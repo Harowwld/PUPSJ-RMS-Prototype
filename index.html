@@ -17,7 +17,7 @@
       rel="stylesheet"
     />
 
-    <!-- Custom Config (Matches Reference) -->
+    <!-- Custom Config (Matches Admin Side Reference) -->
     <script>
       tailwind.config = {
         theme: {
@@ -27,8 +27,8 @@
                 maroon: "#800000",
                 darkMaroon: "#5a0000",
                 gray: "#F5F5F5",
-                text: "#2D2D2D",
-                border: "#e5e7eb",
+                text: "#1F1F1F", /* Updated to match Admin */
+                border: "#d1d5db", /* Updated to match Admin */
               },
             },
             fontFamily: {
@@ -44,8 +44,8 @@
 
     <style>
       body {
-        background-color: #fafafa;
-        color: #2d2d2d;
+        background-color: #f3f4f6; /* Updated to match Admin background */
+        color: #1f2937; /* Updated to match Admin text */
       }
 
       /* Input Styles matched to reference */
@@ -53,10 +53,10 @@
         width: 100%;
         padding: 0.75rem;
         background-color: #fff;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #d1d5db; /* Updated border color */
         border-radius: 6px;
         font-size: 0.875rem;
-        color: #374151;
+        color: #111827; /* Updated input text color */
         transition: all 0.2s;
       }
       .form-input:focus {
@@ -81,7 +81,7 @@
       }
     </style>
   </head>
-  <body class="h-screen flex items-center justify-center bg-gray-50 relative overflow-hidden">
+  <body class="h-screen flex items-center justify-center relative overflow-hidden">
     
     <!-- Background Decor (Optional Subtle Pattern) -->
     <div class="absolute inset-0 pointer-events-none opacity-[0.02]">
@@ -93,27 +93,27 @@
       
       <!-- Brand Header -->
       <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full shadow-sm mb-4 border border-gray-100">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full shadow-sm mb-4 border border-pup-border">
             <i class="ph-bold ph-bank text-4xl text-pup-maroon"></i>
         </div>
         <h1 class="text-2xl font-bold text-pup-maroon tracking-tight">PUP E-Manage</h1>
-        <p class="text-xs text-gray-500 uppercase tracking-widest mt-1">Student Record Management System</p>
+        <p class="text-xs text-gray-600 uppercase tracking-widest mt-1">Student Record Management System</p>
       </div>
 
       <!-- Login Card -->
-      <div class="bg-white rounded-brand border border-gray-200 shadow-sm p-8">
+      <div class="bg-white rounded-brand border border-pup-border shadow-sm p-8">
         <div class="mb-6">
             <h2 class="text-lg font-bold text-gray-800">Staff Login</h2>
-            <p class="text-sm text-gray-500">Please enter your credentials to continue.</p>
+            <p class="text-sm text-gray-600">Please enter your credentials to continue.</p>
         </div>
 
         <form onsubmit="handleLogin(event)" class="space-y-4">
           
           <!-- Username Input -->
           <div>
-            <label for="username" class="block text-xs font-bold text-gray-600 mb-1 uppercase">Username / ID</label>
+            <label for="username" class="block text-xs font-bold text-gray-700 mb-1 uppercase">Username / ID</label>
             <div class="relative">
-                <i class="ph-bold ph-user absolute left-3 top-3.5 text-gray-400"></i>
+                <i class="ph-bold ph-user absolute left-3 top-3.5 text-gray-500"></i>
                 <input 
                     type="text" 
                     id="username" 
@@ -128,10 +128,10 @@
           <!-- Password Input -->
           <div>
             <div class="flex justify-between items-center mb-1">
-                <label for="password" class="block text-xs font-bold text-gray-600 uppercase">Password</label>
+                <label for="password" class="block text-xs font-bold text-gray-700 uppercase">Password</label>
             </div>
             <div class="relative">
-                <i class="ph-bold ph-lock-key absolute left-3 top-3.5 text-gray-400"></i>
+                <i class="ph-bold ph-lock-key absolute left-3 top-3.5 text-gray-500"></i>
                 <input 
                     type="password" 
                     id="password" 
@@ -158,7 +158,7 @@
       </div>
 
       <!-- Footer -->
-      <div class="text-center mt-8 text-xs text-gray-400">
+      <div class="text-center mt-8 text-xs text-gray-500">
         <p>&copy; 2024 Polytechnic University of the Philippines</p>
         <div class="flex justify-center gap-4 mt-2">
             <a href="#" class="hover:text-pup-maroon transition-colors">Privacy Policy</a>
