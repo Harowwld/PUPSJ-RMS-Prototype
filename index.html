@@ -103,7 +103,7 @@
       <!-- Login Card -->
       <div class="bg-white rounded-brand border border-pup-border shadow-sm p-8">
         <div class="mb-6">
-            <h2 class="text-lg font-bold text-gray-800">Staff Login</h2>
+            <h2 class="text-lg font-bold text-gray-800">System Login</h2>
             <p class="text-sm text-gray-600">Please enter your credentials to continue.</p>
         </div>
 
@@ -118,7 +118,7 @@
                     type="text" 
                     id="username" 
                     class="form-input pl-10" 
-                    placeholder="Enter your ID" 
+                    placeholder="Enter your ID (e.g., admin)" 
                     required 
                     autofocus
                 >
@@ -170,8 +170,14 @@
     </div>
 
     <script>
+      // Admin Credentials List
+      const adminUsernames = ['admin', 'admin01', 'registrar', 'head_registrar'];
+
       function handleLogin(event) {
         event.preventDefault(); // Stop actual form submission
+        
+        // Get the entered username
+        const usernameInput = document.getElementById('username').value.trim();
         
         const btn = event.target.querySelector('button[type="submit"]');
         const originalContent = btn.innerHTML;
@@ -182,8 +188,14 @@
         btn.classList.add('opacity-75', 'cursor-not-allowed');
 
         setTimeout(() => {
-            // Redirect to the dashboard
-            window.location.href = 'staffdashboard.html';
+            // Check if input matches any admin username
+            if (adminUsernames.includes(usernameInput)) {
+                 // Redirect to Admin Dashboard
+                window.location.href = 'admindashboard.html';
+            } else {
+                 // Default Redirect to Staff Dashboard
+                window.location.href = 'staffdashboard.html';
+            }
         }, 800);
       }
     </script>
