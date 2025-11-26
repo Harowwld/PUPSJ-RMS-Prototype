@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PUP Registrar - Admin Portal</title>
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Google Fonts: Inter -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Custom Config for PUP Colors -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              pup: {
+                maroon: "#800000",
+                darkMaroon: "#5a0000",
+                gray: "#F5F5F5",
+                text: "#2D2D2D",
+                border: "#e5e7eb",
+              },
+            },
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+            },
+            borderRadius: {
+              brand: "6px",
+            },
+          },
+        },
+      };
+    </script>
+
+    <style>
+      body {
+        background-color: #fafafa;
+        color: #2d2d2d;
+      }
+
+      /* Navigation Button Styles */
+      .btn-nav {
+        padding: 0.5rem 1rem;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #6b7280;
+      }
+      .btn-nav:hover {
+        color: #800000;
+        background-color: rgba(128, 0, 0, 0.05);
+      }
+      .btn-nav.active {
+        color: #800000;
+        background-color: rgba(128, 0, 0, 0.05);
+        border-bottom: 2px solid #800000;
+        border-radius: 6px 6px 0 0;
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #d1d5db;
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #800000;
+      }
+
+      /* Card & Form Styles */
+      .stats-card {
+        transition: transform 0.2s ease, border-color 0.2s ease;
+      }
+      .stats-card:hover {
+        transform: translateY(-2px);
+        border-color: #800000;
+      }
+
+      .form-select,
+      .form-input {
+        width: 100%;
+        padding: 0.6rem;
+        background-color: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        color: #374151;
+        transition: all 0.2s;
+      }
+      .form-select:focus,
+      .form-input:focus {
+        outline: none;
+        border-color: #800000;
+        box-shadow: 0 0 0 1px #800000;
+      }
+
+      /* Table Styles */
+      .table-row-hover:hover {
+        background-color: #fcfcfc;
+      }
+      .table-header {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #6b7280;
+        font-weight: 600;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #e5e7eb;
+        text-align: left;
+      }
+      .table-cell {
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+        color: #374151;
+        border-bottom: 1px solid #f3f4f6;
+      }
+
+      /* Status Badges */
+      .badge {
+        padding: 0.2rem 0.6rem;
+        border-radius: 9999px;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.25rem;
+      }
+      .badge-active { background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+      .badge-inactive { background-color: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; }
+      .badge-admin { background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+      .badge-staff { background-color: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+
+      /* Animation */
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(5px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.3s ease-out forwards;
+      }
+      
+      /* Scale In Animation for Modal */
+      @keyframes scaleIn {
+        from {
+          transform: scale(0.95); /* Starts slightly smaller */
+          opacity: 0;             /* Starts invisible */
+        }
+        to {
+          transform: scale(1);    /* Ends at full size */
+          opacity: 1;             /* Ends fully visible */
+        }
+      }
+
+      .animate-scale-in {
+        animation: scaleIn 0.2s ease-out forwards; /* Runs the animation */
+      }
+      
+      /* Toggle Switch */
+      .toggle-checkbox:checked {
+        right: 0;
+        border-color: #68D391;
+      }
+      .toggle-checkbox:checked + .toggle-label {
+        background-color: #68D391;
+      }
+    </style>
+  </head>
+  <body class="h-screen flex flex-col overflow-hidden bg-gray-50">
+    
+    <!-- Navbar -->
+    <header class="bg-white border-b border-gray-200 flex-none z-20 shadow-sm">
+      <div class="max-w-[1600px] mx-auto px-4 h-16 flex items-center justify-between">
+        <!-- Logo Area (Restored from Source) -->
+        <div class="flex items-center gap-3">
+          <i class="ph-bold ph-bank text-3xl text-pup-maroon"></i>
+          <div class="leading-tight">
+            <h1 class="font-bold text-lg text-pup-maroon tracking-tight">
+              PUP REGISTRAR
+            </h1>
+            <p class="text-[10px] text-gray-500 uppercase tracking-widest">
+              Student Record Management
+            </p>
+          </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="flex items-center gap-2">
+          <button onclick="switchView('directory')" id="nav-directory" class="btn-nav active">
+            <i class="ph ph-users"></i> Staff Directory
+          </button>
+          <button onclick="switchView('create')" id="nav-create" class="btn-nav">
+            <i class="ph ph-user-plus"></i> Register Account
+          </button>
+          <button onclick="switchView('logs')" id="nav-logs" class="btn-nav">
+            <i class="ph ph-scroll"></i> Audit Logs
+          </button>
+          <button onclick="switchView('backup')" id="nav-backup" class="btn-nav">
+            <i class="ph ph-database"></i> Backup & Maintenance
+          </button>
+        </div>
+
+        <!-- User Profile Dropdown (UPDATED) -->
+        <div class="relative ml-4 group">
+            <button onclick="toggleProfileMenu()" class="h-9 w-9 border border-pup-maroon rounded-full flex items-center justify-center text-pup-maroon font-bold text-xs bg-red-50 hover:bg-pup-maroon hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pup-maroon">
+              AD
+            </button>
+
+            <!-- Dropdown Menu -->
+            <div id="profileMenu" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-brand shadow-xl border border-gray-100 z-50 animate-scale-in origin-top-right overflow-hidden">
+                <!-- Header Section -->
+                <div class="p-4 border-b border-gray-100">
+                    <p class="text-sm font-bold text-pup-maroon">Administrator</p>
+                    <p class="text-xs text-gray-500">registrar.admin@pup.edu.ph</p>
+                </div>
+                
+                <!-- Menu Items -->
+                <div class="py-1">
+                    <button class="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-pup-maroon transition-colors flex items-center gap-3">
+                        <i class="ph-bold ph-user"></i> Account Settings
+                    </button>
+                    <button class="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-pup-maroon transition-colors flex items-center gap-3">
+                        <i class="ph-bold ph-question"></i> Help & Support
+                    </button>
+                </div>
+                
+                <!-- Footer Section -->
+                <div class="py-1 border-t border-gray-100">
+                    <button onclick="logout()" class="w-full text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3">
+                        <i class="ph-bold ph-sign-out"></i> Sign Out
+                    </button>
+                </div>
+            </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-hidden w-full max-w-[1600px] mx-auto p-4">
+      
+      <!-- VIEW 1: STAFF DIRECTORY -->
+      <div id="view-directory" class="flex flex-col lg:flex-row gap-4 h-full animate-fade-in">
+        
+        <!-- Sidebar: Filters & Stats -->
+        <aside class="w-full lg:w-1/4 flex flex-col gap-4 h-full">
+          <!-- Stats Cards -->
+          <div class="grid grid-cols-2 gap-2">
+             <div class="bg-white p-4 rounded-brand border border-gray-200 shadow-sm stats-card">
+                <div class="text-2xl font-bold text-pup-maroon" id="stat-total">0</div>
+                <div class="text-[10px] text-gray-500 uppercase font-bold tracking-wide">Total Staff</div>
+             </div>
+             <div class="bg-white p-4 rounded-brand border border-gray-200 shadow-sm stats-card">
+                <div class="text-2xl font-bold text-green-600" id="stat-active">0</div>
+                <div class="text-[10px] text-gray-500 uppercase font-bold tracking-wide">Active Now</div>
+             </div>
+          </div>
+
+          <!-- Search & Filters -->
+          <div class="bg-white rounded-brand border border-gray-200 shadow-sm flex-1 flex flex-col overflow-hidden">
+             <div class="p-4 border-b border-gray-100 bg-gray-50/50">
+                <h3 class="text-xs font-bold text-pup-maroon uppercase tracking-wide mb-3">Filter Directory</h3>
+                <div class="space-y-3">
+                   <div class="relative group">
+                      <i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-gray-400 group-focus-within:text-pup-maroon"></i>
+                      <input type="text" id="searchInput" placeholder="Search name or ID..." class="w-full pl-9 pr-3 py-2 bg-white border border-gray-200 rounded-brand text-sm focus:outline-none focus:border-pup-maroon transition-all placeholder-gray-400">
+                   </div>
+                   
+                   <div>
+                      <label class="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Role</label>
+                      <select id="filterRole" class="form-select text-xs" onchange="renderTable()">
+                         <option value="All">All Roles</option>
+                         <option value="Administrator">Administrator</option>
+                         <option value="Chief">Chief / Head</option>
+                         <option value="Records Officer">Records Officer</option>
+                         <option value="Evaluator">Evaluator</option>
+                         <option value="Encoder">Encoder</option>
+                      </select>
+                   </div>
+
+                   <div>
+                      <label class="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Status</label>
+                      <select id="filterStatus" class="form-select text-xs" onchange="renderTable()">
+                         <option value="All">All Statuses</option>
+                         <option value="Active">Active</option>
+                         <option value="Inactive">Inactive</option>
+                      </select>
+                   </div>
+                </div>
+             </div>
+
+             <!-- Mini Recent Activity List -->
+             <div class="flex-1 overflow-y-auto p-4 bg-white">
+                <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-3">Recent Logins</h4>
+                <div class="space-y-3" id="recentLogins">
+                   <!-- Populated via JS -->
+                </div>
+             </div>
+          </div>
+        </aside>
+
+        <!-- Main Panel: Staff Table -->
+        <section class="w-full lg:w-3/4 bg-white rounded-brand border border-gray-200 shadow-sm flex flex-col h-full overflow-hidden">
+           <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/30">
+              <h2 class="font-bold text-pup-maroon flex items-center gap-2">
+                 <i class="ph-duotone ph-table"></i> Staff Management
+              </h2>
+              <div class="flex gap-2">
+                 <button onclick="exportData()" class="px-3 py-1.5 border border-gray-300 rounded-brand text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-pup-maroon transition-colors">
+                    <i class="ph-bold ph-download-simple"></i> Export CSV
+                 </button>
+                 <button onclick="switchView('create')" class="px-3 py-1.5 bg-pup-maroon text-white rounded-brand text-xs font-bold hover:bg-red-900 transition-colors shadow-sm flex items-center gap-1">
+                    <i class="ph-bold ph-plus"></i> Add New
+                 </button>
+              </div>
+           </div>
+
+           <div class="flex-1 overflow-auto">
+              <table class="w-full border-collapse">
+                 <thead class="bg-gray-50 sticky top-0 z-10">
+                    <tr>
+                       <th class="table-header w-16">ID</th>
+                       <th class="table-header">Staff Name</th>
+                       <th class="table-header">Role</th>
+                       <th class="table-header">Section/Unit</th>
+                       <th class="table-header">Status</th>
+                       <th class="table-header">Last Active</th>
+                       <th class="table-header text-right">Actions</th>
+                    </tr>
+                 </thead>
+                 <tbody id="staffTableBody">
+                    <!-- Rows populated via JS -->
+                 </tbody>
+              </table>
+              
+              <!-- Empty State -->
+              <div id="emptyState" class="hidden flex flex-col items-center justify-center h-64 text-gray-400">
+                 <i class="ph-duotone ph-ghost text-4xl mb-2"></i>
+                 <p class="text-sm">No staff members found.</p>
+              </div>
+           </div>
+           
+           <div class="p-2 border-t border-gray-200 bg-gray-50 text-[10px] text-gray-400 flex justify-between px-4">
+              <span>Showing <span id="count-showing">0</span> records</span>
+              <span>System v1.0.5 Admin</span>
+           </div>
+        </section>
+      </div>
+
+      <!-- VIEW 2: REGISTER ACCOUNT -->
+      <div id="view-create" class="hidden h-full flex flex-col lg:flex-row gap-4 animate-fade-in">
+          
+         <!-- Left: Guidelines -->
+         <aside class="w-full lg:w-1/3 bg-pup-maroon rounded-brand shadow-md p-8 text-white flex flex-col justify-between relative overflow-hidden">
+            <!-- Background Pattern -->
+            <div class="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
+               <i class="ph-fill ph-identification-card text-[200px]"></i>
+            </div>
+            
+            <div class="relative z-10">
+               <div class="w-12 h-12 bg-white/10 rounded-brand flex items-center justify-center mb-6 backdrop-blur-sm">
+                  <i class="ph-bold ph-user-plus text-2xl"></i>
+               </div>
+               <h2 class="text-2xl font-bold mb-2">New Account Creation</h2>
+               <p class="text-white/70 text-sm leading-relaxed mb-6">
+                  Create secure access credentials for <strong>Registrar Staff</strong> only. Ensure all personal information matches the HR records.
+               </p>
+               
+               <div class="space-y-4">
+                  <div class="flex gap-3 items-start">
+                     <i class="ph-bold ph-check-circle mt-1 text-green-300"></i>
+                     <div class="text-xs text-white/80">
+                        <strong class="block text-white">Role-Based Access</strong>
+                        Assign appropriate permissions (Admin, Evaluator, or Encoder) to limit data exposure.
+                     </div>
+                  </div>
+                  <div class="flex gap-3 items-start">
+                     <i class="ph-bold ph-check-circle mt-1 text-green-300"></i>
+                     <div class="text-xs text-white/80">
+                        <strong class="block text-white">Default Credentials</strong>
+                        Accounts are created with a temporary password that must be changed on first login.
+                     </div>
+                  </div>
+               </div>
+            </div>
+
+            <div class="relative z-10 mt-8 pt-6 border-t border-white/10">
+               <button onclick="switchView('directory')" class="text-xs font-bold text-white/70 hover:text-white flex items-center gap-2 transition-colors">
+                  <i class="ph-bold ph-arrow-left"></i> Back to Directory
+               </button>
+            </div>
+         </aside>
+
+         <!-- Right: Form -->
+         <section class="w-full lg:w-2/3 bg-white rounded-brand border border-gray-200 shadow-sm flex flex-col h-full overflow-hidden">
+            <div class="p-6 border-b border-gray-100">
+               <h3 class="font-bold text-gray-800 text-lg">Staff Details Form</h3>
+               <p class="text-xs text-gray-500">All fields marked with * are required.</p>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto p-8 max-w-3xl mx-auto w-full">
+               <form id="createForm" onsubmit="handleCreate(event)" class="space-y-6">
+                  
+                  <!-- ID & Role Row -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Employee ID *</label>
+                        <div class="relative">
+                           <i class="ph-bold ph-identification-card absolute left-3 top-2.5 text-gray-400"></i>
+                           <input type="text" id="newId" required class="form-input pl-9 font-mono" placeholder="e.g. 2023-001">
+                        </div>
+                     </div>
+                     <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">System Role *</label>
+                        <select id="newRole" required class="form-select">
+                           <option value="" disabled selected>Select Role...</option>
+                           <option value="Administrator">Administrator (Head)</option>
+                           <option value="Records Officer">Records Officer</option>
+                           <option value="Evaluator">Evaluator</option>
+                           <option value="Encoder">Encoder (Data Entry)</option>
+                        </select>
+                     </div>
+                  </div>
+
+                  <!-- Name Row -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">First Name *</label>
+                        <input type="text" id="newFName" required class="form-input" placeholder="Juan">
+                     </div>
+                     <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Last Name *</label>
+                        <input type="text" id="newLName" required class="form-input" placeholder="Dela Cruz">
+                     </div>
+                  </div>
+
+                  <!-- Email -->
+                  <div>
+                     <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Email Address *</label>
+                     <div class="relative">
+                        <i class="ph-bold ph-envelope absolute left-3 top-2.5 text-gray-400"></i>
+                        <input type="email" id="newEmail" required class="form-input pl-9" placeholder="juan.delacruz@pup.edu.ph">
+                     </div>
+                     <p class="text-[10px] text-gray-400 mt-1">An activation link will be sent to this email.</p>
+                  </div>
+
+                  <!-- Section & Status -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Section / Unit</label>
+                        <select id="newSection" class="form-select">
+                           <option value="Administrative">Administrative</option>
+                           <option value="Records">Records Section</option>
+                           <option value="Evaluation">Evaluation Section</option>
+                           <option value="Releasing">Releasing Window</option>
+                           <option value="Admission">Admission Support</option>
+                        </select>
+                     </div>
+                     <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Initial Status</label>
+                        <div class="flex gap-4 mt-2">
+                           <label class="flex items-center gap-2 cursor-pointer">
+                              <input type="radio" name="status" value="Active" checked class="text-pup-maroon focus:ring-pup-maroon">
+                              <span class="text-sm text-gray-700">Active</span>
+                           </label>
+                           <label class="flex items-center gap-2 cursor-pointer">
+                              <input type="radio" name="status" value="Inactive" class="text-pup-maroon focus:ring-pup-maroon">
+                              <span class="text-sm text-gray-700">Inactive</span>
+                           </label>
+                        </div>
+                     </div>
+                  </div>
+
+                  <!-- Divider -->
+                  <div class="border-t border-gray-100 pt-6">
+                     <div class="bg-blue-50 border border-blue-100 rounded-brand p-4 flex gap-3">
+                        <i class="ph-fill ph-info text-blue-500 text-xl"></i>
+                        <div class="text-xs text-blue-800">
+                           <strong>Security Note:</strong> A temporary password <code class="bg-white px-1 rounded border border-blue-200">PUP@2025</code> will be assigned. The user will be forced to change this upon first login.
+                        </div>
+                     </div>
+                  </div>
+
+                  <!-- Actions -->
+                  <div class="flex items-center justify-end gap-3 pt-2">
+                     <button type="button" onclick="resetForm()" class="px-5 py-2.5 border border-gray-300 rounded-brand text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">
+                        Reset
+                     </button>
+                     <button type="submit" class="px-6 py-2.5 bg-pup-maroon text-white rounded-brand text-sm font-bold hover:bg-red-900 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
+                        <i class="ph-bold ph-check"></i> Create Account
+                     </button>
+                  </div>
+
+               </form>
+            </div>
+         </section>
+      </div>
+
+      <!-- VIEW 3: AUDIT LOGS -->
+      <div id="view-logs" class="hidden h-full animate-fade-in">
+        <div class="bg-white rounded-brand border border-gray-200 shadow-sm h-full flex flex-col">
+            <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+               <h2 class="font-bold text-pup-maroon">System Audit Logs</h2>
+               <div class="text-[10px] text-gray-400">Showing last 30 days</div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4">
+               <div class="space-y-2" id="log-container">
+                  <!-- JS populated -->
+               </div>
+            </div>
+        </div>
+      </div>
+
+      <!-- VIEW 4: BACKUP & MAINTENANCE (EXPANDED) -->
+      <div id="view-backup" class="hidden h-full gap-4 flex-col lg:flex-row animate-fade-in">
+        <!-- Left: Quick Actions -->
+        <section class="w-full lg:w-1/3 flex flex-col gap-4 overflow-y-auto pr-1">
+           
+           <!-- System Health Card (New) -->
+           <div class="bg-white rounded-brand border border-gray-200 shadow-sm p-5 relative">
+               <h3 class="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2">
+                   <i class="ph-duotone ph-heartbeat text-pup-maroon"></i> System Health
+               </h3>
+               <div class="space-y-4">
+                   <!-- Storage -->
+                   <div>
+                       <div class="flex justify-between text-[10px] uppercase font-bold text-gray-500 mb-1">
+                           <span>Storage (45GB/100GB)</span>
+                           <span class="text-gray-700">45%</span>
+                       </div>
+                       <div class="w-full bg-gray-100 rounded-full h-1.5">
+                           <div class="bg-pup-maroon h-1.5 rounded-full" style="width: 45%"></div>
+                       </div>
+                   </div>
+                   <!-- DB Load -->
+                   <div>
+                       <div class="flex justify-between text-[10px] uppercase font-bold text-gray-500 mb-1">
+                           <span>Database Load</span>
+                           <span class="text-green-600">Healthy</span>
+                       </div>
+                       <div class="w-full bg-gray-100 rounded-full h-1.5">
+                           <div class="bg-green-500 h-1.5 rounded-full" style="width: 12%"></div>
+                       </div>
+                   </div>
+                   <!-- CPU -->
+                   <div>
+                       <div class="flex justify-between text-[10px] uppercase font-bold text-gray-500 mb-1">
+                           <span>CPU Usage</span>
+                           <span class="text-gray-700">28%</span>
+                       </div>
+                       <div class="w-full bg-gray-100 rounded-full h-1.5">
+                           <div class="bg-blue-500 h-1.5 rounded-full" style="width: 28%"></div>
+                       </div>
+                   </div>
+               </div>
+           </div>
+
+           <!-- Database Actions Card -->
+           <div class="bg-white rounded-brand border border-gray-200 shadow-sm p-6 relative overflow-hidden group">
+               <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+                  <i class="ph-fill ph-database text-9xl text-pup-maroon"></i>
+               </div>
+               <div class="relative z-10">
+                   <h3 class="font-bold text-pup-maroon text-lg mb-1">Database Backup</h3>
+                   <p class="text-xs text-gray-500 mb-4">Create snapshots or restore previous data.</p>
+                   
+                   <!-- Download -->
+                   <button onclick="simulateBackup()" class="w-full bg-pup-maroon text-white py-2.5 rounded-brand text-xs font-bold hover:bg-red-900 transition-colors flex items-center justify-center gap-2 shadow-sm mb-4">
+                      <i class="ph-bold ph-download-simple"></i> Download SQL Dump
+                   </button>
+
+                   <!-- Restore Section (New) -->
+                   <div class="border-t border-dashed border-gray-200 pt-4">
+                       <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Restore Data</label>
+                       <input type="file" id="restoreFile" class="hidden" accept=".sql" onchange="handleRestore(this)">
+                       <button onclick="document.getElementById('restoreFile').click()" class="w-full bg-white border border-gray-300 text-gray-600 py-2 rounded-brand text-xs font-bold hover:border-pup-maroon hover:text-pup-maroon transition-colors flex items-center justify-center gap-2">
+                           <i class="ph-bold ph-upload-simple"></i> Upload SQL File
+                       </button>
+                   </div>
+
+                   <div class="mt-4 text-[10px] text-gray-400 text-center">
+                      Last backup: <span class="font-mono text-gray-600">Today, 08:00 AM</span>
+                   </div>
+               </div>
+           </div>
+
+           <!-- Operations Card (Expanded) -->
+           <div class="bg-white rounded-brand border border-gray-200 shadow-sm p-6 flex-1">
+               <h3 class="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2">
+                  <i class="ph-duotone ph-wrench text-pup-maroon"></i> System Operations
+               </h3>
+               
+               <div class="space-y-4">
+                   <div class="flex items-center justify-between">
+                      <div class="text-xs">
+                         <div class="font-bold text-gray-700">Auto-Backup</div>
+                         <div class="text-gray-400">Daily at 12:00 AM</div>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" checked class="sr-only peer">
+                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-600"></div>
+                      </label>
+                   </div>
+                   
+                   <div class="flex items-center justify-between">
+                      <div class="text-xs">
+                         <div class="font-bold text-gray-700">Maintenance Mode</div>
+                         <div class="text-gray-400">Lock non-admin logins</div>
+                      </div>
+                      <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" class="sr-only peer">
+                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pup-maroon"></div>
+                      </label>
+                   </div>
+                   
+                   <hr class="border-gray-100 my-2">
+                   
+                   <!-- Advanced Buttons -->
+                   <div class="grid grid-cols-2 gap-2">
+                       <button onclick="clearCache()" class="px-3 py-2 border border-gray-200 rounded-brand text-[10px] font-bold text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors flex flex-col items-center gap-1">
+                           <i class="ph-bold ph-broom text-lg"></i> Clear Cache
+                       </button>
+                       <button onclick="forceLogout()" class="px-3 py-2 border border-red-100 bg-red-50 rounded-brand text-[10px] font-bold text-red-700 hover:bg-red-100 transition-colors flex flex-col items-center gap-1">
+                           <i class="ph-bold ph-sign-out text-lg"></i> Force Logout
+                       </button>
+                   </div>
+               </div>
+           </div>
+        </section>
+
+        <!-- Right: Log History -->
+        <section class="w-full lg:w-2/3 bg-white rounded-brand border border-gray-200 shadow-sm flex flex-col overflow-hidden">
+            <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+               <h3 class="font-bold text-xs text-pup-maroon uppercase tracking-wide">Backup History</h3>
+               
+               <!-- Settings (New) -->
+               <div class="flex items-center gap-2">
+                   <label class="text-[10px] font-bold text-gray-500 uppercase">Retention Policy:</label>
+                   <select class="text-xs border-gray-300 rounded border px-2 py-1 focus:outline-none focus:border-pup-maroon">
+                       <option>Keep 30 Days</option>
+                       <option>Keep 60 Days</option>
+                       <option>Keep All</option>
+                   </select>
+               </div>
+            </div>
+            
+            <div class="flex-1 overflow-auto">
+               <table class="w-full text-left border-collapse">
+                  <thead class="bg-white text-[10px] text-gray-400 uppercase font-bold sticky top-0">
+                     <tr>
+                        <th class="p-3 border-b border-gray-100">Filename</th>
+                        <th class="p-3 border-b border-gray-100">Date & Time</th>
+                        <th class="p-3 border-b border-gray-100">Size</th>
+                        <th class="p-3 border-b border-gray-100">Type</th>
+                        <th class="p-3 border-b border-gray-100 text-right">Action</th>
+                     </tr>
+                  </thead>
+                  <tbody class="text-xs text-gray-600">
+                     <tr class="hover:bg-gray-50 border-b border-gray-50">
+                        <td class="p-3 font-mono text-pup-maroon">backup_20231126.sql</td>
+                        <td class="p-3">Nov 26, 2023 - 08:00 AM</td>
+                        <td class="p-3">45.2 MB</td>
+                        <td class="p-3"><span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px] font-bold">AUTO</span></td>
+                        <td class="p-3 text-right"><button class="text-gray-400 hover:text-pup-maroon"><i class="ph-bold ph-download-simple"></i></button></td>
+                     </tr>
+                     <tr class="hover:bg-gray-50 border-b border-gray-50">
+                        <td class="p-3 font-mono text-pup-maroon">backup_20231125.sql</td>
+                        <td class="p-3">Nov 25, 2023 - 08:00 AM</td>
+                        <td class="p-3">44.8 MB</td>
+                        <td class="p-3"><span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px] font-bold">AUTO</span></td>
+                        <td class="p-3 text-right"><button class="text-gray-400 hover:text-pup-maroon"><i class="ph-bold ph-download-simple"></i></button></td>
+                     </tr>
+                     <tr class="hover:bg-gray-50 border-b border-gray-50">
+                        <td class="p-3 font-mono text-pup-maroon">manual_snapshot.sql</td>
+                        <td class="p-3">Nov 24, 2023 - 03:15 PM</td>
+                        <td class="p-3">44.5 MB</td>
+                        <td class="p-3"><span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-bold">MANUAL</span></td>
+                        <td class="p-3 text-right"><button class="text-gray-400 hover:text-pup-maroon"><i class="ph-bold ph-download-simple"></i></button></td>
+                     </tr>
+                  </tbody>
+               </table>
+            </div>
+        </section>
+      </div>
+
+    </main>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-5 right-5 transform translate-y-20 opacity-0 transition-all duration-300 z-50 bg-gray-800 text-white px-4 py-3 rounded-brand shadow-lg flex items-center gap-3">
+       <i class="ph-fill ph-check-circle text-green-400 text-xl"></i>
+       <span id="toast-msg" class="text-sm font-medium">Operation Successful</span>
+    </div>
+
+    <script>
+      // --- 1. MOCK DATA ---
+      // Updated Roles and Units for Registrar Context
+      const units = ["Records", "Evaluation", "Releasing", "Administrative", "Admission"];
+      const roles = ["Administrator", "Records Officer", "Evaluator", "Encoder"];
+      
+      let staffData = [
+         { id: "2023-001", fname: "Maria", lname: "Santos", role: "Administrator", section: "Administrative", status: "Active", lastActive: "Just now", email: "m.santos@pup.edu.ph" },
+         { id: "2023-002", fname: "Jose", lname: "Reyes", role: "Records Officer", section: "Records", status: "Active", lastActive: "10 mins ago", email: "j.reyes@pup.edu.ph" },
+         { id: "2023-005", fname: "Ana", lname: "Dizon", role: "Encoder", section: "Records", status: "Inactive", lastActive: "2 days ago", email: "a.dizon@pup.edu.ph" },
+         { id: "2023-008", fname: "Pedro", lname: "Cruz", role: "Evaluator", section: "Evaluation", status: "Active", lastActive: "1 hour ago", email: "p.cruz@pup.edu.ph" },
+         { id: "2022-045", fname: "Lorna", lname: "Tolentino", role: "Encoder", section: "Releasing", status: "Active", lastActive: "5 mins ago", email: "l.tolentino@pup.edu.ph" },
+         { id: "2021-012", fname: "Rico", lname: "Yan", role: "Administrator", section: "Administrative", status: "Active", lastActive: "Yesterday", email: "r.yan@pup.edu.ph" },
+      ];
+
+      const auditLogs = [
+         { time: "10:42 AM", user: "Maria Santos", action: "Created new staff account: P. Cruz" },
+         { time: "10:30 AM", user: "Jose Reyes", action: "Updated student record: 2020-00123-MN-0" },
+         { time: "09:15 AM", user: "System", action: "Backup completed successfully" },
+         { time: "Yesterday", user: "Rico Yan", action: "Deleted archived document #4421" },
+         { time: "Yesterday", user: "Ana Dizon", action: "Failed login attempt (3x)" },
+      ];
+
+      // --- 2. INIT ---
+      document.addEventListener("DOMContentLoaded", () => {
+         renderTable();
+         renderStats();
+         renderRecentLogins();
+         renderLogs();
+      });
+
+      // --- 3. CORE FUNCTIONS ---
+
+      function switchView(viewName) {
+         // Hide all views
+         document.getElementById('view-directory').classList.add('hidden');
+         document.getElementById('view-create').classList.add('hidden');
+         document.getElementById('view-logs').classList.add('hidden');
+         document.getElementById('view-backup').classList.add('hidden');
+         
+         // Reset Nav
+         document.querySelectorAll('.btn-nav').forEach(b => b.classList.remove('active'));
+
+         // Show selected
+         document.getElementById(`view-${viewName}`).classList.remove('hidden');
+         document.getElementById(`nav-${viewName}`).classList.add('active');
+         
+         // Trigger specific renders
+         if(viewName === 'directory') {
+            renderTable();
+            renderStats();
+         }
+      }
+
+      function renderStats() {
+         document.getElementById('stat-total').innerText = staffData.length;
+         document.getElementById('stat-active').innerText = staffData.filter(s => s.status === 'Active').length;
+      }
+
+      function renderRecentLogins() {
+         const container = document.getElementById('recentLogins');
+         const recent = staffData.filter(s => s.status === 'Active').slice(0, 4);
+         
+         container.innerHTML = recent.map(s => `
+            <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50 transition-colors cursor-pointer group">
+               <div class="w-6 h-6 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-[10px] font-bold">
+                  ${s.fname[0]}${s.lname[0]}
+               </div>
+               <div class="overflow-hidden">
+                  <div class="text-xs font-bold text-gray-700 truncate group-hover:text-pup-maroon">${s.fname} ${s.lname}</div>
+                  <div class="text-[10px] text-gray-400 flex items-center gap-1">
+                     <div class="w-1.5 h-1.5 rounded-full bg-green-400"></div> ${s.lastActive}
+                  </div>
+               </div>
+            </div>
+         `).join('');
+      }
+
+      function renderTable() {
+         const tbody = document.getElementById('staffTableBody');
+         const search = document.getElementById('searchInput').value.toLowerCase();
+         const roleFilter = document.getElementById('filterRole').value;
+         const statusFilter = document.getElementById('filterStatus').value;
+
+         const filtered = staffData.filter(s => {
+            const matchesSearch = (s.fname + " " + s.lname).toLowerCase().includes(search) || s.id.toLowerCase().includes(search);
+            const matchesRole = roleFilter === 'All' || s.role === roleFilter;
+            const matchesStatus = statusFilter === 'All' || s.status === statusFilter;
+            return matchesSearch && matchesRole && matchesStatus;
+         });
+
+         document.getElementById('count-showing').innerText = filtered.length;
+         
+         if (filtered.length === 0) {
+            tbody.innerHTML = '';
+            document.getElementById('emptyState').classList.remove('hidden');
+            return;
+         }
+         document.getElementById('emptyState').classList.add('hidden');
+
+         tbody.innerHTML = filtered.map(s => {
+            let roleBadgeClass = s.role === 'Administrator' ? 'badge-admin' : 'badge-staff';
+            let statusBadgeClass = s.status === 'Active' ? 'badge-active' : 'badge-inactive';
+            
+            return `
+            <tr class="table-row-hover transition-colors group">
+               <td class="table-cell font-mono text-gray-500 text-xs">${s.id}</td>
+               <td class="table-cell">
+                  <div class="flex items-center gap-2">
+                     <div class="w-7 h-7 rounded-full bg-pup-maroon text-white flex items-center justify-center text-xs font-bold">
+                        ${s.fname[0]}
+                     </div>
+                     <div>
+                        <div class="font-semibold text-gray-800 text-sm">${s.fname} ${s.lname}</div>
+                        <div class="text-[10px] text-gray-400">${s.email}</div>
+                     </div>
+                  </div>
+               </td>
+               <td class="table-cell">
+                  <span class="badge ${roleBadgeClass}">${s.role}</span>
+               </td>
+               <td class="table-cell text-sm text-gray-600">${s.section}</td>
+               <td class="table-cell">
+                  <span class="badge ${statusBadgeClass}">${s.status}</span>
+               </td>
+               <td class="table-cell text-xs text-gray-500">${s.lastActive}</td>
+               <td class="table-cell text-right">
+                  <div class="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                     <button onclick="editUser('${s.id}')" class="p-1.5 hover:bg-gray-100 rounded text-gray-500 hover:text-pup-maroon" title="Edit">
+                        <i class="ph-bold ph-pencil-simple"></i>
+                     </button>
+                     <button onclick="deleteUser('${s.id}')" class="p-1.5 hover:bg-red-50 rounded text-gray-500 hover:text-red-600" title="Delete">
+                        <i class="ph-bold ph-trash"></i>
+                     </button>
+                  </div>
+               </td>
+            </tr>
+            `;
+         }).join('');
+      }
+
+      function renderLogs() {
+          const container = document.getElementById('log-container');
+          container.innerHTML = auditLogs.map(log => `
+            <div class="flex gap-3 text-sm p-3 border-b border-gray-100 hover:bg-gray-50">
+                <div class="text-gray-400 font-mono text-xs w-20 pt-0.5">${log.time}</div>
+                <div class="flex-1">
+                    <span class="font-bold text-gray-700">${log.user}</span>
+                    <span class="text-gray-600">${log.action}</span>
+                </div>
+            </div>
+          `).join('');
+      }
+
+      // --- 4. BACKUP OPERATIONS ---
+      function simulateBackup() {
+         showToast("Creating database backup...", false);
+         setTimeout(() => {
+             showToast("Backup downloaded successfully!");
+         }, 1500);
+      }
+
+      function handleRestore(input) {
+         if (input.files && input.files[0]) {
+            const fileName = input.files[0].name;
+            if(confirm(`Are you sure you want to restore the database from '${fileName}'? This will overwrite current data.`)) {
+                showToast("Restoring database...", false);
+                setTimeout(() => {
+                    showToast("System restored successfully! Reloading...");
+                    setTimeout(() => location.reload(), 2000);
+                }, 2000);
+            }
+         }
+         input.value = ''; // Reset
+      }
+
+      function clearCache() {
+         showToast("Clearing system cache...", false);
+         setTimeout(() => {
+             showToast("Cache cleared successfully!");
+         }, 1000);
+      }
+
+      function forceLogout() {
+         if(confirm("This will log out all users (except you). Continue?")) {
+             showToast("Processing global logout...", false);
+             setTimeout(() => {
+                 showToast("All active sessions terminated.");
+             }, 1500);
+         }
+      }
+
+      // --- 5. PROFILE MENU LOGIC (New) ---
+      function toggleProfileMenu() {
+        const menu = document.getElementById('profileMenu');
+        menu.classList.toggle('hidden');
+      }
+      
+      function logout() {
+         // Direct redirect as requested
+         window.location.href = 'index.html';
+      }
+
+      // Close menu when clicking outside
+      document.addEventListener('click', (event) => {
+        const menu = document.getElementById('profileMenu');
+        const button = document.querySelector('button[onclick="toggleProfileMenu()"]');
+        
+        // If menu is open and click is NOT on the menu AND NOT on the button
+        if (!menu.classList.contains('hidden') && 
+            !menu.contains(event.target) && 
+            !button.contains(event.target)) {
+          menu.classList.add('hidden');
+        }
+      });
+
+      // --- 6. INTERACTIONS ---
+
+      document.getElementById('searchInput').addEventListener('input', renderTable);
+
+      function handleCreate(e) {
+         e.preventDefault();
+         
+         const id = document.getElementById('newId').value;
+         const fname = document.getElementById('newFName').value;
+         const lname = document.getElementById('newLName').value;
+         const role = document.getElementById('newRole').value;
+         const email = document.getElementById('newEmail').value;
+         const section = document.getElementById('newSection').value;
+         const status = document.querySelector('input[name="status"]:checked').value;
+
+         if (staffData.some(s => s.id === id)) {
+            showToast('Error: Employee ID already exists!', true);
+            return;
+         }
+
+         const newUser = {
+            id,
+            fname,
+            lname,
+            role,
+            section,
+            status,
+            email,
+            lastActive: "Never"
+         };
+
+         staffData.unshift(newUser); // Add to top
+         
+         // Add log
+         auditLogs.unshift({
+             time: "Just now",
+             user: "Admin User",
+             action: `Created account for ${fname} ${lname}`
+         });
+
+         showToast(`Account created for ${fname} ${lname}!`);
+         
+         // Reset & Switch
+         resetForm();
+         switchView('directory');
+         renderLogs();
+      }
+
+      function deleteUser(id) {
+         if(confirm('Are you sure you want to remove this staff member?')) {
+            staffData = staffData.filter(s => s.id !== id);
+            renderTable();
+            renderStats();
+            showToast('User removed successfully.');
+         }
+      }
+
+      function editUser(id) {
+          showToast('Edit mode enabled for ' + id);
+          // In a real app, this would pre-fill the form and switch view
+          switchView('create');
+          const user = staffData.find(u => u.id === id);
+          if(user) {
+              document.getElementById('newId').value = user.id;
+              document.getElementById('newFName').value = user.fname;
+              document.getElementById('newLName').value = user.lname;
+              document.getElementById('newEmail').value = user.email;
+          }
+      }
+
+      function resetForm() {
+         document.getElementById('createForm').reset();
+      }
+
+      function showToast(msg, isError = false) {
+         const toast = document.getElementById('toast');
+         const toastMsg = document.getElementById('toast-msg');
+         
+         toastMsg.innerText = msg;
+         if(isError) {
+             toast.classList.remove('bg-gray-800');
+             toast.classList.add('bg-red-800');
+             toast.querySelector('i').classList.replace('ph-check-circle', 'ph-warning-circle');
+         } else {
+             toast.classList.add('bg-gray-800');
+             toast.classList.remove('bg-red-800');
+             toast.querySelector('i').classList.replace('ph-warning-circle', 'ph-check-circle');
+         }
+
+         toast.classList.remove('translate-y-20', 'opacity-0');
+         setTimeout(() => {
+            toast.classList.add('translate-y-20', 'opacity-0');
+         }, 3000);
+      }
+
+      function exportData() {
+         let csvContent = "data:text/csv;charset=utf-8,";
+         csvContent += "ID,First Name,Last Name,Role,Section,Status,Email\n";
+         
+         staffData.forEach(s => {
+             csvContent += `${s.id},${s.fname},${s.lname},${s.role},${s.section},${s.status},${s.email}\n`;
+         });
+
+         const encodedUri = encodeURI(csvContent);
+         const link = document.createElement("a");
+         link.setAttribute("href", encodedUri);
+         link.setAttribute("download", "pup_staff_list.csv");
+         document.body.appendChild(link);
+         link.click();
+         document.body.removeChild(link);
+      }
+    </script>
+  </body>
+</html>
