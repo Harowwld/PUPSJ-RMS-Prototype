@@ -342,146 +342,161 @@
         </section>
       </div>
 
-      <!-- VIEW 2: REGISTER ACCOUNT -->
-      <div id="view-create" class="hidden h-full flex flex-col lg:flex-row gap-4 animate-fade-in">
-         <aside class="w-full lg:w-1/3 bg-pup-maroon rounded-brand shadow-md p-8 text-white flex flex-col justify-between relative overflow-hidden">
-            <div class="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-               <i class="ph-fill ph-identification-card text-[200px]"></i>
-            </div>
-            <div class="relative z-10">
-               <div class="w-12 h-12 bg-white/10 rounded-brand flex items-center justify-center mb-6 backdrop-blur-sm">
-                  <i class="ph-bold ph-user-plus text-2xl"></i>
+      <!-- VIEW 2: REGISTER ACCOUNT (UPDATED - REMOVED RED SIDEBAR) -->
+      <div id="view-create" class="hidden h-full flex-col animate-fade-in">
+         <div class="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm flex flex-col h-full overflow-hidden">
+            <div class="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50/30">
+               <div>
+                  <h3 class="font-bold text-pup-maroon text-lg flex items-center gap-2">
+                     <i class="ph-duotone ph-user-plus"></i> New Account Creation
+                  </h3>
+                  <p class="text-xs text-gray-500 mt-1">Create secure access credentials for Registrar Staff.</p>
                </div>
-               <h2 class="text-2xl font-bold mb-2">New Account Creation</h2>
-               <p class="text-white/70 text-sm leading-relaxed mb-6">
-                  Create secure access credentials for <strong>Registrar Staff</strong> only. Ensure all personal information matches the HR records.
-               </p>
-               <div class="space-y-4">
-                  <div class="flex gap-3 items-start">
-                     <i class="ph-bold ph-check-circle mt-1 text-green-300"></i>
-                     <div class="text-xs text-white/80">
-                        <strong class="block text-white">Role-Based Access</strong>
-                        Assign appropriate permissions.
-                     </div>
-                  </div>
-                  <div class="flex gap-3 items-start">
-                     <i class="ph-bold ph-check-circle mt-1 text-green-300"></i>
-                     <div class="text-xs text-white/80">
-                        <strong class="block text-white">Default Credentials</strong>
-                        Accounts are created with a temporary password.
-                     </div>
-                  </div>
-               </div>
-            </div>
-            <div class="relative z-10 mt-8 pt-6 border-t border-white/10">
-               <button onclick="switchView('directory')" class="text-xs font-bold text-white/70 hover:text-white flex items-center gap-2 transition-colors">
+               <button onclick="switchView('directory')" class="text-xs font-bold text-gray-500 hover:text-pup-maroon flex items-center gap-2 transition-colors">
                   <i class="ph-bold ph-arrow-left"></i> Back to Directory
                </button>
             </div>
-         </aside>
-         <section class="w-full lg:w-2/3 bg-white rounded-brand border border-gray-300 shadow-sm flex flex-col h-full overflow-hidden">
-            <div class="p-6 border-b border-gray-200">
-               <h3 class="font-bold text-gray-800 text-lg">Staff Details Form</h3>
-               <p class="text-xs text-gray-500">All fields marked with * are required.</p>
-            </div>
-            <div class="flex-1 overflow-y-auto p-8 max-w-3xl mx-auto w-full">
-               <form id="createForm" onsubmit="handleCreate(event)" class="space-y-6">
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            <div class="flex-1 overflow-y-auto p-8">
+               <div class="max-w-4xl mx-auto">
+                  <!-- Info Cards -->
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                     <div class="bg-blue-50 p-4 rounded-brand border border-blue-100 flex items-start gap-3">
+                        <i class="ph-fill ph-shield-check text-blue-600 text-xl mt-0.5"></i>
+                        <div>
+                           <h4 class="text-sm font-bold text-blue-800">Role-Based Access</h4>
+                           <p class="text-xs text-blue-600 mt-1">Assign specific permissions (Admin, Evaluator, Encoder) to limit data exposure based on staff roles.</p>
+                        </div>
+                     </div>
+                     <div class="bg-amber-50 p-4 rounded-brand border border-amber-100 flex items-start gap-3">
+                        <i class="ph-fill ph-key text-amber-600 text-xl mt-0.5"></i>
+                        <div>
+                           <h4 class="text-sm font-bold text-amber-800">Default Credentials</h4>
+                           <p class="text-xs text-amber-600 mt-1">Accounts are initialized with a temporary password. Users will be prompted to change it upon first login.</p>
+                        </div>
+                     </div>
+                  </div>
+
+                  <form id="createForm" onsubmit="handleCreate(event)" class="space-y-6">
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                           <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Employee ID *</label>
+                           <div class="relative">
+                              <i class="ph-bold ph-identification-card absolute left-3 top-2.5 text-gray-400"></i>
+                              <input type="text" id="newId" required class="form-input pl-9 font-mono" placeholder="e.g. 2023-001">
+                           </div>
+                        </div>
+                        <div>
+                           <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">System Role *</label>
+                           <select id="newRole" required class="form-select">
+                              <option value="" disabled selected>Select Role...</option>
+                              <option value="Administrator">Administrator (Head)</option>
+                              <option value="Records Officer">Records Officer</option>
+                              <option value="Evaluator">Evaluator</option>
+                              <option value="Encoder">Encoder (Data Entry)</option>
+                           </select>
+                        </div>
+                     </div>
+
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                           <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">First Name *</label>
+                           <input type="text" id="newFName" required class="form-input" placeholder="Juan">
+                        </div>
+                        <div>
+                           <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Last Name *</label>
+                           <input type="text" id="newLName" required class="form-input" placeholder="Dela Cruz">
+                        </div>
+                     </div>
+
                      <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Employee ID *</label>
+                        <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Email Address *</label>
                         <div class="relative">
-                           <i class="ph-bold ph-identification-card absolute left-3 top-2.5 text-gray-400"></i>
-                           <input type="text" id="newId" required class="form-input pl-9 font-mono" placeholder="e.g. 2023-001">
+                           <i class="ph-bold ph-envelope absolute left-3 top-2.5 text-gray-400"></i>
+                           <input type="email" id="newEmail" required class="form-input pl-9" placeholder="juan.delacruz@pup.edu.ph">
+                        </div>
+                        <p class="text-[10px] text-gray-400 mt-1">An activation link will be sent to this email.</p>
+                     </div>
+
+                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                           <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Section / Unit</label>
+                           <select id="newSection" class="form-select">
+                              <option value="Administrative">Administrative</option>
+                              <option value="Records">Records Section</option>
+                              <option value="Evaluation">Evaluation Section</option>
+                              <option value="Releasing">Releasing Window</option>
+                              <option value="Admission">Admission Support</option>
+                           </select>
+                        </div>
+                        <div>
+                           <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Initial Status</label>
+                           <div class="flex gap-4 mt-2">
+                              <label class="flex items-center gap-2 cursor-pointer">
+                                 <input type="radio" name="status" value="Active" checked class="text-pup-maroon focus:ring-pup-maroon">
+                                 <span class="text-sm text-gray-700">Active</span>
+                              </label>
+                              <label class="flex items-center gap-2 cursor-pointer">
+                                 <input type="radio" name="status" value="Inactive" class="text-pup-maroon focus:ring-pup-maroon">
+                                 <span class="text-sm text-gray-700">Inactive</span>
+                              </label>
+                           </div>
                         </div>
                      </div>
-                     <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">System Role *</label>
-                        <select id="newRole" required class="form-select">
-                           <option value="" disabled selected>Select Role...</option>
-                           <option value="Administrator">Administrator (Head)</option>
-                           <option value="Records Officer">Records Officer</option>
-                           <option value="Evaluator">Evaluator</option>
-                           <option value="Encoder">Encoder (Data Entry)</option>
-                        </select>
+
+                     <div class="border-t border-gray-200 pt-6 flex items-center justify-end gap-3">
+                        <button type="button" onclick="resetForm()" class="px-5 py-2.5 border border-gray-300 rounded-brand text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">Reset Form</button>
+                        <button type="submit" class="px-6 py-2.5 bg-pup-maroon text-white rounded-brand text-sm font-bold hover:bg-red-900 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
+                           <i class="ph-bold ph-check"></i> Create Account
+                        </button>
                      </div>
-                  </div>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                     <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">First Name *</label>
-                        <input type="text" id="newFName" required class="form-input" placeholder="Juan">
-                     </div>
-                     <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Last Name *</label>
-                        <input type="text" id="newLName" required class="form-input" placeholder="Dela Cruz">
-                     </div>
-                  </div>
-                  <div>
-                     <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Email Address *</label>
-                     <div class="relative">
-                        <i class="ph-bold ph-envelope absolute left-3 top-2.5 text-gray-400"></i>
-                        <input type="email" id="newEmail" required class="form-input pl-9" placeholder="juan.delacruz@pup.edu.ph">
-                     </div>
-                     <p class="text-[10px] text-gray-400 mt-1">An activation link will be sent to this email.</p>
-                  </div>
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                     <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Section / Unit</label>
-                        <select id="newSection" class="form-select">
-                           <option value="Administrative">Administrative</option>
-                           <option value="Records">Records Section</option>
-                           <option value="Evaluation">Evaluation Section</option>
-                           <option value="Releasing">Releasing Window</option>
-                           <option value="Admission">Admission Support</option>
-                        </select>
-                     </div>
-                     <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Initial Status</label>
-                        <div class="flex gap-4 mt-2">
-                           <label class="flex items-center gap-2 cursor-pointer">
-                              <input type="radio" name="status" value="Active" checked class="text-pup-maroon focus:ring-pup-maroon">
-                              <span class="text-sm text-gray-700">Active</span>
-                           </label>
-                           <label class="flex items-center gap-2 cursor-pointer">
-                              <input type="radio" name="status" value="Inactive" class="text-pup-maroon focus:ring-pup-maroon">
-                              <span class="text-sm text-gray-700">Inactive</span>
-                           </label>
-                        </div>
-                     </div>
-                  </div>
-                  <div class="border-t border-gray-200 pt-6">
-                     <div class="bg-blue-50 border border-blue-100 rounded-brand p-4 flex gap-3">
-                        <i class="ph-fill ph-info text-blue-500 text-xl"></i>
-                        <div class="text-xs text-blue-800">
-                           <strong>Security Note:</strong> A temporary password <code class="bg-white px-1 rounded border border-blue-200">PUP@2025</code> will be assigned.
-                        </div>
-                     </div>
-                  </div>
-                  <div class="flex items-center justify-end gap-3 pt-2">
-                     <button type="button" onclick="resetForm()" class="px-5 py-2.5 border border-gray-300 rounded-brand text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">Reset</button>
-                     <button type="submit" class="px-6 py-2.5 bg-pup-maroon text-white rounded-brand text-sm font-bold hover:bg-red-900 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
-                        <i class="ph-bold ph-check"></i> Create Account
-                     </button>
-                  </div>
-               </form>
+                  </form>
+               </div>
             </div>
-         </section>
+         </div>
       </div>
 
-      <!-- VIEW 3: AUDIT LOGS -->
+      <!-- VIEW 3: AUDIT LOGS (UPDATED) -->
       <div id="view-logs" class="hidden h-full animate-fade-in">
         <div class="bg-white rounded-brand border border-gray-300 shadow-sm h-full flex flex-col">
             <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-               <h2 class="font-bold text-pup-maroon">System Audit Logs</h2>
-               <div class="text-[10px] text-gray-400">Showing last 30 days</div>
+               <h2 class="font-bold text-pup-maroon flex items-center gap-2">
+                  <i class="ph-duotone ph-scroll"></i> System Audit Logs
+               </h2>
+               <div class="flex items-center gap-3">
+                  <div class="relative">
+                     <i class="ph ph-magnifying-glass absolute left-2.5 top-2 text-gray-400 text-xs"></i>
+                     <input type="text" placeholder="Search logs..." class="pl-7 pr-3 py-1.5 text-xs border border-gray-300 rounded-brand focus:outline-none focus:border-pup-maroon w-48">
+                  </div>
+                  <div class="text-[10px] text-gray-400 font-mono">Total Records: 1,245</div>
+               </div>
             </div>
-            <div class="flex-1 overflow-y-auto p-4">
-               <div class="space-y-2" id="log-container"></div>
+            <div class="flex-1 overflow-y-auto p-0">
+               <table class="w-full text-left border-collapse">
+                  <thead class="bg-gray-50 sticky top-0 z-10 text-[10px] uppercase text-gray-500 font-bold">
+                     <tr>
+                        <th class="p-3 border-b border-gray-200 w-32">Timestamp</th>
+                        <th class="p-3 border-b border-gray-200 w-40">User</th>
+                        <th class="p-3 border-b border-gray-200 w-32">Role</th>
+                        <th class="p-3 border-b border-gray-200">Activity</th>
+                        <th class="p-3 border-b border-gray-200 w-24 text-right">IP Address</th>
+                     </tr>
+                  </thead>
+                  <tbody id="log-container" class="text-xs text-gray-600 divide-y divide-gray-100">
+                     <!-- JS populated -->
+                  </tbody>
+               </table>
+            </div>
+            <div class="p-2 border-t border-gray-200 bg-gray-50 text-[10px] text-gray-400 flex justify-center">
+               <button class="hover:text-pup-maroon px-2">Previous</button>
+               <span class="px-2">Page 1 of 50</span>
+               <button class="hover:text-pup-maroon px-2">Next</button>
             </div>
         </div>
       </div>
 
-      <!-- VIEW 4: BACKUP & MAINTENANCE (30/70 SPLIT) -->
-      <div id="view-backup" class="hidden h-full gap-4 flex flex-row animate-fade-in items-stretch">
+      <!-- VIEW 4: BACKUP & MAINTENANCE (FIXED LAYOUT) -->
+      <div id="view-backup" class="hidden h-full gap-4 flex-row animate-fade-in items-stretch">
         
         <!-- Left Panel: 30% Width -->
         <section class="w-[30%] flex-none flex flex-col gap-4 overflow-y-auto pr-1 h-full">
@@ -529,19 +544,21 @@
                </div>
                <div class="relative z-10">
                    <h3 class="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2">
-                      <i class="ph-duotone ph-database text-pup-maroon text-lg"></i> Database Backup
+                      <i class="ph-duotone ph-database text-pup-maroon text-lg"></i> Full System Backup
                    </h3>
-                   <p class="text-xs text-gray-500 mb-4">Create snapshots or restore previous data.</p>
+                   <p class="text-xs text-gray-500 mb-4 leading-relaxed">
+                      Create a complete snapshot including the SQL database records and all scanned PDF documents stored on the connected external drive.
+                   </p>
                    
                    <button onclick="simulateBackup()" class="w-full bg-pup-maroon text-white py-2.5 rounded-brand text-xs font-bold hover:bg-red-900 transition-colors flex items-center justify-center gap-2 shadow-sm mb-4">
-                      <i class="ph-bold ph-download-simple"></i> Download SQL Dump
+                      <i class="ph-bold ph-download-simple"></i> Download Full Backup (.zip)
                    </button>
 
                    <div class="border-t border-dashed border-gray-200 pt-4">
-                       <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Restore Data</label>
-                       <input type="file" id="restoreFile" class="hidden" accept=".sql" onchange="handleRestore(this)">
+                       <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Restore System</label>
+                       <input type="file" id="restoreFile" class="hidden" accept=".zip,.sql" onchange="handleRestore(this)">
                        <button onclick="document.getElementById('restoreFile').click()" class="w-full bg-white border border-gray-300 text-gray-600 py-2 rounded-brand text-xs font-bold hover:border-pup-maroon hover:text-pup-maroon transition-colors flex items-center justify-center gap-2">
-                           <i class="ph-bold ph-upload-simple"></i> Upload SQL File
+                           <i class="ph-bold ph-upload-simple"></i> Upload Backup File
                        </button>
                    </div>
                    <div class="mt-4 text-[10px] text-gray-400 text-center">
@@ -609,29 +626,33 @@
                         <th class="p-3 border-b border-gray-200">Filename</th>
                         <th class="p-3 border-b border-gray-200">Date & Time</th>
                         <th class="p-3 border-b border-gray-200">Size</th>
+                        <th class="p-3 border-b border-gray-200">Contents</th>
                         <th class="p-3 border-b border-gray-200">Type</th>
                         <th class="p-3 border-b border-gray-200 text-right">Action</th>
                      </tr>
                   </thead>
                   <tbody class="text-xs text-gray-600">
                      <tr class="hover:bg-gray-50 border-b border-gray-50">
-                        <td class="p-3 font-mono text-pup-maroon">backup_20231126.sql</td>
+                        <td class="p-3 font-mono text-pup-maroon">full_backup_20231126.zip</td>
                         <td class="p-3">Nov 26, 2023 - 08:00 AM</td>
-                        <td class="p-3">45.2 MB</td>
+                        <td class="p-3">1.2 GB</td>
+                        <td class="p-3">SQL + PDF Files</td>
                         <td class="p-3"><span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px] font-bold">AUTO</span></td>
                         <td class="p-3 text-right"><button class="text-gray-400 hover:text-pup-maroon"><i class="ph-bold ph-download-simple"></i></button></td>
                      </tr>
                      <tr class="hover:bg-gray-50 border-b border-gray-50">
-                        <td class="p-3 font-mono text-pup-maroon">backup_20231125.sql</td>
+                        <td class="p-3 font-mono text-pup-maroon">full_backup_20231125.zip</td>
                         <td class="p-3">Nov 25, 2023 - 08:00 AM</td>
-                        <td class="p-3">44.8 MB</td>
+                        <td class="p-3">1.1 GB</td>
+                        <td class="p-3">SQL + PDF Files</td>
                         <td class="p-3"><span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px] font-bold">AUTO</span></td>
                         <td class="p-3 text-right"><button class="text-gray-400 hover:text-pup-maroon"><i class="ph-bold ph-download-simple"></i></button></td>
                      </tr>
                      <tr class="hover:bg-gray-50 border-b border-gray-50">
-                        <td class="p-3 font-mono text-pup-maroon">manual_snapshot.sql</td>
+                        <td class="p-3 font-mono text-pup-maroon">db_snapshot.sql</td>
                         <td class="p-3">Nov 24, 2023 - 03:15 PM</td>
                         <td class="p-3">44.5 MB</td>
+                        <td class="p-3">SQL Only</td>
                         <td class="p-3"><span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-bold">MANUAL</span></td>
                         <td class="p-3 text-right"><button class="text-gray-400 hover:text-pup-maroon"><i class="ph-bold ph-download-simple"></i></button></td>
                      </tr>
@@ -676,12 +697,18 @@
          { id: "2021-012", fname: "Rico", lname: "Yan", role: "Administrator", section: "Administrative", status: "Active", lastActive: "Yesterday", email: "r.yan@pup.edu.ph" },
       ];
 
+      // Expanded Audit Logs
       const auditLogs = [
-         { time: "10:42 AM", user: "Maria Santos", action: "Created new staff account: P. Cruz" },
-         { time: "10:30 AM", user: "Jose Reyes", action: "Updated student record: 2020-00123-MN-0" },
-         { time: "09:15 AM", user: "System", action: "Backup completed successfully" },
-         { time: "Yesterday", user: "Rico Yan", action: "Deleted archived document #4421" },
-         { time: "Yesterday", user: "Ana Dizon", action: "Failed login attempt (3x)" },
+         { time: "10:42 AM", user: "Maria Santos", role: "Administrator", action: "Created new staff account: P. Cruz", ip: "192.168.1.10" },
+         { time: "10:30 AM", user: "Jose Reyes", role: "Records Officer", action: "Updated student record: 2020-00123-MN-0", ip: "192.168.1.12" },
+         { time: "09:15 AM", user: "System", role: "System", action: "Daily automated backup completed (1.2GB)", ip: "localhost" },
+         { time: "08:55 AM", user: "Lorna Tolentino", role: "Encoder", action: "Generated Grade Report for Batch 2023", ip: "192.168.1.15" },
+         { time: "Yesterday", user: "Rico Yan", role: "Administrator", action: "Deleted archived document #4421 (Expired)", ip: "192.168.1.11" },
+         { time: "Yesterday", user: "Ana Dizon", role: "Encoder", action: "Failed login attempt (3x) - Account Locked", ip: "192.168.1.14" },
+         { time: "Yesterday", user: "Pedro Cruz", role: "Evaluator", action: "Printed Transcript of Records: 2019-00567-MN-0", ip: "192.168.1.13" },
+         { time: "2 days ago", user: "Maria Santos", role: "Administrator", action: "Updated System Configuration: Retention Policy", ip: "192.168.1.10" },
+         { time: "2 days ago", user: "Jose Reyes", role: "Records Officer", action: "Uploaded 150 scanned documents to Archive C", ip: "192.168.1.12" },
+         { time: "3 days ago", user: "System", role: "System", action: "Weekly Maintenance Script executed successfully", ip: "localhost" },
       ];
 
       // --- 2. INIT ---
@@ -706,7 +733,11 @@
 
          // Show selected
          document.getElementById(`view-${viewName}`).classList.remove('hidden');
-         document.getElementById(`view-${viewName}`).classList.add('flex'); // Important for flex container
+         if(viewName === 'backup' || viewName === 'directory') {
+             document.getElementById(`view-${viewName}`).classList.add('flex');
+         } else {
+             document.getElementById(`view-${viewName}`).classList.remove('flex');
+         }
          document.getElementById(`nav-${viewName}`).classList.add('active');
          
          // Trigger specific renders
@@ -805,19 +836,33 @@
 
       function renderLogs() {
           const container = document.getElementById('log-container');
-          container.innerHTML = auditLogs.map(log => `
-            <div class="flex gap-3 text-sm p-3 border-b border-gray-100 hover:bg-gray-50">
-                <div class="text-gray-400 font-mono text-xs w-20 pt-0.5">${log.time}</div>
-                <div class="flex-1">
-                    <span class="font-bold text-gray-700">${log.user}</span>
-                    <span class="text-gray-600">${log.action}</span>
-                </div>
-            </div>
+          // Generate more filler logs to fill the page
+          let displayLogs = [...auditLogs];
+          for(let i=0; i<15; i++) {
+              displayLogs.push({ 
+                  time: "Last Week", 
+                  user: i % 2 === 0 ? "Maria Santos" : "System", 
+                  role: i % 2 === 0 ? "Administrator" : "System", 
+                  action: i % 2 === 0 ? `Reviewed audit log entry #${1000+i}` : `Automated database optimization`, 
+                  ip: "192.168.1.10" 
+              });
+          }
+
+          container.innerHTML = displayLogs.map(log => `
+            <tr class="hover:bg-gray-50 transition-colors">
+                <td class="p-3 border-b border-gray-100 font-mono text-gray-500">${log.time}</td>
+                <td class="p-3 border-b border-gray-100 font-bold text-gray-700">${log.user}</td>
+                <td class="p-3 border-b border-gray-100">
+                    <span class="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-[10px] font-bold uppercase">${log.role}</span>
+                </td>
+                <td class="p-3 border-b border-gray-100 text-gray-600">${log.action}</td>
+                <td class="p-3 border-b border-gray-100 text-right font-mono text-gray-400">${log.ip}</td>
+            </tr>
           `).join('');
       }
 
       function simulateBackup() {
-         showToast("Creating database backup...", false);
+         showToast("Creating full system backup...", false);
          setTimeout(() => {
              showToast("Backup downloaded successfully!");
          }, 1500);
@@ -826,8 +871,8 @@
       function handleRestore(input) {
          if (input.files && input.files[0]) {
             const fileName = input.files[0].name;
-            if(confirm(`Are you sure you want to restore the database from '${fileName}'? This will overwrite current data.`)) {
-                showToast("Restoring database...", false);
+            if(confirm(`Are you sure you want to restore the system from '${fileName}'? This will overwrite current data and files.`)) {
+                showToast("Restoring system...", false);
                 setTimeout(() => {
                     showToast("System restored successfully! Reloading...");
                     setTimeout(() => location.reload(), 2000);
@@ -889,7 +934,7 @@
 
          const newUser = { id, fname, lname, role, section, status, email, lastActive: "Never" };
          staffData.unshift(newUser); 
-         auditLogs.unshift({ time: "Just now", user: "Admin User", action: `Created account for ${fname} ${lname}` });
+         auditLogs.unshift({ time: "Just now", user: "Admin User", role: "Administrator", action: `Created account for ${fname} ${lname}`, ip: "192.168.1.10" });
          showToast(`Account created for ${fname} ${lname}!`);
          resetForm();
          switchView('directory');
