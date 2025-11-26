@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>PUP Registrar - Student Record Management</title>
+    <title>Login - PUP E-Manage</title>
 
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -17,7 +17,7 @@
       rel="stylesheet"
     />
 
-    <!-- Custom Config for PUP Colors -->
+    <!-- Custom Config (Matches Reference) -->
     <script>
       tailwind.config = {
         theme: {
@@ -27,8 +27,8 @@
                 maroon: "#800000",
                 darkMaroon: "#5a0000",
                 gray: "#F5F5F5",
-                text: "#1F1F1F", /* Darker default text */
-                border: "#d1d5db", /* Slightly darker border */
+                text: "#2D2D2D",
+                border: "#e5e7eb",
               },
             },
             fontFamily: {
@@ -44,1529 +44,148 @@
 
     <style>
       body {
-        background-color: #f3f4f6; /* Slightly darker background for contrast */
-        color: #1f2937; /* Darker main text color */
+        background-color: #fafafa;
+        color: #2d2d2d;
       }
 
-      /* Outline Button Styles */
-      .btn-outline {
-        background-color: transparent;
-        border: 1px solid #800000;
-        color: #800000;
-        transition: all 0.2s ease;
-      }
-      .btn-outline:hover {
-        background-color: #800000;
-        color: white;
-      }
-
-      .btn-nav-active {
-        border-bottom: 3px solid #800000; /* Thicker active border */
-        color: #800000;
-        background-color: rgba(128, 0, 0, 0.05);
-        font-weight: 700; /* Bolder text for active state */
-      }
-
-      /* Locator Styles */
-      .drawer-located {
-        border: 2px solid #800000 !important;
-        background-color: rgba(128, 0, 0, 0.15) !important; /* Higher contrast bg */
-        color: #800000 !important;
-        box-shadow: 0 0 0 4px rgba(128, 0, 0, 0.1);
-        transform: scale(1.05);
-        font-weight: 800; /* Extra bold */
-        z-index: 10;
-      }
-
-      /* Custom Scrollbar */
-      ::-webkit-scrollbar {
-        width: 8px; /* Slightly wider for better usability */
-        height: 8px;
-      }
-      ::-webkit-scrollbar-track {
-        background: transparent;
-      }
-      ::-webkit-scrollbar-thumb {
-        background: #9ca3af; /* Darker scrollbar thumb */
-        border-radius: 4px;
-      }
-      ::-webkit-scrollbar-thumb:hover {
-        background: #800000;
-      }
-
-      /* Card Hover Effect */
-      .folder-card {
-        transition: all 0.2s ease;
-        border: 1px solid #d1d5db;
-      }
-      .folder-card:hover {
-        border-color: #800000;
-        transform: translateY(-2px);
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      }
-
-      /* Form Inputs - Improved Contrast */
-      .form-select,
+      /* Input Styles matched to reference */
       .form-input {
         width: 100%;
-        padding: 0.6rem; /* More padding */
+        padding: 0.75rem;
         background-color: #fff;
-        border: 1px solid #d1d5db; /* Darker border */
+        border: 1px solid #e5e7eb;
         border-radius: 6px;
-        font-size: 0.95rem; /* Larger font */
-        color: #111827; /* Near black text */
-        transition: border-color 0.2s;
+        font-size: 0.875rem;
+        color: #374151;
+        transition: all 0.2s;
       }
-      .form-select:focus,
       .form-input:focus {
         outline: none;
         border-color: #800000;
-        ring: 1px solid #800000;
+        box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.1);
       }
 
-      /* Tab Styles */
-      .tab-btn {
-        padding-bottom: 0.5rem;
-        border-bottom: 3px solid transparent;
-        color: #6b7280; /* Darker gray */
-        font-weight: 600;
-        font-size: 0.9rem;
-        transition: all 0.2s;
-      }
-      .tab-btn.active {
-        color: #800000;
-        border-bottom-color: #800000;
-      }
-
-      /* Modal Animation */
-      @keyframes scaleIn {
+      /* Animation */
+      @keyframes fadeInUp {
         from {
-          transform: scale(0.95);
           opacity: 0;
+          transform: translateY(10px);
         }
         to {
-          transform: scale(1);
           opacity: 1;
+          transform: translateY(0);
         }
       }
-      .animate-scale-in {
-        animation: scaleIn 0.2s ease-out forwards;
+      .animate-fade-up {
+        animation: fadeInUp 0.4s ease-out forwards;
       }
     </style>
   </head>
-  <body class="h-screen flex flex-col overflow-hidden bg-gray-100">
-    <!-- Navbar -->
-    <header class="bg-white border-b border-gray-300 flex-none z-20 shadow-sm">
-      <div
-        class="max-w-[1600px] mx-auto px-4 h-16 flex items-center justify-between"
-      >
-        <div class="flex items-center gap-3">
-          <i class="ph-bold ph-bank text-3xl text-pup-maroon"></i>
-          <div class="leading-tight">
-            <h1 class="font-bold text-xl text-pup-maroon tracking-tight">
-              PUP REGISTRAR
-            </h1>
-            <p class="text-xs text-gray-600 uppercase tracking-widest font-semibold">
-              Student Record Management
-            </p>
-          </div>
+  <body class="h-screen flex items-center justify-center bg-gray-50 relative overflow-hidden">
+    
+    <!-- Background Decor (Optional Subtle Pattern) -->
+    <div class="absolute inset-0 pointer-events-none opacity-[0.02]">
+        <i class="ph-fill ph-bank text-[800px] absolute -right-20 -bottom-40 rotate-12 text-pup-maroon"></i>
+    </div>
+
+    <!-- Login Container -->
+    <div class="w-full max-w-md p-6 animate-fade-up z-10">
+      
+      <!-- Brand Header -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full shadow-sm mb-4 border border-gray-100">
+            <i class="ph-bold ph-bank text-4xl text-pup-maroon"></i>
         </div>
-        <div class="flex items-center gap-2">
-          <button
-            onclick="switchView('search')"
-            id="nav-search"
-            class="px-4 py-2 rounded-brand text-sm font-bold transition-colors flex items-center gap-2 btn-nav-active"
-          >
-            <i class="ph-bold ph-magnifying-glass"></i> Records & Archive
-          </button>
-          <button
-            onclick="switchView('upload')"
-            id="nav-upload"
-            class="px-4 py-2 rounded-brand text-sm font-bold text-gray-600 hover:text-pup-maroon transition-colors flex items-center gap-2"
-          >
-            <i class="ph-bold ph-upload-simple"></i> Scan & Upload
-          </button>
+        <h1 class="text-2xl font-bold text-pup-maroon tracking-tight">PUP E-Manage</h1>
+        <p class="text-xs text-gray-500 uppercase tracking-widest mt-1">Student Record Management System</p>
+      </div>
+
+      <!-- Login Card -->
+      <div class="bg-white rounded-brand border border-gray-200 shadow-sm p-8">
+        <div class="mb-6">
+            <h2 class="text-lg font-bold text-gray-800">Staff Login</h2>
+            <p class="text-sm text-gray-500">Please enter your credentials to continue.</p>
+        </div>
+
+        <form onsubmit="handleLogin(event)" class="space-y-4">
           
-          <!-- User Menu Dropdown -->
-          <div class="relative ml-4">
-            <button
-              id="userMenuBtn"
-              onclick="toggleUserMenu()"
-              class="h-10 w-10 border-2 border-pup-maroon rounded-full flex items-center justify-center text-pup-maroon font-bold text-sm bg-red-50 hover:bg-pup-maroon hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pup-maroon"
-            >
-              AD
-            </button>
-            
-            <!-- Dropdown Menu -->
-            <div
-              id="userMenuDropdown"
-              class="hidden absolute right-0 mt-2 w-64 bg-white rounded-brand shadow-xl border border-gray-200 z-50 animate-scale-in origin-top-right"
-            >
-                <div class="p-4 border-b border-gray-200 bg-gray-50 rounded-t-brand">
-                    <p class="text-sm font-bold text-pup-maroon">Administrator</p>
-                    <p class="text-xs text-gray-700 truncate font-medium">registrar.admin@pup.edu.ph</p>
-                </div>
-                <div class="p-1">
-                    <button class="w-full text-left px-3 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-pup-maroon rounded-brand flex items-center gap-2 transition-colors font-medium">
-                        <i class="ph-bold ph-user-gear"></i> Account Settings
-                    </button>
-                    <button class="w-full text-left px-3 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-pup-maroon rounded-brand flex items-center gap-2 transition-colors font-medium">
-                        <i class="ph-bold ph-question"></i> Help & Support
-                    </button>
-                </div>
-                <div class="p-1 border-t border-gray-200">
-                    <button onclick="logout()" class="w-full text-left px-3 py-3 text-sm text-red-700 hover:bg-red-50 font-bold rounded-brand flex items-center gap-2 transition-colors">
-                        <i class="ph-bold ph-sign-out"></i> Sign Out
-                    </button>
-                </div>
+          <!-- Username Input -->
+          <div>
+            <label for="username" class="block text-xs font-bold text-gray-600 mb-1 uppercase">Username / ID</label>
+            <div class="relative">
+                <i class="ph-bold ph-user absolute left-3 top-3.5 text-gray-400"></i>
+                <input 
+                    type="text" 
+                    id="username" 
+                    class="form-input pl-10" 
+                    placeholder="Enter your ID" 
+                    required 
+                    autofocus
+                >
             </div>
           </div>
 
+          <!-- Password Input -->
+          <div>
+            <div class="flex justify-between items-center mb-1">
+                <label for="password" class="block text-xs font-bold text-gray-600 uppercase">Password</label>
+            </div>
+            <div class="relative">
+                <i class="ph-bold ph-lock-key absolute left-3 top-3.5 text-gray-400"></i>
+                <input 
+                    type="password" 
+                    id="password" 
+                    class="form-input pl-10" 
+                    placeholder="••••••••" 
+                    required
+                >
+            </div>
+            <div class="flex justify-end mt-1">
+                <a href="#" class="text-xs text-pup-maroon hover:underline font-medium">Forgot Password?</a>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button 
+            type="submit" 
+            class="w-full bg-pup-maroon text-white py-3 rounded-brand font-bold text-sm hover:bg-red-900 transition-all shadow-sm flex items-center justify-center gap-2 group mt-2"
+          >
+            <span>Sign In</span>
+            <i class="ph-bold ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
+          </button>
+
+        </form>
+      </div>
+
+      <!-- Footer -->
+      <div class="text-center mt-8 text-xs text-gray-400">
+        <p>&copy; 2024 Polytechnic University of the Philippines</p>
+        <div class="flex justify-center gap-4 mt-2">
+            <a href="#" class="hover:text-pup-maroon transition-colors">Privacy Policy</a>
+            <a href="#" class="hover:text-pup-maroon transition-colors">Terms of Service</a>
+            <a href="#" class="hover:text-pup-maroon transition-colors">Help Center</a>
         </div>
       </div>
-    </header>
 
-    <!-- Main Content Area -->
-    <main
-      class="flex-1 flex flex-col lg:flex-row overflow-hidden max-w-[1600px] mx-auto w-full p-4 gap-4"
-    >
-      <!-- VIEW 1: RECORDS & ARCHIVE -->
-      <div id="view-search" class="flex flex-col lg:flex-row w-full gap-4 h-full">
-        <!-- Left Panel: Global Search -->
-        <section
-          class="w-full lg:w-1/4 bg-white rounded-brand border border-gray-300 flex flex-col h-full shadow-sm"
-        >
-          <div class="p-4 border-b border-gray-200 bg-gray-50">
-            <h2
-              class="text-xs font-bold text-pup-maroon uppercase tracking-wide mb-3"
-            >
-              Quick Find
-            </h2>
-            <div class="relative group">
-              <i
-                class="ph-bold ph-magnifying-glass absolute left-3 top-3 text-gray-500 group-focus-within:text-pup-maroon"
-              ></i>
-              <input
-                type="text"
-                id="searchInput"
-                placeholder="Search ID or Name..."
-                class="w-full pl-10 pr-3 py-2.5 bg-white border border-gray-300 rounded-brand text-sm font-medium focus:outline-none focus:border-pup-maroon transition-all placeholder-gray-500 text-gray-900"
-              />
-            </div>
-          </div>
-
-          <div id="resultsList" class="flex-1 overflow-y-auto p-2 space-y-1">
-            <div
-              class="text-center py-10 text-gray-500 flex flex-col items-center opacity-80"
-            >
-              <i class="ph-bold ph-magnifying-glass text-3xl mb-2"></i>
-              <span class="text-sm font-medium">Search for direct access</span>
-            </div>
-          </div>
-        </section>
-
-        <!-- Right Panel: Split View (Explorer + Locator) -->
-        <section class="w-full lg:w-3/4 flex flex-col gap-4 h-full">
-          <!-- TOP: Hierarchical Explorer (60% Height) -->
-          <div
-            class="h-3/5 bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm relative overflow-hidden"
-          >
-            <!-- Breadcrumbs Header -->
-            <div
-              class="p-4 border-b border-gray-200 flex items-center gap-2 text-sm bg-white sticky top-0 z-10"
-            >
-              <button
-                onclick="resetExplorer()"
-                class="text-gray-500 hover:text-pup-maroon transition-colors"
-                title="Home"
-              >
-                <i class="ph-bold ph-house text-lg"></i>
-              </button>
-              <span class="text-gray-400 font-bold">/</span>
-              <div
-                id="breadcrumbs"
-                class="flex items-center gap-2 font-semibold text-gray-700"
-              >
-                <span class="text-pup-maroon">All Courses</span>
-              </div>
-            </div>
-
-            <!-- Explorer Content -->
-            <div
-              id="explorerContent"
-              class="flex-1 overflow-y-auto p-6 bg-gray-50"
-            >
-              <!-- Grid injected via JS -->
-            </div>
-          </div>
-
-          <!-- BOTTOM: Physical Archive Visualizer (40% Height) -->
-          <div
-            class="h-2/5 bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm relative"
-          >
-            <div
-              class="p-3 border-b border-gray-200 flex justify-between items-center bg-white rounded-t-brand"
-            >
-              <h3
-                class="font-bold text-pup-maroon text-sm flex items-center gap-2"
-              >
-                <i class="ph-fill ph-drawers text-lg"></i> Archive Location
-              </h3>
-              <!-- Legend -->
-              <div class="flex gap-4 text-xs font-medium text-gray-600">
-                <div class="flex items-center gap-1.5">
-                  <div
-                    class="w-3 h-3 border border-gray-400 rounded-[2px]"
-                  ></div>
-                  Empty
-                </div>
-                <div class="flex items-center gap-1.5">
-                  <div
-                    class="w-3 h-3 bg-gray-300 border border-gray-400 rounded-[2px]"
-                  ></div>
-                  Occupied
-                </div>
-                <div class="flex items-center gap-1.5">
-                  <div
-                    class="w-3 h-3 border-2 border-pup-maroon bg-red-100 rounded-[2px]"
-                  ></div>
-                  Target
-                </div>
-              </div>
-            </div>
-
-            <!-- The Room Layout & Details Split -->
-            <div class="flex-1 flex overflow-hidden">
-              <!-- Cabinet Grid (Left) -->
-              <div
-                class="w-2/3 bg-gray-100 p-3 h-full"
-              >
-                <div id="cabinetGrid" class="grid grid-cols-4 gap-3 w-full h-full">
-                  <!-- Cabinets generated by JS -->
-                </div>
-              </div>
-
-              <!-- Details Panel (Right) -->
-              <div
-                class="w-1/3 border-l border-gray-200 bg-white flex flex-col overflow-hidden"
-              >
-                <div class="p-4 h-full flex flex-col overflow-hidden">
-                  <div
-                    id="empty-selection"
-                    class="h-full flex flex-col items-center justify-center text-center text-gray-400"
-                  >
-                    <i class="ph-duotone ph-mouse-left-click text-5xl mb-3"></i>
-                    <span class="text-sm font-medium"
-                      >Select a student to view<br />location & documents</span
-                    >
-                  </div>
-
-                  <div
-                    id="active-selection"
-                    class="hidden h-full flex flex-col min-h-0"
-                  >
-                    <div class="mb-4 flex-shrink-0">
-                      <div
-                        class="text-xs uppercase font-bold text-gray-500 mb-1 tracking-wide"
-                      >
-                        Physical Location
-                      </div>
-                      <div
-                        id="loc-text"
-                        class="text-2xl font-black text-pup-maroon"
-                      >
-                        CAB-A • D-1
-                      </div>
-                      <div
-                        id="loc-name"
-                        class="text-base font-bold text-gray-900 truncate mt-1"
-                      >
-                        Student Name
-                      </div>
-                      <div id="loc-id" class="text-sm text-gray-600 font-mono font-medium">
-                        2020-00000-MN-0
-                      </div>
-                    </div>
-
-                    <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
-                      <div
-                        class="text-xs uppercase font-bold text-gray-500 mb-2 border-b border-gray-200 pb-2 flex-shrink-0 tracking-wide"
-                      >
-                        Documents on File
-                      </div>
-                      <ul
-                        id="doc-list"
-                        class="flex-1 overflow-y-auto space-y-2 text-sm text-gray-700 pr-2"
-                      >
-                        <!-- Docs injected here -->
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <!-- VIEW 2: UPLOAD -->
-      <div id="view-upload" class="hidden flex-col lg:flex-row w-full h-full gap-4">
-        <!-- Left: Drop Zone -->
-        <section
-          class="w-full lg:w-1/2 bg-white rounded-brand border border-gray-300 flex flex-col h-full p-8 items-center justify-center shadow-sm"
-        >
-          <div
-            id="dropZone"
-            class="w-full h-full border-2 border-dashed border-gray-400 rounded-brand bg-gray-50 p-8 flex flex-col items-center justify-center cursor-pointer hover:border-pup-maroon hover:bg-red-50/50 transition-all group relative"
-          >
-            <div class="text-center pointer-events-none">
-              <div
-                class="w-20 h-20 mx-auto rounded-full bg-white border border-gray-300 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-sm"
-              >
-                <i class="ph-thin ph-file-pdf text-4xl text-pup-maroon"></i>
-              </div>
-              <h3 class="font-bold text-xl text-gray-800">
-                Drop PDF File Here
-              </h3>
-              <p class="text-sm text-gray-500 mt-2 font-medium">
-                or click to browse local files
-              </p>
-            </div>
-            <input type="file" id="fileInput" class="hidden" accept=".pdf" />
-
-            <!-- File Preview Area -->
-            <div
-              id="filePreview"
-              class="hidden absolute inset-0 bg-white z-10 flex flex-col items-center justify-center p-6 rounded-brand"
-            >
-              <i class="ph-fill ph-file-pdf text-6xl text-pup-maroon mb-4"></i>
-              <h4
-                id="fileName"
-                class="font-bold text-gray-900 text-lg text-center break-all mb-1 max-w-sm"
-              >
-                document.pdf
-              </h4>
-              <span id="fileSize" class="text-sm text-gray-500 mb-6 font-medium">0 KB</span>
-              <button
-                onclick="clearFile(event)"
-                class="text-sm text-red-700 hover:text-white hover:bg-red-700 font-bold uppercase tracking-wide border border-red-200 px-4 py-2 rounded-full transition-colors"
-              >
-                Remove File
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <!-- Right: Metadata Form -->
-        <section
-          class="w-full lg:w-1/2 bg-white rounded-brand border border-gray-300 flex flex-col h-full shadow-sm overflow-hidden"
-        >
-          <div class="p-6 border-b border-gray-200">
-            <h2 class="text-xl font-bold text-pup-maroon mb-1">Tag Document</h2>
-            <p class="text-sm text-gray-600">
-              Associate this file with a student record.
-            </p>
-
-            <!-- Tabs -->
-            <div class="flex gap-6 mt-6 border-b border-gray-200">
-              <button
-                onclick="switchUploadTab('existing')"
-                id="tab-existing"
-                class="tab-btn active"
-              >
-                Existing Student
-              </button>
-              <button
-                onclick="switchUploadTab('new')"
-                id="tab-new"
-                class="tab-btn"
-              >
-                Register New
-              </button>
-            </div>
-          </div>
-
-          <div class="flex-1 overflow-y-auto p-6 bg-gray-50/50">
-            <!-- FORM A: EXISTING STUDENT -->
-            <div id="form-existing" class="space-y-5">
-              <div>
-                <label
-                  class="block text-xs font-bold text-gray-700 mb-1.5 uppercase"
-                  >Course / Program</label
-                >
-                <select
-                  id="exist-course"
-                  class="form-select"
-                  onchange="filterExisting('course')"
-                >
-                  <option value="">Select Course...</option>
-                  <!-- JS Populated -->
-                </select>
-              </div>
-
-              <div class="grid grid-cols-2 gap-5">
-                <div>
-                  <label
-                    class="block text-xs font-bold text-gray-700 mb-1.5 uppercase"
-                    >Year Level</label
-                  >
-                  <select
-                    id="exist-year"
-                    class="form-select"
-                    onchange="filterExisting('year')"
-                  >
-                    <option value="">Select Year...</option>
-                    <option value="1">1st Year</option>
-                    <option value="2">2nd Year</option>
-                    <option value="3">3rd Year</option>
-                    <option value="4">4th Year</option>
-                  </select>
-                </div>
-                <div>
-                  <label
-                    class="block text-xs font-bold text-gray-700 mb-1.5 uppercase"
-                    >Section</label
-                  >
-                  <select
-                    id="exist-section"
-                    class="form-select"
-                    onchange="filterExisting('section')"
-                  >
-                    <option value="">Select Section...</option>
-                    <!-- JS Populated based on Course+Year -->
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label
-                  class="block text-xs font-bold text-gray-700 mb-1.5 uppercase"
-                  >Student Name</label
-                >
-                <select id="exist-student" class="form-select" disabled>
-                  <option value="">Filter options first...</option>
-                  <!-- JS Populated -->
-                </select>
-              </div>
-
-              <!-- Doc Type Field -->
-              <div class="pt-4 border-t border-gray-200">
-                <label
-                  class="block text-xs font-bold text-gray-700 mb-1.5 uppercase"
-                  >Document Type</label
-                >
-                <div id="exist-doctype-container">
-                  <select
-                    id="exist-doctype"
-                    class="form-select"
-                    onchange="checkNewDocType(this, 'exist')"
-                  >
-                    <option value="">Select Type...</option>
-                    <!-- JS Populated -->
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <!-- FORM B: NEW STUDENT -->
-            <div id="form-new" class="hidden space-y-5">
-              <div class="grid grid-cols-2 gap-5">
-                <div>
-                  <label
-                    class="block text-xs font-bold text-gray-700 mb-1.5 uppercase"
-                    >Student Number</label
-                  >
-                  <input
-                    type="text"
-                    id="new-id"
-                    class="form-input font-mono"
-                    placeholder="202X-XXXXX-MN-0"
-                  />
-                </div>
-                <div>
-                  <label
-                    class="block text-xs font-bold text-gray-700 mb-1.5 uppercase"
-                    >Full Name</label
-                  >
-                  <input
-                    type="text"
-                    id="new-name"
-                    class="form-input"
-                    placeholder="Last Name, First Name"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label
-                  class="block text-xs font-bold text-gray-700 mb-1.5 uppercase"
-                  >Course / Program</label
-                >
-                <select id="new-course" class="form-select">
-                  <option value="">Select Course...</option>
-                  <!-- JS Populated -->
-                </select>
-              </div>
-
-              <div class="grid grid-cols-2 gap-5">
-                <div>
-                  <label
-                    class="block text-xs font-bold text-gray-700 mb-1.5 uppercase"
-                    >Year Level</label
-                  >
-                  <select id="new-year" class="form-select">
-                    <option value="1">1st Year</option>
-                    <option value="2">2nd Year</option>
-                    <option value="3">3rd Year</option>
-                    <option value="4">4th Year</option>
-                  </select>
-                </div>
-                <div>
-                  <label
-                    class="block text-xs font-bold text-gray-700 mb-1.5 uppercase"
-                    >Section</label
-                  >
-                  <input
-                    type="text"
-                    id="new-section"
-                    class="form-input"
-                    placeholder="e.g. 1-1"
-                  />
-                </div>
-              </div>
-
-              <!-- Doc Type Field -->
-              <div>
-                <label
-                  class="block text-xs font-bold text-gray-700 mb-1.5 uppercase"
-                  >Document Type</label
-                >
-                <div id="new-doctype-container">
-                  <select
-                    id="new-doctype"
-                    class="form-select"
-                    onchange="checkNewDocType(this, 'new')"
-                  >
-                    <option value="">Select Type...</option>
-                    <!-- JS Populated -->
-                  </select>
-                </div>
-              </div>
-
-              <div
-                class="p-4 bg-white border border-gray-300 rounded-brand mt-2"
-              >
-                <h4
-                  class="text-xs font-extrabold text-pup-maroon uppercase mb-3 border-b border-gray-200 pb-2"
-                >
-                  Physical Location Assignment
-                </h4>
-                <div class="grid grid-cols-2 gap-5">
-                  <div>
-                    <label
-                      class="block text-xs font-bold text-gray-600 mb-1.5"
-                      >CABINET</label
-                    >
-                    <select id="new-cab" class="form-select text-sm font-medium">
-                      <option value="A">Cabinet A</option>
-                      <option value="B">Cabinet B</option>
-                      <option value="C">Cabinet C</option>
-                      <option value="D">Cabinet D</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label
-                      class="block text-xs font-bold text-gray-600 mb-1.5"
-                      >DRAWER</label
-                    >
-                    <select id="new-draw" class="form-select text-sm font-medium">
-                      <option value="1">Drawer 1</option>
-                      <option value="2">Drawer 2</option>
-                      <option value="3">Drawer 3</option>
-                      <option value="4">Drawer 4</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="p-4 bg-white border-t border-gray-200">
-            <button
-              onclick="processSubmission()"
-              class="w-full bg-pup-maroon text-white py-3.5 rounded-brand font-bold text-sm hover:bg-red-900 transition-colors shadow-sm flex items-center justify-center gap-2"
-            >
-              <i class="ph-bold ph-floppy-disk text-lg"></i> Save & Upload Record
-            </button>
-          </div>
-        </section>
-      </div>
-    </main>
-
-    <!-- NEW FOOTER -->
-    <footer class="bg-white border-t border-gray-300 p-3 flex-none z-10 shadow-inner">
-      <div class="max-w-[1600px] mx-auto flex justify-between items-center text-xs font-medium text-gray-600">
-        <p>&copy; 2024 Polytechnic University of the Philippines. All rights reserved.</p>
-        <div class="flex gap-4">
-          <a href="#" class="hover:text-pup-maroon transition-colors">Privacy Policy</a>
-          <a href="#" class="hover:text-pup-maroon transition-colors">Terms of Use</a>
-          <span class="text-gray-400">|</span>
-          <span class="text-gray-500">System Version 1.0.2 (Beta)</span>
-        </div>
-      </div>
-    </footer>
-
-    <!-- DOCUMENT PREVIEW MODAL -->
-    <div
-      id="previewModal"
-      class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity"
-    >
-      <div
-        class="bg-white rounded-brand shadow-2xl w-full max-w-4xl h-[85vh] flex flex-col overflow-hidden animate-scale-in m-4 border border-gray-400"
-      >
-        <!-- Modal Header -->
-        <div
-          class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50"
-        >
-          <div class="flex items-center gap-3">
-            <div class="bg-red-50 p-2 rounded-brand border border-red-100">
-              <i class="ph-fill ph-file-pdf text-2xl text-pup-maroon"></i>
-            </div>
-            <div>
-              <h3
-                id="modalDocTitle"
-                class="font-bold text-pup-maroon text-lg leading-tight"
-              >
-                Document Title
-              </h3>
-              <p id="modalStudentName" class="text-sm text-gray-700 font-medium">
-                Student Name
-              </p>
-            </div>
-          </div>
-          <div class="flex items-center gap-2">
-            <button
-              onclick="alert('Download feature is coming soon!')"
-              class="text-gray-500 hover:text-pup-maroon p-2 rounded-full hover:bg-gray-200 transition-colors"
-              title="Download"
-            >
-              <i class="ph-bold ph-download-simple text-xl"></i>
-            </button>
-            <button
-              onclick="alert('Printer connection not found.')"
-              class="text-gray-500 hover:text-pup-maroon p-2 rounded-full hover:bg-gray-200 transition-colors"
-              title="Print"
-            >
-              <i class="ph-bold ph-printer text-xl"></i>
-            </button>
-            <div class="h-6 w-px bg-gray-300 mx-1"></div>
-            <button
-              onclick="closeModal()"
-              class="text-gray-500 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-colors"
-            >
-              <i class="ph-bold ph-x text-xl"></i>
-            </button>
-          </div>
-        </div>
-
-        <!-- Modal Content (Mock PDF Viewer) -->
-        <div
-          class="flex-1 bg-gray-600 p-6 flex items-center justify-center overflow-auto relative"
-        >
-          <!-- Mock PDF Page -->
-          <div
-            class="bg-white shadow-2xl w-full max-w-2xl min-h-[800px] p-12 flex flex-col items-center relative border border-gray-300"
-          >
-            <!-- Watermark -->
-            <div
-              class="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.04]"
-            >
-              <i class="ph-fill ph-bank text-[400px]"></i>
-            </div>
-
-            <!-- Content Simulation -->
-            <div
-              class="w-full border-b-2 border-pup-maroon pb-4 mb-8 flex justify-between items-end"
-            >
-              <div class="flex items-center gap-2">
-                <i class="ph-bold ph-bank text-3xl text-pup-maroon"></i>
-                <div>
-                  <div
-                    class="text-[11px] font-bold text-gray-600 uppercase tracking-widest"
-                  >
-                    Polytechnic University of the Philippines
-                  </div>
-                  <div class="font-bold text-sm text-gray-900">
-                    Office of the University Registrar
-                  </div>
-                </div>
-              </div>
-              <div class="text-sm text-gray-600 font-mono font-bold">
-                REF: <span id="modalRefId">00000</span>
-              </div>
-            </div>
-
-            <div class="w-full text-center mb-12">
-              <h2
-                id="modalDocTypeDisplay"
-                class="text-3xl font-bold font-serif text-gray-900 uppercase tracking-wide decoration-double underline decoration-pup-maroon/30"
-              >
-                Certificate of Grades
-              </h2>
-            </div>
-
-            <div
-              class="w-full space-y-6 text-justify text-base text-gray-800 font-serif leading-relaxed"
-            >
-              <p>
-                This is to certify that
-                <strong id="modalContentName" class="text-black">STUDENT NAME</strong> with Student
-                Number <strong id="modalContentId" class="text-black">2020-00000-MN-0</strong> has
-                submitted the required documents for the
-                <strong><span id="modalContentDoc" class="text-black">Document Type</span></strong>.
-              </p>
-
-              <p class="text-gray-500 italic mt-12 bg-gray-50 p-4 border border-dashed border-gray-300 rounded text-center text-sm">
-                [ ... This is a prototype preview. Actual scanned document
-                content would be rendered here via PDF.js or an iframe ... ]
-              </p>
-
-              <!-- Mock Lines -->
-              <div class="space-y-4 mt-8 opacity-20">
-                <div class="h-2 bg-gray-800 rounded w-full"></div>
-                <div class="h-2 bg-gray-800 rounded w-5/6"></div>
-                <div class="h-2 bg-gray-800 rounded w-full"></div>
-                <div class="h-2 bg-gray-800 rounded w-4/6"></div>
-              </div>
-            </div>
-
-            <div class="mt-auto w-full flex justify-between pt-16 px-8">
-              <div class="text-center">
-                <div class="w-40 border-b border-gray-800 mb-2"></div>
-                <div class="text-[11px] font-bold uppercase text-gray-600">
-                  Prepared By
-                </div>
-              </div>
-              <div class="text-center">
-                <div class="w-40 border-b border-gray-800 mb-2"></div>
-                <div class="text-[11px] font-bold uppercase text-gray-600">
-                  University Registrar
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
 
     <script>
-      // --- 1. DATA & STATE ---
+      function handleLogin(event) {
+        event.preventDefault(); // Stop actual form submission
+        
+        const btn = event.target.querySelector('button[type="submit"]');
+        const originalContent = btn.innerHTML;
 
-      const sections = ["1-1", "1-2", "2-1", "2-1N", "3-1", "4-1"];
-      const courses = [
-        { code: "BSIT", name: "BS Information Technology", icon: "ph-desktop" },
-        { code: "BSCS", name: "BS Computer Science", icon: "ph-code" },
-        { code: "BSCE", name: "BS Civil Engineering", icon: "ph-bridge" },
-        { code: "BSARCH", name: "BS Architecture", icon: "ph-buildings" },
-        { code: "BSBA", name: "BS Business Admin", icon: "ph-briefcase" },
-        { code: "AB-POL", name: "AB Political Science", icon: "ph-gavel" },
-      ];
+        // Simulate loading state
+        btn.disabled = true;
+        btn.innerHTML = `<i class="ph-bold ph-spinner animate-spin text-lg"></i> Authenticating...`;
+        btn.classList.add('opacity-75', 'cursor-not-allowed');
 
-      // Global Document Types
-      let docTypes = [
-        "Form 137",
-        "Transcript of Records",
-        "Good Moral Certificate",
-        "Diploma",
-        "Honorable Dismissal",
-        "Medical Certificate",
-        "Birth Certificate",
-      ];
-
-      let studentDatabase = [];
-      let uploadedFile = null;
-
-      // Generate 50 mock students with random documents
-      for (let i = 0; i < 50; i++) {
-        const course = courses[Math.floor(Math.random() * courses.length)];
-        const year = Math.floor(Math.random() * 4) + 1;
-        const section = sections[Math.floor(Math.random() * sections.length)];
-        const cabinet = ["A", "B", "C", "D"][Math.floor(Math.random() * 4)];
-        const drawer = Math.floor(Math.random() * 4) + 1;
-
-        // Generate 1-3 random docs
-        const myDocs = [];
-        const numDocs = Math.floor(Math.random() * 3) + 1;
-        for (let d = 0; d < numDocs; d++) {
-          myDocs.push(docTypes[Math.floor(Math.random() * docTypes.length)]);
-        }
-
-        studentDatabase.push({
-          id: i,
-          name: `Student Name ${i + 1}`,
-          studentNo: `202${Math.floor(Math.random() * 4)}-${String(
-            Math.floor(Math.random() * 10000)
-          ).padStart(5, "0")}-MN-0`,
-          courseCode: course.code,
-          courseName: course.name,
-          year: year,
-          section: section,
-          cabinet: cabinet,
-          drawer: drawer,
-          status: Math.random() > 0.8 ? "Inactive" : "Active",
-          documents: [...new Set(myDocs)], // unique
-        });
+        setTimeout(() => {
+            // Redirect to the dashboard
+            window.location.href = 'staffdashboard.html';
+        }, 800);
       }
-
-      // Navigation State
-      let currentLevel = "courses";
-      let selectedCourse = null;
-      let selectedYear = null;
-      let selectedSection = null;
-
-      // --- 2. INITIALIZATION ---
-
-      document.addEventListener("DOMContentLoaded", () => {
-        renderCabinets();
-        renderExplorer();
-        populateUploadDropdowns();
-      });
-
-      // --- 3. EXPLORER & NAVIGATION LOGIC ---
-      const explorerContent = document.getElementById("explorerContent");
-      const breadcrumbs = document.getElementById("breadcrumbs");
-
-      function renderExplorer() {
-        explorerContent.innerHTML = "";
-        const gridClass =
-          "grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 animate-fade-in";
-
-        if (currentLevel === "courses") {
-          updateBreadcrumbs();
-          const grid = document.createElement("div");
-          grid.className = gridClass;
-          courses.forEach((course) => {
-            const card = createCard(course.code, course.name, course.icon, () =>
-              selectCourse(course)
-            );
-            grid.appendChild(card);
-          });
-          explorerContent.appendChild(grid);
-        } else if (currentLevel === "years") {
-          updateBreadcrumbs();
-          const grid = document.createElement("div");
-          grid.className = gridClass;
-          [1, 2, 3, 4].forEach((year) => {
-            const count = studentDatabase.filter(
-              (s) => s.courseCode === selectedCourse.code && s.year === year
-            ).length;
-            const card = createCard(
-              `Year ${year}`,
-              `${count} Students`,
-              "ph-calendar",
-              () => selectYear(year)
-            );
-            grid.appendChild(card);
-          });
-          explorerContent.appendChild(grid);
-        } else if (currentLevel === "sections") {
-          updateBreadcrumbs();
-          const grid = document.createElement("div");
-          grid.className = gridClass;
-          const availSections = [
-            ...new Set(
-              studentDatabase
-                .filter(
-                  (s) =>
-                    s.courseCode === selectedCourse.code &&
-                    s.year === selectedYear
-                )
-                .map((s) => s.section)
-            ),
-          ].sort();
-
-          if (availSections.length === 0) {
-            explorerContent.innerHTML = `<div class="text-center text-gray-500 mt-10 font-medium">No sections found for this year level.</div>`;
-            return;
-          }
-          availSections.forEach((sect) => {
-            const count = studentDatabase.filter(
-              (s) =>
-                s.courseCode === selectedCourse.code &&
-                s.year === selectedYear &&
-                s.section === sect
-            ).length;
-            const card = createCard(
-              `Section ${sect}`,
-              `${count} Records`,
-              "ph-users-three",
-              () => selectSection(sect)
-            );
-            grid.appendChild(card);
-          });
-          explorerContent.appendChild(grid);
-        } else if (currentLevel === "students") {
-          updateBreadcrumbs();
-          const students = studentDatabase.filter(
-            (s) =>
-              s.courseCode === selectedCourse.code &&
-              s.year === selectedYear &&
-              s.section === selectedSection
-          );
-          if (students.length === 0) {
-            explorerContent.innerHTML = `<div class="text-center text-gray-500 mt-10 font-medium">No students in this section.</div>`;
-            return;
-          }
-          const list = document.createElement("div");
-          list.className = "flex flex-col gap-2";
-          students.forEach((s) => {
-            const row = document.createElement("div");
-            row.className =
-              "group flex items-center justify-between p-4 bg-white border border-gray-300 rounded-brand hover:border-pup-maroon cursor-pointer transition-all shadow-sm";
-            row.innerHTML = `
-                        <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 group-hover:text-pup-maroon transition-colors">
-                                <i class="ph-bold ph-user text-xl"></i>
-                            </div>
-                            <div>
-                                <h4 class="font-bold text-base text-gray-900">${s.name}</h4>
-                                <p class="text-sm text-gray-600 font-mono font-medium">${s.studentNo}</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                             <span class="text-xs uppercase font-bold tracking-wide text-gray-400 group-hover:text-pup-maroon">View Location</span>
-                        </div>
-                    `;
-            row.onclick = () => locateStudent(s);
-            list.appendChild(row);
-          });
-          explorerContent.appendChild(list);
-        }
-      }
-
-      function createCard(title, subtitle, iconClass, onClick) {
-        const el = document.createElement("div");
-        el.className =
-          "folder-card bg-white p-5 rounded-brand cursor-pointer flex flex-col items-center justify-center text-center gap-2 h-36";
-        el.onclick = onClick;
-        el.innerHTML = `
-                <i class="ph-light ${iconClass} text-4xl text-gray-500 mb-1"></i>
-                <h3 class="font-bold text-base text-pup-maroon leading-tight">${title}</h3>
-                <span class="text-xs text-gray-500 uppercase tracking-wide font-semibold">${subtitle}</span>
-            `;
-        return el;
-      }
-
-      function selectCourse(course) {
-        selectedCourse = course;
-        currentLevel = "years";
-        renderExplorer();
-      }
-      function selectYear(year) {
-        selectedYear = year;
-        currentLevel = "sections";
-        renderExplorer();
-      }
-      function selectSection(section) {
-        selectedSection = section;
-        currentLevel = "students";
-        renderExplorer();
-      }
-      function resetExplorer() {
-        currentLevel = "courses";
-        selectedCourse = null;
-        selectedYear = null;
-        selectedSection = null;
-        renderExplorer();
-        resetVisualizer();
-      }
-
-      function updateBreadcrumbs() {
-        let html = `<span class="cursor-pointer hover:text-pup-maroon ${
-          currentLevel === "courses" ? "text-pup-maroon font-bold" : ""
-        }" onclick="resetExplorer()">All Courses</span>`;
-        if (selectedCourse)
-          html += ` <i class="ph-bold ph-caret-right text-sm text-gray-400"></i> <span class="cursor-pointer hover:text-pup-maroon ${
-            currentLevel === "years" ? "text-pup-maroon font-bold" : ""
-          }" onclick="selectCourse(selectedCourse)">${
-            selectedCourse.code
-          }</span>`;
-        if (selectedYear)
-          html += ` <i class="ph-bold ph-caret-right text-sm text-gray-400"></i> <span class="cursor-pointer hover:text-pup-maroon ${
-            currentLevel === "sections" ? "text-pup-maroon font-bold" : ""
-          }" onclick="selectYear(selectedYear)">Year ${selectedYear}</span>`;
-        if (selectedSection)
-          html += ` <i class="ph-bold ph-caret-right text-sm text-gray-400"></i> <span class="text-pup-maroon font-bold">Sec ${selectedSection}</span>`;
-        breadcrumbs.innerHTML = html;
-      }
-
-      // --- 4. LOCATOR & CABINET VISUALS ---
-      const cabinets = ["A", "B", "C", "D"];
-      function renderCabinets() {
-        const grid = document.getElementById("cabinetGrid");
-        grid.innerHTML = "";
-        cabinets.forEach((cab) => {
-          const div = document.createElement("div");
-          div.className =
-            "border border-gray-300 p-2 rounded-brand bg-white relative flex flex-col h-full";
-          div.innerHTML = `<div class="absolute -top-2 left-2 bg-white px-2 text-xs font-bold text-gray-600 border border-gray-300 rounded-sm">CAB-${cab}</div>`;
-          const container = document.createElement("div");
-          container.className = "flex-1 flex flex-col gap-1 mt-3";
-          for (let i = 1; i <= 4; i++) {
-            const drawerId = `loc-${cab}-${i}`;
-            // Check if occupied
-            const occupied = studentDatabase.some(
-              (s) => s.cabinet === cab && s.drawer == i
-            );
-            const drawerClass = occupied
-              ? "bg-gray-300 border-gray-400 text-gray-700"
-              : "bg-gray-50 border-gray-200 text-gray-300";
-
-            const drawer = document.createElement("div");
-            drawer.id = drawerId;
-            drawer.className = `drawer-box flex-1 rounded-sm flex items-center justify-center text-xs font-bold transition-all border ${drawerClass}`;
-            drawer.innerText = i;
-            container.appendChild(drawer);
-          }
-          div.appendChild(container);
-          grid.appendChild(div);
-        });
-      }
-
-      function locateStudent(student) {
-        resetVisualizer();
-        const targetId = `loc-${student.cabinet}-${student.drawer}`;
-        const target = document.getElementById(targetId);
-        if (target) target.classList.add("drawer-located");
-
-        // Sync Explorer (Fix for Search vs Explorer Disconnect)
-        const courseObj = courses.find((c) => c.code === student.courseCode);
-        if (courseObj) {
-          selectedCourse = courseObj;
-          selectedYear = student.year;
-          selectedSection = student.section;
-          currentLevel = "students";
-          // Re-render Explorer to show this student's section
-          renderExplorer();
-        }
-
-        // Show details in the right pane of bottom section
-        document.getElementById("empty-selection").classList.add("hidden");
-        const activePane = document.getElementById("active-selection");
-        activePane.classList.remove("hidden");
-
-        document.getElementById(
-          "loc-text"
-        ).innerText = `CAB-${student.cabinet} • D-${student.drawer}`;
-        document.getElementById("loc-name").innerText = student.name;
-        document.getElementById("loc-id").innerText = student.studentNo;
-
-        // Render Documents with Clickable Links
-        const docList = document.getElementById("doc-list");
-        docList.innerHTML = "";
-        if (student.documents && student.documents.length > 0) {
-          student.documents.forEach((doc) => {
-            const li = document.createElement("li");
-            li.innerHTML = `
-                        <button onclick="previewDocument('${doc}', '${student.name}', '${student.studentNo}')" class="group flex items-center gap-3 w-full text-left p-2 rounded-brand hover:bg-gray-100 transition-colors border border-transparent hover:border-gray-300">
-                            <div class="w-8 h-8 rounded bg-red-50 flex items-center justify-center text-pup-maroon group-hover:bg-pup-maroon group-hover:text-white transition-colors">
-                                <i class="ph-fill ph-file-pdf text-lg"></i>
-                            </div>
-                            <span class="text-gray-700 group-hover:text-pup-maroon font-bold group-hover:underline underline-offset-2">${doc}</span>
-                            <i class="ph-bold ph-arrow-square-out text-gray-400 ml-auto group-hover:text-pup-maroon opacity-0 group-hover:opacity-100 transition-all"></i>
-                        </button>
-                    `;
-            docList.appendChild(li);
-          });
-        } else {
-          docList.innerHTML = `<li class="text-gray-500 italic text-center py-4 font-medium">No physical documents logged.</li>`;
-        }
-      }
-
-      // --- PREVIEW MODAL LOGIC ---
-      function previewDocument(docType, studentName, studentNo) {
-        const modal = document.getElementById("previewModal");
-        // Populate Modal Data
-        document.getElementById("modalDocTitle").innerText = docType;
-        document.getElementById("modalStudentName").innerText = studentName;
-        document.getElementById("modalDocTypeDisplay").innerText = docType;
-        document.getElementById("modalContentName").innerText =
-          studentName.toUpperCase();
-        document.getElementById("modalContentId").innerText = studentNo;
-        document.getElementById("modalContentDoc").innerText = docType;
-        document.getElementById("modalRefId").innerText = Math.floor(
-          Math.random() * 1000000
-        ); // Random Ref ID
-        modal.classList.remove("hidden");
-      }
-
-      function closeModal() {
-        document.getElementById("previewModal").classList.add("hidden");
-      }
-      document.getElementById("previewModal").addEventListener("click", (e) => {
-        if (e.target.id === "previewModal") closeModal();
-      });
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") closeModal();
-      });
-
-      function resetVisualizer() {
-        document
-          .querySelectorAll(".drawer-located")
-          .forEach((el) => el.classList.remove("drawer-located"));
-        document.getElementById("empty-selection").classList.remove("hidden");
-        document.getElementById("active-selection").classList.add("hidden");
-      }
-
-      // --- 5. SEARCH LOGIC (Debounced) ---
-      const searchInput = document.getElementById("searchInput");
-      const resultsList = document.getElementById("resultsList");
-      let searchTimeout;
-
-      searchInput.addEventListener("input", (e) => {
-        clearTimeout(searchTimeout);
-        const q = e.target.value.toLowerCase();
-
-        searchTimeout = setTimeout(() => {
-          if (q.length < 2) {
-            resultsList.innerHTML = `<div class="text-center py-10 text-gray-400 flex flex-col items-center opacity-80"><i class="ph-bold ph-magnifying-glass text-3xl mb-2"></i><span class="text-sm font-medium">Search for direct access</span></div>`;
-            return;
-          }
-          const hits = studentDatabase.filter(
-            (s) => s.name.toLowerCase().includes(q) || s.studentNo.includes(q)
-          );
-          resultsList.innerHTML = "";
-          if (hits.length === 0) {
-            resultsList.innerHTML = `<div class="p-4 text-center text-sm font-medium text-gray-500">No records found.</div>`;
-            return;
-          }
-          hits.forEach((s) => {
-            const item = document.createElement("div");
-            item.className =
-              "p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors flex justify-between items-center group";
-            item.innerHTML = `<div><div class="font-bold text-sm text-gray-800 group-hover:text-pup-maroon">${s.name}</div><div class="text-xs text-gray-500 font-mono font-medium">${s.studentNo}</div></div><i class="ph-bold ph-caret-right text-gray-400 group-hover:text-pup-maroon text-sm"></i>`;
-            item.onclick = () => {
-              locateStudent(s);
-            };
-            resultsList.appendChild(item);
-          });
-        }, 300); // 300ms debounce
-      });
-
-      // --- 6. VIEW SWITCHING ---
-      function switchView(view) {
-        const vSearch = document.getElementById("view-search");
-        const vUpload = document.getElementById("view-upload");
-        const bSearch = document.getElementById("nav-search");
-        const bUpload = document.getElementById("nav-upload");
-
-        if (view === "search") {
-          vSearch.classList.remove("hidden");
-          vUpload.classList.add("hidden");
-          vUpload.classList.remove("flex");
-
-          bSearch.classList.add("btn-nav-active", "text-pup-maroon");
-          bSearch.classList.remove("text-gray-600");
-
-          bUpload.classList.remove("btn-nav-active");
-          bUpload.classList.add("text-gray-600");
-        } else {
-          vSearch.classList.add("hidden");
-          vUpload.classList.remove("hidden");
-          vUpload.classList.add("flex"); // Ensure flex display
-
-          bUpload.classList.add("btn-nav-active", "text-pup-maroon");
-          bUpload.classList.remove("text-gray-600");
-
-          bSearch.classList.remove("btn-nav-active");
-          bSearch.classList.add("text-gray-600");
-        }
-      }
-
-      // --- 7. FILE UPLOAD LOGIC ---
-      const fileInput = document.getElementById("fileInput");
-      const dropZone = document.getElementById("dropZone");
-
-      dropZone.onclick = (e) => {
-        if (e.target !== document.querySelector("#filePreview button"))
-          fileInput.click();
-      };
-      fileInput.onchange = (e) => handleFileSelect(e.target.files[0]);
-
-      dropZone.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        dropZone.classList.add("bg-red-50");
-      });
-      dropZone.addEventListener("dragleave", (e) => {
-        e.preventDefault();
-        dropZone.classList.remove("bg-red-50");
-      });
-      dropZone.addEventListener("drop", (e) => {
-        e.preventDefault();
-        dropZone.classList.remove("bg-red-50");
-        handleFileSelect(e.dataTransfer.files[0]);
-      });
-
-      function handleFileSelect(file) {
-        if (file && file.type === "application/pdf") {
-          uploadedFile = file;
-          document.getElementById("filePreview").classList.remove("hidden");
-          document.getElementById("fileName").innerText = file.name;
-          document.getElementById("fileSize").innerText =
-            (file.size / 1024).toFixed(2) + " KB";
-        } else if (file) {
-          alert("Only PDF files are allowed.");
-        }
-      }
-
-      function clearFile(e) {
-        if (e) e.stopPropagation();
-        uploadedFile = null;
-        document.getElementById("fileInput").value = "";
-        document.getElementById("filePreview").classList.add("hidden");
-      }
-
-      // --- 8. UPLOAD FORM & DOCUMENT TYPES LOGIC ---
-      let uploadMode = "existing";
-
-      function switchUploadTab(mode) {
-        uploadMode = mode;
-        document
-          .getElementById("tab-existing")
-          .classList.toggle("active", mode === "existing");
-        document
-          .getElementById("tab-new")
-          .classList.toggle("active", mode === "new");
-        document
-          .getElementById("form-existing")
-          .classList.toggle("hidden", mode !== "existing");
-        document
-          .getElementById("form-new")
-          .classList.toggle("hidden", mode !== "new");
-      }
-
-      function populateUploadDropdowns() {
-        const existCourse = document.getElementById("exist-course");
-        const newCourse = document.getElementById("new-course");
-        courses.forEach((c) => {
-          const opt1 = new Option(c.name, c.code);
-          const opt2 = new Option(c.name, c.code);
-          existCourse.add(opt1);
-          newCourse.add(opt2);
-        });
-        refreshDocTypeDropdowns();
-      }
-
-      function refreshDocTypeDropdowns() {
-        ["exist-doctype", "new-doctype"].forEach((id) => {
-          const sel = document.getElementById(id);
-          const currentVal = sel.value; // Try to preserve selection if possible
-          sel.innerHTML = '<option value="">Select Type...</option>';
-          docTypes.forEach((t) => {
-            sel.add(new Option(t, t));
-          });
-          sel.add(new Option("➕ Add New Type...", "add_new"));
-          if (docTypes.includes(currentVal)) sel.value = currentVal;
-        });
-      }
-
-      function checkNewDocType(selectEl, prefix) {
-        if (selectEl.value === "add_new") {
-          const container = document.getElementById(
-            `${prefix}-doctype-container`
-          );
-          container.innerHTML = `
-                    <div class="flex gap-2">
-                        <input type="text" id="${prefix}-new-doctype-input" class="form-input flex-1" placeholder="Enter new document type..." autofocus>
-                        <button onclick="saveNewDocType('${prefix}')" class="px-3 bg-pup-maroon text-white rounded-brand text-xs font-bold">ADD</button>
-                        <button onclick="cancelNewDocType('${prefix}')" class="px-3 bg-gray-200 text-gray-700 rounded-brand text-xs font-bold">X</button>
-                    </div>
-                `;
-        }
-      }
-
-      function saveNewDocType(prefix) {
-        const input = document.getElementById(`${prefix}-new-doctype-input`);
-        const val = input.value.trim();
-        if (val) {
-          docTypes.push(val);
-          // Restore Select and set value
-          const container = document.getElementById(
-            `${prefix}-doctype-container`
-          );
-          container.innerHTML = `<select id="${prefix}-doctype" class="form-select" onchange="checkNewDocType(this, '${prefix}')"></select>`;
-          refreshDocTypeDropdowns(); // Re-populate
-          document.getElementById(`${prefix}-doctype`).value = val;
-        }
-      }
-
-      function cancelNewDocType(prefix) {
-        const container = document.getElementById(
-          `${prefix}-doctype-container`
-        );
-        container.innerHTML = `<select id="${prefix}-doctype" class="form-select" onchange="checkNewDocType(this, '${prefix}')"></select>`;
-        refreshDocTypeDropdowns();
-      }
-
-      function filterExisting(triggerSource) {
-        const courseVal = document.getElementById("exist-course").value;
-        const yearVal = parseInt(document.getElementById("exist-year").value);
-        const sectionSelect = document.getElementById("exist-section");
-        const studentSelect = document.getElementById("exist-student");
-
-        if (triggerSource === "course" || triggerSource === "year") {
-          sectionSelect.innerHTML =
-            '<option value="">Select Section...</option>';
-          if (courseVal && yearVal) {
-            const availSections = [
-              ...new Set(
-                studentDatabase
-                  .filter(
-                    (s) => s.courseCode === courseVal && s.year === yearVal
-                  )
-                  .map((s) => s.section)
-              ),
-            ].sort();
-            availSections.forEach((s) => sectionSelect.add(new Option(s, s)));
-          }
-        }
-
-        studentSelect.innerHTML = '<option value="">Select Student...</option>';
-        studentSelect.disabled = true;
-        const sectionVal = sectionSelect.value;
-
-        if (courseVal && yearVal && sectionVal) {
-          studentSelect.disabled = false;
-          const filteredStudents = studentDatabase.filter(
-            (s) =>
-              s.courseCode === courseVal &&
-              s.year === yearVal &&
-              s.section === sectionVal
-          );
-          filteredStudents.forEach((s) =>
-            studentSelect.add(new Option(s.name, s.id))
-          );
-        }
-      }
-
-      // --- CRITICAL QA FIX: UPDATED SUBMISSION LOGIC ---
-      function processSubmission() {
-        if (!uploadedFile) {
-          alert("Please drop or select a PDF file first.");
-          return;
-        }
-
-        let docType = "";
-
-        if (uploadMode === "existing") {
-          const studentId = document.getElementById("exist-student").value;
-          docType = document.getElementById("exist-doctype").value;
-
-          if (!studentId) {
-            alert("Please select a student.");
-            return;
-          }
-          if (!docType || docType === "add_new") {
-            alert("Please select a document type.");
-            return;
-          }
-
-          // 1. Update Data
-          const targetStudent = studentDatabase.find((s) => s.id == studentId);
-          targetStudent.documents.push(docType);
-
-          alert(`File tagged as "${docType}" for ${targetStudent.name}!`);
-
-          // 2. QA FIX: UI Refresh
-          // Check if the currently viewed student is the one we just updated
-          // We use the unique Student No to verify
-          const activeId = document.getElementById("loc-id").innerText;
-          if (activeId === targetStudent.studentNo) {
-            locateStudent(targetStudent); // Refresh the doc list
-          }
-
-          // 3. Reset File input only (keep student selected for ease)
-          clearFile();
-          document.getElementById("exist-doctype").value = "";
-        } else {
-          // New Student Flow
-          const id = document.getElementById("new-id").value;
-          const name = document.getElementById("new-name").value;
-          const courseCode = document.getElementById("new-course").value;
-          const year = parseInt(document.getElementById("new-year").value);
-          const section = document.getElementById("new-section").value;
-          const cab = document.getElementById("new-cab").value;
-          const draw = parseInt(document.getElementById("new-draw").value);
-          docType = document.getElementById("new-doctype").value;
-
-          if (!id || !name || !courseCode || !section) {
-            alert("Fill all required fields.");
-            return;
-          }
-          if (!docType || docType === "add_new") {
-            alert("Please select a document type.");
-            return;
-          }
-
-          const newStudent = {
-            id: Date.now(),
-            name: name,
-            studentNo: id,
-            courseCode: courseCode,
-            courseName:
-              courses.find((c) => c.code === courseCode)?.name || courseCode,
-            year: year,
-            section: section,
-            cabinet: cab,
-            drawer: draw,
-            status: "Active",
-            documents: [docType],
-          };
-
-          // 1. Update Database
-          studentDatabase.push(newStudent);
-
-          // 2. QA FIX: Refresh Cabinets Visualizer
-          // This ensures the drawer turns "occupied" (gray) if it was white
-          renderCabinets();
-
-          alert(`New Record & ${docType} added for ${name}!`);
-
-          // 3. Clear all inputs
-          clearFile();
-          document.getElementById("new-name").value = "";
-          document.getElementById("new-id").value = "";
-          document.getElementById("new-section").value = "";
-          document.getElementById("new-doctype").value = "";
-        }
-      }
-
-      // --- USER MENU LOGIC ---
-      function toggleUserMenu() {
-        const menu = document.getElementById("userMenuDropdown");
-        menu.classList.toggle("hidden");
-      }
-
-      function logout() {
-        if (confirm("Are you sure you want to sign out?")) {
-          // Redirects to index.html effectively resetting the prototype state
-          window.location.href = "index.html";
-        }
-      }
-
-      // Close dropdown when clicking outside
-      document.addEventListener("click", (e) => {
-        const menu = document.getElementById("userMenuDropdown");
-        const btn = document.getElementById("userMenuBtn");
-        if (
-          menu &&
-          !menu.classList.contains("hidden") &&
-          !menu.contains(e.target) &&
-          !btn.contains(e.target)
-        ) {
-          menu.classList.add("hidden");
-        }
-      });
     </script>
   </body>
 </html>
