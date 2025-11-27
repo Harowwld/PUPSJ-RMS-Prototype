@@ -13,7 +13,7 @@
 
     <!-- Google Fonts: Inter -->
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
 
@@ -283,11 +283,11 @@
       <!-- VIEW 1: RECORDS & ARCHIVE -->
       <div
         id="view-search"
-        class="flex flex-col lg:flex-row w-full gap-4 h-full"
+        class="flex flex-col lg:flex-row w-full gap-4 lg:h-full min-h-0"
       >
         <!-- Left Panel: Global Search -->
         <section
-          class="w-full lg:w-1/4 bg-white rounded-brand border border-gray-300 flex flex-col h-full shadow-sm"
+          class="w-full lg:w-1/4 bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm flex-shrink-0 lg:h-full min-h-0"
         >
           <div class="p-4 border-b border-gray-200 bg-gray-50">
             <h2
@@ -319,10 +319,12 @@
         </section>
 
         <!-- Right Panel: Split View (Explorer + Locator) -->
-        <section class="w-full lg:w-3/4 flex flex-col gap-4 h-full">
+        <section
+          class="w-full lg:w-3/4 flex flex-col gap-4 lg:h-full overflow-y-auto min-h-0"
+        >
           <!-- TOP: Hierarchical Explorer (60% Height) -->
           <div
-            class="h-3/5 bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm relative overflow-hidden"
+            class="h-[60%] min-h-[250px] bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm relative overflow-hidden"
           >
             <!-- Breadcrumbs Header -->
             <div
@@ -355,7 +357,7 @@
 
           <!-- BOTTOM: Physical Archive Visualizer (40% Height) -->
           <div
-            class="h-2/5 bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm relative"
+            class="h-[40%] min-h-[250px] bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm relative min-h-0"
           >
             <div
               class="p-3 border-b border-gray-200 flex justify-between items-center bg-white rounded-t-brand"
@@ -389,9 +391,10 @@
             </div>
 
             <!-- The Room Layout & Details Split -->
-            <div class="flex-1 flex overflow-hidden">
+            <div class="flex-1 flex overflow-hidden min-h-0">
               <!-- Cabinet Grid (Left) - Now Locator View -->
-              <div class="w-2/3 bg-gray-100 p-4 h-full">
+              <!-- ADDED overflow-y-auto here to make the locator content scrollable -->
+              <div class="w-2/3 bg-gray-100 p-4 h-full min-h-0 overflow-y-auto">
                 <div id="locatorView" class="w-full h-full">
                   <!-- Content changes based on current locator level (Rooms, Cabinets, Drawers) -->
                 </div>
@@ -399,9 +402,9 @@
 
               <!-- Details Panel (Right) -->
               <div
-                class="w-1/3 border-l border-gray-200 bg-white flex flex-col overflow-hidden"
+                class="w-1/3 border-l border-gray-200 bg-white flex flex-col overflow-hidden min-h-0"
               >
-                <div class="p-4 h-full flex flex-col overflow-hidden">
+                <div class="p-4 h-full flex flex-col overflow-hidden min-h-0">
                   <div
                     id="empty-selection"
                     class="h-full flex flex-col items-center justify-center text-center text-gray-400"
@@ -1227,7 +1230,8 @@
           locatorView.appendChild(locatorTitle);
 
           const grid = document.createElement("div");
-          grid.className = "grid grid-cols-2 gap-4";
+          // Added pb-6 for padding bottom on scrollable content
+          grid.className = "grid grid-cols-2 gap-4 pb-6";
 
           rooms.forEach((room) => {
             const occupiedCount = studentDatabase.filter(
@@ -1295,39 +1299,57 @@
           const div = document.createElement("div");
           // **APPLYING 30% WIDTH HERE**
           div.className =
-            "border border-gray-300 p-2 rounded-brand bg-white relative flex flex-col h-full w-[30%]";
+            "border border-gray-300 p-2 rounded-brand bg-white relative flex flex-col h-full w-[30%] min-h-0";
           div.innerHTML = `<div class="absolute -top-2 left-2 bg-white px-2 text-xs font-bold text-gray-600 border border-gray-300 rounded-sm">CAB-${selectedCabinet}</div>`;
 
           const drawerContainer = document.createElement("div");
           // flex-col, gap-3, and flex-1 (on the drawers) ensures proportional height distribution
-          drawerContainer.className = "flex-1 flex flex-col gap-3 mt-3";
+          drawerContainer.className = "flex-1 flex flex-col gap-3 mt-3 min-h-0";
 
           for (let i = 1; i <= 4; i++) {
             const drawerId = `loc-drawer-${selectedRoom}-${selectedCabinet}-${i}`;
             // Check if occupied
-            const occupied = studentDatabase.some(
+            const studentsInDrawer = studentDatabase.filter(
               (s) =>
                 s.room === selectedRoom &&
                 s.cabinet === selectedCabinet &&
                 s.drawer === i
             );
+            const count = studentsInDrawer.length;
             const isTarget =
               target &&
               target.room === selectedRoom &&
               target.cabinet === selectedCabinet &&
               target.drawer === i;
 
-            const drawerClass = occupied
-              ? "drawer-occupied"
-              : "bg-white border-gray-200 text-gray-300";
+            const drawerClass =
+              count > 0
+                ? "drawer-occupied"
+                : "bg-white border-gray-200 text-gray-300";
 
             const drawer = document.createElement("div");
             drawer.id = drawerId;
             // The key is 'flex-1' which ensures equal proportional height for the four drawers
-            drawer.className = `drawer-box flex-1 rounded-brand flex items-center justify-center text-sm font-bold transition-all border locator-tile ${drawerClass} ${
+            // UPDATED: Removed flex-row, using flex justify-center items-center for centered content
+            drawer.className = `drawer-box flex-1 rounded-brand flex items-center justify-center transition-all border locator-tile ${drawerClass} ${
               isTarget ? "drawer-located" : ""
             }`;
-            drawer.innerText = ``; // Kept content blank as requested
+
+            // UPDATED UX LABEL: Show file count with 'Folders' label, using text-xs
+            const countText = count === 1 ? "1 Folder" : `${count} Folders`;
+
+            if (count > 0) {
+              drawer.innerHTML = `
+                          <span class="text-xs font-bold ${
+                            isTarget ? "text-pup-maroon" : "text-gray-900"
+                          }">${countText}</span>
+                      `;
+            } else {
+              drawer.innerHTML = `
+                          <span class="text-xs font-medium text-gray-400">0 Folders</span>
+                      `;
+            }
+
             drawerContainer.appendChild(drawer);
           }
 
