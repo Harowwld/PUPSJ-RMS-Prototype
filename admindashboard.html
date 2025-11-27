@@ -551,7 +551,7 @@
                       </option>
                       <option value="Records Officer">Records Officer</option>
                       <option value="Evaluator">Evaluator</option>
-                      <option value="Encoder">Encoder (Data Entry)</option>
+                      <option value="Encoder">Encoder</option>
                     </select>
                   </div>
                 </div>
@@ -1047,6 +1047,188 @@
       >
     </div>
 
+    <!-- Edit User Modal -->
+    <div
+      id="editModal"
+      class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center animate-fade-in"
+    >
+      <div
+        class="bg-white rounded-brand shadow-lg w-full max-w-2xl overflow-hidden transform scale-95 transition-transform duration-200"
+      >
+        <div
+          class="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50/30"
+        >
+          <div>
+            <h3
+              class="font-bold text-pup-maroon text-lg flex items-center gap-2"
+            >
+              <i class="ph-duotone ph-pencil-simple"></i> Edit Account
+            </h3>
+            <p class="text-xs text-gray-500 mt-1">
+              Update staff details and permissions.
+            </p>
+          </div>
+          <button
+            onclick="closeEditModal()"
+            class="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50"
+          >
+            <i class="ph-bold ph-x text-lg"></i>
+          </button>
+        </div>
+
+        <div class="p-8">
+          <form
+            id="editForm"
+            onsubmit="handleEditSubmit(event)"
+            class="space-y-6"
+          >
+            <input type="hidden" id="editOriginalId" />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label
+                  class="block text-xs font-bold text-gray-600 mb-1.5 uppercase"
+                  >Employee ID *</label
+                >
+                <div class="relative">
+                  <i
+                    class="ph-bold ph-identification-card absolute left-3 top-2.5 text-gray-400"
+                  ></i>
+                  <input
+                    type="text"
+                    id="editId"
+                    required
+                    class="form-input pl-9 font-mono"
+                    placeholder="e.g. 2023-001"
+                  />
+                </div>
+              </div>
+              <div>
+                <label
+                  class="block text-xs font-bold text-gray-600 mb-1.5 uppercase"
+                  >System Role *</label
+                >
+                <select id="editRole" required class="form-select">
+                  <option value="" disabled>Select Role...</option>
+                  <option value="Administrator">Administrator (Head)</option>
+                  <option value="Records Officer">Records Officer</option>
+                  <option value="Evaluator">Evaluator</option>
+                  <option value="Encoder">Encoder (Data Entry)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label
+                  class="block text-xs font-bold text-gray-600 mb-1.5 uppercase"
+                  >First Name *</label
+                >
+                <input
+                  type="text"
+                  id="editFName"
+                  required
+                  class="form-input"
+                  placeholder="Juan"
+                />
+              </div>
+              <div>
+                <label
+                  class="block text-xs font-bold text-gray-600 mb-1.5 uppercase"
+                  >Last Name *</label
+                >
+                <input
+                  type="text"
+                  id="editLName"
+                  required
+                  class="form-input"
+                  placeholder="Dela Cruz"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label
+                class="block text-xs font-bold text-gray-600 mb-1.5 uppercase"
+                >Email Address *</label
+              >
+              <div class="relative">
+                <i
+                  class="ph-bold ph-envelope absolute left-3 top-2.5 text-gray-400"
+                ></i>
+                <input
+                  type="email"
+                  id="editEmail"
+                  required
+                  class="form-input pl-9"
+                  placeholder="juan.delacruz@pup.edu.ph"
+                />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label
+                  class="block text-xs font-bold text-gray-600 mb-1.5 uppercase"
+                  >Section / Unit</label
+                >
+                <select id="editSection" class="form-select">
+                  <option value="Administrative">Administrative</option>
+                  <option value="Records">Records Section</option>
+                  <option value="Evaluation">Evaluation Section</option>
+                  <option value="Releasing">Releasing Window</option>
+                  <option value="Admission">Admission Support</option>
+                </select>
+              </div>
+              <div>
+                <label
+                  class="block text-xs font-bold text-gray-600 mb-1.5 uppercase"
+                  >Status</label
+                >
+                <div class="flex gap-4 mt-2">
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="editStatus"
+                      value="Active"
+                      class="text-pup-maroon focus:ring-pup-maroon"
+                    />
+                    <span class="text-sm text-gray-700">Active</span>
+                  </label>
+                  <label class="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="editStatus"
+                      value="Inactive"
+                      class="text-pup-maroon focus:ring-pup-maroon"
+                    />
+                    <span class="text-sm text-gray-700">Inactive</span>
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <div
+              class="border-t border-gray-200 pt-6 flex items-center justify-end gap-3"
+            >
+              <button
+                type="button"
+                onclick="closeEditModal()"
+                class="px-5 py-2.5 border border-gray-300 rounded-brand text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="px-6 py-2.5 bg-pup-maroon text-white rounded-brand text-sm font-bold hover:bg-red-900 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+              >
+                <i class="ph-bold ph-floppy-disk"></i> Save Changes
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
     <script>
       // --- 1. MOCK DATA ---
       const units = [
@@ -1495,14 +1677,76 @@
       }
 
       function editUser(id) {
-        showToast("Edit mode enabled for " + id);
-        switchView("create");
         const user = staffData.find((u) => u.id === id);
         if (user) {
-          document.getElementById("newId").value = user.id;
-          document.getElementById("newFName").value = user.fname;
-          document.getElementById("newLName").value = user.lname;
-          document.getElementById("newEmail").value = user.email;
+          document.getElementById("editOriginalId").value = user.id;
+          document.getElementById("editId").value = user.id;
+          document.getElementById("editFName").value = user.fname;
+          document.getElementById("editLName").value = user.lname;
+          document.getElementById("editRole").value = user.role;
+          document.getElementById("editEmail").value = user.email;
+          document.getElementById("editSection").value = user.section;
+
+          // Set radio button
+          const radios = document.getElementsByName("editStatus");
+          for (const radio of radios) {
+            if (radio.value === user.status) {
+              radio.checked = true;
+            }
+          }
+
+          document.getElementById("editModal").classList.remove("hidden");
+        }
+      }
+
+      function closeEditModal() {
+        document.getElementById("editModal").classList.add("hidden");
+        document.getElementById("editForm").reset();
+      }
+
+      function handleEditSubmit(e) {
+        e.preventDefault();
+
+        const originalId = document.getElementById("editOriginalId").value;
+        const newId = document.getElementById("editId").value;
+
+        // Check if ID changed and conflicts
+        if (originalId !== newId && staffData.some((s) => s.id === newId)) {
+          showToast("Error: Employee ID already exists!", true);
+          return;
+        }
+
+        const updatedUser = {
+          id: newId,
+          fname: document.getElementById("editFName").value,
+          lname: document.getElementById("editLName").value,
+          role: document.getElementById("editRole").value,
+          section: document.getElementById("editSection").value,
+          status: document.querySelector('input[name="editStatus"]:checked')
+            .value,
+          email: document.getElementById("editEmail").value,
+          lastActive: "Just now", // Update activity on edit
+        };
+
+        // Update array
+        const index = staffData.findIndex((u) => u.id === originalId);
+        if (index !== -1) {
+          staffData[index] = updatedUser;
+
+          // Log action
+          auditLogs.unshift({
+            time: "Just now",
+            user: "Admin User",
+            role: "Administrator",
+            action: `Updated account details for ${updatedUser.fname} ${updatedUser.lname}`,
+            ip: "192.168.1.10",
+          });
+
+          renderTable();
+          renderStats();
+          renderLogs(); // Update logs view
+          showToast("Account updated successfully!");
+          closeEditModal();
         }
       }
 
