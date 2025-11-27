@@ -27,8 +27,8 @@
                 maroon: "#800000",
                 darkMaroon: "#5a0000",
                 gray: "#F5F5F5",
-                text: "#1F1F1F", /* Darker default text */
-                border: "#d1d5db", /* Slightly darker border */
+                text: "#1F1F1F" /* Darker default text */,
+                border: "#d1d5db" /* Slightly darker border */,
               },
             },
             fontFamily: {
@@ -70,7 +70,12 @@
       /* Locator Styles */
       .drawer-located {
         border: 2px solid #800000 !important;
-        background-color: rgba(128, 0, 0, 0.15) !important; /* Higher contrast bg */
+        background-color: rgba(
+          128,
+          0,
+          0,
+          0.15
+        ) !important; /* Higher contrast bg */
         color: #800000 !important;
         box-shadow: 0 0 0 4px rgba(128, 0, 0, 0.1);
         transform: scale(1.05);
@@ -166,7 +171,9 @@
             <h1 class="font-bold text-xl text-pup-maroon tracking-tight">
               PUP REGISTRAR
             </h1>
-            <p class="text-xs text-gray-600 uppercase tracking-widest font-semibold">
+            <p
+              class="text-xs text-gray-600 uppercase tracking-widest font-semibold"
+            >
               Student Record Management
             </p>
           </div>
@@ -186,7 +193,7 @@
           >
             <i class="ph-bold ph-upload-simple"></i> Scan & Upload
           </button>
-          
+
           <!-- User Menu Dropdown -->
           <div class="relative ml-4">
             <button
@@ -196,32 +203,42 @@
             >
               AD
             </button>
-            
+
             <!-- Dropdown Menu -->
             <div
               id="userMenuDropdown"
               class="hidden absolute right-0 mt-2 w-64 bg-white rounded-brand shadow-xl border border-gray-200 z-50 animate-scale-in origin-top-right"
             >
-                <div class="p-4 border-b border-gray-200 bg-gray-50 rounded-t-brand">
-                    <p class="text-sm font-bold text-pup-maroon">Administrator</p>
-                    <p class="text-xs text-gray-700 truncate font-medium">registrar.admin@pup.edu.ph</p>
-                </div>
-                <div class="p-1">
-                    <button class="w-full text-left px-3 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-pup-maroon rounded-brand flex items-center gap-2 transition-colors font-medium">
-                        <i class="ph-bold ph-user-gear"></i> Account Settings
-                    </button>
-                    <button class="w-full text-left px-3 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-pup-maroon rounded-brand flex items-center gap-2 transition-colors font-medium">
-                        <i class="ph-bold ph-question"></i> Help & Support
-                    </button>
-                </div>
-                <div class="p-1 border-t border-gray-200">
-                    <button onclick="logout()" class="w-full text-left px-3 py-3 text-sm text-red-700 hover:bg-red-50 font-bold rounded-brand flex items-center gap-2 transition-colors">
-                        <i class="ph-bold ph-sign-out"></i> Sign Out
-                    </button>
-                </div>
+              <div
+                class="p-4 border-b border-gray-200 bg-gray-50 rounded-t-brand"
+              >
+                <p class="text-sm font-bold text-pup-maroon">Administrator</p>
+                <p class="text-xs text-gray-700 truncate font-medium">
+                  registrar.admin@pup.edu.ph
+                </p>
+              </div>
+              <div class="p-1">
+                <button
+                  class="w-full text-left px-3 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-pup-maroon rounded-brand flex items-center gap-2 transition-colors font-medium"
+                >
+                  <i class="ph-bold ph-user-gear"></i> Account Settings
+                </button>
+                <button
+                  class="w-full text-left px-3 py-3 text-sm text-gray-700 hover:bg-red-50 hover:text-pup-maroon rounded-brand flex items-center gap-2 transition-colors font-medium"
+                >
+                  <i class="ph-bold ph-question"></i> Help & Support
+                </button>
+              </div>
+              <div class="p-1 border-t border-gray-200">
+                <button
+                  onclick="logout()"
+                  class="w-full text-left px-3 py-3 text-sm text-red-700 hover:bg-red-50 font-bold rounded-brand flex items-center gap-2 transition-colors"
+                >
+                  <i class="ph-bold ph-sign-out"></i> Sign Out
+                </button>
+              </div>
             </div>
           </div>
-
         </div>
       </div>
     </header>
@@ -231,7 +248,10 @@
       class="flex-1 flex flex-col lg:flex-row overflow-hidden max-w-[1600px] mx-auto w-full p-4 gap-4"
     >
       <!-- VIEW 1: RECORDS & ARCHIVE -->
-      <div id="view-search" class="flex flex-col lg:flex-row w-full gap-4 h-full">
+      <div
+        id="view-search"
+        class="flex flex-col lg:flex-row w-full gap-4 h-full"
+      >
         <!-- Left Panel: Global Search -->
         <section
           class="w-full lg:w-1/4 bg-white rounded-brand border border-gray-300 flex flex-col h-full shadow-sm"
@@ -338,10 +358,11 @@
             <!-- The Room Layout & Details Split -->
             <div class="flex-1 flex overflow-hidden">
               <!-- Cabinet Grid (Left) -->
-              <div
-                class="w-2/3 bg-gray-100 p-3 h-full"
-              >
-                <div id="cabinetGrid" class="grid grid-cols-4 gap-3 w-full h-full">
+              <div class="w-2/3 bg-gray-100 p-3 h-full">
+                <div
+                  id="cabinetGrid"
+                  class="grid grid-cols-4 gap-3 w-full h-full"
+                >
                   <!-- Cabinets generated by JS -->
                 </div>
               </div>
@@ -383,7 +404,10 @@
                       >
                         Student Name
                       </div>
-                      <div id="loc-id" class="text-sm text-gray-600 font-mono font-medium">
+                      <div
+                        id="loc-id"
+                        class="text-sm text-gray-600 font-mono font-medium"
+                      >
                         2020-00000-MN-0
                       </div>
                     </div>
@@ -410,7 +434,10 @@
       </div>
 
       <!-- VIEW 2: UPLOAD -->
-      <div id="view-upload" class="hidden flex-col lg:flex-row w-full h-full gap-4">
+      <div
+        id="view-upload"
+        class="hidden flex-col lg:flex-row w-full h-full gap-4"
+      >
         <!-- Left: Drop Zone -->
         <section
           class="w-full lg:w-1/2 bg-white rounded-brand border border-gray-300 flex flex-col h-full p-8 items-center justify-center shadow-sm"
@@ -446,7 +473,9 @@
               >
                 document.pdf
               </h4>
-              <span id="fileSize" class="text-sm text-gray-500 mb-6 font-medium">0 KB</span>
+              <span id="fileSize" class="text-sm text-gray-500 mb-6 font-medium"
+                >0 KB</span
+              >
               <button
                 onclick="clearFile(event)"
                 class="text-sm text-red-700 hover:text-white hover:bg-red-700 font-bold uppercase tracking-wide border border-red-200 px-4 py-2 rounded-full transition-colors"
@@ -663,11 +692,13 @@
                 </h4>
                 <div class="grid grid-cols-2 gap-5">
                   <div>
-                    <label
-                      class="block text-xs font-bold text-gray-600 mb-1.5"
+                    <label class="block text-xs font-bold text-gray-600 mb-1.5"
                       >CABINET</label
                     >
-                    <select id="new-cab" class="form-select text-sm font-medium">
+                    <select
+                      id="new-cab"
+                      class="form-select text-sm font-medium"
+                    >
                       <option value="A">Cabinet A</option>
                       <option value="B">Cabinet B</option>
                       <option value="C">Cabinet C</option>
@@ -675,11 +706,13 @@
                     </select>
                   </div>
                   <div>
-                    <label
-                      class="block text-xs font-bold text-gray-600 mb-1.5"
+                    <label class="block text-xs font-bold text-gray-600 mb-1.5"
                       >DRAWER</label
                     >
-                    <select id="new-draw" class="form-select text-sm font-medium">
+                    <select
+                      id="new-draw"
+                      class="form-select text-sm font-medium"
+                    >
                       <option value="1">Drawer 1</option>
                       <option value="2">Drawer 2</option>
                       <option value="3">Drawer 3</option>
@@ -696,7 +729,8 @@
               onclick="processSubmission()"
               class="w-full bg-pup-maroon text-white py-3.5 rounded-brand font-bold text-sm hover:bg-red-900 transition-colors shadow-sm flex items-center justify-center gap-2"
             >
-              <i class="ph-bold ph-floppy-disk text-lg"></i> Save & Upload Record
+              <i class="ph-bold ph-floppy-disk text-lg"></i> Save & Upload
+              Record
             </button>
           </div>
         </section>
@@ -704,12 +738,23 @@
     </main>
 
     <!-- NEW FOOTER -->
-    <footer class="bg-white border-t border-gray-300 p-3 flex-none z-10 shadow-inner">
-      <div class="max-w-[1600px] mx-auto flex justify-between items-center text-xs font-medium text-gray-600">
-        <p>&copy; 2024 Polytechnic University of the Philippines. All rights reserved.</p>
+    <footer
+      class="bg-white border-t border-gray-300 p-3 flex-none z-10 shadow-inner"
+    >
+      <div
+        class="max-w-[1600px] mx-auto flex justify-between items-center text-xs font-medium text-gray-600"
+      >
+        <p>
+          &copy; 2024 Polytechnic University of the Philippines. All rights
+          reserved.
+        </p>
         <div class="flex gap-4">
-          <a href="#" class="hover:text-pup-maroon transition-colors">Privacy Policy</a>
-          <a href="#" class="hover:text-pup-maroon transition-colors">Terms of Use</a>
+          <a href="#" class="hover:text-pup-maroon transition-colors"
+            >Privacy Policy</a
+          >
+          <a href="#" class="hover:text-pup-maroon transition-colors"
+            >Terms of Use</a
+          >
           <span class="text-gray-400">|</span>
           <span class="text-gray-500">System Version 1.0.2 (Beta)</span>
         </div>
@@ -739,7 +784,10 @@
               >
                 Document Title
               </h3>
-              <p id="modalStudentName" class="text-sm text-gray-700 font-medium">
+              <p
+                id="modalStudentName"
+                class="text-sm text-gray-700 font-medium"
+              >
                 Student Name
               </p>
             </div>
@@ -820,13 +868,24 @@
             >
               <p>
                 This is to certify that
-                <strong id="modalContentName" class="text-black">STUDENT NAME</strong> with Student
-                Number <strong id="modalContentId" class="text-black">2020-00000-MN-0</strong> has
-                submitted the required documents for the
-                <strong><span id="modalContentDoc" class="text-black">Document Type</span></strong>.
+                <strong id="modalContentName" class="text-black"
+                  >STUDENT NAME</strong
+                >
+                with Student Number
+                <strong id="modalContentId" class="text-black"
+                  >2020-00000-MN-0</strong
+                >
+                has submitted the required documents for the
+                <strong
+                  ><span id="modalContentDoc" class="text-black"
+                    >Document Type</span
+                  ></strong
+                >.
               </p>
 
-              <p class="text-gray-500 italic mt-12 bg-gray-50 p-4 border border-dashed border-gray-300 rounded text-center text-sm">
+              <p
+                class="text-gray-500 italic mt-12 bg-gray-50 p-4 border border-dashed border-gray-300 rounded text-center text-sm"
+              >
                 [ ... This is a prototype preview. Actual scanned document
                 content would be rendered here via PDF.js or an iframe ... ]
               </p>
@@ -1548,10 +1607,7 @@
       }
 
       function logout() {
-        if (confirm("Are you sure you want to sign out?")) {
-          // Redirects to index.html effectively resetting the prototype state
-          window.location.href = "index.html";
-        }
+        window.location.href = "index.html";
       }
 
       // Close dropdown when clicking outside
