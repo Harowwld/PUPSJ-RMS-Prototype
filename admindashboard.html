@@ -54,7 +54,7 @@
         border-radius: 6px;
         font-size: 0.875rem;
         font-weight: 500;
-        transition: all 0.2s ease;
+        transition: all 0.1s ease;
         display: flex;
         align-items: center;
         gap: 0.5rem;
@@ -68,7 +68,6 @@
         color: #800000;
         background-color: rgba(128, 0, 0, 0.05);
         border-bottom: 2px solid #800000;
-        border-radius: 6px 6px 0 0;
       }
 
       /* Custom Scrollbar */
@@ -146,20 +145,42 @@
         align-items: center;
         gap: 0.25rem;
       }
-      .badge-active { background-color: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
-      .badge-inactive { background-color: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; }
-      .badge-admin { background-color: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
-      .badge-staff { background-color: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
+      .badge-active {
+        background-color: #ecfdf5;
+        color: #047857;
+        border: 1px solid #a7f3d0;
+      }
+      .badge-inactive {
+        background-color: #f3f4f6;
+        color: #6b7280;
+        border: 1px solid #e5e7eb;
+      }
+      .badge-admin {
+        background-color: #fef2f2;
+        color: #991b1b;
+        border: 1px solid #fecaca;
+      }
+      .badge-staff {
+        background-color: #eff6ff;
+        color: #1e40af;
+        border: 1px solid #bfdbfe;
+      }
 
       /* Animation */
       @keyframes fadeIn {
-        from { opacity: 0; transform: translateY(5px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+          opacity: 0;
+          transform: translateY(5px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
       .animate-fade-in {
         animation: fadeIn 0.3s ease-out forwards;
       }
-      
+
       /* Scale In Animation for Modal */
       @keyframes scaleIn {
         from {
@@ -175,22 +196,23 @@
       .animate-scale-in {
         animation: scaleIn 0.2s ease-out forwards;
       }
-      
+
       /* Toggle Switch */
       .toggle-checkbox:checked {
         right: 0;
-        border-color: #68D391;
+        border-color: #68d391;
       }
       .toggle-checkbox:checked + .toggle-label {
-        background-color: #68D391;
+        background-color: #68d391;
       }
     </style>
   </head>
   <body class="h-screen flex flex-col overflow-hidden bg-gray-50">
-    
     <!-- Navbar -->
     <header class="bg-white border-b border-gray-300 flex-none z-20 shadow-sm">
-      <div class="max-w-[1600px] mx-auto px-4 h-16 flex items-center justify-between">
+      <div
+        class="max-w-[1600px] mx-auto px-4 h-16 flex items-center justify-between"
+      >
         <!-- Logo Area -->
         <div class="flex items-center gap-3">
           <i class="ph-bold ph-bank text-3xl text-pup-maroon"></i>
@@ -206,471 +228,808 @@
 
         <!-- Navigation Tabs -->
         <div class="flex items-center gap-2">
-          <button onclick="switchView('directory')" id="nav-directory" class="btn-nav active">
+          <button
+            onclick="switchView('directory')"
+            id="nav-directory"
+            class="btn-nav active"
+          >
             <i class="ph ph-users"></i> Staff Directory
           </button>
-          <button onclick="switchView('create')" id="nav-create" class="btn-nav">
+          <button
+            onclick="switchView('create')"
+            id="nav-create"
+            class="btn-nav"
+          >
             <i class="ph ph-user-plus"></i> Register Account
           </button>
           <button onclick="switchView('logs')" id="nav-logs" class="btn-nav">
             <i class="ph ph-scroll"></i> Audit Logs
           </button>
-          <button onclick="switchView('backup')" id="nav-backup" class="btn-nav">
+          <button
+            onclick="switchView('backup')"
+            id="nav-backup"
+            class="btn-nav"
+          >
             <i class="ph ph-database"></i> Backup & Maintenance
           </button>
         </div>
 
         <!-- User Profile Dropdown -->
         <div class="relative ml-4 group">
-            <button onclick="toggleProfileMenu()" class="h-9 w-9 border border-pup-maroon rounded-full flex items-center justify-center text-pup-maroon font-bold text-xs bg-red-50 hover:bg-pup-maroon hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pup-maroon">
-              AD
-            </button>
+          <button
+            onclick="toggleProfileMenu()"
+            class="h-9 w-9 border border-pup-maroon rounded-full flex items-center justify-center text-pup-maroon font-bold text-xs bg-red-50 hover:bg-pup-maroon hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pup-maroon"
+          >
+            AD
+          </button>
 
-            <!-- Dropdown Menu -->
-            <div id="profileMenu" class="hidden absolute right-0 mt-2 w-64 bg-white rounded-brand shadow-xl border border-gray-200 z-50 animate-scale-in origin-top-right overflow-hidden">
-                <div class="p-4 border-b border-gray-200">
-                    <p class="text-sm font-bold text-pup-maroon">Administrator</p>
-                    <p class="text-xs text-gray-500">registrar.admin@pup.edu.ph</p>
-                </div>
-                <div class="py-1">
-                    <button class="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-pup-maroon transition-colors flex items-center gap-3">
-                        <i class="ph-bold ph-user"></i> Account Settings
-                    </button>
-                    <button class="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-pup-maroon transition-colors flex items-center gap-3">
-                        <i class="ph-bold ph-question"></i> Help & Support
-                    </button>
-                </div>
-                <div class="py-1 border-t border-gray-200">
-                    <button onclick="logout()" class="w-full text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3">
-                        <i class="ph-bold ph-sign-out"></i> Sign Out
-                    </button>
-                </div>
+          <!-- Dropdown Menu -->
+          <div
+            id="profileMenu"
+            class="hidden absolute right-0 mt-2 w-64 bg-white rounded-brand shadow-xl border border-gray-200 z-50 animate-scale-in origin-top-right overflow-hidden"
+          >
+            <div class="p-4 border-b border-gray-200">
+              <p class="text-sm font-bold text-pup-maroon">Administrator</p>
+              <p class="text-xs text-gray-500">registrar.admin@pup.edu.ph</p>
             </div>
+            <div class="py-1">
+              <button
+                class="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-pup-maroon transition-colors flex items-center gap-3"
+              >
+                <i class="ph-bold ph-user"></i> Account Settings
+              </button>
+              <button
+                class="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-pup-maroon transition-colors flex items-center gap-3"
+              >
+                <i class="ph-bold ph-question"></i> Help & Support
+              </button>
+            </div>
+            <div class="py-1 border-t border-gray-200">
+              <button
+                onclick="logout()"
+                class="w-full text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
+              >
+                <i class="ph-bold ph-sign-out"></i> Sign Out
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </header>
 
     <!-- Main Content -->
     <main class="flex-1 overflow-hidden w-full max-w-[1600px] mx-auto p-4">
-      
       <!-- VIEW 1: STAFF DIRECTORY -->
-      <div id="view-directory" class="flex flex-col lg:flex-row gap-4 h-full animate-fade-in">
+      <div
+        id="view-directory"
+        class="flex flex-col lg:flex-row gap-4 h-full animate-fade-in"
+      >
         <aside class="w-full lg:w-1/4 flex flex-col gap-4 h-full">
           <div class="grid grid-cols-2 gap-2">
-             <div class="bg-white p-4 rounded-brand border border-gray-300 shadow-sm stats-card">
-                <div class="text-2xl font-bold text-pup-maroon" id="stat-total">0</div>
-                <div class="text-[10px] text-gray-500 uppercase font-bold tracking-wide">Total Staff</div>
-             </div>
-             <div class="bg-white p-4 rounded-brand border border-gray-300 shadow-sm stats-card">
-                <div class="text-2xl font-bold text-green-600" id="stat-active">0</div>
-                <div class="text-[10px] text-gray-500 uppercase font-bold tracking-wide">Active Now</div>
-             </div>
+            <div
+              class="bg-white p-4 rounded-brand border border-gray-300 shadow-sm stats-card"
+            >
+              <div class="text-2xl font-bold text-pup-maroon" id="stat-total">
+                0
+              </div>
+              <div
+                class="text-[10px] text-gray-500 uppercase font-bold tracking-wide"
+              >
+                Total Staff
+              </div>
+            </div>
+            <div
+              class="bg-white p-4 rounded-brand border border-gray-300 shadow-sm stats-card"
+            >
+              <div class="text-2xl font-bold text-green-600" id="stat-active">
+                0
+              </div>
+              <div
+                class="text-[10px] text-gray-500 uppercase font-bold tracking-wide"
+              >
+                Active Now
+              </div>
+            </div>
           </div>
-          <div class="bg-white rounded-brand border border-gray-300 shadow-sm flex-1 flex flex-col overflow-hidden">
-             <div class="p-4 border-b border-gray-200 bg-gray-50/50">
-                <h3 class="text-xs font-bold text-pup-maroon uppercase tracking-wide mb-3">Filter Directory</h3>
-                <div class="space-y-3">
-                   <div class="relative group">
-                      <i class="ph ph-magnifying-glass absolute left-3 top-2.5 text-gray-400 group-focus-within:text-pup-maroon"></i>
-                      <input type="text" id="searchInput" placeholder="Search name or ID..." class="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-brand text-sm focus:outline-none focus:border-pup-maroon transition-all placeholder-gray-400">
-                   </div>
-                   <div>
-                      <label class="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Role</label>
-                      <select id="filterRole" class="form-select text-xs" onchange="renderTable()">
-                         <option value="All">All Roles</option>
-                         <option value="Administrator">Administrator</option>
-                         <option value="Chief">Chief / Head</option>
-                         <option value="Records Officer">Records Officer</option>
-                         <option value="Evaluator">Evaluator</option>
-                         <option value="Encoder">Encoder</option>
-                      </select>
-                   </div>
-                   <div>
-                      <label class="text-[10px] font-bold text-gray-500 uppercase mb-1 block">Status</label>
-                      <select id="filterStatus" class="form-select text-xs" onchange="renderTable()">
-                         <option value="All">All Statuses</option>
-                         <option value="Active">Active</option>
-                         <option value="Inactive">Inactive</option>
-                      </select>
-                   </div>
+          <div
+            class="bg-white rounded-brand border border-gray-300 shadow-sm flex-1 flex flex-col overflow-hidden"
+          >
+            <div class="p-4 border-b border-gray-200 bg-gray-50/50">
+              <h3
+                class="text-xs font-bold text-pup-maroon uppercase tracking-wide mb-3"
+              >
+                Filter Directory
+              </h3>
+              <div class="space-y-3">
+                <div class="relative group">
+                  <i
+                    class="ph ph-magnifying-glass absolute left-3 top-2.5 text-gray-400 group-focus-within:text-pup-maroon"
+                  ></i>
+                  <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search name or ID..."
+                    class="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-brand text-sm focus:outline-none focus:border-pup-maroon transition-all placeholder-gray-400"
+                  />
                 </div>
-             </div>
-             <div class="flex-1 overflow-y-auto p-4 bg-white">
-                <h4 class="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-3">Recent Logins</h4>
-                <div class="space-y-3" id="recentLogins"></div>
-             </div>
+                <div>
+                  <label
+                    class="text-[10px] font-bold text-gray-500 uppercase mb-1 block"
+                    >Role</label
+                  >
+                  <select
+                    id="filterRole"
+                    class="form-select text-xs"
+                    onchange="renderTable()"
+                  >
+                    <option value="All">All Roles</option>
+                    <option value="Administrator">Administrator</option>
+                    <option value="Chief">Chief / Head</option>
+                    <option value="Records Officer">Records Officer</option>
+                    <option value="Evaluator">Evaluator</option>
+                    <option value="Encoder">Encoder</option>
+                  </select>
+                </div>
+                <div>
+                  <label
+                    class="text-[10px] font-bold text-gray-500 uppercase mb-1 block"
+                    >Status</label
+                  >
+                  <select
+                    id="filterStatus"
+                    class="form-select text-xs"
+                    onchange="renderTable()"
+                  >
+                    <option value="All">All Statuses</option>
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-4 bg-white">
+              <h4
+                class="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-3"
+              >
+                Recent Logins
+              </h4>
+              <div class="space-y-3" id="recentLogins"></div>
+            </div>
           </div>
         </aside>
-        <section class="w-full lg:w-3/4 bg-white rounded-brand border border-gray-300 shadow-sm flex flex-col h-full overflow-hidden">
-           <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/30">
-              <h2 class="font-bold text-pup-maroon flex items-center gap-2">
-                 <i class="ph-duotone ph-table"></i> Staff Management
-              </h2>
-              <div class="flex gap-2">
-                 <button onclick="exportData()" class="px-3 py-1.5 border border-gray-300 rounded-brand text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-pup-maroon transition-colors">
-                    <i class="ph-bold ph-download-simple"></i> Export CSV
-                 </button>
-                 <button onclick="switchView('create')" class="px-3 py-1.5 bg-pup-maroon text-white rounded-brand text-xs font-bold hover:bg-red-900 transition-colors shadow-sm flex items-center gap-1">
-                    <i class="ph-bold ph-plus"></i> Add New
-                 </button>
-              </div>
-           </div>
-           <div class="flex-1 overflow-auto">
-              <table class="w-full border-collapse">
-                 <thead class="bg-gray-50 sticky top-0 z-10">
-                    <tr>
-                       <th class="table-header w-16">ID</th>
-                       <th class="table-header">Staff Name</th>
-                       <th class="table-header">Role</th>
-                       <th class="table-header">Section/Unit</th>
-                       <th class="table-header">Status</th>
-                       <th class="table-header">Last Active</th>
-                       <th class="table-header text-right">Actions</th>
-                    </tr>
-                 </thead>
-                 <tbody id="staffTableBody"></tbody>
-              </table>
-              <div id="emptyState" class="hidden flex flex-col items-center justify-center h-64 text-gray-400">
-                 <i class="ph-duotone ph-ghost text-4xl mb-2"></i>
-                 <p class="text-sm">No staff members found.</p>
-              </div>
-           </div>
-           <div class="p-2 border-t border-gray-200 bg-gray-50 text-[10px] text-gray-400 flex justify-between px-4">
-              <span>Showing <span id="count-showing">0</span> records</span>
-              <span>System v1.0.5 Admin</span>
-           </div>
+        <section
+          class="w-full lg:w-3/4 bg-white rounded-brand border border-gray-300 shadow-sm flex flex-col h-full overflow-hidden"
+        >
+          <div
+            class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/30"
+          >
+            <h2 class="font-bold text-pup-maroon flex items-center gap-2">
+              <i class="ph-duotone ph-table"></i> Staff Management
+            </h2>
+            <div class="flex gap-2">
+              <button
+                onclick="exportData()"
+                class="px-3 py-1.5 border border-gray-300 rounded-brand text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-pup-maroon transition-colors"
+              >
+                <i class="ph-bold ph-download-simple"></i> Export CSV
+              </button>
+              <button
+                onclick="switchView('create')"
+                class="px-3 py-1.5 bg-pup-maroon text-white rounded-brand text-xs font-bold hover:bg-red-900 transition-colors shadow-sm flex items-center gap-1"
+              >
+                <i class="ph-bold ph-plus"></i> Add New
+              </button>
+            </div>
+          </div>
+          <div class="flex-1 overflow-auto">
+            <table class="w-full border-collapse">
+              <thead class="bg-gray-50 sticky top-0 z-10">
+                <tr>
+                  <th class="table-header w-16">ID</th>
+                  <th class="table-header">Staff Name</th>
+                  <th class="table-header">Role</th>
+                  <th class="table-header">Section/Unit</th>
+                  <th class="table-header">Status</th>
+                  <th class="table-header">Last Active</th>
+                  <th class="table-header text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="staffTableBody"></tbody>
+            </table>
+            <div
+              id="emptyState"
+              class="hidden flex flex-col items-center justify-center h-64 text-gray-400"
+            >
+              <i class="ph-duotone ph-ghost text-4xl mb-2"></i>
+              <p class="text-sm">No staff members found.</p>
+            </div>
+          </div>
+          <div
+            class="p-2 border-t border-gray-200 bg-gray-50 text-[10px] text-gray-400 flex justify-between px-4"
+          >
+            <span>Showing <span id="count-showing">0</span> records</span>
+            <span>System v1.0.5 Admin</span>
+          </div>
         </section>
       </div>
 
       <!-- VIEW 2: REGISTER ACCOUNT (UPDATED - REMOVED RED SIDEBAR) -->
       <div id="view-create" class="hidden h-full flex-col animate-fade-in">
-         <div class="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm flex flex-col h-full overflow-hidden">
-            <div class="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50/30">
-               <div>
-                  <h3 class="font-bold text-pup-maroon text-lg flex items-center gap-2">
-                     <i class="ph-duotone ph-user-plus"></i> New Account Creation
-                  </h3>
-                  <p class="text-xs text-gray-500 mt-1">Create secure access credentials for Registrar Staff.</p>
-               </div>
-               <button onclick="switchView('directory')" class="text-xs font-bold text-gray-500 hover:text-pup-maroon flex items-center gap-2 transition-colors">
-                  <i class="ph-bold ph-arrow-left"></i> Back to Directory
-               </button>
+        <div
+          class="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm flex flex-col h-full overflow-hidden"
+        >
+          <div
+            class="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50/30"
+          >
+            <div>
+              <h3
+                class="font-bold text-pup-maroon text-lg flex items-center gap-2"
+              >
+                <i class="ph-duotone ph-user-plus"></i> New Account Creation
+              </h3>
+              <p class="text-xs text-gray-500 mt-1">
+                Create secure access credentials for Registrar Staff.
+              </p>
             </div>
-            
-            <div class="flex-1 overflow-y-auto p-8">
-               <div class="max-w-4xl mx-auto">
-                  <!-- Info Cards -->
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                     <div class="bg-blue-50 p-4 rounded-brand border border-blue-100 flex items-start gap-3">
-                        <i class="ph-fill ph-shield-check text-blue-600 text-xl mt-0.5"></i>
-                        <div>
-                           <h4 class="text-sm font-bold text-blue-800">Role-Based Access</h4>
-                           <p class="text-xs text-blue-600 mt-1">Assign specific permissions (Admin, Evaluator, Encoder) to limit data exposure based on staff roles.</p>
-                        </div>
-                     </div>
-                     <div class="bg-amber-50 p-4 rounded-brand border border-amber-100 flex items-start gap-3">
-                        <i class="ph-fill ph-key text-amber-600 text-xl mt-0.5"></i>
-                        <div>
-                           <h4 class="text-sm font-bold text-amber-800">Default Credentials</h4>
-                           <p class="text-xs text-amber-600 mt-1">Accounts are initialized with a temporary password. Users will be prompted to change it upon first login.</p>
-                        </div>
-                     </div>
+            <button
+              onclick="switchView('directory')"
+              class="text-xs font-bold text-gray-500 hover:text-pup-maroon flex items-center gap-2 transition-colors"
+            >
+              <i class="ph-bold ph-arrow-left"></i> Back to Directory
+            </button>
+          </div>
+
+          <div class="flex-1 overflow-y-auto p-8">
+            <div class="max-w-4xl mx-auto">
+              <!-- Info Cards -->
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                <div
+                  class="bg-blue-50 p-4 rounded-brand border border-blue-100 flex items-start gap-3"
+                >
+                  <i
+                    class="ph-fill ph-shield-check text-blue-600 text-xl mt-0.5"
+                  ></i>
+                  <div>
+                    <h4 class="text-sm font-bold text-blue-800">
+                      Role-Based Access
+                    </h4>
+                    <p class="text-xs text-blue-600 mt-1">
+                      Assign specific permissions (Admin, Evaluator, Encoder) to
+                      limit data exposure based on staff roles.
+                    </p>
                   </div>
+                </div>
+                <div
+                  class="bg-amber-50 p-4 rounded-brand border border-amber-100 flex items-start gap-3"
+                >
+                  <i class="ph-fill ph-key text-amber-600 text-xl mt-0.5"></i>
+                  <div>
+                    <h4 class="text-sm font-bold text-amber-800">
+                      Default Credentials
+                    </h4>
+                    <p class="text-xs text-amber-600 mt-1">
+                      Accounts are initialized with a temporary password. Users
+                      will be prompted to change it upon first login.
+                    </p>
+                  </div>
+                </div>
+              </div>
 
-                  <form id="createForm" onsubmit="handleCreate(event)" class="space-y-6">
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                           <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Employee ID *</label>
-                           <div class="relative">
-                              <i class="ph-bold ph-identification-card absolute left-3 top-2.5 text-gray-400"></i>
-                              <input type="text" id="newId" required class="form-input pl-9 font-mono" placeholder="e.g. 2023-001">
-                           </div>
-                        </div>
-                        <div>
-                           <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">System Role *</label>
-                           <select id="newRole" required class="form-select">
-                              <option value="" disabled selected>Select Role...</option>
-                              <option value="Administrator">Administrator (Head)</option>
-                              <option value="Records Officer">Records Officer</option>
-                              <option value="Evaluator">Evaluator</option>
-                              <option value="Encoder">Encoder (Data Entry)</option>
-                           </select>
-                        </div>
-                     </div>
+              <form
+                id="createForm"
+                onsubmit="handleCreate(event)"
+                class="space-y-6"
+              >
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label
+                      class="block text-xs font-bold text-gray-600 mb-1.5 uppercase"
+                      >Employee ID *</label
+                    >
+                    <div class="relative">
+                      <i
+                        class="ph-bold ph-identification-card absolute left-3 top-2.5 text-gray-400"
+                      ></i>
+                      <input
+                        type="text"
+                        id="newId"
+                        required
+                        class="form-input pl-9 font-mono"
+                        placeholder="e.g. 2023-001"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label
+                      class="block text-xs font-bold text-gray-600 mb-1.5 uppercase"
+                      >System Role *</label
+                    >
+                    <select id="newRole" required class="form-select">
+                      <option value="" disabled selected>Select Role...</option>
+                      <option value="Administrator">
+                        Administrator (Head)
+                      </option>
+                      <option value="Records Officer">Records Officer</option>
+                      <option value="Evaluator">Evaluator</option>
+                      <option value="Encoder">Encoder (Data Entry)</option>
+                    </select>
+                  </div>
+                </div>
 
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                           <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">First Name *</label>
-                           <input type="text" id="newFName" required class="form-input" placeholder="Juan">
-                        </div>
-                        <div>
-                           <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Last Name *</label>
-                           <input type="text" id="newLName" required class="form-input" placeholder="Dela Cruz">
-                        </div>
-                     </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label
+                      class="block text-xs font-bold text-gray-600 mb-1.5 uppercase"
+                      >First Name *</label
+                    >
+                    <input
+                      type="text"
+                      id="newFName"
+                      required
+                      class="form-input"
+                      placeholder="Juan"
+                    />
+                  </div>
+                  <div>
+                    <label
+                      class="block text-xs font-bold text-gray-600 mb-1.5 uppercase"
+                      >Last Name *</label
+                    >
+                    <input
+                      type="text"
+                      id="newLName"
+                      required
+                      class="form-input"
+                      placeholder="Dela Cruz"
+                    />
+                  </div>
+                </div>
 
-                     <div>
-                        <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Email Address *</label>
-                        <div class="relative">
-                           <i class="ph-bold ph-envelope absolute left-3 top-2.5 text-gray-400"></i>
-                           <input type="email" id="newEmail" required class="form-input pl-9" placeholder="juan.delacruz@pup.edu.ph">
-                        </div>
-                        <p class="text-[10px] text-gray-400 mt-1">An activation link will be sent to this email.</p>
-                     </div>
+                <div>
+                  <label
+                    class="block text-xs font-bold text-gray-600 mb-1.5 uppercase"
+                    >Email Address *</label
+                  >
+                  <div class="relative">
+                    <i
+                      class="ph-bold ph-envelope absolute left-3 top-2.5 text-gray-400"
+                    ></i>
+                    <input
+                      type="email"
+                      id="newEmail"
+                      required
+                      class="form-input pl-9"
+                      placeholder="juan.delacruz@pup.edu.ph"
+                    />
+                  </div>
+                  <p class="text-[10px] text-gray-400 mt-1">
+                    An activation link will be sent to this email.
+                  </p>
+                </div>
 
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                           <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Section / Unit</label>
-                           <select id="newSection" class="form-select">
-                              <option value="Administrative">Administrative</option>
-                              <option value="Records">Records Section</option>
-                              <option value="Evaluation">Evaluation Section</option>
-                              <option value="Releasing">Releasing Window</option>
-                              <option value="Admission">Admission Support</option>
-                           </select>
-                        </div>
-                        <div>
-                           <label class="block text-xs font-bold text-gray-600 mb-1.5 uppercase">Initial Status</label>
-                           <div class="flex gap-4 mt-2">
-                              <label class="flex items-center gap-2 cursor-pointer">
-                                 <input type="radio" name="status" value="Active" checked class="text-pup-maroon focus:ring-pup-maroon">
-                                 <span class="text-sm text-gray-700">Active</span>
-                              </label>
-                              <label class="flex items-center gap-2 cursor-pointer">
-                                 <input type="radio" name="status" value="Inactive" class="text-pup-maroon focus:ring-pup-maroon">
-                                 <span class="text-sm text-gray-700">Inactive</span>
-                              </label>
-                           </div>
-                        </div>
-                     </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label
+                      class="block text-xs font-bold text-gray-600 mb-1.5 uppercase"
+                      >Section / Unit</label
+                    >
+                    <select id="newSection" class="form-select">
+                      <option value="Administrative">Administrative</option>
+                      <option value="Records">Records Section</option>
+                      <option value="Evaluation">Evaluation Section</option>
+                      <option value="Releasing">Releasing Window</option>
+                      <option value="Admission">Admission Support</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label
+                      class="block text-xs font-bold text-gray-600 mb-1.5 uppercase"
+                      >Initial Status</label
+                    >
+                    <div class="flex gap-4 mt-2">
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="status"
+                          value="Active"
+                          checked
+                          class="text-pup-maroon focus:ring-pup-maroon"
+                        />
+                        <span class="text-sm text-gray-700">Active</span>
+                      </label>
+                      <label class="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="status"
+                          value="Inactive"
+                          class="text-pup-maroon focus:ring-pup-maroon"
+                        />
+                        <span class="text-sm text-gray-700">Inactive</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
 
-                     <div class="border-t border-gray-200 pt-6 flex items-center justify-end gap-3">
-                        <button type="button" onclick="resetForm()" class="px-5 py-2.5 border border-gray-300 rounded-brand text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors">Reset Form</button>
-                        <button type="submit" class="px-6 py-2.5 bg-pup-maroon text-white rounded-brand text-sm font-bold hover:bg-red-900 transition-all shadow-md hover:shadow-lg flex items-center gap-2">
-                           <i class="ph-bold ph-check"></i> Create Account
-                        </button>
-                     </div>
-                  </form>
-               </div>
+                <div
+                  class="border-t border-gray-200 pt-6 flex items-center justify-end gap-3"
+                >
+                  <button
+                    type="button"
+                    onclick="resetForm()"
+                    class="px-5 py-2.5 border border-gray-300 rounded-brand text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
+                  >
+                    Reset Form
+                  </button>
+                  <button
+                    type="submit"
+                    class="px-6 py-2.5 bg-pup-maroon text-white rounded-brand text-sm font-bold hover:bg-red-900 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
+                  >
+                    <i class="ph-bold ph-check"></i> Create Account
+                  </button>
+                </div>
+              </form>
             </div>
-         </div>
+          </div>
+        </div>
       </div>
 
       <!-- VIEW 3: AUDIT LOGS (UPDATED) -->
       <div id="view-logs" class="hidden h-full animate-fade-in">
-        <div class="bg-white rounded-brand border border-gray-300 shadow-sm h-full flex flex-col">
-            <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-               <h2 class="font-bold text-pup-maroon flex items-center gap-2">
-                  <i class="ph-duotone ph-scroll"></i> System Audit Logs
-               </h2>
-               <div class="flex items-center gap-3">
-                  <div class="relative">
-                     <i class="ph ph-magnifying-glass absolute left-2.5 top-2 text-gray-400 text-xs"></i>
-                     <input type="text" placeholder="Search logs..." class="pl-7 pr-3 py-1.5 text-xs border border-gray-300 rounded-brand focus:outline-none focus:border-pup-maroon w-48">
-                  </div>
-                  <div class="text-[10px] text-gray-400 font-mono">Total Records: 1,245</div>
-               </div>
+        <div
+          class="bg-white rounded-brand border border-gray-300 shadow-sm h-full flex flex-col"
+        >
+          <div
+            class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center"
+          >
+            <h2 class="font-bold text-pup-maroon flex items-center gap-2">
+              <i class="ph-duotone ph-scroll"></i> System Audit Logs
+            </h2>
+            <div class="flex items-center gap-3">
+              <div class="relative">
+                <i
+                  class="ph ph-magnifying-glass absolute left-2.5 top-2 text-gray-400 text-xs"
+                ></i>
+                <input
+                  type="text"
+                  placeholder="Search logs..."
+                  class="pl-7 pr-3 py-1.5 text-xs border border-gray-300 rounded-brand focus:outline-none focus:border-pup-maroon w-48"
+                />
+              </div>
+              <div class="text-[10px] text-gray-400 font-mono">
+                Total Records: 1,245
+              </div>
             </div>
-            <div class="flex-1 overflow-y-auto p-0">
-               <table class="w-full text-left border-collapse">
-                  <thead class="bg-gray-50 sticky top-0 z-10 text-[10px] uppercase text-gray-500 font-bold">
-                     <tr>
-                        <th class="p-3 border-b border-gray-200 w-32">Timestamp</th>
-                        <th class="p-3 border-b border-gray-200 w-40">User</th>
-                        <th class="p-3 border-b border-gray-200 w-32">Role</th>
-                        <th class="p-3 border-b border-gray-200">Activity</th>
-                        <th class="p-3 border-b border-gray-200 w-24 text-right">IP Address</th>
-                     </tr>
-                  </thead>
-                  <tbody id="log-container" class="text-xs text-gray-600 divide-y divide-gray-100">
-                     <!-- JS populated -->
-                  </tbody>
-               </table>
-            </div>
-            <div class="p-2 border-t border-gray-200 bg-gray-50 text-[10px] text-gray-400 flex justify-center">
-               <button class="hover:text-pup-maroon px-2">Previous</button>
-               <span class="px-2">Page 1 of 50</span>
-               <button class="hover:text-pup-maroon px-2">Next</button>
-            </div>
+          </div>
+          <div class="flex-1 overflow-y-auto p-0">
+            <table class="w-full text-left border-collapse">
+              <thead
+                class="bg-gray-50 sticky top-0 z-10 text-[10px] uppercase text-gray-500 font-bold"
+              >
+                <tr>
+                  <th class="p-3 border-b border-gray-200 w-32">Timestamp</th>
+                  <th class="p-3 border-b border-gray-200 w-40">User</th>
+                  <th class="p-3 border-b border-gray-200 w-32">Role</th>
+                  <th class="p-3 border-b border-gray-200">Activity</th>
+                  <th class="p-3 border-b border-gray-200 w-24 text-right">
+                    IP Address
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                id="log-container"
+                class="text-xs text-gray-600 divide-y divide-gray-100"
+              >
+                <!-- JS populated -->
+              </tbody>
+            </table>
+          </div>
+          <div
+            class="p-2 border-t border-gray-200 bg-gray-50 text-[10px] text-gray-400 flex justify-center"
+          >
+            <button class="hover:text-pup-maroon px-2">Previous</button>
+            <span class="px-2">Page 1 of 50</span>
+            <button class="hover:text-pup-maroon px-2">Next</button>
+          </div>
         </div>
       </div>
 
       <!-- VIEW 4: BACKUP & MAINTENANCE (FIXED LAYOUT) -->
-      <div id="view-backup" class="hidden h-full gap-4 flex-row animate-fade-in items-stretch">
-        
+      <div
+        id="view-backup"
+        class="hidden h-full gap-4 flex-row animate-fade-in items-stretch"
+      >
         <!-- Left Panel: 30% Width -->
-        <section class="w-[30%] flex-none flex flex-col gap-4 overflow-y-auto pr-1 h-full">
-           
-           <!-- System Health -->
-           <div class="bg-white rounded-brand border border-gray-300 shadow-sm p-5 relative flex-none">
-               <h3 class="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2">
-                   <i class="ph-duotone ph-heartbeat text-pup-maroon text-lg"></i> System Health
-               </h3>
-               <div class="space-y-4">
-                   <div>
-                       <div class="flex justify-between text-[10px] uppercase font-bold text-gray-500 mb-1">
-                           <span>Storage (45GB/100GB)</span>
-                           <span class="text-gray-700">45%</span>
-                       </div>
-                       <div class="w-full bg-gray-100 rounded-full h-1.5">
-                           <div class="bg-pup-maroon h-1.5 rounded-full" style="width: 45%"></div>
-                       </div>
-                   </div>
-                   <div>
-                       <div class="flex justify-between text-[10px] uppercase font-bold text-gray-500 mb-1">
-                           <span>Database Load</span>
-                           <span class="text-green-600">Healthy</span>
-                       </div>
-                       <div class="w-full bg-gray-100 rounded-full h-1.5">
-                           <div class="bg-green-500 h-1.5 rounded-full" style="width: 12%"></div>
-                       </div>
-                   </div>
-                   <div>
-                       <div class="flex justify-between text-[10px] uppercase font-bold text-gray-500 mb-1">
-                           <span>CPU Usage</span>
-                           <span class="text-gray-700">28%</span>
-                       </div>
-                       <div class="w-full bg-gray-100 rounded-full h-1.5">
-                           <div class="bg-blue-500 h-1.5 rounded-full" style="width: 28%"></div>
-                       </div>
-                   </div>
-               </div>
-           </div>
+        <section
+          class="w-[30%] flex-none flex flex-col gap-4 overflow-y-auto pr-1 h-full"
+        >
+          <!-- System Health -->
+          <div
+            class="bg-white rounded-brand border border-gray-300 shadow-sm p-5 relative flex-none"
+          >
+            <h3
+              class="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2"
+            >
+              <i class="ph-duotone ph-heartbeat text-pup-maroon text-lg"></i>
+              System Health
+            </h3>
+            <div class="space-y-4">
+              <div>
+                <div
+                  class="flex justify-between text-[10px] uppercase font-bold text-gray-500 mb-1"
+                >
+                  <span>Storage (45GB/100GB)</span>
+                  <span class="text-gray-700">45%</span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-1.5">
+                  <div
+                    class="bg-pup-maroon h-1.5 rounded-full"
+                    style="width: 45%"
+                  ></div>
+                </div>
+              </div>
+              <div>
+                <div
+                  class="flex justify-between text-[10px] uppercase font-bold text-gray-500 mb-1"
+                >
+                  <span>Database Load</span>
+                  <span class="text-green-600">Healthy</span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-1.5">
+                  <div
+                    class="bg-green-500 h-1.5 rounded-full"
+                    style="width: 12%"
+                  ></div>
+                </div>
+              </div>
+              <div>
+                <div
+                  class="flex justify-between text-[10px] uppercase font-bold text-gray-500 mb-1"
+                >
+                  <span>CPU Usage</span>
+                  <span class="text-gray-700">28%</span>
+                </div>
+                <div class="w-full bg-gray-100 rounded-full h-1.5">
+                  <div
+                    class="bg-blue-500 h-1.5 rounded-full"
+                    style="width: 28%"
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-           <!-- Database Actions -->
-           <div class="bg-white rounded-brand border border-gray-300 shadow-sm p-5 relative overflow-hidden group flex-none">
-               <div class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
-                  <i class="ph-fill ph-database text-9xl text-pup-maroon"></i>
-               </div>
-               <div class="relative z-10">
-                   <h3 class="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2">
-                      <i class="ph-duotone ph-database text-pup-maroon text-lg"></i> Full System Backup
-                   </h3>
-                   <p class="text-xs text-gray-500 mb-4 leading-relaxed">
-                      Create a complete snapshot including the SQL database records and all scanned PDF documents stored on the connected external drive.
-                   </p>
-                   
-                   <button onclick="simulateBackup()" class="w-full bg-pup-maroon text-white py-2.5 rounded-brand text-xs font-bold hover:bg-red-900 transition-colors flex items-center justify-center gap-2 shadow-sm mb-4">
-                      <i class="ph-bold ph-download-simple"></i> Download Full Backup (.zip)
-                   </button>
+          <!-- Database Actions -->
+          <div
+            class="bg-white rounded-brand border border-gray-300 shadow-sm p-5 relative overflow-hidden group flex-none"
+          >
+            <div
+              class="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none"
+            >
+              <i class="ph-fill ph-database text-9xl text-pup-maroon"></i>
+            </div>
+            <div class="relative z-10">
+              <h3
+                class="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2"
+              >
+                <i class="ph-duotone ph-database text-pup-maroon text-lg"></i>
+                Full System Backup
+              </h3>
+              <p class="text-xs text-gray-500 mb-4 leading-relaxed">
+                Create a complete snapshot including the SQL database records
+                and all scanned PDF documents stored on the connected external
+                drive.
+              </p>
 
-                   <div class="border-t border-dashed border-gray-200 pt-4">
-                       <label class="block text-[10px] font-bold text-gray-400 uppercase mb-2">Restore System</label>
-                       <input type="file" id="restoreFile" class="hidden" accept=".zip,.sql" onchange="handleRestore(this)">
-                       <button onclick="document.getElementById('restoreFile').click()" class="w-full bg-white border border-gray-300 text-gray-600 py-2 rounded-brand text-xs font-bold hover:border-pup-maroon hover:text-pup-maroon transition-colors flex items-center justify-center gap-2">
-                           <i class="ph-bold ph-upload-simple"></i> Upload Backup File
-                       </button>
-                   </div>
-                   <div class="mt-4 text-[10px] text-gray-400 text-center">
-                      Last backup: <span class="font-mono text-gray-600">Today, 08:00 AM</span>
-                   </div>
-               </div>
-           </div>
+              <button
+                onclick="simulateBackup()"
+                class="w-full bg-pup-maroon text-white py-2.5 rounded-brand text-xs font-bold hover:bg-red-900 transition-colors flex items-center justify-center gap-2 shadow-sm mb-4"
+              >
+                <i class="ph-bold ph-download-simple"></i> Download Full Backup
+                (.zip)
+              </button>
 
-           <!-- System Operations (GROW TO FILL) -->
-           <div class="bg-white rounded-brand border border-gray-300 shadow-sm p-5 flex-1">
-               <h3 class="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2">
-                  <i class="ph-duotone ph-wrench text-pup-maroon text-lg"></i> System Operations
-               </h3>
-               <div class="space-y-4">
-                   <div class="flex items-center justify-between">
-                      <div class="text-xs">
-                         <div class="font-bold text-gray-700">Auto-Backup</div>
-                         <div class="text-gray-400">Daily at 12:00 AM</div>
-                      </div>
-                      <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" checked class="sr-only peer">
-                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pup-maroon"></div>
-                      </label>
-                   </div>
-                   <div class="flex items-center justify-between">
-                      <div class="text-xs">
-                         <div class="font-bold text-gray-700">Maintenance Mode</div>
-                         <div class="text-gray-400">Lock non-admin logins</div>
-                      </div>
-                      <label class="relative inline-flex items-center cursor-pointer">
-                        <input type="checkbox" class="sr-only peer">
-                        <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pup-maroon"></div>
-                      </label>
-                   </div>
-                   <hr class="border-gray-200 my-2">
-                   <div class="grid grid-cols-2 gap-2">
-                       <button onclick="clearCache()" class="px-3 py-2 border border-gray-200 rounded-brand text-[10px] font-bold text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors flex flex-col items-center gap-1">
-                           <i class="ph-bold ph-broom text-lg"></i> Clear Cache
-                       </button>
-                       <button onclick="forceLogout()" class="px-3 py-2 border border-red-100 bg-red-50 rounded-brand text-[10px] font-bold text-red-700 hover:bg-red-100 transition-colors flex flex-col items-center gap-1">
-                           <i class="ph-bold ph-sign-out text-lg"></i> Force Logout
-                       </button>
-                   </div>
-               </div>
-           </div>
+              <div class="border-t border-dashed border-gray-200 pt-4">
+                <label
+                  class="block text-[10px] font-bold text-gray-400 uppercase mb-2"
+                  >Restore System</label
+                >
+                <input
+                  type="file"
+                  id="restoreFile"
+                  class="hidden"
+                  accept=".zip,.sql"
+                  onchange="handleRestore(this)"
+                />
+                <button
+                  onclick="document.getElementById('restoreFile').click()"
+                  class="w-full bg-white border border-gray-300 text-gray-600 py-2 rounded-brand text-xs font-bold hover:border-pup-maroon hover:text-pup-maroon transition-colors flex items-center justify-center gap-2"
+                >
+                  <i class="ph-bold ph-upload-simple"></i> Upload Backup File
+                </button>
+              </div>
+              <div class="mt-4 text-[10px] text-gray-400 text-center">
+                Last backup:
+                <span class="font-mono text-gray-600">Today, 08:00 AM</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- System Operations (GROW TO FILL) -->
+          <div
+            class="bg-white rounded-brand border border-gray-300 shadow-sm p-5 flex-1"
+          >
+            <h3
+              class="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2"
+            >
+              <i class="ph-duotone ph-wrench text-pup-maroon text-lg"></i>
+              System Operations
+            </h3>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <div class="text-xs">
+                  <div class="font-bold text-gray-700">Auto-Backup</div>
+                  <div class="text-gray-400">Daily at 12:00 AM</div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" checked class="sr-only peer" />
+                  <div
+                    class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pup-maroon"
+                  ></div>
+                </label>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="text-xs">
+                  <div class="font-bold text-gray-700">Maintenance Mode</div>
+                  <div class="text-gray-400">Lock non-admin logins</div>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input type="checkbox" class="sr-only peer" />
+                  <div
+                    class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pup-maroon"
+                  ></div>
+                </label>
+              </div>
+              <hr class="border-gray-200 my-2" />
+              <div class="grid grid-cols-2 gap-2">
+                <button
+                  onclick="clearCache()"
+                  class="px-3 py-2 border border-gray-200 rounded-brand text-[10px] font-bold text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors flex flex-col items-center gap-1"
+                >
+                  <i class="ph-bold ph-broom text-lg"></i> Clear Cache
+                </button>
+                <button
+                  onclick="forceLogout()"
+                  class="px-3 py-2 border border-red-100 bg-red-50 rounded-brand text-[10px] font-bold text-red-700 hover:bg-red-100 transition-colors flex flex-col items-center gap-1"
+                >
+                  <i class="ph-bold ph-sign-out text-lg"></i> Force Logout
+                </button>
+              </div>
+            </div>
+          </div>
         </section>
 
         <!-- Right Panel: 70% Width (Backup History) -->
-        <section class="w-[70%] bg-white rounded-brand border border-gray-300 shadow-sm flex flex-col overflow-hidden h-full">
-            <div class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center flex-none">
-               <h3 class="font-bold text-xs text-pup-maroon uppercase tracking-wide">Backup History</h3>
-               <div class="flex items-center gap-2">
-                   <label class="text-[10px] font-bold text-gray-500 uppercase">Retention Policy:</label>
-                   <select class="text-xs border-gray-300 rounded border px-2 py-1 focus:outline-none focus:border-pup-maroon">
-                       <option>Keep 30 Days</option>
-                       <option>Keep 60 Days</option>
-                       <option>Keep All</option>
-                   </select>
-               </div>
+        <section
+          class="w-[70%] bg-white rounded-brand border border-gray-300 shadow-sm flex flex-col overflow-hidden h-full"
+        >
+          <div
+            class="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center flex-none"
+          >
+            <h3
+              class="font-bold text-xs text-pup-maroon uppercase tracking-wide"
+            >
+              Backup History
+            </h3>
+            <div class="flex items-center gap-2">
+              <label class="text-[10px] font-bold text-gray-500 uppercase"
+                >Retention Policy:</label
+              >
+              <select
+                class="text-xs border-gray-300 rounded border px-2 py-1 focus:outline-none focus:border-pup-maroon"
+              >
+                <option>Keep 30 Days</option>
+                <option>Keep 60 Days</option>
+                <option>Keep All</option>
+              </select>
             </div>
-            <div class="flex-1 overflow-auto">
-               <table class="w-full text-left border-collapse">
-                  <thead class="bg-white text-[10px] text-gray-400 uppercase font-bold sticky top-0">
-                     <tr>
-                        <th class="p-3 border-b border-gray-200">Filename</th>
-                        <th class="p-3 border-b border-gray-200">Date & Time</th>
-                        <th class="p-3 border-b border-gray-200">Size</th>
-                        <th class="p-3 border-b border-gray-200">Contents</th>
-                        <th class="p-3 border-b border-gray-200">Type</th>
-                        <th class="p-3 border-b border-gray-200 text-right">Action</th>
-                     </tr>
-                  </thead>
-                  <tbody class="text-xs text-gray-600">
-                     <tr class="hover:bg-gray-50 border-b border-gray-50">
-                        <td class="p-3 font-mono text-pup-maroon">full_backup_20231126.zip</td>
-                        <td class="p-3">Nov 26, 2023 - 08:00 AM</td>
-                        <td class="p-3">1.2 GB</td>
-                        <td class="p-3">SQL + PDF Files</td>
-                        <td class="p-3"><span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px] font-bold">AUTO</span></td>
-                        <td class="p-3 text-right"><button class="text-gray-400 hover:text-pup-maroon"><i class="ph-bold ph-download-simple"></i></button></td>
-                     </tr>
-                     <tr class="hover:bg-gray-50 border-b border-gray-50">
-                        <td class="p-3 font-mono text-pup-maroon">full_backup_20231125.zip</td>
-                        <td class="p-3">Nov 25, 2023 - 08:00 AM</td>
-                        <td class="p-3">1.1 GB</td>
-                        <td class="p-3">SQL + PDF Files</td>
-                        <td class="p-3"><span class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px] font-bold">AUTO</span></td>
-                        <td class="p-3 text-right"><button class="text-gray-400 hover:text-pup-maroon"><i class="ph-bold ph-download-simple"></i></button></td>
-                     </tr>
-                     <tr class="hover:bg-gray-50 border-b border-gray-50">
-                        <td class="p-3 font-mono text-pup-maroon">db_snapshot.sql</td>
-                        <td class="p-3">Nov 24, 2023 - 03:15 PM</td>
-                        <td class="p-3">44.5 MB</td>
-                        <td class="p-3">SQL Only</td>
-                        <td class="p-3"><span class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-bold">MANUAL</span></td>
-                        <td class="p-3 text-right"><button class="text-gray-400 hover:text-pup-maroon"><i class="ph-bold ph-download-simple"></i></button></td>
-                     </tr>
-                  </tbody>
-               </table>
-            </div>
+          </div>
+          <div class="flex-1 overflow-auto">
+            <table class="w-full text-left border-collapse">
+              <thead
+                class="bg-white text-[10px] text-gray-400 uppercase font-bold sticky top-0"
+              >
+                <tr>
+                  <th class="p-3 border-b border-gray-200">Filename</th>
+                  <th class="p-3 border-b border-gray-200">Date & Time</th>
+                  <th class="p-3 border-b border-gray-200">Size</th>
+                  <th class="p-3 border-b border-gray-200">Contents</th>
+                  <th class="p-3 border-b border-gray-200">Type</th>
+                  <th class="p-3 border-b border-gray-200 text-right">
+                    Action
+                  </th>
+                </tr>
+              </thead>
+              <tbody class="text-xs text-gray-600">
+                <tr class="hover:bg-gray-50 border-b border-gray-50">
+                  <td class="p-3 font-mono text-pup-maroon">
+                    full_backup_20231126.zip
+                  </td>
+                  <td class="p-3">Nov 26, 2023 - 08:00 AM</td>
+                  <td class="p-3">1.2 GB</td>
+                  <td class="p-3">SQL + PDF Files</td>
+                  <td class="p-3">
+                    <span
+                      class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px] font-bold"
+                      >AUTO</span
+                    >
+                  </td>
+                  <td class="p-3 text-right">
+                    <button class="text-gray-400 hover:text-pup-maroon">
+                      <i class="ph-bold ph-download-simple"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr class="hover:bg-gray-50 border-b border-gray-50">
+                  <td class="p-3 font-mono text-pup-maroon">
+                    full_backup_20231125.zip
+                  </td>
+                  <td class="p-3">Nov 25, 2023 - 08:00 AM</td>
+                  <td class="p-3">1.1 GB</td>
+                  <td class="p-3">SQL + PDF Files</td>
+                  <td class="p-3">
+                    <span
+                      class="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px] font-bold"
+                      >AUTO</span
+                    >
+                  </td>
+                  <td class="p-3 text-right">
+                    <button class="text-gray-400 hover:text-pup-maroon">
+                      <i class="ph-bold ph-download-simple"></i>
+                    </button>
+                  </td>
+                </tr>
+                <tr class="hover:bg-gray-50 border-b border-gray-50">
+                  <td class="p-3 font-mono text-pup-maroon">db_snapshot.sql</td>
+                  <td class="p-3">Nov 24, 2023 - 03:15 PM</td>
+                  <td class="p-3">44.5 MB</td>
+                  <td class="p-3">SQL Only</td>
+                  <td class="p-3">
+                    <span
+                      class="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-bold"
+                      >MANUAL</span
+                    >
+                  </td>
+                  <td class="p-3 text-right">
+                    <button class="text-gray-400 hover:text-pup-maroon">
+                      <i class="ph-bold ph-download-simple"></i>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </section>
       </div>
-
     </main>
 
     <!-- FOOTER -->
-    <footer class="bg-white border-t border-gray-300 p-3 flex-none z-10 shadow-inner">
-      <div class="max-w-[1600px] mx-auto flex justify-between items-center text-xs font-medium text-gray-600">
-        <p>&copy; 2024 Polytechnic University of the Philippines. All rights reserved.</p>
+    <footer
+      class="bg-white border-t border-gray-300 p-3 flex-none z-10 shadow-inner"
+    >
+      <div
+        class="max-w-[1600px] mx-auto flex justify-between items-center text-xs font-medium text-gray-600"
+      >
+        <p>
+          &copy; 2024 Polytechnic University of the Philippines. All rights
+          reserved.
+        </p>
         <div class="flex gap-4">
-          <a href="#" class="hover:text-pup-maroon transition-colors">Privacy Policy</a>
-          <a href="#" class="hover:text-pup-maroon transition-colors">Terms of Use</a>
+          <a href="#" class="hover:text-pup-maroon transition-colors"
+            >Privacy Policy</a
+          >
+          <a href="#" class="hover:text-pup-maroon transition-colors"
+            >Terms of Use</a
+          >
           <span class="text-gray-400">|</span>
           <span class="text-gray-500">System Version 1.0.2 (Beta)</span>
         </div>
@@ -678,85 +1037,223 @@
     </footer>
 
     <!-- TOAST NOTIFICATION -->
-    <div id="toast" class="fixed bottom-5 right-5 transform translate-y-20 opacity-0 transition-all duration-300 z-50 bg-gray-800 text-white px-4 py-3 rounded-brand shadow-lg flex items-center gap-3">
-       <i class="ph-fill ph-check-circle text-green-400 text-xl"></i>
-       <span id="toast-msg" class="text-sm font-medium">Operation Successful</span>
+    <div
+      id="toast"
+      class="fixed bottom-5 right-5 transform translate-y-20 opacity-0 transition-all duration-300 z-50 bg-gray-800 text-white px-4 py-3 rounded-brand shadow-lg flex items-center gap-3"
+    >
+      <i class="ph-fill ph-check-circle text-green-400 text-xl"></i>
+      <span id="toast-msg" class="text-sm font-medium"
+        >Operation Successful</span
+      >
     </div>
 
     <script>
       // --- 1. MOCK DATA ---
-      const units = ["Records", "Evaluation", "Releasing", "Administrative", "Admission"];
-      const roles = ["Administrator", "Records Officer", "Evaluator", "Encoder"];
-      
+      const units = [
+        "Records",
+        "Evaluation",
+        "Releasing",
+        "Administrative",
+        "Admission",
+      ];
+      const roles = [
+        "Administrator",
+        "Records Officer",
+        "Evaluator",
+        "Encoder",
+      ];
+
       let staffData = [
-         { id: "2023-001", fname: "Maria", lname: "Santos", role: "Administrator", section: "Administrative", status: "Active", lastActive: "Just now", email: "m.santos@pup.edu.ph" },
-         { id: "2023-002", fname: "Jose", lname: "Reyes", role: "Records Officer", section: "Records", status: "Active", lastActive: "10 mins ago", email: "j.reyes@pup.edu.ph" },
-         { id: "2023-005", fname: "Ana", lname: "Dizon", role: "Encoder", section: "Records", status: "Inactive", lastActive: "2 days ago", email: "a.dizon@pup.edu.ph" },
-         { id: "2023-008", fname: "Pedro", lname: "Cruz", role: "Evaluator", section: "Evaluation", status: "Active", lastActive: "1 hour ago", email: "p.cruz@pup.edu.ph" },
-         { id: "2022-045", fname: "Lorna", lname: "Tolentino", role: "Encoder", section: "Releasing", status: "Active", lastActive: "5 mins ago", email: "l.tolentino@pup.edu.ph" },
-         { id: "2021-012", fname: "Rico", lname: "Yan", role: "Administrator", section: "Administrative", status: "Active", lastActive: "Yesterday", email: "r.yan@pup.edu.ph" },
+        {
+          id: "2023-001",
+          fname: "Maria",
+          lname: "Santos",
+          role: "Administrator",
+          section: "Administrative",
+          status: "Active",
+          lastActive: "Just now",
+          email: "m.santos@pup.edu.ph",
+        },
+        {
+          id: "2023-002",
+          fname: "Jose",
+          lname: "Reyes",
+          role: "Records Officer",
+          section: "Records",
+          status: "Active",
+          lastActive: "10 mins ago",
+          email: "j.reyes@pup.edu.ph",
+        },
+        {
+          id: "2023-005",
+          fname: "Ana",
+          lname: "Dizon",
+          role: "Encoder",
+          section: "Records",
+          status: "Inactive",
+          lastActive: "2 days ago",
+          email: "a.dizon@pup.edu.ph",
+        },
+        {
+          id: "2023-008",
+          fname: "Pedro",
+          lname: "Cruz",
+          role: "Evaluator",
+          section: "Evaluation",
+          status: "Active",
+          lastActive: "1 hour ago",
+          email: "p.cruz@pup.edu.ph",
+        },
+        {
+          id: "2022-045",
+          fname: "Lorna",
+          lname: "Tolentino",
+          role: "Encoder",
+          section: "Releasing",
+          status: "Active",
+          lastActive: "5 mins ago",
+          email: "l.tolentino@pup.edu.ph",
+        },
+        {
+          id: "2021-012",
+          fname: "Rico",
+          lname: "Yan",
+          role: "Administrator",
+          section: "Administrative",
+          status: "Active",
+          lastActive: "Yesterday",
+          email: "r.yan@pup.edu.ph",
+        },
       ];
 
       // Expanded Audit Logs
       const auditLogs = [
-         { time: "10:42 AM", user: "Maria Santos", role: "Administrator", action: "Created new staff account: P. Cruz", ip: "192.168.1.10" },
-         { time: "10:30 AM", user: "Jose Reyes", role: "Records Officer", action: "Updated student record: 2020-00123-MN-0", ip: "192.168.1.12" },
-         { time: "09:15 AM", user: "System", role: "System", action: "Daily automated backup completed (1.2GB)", ip: "localhost" },
-         { time: "08:55 AM", user: "Lorna Tolentino", role: "Encoder", action: "Generated Grade Report for Batch 2023", ip: "192.168.1.15" },
-         { time: "Yesterday", user: "Rico Yan", role: "Administrator", action: "Deleted archived document #4421 (Expired)", ip: "192.168.1.11" },
-         { time: "Yesterday", user: "Ana Dizon", role: "Encoder", action: "Failed login attempt (3x) - Account Locked", ip: "192.168.1.14" },
-         { time: "Yesterday", user: "Pedro Cruz", role: "Evaluator", action: "Printed Transcript of Records: 2019-00567-MN-0", ip: "192.168.1.13" },
-         { time: "2 days ago", user: "Maria Santos", role: "Administrator", action: "Updated System Configuration: Retention Policy", ip: "192.168.1.10" },
-         { time: "2 days ago", user: "Jose Reyes", role: "Records Officer", action: "Uploaded 150 scanned documents to Archive C", ip: "192.168.1.12" },
-         { time: "3 days ago", user: "System", role: "System", action: "Weekly Maintenance Script executed successfully", ip: "localhost" },
+        {
+          time: "10:42 AM",
+          user: "Maria Santos",
+          role: "Administrator",
+          action: "Created new staff account: P. Cruz",
+          ip: "192.168.1.10",
+        },
+        {
+          time: "10:30 AM",
+          user: "Jose Reyes",
+          role: "Records Officer",
+          action: "Updated student record: 2020-00123-MN-0",
+          ip: "192.168.1.12",
+        },
+        {
+          time: "09:15 AM",
+          user: "System",
+          role: "System",
+          action: "Daily automated backup completed (1.2GB)",
+          ip: "localhost",
+        },
+        {
+          time: "08:55 AM",
+          user: "Lorna Tolentino",
+          role: "Encoder",
+          action: "Generated Grade Report for Batch 2023",
+          ip: "192.168.1.15",
+        },
+        {
+          time: "Yesterday",
+          user: "Rico Yan",
+          role: "Administrator",
+          action: "Deleted archived document #4421 (Expired)",
+          ip: "192.168.1.11",
+        },
+        {
+          time: "Yesterday",
+          user: "Ana Dizon",
+          role: "Encoder",
+          action: "Failed login attempt (3x) - Account Locked",
+          ip: "192.168.1.14",
+        },
+        {
+          time: "Yesterday",
+          user: "Pedro Cruz",
+          role: "Evaluator",
+          action: "Printed Transcript of Records: 2019-00567-MN-0",
+          ip: "192.168.1.13",
+        },
+        {
+          time: "2 days ago",
+          user: "Maria Santos",
+          role: "Administrator",
+          action: "Updated System Configuration: Retention Policy",
+          ip: "192.168.1.10",
+        },
+        {
+          time: "2 days ago",
+          user: "Jose Reyes",
+          role: "Records Officer",
+          action: "Uploaded 150 scanned documents to Archive C",
+          ip: "192.168.1.12",
+        },
+        {
+          time: "3 days ago",
+          user: "System",
+          role: "System",
+          action: "Weekly Maintenance Script executed successfully",
+          ip: "localhost",
+        },
       ];
 
       // --- 2. INIT ---
       document.addEventListener("DOMContentLoaded", () => {
-         renderTable();
-         renderStats();
-         renderRecentLogins();
-         renderLogs();
+        renderTable();
+        renderStats();
+        renderRecentLogins();
+        renderLogs();
       });
 
       // --- 3. CORE FUNCTIONS ---
 
       function switchView(viewName) {
-         // Hide all views
-         document.getElementById('view-directory').classList.add('hidden');
-         document.getElementById('view-create').classList.add('hidden');
-         document.getElementById('view-logs').classList.add('hidden');
-         document.getElementById('view-backup').classList.add('hidden');
-         
-         // Reset Nav
-         document.querySelectorAll('.btn-nav').forEach(b => b.classList.remove('active'));
+        // Hide all views
+        document.getElementById("view-directory").classList.add("hidden");
+        document.getElementById("view-create").classList.add("hidden");
+        document.getElementById("view-logs").classList.add("hidden");
+        document.getElementById("view-backup").classList.add("hidden");
 
-         // Show selected
-         document.getElementById(`view-${viewName}`).classList.remove('hidden');
-         if(viewName === 'backup' || viewName === 'directory') {
-             document.getElementById(`view-${viewName}`).classList.add('flex');
-         } else {
-             document.getElementById(`view-${viewName}`).classList.remove('flex');
-         }
-         document.getElementById(`nav-${viewName}`).classList.add('active');
-         
-         // Trigger specific renders
-         if(viewName === 'directory') {
-            renderTable();
-            renderStats();
-         }
+        // Reset Nav
+        document
+          .querySelectorAll(".btn-nav")
+          .forEach((b) => b.classList.remove("active"));
+
+        // Show selected
+        document.getElementById(`view-${viewName}`).classList.remove("hidden");
+        if (viewName === "backup" || viewName === "directory") {
+          document.getElementById(`view-${viewName}`).classList.add("flex");
+        } else {
+          document.getElementById(`view-${viewName}`).classList.remove("flex");
+        }
+        document.getElementById(`nav-${viewName}`).classList.add("active");
+
+        // Trigger specific renders
+        if (viewName === "directory") {
+          renderTable();
+          renderStats();
+        }
       }
 
       function renderStats() {
-         document.getElementById('stat-total').innerText = staffData.length;
-         document.getElementById('stat-active').innerText = staffData.filter(s => s.status === 'Active').length;
+        document.getElementById("stat-total").innerText = staffData.length;
+        document.getElementById("stat-active").innerText = staffData.filter(
+          (s) => s.status === "Active"
+        ).length;
       }
 
       function renderRecentLogins() {
-         const container = document.getElementById('recentLogins');
-         const recent = staffData.filter(s => s.status === 'Active').slice(0, 4);
-         
-         container.innerHTML = recent.map(s => `
+        const container = document.getElementById("recentLogins");
+        const recent = staffData
+          .filter((s) => s.status === "Active")
+          .slice(0, 4);
+
+        container.innerHTML = recent
+          .map(
+            (s) => `
             <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50 transition-colors cursor-pointer group">
                <div class="w-6 h-6 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-[10px] font-bold">
                   ${s.fname[0]}${s.lname[0]}
@@ -768,35 +1265,45 @@
                   </div>
                </div>
             </div>
-         `).join('');
+         `
+          )
+          .join("");
       }
 
       function renderTable() {
-         const tbody = document.getElementById('staffTableBody');
-         const search = document.getElementById('searchInput').value.toLowerCase();
-         const roleFilter = document.getElementById('filterRole').value;
-         const statusFilter = document.getElementById('filterStatus').value;
+        const tbody = document.getElementById("staffTableBody");
+        const search = document
+          .getElementById("searchInput")
+          .value.toLowerCase();
+        const roleFilter = document.getElementById("filterRole").value;
+        const statusFilter = document.getElementById("filterStatus").value;
 
-         const filtered = staffData.filter(s => {
-            const matchesSearch = (s.fname + " " + s.lname).toLowerCase().includes(search) || s.id.toLowerCase().includes(search);
-            const matchesRole = roleFilter === 'All' || s.role === roleFilter;
-            const matchesStatus = statusFilter === 'All' || s.status === statusFilter;
-            return matchesSearch && matchesRole && matchesStatus;
-         });
+        const filtered = staffData.filter((s) => {
+          const matchesSearch =
+            (s.fname + " " + s.lname).toLowerCase().includes(search) ||
+            s.id.toLowerCase().includes(search);
+          const matchesRole = roleFilter === "All" || s.role === roleFilter;
+          const matchesStatus =
+            statusFilter === "All" || s.status === statusFilter;
+          return matchesSearch && matchesRole && matchesStatus;
+        });
 
-         document.getElementById('count-showing').innerText = filtered.length;
-         
-         if (filtered.length === 0) {
-            tbody.innerHTML = '';
-            document.getElementById('emptyState').classList.remove('hidden');
-            return;
-         }
-         document.getElementById('emptyState').classList.add('hidden');
+        document.getElementById("count-showing").innerText = filtered.length;
 
-         tbody.innerHTML = filtered.map(s => {
-            let roleBadgeClass = s.role === 'Administrator' ? 'badge-admin' : 'badge-staff';
-            let statusBadgeClass = s.status === 'Active' ? 'badge-active' : 'badge-inactive';
-            
+        if (filtered.length === 0) {
+          tbody.innerHTML = "";
+          document.getElementById("emptyState").classList.remove("hidden");
+          return;
+        }
+        document.getElementById("emptyState").classList.add("hidden");
+
+        tbody.innerHTML = filtered
+          .map((s) => {
+            let roleBadgeClass =
+              s.role === "Administrator" ? "badge-admin" : "badge-staff";
+            let statusBadgeClass =
+              s.status === "Active" ? "badge-active" : "badge-inactive";
+
             return `
             <tr class="table-row-hover transition-colors group">
                <td class="table-cell font-mono text-gray-500 text-xs">${s.id}</td>
@@ -831,24 +1338,30 @@
                </td>
             </tr>
             `;
-         }).join('');
+          })
+          .join("");
       }
 
       function renderLogs() {
-          const container = document.getElementById('log-container');
-          // Generate more filler logs to fill the page
-          let displayLogs = [...auditLogs];
-          for(let i=0; i<15; i++) {
-              displayLogs.push({ 
-                  time: "Last Week", 
-                  user: i % 2 === 0 ? "Maria Santos" : "System", 
-                  role: i % 2 === 0 ? "Administrator" : "System", 
-                  action: i % 2 === 0 ? `Reviewed audit log entry #${1000+i}` : `Automated database optimization`, 
-                  ip: "192.168.1.10" 
-              });
-          }
+        const container = document.getElementById("log-container");
+        // Generate more filler logs to fill the page
+        let displayLogs = [...auditLogs];
+        for (let i = 0; i < 15; i++) {
+          displayLogs.push({
+            time: "Last Week",
+            user: i % 2 === 0 ? "Maria Santos" : "System",
+            role: i % 2 === 0 ? "Administrator" : "System",
+            action:
+              i % 2 === 0
+                ? `Reviewed audit log entry #${1000 + i}`
+                : `Automated database optimization`,
+            ip: "192.168.1.10",
+          });
+        }
 
-          container.innerHTML = displayLogs.map(log => `
+        container.innerHTML = displayLogs
+          .map(
+            (log) => `
             <tr class="hover:bg-gray-50 transition-colors">
                 <td class="p-3 border-b border-gray-100 font-mono text-gray-500">${log.time}</td>
                 <td class="p-3 border-b border-gray-100 font-bold text-gray-700">${log.user}</td>
@@ -858,146 +1371,181 @@
                 <td class="p-3 border-b border-gray-100 text-gray-600">${log.action}</td>
                 <td class="p-3 border-b border-gray-100 text-right font-mono text-gray-400">${log.ip}</td>
             </tr>
-          `).join('');
+          `
+          )
+          .join("");
       }
 
       function simulateBackup() {
-         showToast("Creating full system backup...", false);
-         setTimeout(() => {
-             showToast("Backup downloaded successfully!");
-         }, 1500);
+        showToast("Creating full system backup...", false);
+        setTimeout(() => {
+          showToast("Backup downloaded successfully!");
+        }, 1500);
       }
 
       function handleRestore(input) {
-         if (input.files && input.files[0]) {
-            const fileName = input.files[0].name;
-            if(confirm(`Are you sure you want to restore the system from '${fileName}'? This will overwrite current data and files.`)) {
-                showToast("Restoring system...", false);
-                setTimeout(() => {
-                    showToast("System restored successfully! Reloading...");
-                    setTimeout(() => location.reload(), 2000);
-                }, 2000);
-            }
-         }
-         input.value = ''; 
+        if (input.files && input.files[0]) {
+          const fileName = input.files[0].name;
+          if (
+            confirm(
+              `Are you sure you want to restore the system from '${fileName}'? This will overwrite current data and files.`
+            )
+          ) {
+            showToast("Restoring system...", false);
+            setTimeout(() => {
+              showToast("System restored successfully! Reloading...");
+              setTimeout(() => location.reload(), 2000);
+            }, 2000);
+          }
+        }
+        input.value = "";
       }
 
       function clearCache() {
-         showToast("Clearing system cache...", false);
-         setTimeout(() => {
-             showToast("Cache cleared successfully!");
-         }, 1000);
+        showToast("Clearing system cache...", false);
+        setTimeout(() => {
+          showToast("Cache cleared successfully!");
+        }, 1000);
       }
 
       function forceLogout() {
-         if(confirm("This will log out all users (except you). Continue?")) {
-             showToast("Processing global logout...", false);
-             setTimeout(() => {
-                 showToast("All active sessions terminated.");
-             }, 1500);
-         }
+        if (confirm("This will log out all users (except you). Continue?")) {
+          showToast("Processing global logout...", false);
+          setTimeout(() => {
+            showToast("All active sessions terminated.");
+          }, 1500);
+        }
       }
 
       function toggleProfileMenu() {
-        const menu = document.getElementById('profileMenu');
-        menu.classList.toggle('hidden');
-      }
-      
-      function logout() {
-         window.location.href = 'index.html';
+        const menu = document.getElementById("profileMenu");
+        menu.classList.toggle("hidden");
       }
 
-      document.addEventListener('click', (event) => {
-        const menu = document.getElementById('profileMenu');
-        const button = document.querySelector('button[onclick="toggleProfileMenu()"]');
-        if (!menu.classList.contains('hidden') && !menu.contains(event.target) && !button.contains(event.target)) {
-          menu.classList.add('hidden');
+      function logout() {
+        window.location.href = "index.html";
+      }
+
+      document.addEventListener("click", (event) => {
+        const menu = document.getElementById("profileMenu");
+        const button = document.querySelector(
+          'button[onclick="toggleProfileMenu()"]'
+        );
+        if (
+          !menu.classList.contains("hidden") &&
+          !menu.contains(event.target) &&
+          !button.contains(event.target)
+        ) {
+          menu.classList.add("hidden");
         }
       });
 
-      document.getElementById('searchInput').addEventListener('input', renderTable);
+      document
+        .getElementById("searchInput")
+        .addEventListener("input", renderTable);
 
       function handleCreate(e) {
-         e.preventDefault();
-         const id = document.getElementById('newId').value;
-         const fname = document.getElementById('newFName').value;
-         const lname = document.getElementById('newLName').value;
-         const role = document.getElementById('newRole').value;
-         const email = document.getElementById('newEmail').value;
-         const section = document.getElementById('newSection').value;
-         const status = document.querySelector('input[name="status"]:checked').value;
+        e.preventDefault();
+        const id = document.getElementById("newId").value;
+        const fname = document.getElementById("newFName").value;
+        const lname = document.getElementById("newLName").value;
+        const role = document.getElementById("newRole").value;
+        const email = document.getElementById("newEmail").value;
+        const section = document.getElementById("newSection").value;
+        const status = document.querySelector(
+          'input[name="status"]:checked'
+        ).value;
 
-         if (staffData.some(s => s.id === id)) {
-            showToast('Error: Employee ID already exists!', true);
-            return;
-         }
+        if (staffData.some((s) => s.id === id)) {
+          showToast("Error: Employee ID already exists!", true);
+          return;
+        }
 
-         const newUser = { id, fname, lname, role, section, status, email, lastActive: "Never" };
-         staffData.unshift(newUser); 
-         auditLogs.unshift({ time: "Just now", user: "Admin User", role: "Administrator", action: `Created account for ${fname} ${lname}`, ip: "192.168.1.10" });
-         showToast(`Account created for ${fname} ${lname}!`);
-         resetForm();
-         switchView('directory');
-         renderLogs();
+        const newUser = {
+          id,
+          fname,
+          lname,
+          role,
+          section,
+          status,
+          email,
+          lastActive: "Never",
+        };
+        staffData.unshift(newUser);
+        auditLogs.unshift({
+          time: "Just now",
+          user: "Admin User",
+          role: "Administrator",
+          action: `Created account for ${fname} ${lname}`,
+          ip: "192.168.1.10",
+        });
+        showToast(`Account created for ${fname} ${lname}!`);
+        resetForm();
+        switchView("directory");
+        renderLogs();
       }
 
       function deleteUser(id) {
-         if(confirm('Are you sure you want to remove this staff member?')) {
-            staffData = staffData.filter(s => s.id !== id);
-            renderTable();
-            renderStats();
-            showToast('User removed successfully.');
-         }
+        if (confirm("Are you sure you want to remove this staff member?")) {
+          staffData = staffData.filter((s) => s.id !== id);
+          renderTable();
+          renderStats();
+          showToast("User removed successfully.");
+        }
       }
 
       function editUser(id) {
-          showToast('Edit mode enabled for ' + id);
-          switchView('create');
-          const user = staffData.find(u => u.id === id);
-          if(user) {
-              document.getElementById('newId').value = user.id;
-              document.getElementById('newFName').value = user.fname;
-              document.getElementById('newLName').value = user.lname;
-              document.getElementById('newEmail').value = user.email;
-          }
+        showToast("Edit mode enabled for " + id);
+        switchView("create");
+        const user = staffData.find((u) => u.id === id);
+        if (user) {
+          document.getElementById("newId").value = user.id;
+          document.getElementById("newFName").value = user.fname;
+          document.getElementById("newLName").value = user.lname;
+          document.getElementById("newEmail").value = user.email;
+        }
       }
 
       function resetForm() {
-         document.getElementById('createForm').reset();
+        document.getElementById("createForm").reset();
       }
 
       function showToast(msg, isError = false) {
-         const toast = document.getElementById('toast');
-         const toastMsg = document.getElementById('toast-msg');
-         toastMsg.innerText = msg;
-         if(isError) {
-             toast.classList.remove('bg-gray-800');
-             toast.classList.add('bg-red-800');
-             toast.querySelector('i').classList.replace('ph-check-circle', 'ph-warning-circle');
-         } else {
-             toast.classList.add('bg-gray-800');
-             toast.classList.remove('bg-red-800');
-             toast.querySelector('i').classList.replace('ph-warning-circle', 'ph-check-circle');
-         }
-         toast.classList.remove('translate-y-20', 'opacity-0');
-         setTimeout(() => {
-            toast.classList.add('translate-y-20', 'opacity-0');
-         }, 3000);
+        const toast = document.getElementById("toast");
+        const toastMsg = document.getElementById("toast-msg");
+        toastMsg.innerText = msg;
+        if (isError) {
+          toast.classList.remove("bg-gray-800");
+          toast.classList.add("bg-red-800");
+          toast
+            .querySelector("i")
+            .classList.replace("ph-check-circle", "ph-warning-circle");
+        } else {
+          toast.classList.add("bg-gray-800");
+          toast.classList.remove("bg-red-800");
+          toast
+            .querySelector("i")
+            .classList.replace("ph-warning-circle", "ph-check-circle");
+        }
+        toast.classList.remove("translate-y-20", "opacity-0");
+        setTimeout(() => {
+          toast.classList.add("translate-y-20", "opacity-0");
+        }, 3000);
       }
 
       function exportData() {
-         let csvContent = "data:text/csv;charset=utf-8,";
-         csvContent += "ID,First Name,Last Name,Role,Section,Status,Email\n";
-         staffData.forEach(s => {
-             csvContent += `${s.id},${s.fname},${s.lname},${s.role},${s.section},${s.status},${s.email}\n`;
-         });
-         const encodedUri = encodeURI(csvContent);
-         const link = document.createElement("a");
-         link.setAttribute("href", encodedUri);
-         link.setAttribute("download", "pup_staff_list.csv");
-         document.body.appendChild(link);
-         link.click();
-         document.body.removeChild(link);
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "ID,First Name,Last Name,Role,Section,Status,Email\n";
+        staffData.forEach((s) => {
+          csvContent += `${s.id},${s.fname},${s.lname},${s.role},${s.section},${s.status},${s.email}\n`;
+        });
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "pup_staff_list.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
       }
     </script>
   </body>
