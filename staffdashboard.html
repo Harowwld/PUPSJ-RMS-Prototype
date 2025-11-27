@@ -1291,15 +1291,15 @@
           container.className =
             "flex justify-center w-full h-[calc(100%-40px)] p-2";
 
-          // Cabinet container: Adjusted to use flex-1 for fluid width, removed fixed max-w-xs
+          // Cabinet container: Adjusted to use flex-1 for fluid width, now setting max-w-[30%]
           const div = document.createElement("div");
-          // Added flex-1 to the cabinet element itself to occupy available space
+          // **APPLYING 30% WIDTH HERE**
           div.className =
-            "border border-gray-300 p-2 rounded-brand bg-white relative flex flex-col h-full w-full max-w-sm md:max-w-md lg:max-w-xl xl:max-w-2xl 2xl:max-w-2xl";
+            "border border-gray-300 p-2 rounded-brand bg-white relative flex flex-col h-full w-[30%]";
           div.innerHTML = `<div class="absolute -top-2 left-2 bg-white px-2 text-xs font-bold text-gray-600 border border-gray-300 rounded-sm">CAB-${selectedCabinet}</div>`;
 
           const drawerContainer = document.createElement("div");
-          // Added flex-col to enable vertical spacing and fill height, and removed extra p-1
+          // flex-col, gap-3, and flex-1 (on the drawers) ensures proportional height distribution
           drawerContainer.className = "flex-1 flex flex-col gap-3 mt-3";
 
           for (let i = 1; i <= 4; i++) {
@@ -1323,8 +1323,7 @@
 
             const drawer = document.createElement("div");
             drawer.id = drawerId;
-            // Removed py-8 and added flex-grow and justify-center to ensure equal vertical spacing
-            // The key here is 'flex-1' which is a shorthand for flex-grow: 1, flex-shrink: 1, flex-basis: 0.
+            // The key is 'flex-1' which ensures equal proportional height for the four drawers
             drawer.className = `drawer-box flex-1 rounded-brand flex items-center justify-center text-sm font-bold transition-all border locator-tile ${drawerClass} ${
               isTarget ? "drawer-located" : ""
             }`;
