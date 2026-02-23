@@ -5,17 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PUP Registrar - Admin Portal</title>
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS (local) -->
+    <script src="assets/vendor/tailwindcss/tailwindcss.min.js"></script>
 
-    <!-- Phosphor Icons -->
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Phosphor Icons (local) -->
+    <link rel="stylesheet" href="assets/vendor/phosphor/bold/style.css" />
+    <link rel="stylesheet" href="assets/vendor/phosphor/fill/style.css" />
+    <link rel="stylesheet" href="assets/vendor/phosphor/duotone/style.css" />
+    <link rel="stylesheet" href="assets/vendor/phosphor/thin/style.css" />
+    <link rel="stylesheet" href="assets/vendor/phosphor/light/style.css" />
 
-    <!-- Google Fonts: Inter -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Google Fonts: Inter (local) -->
+    <link rel="stylesheet" href="assets/fonts/inter/inter.css" />
 
     <!-- Custom Config for PUP Colors -->
     <script>
@@ -218,7 +219,7 @@
           <i class="ph-bold ph-bank text-3xl text-pup-maroon"></i>
           <div class="leading-tight">
             <h1 class="font-bold text-lg text-pup-maroon tracking-tight">
-              PUP REGISTRAR
+              PUP E-MANAGE
             </h1>
             <p class="text-[10px] text-gray-500 uppercase tracking-widest">
               Student Record Management
@@ -269,8 +270,8 @@
             class="hidden absolute right-0 mt-2 w-64 bg-white rounded-brand shadow-xl border border-gray-200 z-50 animate-scale-in origin-top-right overflow-hidden"
           >
             <div class="p-4 border-b border-gray-200">
-              <p class="text-sm font-bold text-pup-maroon">Administrator</p>
-              <p class="text-xs text-gray-500">registrar.admin@pup.edu.ph</p>
+              <p class="text-sm font-bold text-pup-maroon">Admin</p>
+              <p class="text-xs text-gray-500">registrar.admin</p>
             </div>
             <div class="py-1">
               <button
@@ -363,11 +364,8 @@
                     onchange="renderTable()"
                   >
                     <option value="All">All Roles</option>
-                    <option value="Administrator">Administrator</option>
-                    <option value="Chief">Chief / Head</option>
-                    <option value="Records Officer">Records Officer</option>
-                    <option value="Evaluator">Evaluator</option>
-                    <option value="Encoder">Encoder</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Staff">Staff</option>
                   </select>
                 </div>
                 <div>
@@ -494,8 +492,8 @@
                       Role-Based Access
                     </h4>
                     <p class="text-xs text-blue-600 mt-1">
-                      Assign specific permissions (Admin, Evaluator, Encoder) to
-                      limit data exposure based on staff roles.
+                      Assign permissions as either Admin or Staff to keep access
+                      scoped to responsibilities.
                     </p>
                   </div>
                 </div>
@@ -546,12 +544,8 @@
                     >
                     <select id="newRole" required class="form-select">
                       <option value="" disabled selected>Select Role...</option>
-                      <option value="Administrator">
-                        Administrator (Head)
-                      </option>
-                      <option value="Records Officer">Records Officer</option>
-                      <option value="Evaluator">Evaluator</option>
-                      <option value="Encoder">Encoder</option>
+                      <option value="Admin">Admin</option>
+                      <option value="Staff">Staff</option>
                     </select>
                   </div>
                 </div>
@@ -578,7 +572,7 @@
                     <input
                       type="text"
                       id="newLName"
-                      required
+                      required  
                       class="form-input"
                       placeholder="Dela Cruz"
                     />
@@ -588,37 +582,31 @@
                 <div>
                   <label
                     class="block text-xs font-bold text-gray-600 mb-1.5 uppercase"
-                    >Email Address *</label
+                    >Username *</label
                   >
                   <div class="relative">
                     <i
                       class="ph-bold ph-envelope absolute left-3 top-2.5 text-gray-400"
                     ></i>
                     <input
-                      type="email"
+                      type="text"
                       id="newEmail"
                       required
                       class="form-input pl-9"
-                      placeholder="juan.delacruz@pup.edu.ph"
+                      placeholder="username"
                     />
                   </div>
-                  <p class="text-[10px] text-gray-400 mt-1">
-                    An activation link will be sent to this email.
-                  </p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label
                       class="block text-xs font-bold text-gray-600 mb-1.5 uppercase"
-                      >Section / Unit</label
+                      >Role</label
                     >
                     <select id="newSection" class="form-select">
-                      <option value="Administrative">Administrative</option>
-                      <option value="Records">Records Section</option>
-                      <option value="Evaluation">Evaluation Section</option>
-                      <option value="Releasing">Releasing Window</option>
-                      <option value="Admission">Admission Support</option>
+                      <option value="Admin">Admin</option>
+                      <option value="Staff">Staff</option>
                     </select>
                   </div>
                   <div>
@@ -868,7 +856,20 @@
               <div class="flex items-center justify-between">
                 <div class="text-xs">
                   <div class="font-bold text-gray-700">Auto-Backup</div>
-                  <div class="text-gray-400">Daily at 12:00 AM</div>
+                  <div class="text-gray-400 flex items-center gap-2">
+                    <span>Daily at</span>
+                    <span
+                      id="autoBackupTimeLabel"
+                      class="font-semibold text-gray-600"
+                      >12:00 AM</span
+                    >
+                    <input
+                      type="time"
+                      id="autoBackupTimeInput"
+                      class="text-[11px] border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-pup-maroon"
+                      onchange="setAutoBackupTime(this.value)"
+                    />
+                  </div>
                 </div>
                 <label class="relative inline-flex items-center cursor-pointer">
                   <input type="checkbox" checked class="sr-only peer" />
@@ -1109,10 +1110,8 @@
                 >
                 <select id="editRole" required class="form-select">
                   <option value="" disabled>Select Role...</option>
-                  <option value="Administrator">Administrator (Head)</option>
-                  <option value="Records Officer">Records Officer</option>
-                  <option value="Evaluator">Evaluator</option>
-                  <option value="Encoder">Encoder (Data Entry)</option>
+                  <option value="Admin">Admin</option>
+                  <option value="Staff">Staff</option>
                 </select>
               </div>
             </div>
@@ -1149,18 +1148,18 @@
             <div>
               <label
                 class="block text-xs font-bold text-gray-600 mb-1.5 uppercase"
-                >Email Address *</label
+                >Username *</label
               >
               <div class="relative">
                 <i
                   class="ph-bold ph-envelope absolute left-3 top-2.5 text-gray-400"
                 ></i>
                 <input
-                  type="email"
+                  type="text"
                   id="editEmail"
                   required
                   class="form-input pl-9"
-                  placeholder="juan.delacruz@pup.edu.ph"
+                  placeholder="username"
                 />
               </div>
             </div>
@@ -1238,73 +1237,69 @@
         "Administrative",
         "Admission",
       ];
-      const roles = [
-        "Administrator",
-        "Records Officer",
-        "Evaluator",
-        "Encoder",
-      ];
+      const roles = ["Admin", "Staff"];
+      let autoBackupTime = "00:00";
 
       let staffData = [
         {
           id: "2023-001",
           fname: "Maria",
           lname: "Santos",
-          role: "Administrator",
+          role: "Admin",
           section: "Administrative",
           status: "Active",
           lastActive: "Just now",
-          email: "m.santos@pup.edu.ph",
+          email: "m.santos",
         },
         {
           id: "2023-002",
           fname: "Jose",
           lname: "Reyes",
-          role: "Records Officer",
+          role: "Staff",
           section: "Records",
           status: "Active",
           lastActive: "10 mins ago",
-          email: "j.reyes@pup.edu.ph",
+          email: "j.reyes",
         },
         {
           id: "2023-005",
           fname: "Ana",
           lname: "Dizon",
-          role: "Encoder",
+          role: "Staff",
           section: "Records",
           status: "Inactive",
           lastActive: "2 days ago",
-          email: "a.dizon@pup.edu.ph",
+          email: "a.dizon",
         },
         {
           id: "2023-008",
           fname: "Pedro",
           lname: "Cruz",
-          role: "Evaluator",
+          role: "Staff",
           section: "Evaluation",
           status: "Active",
           lastActive: "1 hour ago",
-          email: "p.cruz@pup.edu.ph",
+          email: "p.cruz",
         },
         {
           id: "2022-045",
           fname: "Lorna",
           lname: "Tolentino",
-          role: "Encoder",
+          role: "Staff",
           section: "Releasing",
           status: "Active",
           lastActive: "5 mins ago",
-          email: "l.tolentino@pup.edu.ph",
+          email: "l.tolentino",
         },
         {
           id: "2021-012",
           fname: "Rico",
           lname: "Yan",
-          role: "Administrator",
+          role: "Admin",
           section: "Administrative",
           status: "Active",
           lastActive: "Yesterday",
-          email: "r.yan@pup.edu.ph",
+          email: "r.yan",
         },
       ];
 
@@ -1313,14 +1308,14 @@
         {
           time: "10:42 AM",
           user: "Maria Santos",
-          role: "Administrator",
+          role: "Admin",
           action: "Created new staff account: P. Cruz",
           ip: "192.168.1.10",
         },
         {
           time: "10:30 AM",
           user: "Jose Reyes",
-          role: "Records Officer",
+          role: "Staff",
           action: "Updated student record: 2020-00123-MN-0",
           ip: "192.168.1.12",
         },
@@ -1334,42 +1329,42 @@
         {
           time: "08:55 AM",
           user: "Lorna Tolentino",
-          role: "Encoder",
+          role: "Staff",
           action: "Generated Grade Report for Batch 2023",
           ip: "192.168.1.15",
         },
         {
           time: "Yesterday",
           user: "Rico Yan",
-          role: "Administrator",
+          role: "Admin",
           action: "Deleted archived document #4421 (Expired)",
           ip: "192.168.1.11",
         },
         {
           time: "Yesterday",
           user: "Ana Dizon",
-          role: "Encoder",
+          role: "Staff",
           action: "Failed login attempt (3x) - Account Locked",
           ip: "192.168.1.14",
         },
         {
           time: "Yesterday",
           user: "Pedro Cruz",
-          role: "Evaluator",
+          role: "Staff",
           action: "Printed Transcript of Records: 2019-00567-MN-0",
           ip: "192.168.1.13",
         },
         {
           time: "2 days ago",
           user: "Maria Santos",
-          role: "Administrator",
+          role: "Admin",
           action: "Updated System Configuration: Retention Policy",
           ip: "192.168.1.10",
         },
         {
           time: "2 days ago",
           user: "Jose Reyes",
-          role: "Records Officer",
+          role: "Staff",
           action: "Uploaded 150 scanned documents to Archive C",
           ip: "192.168.1.12",
         },
@@ -1388,6 +1383,7 @@
         renderStats();
         renderRecentLogins();
         renderLogs();
+        initAutoBackupTime();
       });
 
       // --- 3. CORE FUNCTIONS ---
@@ -1452,6 +1448,40 @@
           .join("");
       }
 
+      // Auto-backup time handling
+      function initAutoBackupTime() {
+        const timeInput = document.getElementById("autoBackupTimeInput");
+        if (timeInput) {
+          if (timeInput.value) {
+            autoBackupTime = timeInput.value;
+          } else {
+            timeInput.value = autoBackupTime;
+          }
+          updateAutoBackupLabel(autoBackupTime);
+        }
+      }
+
+      function setAutoBackupTime(value) {
+        if (!value) return;
+        autoBackupTime = value;
+        updateAutoBackupLabel(value);
+        showToast(`Auto-backup time set to ${formatTime(value)}`);
+      }
+
+      function updateAutoBackupLabel(value) {
+        const label = document.getElementById("autoBackupTimeLabel");
+        if (label) label.innerText = formatTime(value);
+      }
+
+      function formatTime(value) {
+        // value in "HH:MM"
+        const [hourStr, minute] = value.split(":");
+        let hour = parseInt(hourStr, 10);
+        const suffix = hour >= 12 ? "PM" : "AM";
+        hour = hour % 12 || 12;
+        return `${hour}:${minute} ${suffix}`;
+      }
+
       function renderTable() {
         const tbody = document.getElementById("staffTableBody");
         const search = document
@@ -1482,7 +1512,7 @@
         tbody.innerHTML = filtered
           .map((s) => {
             let roleBadgeClass =
-              s.role === "Administrator" ? "badge-admin" : "badge-staff";
+              s.role === "Admin" ? "badge-admin" : "badge-staff";
             let statusBadgeClass =
               s.status === "Active" ? "badge-active" : "badge-inactive";
 
@@ -1532,7 +1562,7 @@
           displayLogs.push({
             time: "Last Week",
             user: i % 2 === 0 ? "Maria Santos" : "System",
-            role: i % 2 === 0 ? "Administrator" : "System",
+            role: i % 2 === 0 ? "Admin" : "System",
             action:
               i % 2 === 0
                 ? `Reviewed audit log entry #${1000 + i}`
@@ -1657,7 +1687,7 @@
         auditLogs.unshift({
           time: "Just now",
           user: "Admin User",
-          role: "Administrator",
+          role: "Admin",
           action: `Created account for ${fname} ${lname}`,
           ip: "192.168.1.10",
         });
@@ -1737,7 +1767,7 @@
           auditLogs.unshift({
             time: "Just now",
             user: "Admin User",
-            role: "Administrator",
+            role: "Admin",
             action: `Updated account details for ${updatedUser.fname} ${updatedUser.lname}`,
             ip: "192.168.1.10",
           });

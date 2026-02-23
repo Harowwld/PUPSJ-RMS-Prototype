@@ -5,17 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PUP Registrar - Student Record Management</title>
 
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Tailwind CSS (local) -->
+    <script src="assets/vendor/tailwindcss/tailwindcss.min.js"></script>
 
-    <!-- Phosphor Icons -->
-    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <!-- Phosphor Icons (local) -->
+    <link rel="stylesheet" href="assets/vendor/phosphor/bold/style.css" />
+    <link rel="stylesheet" href="assets/vendor/phosphor/fill/style.css" />
+    <link rel="stylesheet" href="assets/vendor/phosphor/duotone/style.css" />
+    <link rel="stylesheet" href="assets/vendor/phosphor/thin/style.css" />
+    <link rel="stylesheet" href="assets/vendor/phosphor/light/style.css" />
 
-    <!-- Google Fonts: Inter -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Google Fonts: Inter (local) -->
+    <link rel="stylesheet" href="assets/fonts/inter/inter.css" />
 
     <!-- Custom Config for PUP Colors -->
     <script>
@@ -159,7 +160,7 @@
       .form-input:focus {
         outline: none;
         border-color: #800000;
-        ring: 1px solid #800000;
+        box-shadow: 0 0 0 1px #800000;
       }
 
       /* Tab Styles */
@@ -247,7 +248,7 @@
               >
                 <p class="text-sm font-bold text-pup-maroon">Administrator</p>
                 <p class="text-xs text-gray-700 truncate font-medium">
-                  registrar.admin@pup.edu.ph
+                  registrar.admin
                 </p>
               </div>
               <div class="p-1">
@@ -365,7 +366,7 @@
               <h3
                 class="font-bold text-pup-maroon text-sm flex items-center gap-2"
               >
-                <i class="ph-fill ph-drawers text-lg"></i> Archive Location
+                <i class="ph-fill ph-drawers text-lg"></i> Storage Layout 
               </h3>
               <!-- Legend - Updated to Maroon -->
               <div class="flex gap-4 text-xs font-medium text-gray-600">
@@ -1226,7 +1227,7 @@
         locatorTitle.className = "font-bold text-gray-700 text-lg mb-4";
 
         if (currentLocatorLevel === "rooms") {
-          locatorTitle.innerText = "Select Archive Room";
+          locatorTitle.innerText = "Select Storage Room";
           locatorView.appendChild(locatorTitle);
 
           const grid = document.createElement("div");
