@@ -1,5 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
+import crypto from "node:crypto";
 import { createRequire } from "node:module";
 
 let db;
@@ -61,13 +62,83 @@ export function getDb() {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS staff (
+      id TEXT PRIMARY KEY,
+      fname TEXT NOT NULL,
+      lname TEXT NOT NULL,
+      role TEXT NOT NULL,
+      section TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'Active',
+      email TEXT NOT NULL,
+      last_active TEXT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      actor TEXT NOT NULL,
+      role TEXT NOT NULL,
+      action TEXT NOT NULL,
+      ip TEXT
+    );
+
     CREATE INDEX IF NOT EXISTS idx_documents_student_no ON documents(student_no);
     CREATE INDEX IF NOT EXISTS idx_documents_doc_type ON documents(doc_type);
     CREATE INDEX IF NOT EXISTS idx_documents_created_at ON documents(created_at);
 
     CREATE INDEX IF NOT EXISTS idx_students_course_year_section ON students(course_code, year_level, section);
     CREATE INDEX IF NOT EXISTS idx_students_name ON students(name);
+
+    CREATE INDEX IF NOT EXISTS idx_staff_name ON staff(lname, fname);
+    CREATE INDEX IF NOT EXISTS idx_staff_role ON staff(role);
+    CREATE INDEX IF NOT EXISTS idx_staff_status ON staff(status);
+
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
   `);
+
+    try {
+      db.exec("ALTER TABLE staff ADD COLUMN password_hash TEXT");
+    } catch {
+      // ignore if column already exists
+    }
+
+    try {
+      db.exec("ALTER TABLE staff ADD COLUMN last_active TEXT");
+    } catch {
+      // ignore if column already exists
+    }
+
+    try {
+      db.exec("ALTER TABLE staff ADD COLUMN updated_at TEXT NOT NULL DEFAULT (datetime('now'))");
+    } catch {
+      // ignore if column already exists
+    }
+
+    try {
+      const defaultHash = crypto
+        .createHash("sha256")
+        .update("pupstaff")
+        .digest("hex");
+      db.exec(
+        `UPDATE staff
+         SET password_hash = '${defaultHash}'
+         WHERE password_hash IS NULL OR password_hash = ''`
+      );
+    } catch {
+      // ignore backfill errors
+    }
+
+    try {
+      db.exec(
+        `UPDATE students
+         SET year_level = 2024 + year_level
+         WHERE year_level IS NOT NULL AND year_level < 100`
+      );
+    } catch {
+      // ignore migration errors
+    }
 
     persistDb();
     return db;

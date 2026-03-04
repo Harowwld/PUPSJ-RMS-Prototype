@@ -1,143 +1,7 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-
-const initialStaffData = [
-  {
-    id: "2023-001",
-    fname: "Maria",
-    lname: "Santos",
-    role: "Admin",
-    section: "Administrative",
-    status: "Active",
-    lastActive: "Just now",
-    email: "m.santos",
-  },
-  {
-    id: "2023-002",
-    fname: "Jose",
-    lname: "Reyes",
-    role: "Staff",
-    section: "Records",
-    status: "Active",
-    lastActive: "10 mins ago",
-    email: "j.reyes",
-  },
-  {
-    id: "2023-005",
-    fname: "Ana",
-    lname: "Dizon",
-    role: "Staff",
-    section: "Records",
-    status: "Inactive",
-    lastActive: "2 days ago",
-    email: "a.dizon",
-  },
-  {
-    id: "2023-008",
-    fname: "Pedro",
-    lname: "Cruz",
-    role: "Staff",
-    section: "Evaluation",
-    status: "Active",
-    lastActive: "1 hour ago",
-    email: "p.cruz",
-  },
-  {
-    id: "2022-045",
-    fname: "Lorna",
-    lname: "Tolentino",
-    role: "Staff",
-    section: "Releasing",
-    status: "Active",
-    lastActive: "5 mins ago",
-    email: "l.tolentino",
-  },
-  {
-    id: "2021-012",
-    fname: "Rico",
-    lname: "Yan",
-    role: "Admin",
-    section: "Administrative",
-    status: "Active",
-    lastActive: "Yesterday",
-    email: "r.yan",
-  },
-];
-
-const initialAuditLogs = [
-  {
-    time: "10:42 AM",
-    user: "Maria Santos",
-    role: "Admin",
-    action: "Created new staff account: P. Cruz",
-    ip: "192.168.1.10",
-  },
-  {
-    time: "10:30 AM",
-    user: "Jose Reyes",
-    role: "Staff",
-    action: "Updated student record: 2020-00123-MN-0",
-    ip: "192.168.1.12",
-  },
-  {
-    time: "09:15 AM",
-    user: "System",
-    role: "System",
-    action: "Daily automated backup completed (1.2GB)",
-    ip: "localhost",
-  },
-  {
-    time: "08:55 AM",
-    user: "Lorna Tolentino",
-    role: "Staff",
-    action: "Generated Grade Report for Batch 2023",
-    ip: "192.168.1.15",
-  },
-  {
-    time: "Yesterday",
-    user: "Rico Yan",
-    role: "Admin",
-    action: "Deleted archived document #4421 (Expired)",
-    ip: "192.168.1.11",
-  },
-  {
-    time: "Yesterday",
-    user: "Ana Dizon",
-    role: "Staff",
-    action: "Failed login attempt (3x) - Account Locked",
-    ip: "192.168.1.14",
-  },
-  {
-    time: "Yesterday",
-    user: "Pedro Cruz",
-    role: "Staff",
-    action: "Printed Transcript of Records: 2019-00567-MN-0",
-    ip: "192.168.1.13",
-  },
-  {
-    time: "2 days ago",
-    user: "Maria Santos",
-    role: "Admin",
-    action: "Updated System Configuration: Retention Policy",
-    ip: "192.168.1.10",
-  },
-  {
-    time: "2 days ago",
-    user: "Jose Reyes",
-    role: "Staff",
-    action: "Uploaded 150 scanned documents to Archive C",
-    ip: "192.168.1.12",
-  },
-  {
-    time: "3 days ago",
-    user: "System",
-    role: "System",
-    action: "Weekly Maintenance Script executed successfully",
-    ip: "localhost",
-  },
-];
 
 function formatTime(value) {
   const [hourStr, minute] = value.split(":");
@@ -156,8 +20,8 @@ export default function AdminPage() {
   const [profileOpen, setProfileOpen] = useState(false);
   const [toast, setToast] = useState({ open: false, msg: "", isError: false });
 
-  const [staffData, setStaffData] = useState(initialStaffData);
-  const [auditLogs, setAuditLogs] = useState(initialAuditLogs);
+  const [staffData, setStaffData] = useState([]);
+  const [auditLogs, setAuditLogs] = useState([]);
   const [autoBackupTime, setAutoBackupTime] = useState("00:00");
 
   const [search, setSearch] = useState("");
@@ -170,7 +34,6 @@ export default function AdminPage() {
     fname: "",
     lname: "",
     email: "",
-    section: "Admin",
     status: "Active",
   });
 
@@ -182,9 +45,133 @@ export default function AdminPage() {
     fname: "",
     lname: "",
     email: "",
-    section: "Administrative",
     status: "Active",
   });
+
+  const [authUser, setAuthUser] = useState(null);
+  const [pwOpen, setPwOpen] = useState(false);
+  const [pwCurrent, setPwCurrent] = useState("");
+  const [pwNext, setPwNext] = useState("");
+  const [pwConfirm, setPwConfirm] = useState("");
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwError, setPwError] = useState("");
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("pup_auth_user");
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      setAuthUser(parsed);
+      if (parsed?.mustChangePassword) {
+        setPwOpen(true);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  function clearPwForm() {
+    setPwCurrent("");
+    setPwNext("");
+    setPwConfirm("");
+    setPwError("");
+  }
+
+  function submitChangePassword(e) {
+    e.preventDefault();
+    if (pwLoading) return;
+    if (!authUser?.id || authUser.id === "admin") {
+      setPwError("Password change is not available for this account");
+      return;
+    }
+    if (!pwCurrent || !pwNext || !pwConfirm) {
+      setPwError("Please fill all fields");
+      return;
+    }
+    if (pwNext !== pwConfirm) {
+      setPwError("New password does not match");
+      return;
+    }
+    if (pwNext.length < 6) {
+      setPwError("Password must be at least 6 characters");
+      return;
+    }
+
+    setPwError("");
+    setPwLoading(true);
+
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/change-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: authUser.id,
+            currentPassword: pwCurrent,
+            newPassword: pwNext,
+          }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json?.ok) {
+          throw new Error(json?.error || "Failed to change password");
+        }
+
+        try {
+          const nextUser = { ...authUser, mustChangePassword: false };
+          localStorage.setItem("pup_auth_user", JSON.stringify(nextUser));
+          setAuthUser(nextUser);
+        } catch {
+          // ignore
+        }
+
+        await logAdminAction("Changed account password");
+
+        clearPwForm();
+        setPwOpen(false);
+        showToast("Password updated successfully!");
+      } catch (err) {
+        setPwError(err?.message || "Failed to change password");
+      } finally {
+        setPwLoading(false);
+      }
+    })();
+  }
+
+  async function refreshStaff() {
+    const res = await fetch("/api/staff?limit=500");
+    const json = await res.json();
+    if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to load staff");
+    setStaffData(Array.isArray(json.data) ? json.data : []);
+  }
+
+  async function refreshAuditLogs() {
+    const resLogs = await fetch("/api/audit-logs?limit=200");
+    const jsonLogs = await resLogs.json();
+    if (!resLogs.ok || !jsonLogs?.ok) throw new Error(jsonLogs?.error || "Failed to load audit logs");
+    const rows = Array.isArray(jsonLogs.data) ? jsonLogs.data : [];
+    setAuditLogs(
+      rows.map((r) => ({
+        time: r.created_at,
+        user: r.actor,
+        role: r.role,
+        action: r.action,
+        ip: r.ip || "—",
+      }))
+    );
+  }
+
+  useEffect(() => {
+    (async () => {
+      try {
+        await refreshStaff();
+        await refreshAuditLogs();
+      } catch (e) {
+        setStaffData([]);
+        showToast(e?.message || "Failed to load staff", true);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function showToast(msg, isError = false, autoHide = true) {
     if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
@@ -219,25 +206,58 @@ export default function AdminPage() {
     };
   }, [staffData]);
 
-  const displayLogs = useMemo(() => {
-    const expanded = [...auditLogs];
-    for (let i = 0; i < 15; i++) {
-      expanded.push({
-        time: "Last Week",
-        user: i % 2 === 0 ? "Maria Santos" : "System",
-        role: i % 2 === 0 ? "Admin" : "System",
-        action:
-          i % 2 === 0
-            ? `Reviewed audit log entry #${1000 + i}`
-            : "Automated database optimization",
-        ip: "192.168.1.10",
+  const displayLogs = useMemo(() => auditLogs, [auditLogs]);
+
+  async function logAdminAction(action) {
+    try {
+      await fetch("/api/audit-logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          actor: "Admin User",
+          role: "Admin",
+          action,
+          ip: "localhost",
+        }),
       });
+    } catch {
+      // ignore logging errors
     }
-    return expanded;
-  }, [auditLogs]);
+
+    setAuditLogs((prev) => [
+      {
+        time: new Date().toISOString(),
+        user: "Admin User",
+        role: "Admin",
+        action,
+        ip: "localhost",
+      },
+      ...prev,
+    ]);
+  }
 
   function switchView(next) {
     setView(next);
+
+    if (next === "directory") {
+      (async () => {
+        try {
+          await refreshStaff();
+        } catch {
+          // ignore
+        }
+      })();
+    }
+
+    if (next === "logs") {
+      (async () => {
+        try {
+          await refreshAuditLogs();
+        } catch {
+          // ignore
+        }
+      })();
+    }
   }
 
   function logout() {
@@ -251,7 +271,6 @@ export default function AdminPage() {
       fname: "",
       lname: "",
       email: "",
-      section: "Admin",
       status: "Active",
     });
   }
@@ -263,45 +282,45 @@ export default function AdminPage() {
     const lname = createForm.lname;
     const role = createForm.role;
     const email = createForm.email;
-    const section = createForm.section;
+    const section = role === "Admin" ? "Administrative" : "Records";
     const status = createForm.status;
 
-    if (staffData.some((s) => s.id === id)) {
-      showToast("Error: Employee ID already exists!", true);
-      return;
-    }
+    (async () => {
+      try {
+        const res = await fetch("/api/staff", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id, fname, lname, role, email, section, status }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to create staff");
 
-    const newUser = {
-      id,
-      fname,
-      lname,
-      role,
-      section,
-      status,
-      email,
-      lastActive: "Never",
-    };
-
-    setStaffData((prev) => [newUser, ...prev]);
-    setAuditLogs((prev) => [
-      {
-        time: "Just now",
-        user: "Admin User",
-        role: "Admin",
-        action: `Created account for ${fname} ${lname}`,
-        ip: "192.168.1.10",
-      },
-      ...prev,
-    ]);
-    showToast(`Account created for ${fname} ${lname}!`);
-    resetCreateForm();
-    switchView("directory");
+        setStaffData((prev) => [json.data, ...prev]);
+        await logAdminAction(`Created account for ${fname} ${lname}`);
+        showToast(`Account created for ${fname} ${lname}!`);
+        resetCreateForm();
+        switchView("directory");
+      } catch (err) {
+        showToast(err?.message || "Failed to create staff", true);
+      }
+    })();
   }
 
   function deleteUser(id) {
     if (!confirm("Are you sure you want to remove this staff member?")) return;
-    setStaffData((prev) => prev.filter((s) => s.id !== id));
-    showToast("User removed successfully.");
+
+    (async () => {
+      try {
+        const res = await fetch(`/api/staff/${id}`, { method: "DELETE" });
+        const json = await res.json();
+        if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to delete staff");
+        setStaffData((prev) => prev.filter((s) => s.id !== id));
+        await logAdminAction(`Removed staff account: ${id}`);
+        showToast("User removed successfully.");
+      } catch (err) {
+        showToast(err?.message || "Failed to delete staff", true);
+      }
+    })();
   }
 
   function openEditUser(id) {
@@ -314,7 +333,6 @@ export default function AdminPage() {
       fname: user.fname,
       lname: user.lname,
       email: user.email,
-      section: user.section,
       status: user.status,
     });
     setEditOpen(true);
@@ -328,48 +346,49 @@ export default function AdminPage() {
     e.preventDefault();
     const originalId = editOriginalId;
     const newId = editForm.id;
+    const section = editForm.role === "Admin" ? "Administrative" : "Records";
 
-    if (originalId !== newId && staffData.some((s) => s.id === newId)) {
-      showToast("Error: Employee ID already exists!", true);
-      return;
-    }
+    (async () => {
+      try {
+        const res = await fetch(`/api/staff/${originalId}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: newId,
+            fname: editForm.fname,
+            lname: editForm.lname,
+            role: editForm.role,
+            section,
+            status: editForm.status,
+            email: editForm.email,
+          }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to update staff");
 
-    const updatedUser = {
-      id: newId,
-      fname: editForm.fname,
-      lname: editForm.lname,
-      role: editForm.role,
-      section: editForm.section,
-      status: editForm.status,
-      email: editForm.email,
-      lastActive: "Just now",
-    };
-
-    setStaffData((prev) => {
-      const next = [...prev];
-      const index = next.findIndex((u) => u.id === originalId);
-      if (index !== -1) next[index] = updatedUser;
-      return next;
-    });
-    setAuditLogs((prev) => [
-      {
-        time: "Just now",
-        user: "Admin User",
-        role: "Admin",
-        action: `Updated account details for ${updatedUser.fname} ${updatedUser.lname}`,
-        ip: "192.168.1.10",
-      },
-      ...prev,
-    ]);
-    showToast("Account updated successfully!");
-    closeEditModal();
+        const updatedUser = json.data;
+        setStaffData((prev) => {
+          const next = [...prev];
+          const index = next.findIndex((u) => u.id === originalId);
+          if (index !== -1) next[index] = updatedUser;
+          return next;
+        });
+        await logAdminAction(
+          `Updated account details for ${updatedUser.fname} ${updatedUser.lname}`
+        );
+        showToast("Account updated successfully!");
+        closeEditModal();
+      } catch (err) {
+        showToast(err?.message || "Failed to update staff", true);
+      }
+    })();
   }
 
   function exportData() {
     let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "ID,First Name,Last Name,Role,Section,Status,Email\n";
+    csvContent += "ID,First Name,Last Name,Role,Status,Email\n";
     staffData.forEach((s) => {
-      csvContent += `${s.id},${s.fname},${s.lname},${s.role},${s.section},${s.status},${s.email}\n`;
+      csvContent += `${s.id},${s.fname},${s.lname},${s.role},${s.status},${s.email}\n`;
     });
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -431,7 +450,7 @@ export default function AdminPage() {
                 PUP E-MANAGE
               </h1>
               <p className="text-[10px] text-gray-500 uppercase tracking-widest">
-                Student Record Management
+                Student Record Keeping
               </p>
             </div>
           </div>
@@ -502,6 +521,73 @@ export default function AdminPage() {
           </div>
         </div>
       </header>
+
+      {pwOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md bg-white rounded-brand border border-gray-200 shadow-xl overflow-hidden">
+            <div className="p-5 border-b border-gray-200 bg-gray-50/60">
+              <h3 className="font-bold text-pup-maroon">Change Password</h3>
+              <p className="text-xs text-gray-500 mt-1">
+                First login detected. Please change your password to continue.
+              </p>
+            </div>
+            <form onSubmit={submitChangePassword} className="p-5 space-y-4">
+              {pwError ? (
+                <div className="text-sm text-red-600 font-semibold">{pwError}</div>
+              ) : null}
+
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  className="form-input"
+                  value={pwCurrent}
+                  onChange={(e) => setPwCurrent(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  className="form-input"
+                  value={pwNext}
+                  onChange={(e) => setPwNext(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  className="form-input"
+                  value={pwConfirm}
+                  onChange={(e) => setPwConfirm(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={pwLoading}
+                  className="px-5 py-2.5 bg-pup-maroon text-white rounded-brand text-sm font-bold hover:bg-red-900 transition-colors shadow-sm disabled:opacity-60"
+                >
+                  {pwLoading ? "Saving..." : "Update Password"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
 
       <main className="flex-1 overflow-hidden w-full max-w-[1600px] mx-auto p-4">
         <div
@@ -594,7 +680,7 @@ export default function AdminPage() {
                         </div>
                         <div className="text-[10px] text-gray-400 flex items-center gap-1">
                           <div className="w-1.5 h-1.5 rounded-full bg-green-400"></div>
-                          {s.lastActive}
+                          {s.last_active || "—"}
                         </div>
                       </div>
                     </div>
@@ -628,13 +714,12 @@ export default function AdminPage() {
               <table className="w-full border-collapse">
                 <thead className="bg-gray-50 sticky top-0 z-10">
                   <tr>
-                    <th className="table-header w-16">ID</th>
                     <th className="table-header">Staff Name</th>
+                    <th className="table-header w-32">ID</th>
                     <th className="table-header">Role</th>
-                    <th className="table-header">Section/Unit</th>
                     <th className="table-header">Status</th>
                     <th className="table-header">Last Active</th>
-                    <th className="table-header text-right">Actions</th>
+                    <th className="table-header text-right w-28">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -649,9 +734,6 @@ export default function AdminPage() {
                         key={s.id}
                         className="table-row-hover transition-colors group"
                       >
-                        <td className="table-cell font-mono text-gray-500 text-xs">
-                          {s.id}
-                        </td>
                         <td className="table-cell">
                           <div className="flex items-center gap-2">
                             <div className="w-7 h-7 rounded-full bg-pup-maroon text-white flex items-center justify-center text-xs font-bold">
@@ -667,32 +749,32 @@ export default function AdminPage() {
                             </div>
                           </div>
                         </td>
+                        <td className="table-cell font-mono text-gray-600 text-xs whitespace-nowrap">
+                          {s.id}
+                        </td>
                         <td className="table-cell">
                           <span className={`badge ${roleBadgeClass}`}>{s.role}</span>
-                        </td>
-                        <td className="table-cell text-sm text-gray-600">
-                          {s.section}
                         </td>
                         <td className="table-cell">
                           <span className={`badge ${statusBadgeClass}`}>
                             {s.status}
                           </span>
                         </td>
-                        <td className="table-cell text-xs text-gray-500">
-                          {s.lastActive}
+                        <td className="table-cell text-xs text-gray-500 font-mono whitespace-nowrap">
+                          {s.last_active || "—"}
                         </td>
                         <td className="table-cell text-right">
-                          <div className="flex items-center justify-end gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
                             <button
                               onClick={() => openEditUser(s.id)}
-                              className="p-1.5 hover:bg-gray-100 rounded text-gray-500 hover:text-pup-maroon"
+                              className="h-8 w-8 inline-flex items-center justify-center hover:bg-gray-100 rounded text-gray-500 hover:text-pup-maroon"
                               title="Edit"
                             >
                               <i className="ph-bold ph-pencil-simple"></i>
                             </button>
                             <button
                               onClick={() => deleteUser(s.id)}
-                              className="p-1.5 hover:bg-red-50 rounded text-gray-500 hover:text-red-600"
+                              className="h-8 w-8 inline-flex items-center justify-center hover:bg-red-50 rounded text-gray-500 hover:text-red-600"
                               title="Delete"
                             >
                               <i className="ph-bold ph-trash"></i>
@@ -776,19 +858,16 @@ export default function AdminPage() {
                       <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
                         Employee ID *
                       </label>
-                      <div className="relative">
-                        <i className="ph-bold ph-identification-card absolute left-3 top-2.5 text-gray-400"></i>
-                        <input
-                          type="text"
-                          required
-                          className="form-input pl-9 font-mono"
-                          placeholder="e.g. 2023-001"
-                          value={createForm.id}
-                          onChange={(e) =>
-                            setCreateForm((f) => ({ ...f, id: e.target.value }))
-                          }
-                        />
-                      </div>
+                      <input
+                        type="text"
+                        required
+                        className="form-input font-mono"
+                        placeholder="e.g. 2023-001"
+                        value={createForm.id}
+                        onChange={(e) =>
+                          setCreateForm((f) => ({ ...f, id: e.target.value }))
+                        }
+                      />
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
@@ -848,41 +927,19 @@ export default function AdminPage() {
                     <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
                       Username *
                     </label>
-                    <div className="relative">
-                      <i className="ph-bold ph-envelope absolute left-3 top-2.5 text-gray-400"></i>
-                      <input
-                        type="text"
-                        required
-                        className="form-input pl-9"
-                        placeholder="username"
-                        value={createForm.email}
-                        onChange={(e) =>
-                          setCreateForm((f) => ({ ...f, email: e.target.value }))
-                        }
-                      />
-                    </div>
+                    <input
+                      type="text"
+                      required
+                      className="form-input"
+                      placeholder="username"
+                      value={createForm.email}
+                      onChange={(e) =>
+                        setCreateForm((f) => ({ ...f, email: e.target.value }))
+                      }
+                    />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                        Role
-                      </label>
-                      <select
-                        className="form-select"
-                        value={createForm.section}
-                        onChange={(e) =>
-                          setCreateForm((f) => ({
-                            ...f,
-                            section: e.target.value,
-                          }))
-                        }
-                      >
-                        <option value="Admin">Admin</option>
-                        <option value="Staff">Staff</option>
-                      </select>
-                    </div>
-                    <div>
+                  <div>
                       <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
                         Initial Status
                       </label>
@@ -920,7 +977,6 @@ export default function AdminPage() {
                           <span className="text-sm text-gray-700">Inactive</span>
                         </label>
                       </div>
-                    </div>
                   </div>
 
                   <div className="border-t border-gray-200 pt-6 flex items-center justify-end gap-3">
@@ -1307,19 +1363,16 @@ export default function AdminPage() {
                   <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
                     Employee ID *
                   </label>
-                  <div className="relative">
-                    <i className="ph-bold ph-identification-card absolute left-3 top-2.5 text-gray-400"></i>
-                    <input
-                      type="text"
-                      required
-                      className="form-input pl-9 font-mono"
-                      placeholder="e.g. 2023-001"
-                      value={editForm.id}
-                      onChange={(e) =>
-                        setEditForm((f) => ({ ...f, id: e.target.value }))
-                      }
-                    />
-                  </div>
+                  <input
+                    type="text"
+                    required
+                    className="form-input font-mono"
+                    placeholder="e.g. 2023-001"
+                    value={editForm.id}
+                    onChange={(e) =>
+                      setEditForm((f) => ({ ...f, id: e.target.value }))
+                    }
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
@@ -1379,41 +1432,19 @@ export default function AdminPage() {
                 <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
                   Username *
                 </label>
-                <div className="relative">
-                  <i className="ph-bold ph-envelope absolute left-3 top-2.5 text-gray-400"></i>
-                  <input
-                    type="text"
-                    required
-                    className="form-input pl-9"
-                    placeholder="username"
-                    value={editForm.email}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, email: e.target.value }))
-                    }
-                  />
-                </div>
+                <input
+                  type="text"
+                  required
+                  className="form-input"
+                  placeholder="username"
+                  value={editForm.email}
+                  onChange={(e) =>
+                    setEditForm((f) => ({ ...f, email: e.target.value }))
+                  }
+                />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                    Section / Unit
-                  </label>
-                  <select
-                    className="form-select"
-                    value={editForm.section}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, section: e.target.value }))
-                    }
-                  >
-                    <option value="Administrative">Administrative</option>
-                    <option value="Records">Records Section</option>
-                    <option value="Evaluation">Evaluation Section</option>
-                    <option value="Releasing">Releasing Window</option>
-                    <option value="Admission">Admission Support</option>
-                  </select>
-                </div>
-                <div>
+              <div>
                   <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
                     Status
                   </label>
@@ -1451,7 +1482,6 @@ export default function AdminPage() {
                       <span className="text-sm text-gray-700">Inactive</span>
                     </label>
                   </div>
-                </div>
               </div>
 
               <div className="border-t border-gray-200 pt-6 flex items-center justify-end gap-3">

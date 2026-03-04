@@ -11,6 +11,7 @@ export async function createStudent({
   drawer,
   status,
 }) {
+  const academicYear = parseInt(yearLevel);
   await dbRun(
     `
     INSERT INTO students (
@@ -29,7 +30,7 @@ export async function createStudent({
       studentNo,
       name,
       courseCode,
-      yearLevel,
+      academicYear,
       section,
       room,
       cabinet,

@@ -10,21 +10,55 @@ export default function Home() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   function handleLogin(e) {
     e.preventDefault();
     if (isLoading) return;
 
     const usernameInput = username.trim();
+    const passwordInput = password;
+
+    setError("");
     setIsLoading(true);
 
-    setTimeout(() => {
-      if (adminUsernames.includes(usernameInput)) {
-        router.push("/admin");
-      } else {
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ username: usernameInput, password: passwordInput }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json?.ok) {
+          throw new Error(json?.error || "Invalid username or password.");
+        }
+
+        const role = String(json?.data?.role || "");
+        try {
+          localStorage.setItem(
+            "pup_auth_user",
+            JSON.stringify({
+              id: json?.data?.id || null,
+              username: json?.data?.username || usernameInput,
+              role,
+              mustChangePassword: Boolean(json?.data?.mustChangePassword),
+            })
+          );
+        } catch {
+          // ignore storage errors
+        }
+        if (role === "Admin") {
+          router.push("/admin");
+          return;
+        }
+
         router.push("/staff");
+      } catch (err) {
+        setError(err?.message || "Invalid username or password.");
+        setIsLoading(false);
       }
-    }, 800);
+    })();
   }
 
   return (
@@ -42,7 +76,7 @@ export default function Home() {
             PUP E-Manage
           </h1>
           <p className="text-xs text-gray-600 uppercase tracking-widest mt-1">
-            Student Record Management System
+            Student Record Keeping System
           </p>
         </div>
 
@@ -67,7 +101,7 @@ export default function Home() {
                 <input
                   type="text"
                   id="username"
-                  className="form-input pl-10"
+                  className="form-input has-left-icon"
                   placeholder="Enter your ID (e.g., admin)"
                   required
                   autoFocus
@@ -91,7 +125,7 @@ export default function Home() {
                 <input
                   type="password"
                   id="password"
-                  className="form-input pl-10"
+                  className="form-input has-left-icon"
                   placeholder="••••••••"
                   required
                   value={password}
@@ -107,6 +141,12 @@ export default function Home() {
                 </a>
               </div>
             </div>
+
+            {error ? (
+              <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-brand px-3 py-2">
+                {error}
+              </div>
+            ) : null}
 
             <button
               type="submit"

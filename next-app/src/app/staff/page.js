@@ -16,15 +16,85 @@ const courses = [
 const rooms = [1, 2];
 const cabinets = ["A", "B", "C", "D"];
 
+function formatStudentNoInput(raw) {
+  return applyStudentNoMask(raw).value;
+}
+
+function applyStudentNoMask(raw) {
+  const input = String(raw || "").toUpperCase();
+  const cleaned = input.replace(/[^A-Z0-9]/g, "");
+
+  let accepted = "";
+  let invalid = false;
+
+  for (const ch of cleaned) {
+    const pos = accepted.length;
+    if (pos < 4) {
+      if (/[0-9]/.test(ch)) accepted += ch;
+      else invalid = true;
+      continue;
+    }
+    if (pos < 9) {
+      if (/[0-9]/.test(ch)) accepted += ch;
+      else invalid = true;
+      continue;
+    }
+    if (pos < 11) {
+      if (/[A-Z]/.test(ch)) accepted += ch;
+      else invalid = true;
+      continue;
+    }
+    if (pos < 12) {
+      if (/[0-9]/.test(ch)) accepted += ch;
+      else invalid = true;
+      continue;
+    }
+    break;
+  }
+
+  const year = accepted.slice(0, 4);
+  const serial = accepted.slice(4, 9);
+  const campus = accepted.slice(9, 11);
+  const tail = accepted.slice(11, 12);
+
+  let out = year;
+  if (year.length === 4) out += "-";
+  if (serial.length) out += serial;
+  if (serial.length === 5) out += "-";
+  if (campus.length) out += campus;
+  if (campus.length === 2) out += "-";
+  if (tail.length) out += tail;
+
+  return {
+    value: out,
+    invalid,
+  };
+}
+
+function isValidStudentNo(studentNo) {
+  return /^\d{4}-\d{5}-[A-Z]{2}-\d$/.test(String(studentNo || "").trim());
+}
+
 function normalizeStudentRow(r) {
   const course = courses.find((c) => c.code === r.course_code);
+  const rawSection = String(r.section || "").trim();
+  let normalizedSection = rawSection;
+  if (rawSection && !/^Section\s+/i.test(rawSection)) {
+    if (rawSection.includes("-")) {
+      const lastPart = rawSection.split("-").pop();
+      normalizedSection = `Section ${String(lastPart || "").trim()}`;
+    } else if (/^\d+[A-Za-z]*$/.test(rawSection)) {
+      normalizedSection = `Section ${rawSection}`;
+    }
+  }
+
   return {
     studentNo: r.student_no,
     name: r.name,
     courseCode: r.course_code,
     courseName: course?.name || r.course_code,
     year: r.year_level,
-    section: r.section,
+    section: normalizedSection,
     room: r.room,
     cabinet: r.cabinet,
     drawer: r.drawer,
@@ -38,10 +108,123 @@ export default function StaffPage() {
   const docsFileInputRef = useRef(null);
   const searchTimerRef = useRef(null);
 
+  async function logStaffAction(action) {
+    try {
+      let actor = "Staff";
+      let role = "Staff";
+      try {
+        const raw = localStorage.getItem("pup_auth_user");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          actor = String(parsed?.username || parsed?.id || actor);
+          role = String(parsed?.role || role);
+        }
+      } catch {
+        // ignore
+      }
+
+      await fetch("/api/audit-logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ actor, role, action, ip: "localhost" }),
+      });
+    } catch {
+      // ignore logging errors
+    }
+  }
+
   const [view, setView] = useState("search");
   const [userMenuOpen, setUserMenuOpen] = useState(false);
 
-  const [docsQuery, setDocsQuery] = useState("");
+  const [authUser, setAuthUser] = useState(null);
+  const [pwOpen, setPwOpen] = useState(false);
+  const [pwCurrent, setPwCurrent] = useState("");
+  const [pwNext, setPwNext] = useState("");
+  const [pwConfirm, setPwConfirm] = useState("");
+  const [pwLoading, setPwLoading] = useState(false);
+  const [pwError, setPwError] = useState("");
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("pup_auth_user");
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      setAuthUser(parsed);
+      if (parsed?.mustChangePassword) {
+        setPwOpen(true);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  function clearPwForm() {
+    setPwCurrent("");
+    setPwNext("");
+    setPwConfirm("");
+    setPwError("");
+  }
+
+  function submitChangePassword(e) {
+    e.preventDefault();
+    if (pwLoading) return;
+    if (!authUser?.id) {
+      setPwError("Missing user session");
+      return;
+    }
+    if (!pwCurrent || !pwNext || !pwConfirm) {
+      setPwError("Please fill all fields");
+      return;
+    }
+    if (pwNext !== pwConfirm) {
+      setPwError("New password does not match");
+      return;
+    }
+    if (pwNext.length < 6) {
+      setPwError("Password must be at least 6 characters");
+      return;
+    }
+
+    setPwError("");
+    setPwLoading(true);
+
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/change-password", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: authUser.id,
+            currentPassword: pwCurrent,
+            newPassword: pwNext,
+          }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json?.ok) {
+          throw new Error(json?.error || "Failed to change password");
+        }
+
+        try {
+          const nextUser = { ...authUser, mustChangePassword: false };
+          localStorage.setItem("pup_auth_user", JSON.stringify(nextUser));
+          setAuthUser(nextUser);
+        } catch {
+          // ignore
+        }
+
+        await logStaffAction("Changed account password");
+
+        clearPwForm();
+        setPwOpen(false);
+        alert("Password updated successfully.");
+      } catch (err) {
+        setPwError(err?.message || "Failed to change password");
+      } finally {
+        setPwLoading(false);
+      }
+    })();
+  }
+
   const [docsRows, setDocsRows] = useState([]);
   const [docsLoading, setDocsLoading] = useState(false);
   const [docsError, setDocsError] = useState("");
@@ -95,6 +278,8 @@ export default function StaffPage() {
     refId: "00000",
   });
 
+  const [uploadError, setUploadError] = useState("");
+
   const [uploadedFile, setUploadedFile] = useState(null);
   const [dropActive, setDropActive] = useState(false);
 
@@ -109,6 +294,9 @@ export default function StaffPage() {
     addingDocType: false,
     newDocType: "",
   });
+
+  const [newRecStudentNoTouched, setNewRecStudentNoTouched] = useState(false);
+  const [newRecStudentNoHint, setNewRecStudentNoHint] = useState("");
 
   const [newRec, setNewRec] = useState({
     studentNo: "",
@@ -207,20 +395,76 @@ export default function StaffPage() {
     })();
   }, [activeStudentNo]);
 
-  async function refreshDocuments(nextQuery) {
+  async function refreshDocuments(nextCriteria) {
     setDocsLoading(true);
     setDocsError("");
     try {
-      const qs = new URLSearchParams();
-      const q = (nextQuery ?? docsQuery).trim();
-      if (q) qs.set("q", q);
-      qs.set("limit", "100");
-      const res = await fetch(`/api/documents?${qs.toString()}`);
-      const json = await res.json();
-      if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Failed to load documents");
+      const criteria = nextCriteria || docsForm;
+      const studentNoQ = String(criteria.studentNo || "").trim().toLowerCase();
+      const studentNameQ = String(criteria.studentName || "").trim().toLowerCase();
+      const docTypeQ = String(criteria.docType || "").trim();
+
+      const hasSearch = !!(studentNoQ || studentNameQ || docTypeQ);
+      if (!hasSearch) {
+        setDocsRows([]);
+        return;
       }
-      setDocsRows(Array.isArray(json.data) ? json.data : []);
+
+      const matches = students
+        .filter((s) => {
+          if (studentNoQ && !String(s.studentNo || "").toLowerCase().includes(studentNoQ)) {
+            return false;
+          }
+          if (studentNameQ && !String(s.name || "").toLowerCase().includes(studentNameQ)) {
+            return false;
+          }
+          return true;
+        })
+        .slice(0, 10);
+
+      const docsByStudent = await Promise.all(
+        matches.map(async (s) => {
+          const qs = new URLSearchParams();
+          qs.set("studentNo", s.studentNo);
+          qs.set("limit", "200");
+          const res = await fetch(`/api/documents?${qs.toString()}`);
+          const json = await res.json();
+          if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to load documents");
+          const rows = Array.isArray(json.data) ? json.data : [];
+          return { student: s, docs: rows };
+        })
+      );
+
+      const checklistRows = docsByStudent.flatMap(({ student, docs }) => {
+        const byType = new Map();
+        for (const d of docs) {
+          const t = d.doc_type;
+          if (!t) continue;
+          const existing = byType.get(t);
+          if (!existing) {
+            byType.set(t, d);
+            continue;
+          }
+          const a = String(existing.created_at || "");
+          const b = String(d.created_at || "");
+          if (b > a) byType.set(t, d);
+        }
+
+        const types = docTypeQ ? [docTypeQ] : docTypes;
+        return types.map((t) => {
+          const doc = byType.get(t) || null;
+          return {
+            key: `${student.studentNo}:${t}`,
+            student_no: student.studentNo,
+            student_name: student.name,
+            doc_type: t,
+            status: doc ? "uploaded" : "missing",
+            doc,
+          };
+        });
+      });
+
+      setDocsRows(checklistRows);
     } catch (e) {
       setDocsError(e?.message || "Failed to load documents");
     } finally {
@@ -230,7 +474,6 @@ export default function StaffPage() {
 
   useEffect(() => {
     if (view !== "documents") return;
-    refreshDocuments();
   }, [view]);
 
   async function uploadDocument(e) {
@@ -266,6 +509,9 @@ export default function StaffPage() {
       setDocsFile(null);
       if (docsFileInputRef.current) docsFileInputRef.current.value = "";
       setDocsForm((p) => ({ ...p, docType: "" }));
+      await logStaffAction(
+        `Uploaded document (${docsForm.docType.trim()}) for ${docsForm.studentNo.trim()}`
+      );
       await refreshDocuments();
     } catch (e) {
       setDocsError(e?.message || "Upload failed");
@@ -274,20 +520,23 @@ export default function StaffPage() {
     }
   }
 
-  async function deleteDoc(id) {
-    const ok = confirm("Delete this document? This will remove the PDF from disk.");
-    if (!ok) return;
+  async function updateDoc(id, { studentNo, studentName, docType }) {
     setDocsLoading(true);
     setDocsError("");
     try {
-      const res = await fetch(`/api/documents/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/documents/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ studentNo, studentName, docType }),
+      });
       const json = await res.json();
       if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Delete failed");
+        throw new Error(json?.error || "Update failed");
       }
+      await logStaffAction(`Updated document metadata (#${id})`);
       await refreshDocuments();
     } catch (e) {
-      setDocsError(e?.message || "Delete failed");
+      setDocsError(e?.message || "Update failed");
     } finally {
       setDocsLoading(false);
     }
@@ -296,8 +545,8 @@ export default function StaffPage() {
   const breadcrumbs = useMemo(() => {
     const parts = [{ label: "All Courses", level: "courses" }];
     if (selectedCourse) parts.push({ label: selectedCourse.code, level: "years" });
-    if (selectedYear) parts.push({ label: `Year ${selectedYear}`, level: "sections" });
-    if (selectedSection) parts.push({ label: `Sec ${selectedSection}`, level: "students" });
+    if (selectedYear) parts.push({ label: String(selectedYear), level: "sections" });
+    if (selectedSection) parts.push({ label: String(selectedSection), level: "students" });
     return parts;
   }, [selectedCourse, selectedSection, selectedYear]);
 
@@ -323,14 +572,15 @@ export default function StaffPage() {
     }
 
     if (currentLevel === "years") {
-      const yrs = [1, 2, 3, 4];
+      const now = new Date().getFullYear();
+      const yrs = [now - 1, now, now + 1, now + 2];
       return yrs.map((y) => {
         const count = students.filter(
           (s) => s.courseCode === selectedCourse?.code && s.year === y
         ).length;
         return {
           key: `year-${y}`,
-          title: `Year ${y}`,
+          title: String(y),
           subtitle: `${count} Students`,
           icon: "ph-calendar",
           disabled: count === 0,
@@ -366,7 +616,7 @@ export default function StaffPage() {
 
         return {
           key: `sec-${sec}`,
-          title: `Sec ${sec}`,
+          title: String(sec),
           subtitle: `${count} Students`,
           icon: "ph-users-three",
           disabled: count === 0,
@@ -528,14 +778,16 @@ export default function StaffPage() {
   function handleFileSelect(file) {
     if (file && file.type === "application/pdf") {
       setUploadedFile(file);
+      setUploadError("");
     } else if (file) {
-      alert("Only PDF files are allowed.");
+      setUploadError("Only PDF files are allowed.");
     }
   }
 
   function clearFile(e) {
     if (e) e.stopPropagation();
     setUploadedFile(null);
+    setUploadError("");
     if (fileInputRef.current) fileInputRef.current.value = "";
   }
 
@@ -575,7 +827,7 @@ export default function StaffPage() {
 
   function processSubmission() {
     if (!uploadedFile) {
-      alert("Please drop or select a PDF file first.");
+      setUploadError("Please drop or select a PDF file first.");
       return;
     }
 
@@ -584,13 +836,15 @@ export default function StaffPage() {
       const dt = exist.docType;
 
       if (!studentNo) {
-        alert("Please select a student.");
+        setUploadError("Please select a student.");
         return;
       }
       if (!dt || dt === "add_new") {
-        alert("Please select a document type.");
+        setUploadError("Please select a document type.");
         return;
       }
+
+      setUploadError("");
 
       (async () => {
         try {
@@ -605,6 +859,8 @@ export default function StaffPage() {
           if (!res.ok || !json?.ok) throw new Error(json?.error || "Upload failed");
 
           alert(`File tagged as "${dt}" for ${studentNo}!`);
+
+          await logStaffAction(`Uploaded document (${dt}) for ${studentNo}`);
 
           if (activeStudentNo === studentNo) {
             const qs = new URLSearchParams();
@@ -637,16 +893,25 @@ export default function StaffPage() {
     const dt = newRec.docType;
 
     if (!id || !name || !courseCode || !Number.isFinite(sectionPart)) {
-      alert("Fill all required fields.");
+      setUploadError("Fill all required fields.");
       return;
     }
 
-    const computedYear = Number.isFinite(year) ? year : 1;
-    const section = `${computedYear}-${sectionPart}`;
-    if (!dt || dt === "add_new") {
-      alert("Please select a document type.");
+    if (!isValidStudentNo(id)) {
+      setUploadError(
+        "Invalid Student No. Use numbers in the first 2 parts and last part, and letters in the 3rd part."
+      );
       return;
     }
+
+    const computedYear = Number.isFinite(year) ? year : new Date().getFullYear();
+    const section = `Section ${sectionPart}`;
+    if (!dt || dt === "add_new") {
+      setUploadError("Please select a document type.");
+      return;
+    }
+
+    setUploadError("");
 
     const newStudent = {
       studentNo: id,
@@ -688,6 +953,10 @@ export default function StaffPage() {
 
         alert(`New Record & ${dt} added for ${name}!`);
 
+        await logStaffAction(
+          `Created student record (${created.studentNo}) and uploaded document (${dt})`
+        );
+
         clearFile();
         setNewRec({
           studentNo: "",
@@ -727,7 +996,7 @@ export default function StaffPage() {
                 PUP E-Manage
               </h1>
               <p className="text-xs text-gray-600 uppercase tracking-widest font-semibold">
-                Student Record Management
+                Student Record Keeping System
               </p>
             </div>
           </div>
@@ -809,6 +1078,73 @@ export default function StaffPage() {
           </div>
         </div>
       </header>
+
+      {pwOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md bg-white rounded-brand border border-gray-200 shadow-xl overflow-hidden">
+            <div className="p-5 border-b border-gray-200 bg-gray-50/60">
+              <h3 className="font-bold text-pup-maroon">Change Password</h3>
+              <p className="text-xs text-gray-500 mt-1">
+                First login detected. Please change your password to continue.
+              </p>
+            </div>
+            <form onSubmit={submitChangePassword} className="p-5 space-y-4">
+              {pwError ? (
+                <div className="text-sm text-red-600 font-semibold">{pwError}</div>
+              ) : null}
+
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
+                  Current Password
+                </label>
+                <input
+                  type="password"
+                  className="form-input"
+                  value={pwCurrent}
+                  onChange={(e) => setPwCurrent(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  className="form-input"
+                  value={pwNext}
+                  onChange={(e) => setPwNext(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
+                  Confirm New Password
+                </label>
+                <input
+                  type="password"
+                  className="form-input"
+                  value={pwConfirm}
+                  onChange={(e) => setPwConfirm(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end">
+                <button
+                  type="submit"
+                  disabled={pwLoading}
+                  className="px-5 py-2.5 bg-pup-maroon text-white rounded-brand text-sm font-bold hover:bg-red-900 transition-colors shadow-sm disabled:opacity-60"
+                >
+                  {pwLoading ? "Saving..." : "Update Password"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      ) : null}
 
       <main className="flex-1 flex flex-col lg:flex-row overflow-hidden max-w-[1600px] mx-auto w-full p-4 gap-4">
         <div
@@ -1295,13 +1631,19 @@ export default function StaffPage() {
               <div className="flex gap-6 mt-6 border-b border-gray-200">
                 <button
                   className={`tab-btn ${uploadMode === "existing" ? "active" : ""}`}
-                  onClick={() => setUploadMode("existing")}
+                  onClick={() => {
+                    setUploadMode("existing");
+                    setUploadError("");
+                  }}
                 >
                   Existing Student
                 </button>
                 <button
                   className={`tab-btn ${uploadMode === "new" ? "active" : ""}`}
-                  onClick={() => setUploadMode("new")}
+                  onClick={() => {
+                    setUploadMode("new");
+                    setUploadError("");
+                  }}
                 >
                   Register New
                 </button>
@@ -1318,14 +1660,15 @@ export default function StaffPage() {
                     <select
                       className="form-select"
                       value={exist.course}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        setUploadError("");
                         setExist((p) => ({
                           ...p,
                           course: e.target.value,
                           section: "",
                           studentId: "",
-                        }))
-                      }
+                        }));
+                      }}
                     >
                       <option value="">Select Course...</option>
                       {courses.map((c) => (
@@ -1339,25 +1682,31 @@ export default function StaffPage() {
                   <div className="grid grid-cols-2 gap-5">
                     <div>
                       <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
-                        Year Level
+                        Academic Year
                       </label>
                       <select
                         className="form-select"
                         value={exist.year}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          setUploadError("");
                           setExist((p) => ({
                             ...p,
                             year: e.target.value,
                             section: "",
                             studentId: "",
-                          }))
-                        }
+                          }));
+                        }}
                       >
                         <option value="">Select Year...</option>
-                        <option value="1">1st Year</option>
-                        <option value="2">2nd Year</option>
-                        <option value="3">3rd Year</option>
-                        <option value="4">4th Year</option>
+                        {(() => {
+                          const now = new Date().getFullYear();
+                          const years = [now - 1, now, now + 1, now + 2];
+                          return years.map((y) => (
+                            <option key={y} value={String(y)}>
+                              {y}
+                            </option>
+                          ));
+                        })()}
                       </select>
                     </div>
                     <div>
@@ -1367,13 +1716,14 @@ export default function StaffPage() {
                       <select
                         className="form-select"
                         value={exist.section}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          setUploadError("");
                           setExist((p) => ({
                             ...p,
                             section: e.target.value,
                             studentId: "",
-                          }))
-                        }
+                          }));
+                        }}
                       >
                         <option value="">Select Section...</option>
                         {existingAvailSections.map((s) => (
@@ -1393,9 +1743,10 @@ export default function StaffPage() {
                       className="form-select"
                       disabled={!exist.course || !exist.year || !exist.section}
                       value={exist.studentId}
-                      onChange={(e) =>
-                        setExist((p) => ({ ...p, studentId: e.target.value }))
-                      }
+                      onChange={(e) => {
+                        setUploadError("");
+                        setExist((p) => ({ ...p, studentId: e.target.value }));
+                      }}
                     >
                       <option value="">
                         {exist.course && exist.year && exist.section
@@ -1447,6 +1798,7 @@ export default function StaffPage() {
                         className="form-select"
                         value={exist.docType}
                         onChange={(e) => {
+                          setUploadError("");
                           const v = e.target.value;
                           setExist((p) => ({ ...p, docType: v }));
                           if (v === "add_new") ensureDocType("exist");
@@ -1472,6 +1824,12 @@ export default function StaffPage() {
                   >
                     <i className="ph-bold ph-upload-simple"></i> Submit Upload
                   </button>
+
+                  {uploadError ? (
+                    <div className="mt-3 p-3 rounded-brand border border-red-200 bg-red-50 text-red-800 text-sm font-bold">
+                      {uploadError}
+                    </div>
+                  ) : null}
                 </div>
               ) : (
                 <div className="space-y-5">
@@ -1485,10 +1843,30 @@ export default function StaffPage() {
                         className="form-input font-mono"
                         placeholder="202X-XXXXX-MN-0"
                         value={newRec.studentNo}
-                        onChange={(e) =>
-                          setNewRec((p) => ({ ...p, studentNo: e.target.value }))
-                        }
+                        onChange={(e) => {
+                          setUploadError("");
+                          setNewRecStudentNoTouched(true);
+                          const masked = applyStudentNoMask(e.target.value);
+                          setNewRec((p) => ({
+                            ...p,
+                            studentNo: masked.value,
+                          }));
+
+                          if (masked.invalid) {
+                            setNewRecStudentNoHint(
+                              "Wrong input type: use numbers first, then letters (AA), then a number."
+                            );
+                          } else {
+                            setNewRecStudentNoHint("");
+                          }
+                        }}
+                        onBlur={() => setNewRecStudentNoTouched(true)}
                       />
+                      {newRecStudentNoHint ? (
+                        <div className="mt-2 text-xs font-bold text-red-700">
+                          {newRecStudentNoHint}
+                        </div>
+                      ) : null}
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
@@ -1499,9 +1877,10 @@ export default function StaffPage() {
                         className="form-input"
                         placeholder="Last Name, First Name"
                         value={newRec.name}
-                        onChange={(e) =>
-                          setNewRec((p) => ({ ...p, name: e.target.value }))
-                        }
+                        onChange={(e) => {
+                          setUploadError("");
+                          setNewRec((p) => ({ ...p, name: e.target.value }));
+                        }}
                       />
                     </div>
                   </div>
@@ -1513,9 +1892,10 @@ export default function StaffPage() {
                     <select
                       className="form-select"
                       value={newRec.course}
-                      onChange={(e) =>
-                        setNewRec((p) => ({ ...p, course: e.target.value }))
-                      }
+                      onChange={(e) => {
+                        setUploadError("");
+                        setNewRec((p) => ({ ...p, course: e.target.value }));
+                      }}
                     >
                       <option value="">Select Course...</option>
                       {courses.map((c) => (
@@ -1529,24 +1909,30 @@ export default function StaffPage() {
                   <div className="grid grid-cols-2 gap-5">
                     <div>
                       <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
-                        Year Level
+                        Academic Year
                       </label>
                       <select
                         className="form-select"
                         value={newRec.year}
-                        onChange={(e) =>
+                        onChange={(e) => {
+                          setUploadError("");
                           setNewRec((p) => ({
                             ...p,
                             year: e.target.value,
                             sectionPart: "",
-                          }))
-                        }
+                          }));
+                        }}
                       >
                         <option value="">Select Year...</option>
-                        <option value="1">1st Year</option>
-                        <option value="2">2nd Year</option>
-                        <option value="3">3rd Year</option>
-                        <option value="4">4th Year</option>
+                        {(() => {
+                          const now = new Date().getFullYear();
+                          const years = [now - 1, now, now + 1, now + 2];
+                          return years.map((y) => (
+                            <option key={y} value={String(y)}>
+                              {y}
+                            </option>
+                          ));
+                        })()}
                       </select>
                     </div>
                     <div>
@@ -1556,16 +1942,17 @@ export default function StaffPage() {
                       <select
                         className="form-select"
                         value={newRec.sectionPart}
-                        onChange={(e) =>
-                          setNewRec((p) => ({ ...p, sectionPart: e.target.value }))
-                        }
+                        onChange={(e) => {
+                          setUploadError("");
+                          setNewRec((p) => ({ ...p, sectionPart: e.target.value }));
+                        }}
                         disabled={!newRec.year}
                       >
                         <option value="">
                           {newRec.year ? "Select Section..." : "Select year first..."}
                         </option>
-                        <option value="1">Section 1 ({newRec.year || "_"}-1)</option>
-                        <option value="2">Section 2 ({newRec.year || "_"}-2)</option>
+                        <option value="1">Section 1</option>
+                        <option value="2">Section 2</option>
                       </select>
                     </div>
                   </div>
@@ -1578,9 +1965,10 @@ export default function StaffPage() {
                       <select
                         className="form-select"
                         value={newRec.room}
-                        onChange={(e) =>
-                          setNewRec((p) => ({ ...p, room: e.target.value }))
-                        }
+                        onChange={(e) => {
+                          setUploadError("");
+                          setNewRec((p) => ({ ...p, room: e.target.value }));
+                        }}
                       >
                         <option value="">Room...</option>
                         {rooms.map((r) => (
@@ -1597,9 +1985,10 @@ export default function StaffPage() {
                       <select
                         className="form-select"
                         value={newRec.cabinet}
-                        onChange={(e) =>
-                          setNewRec((p) => ({ ...p, cabinet: e.target.value }))
-                        }
+                        onChange={(e) => {
+                          setUploadError("");
+                          setNewRec((p) => ({ ...p, cabinet: e.target.value }));
+                        }}
                       >
                         <option value="">Cab...</option>
                         {cabinets.map((c) => (
@@ -1616,9 +2005,10 @@ export default function StaffPage() {
                       <select
                         className="form-select"
                         value={newRec.drawer}
-                        onChange={(e) =>
-                          setNewRec((p) => ({ ...p, drawer: e.target.value }))
-                        }
+                        onChange={(e) => {
+                          setUploadError("");
+                          setNewRec((p) => ({ ...p, drawer: e.target.value }));
+                        }}
                       >
                         <option value="">D...</option>
                         {[1, 2, 3, 4].map((d) => (
@@ -1666,6 +2056,7 @@ export default function StaffPage() {
                         className="form-select"
                         value={newRec.docType}
                         onChange={(e) => {
+                          setUploadError("");
                           const v = e.target.value;
                           setNewRec((p) => ({ ...p, docType: v }));
                           if (v === "add_new") ensureDocType("new");
@@ -1691,6 +2082,12 @@ export default function StaffPage() {
                   >
                     <i className="ph-bold ph-upload-simple"></i> Submit Upload
                   </button>
+
+                  {uploadError ? (
+                    <div className="mt-3 p-3 rounded-brand border border-red-200 bg-red-50 text-red-800 text-sm font-bold">
+                      {uploadError}
+                    </div>
+                  ) : null}
                 </div>
               )}
             </div>
@@ -1711,25 +2108,6 @@ export default function StaffPage() {
                   Stored locally in <code>.local/</code> (SQLite + uploaded PDFs).
                 </p>
               </div>
-
-              <div className="flex items-center gap-2">
-                <div className="relative">
-                  <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-500"></i>
-                  <input
-                    className="form-input pl-10 w-[320px]"
-                    placeholder="Search student no, name, type..."
-                    value={docsQuery}
-                    onChange={(e) => setDocsQuery(e.target.value)}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={() => refreshDocuments()}
-                  className="px-4 py-2 rounded-brand bg-gray-900 text-white text-sm font-bold hover:bg-black transition-colors"
-                >
-                  Refresh
-                </button>
-              </div>
             </div>
 
             <div className="p-6 bg-gray-50/50">
@@ -1739,11 +2117,16 @@ export default function StaffPage() {
                     Student No
                   </label>
                   <input
-                    className="form-input font-mono"
+                    className="form-input font-mono h-11"
                     value={docsForm.studentNo}
-                    onChange={(e) =>
-                      setDocsForm((p) => ({ ...p, studentNo: e.target.value }))
-                    }
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setDocsForm((p) => {
+                        const next = { ...p, studentNo: v };
+                        refreshDocuments(next);
+                        return next;
+                      });
+                    }}
                     placeholder="202X-XXXXX-MN-0"
                     required
                   />
@@ -1754,11 +2137,16 @@ export default function StaffPage() {
                     Student Name
                   </label>
                   <input
-                    className="form-input"
+                    className="form-input h-11"
                     value={docsForm.studentName}
-                    onChange={(e) =>
-                      setDocsForm((p) => ({ ...p, studentName: e.target.value }))
-                    }
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setDocsForm((p) => {
+                        const next = { ...p, studentName: v };
+                        refreshDocuments(next);
+                        return next;
+                      });
+                    }}
                     placeholder="Optional"
                   />
                 </div>
@@ -1768,11 +2156,16 @@ export default function StaffPage() {
                     Document Type
                   </label>
                   <select
-                    className="form-select"
+                    className="form-select h-11"
                     value={docsForm.docType}
-                    onChange={(e) =>
-                      setDocsForm((p) => ({ ...p, docType: e.target.value }))
-                    }
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setDocsForm((p) => {
+                        const next = { ...p, docType: v };
+                        refreshDocuments(next);
+                        return next;
+                      });
+                    }}
                     required
                   >
                     <option value="">Select Type...</option>
@@ -1792,7 +2185,7 @@ export default function StaffPage() {
                     ref={docsFileInputRef}
                     type="file"
                     accept=".pdf"
-                    className="block w-full text-sm text-gray-600 file:mr-3 file:py-2 file:px-3 file:rounded-brand file:border file:border-gray-300 file:bg-white file:text-gray-700 file:font-bold hover:file:border-pup-maroon"
+                    className="block w-full h-11 text-sm text-gray-600 file:mr-3 file:h-11 file:px-4 file:rounded-brand file:border file:border-gray-300 file:bg-white file:text-gray-700 file:font-bold hover:file:border-pup-maroon"
                     onChange={(e) => setDocsFile(e.target.files?.[0] || null)}
                     required
                   />
@@ -1802,7 +2195,7 @@ export default function StaffPage() {
                   <button
                     type="submit"
                     disabled={docsLoading}
-                    className={`flex-1 bg-pup-maroon text-white py-2.5 rounded-brand font-bold text-sm hover:bg-red-900 transition-colors ${
+                    className={`flex-1 bg-pup-maroon text-white h-11 rounded-brand font-bold text-sm hover:bg-red-900 transition-colors ${
                       docsLoading ? "opacity-75 cursor-not-allowed" : ""
                     }`}
                   >
@@ -1814,7 +2207,7 @@ export default function StaffPage() {
                       setDocsFile(null);
                       if (docsFileInputRef.current) docsFileInputRef.current.value = "";
                     }}
-                    className="px-4 py-2.5 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
+                    className="px-4 h-11 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
                   >
                     Clear
                   </button>
@@ -1829,13 +2222,14 @@ export default function StaffPage() {
             </div>
 
             <div className="p-6">
-              <div className="overflow-x-auto border border-gray-200 rounded-brand">
+              <div className="max-h-[60vh] overflow-y-auto overflow-x-auto border border-gray-200 rounded-brand">
                 <table className="min-w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200">
+                  <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
                     <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
                       <th className="p-3 font-bold">Student No</th>
                       <th className="p-3 font-bold">Name</th>
                       <th className="p-3 font-bold">Type</th>
+                      <th className="p-3 font-bold">Status</th>
                       <th className="p-3 font-bold">File</th>
                       <th className="p-3 font-bold">Created</th>
                       <th className="p-3 font-bold text-right">Actions</th>
@@ -1844,19 +2238,28 @@ export default function StaffPage() {
                   <tbody className="divide-y divide-gray-200">
                     {docsLoading ? (
                       <tr>
-                        <td colSpan={6} className="p-6 text-center text-gray-500 font-medium">
+                        <td colSpan={7} className="p-6 text-center text-gray-500 font-medium">
                           Loading...
                         </td>
                       </tr>
-                    ) : docsRows.length === 0 ? (
+                    ) : !(
+                        docsForm.studentNo.trim() ||
+                        docsForm.studentName.trim() ||
+                        docsForm.docType.trim()
+                      ) ? null : docsRows.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="p-6 text-center text-gray-500 font-medium">
-                          No documents found.
+                        <td colSpan={7} className="p-6 text-center text-gray-500 font-medium">
+                          No matching students found.
                         </td>
                       </tr>
                     ) : (
                       docsRows.map((r) => (
-                        <tr key={r.id} className="hover:bg-gray-50">
+                        <tr
+                          key={r.key}
+                          className={`hover:bg-gray-50 ${
+                            r.status === "uploaded" ? "bg-green-50/40" : "bg-red-50/40"
+                          }`}
+                        >
                           <td className="p-3 font-mono font-bold text-gray-900">
                             {r.student_no}
                           </td>
@@ -1868,32 +2271,78 @@ export default function StaffPage() {
                               {r.doc_type}
                             </span>
                           </td>
+                          <td className="p-3">
+                            {r.status === "uploaded" ? (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full bg-green-50 text-green-800 border border-green-200 text-xs font-bold">
+                                Uploaded
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full bg-red-50 text-red-800 border border-red-200 text-xs font-bold">
+                                Missing
+                              </span>
+                            )}
+                          </td>
                           <td className="p-3 text-gray-700">
-                            {r.original_filename}
-                            <div className="text-xs text-gray-500 font-mono">
-                              {(r.size_bytes / 1024).toFixed(1)} KB
-                            </div>
+                            {r.doc ? (
+                              <>
+                                {r.doc.original_filename}
+                                <div className="text-xs text-gray-500 font-mono">
+                                  {(r.doc.size_bytes / 1024).toFixed(1)} KB
+                                </div>
+                              </>
+                            ) : (
+                              <span className="text-xs text-gray-500 font-medium">Not uploaded</span>
+                            )}
                           </td>
                           <td className="p-3 text-gray-600 font-medium">
-                            {String(r.created_at || "").replace("T", " ")}
+                            {r.doc ? String(r.doc.created_at || "").replace("T", " ") : "—"}
                           </td>
                           <td className="p-3">
                             <div className="flex justify-end gap-2">
-                              <a
-                                className="px-3 py-2 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-xs hover:border-pup-maroon"
-                                href={`/api/documents/${r.id}`}
-                                target="_blank"
-                                rel="noreferrer"
-                              >
-                                Open
-                              </a>
-                              <button
-                                type="button"
-                                onClick={() => deleteDoc(r.id)}
-                                className="px-3 py-2 rounded-brand bg-red-700 text-white font-bold text-xs hover:bg-red-800"
-                              >
-                                Delete
-                              </button>
+                              {r.doc ? (
+                                <>
+                                  <a
+                                    className="px-3 h-11 inline-flex items-center rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-xs hover:border-pup-maroon"
+                                    href={`/api/documents/${r.doc.id}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                  >
+                                    Open
+                                  </a>
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      if (!r.doc?.id) return;
+                                      const nextStudentNo = prompt(
+                                        "Update Student No:",
+                                        String(r.student_no || "")
+                                      );
+                                      if (nextStudentNo === null) return;
+
+                                      const nextStudentName = prompt(
+                                        "Update Student Name (optional):",
+                                        String(r.student_name || "")
+                                      );
+                                      if (nextStudentName === null) return;
+
+                                      const nextDocType = prompt(
+                                        "Update Document Type:",
+                                        String(r.doc_type || "")
+                                      );
+                                      if (nextDocType === null) return;
+
+                                      await updateDoc(r.doc.id, {
+                                        studentNo: String(nextStudentNo).trim(),
+                                        studentName: String(nextStudentName).trim(),
+                                        docType: String(nextDocType).trim(),
+                                      });
+                                    }}
+                                    className="px-3 h-11 rounded-brand bg-pup-maroon text-white font-bold text-xs hover:bg-red-900"
+                                  >
+                                    Update
+                                  </button>
+                                </>
+                              ) : null}
                             </div>
                           </td>
                         </tr>
@@ -1905,14 +2354,16 @@ export default function StaffPage() {
 
               <div className="mt-4 flex justify-between items-center">
                 <div className="text-xs text-gray-500 font-medium">
-                  Showing {docsRows.length} documents
+                  {docsForm.studentNo.trim() || docsForm.studentName.trim() || docsForm.docType.trim()
+                    ? `Showing ${docsRows.length} documents`
+                    : ""}
                 </div>
                 <button
                   type="button"
-                  onClick={() => refreshDocuments(docsQuery)}
-                  className="px-4 py-2 rounded-brand bg-gray-100 border border-gray-200 text-gray-700 font-bold text-xs hover:border-pup-maroon"
+                  onClick={() => refreshDocuments(docsForm)}
+                  className="px-4 h-11 rounded-brand bg-gray-100 border border-gray-200 text-gray-700 font-bold text-xs hover:border-pup-maroon"
                 >
-                  Search
+                  Refresh
                 </button>
               </div>
             </div>

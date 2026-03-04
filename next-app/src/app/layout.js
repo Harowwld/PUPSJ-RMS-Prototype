@@ -2,7 +2,7 @@ import "./globals.css";
 
 export const metadata = {
   title: "PUP E-Manage",
-  description: "Student Record Management",
+  description: "Student Record Keeping System",
 };
 
 export default function RootLayout({ children }) {

@@ -43,6 +43,8 @@ export async function POST(req) {
   const drawer = parseInt(body.drawer);
   const status = String(body.status || "Active").trim() || "Active";
 
+  const studentNoPattern = /^\d{4}-\d{5}-[A-Z]{2}-\d$/;
+
   if (!studentNo || !name || !courseCode || !section) {
     return NextResponse.json(
       { ok: false, error: "Missing required fields" },
@@ -50,7 +52,14 @@ export async function POST(req) {
     );
   }
 
-  if (!Number.isFinite(yearLevel) || yearLevel < 1 || yearLevel > 6) {
+  if (!studentNoPattern.test(studentNo.toUpperCase())) {
+    return NextResponse.json(
+      { ok: false, error: "Invalid studentNo format" },
+      { status: 400 }
+    );
+  }
+
+  if (!Number.isFinite(yearLevel) || yearLevel < 2000 || yearLevel > 2100) {
     return NextResponse.json(
       { ok: false, error: "Invalid yearLevel" },
       { status: 400 }
