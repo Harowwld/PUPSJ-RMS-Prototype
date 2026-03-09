@@ -75,6 +75,147 @@ function isValidStudentNo(studentNo) {
   return /^\d{4}-\d{5}-[A-Z]{2}-\d$/.test(String(studentNo || "").trim());
 }
 
+function parseCsvLine(line) {
+  const out = [];
+  let cur = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      if (inQuotes && line[i + 1] === '"') {
+        cur += '"';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      continue;
+    }
+    if (ch === "," && !inQuotes) {
+      out.push(cur);
+      cur = "";
+      continue;
+    }
+    cur += ch;
+  }
+  out.push(cur);
+  return out.map((v) => String(v).trim());
+}
+
+function normalizeHeaderKey(k) {
+  return String(k || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "");
+}
+
+function mapCsvRowToStudent(obj) {
+  const studentNo = formatStudentNoInput(obj.studentno || obj.student_number || obj.studentid || "");
+  const name = String(obj.name || obj.fullname || obj.studentname || "").trim();
+  const courseCode = String(obj.course || obj.coursecode || obj.program || "").trim();
+  const yearLevel = parseInt(obj.academicyear || obj.year || obj.yearlevel || "");
+  const sectionRaw = String(obj.section || obj.sectionname || obj.sectionpart || "").trim();
+  const section = sectionRaw ? (sectionRaw.toLowerCase().startsWith("section") ? sectionRaw : `Section ${sectionRaw}`) : "";
+  const room = parseInt(obj.room || "1");
+  const cabinet = String(obj.cabinet || "A").trim() || "A";
+  const drawer = parseInt(obj.drawer || "1");
+  const status = String(obj.status || "Active").trim() || "Active";
+  return {
+    studentNo,
+    name,
+    courseCode,
+    yearLevel,
+    section,
+    room,
+    cabinet,
+    drawer,
+    status,
+  };
+}
+
+function validateStudentForCsv(s) {
+  if (!s.studentNo || !s.name || !s.courseCode || !s.section) return "Missing required fields";
+  if (!isValidStudentNo(s.studentNo)) return "Invalid studentNo format";
+  if (!Number.isFinite(s.yearLevel) || s.yearLevel < 2000 || s.yearLevel > 2100) return "Invalid academic year";
+  if (!Number.isFinite(s.room) || s.room < 1) return "Invalid room";
+  if (!s.cabinet) return "Invalid cabinet";
+  if (!Number.isFinite(s.drawer) || s.drawer < 1) return "Invalid drawer";
+  return "";
+}
+
+function extractNameFromOcrText(text) {
+  const t = String(text || "");
+  const lines = t
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  const labeled = lines.join("\n");
+  const m1 = labeled.match(/\b(?:Name|Student Name)\s*[:\-]\s*(.+)$/im);
+  if (m1 && m1[1]) {
+    const candidate = String(m1[1]).trim();
+    if (candidate.length >= 4 && candidate.length <= 80) return candidate;
+  }
+
+  // Fallback: pick the first long-ish line that looks like a name
+  for (const l of lines) {
+    if (l.length < 6 || l.length > 80) continue;
+    // avoid lines that are mostly digits
+    const digits = (l.match(/\d/g) || []).length;
+    if (digits > Math.max(3, Math.floor(l.length / 3))) continue;
+    // likely name line
+    if (/[A-Za-z]{2,}/.test(l)) return l;
+  }
+
+  return "";
+}
+
+function extractStudentNoFromOcrText(text) {
+  const t = String(text || "").toUpperCase();
+  const m = t.match(/\b\d{4}[-\s]?\d{5}[-\s]?[A-Z]{2}[-\s]?\d\b/);
+  if (!m) return "";
+  const raw = m[0].replace(/\s+/g, "");
+  return formatStudentNoInput(raw);
+}
+
+async function ocrFirstPageFromPdfFile(file) {
+  const buf = await file.arrayBuffer();
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+    "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
+    import.meta.url
+  ).toString();
+
+  const loadingTask = pdfjs.getDocument({ data: buf });
+  const pdf = await loadingTask.promise;
+  const page = await pdf.getPage(1);
+
+  const viewport = page.getViewport({ scale: 2 });
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = Math.floor(viewport.width);
+  canvas.height = Math.floor(viewport.height);
+
+  await page.render({ canvasContext: ctx, viewport }).promise;
+
+  const { createWorker } = await import("tesseract.js");
+  const worker = await createWorker({
+    // Serve everything locally from /public/tesseract (offline)
+    workerPath: "/tesseract/worker.min.js",
+    corePath: "/tesseract/tesseract-core.wasm.js",
+    langPath: "/tesseract",
+    logger: () => {},
+  });
+
+  await worker.loadLanguage("eng");
+  await worker.initialize("eng");
+  const {
+    data: { text },
+  } = await worker.recognize(canvas);
+  await worker.terminate();
+
+  return String(text || "");
+}
+
 function normalizeStudentRow(r) {
   const course = courses.find((c) => c.code === r.course_code);
   const rawSection = String(r.section || "").trim();
@@ -235,15 +376,7 @@ export default function StaffPage() {
   });
   const [docsFile, setDocsFile] = useState(null);
 
-  const [docTypes, setDocTypes] = useState([
-    "Form 137",
-    "Transcript of Records",
-    "Good Moral Certificate",
-    "Diploma",
-    "Honorable Dismissal",
-    "Medical Certificate",
-    "Birth Certificate",
-  ]);
+  const [docTypes, setDocTypes] = useState([]);
 
   const [students, setStudents] = useState([]);
 
@@ -283,7 +416,22 @@ export default function StaffPage() {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [dropActive, setDropActive] = useState(false);
 
+  const [ocrLoading, setOcrLoading] = useState(false);
+  const [ocrError, setOcrError] = useState("");
+
   const [uploadMode, setUploadMode] = useState("existing");
+
+  const [csvFile, setCsvFile] = useState(null);
+  const [csvRows, setCsvRows] = useState([]);
+  const [csvError, setCsvError] = useState("");
+  const [csvLoading, setCsvLoading] = useState(false);
+  const [csvResults, setCsvResults] = useState([]);
+
+  const [docTypeModalOpen, setDocTypeModalOpen] = useState(false);
+  const [docTypeModalPrefix, setDocTypeModalPrefix] = useState("exist");
+  const [docTypeModalValue, setDocTypeModalValue] = useState("");
+  const [docTypeModalLoading, setDocTypeModalLoading] = useState(false);
+  const [docTypeModalError, setDocTypeModalError] = useState("");
 
   const [exist, setExist] = useState({
     course: "",
@@ -370,6 +518,19 @@ export default function StaffPage() {
         setStudents(rows.map(normalizeStudentRow));
       } catch {
         setStudents([]);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/doc-types");
+        const json = await res.json();
+        if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to load doc types");
+        setDocTypes(Array.isArray(json.data) ? json.data : []);
+      } catch {
+        setDocTypes([]);
       }
     })();
   }, []);
@@ -779,6 +940,28 @@ export default function StaffPage() {
     if (file && file.type === "application/pdf") {
       setUploadedFile(file);
       setUploadError("");
+
+      if (uploadMode === "new") {
+        setOcrError("");
+        setOcrLoading(true);
+        (async () => {
+          try {
+            const text = await ocrFirstPageFromPdfFile(file);
+            const inferredName = extractNameFromOcrText(text);
+            const inferredStudentNo = extractStudentNoFromOcrText(text);
+            setNewRec((p) => ({
+              ...p,
+              name: p.name || inferredName || p.name,
+              studentNo:
+                p.studentNo || (isValidStudentNo(inferredStudentNo) ? inferredStudentNo : p.studentNo),
+            }));
+          } catch (e) {
+            setOcrError(e?.message || "OCR failed");
+          } finally {
+            setOcrLoading(false);
+          }
+        })();
+      }
     } else if (file) {
       setUploadError("Only PDF files are allowed.");
     }
@@ -788,7 +971,164 @@ export default function StaffPage() {
     if (e) e.stopPropagation();
     setUploadedFile(null);
     setUploadError("");
+    setOcrError("");
+    setOcrLoading(false);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  async function handleCsvFileSelect(file) {
+    setCsvError("");
+    setCsvResults([]);
+    setCsvRows([]);
+    setCsvFile(null);
+
+    if (!file) return;
+    const isCsv =
+      file.type === "text/csv" ||
+      file.name.toLowerCase().endsWith(".csv") ||
+      file.type === "application/vnd.ms-excel";
+    if (!isCsv) {
+      setCsvError("Please select a CSV file.");
+      return;
+    }
+
+    setCsvFile(file);
+    try {
+      const text = await file.text();
+      const lines = String(text)
+        .replace(/^\uFEFF/, "")
+        .split(/\r?\n/)
+        .map((l) => l.trim())
+        .filter((l) => l.length > 0);
+
+      if (lines.length < 2) {
+        setCsvError("CSV must include a header row and at least 1 data row.");
+        return;
+      }
+
+      const header = parseCsvLine(lines[0]).map(normalizeHeaderKey);
+      const out = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = parseCsvLine(lines[i]);
+        const obj = {};
+        for (let j = 0; j < header.length; j++) {
+          obj[header[j]] = cols[j] ?? "";
+        }
+        const student = mapCsvRowToStudent(obj);
+        const error = validateStudentForCsv(student);
+        out.push({ index: i, student, error });
+      }
+
+      setCsvRows(out);
+    } catch (e) {
+      setCsvError(e?.message || "Failed to read CSV");
+    }
+  }
+
+  async function importCsvStudents() {
+    setCsvError("");
+    setCsvResults([]);
+
+    if (!csvFile) {
+      setCsvError("Please select a CSV file.");
+      return;
+    }
+
+    if (!csvRows.length) {
+      setCsvError("No rows to import.");
+      return;
+    }
+
+    const invalidCount = csvRows.filter((r) => r.error).length;
+    if (invalidCount > 0) {
+      setCsvError("Fix CSV errors before importing.");
+      return;
+    }
+
+    setCsvLoading(true);
+    try {
+      const res = await fetch("/api/students/batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rows: csvRows.map((r) => r.student) }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || "Batch import failed");
+      }
+
+      const results = Array.isArray(json.data) ? json.data : [];
+      setCsvResults(results);
+
+      const created = results
+        .filter((r) => r?.ok && r?.data)
+        .map((r) => normalizeStudentRow(r.data));
+
+      if (created.length) {
+        setStudents((prev) => {
+          const map = new Map(prev.map((s) => [s.studentNo, s]));
+          for (const s of created) map.set(s.studentNo, s);
+          return Array.from(map.values());
+        });
+      }
+    } catch (e) {
+      setCsvError(e?.message || "Batch import failed");
+    } finally {
+      setCsvLoading(false);
+    }
+  }
+
+  function openDocTypeModal(prefix) {
+    setUploadError("");
+    setDocTypeModalError("");
+    setDocTypeModalPrefix(prefix);
+    setDocTypeModalValue("");
+    setDocTypeModalOpen(true);
+  }
+
+  function closeDocTypeModal() {
+    setDocTypeModalOpen(false);
+    setDocTypeModalLoading(false);
+    setDocTypeModalError("");
+    setDocTypeModalValue("");
+    if (docTypeModalPrefix === "exist") {
+      setExist((p) => ({ ...p, docType: p.docType === "add_new" ? "" : p.docType }));
+    } else {
+      setNewRec((p) => ({ ...p, docType: p.docType === "add_new" ? "" : p.docType }));
+    }
+  }
+
+  async function saveDocTypeModal() {
+    const val = docTypeModalValue.trim();
+    if (!val) {
+      setDocTypeModalError("Please enter a document type.");
+      return;
+    }
+
+    setDocTypeModalLoading(true);
+    setDocTypeModalError("");
+    try {
+      const res = await fetch("/api/doc-types", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: val }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to add type");
+      const created = String(json.data);
+      setDocTypes((prev) => Array.from(new Set([...(prev || []), created])));
+      if (docTypeModalPrefix === "exist") {
+        setExist((p) => ({ ...p, docType: created }));
+      } else {
+        setNewRec((p) => ({ ...p, docType: created }));
+      }
+      setDocTypeModalOpen(false);
+      setDocTypeModalValue("");
+    } catch (e) {
+      setDocTypeModalError(e?.message || "Failed to add type");
+    } finally {
+      setDocTypeModalLoading(false);
+    }
   }
 
   function ensureDocType(prefix) {
@@ -807,13 +1147,51 @@ export default function StaffPage() {
     if (prefix === "exist") {
       const val = exist.newDocType.trim();
       if (!val) return;
-      setDocTypes((prev) => [...prev, val]);
-      setExist((p) => ({ ...p, addingDocType: false, docType: val, newDocType: "" }));
+      (async () => {
+        try {
+          const res = await fetch("/api/doc-types", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: val }),
+          });
+          const json = await res.json();
+          if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to add type");
+          const created = String(json.data);
+          setDocTypes((prev) => Array.from(new Set([...prev, created])));
+          setExist((p) => ({
+            ...p,
+            addingDocType: false,
+            docType: created,
+            newDocType: "",
+          }));
+        } catch (e) {
+          setUploadError(e?.message || "Failed to add type");
+        }
+      })();
     } else {
       const val = newRec.newDocType.trim();
       if (!val) return;
-      setDocTypes((prev) => [...prev, val]);
-      setNewRec((p) => ({ ...p, addingDocType: false, docType: val, newDocType: "" }));
+      (async () => {
+        try {
+          const res = await fetch("/api/doc-types", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ name: val }),
+          });
+          const json = await res.json();
+          if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to add type");
+          const created = String(json.data);
+          setDocTypes((prev) => Array.from(new Set([...prev, created])));
+          setNewRec((p) => ({
+            ...p,
+            addingDocType: false,
+            docType: created,
+            newDocType: "",
+          }));
+        } catch (e) {
+          setUploadError(e?.message || "Failed to add type");
+        }
+      })();
     }
   }
 
@@ -1610,9 +1988,22 @@ export default function StaffPage() {
                   <span className="text-sm text-gray-500 mb-6 font-medium">
                     {(uploadedFile.size / 1024).toFixed(2)} KB
                   </span>
+
+                  {uploadMode === "new" && ocrLoading ? (
+                    <div className="mb-4 text-sm font-bold text-gray-700">
+                      Scanning PDF (OCR)...
+                    </div>
+                  ) : null}
+
+                  {uploadMode === "new" && ocrError ? (
+                    <div className="mb-4 text-sm font-bold text-red-700 text-center max-w-md">
+                      {ocrError}
+                    </div>
+                  ) : null}
+
                   <button
                     onClick={clearFile}
-                    className="text-sm text-red-700 hover:text-white hover:bg-red-700 font-bold uppercase tracking-wide border border-red-200 px-4 py-2 rounded-full transition-colors"
+                    className="px-6 py-2.5 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
                   >
                     Remove File
                   </button>
@@ -1645,7 +2036,18 @@ export default function StaffPage() {
                     setUploadError("");
                   }}
                 >
-                  Register New
+                  New Student
+                </button>
+                <button
+                  className={`tab-btn ${uploadMode === "csv" ? "active" : ""}`}
+                  onClick={() => {
+                    setUploadMode("csv");
+                    setUploadError("");
+                    setCsvError("");
+                    setCsvResults([]);
+                  }}
+                >
+                  Batch (CSV)
                 </button>
               </div>
             </div>
@@ -1766,55 +2168,28 @@ export default function StaffPage() {
                       Document Type
                     </label>
 
-                    {exist.addingDocType ? (
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          className="form-input flex-1"
-                          placeholder="Enter new document type..."
-                          value={exist.newDocType}
-                          onChange={(e) =>
-                            setExist((p) => ({ ...p, newDocType: e.target.value }))
-                          }
-                          autoFocus
-                        />
-                        <button
-                          onClick={() => saveNewDocType("exist")}
-                          className="px-3 bg-pup-maroon text-white rounded-brand text-xs font-bold"
-                          type="button"
-                        >
-                          ADD
-                        </button>
-                        <button
-                          onClick={() => cancelNewDocType("exist")}
-                          className="px-3 bg-gray-200 text-gray-700 rounded-brand text-xs font-bold"
-                          type="button"
-                        >
-                          X
-                        </button>
-                      </div>
-                    ) : (
-                      <select
-                        className="form-select"
-                        value={exist.docType}
-                        onChange={(e) => {
-                          setUploadError("");
-                          const v = e.target.value;
-                          setExist((p) => ({ ...p, docType: v }));
-                          if (v === "add_new") ensureDocType("exist");
-                        }}
-                      >
-                        <option value="">Select Type...</option>
-                        {docTypes.map((t) => (
-                          <option key={t} value={t}>
-                            {t}
-                          </option>
-                        ))}
-                        <option value="add_new">
-                          ➕ Add New Type...
+                    <select
+                      className="form-select"
+                      value={exist.docType}
+                      onChange={(e) => {
+                        setUploadError("");
+                        const v = e.target.value;
+                        if (v === "add_new") {
+                          setExist((p) => ({ ...p, docType: "" }));
+                          openDocTypeModal("exist");
+                          return;
+                        }
+                        setExist((p) => ({ ...p, docType: v }));
+                      }}
+                    >
+                      <option value="">Select Type...</option>
+                      {docTypes.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
                         </option>
-                      </select>
-                    )}
+                      ))}
+                      <option value="add_new">Add New Type...</option>
+                    </select>
                   </div>
 
                   <button
@@ -1831,7 +2206,7 @@ export default function StaffPage() {
                     </div>
                   ) : null}
                 </div>
-              ) : (
+              ) : uploadMode === "new" ? (
                 <div className="space-y-5">
                   <div className="grid grid-cols-2 gap-5">
                     <div>
@@ -2024,55 +2399,28 @@ export default function StaffPage() {
                     <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
                       Document Type
                     </label>
-                    {newRec.addingDocType ? (
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          className="form-input flex-1"
-                          placeholder="Enter new document type..."
-                          value={newRec.newDocType}
-                          onChange={(e) =>
-                            setNewRec((p) => ({ ...p, newDocType: e.target.value }))
-                          }
-                          autoFocus
-                        />
-                        <button
-                          onClick={() => saveNewDocType("new")}
-                          className="px-3 bg-pup-maroon text-white rounded-brand text-xs font-bold"
-                          type="button"
-                        >
-                          ADD
-                        </button>
-                        <button
-                          onClick={() => cancelNewDocType("new")}
-                          className="px-3 bg-gray-200 text-gray-700 rounded-brand text-xs font-bold"
-                          type="button"
-                        >
-                          X
-                        </button>
-                      </div>
-                    ) : (
-                      <select
-                        className="form-select"
-                        value={newRec.docType}
-                        onChange={(e) => {
-                          setUploadError("");
-                          const v = e.target.value;
-                          setNewRec((p) => ({ ...p, docType: v }));
-                          if (v === "add_new") ensureDocType("new");
-                        }}
-                      >
-                        <option value="">Select Type...</option>
-                        {docTypes.map((t) => (
-                          <option key={t} value={t}>
-                            {t}
-                          </option>
-                        ))}
-                        <option value="add_new">
-                          ➕ Add New Type...
+                    <select
+                      className="form-select"
+                      value={newRec.docType}
+                      onChange={(e) => {
+                        setUploadError("");
+                        const v = e.target.value;
+                        if (v === "add_new") {
+                          setNewRec((p) => ({ ...p, docType: "" }));
+                          openDocTypeModal("new");
+                          return;
+                        }
+                        setNewRec((p) => ({ ...p, docType: v }));
+                      }}
+                    >
+                      <option value="">Select Type...</option>
+                      {docTypes.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
                         </option>
-                      </select>
-                    )}
+                      ))}
+                      <option value="add_new">Add New Type...</option>
+                    </select>
                   </div>
 
                   <button
@@ -2086,6 +2434,114 @@ export default function StaffPage() {
                   {uploadError ? (
                     <div className="mt-3 p-3 rounded-brand border border-red-200 bg-red-50 text-red-800 text-sm font-bold">
                       {uploadError}
+                    </div>
+                  ) : null}
+                </div>
+              ) : (
+                <div className="space-y-5">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                      CSV File
+                    </label>
+                    <input
+                      type="file"
+                      accept=".csv,text/csv"
+                      className="block w-full text-sm text-gray-600 file:mr-3 file:h-11 file:px-4 file:rounded-brand file:border file:border-gray-300 file:bg-white file:text-gray-700 file:font-bold hover:file:border-pup-maroon"
+                      onChange={(e) => handleCsvFileSelect(e.target.files?.[0] || null)}
+                    />
+                    <div className="mt-2 text-xs font-medium text-gray-600">
+                      Required columns:
+                      <span className="font-mono"> studentNo, name, courseCode, academicYear, section, room, cabinet, drawer</span>
+                    </div>
+                  </div>
+
+                  {csvError ? (
+                    <div className="p-3 rounded-brand border border-red-200 bg-red-50 text-red-800 text-sm font-bold">
+                      {csvError}
+                    </div>
+                  ) : null}
+
+                  {csvRows.length ? (
+                    <div className="border border-gray-200 rounded-brand overflow-hidden bg-white">
+                      <div className="p-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+                        <div className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+                          Preview ({csvRows.length} rows)
+                        </div>
+                        <div className="text-xs font-medium text-gray-600">
+                          {csvRows.filter((r) => r.error).length
+                            ? `${csvRows.filter((r) => r.error).length} invalid`
+                            : "All valid"}
+                        </div>
+                      </div>
+                      <div className="max-h-[45vh] overflow-auto">
+                        <table className="min-w-full text-sm">
+                          <thead className="bg-white border-b border-gray-200 sticky top-0 z-10">
+                            <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
+                              <th className="p-3 font-bold">#</th>
+                              <th className="p-3 font-bold">Student No</th>
+                              <th className="p-3 font-bold">Name</th>
+                              <th className="p-3 font-bold">Course</th>
+                              <th className="p-3 font-bold">Year</th>
+                              <th className="p-3 font-bold">Section</th>
+                              <th className="p-3 font-bold">Room</th>
+                              <th className="p-3 font-bold">Cab</th>
+                              <th className="p-3 font-bold">Drawer</th>
+                              <th className="p-3 font-bold">Error</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200">
+                            {csvRows.slice(0, 100).map((r) => (
+                              <tr key={r.index}>
+                                <td className="p-3 text-gray-500 font-mono">{r.index}</td>
+                                <td className="p-3 font-mono">{r.student.studentNo}</td>
+                                <td className="p-3">{r.student.name}</td>
+                                <td className="p-3">{r.student.courseCode}</td>
+                                <td className="p-3">{r.student.yearLevel}</td>
+                                <td className="p-3">{r.student.section}</td>
+                                <td className="p-3">{r.student.room}</td>
+                                <td className="p-3">{r.student.cabinet}</td>
+                                <td className="p-3">{r.student.drawer}</td>
+                                <td className="p-3">
+                                  {r.error ? (
+                                    <span className="text-red-700 font-bold text-xs">{r.error}</span>
+                                  ) : (
+                                    <span className="text-green-700 font-bold text-xs">OK</span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      {csvRows.length > 100 ? (
+                        <div className="p-3 border-t border-gray-200 text-xs font-medium text-gray-600">
+                          Showing first 100 rows.
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  <button
+                    type="button"
+                    onClick={importCsvStudents}
+                    disabled={csvLoading}
+                    className={`w-full bg-pup-maroon text-white py-3 rounded-brand font-bold text-sm hover:bg-red-900 transition-all shadow-sm flex items-center justify-center gap-2 ${
+                      csvLoading ? "opacity-75 cursor-not-allowed" : ""
+                    }`}
+                  >
+                    {csvLoading ? "Importing..." : "Import Students"}
+                  </button>
+
+                  {csvResults.length ? (
+                    <div className="p-4 rounded-brand border border-gray-200 bg-white">
+                      <div className="text-sm font-bold text-gray-800">
+                        Import Summary
+                      </div>
+                      <div className="mt-2 text-sm text-gray-700 font-medium">
+                        {csvResults.filter((r) => r.ok).length} created
+                        {" · "}
+                        {csvResults.filter((r) => !r.ok).length} failed
+                      </div>
                     </div>
                   ) : null}
                 </div>
@@ -2431,6 +2887,77 @@ export default function StaffPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="docTypeModal"
+        className={`${docTypeModalOpen ? "flex" : "hidden"} fixed inset-0 z-50 bg-black/60 items-center justify-center p-4`}
+        onClick={(e) => {
+          if (e.target.id === "docTypeModal") closeDocTypeModal();
+        }}
+      >
+        <div className="w-full max-w-md bg-white rounded-brand border border-gray-200 shadow-2xl overflow-hidden animate-scale-in">
+          <div className="p-5 border-b border-gray-200 bg-gray-50/60 flex items-center justify-between">
+            <h3 className="font-bold text-pup-maroon">Add Document Type</h3>
+            <button
+              type="button"
+              onClick={closeDocTypeModal}
+              className="text-gray-500 hover:text-pup-maroon transition-colors p-2 rounded-brand"
+            >
+              <i className="ph-bold ph-x text-lg"></i>
+            </button>
+          </div>
+
+          <div className="p-5">
+            <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+              Document Type
+            </label>
+            <input
+              type="text"
+              className="form-input"
+              placeholder="Enter new document type..."
+              value={docTypeModalValue}
+              onChange={(e) => {
+                setDocTypeModalError("");
+                setDocTypeModalValue(e.target.value);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  saveDocTypeModal();
+                }
+              }}
+              autoFocus
+            />
+
+            {docTypeModalError ? (
+              <div className="mt-3 p-3 rounded-brand border border-red-200 bg-red-50 text-red-800 text-sm font-bold">
+                {docTypeModalError}
+              </div>
+            ) : null}
+
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={closeDocTypeModal}
+                className="px-4 h-11 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
+                disabled={docTypeModalLoading}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={saveDocTypeModal}
+                className={`px-4 h-11 rounded-brand bg-pup-maroon text-white font-bold text-sm hover:bg-red-900 ${
+                  docTypeModalLoading ? "opacity-75 cursor-not-allowed" : ""
+                }`}
+                disabled={docTypeModalLoading}
+              >
+                {docTypeModalLoading ? "Saving..." : "Save"}
+              </button>
+            </div>
           </div>
         </div>
       </div>

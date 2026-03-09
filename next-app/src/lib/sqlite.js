@@ -49,6 +49,12 @@ export function getDb() {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS document_types (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
     CREATE TABLE IF NOT EXISTS students (
       student_no TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -87,6 +93,8 @@ export function getDb() {
     CREATE INDEX IF NOT EXISTS idx_documents_student_no ON documents(student_no);
     CREATE INDEX IF NOT EXISTS idx_documents_doc_type ON documents(doc_type);
     CREATE INDEX IF NOT EXISTS idx_documents_created_at ON documents(created_at);
+
+    CREATE INDEX IF NOT EXISTS idx_document_types_name ON document_types(name);
 
     CREATE INDEX IF NOT EXISTS idx_students_course_year_section ON students(course_code, year_level, section);
     CREATE INDEX IF NOT EXISTS idx_students_name ON students(name);
@@ -138,6 +146,33 @@ export function getDb() {
       );
     } catch {
       // ignore migration errors
+    }
+
+    try {
+      const row = db.exec("SELECT COUNT(*) AS c FROM document_types");
+      const c = row?.[0]?.values?.[0]?.[0] ?? 0;
+      if (Number(c) === 0) {
+        const defaults = [
+          "Form 137",
+          "Transcript of Records",
+          "Good Moral Certificate",
+          "Diploma",
+          "Honorable Dismissal",
+          "Medical Certificate",
+          "Birth Certificate",
+        ];
+        for (const name of defaults) {
+          try {
+            db.exec(
+              `INSERT INTO document_types (name) VALUES ('${String(name).replace(/'/g, "''")}')`
+            );
+          } catch {
+            // ignore duplicates
+          }
+        }
+      }
+    } catch {
+      // ignore seed errors
     }
 
     persistDb();
