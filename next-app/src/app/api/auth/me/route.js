@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
+import { getStaffById } from "../../../../lib/staffRepo";
 
 export const runtime = "nodejs";
 
@@ -14,12 +15,19 @@ export async function GET(req) {
     }
 
     const payload = await verifySessionToken(token);
+    const userId = payload.sub || null;
+
+    // Fetch fresh user data from database to get current role and status
+    const staff = userId ? await getStaffById(userId) : null;
+    const currentRole = staff?.role || payload.role || null;
+    const currentStatus = staff?.status || "Inactive";
 
     return NextResponse.json({
       ok: true,
       data: {
-        id: payload.sub || null,
-        role: payload.role || null,
+        id: userId,
+        role: currentRole,
+        status: currentStatus,
         username: payload.username || null,
         mustChangePassword: Boolean(payload.mustChangePassword),
         last_active: payload.last_active || null,

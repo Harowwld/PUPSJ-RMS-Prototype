@@ -29,7 +29,6 @@ export async function PATCH(req, ctx) {
     role: body.role === undefined ? undefined : String(body.role).trim(),
     section:
       body.section === undefined ? undefined : String(body.section).trim(),
-    status: body.status === undefined ? undefined : String(body.status).trim(),
     email: body.email === undefined ? undefined : String(body.email).trim(),
     lastActive:
       body.lastActive === undefined ? undefined : String(body.lastActive).trim(),

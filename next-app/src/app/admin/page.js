@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { io } from "socket.io-client";
 
 function formatTime(value) {
   const [hourStr, minute] = value.split(":");
@@ -25,6 +26,7 @@ export default function AdminPage() {
   const [staffData, setStaffData] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
   const [autoBackupTime, setAutoBackupTime] = useState("00:00");
+  const [activeSessions, setActiveSessions] = useState(0);
 
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
@@ -140,6 +142,14 @@ export default function AdminPage() {
     })();
   }
 
+  async function refreshActiveSessions() {
+    const res = await fetch("/api/sessions");
+    const json = await res.json();
+    if (res.ok && json?.ok) {
+      setActiveSessions(json.data.count || 0);
+    }
+  }
+
   async function refreshStaff() {
     const res = await fetch("/api/staff?limit=500");
     const json = await res.json();
@@ -168,12 +178,68 @@ export default function AdminPage() {
       try {
         await refreshStaff();
         await refreshAuditLogs();
+        await refreshActiveSessions();
       } catch (e) {
         setStaffData([]);
         showToast(e?.message || "Failed to load staff", true);
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // WebSocket connection for real-time updates
+  useEffect(() => {
+    // Initialize Socket.io connection
+    const socket = io({
+      path: "/api/socket",
+      addTrailingSlash: false,
+    });
+
+    // Subscribe to admin events
+    socket.emit("adminSubscribe");
+
+    // Listen for staff login events
+    socket.on("staffLogin", (data) => {
+      setStaffData((prev) => {
+        const index = prev.findIndex((s) => s.id === data.staffId);
+        if (index === -1) return prev;
+        const next = [...prev];
+        next[index] = {
+          ...next[index],
+          status: "Active",
+          last_active: data.last_active || new Date().toISOString(),
+        };
+        return next;
+      });
+      refreshActiveSessions();
+    });
+
+    // Listen for staff logout events
+    socket.on("staffLogout", (data) => {
+      setStaffData((prev) => {
+        const index = prev.findIndex((s) => s.id === data.staffId);
+        if (index === -1) return prev;
+        const next = [...prev];
+        next[index] = {
+          ...next[index],
+          status: "Inactive",
+        };
+        return next;
+      });
+      refreshActiveSessions();
+    });
+
+    socket.on("connect", () => {
+      console.log("WebSocket connected");
+    });
+
+    socket.on("disconnect", () => {
+      console.log("WebSocket disconnected");
+    });
+
+    return () => {
+      socket.disconnect();
+    };
   }, []);
 
   function showToast(msg, isError = false, autoHide = true) {
@@ -246,6 +312,7 @@ export default function AdminPage() {
       (async () => {
         try {
           await refreshStaff();
+          await refreshActiveSessions();
         } catch {
           // ignore
         }
@@ -371,7 +438,6 @@ export default function AdminPage() {
             lname: editForm.lname,
             role: editForm.role,
             section,
-            status: editForm.status,
             email: editForm.email,
           }),
         });
@@ -979,46 +1045,6 @@ export default function AdminPage() {
                     />
                   </div>
 
-                  <div>
-                      <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                        Initial Status
-                      </label>
-                      <div className="flex gap-4 mt-2">
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="status"
-                            value="Active"
-                            checked={createForm.status === "Active"}
-                            onChange={(e) =>
-                              setCreateForm((f) => ({
-                                ...f,
-                                status: e.target.value,
-                              }))
-                            }
-                            className="text-pup-maroon focus:ring-pup-maroon"
-                          />
-                          <span className="text-sm text-gray-700">Active</span>
-                        </label>
-                        <label className="flex items-center gap-2 cursor-pointer">
-                          <input
-                            type="radio"
-                            name="status"
-                            value="Inactive"
-                            checked={createForm.status === "Inactive"}
-                            onChange={(e) =>
-                              setCreateForm((f) => ({
-                                ...f,
-                                status: e.target.value,
-                              }))
-                            }
-                            className="text-pup-maroon focus:ring-pup-maroon"
-                          />
-                          <span className="text-sm text-gray-700">Inactive</span>
-                        </label>
-                      </div>
-                  </div>
-
                   <div className="border-t border-gray-200 pt-6 flex items-center justify-end gap-3">
                     <button
                       type="button"
@@ -1482,46 +1508,6 @@ export default function AdminPage() {
                     setEditForm((f) => ({ ...f, email: e.target.value }))
                   }
                 />
-              </div>
-
-              <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                    Status
-                  </label>
-                  <div className="flex gap-4 mt-2">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="editStatus"
-                        value="Active"
-                        checked={editForm.status === "Active"}
-                        onChange={(e) =>
-                          setEditForm((f) => ({
-                            ...f,
-                            status: e.target.value,
-                          }))
-                        }
-                        className="text-pup-maroon focus:ring-pup-maroon"
-                      />
-                      <span className="text-sm text-gray-700">Active</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="editStatus"
-                        value="Inactive"
-                        checked={editForm.status === "Inactive"}
-                        onChange={(e) =>
-                          setEditForm((f) => ({
-                            ...f,
-                            status: e.target.value,
-                          }))
-                        }
-                        className="text-pup-maroon focus:ring-pup-maroon"
-                      />
-                      <span className="text-sm text-gray-700">Inactive</span>
-                    </label>
-                  </div>
               </div>
 
               <div className="border-t border-gray-200 pt-6 flex items-center justify-end gap-3">

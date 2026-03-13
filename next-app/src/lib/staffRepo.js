@@ -170,9 +170,21 @@ export async function touchStaffLastActiveById(id) {
   if (!existing) return null;
   await dbRun(
     `UPDATE staff
-     SET last_active = datetime('now'), updated_at = datetime('now')
+     SET last_active = datetime('now'), updated_at = datetime('now'), status = 'Active'
      WHERE id = ?`,
     [id]
+  );
+  return await getStaffById(id);
+}
+
+export async function setStaffStatus(id, status) {
+  const existing = await getStaffById(id);
+  if (!existing) return null;
+  await dbRun(
+    `UPDATE staff
+     SET status = ?, updated_at = datetime('now')
+     WHERE id = ?`,
+    [status, id]
   );
   return await getStaffById(id);
 }

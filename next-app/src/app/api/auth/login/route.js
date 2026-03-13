@@ -5,6 +5,8 @@ import {
   touchStaffLastActiveById,
 } from "../../../../lib/staffRepo";
 import { getSessionCookieName, signSessionToken } from "../../../../lib/jwt";
+import { createSession } from "../../../../lib/sessionStore";
+import { broadcastToAdmins } from "../../../../pages/api/socket";
 
 export const runtime = "nodejs";
 
@@ -35,6 +37,13 @@ export async function POST(req) {
       mustChangePassword: false,
     };
     const token = await signSessionToken(payload);
+    createSession(token, "admin", "Admin", "admin");
+    // Broadcast to admins
+    broadcastToAdmins("staffLogin", {
+      staffId: "admin",
+      role: "Admin",
+      username: "admin",
+    });
     const res = NextResponse.json({
       ok: true,
       data: { role: "Admin", id: "admin", username: "admin", mustChangePassword: false },
@@ -84,6 +93,15 @@ export async function POST(req) {
     mustChangePassword,
   };
   const token = await signSessionToken(sessionPayload);
+  createSession(token, touched.id, touched.role || "Staff", touched.email);
+  // Broadcast to admins
+  broadcastToAdmins("staffLogin", {
+    staffId: touched.id,
+    role: touched.role || "Staff",
+    username: touched.email,
+    status: "Active",
+    last_active: touched.last_active,
+  });
 
   const res = NextResponse.json({
     ok: true,

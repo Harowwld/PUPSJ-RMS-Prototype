@@ -38,7 +38,7 @@ export async function POST(req) {
   const lname = String(body.lname || "").trim();
   const role = String(body.role || "").trim();
   const section = String(body.section || "").trim();
-  const status = String(body.status || "Active").trim() || "Active";
+  const status = "Inactive";
   const email = String(body.email || "").trim();
   const password =
     body.password === undefined || body.password === null || String(body.password) === ""
