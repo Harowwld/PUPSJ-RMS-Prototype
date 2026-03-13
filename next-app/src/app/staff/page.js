@@ -177,6 +177,51 @@ function extractStudentNoFromOcrText(text) {
   return formatStudentNoInput(raw);
 }
 
+function inferDocTypeFromText(text, docTypes) {
+  const t = String(text || "").toLowerCase();
+  const types = Array.isArray(docTypes) ? docTypes : [];
+  if (!t || !types.length) return "";
+
+  let best = "";
+  let bestScore = 0;
+  for (const dt of types) {
+    const needle = String(dt || "").trim().toLowerCase();
+    if (!needle) continue;
+    let score = 0;
+    if (t.includes(needle)) score += 10;
+    for (const part of needle.split(/[^a-z0-9]+/g).filter(Boolean)) {
+      if (part.length < 3) continue;
+      if (t.includes(part)) score += 2;
+    }
+    if (score > bestScore) {
+      bestScore = score;
+      best = dt;
+    }
+  }
+
+  return bestScore >= 4 ? best : "";
+}
+
+async function extractFirstPageTextFromPdfFile(file) {
+  const buf = await file.arrayBuffer();
+  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
+  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+    "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
+    import.meta.url
+  ).toString();
+
+  const loadingTask = pdfjs.getDocument({ data: buf });
+  const pdf = await loadingTask.promise;
+  const page = await pdf.getPage(1);
+  const content = await page.getTextContent();
+  const items = Array.isArray(content?.items) ? content.items : [];
+  const out = items
+    .map((it) => String(it?.str || "").trim())
+    .filter(Boolean)
+    .join("\n");
+  return out;
+}
+
 async function ocrFirstPageFromPdfFile(file) {
   const buf = await file.arrayBuffer();
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
@@ -197,23 +242,37 @@ async function ocrFirstPageFromPdfFile(file) {
 
   await page.render({ canvasContext: ctx, viewport }).promise;
 
-  const { createWorker } = await import("tesseract.js");
-  const worker = await createWorker({
-    // Serve everything locally from /public/tesseract (offline)
-    workerPath: "/tesseract/worker.min.js",
-    corePath: "/tesseract/tesseract-core.wasm.js",
-    langPath: "/tesseract",
-    logger: () => {},
-  });
+  try {
+    const { createWorker } = await import("tesseract.js");
+    const worker = await createWorker({
+      // Serve everything locally from /public/tesseract (offline)
+      workerPath: "/tesseract/worker.min.js",
+      corePath: "/tesseract/tesseract-core.wasm.js",
+      langPath: "/tesseract",
+      logger: () => {},
+    });
 
-  await worker.loadLanguage("eng");
-  await worker.initialize("eng");
-  const {
-    data: { text },
-  } = await worker.recognize(canvas);
-  await worker.terminate();
+    await worker.loadLanguage("eng");
+    await worker.initialize("eng");
+    const {
+      data: { text },
+    } = await worker.recognize(canvas);
+    await worker.terminate();
 
-  return String(text || "");
+    return String(text || "");
+  } catch (e) {
+    const msg = String(e?.message || "");
+    if (
+      msg.includes("/tesseract/") ||
+      msg.toLowerCase().includes("worker") ||
+      msg.toLowerCase().includes("wasm")
+    ) {
+      throw new Error(
+        "Offline OCR assets are missing. Add /public/tesseract (worker + wasm + eng.traineddata) to enable OCR for scanned PDFs. Embedded-text PDFs will still work."
+      );
+    }
+    throw e;
+  }
 }
 
 function normalizeStudentRow(r) {
@@ -420,6 +479,9 @@ export default function StaffPage() {
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrError, setOcrError] = useState("");
 
+  const [ocrPromptOpen, setOcrPromptOpen] = useState(false);
+  const [ocrSuggestion, setOcrSuggestion] = useState(null);
+
   const [uploadMode, setUploadMode] = useState("existing");
 
   const [csvFile, setCsvFile] = useState(null);
@@ -432,6 +494,8 @@ export default function StaffPage() {
   const [csvBulkRoom, setCsvBulkRoom] = useState("");
   const [csvBulkCabinet, setCsvBulkCabinet] = useState("");
   const [csvBulkDrawer, setCsvBulkDrawer] = useState("");
+  const [csvDropActive, setCsvDropActive] = useState(false);
+  const csvInputRef = useRef(null);
 
   const [docTypeModalOpen, setDocTypeModalOpen] = useState(false);
   const [docTypeModalPrefix, setDocTypeModalPrefix] = useState("exist");
@@ -739,26 +803,34 @@ export default function StaffPage() {
     }
 
     if (currentLevel === "years") {
-      const now = new Date().getFullYear();
-      const yrs = [now - 1, now, now + 1, now + 2];
-      return yrs.map((y) => {
-        const count = students.filter(
-          (s) => s.courseCode === selectedCourse?.code && s.year === y
-        ).length;
-        return {
-          key: `year-${y}`,
-          title: String(y),
-          subtitle: `${count} Students`,
-          icon: "ph-calendar",
-          disabled: count === 0,
-          onClick: () => {
-            if (count === 0) return;
-            setSelectedYear(y);
-            setSelectedSection(null);
-            setCurrentLevel("sections");
-          },
-        };
-      });
+      const yearsInCourse = [
+        ...new Set(
+          students
+            .filter((s) => s.courseCode === selectedCourse?.code)
+            .map((s) => s.year)
+            .filter(Boolean)
+        ),
+      ].sort((a, b) => b - a);
+
+      return yearsInCourse
+        .filter((y) => students.some((s) => s.courseCode === selectedCourse?.code && s.year === y))
+        .map((y) => {
+          const count = students.filter(
+            (s) => s.courseCode === selectedCourse?.code && s.year === y
+          ).length;
+          return {
+            key: `year-${y}`,
+            title: String(y),
+            subtitle: `${count} Students`,
+            icon: "ph-calendar",
+            disabled: false,
+            onClick: () => {
+              setSelectedYear(y);
+              setSelectedSection(null);
+              setCurrentLevel("sections");
+            },
+          };
+        });
     }
 
     if (currentLevel === "sections") {
@@ -891,6 +963,25 @@ export default function StaffPage() {
     ].sort();
   }, [exist.course, exist.year, students]);
 
+  const existingAvailYears = useMemo(() => {
+    const courseVal = exist.course;
+    if (!courseVal) return [];
+    return [
+      ...new Set(
+        students
+          .filter((s) => s.courseCode === courseVal)
+          .map((s) => s.year)
+          .filter(Boolean)
+      ),
+    ].sort((a, b) => b - a);
+  }, [exist.course, students]);
+
+  const newAvailYears = useMemo(() => {
+    const courseVal = newRec.course;
+    const src = courseVal ? students.filter((s) => s.courseCode === courseVal) : students;
+    return [...new Set(src.map((s) => s.year).filter(Boolean))].sort((a, b) => b - a);
+  }, [newRec.course, students]);
+
   const existingStudents = useMemo(() => {
     const courseVal = exist.course;
     const yearVal = parseInt(exist.year);
@@ -947,27 +1038,49 @@ export default function StaffPage() {
       setUploadedFile(file);
       setUploadError("");
 
-      if (uploadMode === "new") {
-        setOcrError("");
-        setOcrLoading(true);
-        (async () => {
+      setOcrError("");
+      setOcrSuggestion(null);
+      setOcrPromptOpen(false);
+      setOcrLoading(true);
+      (async () => {
+        try {
+          let text = "";
           try {
-            const text = await ocrFirstPageFromPdfFile(file);
-            const inferredName = extractNameFromOcrText(text);
-            const inferredStudentNo = extractStudentNoFromOcrText(text);
-            setNewRec((p) => ({
-              ...p,
-              name: p.name || inferredName || p.name,
-              studentNo:
-                p.studentNo || (isValidStudentNo(inferredStudentNo) ? inferredStudentNo : p.studentNo),
-            }));
-          } catch (e) {
-            setOcrError(e?.message || "OCR failed");
-          } finally {
-            setOcrLoading(false);
+            text = await extractFirstPageTextFromPdfFile(file);
+          } catch {
+            text = "";
           }
-        })();
-      }
+
+          if (!String(text || "").trim()) {
+            text = await ocrFirstPageFromPdfFile(file);
+          }
+
+          const inferredName = extractNameFromOcrText(text);
+          const inferredStudentNo = extractStudentNoFromOcrText(text);
+          const inferredDocType = inferDocTypeFromText(text, docTypes);
+
+          const studentNoOk = isValidStudentNo(inferredStudentNo) ? inferredStudentNo : "";
+          const match = studentNoOk
+            ? students.find((s) => s.studentNo === studentNoOk) || null
+            : null;
+
+          const suggestion = {
+            studentNo: studentNoOk,
+            name: inferredName,
+            docType: inferredDocType,
+            matchedStudent: match,
+          };
+
+          setOcrSuggestion(suggestion);
+          if (suggestion.studentNo || suggestion.name || suggestion.docType) {
+            setOcrPromptOpen(true);
+          }
+        } catch (e) {
+          setOcrError(e?.message || "OCR failed");
+        } finally {
+          setOcrLoading(false);
+        }
+      })();
     } else if (file) {
       setUploadError("Only PDF files are allowed.");
     }
@@ -979,7 +1092,38 @@ export default function StaffPage() {
     setUploadError("");
     setOcrError("");
     setOcrLoading(false);
+    setOcrPromptOpen(false);
+    setOcrSuggestion(null);
     if (fileInputRef.current) fileInputRef.current.value = "";
+  }
+
+  function applyOcrToExistingStudent() {
+    const sug = ocrSuggestion;
+    const s = sug?.matchedStudent;
+    if (!s) return;
+
+    setUploadMode("existing");
+    setExist((p) => ({
+      ...p,
+      course: s.courseCode || "",
+      year: s.year ? String(s.year) : "",
+      section: s.section || "",
+      studentId: s.studentNo || "",
+      docType: sug?.docType ? String(sug.docType) : p.docType,
+    }));
+    setOcrPromptOpen(false);
+  }
+
+  function applyOcrToNewStudent() {
+    const sug = ocrSuggestion;
+    setUploadMode("new");
+    setNewRec((p) => ({
+      ...p,
+      studentNo: p.studentNo || String(sug?.studentNo || ""),
+      name: p.name || String(sug?.name || ""),
+      docType: p.docType || String(sug?.docType || ""),
+    }));
+    setOcrPromptOpen(false);
   }
 
   async function handleCsvFileSelect(file) {
@@ -1186,6 +1330,24 @@ export default function StaffPage() {
     }
   }
 
+  async function ensureDocTypeSaved(raw) {
+    const val = String(raw || "").trim();
+    if (!val) return "";
+
+    const res = await fetch("/api/doc-types", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: val }),
+    });
+    const json = await res.json().catch(() => null);
+    if (!res.ok || !json?.ok) {
+      throw new Error(json?.error || "Failed to add type");
+    }
+    const created = String(json.data || val);
+    setDocTypes((prev) => Array.from(new Set([...(prev || []), created])));
+    return created;
+  }
+
   function ensureDocType(prefix) {
     if (prefix === "exist") {
       if (exist.docType === "add_new") {
@@ -1281,19 +1443,22 @@ export default function StaffPage() {
 
       (async () => {
         try {
+          const dtSaved = await ensureDocTypeSaved(dt);
+          if (!dtSaved) throw new Error("Please enter a document type.");
+
           const form = new FormData();
           form.set("file", uploadedFile);
           form.set("studentNo", studentNo);
           form.set("studentName", existingStudents.find((s) => s.studentNo === studentNo)?.name || "");
-          form.set("docType", dt);
+          form.set("docType", dtSaved);
 
           const res = await fetch("/api/documents", { method: "POST", body: form });
           const json = await res.json();
           if (!res.ok || !json?.ok) throw new Error(json?.error || "Upload failed");
 
-          showToast(`File tagged as "${dt}" for ${studentNo}!`);
+          showToast(`File tagged as "${dtSaved}" for ${studentNo}!`);
 
-          await logStaffAction(`Uploaded document (${dt}) for ${studentNo}`);
+          await logStaffAction(`Uploaded document (${dtSaved}) for ${studentNo}`);
 
           if (activeStudentNo === studentNo) {
             const qs = new URLSearchParams();
@@ -1340,7 +1505,7 @@ export default function StaffPage() {
     const computedYear = Number.isFinite(year) ? year : new Date().getFullYear();
     const section = `Section ${sectionPart}`;
     if (!dt || dt === "add_new") {
-      setUploadError("Please select a document type.");
+      setUploadError("Please enter a document type.");
       return;
     }
 
@@ -1360,6 +1525,9 @@ export default function StaffPage() {
 
     (async () => {
       try {
+        const dtSaved = await ensureDocTypeSaved(dt);
+        if (!dtSaved) throw new Error("Please enter a document type.");
+
         const res = await fetch("/api/students", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -1379,15 +1547,15 @@ export default function StaffPage() {
         form.set("file", uploadedFile);
         form.set("studentNo", created.studentNo);
         form.set("studentName", created.name);
-        form.set("docType", dt);
+        form.set("docType", dtSaved);
         const res2 = await fetch("/api/documents", { method: "POST", body: form });
         const json2 = await res2.json();
         if (!res2.ok || !json2?.ok) throw new Error(json2?.error || "Failed to upload document");
 
-        showToast(`New Record & ${dt} added for ${name}!`);
+        showToast(`New Record & ${dtSaved} added for ${name}!`);
 
         await logStaffAction(
-          `Created student record (${created.studentNo}) and uploaded document (${dt})`
+          `Created student record (${created.studentNo}) and uploaded document (${dtSaved})`
         );
 
         clearFile();
@@ -2000,12 +2168,12 @@ export default function StaffPage() {
             view === "upload" ? "flex" : "hidden"
           } flex-col lg:flex-row w-full h-full gap-4`}
         >
-          <section className="w-full lg:w-1/2 bg-white rounded-brand border border-gray-300 flex flex-col h-full p-8 items-center justify-center shadow-sm">
+          <section className="w-full lg:w-1/2 bg-white rounded-brand border border-gray-300 flex flex-col h-full p-8 items-center justify-center shadow-sm relative">
             {uploadMode === "csv" ? (
               <div className="w-full h-full border border-gray-200 rounded-brand bg-white overflow-hidden flex flex-col">
                 <div className="p-4 border-b border-gray-200 bg-gray-50">
                   <div className="text-xs font-bold text-gray-600 uppercase tracking-wider">
-                    CSV Details
+                    CSV Preview
                   </div>
                   <div className="mt-1 text-sm font-bold text-gray-900 break-all">
                     {csvFile ? csvFile.name : "No CSV selected"}
@@ -2016,37 +2184,103 @@ export default function StaffPage() {
                         {csvRows.length} rows
                         {" · "}
                         {csvRows.filter((r) => r.error).length} invalid
+                        {csvRows.filter((r) => r.error).length === 0 ? " · All valid" : ""}
                       </>
                     ) : (
-                      "Select a CSV file on the right to preview it here."
+                      "Select a CSV file to preview it here."
                     )}
                   </div>
                 </div>
 
                 <div className="flex-1 min-h-0 overflow-auto">
                   {csvRows.length ? (
-                    <table className="min-w-full text-sm">
+                    <table className="min-w-full text-xs">
                       <thead className="bg-white border-b border-gray-200 sticky top-0 z-10">
-                        <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
-                          <th className="p-3 font-bold">#</th>
-                          <th className="p-3 font-bold">Student No</th>
-                          <th className="p-3 font-bold">Name</th>
-                          <th className="p-3 font-bold">Room</th>
-                          <th className="p-3 font-bold">Cab</th>
-                          <th className="p-3 font-bold">Drawer</th>
-                          <th className="p-3 font-bold">Error</th>
+                        <tr className="text-left text-[11px] uppercase tracking-wider text-gray-600">
+                          <th className="p-1.5 font-bold w-8">
+                            <input
+                              type="checkbox"
+                              checked={
+                                csvRows.length > 0 &&
+                                Object.values(csvSelected).filter(Boolean).length === csvRows.length
+                              }
+                              onChange={(e) => toggleCsvSelectAll(e.target.checked)}
+                            />
+                          </th>
+                          <th className="p-1.5 font-bold">#</th>
+                          <th className="p-1.5 font-bold">Student No</th>
+                          <th className="p-1.5 font-bold">Name</th>
+                          <th className="p-1.5 font-bold">Course</th>
+                          <th className="p-1.5 font-bold">Year</th>
+                          <th className="p-1.5 font-bold">Section</th>
+                          <th className="p-1.5 font-bold">Room</th>
+                          <th className="p-1.5 font-bold">Cab</th>
+                          <th className="p-1.5 font-bold">Drawer</th>
+                          <th className="p-1.5 font-bold">Error</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-200">
                         {csvRows.slice(0, 100).map((r) => (
                           <tr key={r.index} className={csvSelected?.[r.index] ? "bg-gray-50" : ""}>
-                            <td className="p-3 text-gray-500 font-mono">{r.index}</td>
-                            <td className="p-3 font-mono">{r.student.studentNo}</td>
-                            <td className="p-3">{r.student.name}</td>
-                            <td className="p-3 font-bold">{r.student.room}</td>
-                            <td className="p-3 font-bold">{r.student.cabinet}</td>
-                            <td className="p-3 font-bold">{r.student.drawer}</td>
-                            <td className="p-3">
+                            <td className="p-1.5">
+                              <input
+                                type="checkbox"
+                                checked={!!csvSelected?.[r.index]}
+                                onChange={() => toggleCsvRowSelected(r.index)}
+                              />
+                            </td>
+                            <td className="p-1.5 text-gray-500 font-mono">{r.index}</td>
+                            <td className="p-1.5 font-mono">{r.student.studentNo}</td>
+                            <td className="p-1.5">{r.student.name}</td>
+                            <td className="p-1.5">{r.student.courseCode}</td>
+                            <td className="p-1.5">{r.student.yearLevel}</td>
+                            <td className="p-1.5">{r.student.section}</td>
+                            <td className="p-1.5">
+                              <select
+                                className="form-select h-9 text-[11px] leading-none px-1 py-0 w-14"
+                                value={String(r.student.room || "")}
+                                onChange={(e) =>
+                                  setCsvRowField(r.index, "room", parseInt(e.target.value))
+                                }
+                              >
+                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((room) => (
+                                  <option key={room} value={room}>
+                                    {room}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="p-1.5">
+                              <select
+                                className="form-select h-9 text-[11px] leading-none px-1 py-0 w-12"
+                                value={String(r.student.cabinet || "")}
+                                onChange={(e) =>
+                                  setCsvRowField(r.index, "cabinet", e.target.value)
+                                }
+                              >
+                                {cabinets.map((c) => (
+                                  <option key={c} value={c}>
+                                    {c}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="p-1.5">
+                              <select
+                                className="form-select h-9 text-[11px] leading-none px-1 py-0 w-14"
+                                value={String(r.student.drawer || "")}
+                                onChange={(e) =>
+                                  setCsvRowField(r.index, "drawer", parseInt(e.target.value))
+                                }
+                              >
+                                {[1, 2, 3, 4].map((d) => (
+                                  <option key={d} value={d}>
+                                    {d}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                            <td className="p-1.5">
                               {r.error ? (
                                 <span className="text-red-700 font-bold text-xs">{r.error}</span>
                               ) : (
@@ -2070,6 +2304,11 @@ export default function StaffPage() {
                       </div>
                     </div>
                   )}
+                  {csvRows.length > 100 ? (
+                    <div className="p-3 border-t border-gray-200 text-xs font-medium text-gray-600">
+                      Showing first 100 rows.
+                    </div>
+                  ) : null}
                 </div>
               </div>
             ) : (
@@ -2145,6 +2384,14 @@ export default function StaffPage() {
                 ) : null}
               </div>
             )}
+
+            {ocrLoading && uploadMode !== "csv" ? (
+              <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-brand">
+                <div className="w-12 h-12 rounded-full border-4 border-gray-300 border-t-pup-maroon animate-spin"></div>
+                <div className="mt-3 text-sm font-bold text-gray-800">Scanning file…</div>
+                <div className="mt-1 text-xs font-medium text-gray-600">Working offline (LAN)</div>
+              </div>
+            ) : null}
           </section>
           <section className="w-full lg:w-1/2 bg-white rounded-brand border border-gray-300 flex flex-col h-full shadow-sm overflow-hidden">
             <div className="p-6 border-b border-gray-200">
@@ -2187,6 +2434,24 @@ export default function StaffPage() {
             </div>
 
             <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50">
+              <datalist id="docTypeOptions">
+                {docTypes.map((t) => (
+                  <option key={t} value={t} />
+                ))}
+              </datalist>
+
+              <datalist id="existingYearOptions">
+                {existingAvailYears.map((y) => (
+                  <option key={y} value={String(y)} />
+                ))}
+              </datalist>
+
+              <datalist id="newYearOptions">
+                {newAvailYears.map((y) => (
+                  <option key={y} value={String(y)} />
+                ))}
+              </datalist>
+
               {uploadMode === "existing" ? (
                 <div className="space-y-5">
                   <div>
@@ -2220,9 +2485,12 @@ export default function StaffPage() {
                       <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
                         Academic Year
                       </label>
-                      <select
-                        className="form-select"
+                      <input
+                        className="form-select no-glow"
+                        list="existingYearOptions"
                         value={exist.year}
+                        inputMode="numeric"
+                        placeholder="e.g. 2025"
                         onChange={(e) => {
                           setUploadError("");
                           setExist((p) => ({
@@ -2232,18 +2500,12 @@ export default function StaffPage() {
                             studentId: "",
                           }));
                         }}
-                      >
-                        <option value="">Select Year...</option>
-                        {(() => {
-                          const now = new Date().getFullYear();
-                          const years = [now - 1, now, now + 1, now + 2];
-                          return years.map((y) => (
-                            <option key={y} value={String(y)}>
-                              {y}
-                            </option>
-                          ));
-                        })()}
-                      </select>
+                      />
+                      <datalist id="existingYearOptions">
+                        {existingAvailYears.map((y) => (
+                          <option key={y} value={String(y)} />
+                        ))}
+                      </datalist>
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
@@ -2302,28 +2564,16 @@ export default function StaffPage() {
                       Document Type
                     </label>
 
-                    <select
-                      className="form-select"
+                    <input
+                      className="form-select no-glow"
+                      list="docTypeOptions"
                       value={exist.docType}
+                      placeholder="Type document type..."
                       onChange={(e) => {
                         setUploadError("");
-                        const v = e.target.value;
-                        if (v === "add_new") {
-                          setExist((p) => ({ ...p, docType: "" }));
-                          openDocTypeModal("exist");
-                          return;
-                        }
-                        setExist((p) => ({ ...p, docType: v }));
+                        setExist((p) => ({ ...p, docType: e.target.value }));
                       }}
-                    >
-                      <option value="">Select Type...</option>
-                      {docTypes.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
-                      ))}
-                      <option value="add_new">Add New Type...</option>
-                    </select>
+                    />
                   </div>
 
                   <button
@@ -2420,9 +2670,12 @@ export default function StaffPage() {
                       <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
                         Academic Year
                       </label>
-                      <select
-                        className="form-select"
+                      <input
+                        className="form-select no-glow"
+                        list="newYearOptions"
                         value={newRec.year}
+                        inputMode="numeric"
+                        placeholder="e.g. 2025"
                         onChange={(e) => {
                           setUploadError("");
                           setNewRec((p) => ({
@@ -2431,18 +2684,12 @@ export default function StaffPage() {
                             sectionPart: "",
                           }));
                         }}
-                      >
-                        <option value="">Select Year...</option>
-                        {(() => {
-                          const now = new Date().getFullYear();
-                          const years = [now - 1, now, now + 1, now + 2];
-                          return years.map((y) => (
-                            <option key={y} value={String(y)}>
-                              {y}
-                            </option>
-                          ));
-                        })()}
-                      </select>
+                      />
+                      <datalist id="newYearOptions">
+                        {newAvailYears.map((y) => (
+                          <option key={y} value={String(y)} />
+                        ))}
+                      </datalist>
                     </div>
                     <div>
                       <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
@@ -2533,28 +2780,16 @@ export default function StaffPage() {
                     <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
                       Document Type
                     </label>
-                    <select
-                      className="form-select"
+                    <input
+                      className="form-select no-glow"
+                      list="docTypeOptions"
                       value={newRec.docType}
+                      placeholder="Type document type..."
                       onChange={(e) => {
                         setUploadError("");
-                        const v = e.target.value;
-                        if (v === "add_new") {
-                          setNewRec((p) => ({ ...p, docType: "" }));
-                          openDocTypeModal("new");
-                          return;
-                        }
-                        setNewRec((p) => ({ ...p, docType: v }));
+                        setNewRec((p) => ({ ...p, docType: e.target.value }));
                       }}
-                    >
-                      <option value="">Select Type...</option>
-                      {docTypes.map((t) => (
-                        <option key={t} value={t}>
-                          {t}
-                        </option>
-                      ))}
-                      <option value="add_new">Add New Type...</option>
-                    </select>
+                    />
                   </div>
 
                   <button
@@ -2577,12 +2812,41 @@ export default function StaffPage() {
                     <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
                       CSV File
                     </label>
-                    <input
-                      type="file"
-                      accept=".csv,text/csv"
-                      className="block w-full text-sm text-gray-600 file:mr-3 file:h-11 file:px-4 file:rounded-brand file:border file:border-gray-300 file:bg-white file:text-gray-700 file:font-bold hover:file:border-pup-maroon"
-                      onChange={(e) => handleCsvFileSelect(e.target.files?.[0] || null)}
-                    />
+                    <div className="flex gap-3">
+                      <input
+                        ref={csvInputRef}
+                        type="file"
+                        accept=".csv,text/csv"
+                        className="block w-full text-sm text-gray-600 file:mr-3 file:h-11 file:px-4 file:rounded-brand file:border file:border-gray-300 file:bg-white file:text-gray-700 file:font-bold hover:file:border-pup-maroon"
+                        onChange={(e) => handleCsvFileSelect(e.target.files?.[0] || null)}
+                      />
+                      <div
+                        className={`flex-shrink-0 w-32 h-11 rounded-brand border-2 border-dashed border-gray-400 bg-gray-50 flex items-center justify-center cursor-pointer hover:border-pup-maroon hover:bg-red-50/50 transition-all ${csvDropActive ? 'bg-red-50 border-pup-maroon' : ''}`}
+                        onClick={() => csvInputRef.current?.click()}
+                        onDragOver={(e) => {
+                          e.preventDefault();
+                          setCsvDropActive(true);
+                        }}
+                        onDragLeave={(e) => {
+                          e.preventDefault();
+                          setCsvDropActive(false);
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          setCsvDropActive(false);
+                          const file = e.dataTransfer.files?.[0];
+                          if (file && (file.name.endsWith('.csv') || file.type === 'text/csv')) {
+                            handleCsvFileSelect(file);
+                          } else {
+                            setCsvError('Please drop a CSV file');
+                          }
+                        }}
+                      >
+                        <span className="text-xs font-bold text-gray-600 flex items-center gap-1">
+                          <i className="ph-bold ph-upload-simple"></i> Drop CSV
+                        </span>
+                      </div>
+                    </div>
                     <div className="mt-2 text-xs font-medium text-gray-600">
                       Required columns:
                       <span className="font-mono"> studentNo, name, courseCode, academicYear, section, room, cabinet, drawer</span>
@@ -2595,211 +2859,93 @@ export default function StaffPage() {
                     </div>
                   ) : null}
 
-                  {csvRows.length ? (
-                    <div className="border border-gray-200 rounded-brand overflow-hidden bg-white">
-                      <div className="p-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
-                        <div className="text-xs font-bold text-gray-600 uppercase tracking-wider">
-                          Preview ({csvRows.length} rows)
-                        </div>
-                        <div className="text-xs font-medium text-gray-600">
-                          {csvRows.filter((r) => r.error).length
-                            ? `${csvRows.filter((r) => r.error).length} invalid`
-                            : "All valid"}
-                        </div>
+                  <div className="border border-gray-200 rounded-brand overflow-hidden bg-white">
+                    <div className="p-3 border-b border-gray-200 bg-gray-50">
+                      <div className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+                        Bulk Edit Selected
                       </div>
-
-                      <div className="p-3 border-b border-gray-200 bg-white">
-                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-end">
-                          <div className="lg:col-span-3">
-                            <div className="text-xs font-bold text-gray-600 uppercase tracking-wider">
-                              Selected
-                            </div>
-                            <div className="mt-1 text-sm font-bold text-gray-900">
-                              {Object.values(csvSelected).filter(Boolean).length}
-                            </div>
-                          </div>
-
-                          <div className="lg:col-span-3">
-                            <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                              Bulk Room
-                            </label>
-                            <select
-                              className="form-select"
-                              value={csvBulkRoom}
-                              onChange={(e) => setCsvBulkRoom(e.target.value)}
-                            >
-                              <option value="">No change</option>
-                              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((r) => (
-                                <option key={r} value={String(r)}>
-                                  {r}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div className="lg:col-span-3">
-                            <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                              Bulk Cabinet
-                            </label>
-                            <select
-                              className="form-select"
-                              value={csvBulkCabinet}
-                              onChange={(e) => setCsvBulkCabinet(e.target.value)}
-                            >
-                              <option value="">No change</option>
-                              {cabinets.map((c) => (
-                                <option key={c} value={c}>
-                                  {c}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div className="lg:col-span-3">
-                            <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                              Bulk Drawer
-                            </label>
-                            <select
-                              className="form-select"
-                              value={csvBulkDrawer}
-                              onChange={(e) => setCsvBulkDrawer(e.target.value)}
-                            >
-                              <option value="">No change</option>
-                              {[1, 2, 3, 4].map((d) => (
-                                <option key={d} value={String(d)}>
-                                  {d}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-
-                          <div className="lg:col-span-12 flex flex-col lg:flex-row gap-2">
-                            <button
-                              type="button"
-                              onClick={applyCsvBulkLocation}
-                              className="px-4 h-11 rounded-brand bg-pup-maroon text-white font-bold text-sm hover:bg-red-900"
-                              disabled={Object.values(csvSelected).filter(Boolean).length === 0}
-                            >
-                              Apply to Selected
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => setCsvSelected({})}
-                              className="px-4 h-11 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
-                              disabled={Object.values(csvSelected).filter(Boolean).length === 0}
-                            >
-                              Clear Selection
-                            </button>
-                          </div>
-                        </div>
+                      <div className="mt-1 text-sm font-bold text-gray-900">
+                        {Object.values(csvSelected).filter(Boolean).length} selected
                       </div>
-
-                      <div className="max-h-[45vh] overflow-auto">
-                        <table className="min-w-full text-sm">
-                          <thead className="bg-white border-b border-gray-200 sticky top-0 z-10">
-                            <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
-                              <th className="p-3 font-bold w-10">
-                                <input
-                                  type="checkbox"
-                                  checked={
-                                    csvRows.length > 0 &&
-                                    Object.values(csvSelected).filter(Boolean).length === csvRows.length
-                                  }
-                                  onChange={(e) => toggleCsvSelectAll(e.target.checked)}
-                                />
-                              </th>
-                              <th className="p-3 font-bold">#</th>
-                              <th className="p-3 font-bold">Student No</th>
-                              <th className="p-3 font-bold">Name</th>
-                              <th className="p-3 font-bold">Course</th>
-                              <th className="p-3 font-bold">Year</th>
-                              <th className="p-3 font-bold">Section</th>
-                              <th className="p-3 font-bold">Room</th>
-                              <th className="p-3 font-bold">Cab</th>
-                              <th className="p-3 font-bold">Drawer</th>
-                              <th className="p-3 font-bold">Error</th>
-                            </tr>
-                          </thead>
-                          <tbody className="divide-y divide-gray-200">
-                            {csvRows.slice(0, 100).map((r) => (
-                              <tr key={r.index} className={csvSelected?.[r.index] ? "bg-gray-50" : ""}>
-                                <td className="p-3">
-                                  <input
-                                    type="checkbox"
-                                    checked={!!csvSelected?.[r.index]}
-                                    onChange={() => toggleCsvRowSelected(r.index)}
-                                  />
-                                </td>
-                                <td className="p-3 text-gray-500 font-mono">{r.index}</td>
-                                <td className="p-3 font-mono">{r.student.studentNo}</td>
-                                <td className="p-3">{r.student.name}</td>
-                                <td className="p-3">{r.student.courseCode}</td>
-                                <td className="p-3">{r.student.yearLevel}</td>
-                                <td className="p-3">{r.student.section}</td>
-                                <td className="p-3">
-                                  <select
-                                    className="form-select h-10"
-                                    value={String(r.student.room || "")}
-                                    onChange={(e) =>
-                                      setCsvRowField(r.index, "room", parseInt(e.target.value))
-                                    }
-                                  >
-                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((room) => (
-                                      <option key={room} value={room}>
-                                        {room}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </td>
-                                <td className="p-3">
-                                  <select
-                                    className="form-select h-10"
-                                    value={String(r.student.cabinet || "")}
-                                    onChange={(e) =>
-                                      setCsvRowField(r.index, "cabinet", e.target.value)
-                                    }
-                                  >
-                                    {cabinets.map((c) => (
-                                      <option key={c} value={c}>
-                                        {c}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </td>
-                                <td className="p-3">
-                                  <select
-                                    className="form-select h-10"
-                                    value={String(r.student.drawer || "")}
-                                    onChange={(e) =>
-                                      setCsvRowField(r.index, "drawer", parseInt(e.target.value))
-                                    }
-                                  >
-                                    {[1, 2, 3, 4].map((d) => (
-                                      <option key={d} value={d}>
-                                        {d}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </td>
-                                <td className="p-3">
-                                  {r.error ? (
-                                    <span className="text-red-700 font-bold text-xs">{r.error}</span>
-                                  ) : (
-                                    <span className="text-green-700 font-bold text-xs">OK</span>
-                                  )}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                      {csvRows.length > 100 ? (
-                        <div className="p-3 border-t border-gray-200 text-xs font-medium text-gray-600">
-                          Showing first 100 rows.
-                        </div>
-                      ) : null}
                     </div>
-                  ) : null}
+
+                    <div className="p-3 border-b border-gray-200 bg-white">
+                      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+                            Bulk Room
+                          </label>
+                          <select
+                            className="form-select"
+                            value={csvBulkRoom}
+                            onChange={(e) => setCsvBulkRoom(e.target.value)}
+                          >
+                            <option value="">No change</option>
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((r) => (
+                              <option key={r} value={String(r)}>
+                                {r}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+                            Bulk Cabinet
+                          </label>
+                          <select
+                            className="form-select"
+                            value={csvBulkCabinet}
+                            onChange={(e) => setCsvBulkCabinet(e.target.value)}
+                          >
+                            <option value="">No change</option>
+                            {cabinets.map((c) => (
+                              <option key={c} value={c}>
+                                {c}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+                            Bulk Drawer
+                          </label>
+                          <select
+                            className="form-select"
+                            value={csvBulkDrawer}
+                            onChange={(e) => setCsvBulkDrawer(e.target.value)}
+                          >
+                            <option value="">No change</option>
+                            {[1, 2, 3, 4].map((d) => (
+                              <option key={d} value={String(d)}>
+                                {d}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="mt-3 flex flex-col lg:flex-row gap-2">
+                        <button
+                          type="button"
+                          onClick={applyCsvBulkLocation}
+                          className="px-4 h-11 rounded-brand bg-pup-maroon text-white font-bold text-sm hover:bg-red-900"
+                          disabled={Object.values(csvSelected).filter(Boolean).length === 0}
+                        >
+                          Apply to Selected
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCsvSelected({})}
+                          className="px-4 h-11 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
+                          disabled={Object.values(csvSelected).filter(Boolean).length === 0}
+                        >
+                          Clear Selection
+                        </button>
+                      </div>
+                    </div>
+                  </div>
 
                   <button
                     type="button"
@@ -3167,6 +3313,82 @@ export default function StaffPage() {
                 </div>
               </div>
             )}
+          </div>
+        </div>
+      </div>
+
+      <div
+        id="ocrPromptModal"
+        className={`${ocrPromptOpen ? "flex" : "hidden"} fixed inset-0 z-50 bg-black/60 items-center justify-center p-4`}
+        onClick={(e) => {
+          if (e.target.id === "ocrPromptModal") setOcrPromptOpen(false);
+        }}
+      >
+        <div className="w-full max-w-lg bg-white rounded-brand border border-gray-300 shadow-lg p-6">
+          <div className="text-lg font-bold text-pup-maroon">Detected from PDF</div>
+          <div className="mt-2 text-sm text-gray-700 font-medium">
+            Review the detected info and choose where to apply it.
+          </div>
+
+          <div className="mt-4 space-y-2 text-sm">
+            <div className="flex justify-between gap-4">
+              <div className="text-gray-600 font-bold">Student No</div>
+              <div className="text-gray-900 font-mono font-bold text-right break-all">
+                {ocrSuggestion?.studentNo || "(not detected)"}
+              </div>
+            </div>
+            <div className="flex justify-between gap-4">
+              <div className="text-gray-600 font-bold">Name</div>
+              <div className="text-gray-900 font-bold text-right break-words">
+                {ocrSuggestion?.name || "(not detected)"}
+              </div>
+            </div>
+            <div className="flex justify-between gap-4">
+              <div className="text-gray-600 font-bold">Document Type</div>
+              <div className="text-gray-900 font-bold text-right break-words">
+                {ocrSuggestion?.docType || "(not detected)"}
+              </div>
+            </div>
+            <div className="pt-2 border-t border-gray-200">
+              {ocrSuggestion?.matchedStudent ? (
+                <div className="text-xs font-bold text-green-700">
+                  Student found in database: {ocrSuggestion.matchedStudent.name}
+                </div>
+              ) : (
+                <div className="text-xs font-bold text-gray-600">
+                  No exact student match found (by Student No).
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-5 flex flex-col gap-2">
+            <button
+              type="button"
+              onClick={applyOcrToExistingStudent}
+              disabled={!ocrSuggestion?.matchedStudent}
+              className={`w-full h-11 rounded-brand font-bold text-sm border ${
+                ocrSuggestion?.matchedStudent
+                  ? "bg-pup-maroon text-white hover:bg-red-900"
+                  : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+              }`}
+            >
+              Apply to Existing Student
+            </button>
+            <button
+              type="button"
+              onClick={applyOcrToNewStudent}
+              className="w-full h-11 rounded-brand font-bold text-sm bg-white border border-gray-300 text-gray-700 hover:border-pup-maroon"
+            >
+              Use as New Student Prefill
+            </button>
+            <button
+              type="button"
+              onClick={() => setOcrPromptOpen(false)}
+              className="w-full h-11 rounded-brand font-bold text-sm bg-white text-gray-600 hover:text-gray-900"
+            >
+              Dismiss
+            </button>
           </div>
         </div>
       </div>

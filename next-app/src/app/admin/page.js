@@ -513,7 +513,7 @@ export default function AdminPage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
       <header className="bg-white border-b border-gray-300 flex-none z-20 shadow-sm">
-        <div className="max-w-[1600px] mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="max-w-400 mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <i className="ph-bold ph-bank text-3xl text-pup-maroon"></i>
             <div className="leading-tight">
@@ -694,7 +694,7 @@ export default function AdminPage() {
         </div>
       ) : null}
 
-      <main className="flex-1 overflow-hidden w-full max-w-[1600px] mx-auto p-4">
+      <main className="flex-1 overflow-hidden w-full max-w-400 mx-auto p-4">
         <div
           className={`${view === "directory" ? "flex" : "hidden"} flex-col lg:flex-row gap-4 h-full animate-fade-in`}
         >
@@ -1250,7 +1250,7 @@ export default function AdminPage() {
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" defaultChecked className="sr-only peer" />
-                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pup-maroon"></div>
+                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5fter:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pup-maroon"></div>
                   </label>
                 </div>
                 <div className="flex items-center justify-between">
@@ -1260,7 +1260,7 @@ export default function AdminPage() {
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" className="sr-only peer" />
-                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pup-maroon"></div>
+                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pup-maroon"></div>
                   </label>
                 </div>
                 <hr className="border-gray-200 my-2" />
@@ -1371,7 +1371,7 @@ export default function AdminPage() {
       </main>
 
       <footer className="bg-white border-t border-gray-300 p-3 flex-none z-10 shadow-inner">
-        <div className="max-w-[1600px] mx-auto flex justify-between items-center text-xs font-medium text-gray-600">
+        <div className="max-w-400 mx-auto flex justify-between items-center text-xs font-medium text-gray-600">
           <p>
             &copy; 2024 Polytechnic University of the Philippines. All rights
             reserved.

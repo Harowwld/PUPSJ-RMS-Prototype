@@ -31,10 +31,8 @@ export async function POST(req) {
   } catch (e) {
     const msg = String(e?.message || "");
     if (msg.includes("UNIQUE") || msg.toLowerCase().includes("unique")) {
-      return NextResponse.json(
-        { ok: false, error: "Document type already exists" },
-        { status: 409 }
-      );
+      // Idempotent: treat duplicates as success.
+      return NextResponse.json({ ok: true, data: name }, { status: 200 });
     }
     return NextResponse.json(
       { ok: false, error: "Failed to create document type" },

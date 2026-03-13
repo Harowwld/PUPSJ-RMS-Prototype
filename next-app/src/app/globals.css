@@ -53,6 +53,10 @@ body {
   box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.1);
 }
 
+:where(.no-glow):focus {
+  box-shadow: none;
+}
+
 @keyframes fadeInUp {
   from {
     opacity: 0;

@@ -52,6 +52,7 @@ export function getDb() {
     CREATE TABLE IF NOT EXISTS document_types (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL UNIQUE,
+      name_norm TEXT NOT NULL UNIQUE,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
@@ -95,6 +96,7 @@ export function getDb() {
     CREATE INDEX IF NOT EXISTS idx_documents_created_at ON documents(created_at);
 
     CREATE INDEX IF NOT EXISTS idx_document_types_name ON document_types(name);
+    CREATE INDEX IF NOT EXISTS idx_document_types_name_norm ON document_types(name_norm);
 
     CREATE INDEX IF NOT EXISTS idx_students_course_year_section ON students(course_code, year_level, section);
     CREATE INDEX IF NOT EXISTS idx_students_name ON students(name);
@@ -149,6 +151,46 @@ export function getDb() {
     }
 
     try {
+      db.exec("ALTER TABLE document_types ADD COLUMN name_norm TEXT");
+    } catch {
+      // ignore if column already exists
+    }
+
+    try {
+      const rows = db.exec("SELECT id, name FROM document_types");
+      const values = rows?.[0]?.values || [];
+      for (const r of values) {
+        const id = r?.[0];
+        const name = String(r?.[1] ?? "");
+        const nameNorm = name
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, " ");
+
+        if (!id || !nameNorm) continue;
+        try {
+          db.exec(
+            `UPDATE document_types
+             SET name_norm = '${String(nameNorm).replace(/'/g, "''")}'
+             WHERE id = ${Number(id)}`
+          );
+        } catch {
+          // ignore per-row migration errors
+        }
+      }
+    } catch {
+      // ignore backfill errors
+    }
+
+    try {
+      db.exec(
+        "CREATE UNIQUE INDEX IF NOT EXISTS idx_document_types_name_norm_unique ON document_types(name_norm)"
+      );
+    } catch {
+      // ignore index errors
+    }
+
+    try {
       const row = db.exec("SELECT COUNT(*) AS c FROM document_types");
       const c = row?.[0]?.values?.[0]?.[0] ?? 0;
       if (Number(c) === 0) {
@@ -163,9 +205,19 @@ export function getDb() {
         ];
         for (const name of defaults) {
           try {
+            const nameNorm = String(name).trim().toLowerCase().replace(/\s+/g, " ");
             db.exec(
               `INSERT INTO document_types (name) VALUES ('${String(name).replace(/'/g, "''")}')`
             );
+            try {
+              db.exec(
+                `UPDATE document_types
+                 SET name_norm = '${String(nameNorm).replace(/'/g, "''")}'
+                 WHERE name = '${String(name).replace(/'/g, "''")}'`
+              );
+            } catch {
+              // ignore backfill
+            }
           } catch {
             // ignore duplicates
           }
