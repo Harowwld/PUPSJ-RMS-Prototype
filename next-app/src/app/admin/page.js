@@ -16,6 +16,8 @@ export default function AdminPage() {
   const restoreFileRef = useRef(null);
   const toastTimerRef = useRef(null);
 
+  const DEFAULT_TEMP_PASSWORD = "pupstaff";
+
   const [view, setView] = useState("directory");
   const [profileOpen, setProfileOpen] = useState(false);
   const [toast, setToast] = useState({ open: false, msg: "", isError: false });
@@ -56,18 +58,26 @@ export default function AdminPage() {
   const [pwLoading, setPwLoading] = useState(false);
   const [pwError, setPwError] = useState("");
 
+  const [defaultPwOpen, setDefaultPwOpen] = useState(false);
+  const [defaultPwUserLabel, setDefaultPwUserLabel] = useState("");
+
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem("pup_auth_user");
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      setAuthUser(parsed);
-      if (parsed?.mustChangePassword) {
-        setPwOpen(true);
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        const json = await res.json().catch(() => null);
+        if (!res.ok || !json?.ok) {
+          router.push("/");
+          return;
+        }
+        setAuthUser(json.data);
+        if (json?.data?.mustChangePassword) {
+          setPwOpen(true);
+        }
+      } catch {
+        router.push("/");
       }
-    } catch {
-      // ignore
-    }
+    })();
   }, []);
 
   function clearPwForm() {
@@ -106,7 +116,6 @@ export default function AdminPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            id: authUser.id,
             currentPassword: pwCurrent,
             newPassword: pwNext,
           }),
@@ -116,13 +125,7 @@ export default function AdminPage() {
           throw new Error(json?.error || "Failed to change password");
         }
 
-        try {
-          const nextUser = { ...authUser, mustChangePassword: false };
-          localStorage.setItem("pup_auth_user", JSON.stringify(nextUser));
-          setAuthUser(nextUser);
-        } catch {
-          // ignore
-        }
+        setAuthUser((u) => (u ? { ...u, mustChangePassword: false } : u));
 
         await logAdminAction("Changed account password");
 
@@ -261,7 +264,14 @@ export default function AdminPage() {
   }
 
   function logout() {
-    router.push("/");
+    (async () => {
+      try {
+        await fetch("/api/auth/logout", { method: "POST" });
+      } catch {
+        // ignore
+      }
+      router.push("/");
+    })();
   }
 
   function resetCreateForm() {
@@ -298,6 +308,8 @@ export default function AdminPage() {
         setStaffData((prev) => [json.data, ...prev]);
         await logAdminAction(`Created account for ${fname} ${lname}`);
         showToast(`Account created for ${fname} ${lname}!`);
+        setDefaultPwUserLabel(`${fname} ${lname}`.trim() || id);
+        setDefaultPwOpen(true);
         resetCreateForm();
         switchView("directory");
       } catch (err) {
@@ -307,7 +319,7 @@ export default function AdminPage() {
   }
 
   function deleteUser(id) {
-    if (!confirm("Are you sure you want to remove this staff member?")) return;
+    showToast("Removing staff member...", false, false);
 
     (async () => {
       try {
@@ -410,17 +422,11 @@ export default function AdminPage() {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
     const fileName = file.name;
-    if (
-      confirm(
-        `Are you sure you want to restore the system from '${fileName}'? This will overwrite current data and files.`
-      )
-    ) {
-      showToast("Restoring system...", false, false);
-      setTimeout(() => {
-        showToast("System restored successfully! Reloading...");
-        setTimeout(() => location.reload(), 2000);
-      }, 2000);
-    }
+    showToast(`Restoring system from '${fileName}'...`, false, false);
+    setTimeout(() => {
+      showToast("System restored successfully! Reloading...");
+      setTimeout(() => location.reload(), 2000);
+    }, 2000);
     e.target.value = "";
   }
 
@@ -432,7 +438,6 @@ export default function AdminPage() {
   }
 
   function forceLogout() {
-    if (!confirm("This will log out all users (except you). Continue?")) return;
     showToast("Processing global logout...", false, false);
     setTimeout(() => {
       showToast("All active sessions terminated.");
@@ -585,6 +590,40 @@ export default function AdminPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      ) : null}
+
+      {defaultPwOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md bg-white rounded-brand border border-gray-200 shadow-xl overflow-hidden">
+            <div className="p-5 border-b border-gray-200 bg-gray-50/60">
+              <h3 className="font-bold text-pup-maroon">Default Temporary Password</h3>
+              <p className="text-xs text-gray-500 mt-1">
+                Share this password with <span className="font-semibold">{defaultPwUserLabel || "the user"}</span>.
+              </p>
+            </div>
+            <div className="p-5 space-y-4">
+              <div className="rounded-brand border border-amber-200 bg-amber-50 px-4 py-3">
+                <div className="text-xs font-bold text-amber-800 uppercase">Temporary Password</div>
+                <div className="mt-1 font-mono text-lg font-bold text-amber-900">
+                  {DEFAULT_TEMP_PASSWORD}
+                </div>
+                <div className="mt-2 text-xs text-amber-700">
+                  The user will be prompted to change it upon first login.
+                </div>
+              </div>
+
+              <div className="pt-1 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setDefaultPwOpen(false)}
+                  className="px-5 py-2.5 bg-pup-maroon text-white rounded-brand text-sm font-bold hover:bg-red-900 transition-colors shadow-sm"
+                >
+                  Confirm
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       ) : null}
@@ -845,8 +884,9 @@ export default function AdminPage() {
                         Default Credentials
                       </h4>
                       <p className="text-xs text-amber-600 mt-1">
-                        Accounts are initialized with a temporary password. Users
-                        will be prompted to change it upon first login.
+                        New accounts are initialized with a temporary password:
+                        <span className="font-mono font-bold"> pupstaff</span>. Users will be
+                        prompted to change it upon first login.
                       </p>
                     </div>
                   </div>
@@ -1324,7 +1364,7 @@ export default function AdminPage() {
       </footer>
 
       <div
-        className={`fixed bottom-5 right-5 transform transition-all duration-300 z-50 px-4 py-3 rounded-brand shadow-lg flex items-center gap-3 ${
+        className={`fixed top-5 left-1/2 -translate-x-1/2 transform transition-all duration-300 z-50 px-4 py-3 rounded-brand shadow-lg flex items-center gap-3 ${
           toast.open ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"
         } ${toast.isError ? "bg-red-800" : "bg-gray-800"} text-white`}
       >

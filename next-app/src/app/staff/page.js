@@ -248,21 +248,12 @@ export default function StaffPage() {
   const fileInputRef = useRef(null);
   const docsFileInputRef = useRef(null);
   const searchTimerRef = useRef(null);
+  const toastTimerRef = useRef(null);
 
   async function logStaffAction(action) {
     try {
-      let actor = "Staff";
-      let role = "Staff";
-      try {
-        const raw = localStorage.getItem("pup_auth_user");
-        if (raw) {
-          const parsed = JSON.parse(raw);
-          actor = String(parsed?.username || parsed?.id || actor);
-          role = String(parsed?.role || role);
-        }
-      } catch {
-        // ignore
-      }
+      const actor = String(authUser?.username || authUser?.id || "Staff");
+      const role = String(authUser?.role || "Staff");
 
       await fetch("/api/audit-logs", {
         method: "POST",
@@ -285,18 +276,35 @@ export default function StaffPage() {
   const [pwLoading, setPwLoading] = useState(false);
   const [pwError, setPwError] = useState("");
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem("pup_auth_user");
-      if (!raw) return;
-      const parsed = JSON.parse(raw);
-      setAuthUser(parsed);
-      if (parsed?.mustChangePassword) {
-        setPwOpen(true);
-      }
-    } catch {
-      // ignore
+  const [toast, setToast] = useState({ open: false, msg: "", isError: false });
+
+  function showToast(msg, isError = false, autoHide = true) {
+    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
+    setToast({ open: true, msg, isError });
+    if (autoHide) {
+      toastTimerRef.current = setTimeout(() => {
+        setToast((t) => ({ ...t, open: false }));
+      }, 3000);
     }
+  }
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/auth/me");
+        const json = await res.json().catch(() => null);
+        if (!res.ok || !json?.ok) {
+          router.push("/");
+          return;
+        }
+        setAuthUser(json.data);
+        if (json?.data?.mustChangePassword) {
+          setPwOpen(true);
+        }
+      } catch {
+        router.push("/");
+      }
+    })();
   }, []);
 
   function clearPwForm() {
@@ -335,7 +343,6 @@ export default function StaffPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            id: authUser.id,
             currentPassword: pwCurrent,
             newPassword: pwNext,
           }),
@@ -345,19 +352,13 @@ export default function StaffPage() {
           throw new Error(json?.error || "Failed to change password");
         }
 
-        try {
-          const nextUser = { ...authUser, mustChangePassword: false };
-          localStorage.setItem("pup_auth_user", JSON.stringify(nextUser));
-          setAuthUser(nextUser);
-        } catch {
-          // ignore
-        }
+        setAuthUser((u) => (u ? { ...u, mustChangePassword: false } : u));
 
         await logStaffAction("Changed account password");
 
         clearPwForm();
         setPwOpen(false);
-        alert("Password updated successfully.");
+        showToast("Password updated successfully!");
       } catch (err) {
         setPwError(err?.message || "Failed to change password");
       } finally {
@@ -426,6 +427,11 @@ export default function StaffPage() {
   const [csvError, setCsvError] = useState("");
   const [csvLoading, setCsvLoading] = useState(false);
   const [csvResults, setCsvResults] = useState([]);
+
+  const [csvSelected, setCsvSelected] = useState({});
+  const [csvBulkRoom, setCsvBulkRoom] = useState("");
+  const [csvBulkCabinet, setCsvBulkCabinet] = useState("");
+  const [csvBulkDrawer, setCsvBulkDrawer] = useState("");
 
   const [docTypeModalOpen, setDocTypeModalOpen] = useState(false);
   const [docTypeModalPrefix, setDocTypeModalPrefix] = useState("exist");
@@ -981,6 +987,7 @@ export default function StaffPage() {
     setCsvResults([]);
     setCsvRows([]);
     setCsvFile(null);
+    setCsvSelected({});
 
     if (!file) return;
     const isCsv =
@@ -1020,9 +1027,57 @@ export default function StaffPage() {
       }
 
       setCsvRows(out);
+      setCsvSelected({});
     } catch (e) {
       setCsvError(e?.message || "Failed to read CSV");
     }
+  }
+
+  function setCsvRowField(rowIndex, field, value) {
+    setCsvRows((prev) => {
+      const next = prev.map((r) => {
+        if (r.index !== rowIndex) return r;
+        const student = { ...r.student, [field]: value };
+        const error = validateStudentForCsv(student);
+        return { ...r, student, error };
+      });
+      return next;
+    });
+  }
+
+  function toggleCsvRowSelected(rowIndex) {
+    setCsvSelected((prev) => ({ ...prev, [rowIndex]: !prev?.[rowIndex] }));
+  }
+
+  function toggleCsvSelectAll(nextChecked) {
+    if (!nextChecked) {
+      setCsvSelected({});
+      return;
+    }
+    setCsvSelected(() => {
+      const out = {};
+      for (const r of csvRows) out[r.index] = true;
+      return out;
+    });
+  }
+
+  function applyCsvBulkLocation() {
+    setCsvError("");
+    const roomVal = csvBulkRoom ? parseInt(csvBulkRoom) : null;
+    const drawerVal = csvBulkDrawer ? parseInt(csvBulkDrawer) : null;
+    const cabVal = csvBulkCabinet ? String(csvBulkCabinet).trim() : "";
+
+    setCsvRows((prev) => {
+      return prev.map((r) => {
+        if (!csvSelected?.[r.index]) return r;
+        const student = { ...r.student };
+        if (roomVal !== null) student.room = roomVal;
+        if (cabVal) student.cabinet = cabVal;
+        if (drawerVal !== null) student.drawer = drawerVal;
+        const error = validateStudentForCsv(student);
+        return { ...r, student, error };
+      });
+    });
   }
 
   async function importCsvStudents() {
@@ -1236,7 +1291,7 @@ export default function StaffPage() {
           const json = await res.json();
           if (!res.ok || !json?.ok) throw new Error(json?.error || "Upload failed");
 
-          alert(`File tagged as "${dt}" for ${studentNo}!`);
+          showToast(`File tagged as "${dt}" for ${studentNo}!`);
 
           await logStaffAction(`Uploaded document (${dt}) for ${studentNo}`);
 
@@ -1254,7 +1309,7 @@ export default function StaffPage() {
           clearFile();
           setExist((p) => ({ ...p, docType: "" }));
         } catch (e) {
-          alert(e?.message || "Upload failed");
+          showToast(e?.message || "Upload failed", true);
         }
       })();
       return;
@@ -1329,7 +1384,7 @@ export default function StaffPage() {
         const json2 = await res2.json();
         if (!res2.ok || !json2?.ok) throw new Error(json2?.error || "Failed to upload document");
 
-        alert(`New Record & ${dt} added for ${name}!`);
+        showToast(`New Record & ${dt} added for ${name}!`);
 
         await logStaffAction(
           `Created student record (${created.studentNo}) and uploaded document (${dt})`
@@ -1350,7 +1405,7 @@ export default function StaffPage() {
           newDocType: "",
         });
       } catch (e) {
-        alert(e?.message || "Submission failed");
+        showToast(e?.message || "Submission failed", true);
       }
     })();
   }
@@ -1360,7 +1415,14 @@ export default function StaffPage() {
   }
 
   function logout() {
-    router.push("/");
+    (async () => {
+      try {
+        await fetch("/api/auth/logout", { method: "POST" });
+      } catch {
+        // ignore
+      }
+      router.push("/");
+    })();
   }
 
   return (
@@ -1939,79 +2001,151 @@ export default function StaffPage() {
           } flex-col lg:flex-row w-full h-full gap-4`}
         >
           <section className="w-full lg:w-1/2 bg-white rounded-brand border border-gray-300 flex flex-col h-full p-8 items-center justify-center shadow-sm">
-            <div
-              className={`w-full h-full border-2 border-dashed border-gray-400 rounded-brand bg-gray-50 p-8 flex flex-col items-center justify-center cursor-pointer hover:border-pup-maroon hover:bg-red-50/50 transition-all group relative ${
-                dropActive ? "bg-red-50" : ""
-              }`}
-              onClick={(e) => {
-                if (uploadedFile) return;
-                if (fileInputRef.current) fileInputRef.current.click();
-              }}
-              onDragOver={(e) => {
-                e.preventDefault();
-                setDropActive(true);
-              }}
-              onDragLeave={(e) => {
-                e.preventDefault();
-                setDropActive(false);
-              }}
-              onDrop={(e) => {
-                e.preventDefault();
-                setDropActive(false);
-                handleFileSelect(e.dataTransfer.files[0]);
-              }}
-            >
-              <div className="text-center pointer-events-none">
-                <div className="w-20 h-20 mx-auto rounded-full bg-white border border-gray-300 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-sm">
-                  <i className="ph-thin ph-file-pdf text-4xl text-pup-maroon"></i>
+            {uploadMode === "csv" ? (
+              <div className="w-full h-full border border-gray-200 rounded-brand bg-white overflow-hidden flex flex-col">
+                <div className="p-4 border-b border-gray-200 bg-gray-50">
+                  <div className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    CSV Details
+                  </div>
+                  <div className="mt-1 text-sm font-bold text-gray-900 break-all">
+                    {csvFile ? csvFile.name : "No CSV selected"}
+                  </div>
+                  <div className="mt-2 text-xs font-medium text-gray-600">
+                    {csvRows.length ? (
+                      <>
+                        {csvRows.length} rows
+                        {" · "}
+                        {csvRows.filter((r) => r.error).length} invalid
+                      </>
+                    ) : (
+                      "Select a CSV file on the right to preview it here."
+                    )}
+                  </div>
                 </div>
-                <h3 className="font-bold text-xl text-gray-800">Drop PDF File Here</h3>
-                <p className="text-sm text-gray-500 mt-2 font-medium">
-                  or click to browse local files
-                </p>
+
+                <div className="flex-1 min-h-0 overflow-auto">
+                  {csvRows.length ? (
+                    <table className="min-w-full text-sm">
+                      <thead className="bg-white border-b border-gray-200 sticky top-0 z-10">
+                        <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
+                          <th className="p-3 font-bold">#</th>
+                          <th className="p-3 font-bold">Student No</th>
+                          <th className="p-3 font-bold">Name</th>
+                          <th className="p-3 font-bold">Room</th>
+                          <th className="p-3 font-bold">Cab</th>
+                          <th className="p-3 font-bold">Drawer</th>
+                          <th className="p-3 font-bold">Error</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {csvRows.slice(0, 100).map((r) => (
+                          <tr key={r.index} className={csvSelected?.[r.index] ? "bg-gray-50" : ""}>
+                            <td className="p-3 text-gray-500 font-mono">{r.index}</td>
+                            <td className="p-3 font-mono">{r.student.studentNo}</td>
+                            <td className="p-3">{r.student.name}</td>
+                            <td className="p-3 font-bold">{r.student.room}</td>
+                            <td className="p-3 font-bold">{r.student.cabinet}</td>
+                            <td className="p-3 font-bold">{r.student.drawer}</td>
+                            <td className="p-3">
+                              {r.error ? (
+                                <span className="text-red-700 font-bold text-xs">{r.error}</span>
+                              ) : (
+                                <span className="text-green-700 font-bold text-xs">OK</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  ) : (
+                    <div className="h-full flex items-center justify-center text-center p-8">
+                      <div className="text-gray-500">
+                        <div className="w-20 h-20 mx-auto rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                          <i className="ph-thin ph-file-csv text-4xl text-pup-maroon"></i>
+                        </div>
+                        <div className="font-bold text-gray-800 text-lg">Upload a CSV to preview</div>
+                        <div className="mt-2 text-sm font-medium text-gray-600">
+                          The parsed rows will appear here once selected.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-
-              <input
-                ref={fileInputRef}
-                type="file"
-                className="hidden"
-                accept=".pdf"
-                onChange={(e) => handleFileSelect(e.target.files[0])}
-              />
-
-              {uploadedFile ? (
-                <div className="absolute inset-0 bg-white z-10 flex flex-col items-center justify-center p-6 rounded-brand">
-                  <i className="ph-fill ph-file-pdf text-6xl text-pup-maroon mb-4"></i>
-                  <h4 className="font-bold text-gray-900 text-lg text-center break-all mb-1 max-w-sm">
-                    {uploadedFile.name}
-                  </h4>
-                  <span className="text-sm text-gray-500 mb-6 font-medium">
-                    {(uploadedFile.size / 1024).toFixed(2)} KB
-                  </span>
-
-                  {uploadMode === "new" && ocrLoading ? (
-                    <div className="mb-4 text-sm font-bold text-gray-700">
-                      Scanning PDF (OCR)...
-                    </div>
-                  ) : null}
-
-                  {uploadMode === "new" && ocrError ? (
-                    <div className="mb-4 text-sm font-bold text-red-700 text-center max-w-md">
-                      {ocrError}
-                    </div>
-                  ) : null}
-
-                  <button
-                    onClick={clearFile}
-                    className="px-6 py-2.5 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
-                  >
-                    Remove File
-                  </button>
+            ) : (
+              <div
+                className={`w-full h-full border-2 border-dashed border-gray-400 rounded-brand bg-gray-50 p-8 flex flex-col items-center justify-center cursor-pointer hover:border-pup-maroon hover:bg-red-50/50 transition-all group relative ${
+                  dropActive ? "bg-red-50" : ""
+                }`}
+                onClick={(e) => {
+                  if (uploadedFile) return;
+                  if (fileInputRef.current) fileInputRef.current.click();
+                }}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setDropActive(true);
+                }}
+                onDragLeave={(e) => {
+                  e.preventDefault();
+                  setDropActive(false);
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDropActive(false);
+                  handleFileSelect(e.dataTransfer.files[0]);
+                }}
+              >
+                <div className="text-center pointer-events-none">
+                  <div className="w-20 h-20 mx-auto rounded-full bg-white border border-gray-300 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-sm">
+                    <i className="ph-thin ph-file-pdf text-4xl text-pup-maroon"></i>
+                  </div>
+                  <h3 className="font-bold text-xl text-gray-800">Drop PDF File Here</h3>
+                  <p className="text-sm text-gray-500 mt-2 font-medium">
+                    or click to browse local files
+                  </p>
                 </div>
-              ) : null}
-            </div>
-          </section>
 
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  className="hidden"
+                  accept=".pdf"
+                  onChange={(e) => handleFileSelect(e.target.files[0])}
+                />
+
+                {uploadedFile ? (
+                  <div className="absolute inset-0 bg-white z-10 flex flex-col items-center justify-center p-6 rounded-brand">
+                    <i className="ph-fill ph-file-pdf text-6xl text-pup-maroon mb-4"></i>
+                    <h4 className="font-bold text-gray-900 text-lg text-center break-all mb-1 max-w-sm">
+                      {uploadedFile.name}
+                    </h4>
+                    <span className="text-sm text-gray-500 mb-6 font-medium">
+                      {(uploadedFile.size / 1024).toFixed(2)} KB
+                    </span>
+
+                    {uploadMode === "new" && ocrLoading ? (
+                      <div className="mb-4 text-sm font-bold text-gray-700">
+                        Scanning PDF (OCR)...
+                      </div>
+                    ) : null}
+
+                    {uploadMode === "new" && ocrError ? (
+                      <div className="mb-4 text-sm font-bold text-red-700 text-center max-w-md">
+                        {ocrError}
+                      </div>
+                    ) : null}
+
+                    <button
+                      onClick={clearFile}
+                      className="px-6 py-2.5 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
+                    >
+                      Remove File
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </section>
           <section className="w-full lg:w-1/2 bg-white rounded-brand border border-gray-300 flex flex-col h-full shadow-sm overflow-hidden">
             <div className="p-6 border-b border-gray-200">
               <h2 className="text-xl font-bold text-pup-maroon mb-1">Tag Document</h2>
@@ -2473,10 +2607,107 @@ export default function StaffPage() {
                             : "All valid"}
                         </div>
                       </div>
+
+                      <div className="p-3 border-b border-gray-200 bg-white">
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 items-end">
+                          <div className="lg:col-span-3">
+                            <div className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+                              Selected
+                            </div>
+                            <div className="mt-1 text-sm font-bold text-gray-900">
+                              {Object.values(csvSelected).filter(Boolean).length}
+                            </div>
+                          </div>
+
+                          <div className="lg:col-span-3">
+                            <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+                              Bulk Room
+                            </label>
+                            <select
+                              className="form-select"
+                              value={csvBulkRoom}
+                              onChange={(e) => setCsvBulkRoom(e.target.value)}
+                            >
+                              <option value="">No change</option>
+                              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((r) => (
+                                <option key={r} value={String(r)}>
+                                  {r}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="lg:col-span-3">
+                            <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+                              Bulk Cabinet
+                            </label>
+                            <select
+                              className="form-select"
+                              value={csvBulkCabinet}
+                              onChange={(e) => setCsvBulkCabinet(e.target.value)}
+                            >
+                              <option value="">No change</option>
+                              {cabinets.map((c) => (
+                                <option key={c} value={c}>
+                                  {c}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="lg:col-span-3">
+                            <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+                              Bulk Drawer
+                            </label>
+                            <select
+                              className="form-select"
+                              value={csvBulkDrawer}
+                              onChange={(e) => setCsvBulkDrawer(e.target.value)}
+                            >
+                              <option value="">No change</option>
+                              {[1, 2, 3, 4].map((d) => (
+                                <option key={d} value={String(d)}>
+                                  {d}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div className="lg:col-span-12 flex flex-col lg:flex-row gap-2">
+                            <button
+                              type="button"
+                              onClick={applyCsvBulkLocation}
+                              className="px-4 h-11 rounded-brand bg-pup-maroon text-white font-bold text-sm hover:bg-red-900"
+                              disabled={Object.values(csvSelected).filter(Boolean).length === 0}
+                            >
+                              Apply to Selected
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setCsvSelected({})}
+                              className="px-4 h-11 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
+                              disabled={Object.values(csvSelected).filter(Boolean).length === 0}
+                            >
+                              Clear Selection
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+
                       <div className="max-h-[45vh] overflow-auto">
                         <table className="min-w-full text-sm">
                           <thead className="bg-white border-b border-gray-200 sticky top-0 z-10">
                             <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
+                              <th className="p-3 font-bold w-10">
+                                <input
+                                  type="checkbox"
+                                  checked={
+                                    csvRows.length > 0 &&
+                                    Object.values(csvSelected).filter(Boolean).length === csvRows.length
+                                  }
+                                  onChange={(e) => toggleCsvSelectAll(e.target.checked)}
+                                />
+                              </th>
                               <th className="p-3 font-bold">#</th>
                               <th className="p-3 font-bold">Student No</th>
                               <th className="p-3 font-bold">Name</th>
@@ -2491,16 +2722,65 @@ export default function StaffPage() {
                           </thead>
                           <tbody className="divide-y divide-gray-200">
                             {csvRows.slice(0, 100).map((r) => (
-                              <tr key={r.index}>
+                              <tr key={r.index} className={csvSelected?.[r.index] ? "bg-gray-50" : ""}>
+                                <td className="p-3">
+                                  <input
+                                    type="checkbox"
+                                    checked={!!csvSelected?.[r.index]}
+                                    onChange={() => toggleCsvRowSelected(r.index)}
+                                  />
+                                </td>
                                 <td className="p-3 text-gray-500 font-mono">{r.index}</td>
                                 <td className="p-3 font-mono">{r.student.studentNo}</td>
                                 <td className="p-3">{r.student.name}</td>
                                 <td className="p-3">{r.student.courseCode}</td>
                                 <td className="p-3">{r.student.yearLevel}</td>
                                 <td className="p-3">{r.student.section}</td>
-                                <td className="p-3">{r.student.room}</td>
-                                <td className="p-3">{r.student.cabinet}</td>
-                                <td className="p-3">{r.student.drawer}</td>
+                                <td className="p-3">
+                                  <select
+                                    className="form-select h-10"
+                                    value={String(r.student.room || "")}
+                                    onChange={(e) =>
+                                      setCsvRowField(r.index, "room", parseInt(e.target.value))
+                                    }
+                                  >
+                                    {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((room) => (
+                                      <option key={room} value={room}>
+                                        {room}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </td>
+                                <td className="p-3">
+                                  <select
+                                    className="form-select h-10"
+                                    value={String(r.student.cabinet || "")}
+                                    onChange={(e) =>
+                                      setCsvRowField(r.index, "cabinet", e.target.value)
+                                    }
+                                  >
+                                    {cabinets.map((c) => (
+                                      <option key={c} value={c}>
+                                        {c}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </td>
+                                <td className="p-3">
+                                  <select
+                                    className="form-select h-10"
+                                    value={String(r.student.drawer || "")}
+                                    onChange={(e) =>
+                                      setCsvRowField(r.index, "drawer", parseInt(e.target.value))
+                                    }
+                                  >
+                                    {[1, 2, 3, 4].map((d) => (
+                                      <option key={d} value={d}>
+                                        {d}
+                                      </option>
+                                    ))}
+                                  </select>
+                                </td>
                                 <td className="p-3">
                                   {r.error ? (
                                     <span className="text-red-700 font-bold text-xs">{r.error}</span>
@@ -2960,6 +3240,19 @@ export default function StaffPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div
+        className={`fixed top-5 left-1/2 -translate-x-1/2 transform transition-all duration-300 z-50 px-4 py-3 rounded-brand shadow-lg flex items-center gap-3 ${
+          toast.open ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"
+        } ${toast.isError ? "bg-red-800" : "bg-gray-800"} text-white`}
+      >
+        <i
+          className={`ph-fill ${
+            toast.isError ? "ph-warning-circle" : "ph-check-circle"
+          } ${toast.isError ? "text-red-200" : "text-green-400"} text-xl`}
+        ></i>
+        <span className="text-sm font-medium">{toast.msg}</span>
       </div>
     </div>
   );

@@ -35,19 +35,6 @@ export default function Home() {
         }
 
         const role = String(json?.data?.role || "");
-        try {
-          localStorage.setItem(
-            "pup_auth_user",
-            JSON.stringify({
-              id: json?.data?.id || null,
-              username: json?.data?.username || usernameInput,
-              role,
-              mustChangePassword: Boolean(json?.data?.mustChangePassword),
-            })
-          );
-        } catch {
-          // ignore storage errors
-        }
         if (role === "Admin") {
           router.push("/admin");
           return;

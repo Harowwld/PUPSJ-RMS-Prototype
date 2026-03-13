@@ -1,12 +1,30 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import {
   setStaffPasswordById,
   verifyStaffPasswordById,
 } from "../../../../lib/staffRepo";
+import {
+  getSessionCookieName,
+  signSessionToken,
+  verifySessionToken,
+} from "../../../../lib/jwt";
 
 export const runtime = "nodejs";
 
 export async function POST(req) {
+  let session;
+  try {
+    const store = await cookies();
+    const token = store.get(getSessionCookieName())?.value || "";
+    if (!token) {
+      return NextResponse.json({ ok: false, error: "Not authenticated" }, { status: 401 });
+    }
+    session = await verifySessionToken(token);
+  } catch {
+    return NextResponse.json({ ok: false, error: "Invalid session" }, { status: 401 });
+  }
+
   const body = await req.json().catch(() => null);
   if (!body || typeof body !== "object") {
     return NextResponse.json(
@@ -15,7 +33,7 @@ export async function POST(req) {
     );
   }
 
-  const id = String(body.id || "").trim();
+  const id = String(session?.sub || "").trim();
   const currentPassword = String(body.currentPassword || "");
   const newPassword = String(body.newPassword || "");
 
@@ -49,5 +67,22 @@ export async function POST(req) {
     );
   }
 
-  return NextResponse.json({ ok: true });
+  const nextPayload = {
+    sub: session?.sub || id,
+    role: session?.role || updated.role || "Staff",
+    username: session?.username || updated.email || null,
+    last_active: session?.last_active || updated.last_active || null,
+    mustChangePassword: false,
+  };
+  const nextToken = await signSessionToken(nextPayload);
+  const res = NextResponse.json({ ok: true });
+  res.cookies.set({
+    name: getSessionCookieName(),
+    value: nextToken,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
+  return res;
 }

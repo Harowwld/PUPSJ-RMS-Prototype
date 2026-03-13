@@ -4,6 +4,7 @@ import {
   hashPasswordForStorage,
   touchStaffLastActiveById,
 } from "../../../../lib/staffRepo";
+import { getSessionCookieName, signSessionToken } from "../../../../lib/jwt";
 
 export const runtime = "nodejs";
 
@@ -27,10 +28,26 @@ export async function POST(req) {
   }
 
   if (username === "admin" && password === "admin") {
-    return NextResponse.json({
+    const payload = {
+      sub: "admin",
+      role: "Admin",
+      username: "admin",
+      mustChangePassword: false,
+    };
+    const token = await signSessionToken(payload);
+    const res = NextResponse.json({
       ok: true,
-      data: { role: "Admin", id: "admin", username: "admin" },
+      data: { role: "Admin", id: "admin", username: "admin", mustChangePassword: false },
     });
+    res.cookies.set({
+      name: getSessionCookieName(),
+      value: token,
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+      path: "/",
+    });
+    return res;
   }
 
   const staff = await getStaffByUsername(username);
@@ -59,7 +76,16 @@ export async function POST(req) {
   const defaultHash = hashPasswordForStorage("pupstaff");
   const mustChangePassword = stored === defaultHash;
 
-  return NextResponse.json({
+  const sessionPayload = {
+    sub: touched.id,
+    role: touched.role || "Staff",
+    username: touched.email,
+    last_active: touched.last_active,
+    mustChangePassword,
+  };
+  const token = await signSessionToken(sessionPayload);
+
+  const res = NextResponse.json({
     ok: true,
     data: {
       role: touched.role || "Staff",
@@ -69,4 +95,13 @@ export async function POST(req) {
       mustChangePassword,
     },
   });
+  res.cookies.set({
+    name: getSessionCookieName(),
+    value: token,
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+  });
+  return res;
 }
