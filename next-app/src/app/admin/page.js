@@ -25,6 +25,11 @@ export default function AdminPage() {
 
   const [staffData, setStaffData] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
+  const [logPage, setLogPage] = useState(1);
+  const [logTotal, setLogTotal] = useState(0);
+  const [logsPerPage, setLogsPerPage] = useState(20);
+  const [logSearch, setLogSearch] = useState("");
+
   const [autoBackupTime, setAutoBackupTime] = useState("00:00");
   const [activeSessions, setActiveSessions] = useState(0);
 
@@ -51,6 +56,10 @@ export default function AdminPage() {
     email: "",
     status: "Active",
   });
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [authUser, setAuthUser] = useState(null);
   const [pwOpen, setPwOpen] = useState(false);
@@ -158,9 +167,12 @@ export default function AdminPage() {
   }
 
   async function refreshAuditLogs() {
-    const resLogs = await fetch("/api/audit-logs?limit=200");
+    const offset = (logPage - 1) * logsPerPage;
+    const resLogs = await fetch(`/api/audit-logs?limit=${logsPerPage}&offset=${offset}&search=${encodeURIComponent(logSearch)}`);
     const jsonLogs = await resLogs.json();
     if (!resLogs.ok || !jsonLogs?.ok) throw new Error(jsonLogs?.error || "Failed to load audit logs");
+
+    setLogTotal(jsonLogs.total || 0);
     const rows = Array.isArray(jsonLogs.data) ? jsonLogs.data : [];
     setAuditLogs(
       rows.map((r) => ({
@@ -172,6 +184,12 @@ export default function AdminPage() {
       }))
     );
   }
+
+  useEffect(() => {
+    if (view === "logs") {
+      refreshAuditLogs().catch((e) => showToast(e?.message, true));
+    }
+  }, [logPage, logsPerPage, logSearch, view]);
 
   useEffect(() => {
     (async () => {
@@ -386,6 +404,16 @@ export default function AdminPage() {
   }
 
   function deleteUser(id) {
+    const user = staffData.find((s) => s.id === id);
+    if (!user) return;
+    setDeleteTarget(user);
+    setDeleteOpen(true);
+  }
+
+  function confirmDelete() {
+    if (!deleteTarget || deleteLoading) return;
+    const id = deleteTarget.id;
+    setDeleteLoading(true);
     showToast("Removing staff member...", false, false);
 
     (async () => {
@@ -396,8 +424,12 @@ export default function AdminPage() {
         setStaffData((prev) => prev.filter((s) => s.id !== id));
         await logAdminAction(`Removed staff account: ${id}`);
         showToast("User removed successfully.");
+        setDeleteOpen(false);
+        setDeleteTarget(null);
       } catch (err) {
         showToast(err?.message || "Failed to delete staff", true);
+      } finally {
+        setDeleteLoading(false);
       }
     })();
   }
@@ -532,28 +564,28 @@ export default function AdminPage() {
               id="nav-directory"
               className={`btn-nav ${view === "directory" ? "active" : ""}`}
             >
-              <i className="ph ph-users"></i> Staff Directory
+              <i className="ph-bold ph-users"></i> Staff Directory
             </button>
             <button
               onClick={() => switchView("create")}
               id="nav-create"
               className={`btn-nav ${view === "create" ? "active" : ""}`}
             >
-              <i className="ph ph-user-plus"></i> Register Account
+              <i className="ph-bold ph-user-plus"></i> Register Account
             </button>
             <button
               onClick={() => switchView("logs")}
               id="nav-logs"
               className={`btn-nav ${view === "logs" ? "active" : ""}`}
             >
-              <i className="ph ph-scroll"></i> Audit Logs
+              <i className="ph-bold ph-scroll"></i> Audit Logs
             </button>
             <button
               onClick={() => switchView("backup")}
               id="nav-backup"
               className={`btn-nav ${view === "backup" ? "active" : ""}`}
             >
-              <i className="ph ph-database"></i> Backup & Maintenance
+              <i className="ph-bold ph-database"></i> Backup & Maintenance
             </button>
           </div>
 
@@ -725,7 +757,7 @@ export default function AdminPage() {
                 </h3>
                 <div className="space-y-3">
                   <div className="relative group">
-                    <i className="ph ph-magnifying-glass absolute left-3 top-2.5 text-gray-400 group-focus-within:text-pup-maroon"></i>
+                    <i className="ph-bold ph-magnifying-glass absolute left-3 top-2.5 text-gray-400 group-focus-within:text-pup-maroon"></i>
                     <input
                       type="text"
                       placeholder="Search name or ID..."
@@ -904,7 +936,6 @@ export default function AdminPage() {
               <span>
                 Showing <span>{filteredStaff.length}</span> records
               </span>
-              <span>System v1.0.5 Admin</span>
             </div>
           </section>
         </div>
@@ -1073,16 +1104,39 @@ export default function AdminPage() {
                 <i className="ph-duotone ph-scroll"></i> System Audit Logs
               </h2>
               <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase">
+                    Show:
+                  </label>
+                  <select
+                    className="text-[10px] border-gray-300 rounded border px-1.5 py-1 focus:outline-none focus:border-pup-maroon bg-white"
+                    value={logsPerPage}
+                    onChange={(e) => {
+                      setLogsPerPage(parseInt(e.target.value));
+                      setLogPage(1);
+                    }}
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
                 <div className="relative">
-                  <i className="ph ph-magnifying-glass absolute left-2.5 top-2 text-gray-400 text-xs"></i>
+                  <i className="ph-bold ph-magnifying-glass absolute left-2.5 top-2 text-gray-400 text-xs"></i>
                   <input
                     type="text"
                     placeholder="Search logs..."
                     className="pl-7 pr-3 py-1.5 text-xs border border-gray-300 rounded-brand focus:outline-none focus:border-pup-maroon w-48"
+                    value={logSearch}
+                    onChange={(e) => {
+                      setLogSearch(e.target.value);
+                      setLogPage(1);
+                    }}
                   />
                 </div>
                 <div className="text-[10px] text-gray-400 font-mono">
-                  Total Records: 1,245
+                  Total Records: {logTotal.toLocaleString()}
                 </div>
               </div>
             </div>
@@ -1126,10 +1180,24 @@ export default function AdminPage() {
                 </tbody>
               </table>
             </div>
-            <div className="p-2 border-t border-gray-200 bg-gray-50 text-[10px] text-gray-400 flex justify-center">
-              <button className="hover:text-pup-maroon px-2">Previous</button>
-              <span className="px-2">Page 1 of 50</span>
-              <button className="hover:text-pup-maroon px-2">Next</button>
+            <div className="p-2 border-t border-gray-200 bg-gray-50 text-[10px] text-gray-400 flex justify-center items-center gap-4">
+              <button
+                disabled={logPage <= 1}
+                onClick={() => setLogPage((p) => p - 1)}
+                className="hover:text-pup-maroon px-2 disabled:opacity-30 disabled:hover:text-gray-400 transition-colors"
+              >
+                Previous
+              </button>
+              <span className="px-2 font-medium">
+                Page {logPage} of {Math.max(1, Math.ceil(logTotal / logsPerPage))}
+              </span>
+              <button
+                disabled={logPage >= Math.ceil(logTotal / logsPerPage)}
+                onClick={() => setLogPage((p) => p + 1)}
+                className="hover:text-pup-maroon px-2 disabled:opacity-30 disabled:hover:text-gray-400 transition-colors"
+              >
+                Next
+              </button>
             </div>
           </div>
         </div>
@@ -1377,13 +1445,6 @@ export default function AdminPage() {
             reserved.
           </p>
           <div className="flex gap-4">
-            <a href="#" className="hover:text-pup-maroon transition-colors">
-              Privacy Policy
-            </a>
-            <a href="#" className="hover:text-pup-maroon transition-colors">
-              Terms of Use
-            </a>
-            <span className="text-gray-400">|</span>
             <span className="text-gray-500">System Version 1.0.2 (Beta)</span>
           </div>
         </div>
@@ -1526,6 +1587,55 @@ export default function AdminPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className={`${deleteOpen ? "flex" : "hidden"} fixed inset-0 bg-black/50 z-50 items-center justify-center animate-fade-in`}
+      >
+        <div className="bg-white rounded-brand shadow-lg w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200">
+          <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-red-50/50">
+            <div>
+              <h3 className="font-bold text-red-700 text-lg flex items-center gap-2">
+                <i className="ph-bold ph-warning-circle"></i> Confirm Removal
+              </h3>
+            </div>
+            <button
+              onClick={() => setDeleteOpen(false)}
+              className="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50"
+            >
+              <i className="ph-bold ph-x text-lg"></i>
+            </button>
+          </div>
+          <div className="p-8">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
+                <i className="ph-bold ph-trash text-3xl"></i>
+              </div>
+              <h4 className="text-gray-800 font-bold text-lg mb-2">
+                Remove {deleteTarget?.fname} {deleteTarget?.lname}?
+              </h4>
+              <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+                This will permanently delete the account for <span className="font-semibold text-gray-700">{deleteTarget?.id}</span>. This action cannot be undone and all associated sessions will be terminated.
+              </p>
+
+              <div className="w-full flex gap-3">
+                <button
+                  onClick={() => setDeleteOpen(false)}
+                  className="flex-1 px-5 py-2.5 border border-gray-300 rounded-brand text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={deleteLoading}
+                  className="flex-1 px-5 py-2.5 bg-red-600 text-white rounded-brand text-sm font-bold hover:bg-red-700 transition-all shadow-md hover:shadow-lg disabled:opacity-60"
+                >
+                  {deleteLoading ? "Removing..." : "Confirm Delete"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>

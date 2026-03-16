@@ -1,15 +1,20 @@
 import { NextResponse } from "next/server";
-import { createAuditLog, listAuditLogs } from "../../../lib/auditLogsRepo";
+import { createAuditLog, listAuditLogs, countAuditLogs } from "../../../lib/auditLogsRepo";
 
 export const runtime = "nodejs";
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
-  const limit = searchParams.get("limit") || "200";
-  const offset = searchParams.get("offset") || "0";
+  const limit = parseInt(searchParams.get("limit") || "200");
+  const offset = parseInt(searchParams.get("offset") || "0");
+  const search = searchParams.get("search") || "";
 
-  const rows = await listAuditLogs({ limit, offset });
-  return NextResponse.json({ ok: true, data: rows });
+  const [rows, total] = await Promise.all([
+    listAuditLogs({ limit, offset, search }),
+    countAuditLogs(search),
+  ]);
+
+  return NextResponse.json({ ok: true, data: rows, total });
 }
 
 export async function POST(req) {
