@@ -150,9 +150,41 @@ function extractNameFromOcrText(text) {
     .filter(Boolean);
 
   const labeled = lines.join("\n");
+
+  function cleanNamePart(v) {
+    return String(v || "")
+      .replace(/\s+/g, " ")
+      .replace(/[^A-Za-z.\-\s']/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function readLabeledValue(labelRegex) {
+    const m = labeled.match(labelRegex);
+    if (!m || !m[1]) return "";
+    const cleaned = cleanNamePart(m[1]);
+    if (cleaned.length < 2 || cleaned.length > 60) return "";
+    return cleaned;
+  }
+
+  const lastName =
+    readLabeledValue(/\b(?:Last\s*Name|Surname|Family\s*Name)\s*[:\-]\s*(.+)$/im) ||
+    "";
+  const firstName =
+    readLabeledValue(/\b(?:First\s*Name|Given\s*Name)\s*[:\-]\s*(.+)$/im) || "";
+  const middleName =
+    readLabeledValue(/\b(?:Middle\s*Name|M\.I\.|MI)\s*[:\-]\s*(.+)$/im) || "";
+
+  if (firstName || lastName || middleName) {
+    const full = `${lastName}${lastName && firstName ? ", " : ""}${firstName}${
+      middleName ? ` ${middleName}` : ""
+    }`.trim();
+    if (full.length >= 4 && full.length <= 80) return full;
+  }
+
   const m1 = labeled.match(/\b(?:Name|Student Name)\s*[:\-]\s*(.+)$/im);
   if (m1 && m1[1]) {
-    const candidate = String(m1[1]).trim();
+    const candidate = cleanNamePart(m1[1]);
     if (candidate.length >= 4 && candidate.length <= 80) return candidate;
   }
 
