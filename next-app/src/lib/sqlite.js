@@ -96,7 +96,6 @@ export function getDb() {
     CREATE INDEX IF NOT EXISTS idx_documents_created_at ON documents(created_at);
 
     CREATE INDEX IF NOT EXISTS idx_document_types_name ON document_types(name);
-    CREATE INDEX IF NOT EXISTS idx_document_types_name_norm ON document_types(name_norm);
 
     CREATE INDEX IF NOT EXISTS idx_students_course_year_section ON students(course_code, year_level, section);
     CREATE INDEX IF NOT EXISTS idx_students_name ON students(name);
