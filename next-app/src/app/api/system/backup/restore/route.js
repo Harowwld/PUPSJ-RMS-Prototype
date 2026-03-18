@@ -12,6 +12,7 @@ export async function POST(req) {
   let stagingDir = null;
   
   try {
+    console.log("[RESTORE] Starting restore process...");
     const formData = await req.formData();
     const file = formData.get("file");
 
@@ -52,77 +53,88 @@ export async function POST(req) {
     const currentDbPath = path.join(localDir, "db.sqlite");
     const currentUploadsDir = path.join(localDir, "uploads");
 
-    // --- SAFETY MEASURE: PRE-RESTORE SNAPSHOT ---
-    console.log("[RESTORE] Creating pre-restore snapshot...");
+    // --- PHASE 1: CREATE SNAPSHOT FILE ---
+    console.log("[RESTORE] Creating pre-restore snapshot file...");
     const snapshotFilename = `pre-restore-snapshot-${isoTimestamp}.zip`;
     const backupsDir = getBackupsDir();
     const snapshotPath = path.join(backupsDir, snapshotFilename);
     
     const snapshotZip = new AdmZip();
     if (fs.existsSync(currentDbPath)) {
+      console.log(`[RESTORE] Adding current DB to snapshot: ${currentDbPath}`);
       snapshotZip.addLocalFile(currentDbPath, "", "db.sqlite");
     }
     if (fs.existsSync(currentUploadsDir)) {
+      console.log(`[RESTORE] Adding current uploads to snapshot: ${currentUploadsDir}`);
       snapshotZip.addLocalFolder(currentUploadsDir, "uploads");
     }
     
-    snapshotZip.writeZip(snapshotPath);
+    const zipBuffer = snapshotZip.toBuffer();
+    if (!fs.existsSync(backupsDir)) fs.mkdirSync(backupsDir, { recursive: true });
+    fs.writeFileSync(snapshotPath, zipBuffer);
+    console.log(`[RESTORE] Snapshot file written to disk: ${snapshotPath} (${zipBuffer.length} bytes)`);
     
-    // Record snapshot in DB (using the current DB before it gets overwritten)
-    if (fs.existsSync(snapshotPath) && fs.statSync(snapshotPath).size > 0) {
-      const snapshotBuffer = fs.readFileSync(snapshotPath);
-      const hashSum = crypto.createHash("sha256");
-      hashSum.update(snapshotBuffer);
-      const checksum = hashSum.digest("hex");
-      
-      await createBackupRecord({
-        filename: snapshotFilename,
-        sizeBytes: snapshotBuffer.length,
-        checksum,
-      });
-      console.log(`[RESTORE] Pre-restore snapshot created: ${snapshotFilename}`);
-    } else {
-      console.warn("[RESTORE] Warning: Failed to create pre-restore snapshot, proceeding anyway.");
-    }
-    // --- END SAFETY MEASURE ---
+    const hashSum = crypto.createHash("sha256");
+    hashSum.update(zipBuffer);
+    const checksum = hashSum.digest("hex");
+    const sizeBytes = zipBuffer.length;
 
-    // Proceed with Restoration
-    console.log("[RESTORE] Overwriting current database and files...");
+    // --- PHASE 2: OVERWRITE SYSTEM ---
+    console.log("[RESTORE] Overwriting system with uploaded backup...");
     
     // Replace DB
     fs.copyFileSync(stagedDbPath, currentDbPath);
+    console.log("[RESTORE] db.sqlite overwritten.");
     
-    // Force the application to reload the DB from disk on the next query
+    // Force the application to reload the connection to the NEW database
     reloadDb();
 
-    // Replace Uploads if it exists in the backup
+    // Replace Uploads folder
     if (fs.existsSync(stagedUploadsDir)) {
+      console.log("[RESTORE] Replacing uploads folder...");
       if (fs.existsSync(currentUploadsDir)) {
          fs.rmSync(currentUploadsDir, { recursive: true, force: true });
       }
       fs.cpSync(stagedUploadsDir, currentUploadsDir, { recursive: true });
     }
 
+    // --- PHASE 3: RECORD SNAPSHOT IN THE NEW DATABASE ---
+    console.log("[RESTORE] Recording snapshot in the restored database...");
+    try {
+      const record = await createBackupRecord({
+        filename: snapshotFilename,
+        sizeBytes,
+        checksum,
+      });
+      console.log(`[RESTORE] Snapshot record created in DB: ID=${record?.id}`);
+      
+      // Final verification of the entire backups table
+      const allBackups = await listBackups();
+      console.log(`[RESTORE] Total backups now in DB: ${allBackups.length}`);
+      allBackups.forEach(b => {
+        if (b.filename === snapshotFilename) {
+          console.log(`[RESTORE] VERIFIED: Snapshot ${snapshotFilename} exists in DB.`);
+        }
+      });
+    } catch (dbErr) {
+      console.error("[RESTORE] Failed to record snapshot in DB:", dbErr);
+      // We don't throw here because the restore itself was successful
+    }
+
     // Cleanup staging
     fs.rmSync(stagingDir, { recursive: true, force: true });
+    console.log("[RESTORE] Process complete.");
 
     return NextResponse.json({
       ok: true,
-      message: "System restored successfully from backup."
+      message: "System restored successfully from backup. A safety snapshot was created."
     });
 
   } catch (error) {
-    console.error("Restore Error:", error);
-    
-    // Attempt cleanup on error
+    console.error("[RESTORE] Critical Error:", error);
     if (stagingDir && fs.existsSync(stagingDir)) {
-      try {
-        fs.rmSync(stagingDir, { recursive: true, force: true });
-      } catch (e) {
-        console.error("Failed to cleanup staging dir:", e);
-      }
+      try { fs.rmSync(stagingDir, { recursive: true, force: true }); } catch (e) {}
     }
-
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 }

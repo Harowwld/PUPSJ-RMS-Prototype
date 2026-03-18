@@ -222,24 +222,6 @@ export default function AdminPage() {
     }
   }
 
-  async function syncOffsite(id) {
-    showToast("Pushing encrypted backup to off-site cloud...", false, false);
-    try {
-      const res = await fetch("/api/system/backup/sync-offsite", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json?.ok)
-        throw new Error(json?.error || "Off-site sync failed");
-      showToast("Pushed to off-site cloud successfully!");
-      refreshBackups();
-    } catch (err) {
-      showToast(err?.message, true);
-    }
-  }
-
   useEffect(() => {
     refreshSystemHealth();
     const timer = setInterval(refreshSystemHealth, 10000);

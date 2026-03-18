@@ -38,9 +38,14 @@ export async function createBackupRecord({
 }
 
 export async function listBackups() {
-  return await dbAll(
+  const rows = await dbAll(
     `SELECT * FROM backups ORDER BY datetime(created_at) DESC`
   );
+  console.log(`[REPO] listBackups returned ${rows.length} rows.`);
+  if (rows.length > 0) {
+    console.log(`[REPO] Latest backup: ${rows[0].filename} (Created: ${rows[0].created_at})`);
+  }
+  return rows;
 }
 
 export async function getBackupById(id) {
