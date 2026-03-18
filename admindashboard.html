@@ -446,7 +446,6 @@
             class="p-2 border-t border-gray-200 bg-gray-50 text-[10px] text-gray-400 flex justify-between px-4"
           >
             <span>Showing <span id="count-showing">0</span> records</span>
-            <span>System v1.0.5 Admin</span>
           </div>
         </section>
       </div>
@@ -684,12 +683,12 @@
                 />
               </div>
               <div class="text-[10px] text-gray-400 font-mono">
-                Total Records: 1,245
+                Total Records: <span id="log-total-count">0</span>
               </div>
-            </div>
-          </div>
-          <div class="flex-1 overflow-y-auto p-0">
-            <table class="w-full text-left border-collapse">
+              </div>
+              </div>
+              <div class="flex-1 overflow-y-auto p-0">
+              <table class="w-full text-left border-collapse">
               <thead
                 class="bg-gray-50 sticky top-0 z-10 text-[10px] uppercase text-gray-500 font-bold"
               >
@@ -709,16 +708,15 @@
               >
                 <!-- JS populated -->
               </tbody>
-            </table>
-          </div>
-          <div
-            class="p-2 border-t border-gray-200 bg-gray-50 text-[10px] text-gray-400 flex justify-center"
-          >
-            <button class="hover:text-pup-maroon px-2">Previous</button>
-            <span class="px-2">Page 1 of 50</span>
-            <button class="hover:text-pup-maroon px-2">Next</button>
-          </div>
-        </div>
+              </table>
+              </div>
+              <div
+              class="p-2 border-t border-gray-200 bg-gray-50 text-[10px] text-gray-400 flex justify-center items-center gap-4"
+              >
+              <button id="log-prev-btn" class="hover:text-pup-maroon px-2 disabled:opacity-30 transition-colors">Previous</button>
+              <span class="px-2 font-medium">Page <span id="log-current-page">1</span> of <span id="log-total-pages">1</span></span>
+              <button id="log-next-btn" class="hover:text-pup-maroon px-2 disabled:opacity-30 transition-colors">Next</button>
+              </div>        </div>
       </div>
 
       <!-- VIEW 4: BACKUP & MAINTENANCE (FIXED LAYOUT) -->
@@ -1025,13 +1023,6 @@
           reserved.
         </p>
         <div class="flex gap-4">
-          <a href="#" class="hover:text-pup-maroon transition-colors"
-            >Privacy Policy</a
-          >
-          <a href="#" class="hover:text-pup-maroon transition-colors"
-            >Terms of Use</a
-          >
-          <span class="text-gray-400">|</span>
           <span class="text-gray-500">System Version 1.0.2 (Beta)</span>
         </div>
       </div>

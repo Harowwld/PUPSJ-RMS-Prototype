@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "adm-zip": "^0.5.16",
     "jose": "^5.2.4",
     "next": "16.1.6",
     "pdfjs-dist": "^4.10.38",
@@ -17,7 +18,8 @@
     "socket.io": "^4.8.3",
     "socket.io-client": "^4.8.3",
     "sql.js": "^1.13.0",
-    "tesseract.js": "^5.1.0"
+    "tesseract.js": "^5.1.0",
+    "zip-lib": "^1.2.2"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

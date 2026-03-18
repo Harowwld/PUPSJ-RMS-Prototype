@@ -3,9 +3,9 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { createRequire } from "node:module";
 
-let db;
-let SQL;
-let initializing;
+let db = null;
+let SQL = null;
+let initializing = null;
 
 function getDbFilePath() {
   const base = process.env.LOCAL_DATA_DIR
@@ -15,87 +15,105 @@ function getDbFilePath() {
   return path.join(base, "db.sqlite");
 }
 
-export function getDb() {
-  if (db) return Promise.resolve(db);
+export async function getDb() {
+  if (db) return db;
   if (initializing) return initializing;
 
   initializing = (async () => {
-    const dbPath = getDbFilePath();
-    fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+    try {
+      const dbPath = getDbFilePath();
+      const dbDir = path.dirname(dbPath);
+      if (!fs.existsSync(dbDir)) {
+        fs.mkdirSync(dbDir, { recursive: true });
+      }
 
-    if (!SQL) {
-      const require = createRequire(import.meta.url);
-      const initSqlJs = require("sql.js/dist/sql-asm.js");
-      SQL = await initSqlJs();
-    }
+      if (!SQL) {
+        const require = createRequire(import.meta.url);
+        const initSqlJs = require("sql.js/dist/sql-asm.js");
+        SQL = await initSqlJs();
+      }
 
-    if (fs.existsSync(dbPath)) {
-      const bytes = fs.readFileSync(dbPath);
-      db = new SQL.Database(bytes);
-    } else {
-      db = new SQL.Database();
-    }
+      if (fs.existsSync(dbPath)) {
+        const bytes = fs.readFileSync(dbPath);
+        db = new SQL.Database(bytes);
+      } else {
+        db = new SQL.Database();
+      }
 
-    db.exec(`
-    CREATE TABLE IF NOT EXISTS documents (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      student_no TEXT NOT NULL,
-      student_name TEXT,
-      doc_type TEXT NOT NULL,
-      original_filename TEXT NOT NULL,
-      storage_filename TEXT NOT NULL,
-      mime_type TEXT NOT NULL,
-      size_bytes INTEGER NOT NULL,
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
+      // Initial Schema
+      db.exec(`
+        CREATE TABLE IF NOT EXISTS documents (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          student_no TEXT NOT NULL,
+          student_name TEXT,
+          doc_type TEXT NOT NULL,
+          original_filename TEXT NOT NULL,
+          storage_filename TEXT NOT NULL,
+          mime_type TEXT NOT NULL,
+          size_bytes INTEGER NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
 
-    CREATE TABLE IF NOT EXISTS document_types (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL UNIQUE,
-      name_norm TEXT NOT NULL UNIQUE,
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
+        CREATE TABLE IF NOT EXISTS document_types (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE,
+          name_norm TEXT NOT NULL UNIQUE,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
 
-    CREATE TABLE IF NOT EXISTS students (
-      student_no TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      course_code TEXT NOT NULL,
-      year_level INTEGER NOT NULL,
-      section TEXT NOT NULL,
-      room INTEGER NOT NULL,
-      cabinet TEXT NOT NULL,
-      drawer INTEGER NOT NULL,
-      status TEXT NOT NULL DEFAULT 'Active',
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
+        CREATE TABLE IF NOT EXISTS students (
+          student_no TEXT PRIMARY KEY,
+          name TEXT NOT NULL,
+          course_code TEXT NOT NULL,
+          year_level INTEGER NOT NULL,
+          section TEXT NOT NULL,
+          room INTEGER NOT NULL,
+          cabinet TEXT NOT NULL,
+          drawer INTEGER NOT NULL,
+          status TEXT NOT NULL DEFAULT 'Active',
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
 
-    CREATE TABLE IF NOT EXISTS staff (
-      id TEXT PRIMARY KEY,
-      fname TEXT NOT NULL,
-      lname TEXT NOT NULL,
-      role TEXT NOT NULL,
-      section TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'Active',
-      email TEXT NOT NULL,
-      last_active TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
+        CREATE TABLE IF NOT EXISTS staff (
+          id TEXT PRIMARY KEY,
+          fname TEXT NOT NULL,
+          lname TEXT NOT NULL,
+          role TEXT NOT NULL,
+          section TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'Active',
+          email TEXT NOT NULL,
+          last_active TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
 
-    CREATE TABLE IF NOT EXISTS audit_logs (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      actor TEXT NOT NULL,
-      role TEXT NOT NULL,
-      action TEXT NOT NULL,
-      ip TEXT
-    );
+        CREATE TABLE IF NOT EXISTS audit_logs (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          actor TEXT NOT NULL,
+          role TEXT NOT NULL,
+          action TEXT NOT NULL,
+          ip TEXT
+        );
+
+        CREATE TABLE IF NOT EXISTS backups (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          filename TEXT NOT NULL,
+          size_bytes INTEGER NOT NULL,
+          checksum TEXT NOT NULL,
+          status_local TEXT DEFAULT 'Pending',
+          status_external TEXT DEFAULT 'Pending',
+          status_offsite TEXT DEFAULT 'Pending',
+          encryption_key_id TEXT,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
 
     CREATE INDEX IF NOT EXISTS idx_documents_student_no ON documents(student_no);
     CREATE INDEX IF NOT EXISTS idx_documents_doc_type ON documents(doc_type);
     CREATE INDEX IF NOT EXISTS idx_documents_created_at ON documents(created_at);
 
     CREATE INDEX IF NOT EXISTS idx_document_types_name ON document_types(name);
+    CREATE INDEX IF NOT EXISTS idx_document_types_name_norm ON document_types(name_norm);
 
     CREATE INDEX IF NOT EXISTS idx_students_course_year_section ON students(course_code, year_level, section);
     CREATE INDEX IF NOT EXISTS idx_students_name ON students(name);
@@ -107,127 +125,69 @@ export function getDb() {
     CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
   `);
 
-    try {
-      db.exec("ALTER TABLE staff ADD COLUMN password_hash TEXT");
-    } catch {
-      // ignore if column already exists
-    }
+      // Migrations & Data Backfill
+      try { db.exec("ALTER TABLE staff ADD COLUMN password_hash TEXT"); } catch (e) {}
+      try { db.exec("ALTER TABLE staff ADD COLUMN last_active TEXT"); } catch (e) {}
+      try { db.exec("ALTER TABLE staff ADD COLUMN updated_at TEXT NOT NULL DEFAULT (datetime('now'))"); } catch (e) {}
 
-    try {
-      db.exec("ALTER TABLE staff ADD COLUMN last_active TEXT");
-    } catch {
-      // ignore if column already exists
-    }
+      // Default Password for Staff
+      try {
+        const defaultHash = crypto.createHash("sha256").update("pupstaff").digest("hex");
+        db.exec(`UPDATE staff SET password_hash = '${defaultHash}' WHERE password_hash IS NULL OR password_hash = ''`);
+      } catch (e) {}
 
-    try {
-      db.exec("ALTER TABLE staff ADD COLUMN updated_at TEXT NOT NULL DEFAULT (datetime('now'))");
-    } catch {
-      // ignore if column already exists
-    }
+      // Year Level Migration
+      try {
+        db.exec("UPDATE students SET year_level = 2024 + year_level WHERE year_level IS NOT NULL AND year_level < 100");
+      } catch (e) {}
 
-    try {
-      const defaultHash = crypto
-        .createHash("sha256")
-        .update("pupstaff")
-        .digest("hex");
-      db.exec(
-        `UPDATE staff
-         SET password_hash = '${defaultHash}'
-         WHERE password_hash IS NULL OR password_hash = ''`
-      );
-    } catch {
-      // ignore backfill errors
-    }
+      // Document Types Normalization Migration
+      try {
+        db.exec("ALTER TABLE document_types ADD COLUMN name_norm TEXT");
+      } catch (e) {}
 
-    try {
-      db.exec(
-        `UPDATE students
-         SET year_level = 2024 + year_level
-         WHERE year_level IS NOT NULL AND year_level < 100`
-      );
-    } catch {
-      // ignore migration errors
-    }
-
-    try {
-      db.exec("ALTER TABLE document_types ADD COLUMN name_norm TEXT");
-    } catch {
-      // ignore if column already exists
-    }
-
-    try {
-      const rows = db.exec("SELECT id, name FROM document_types");
-      const values = rows?.[0]?.values || [];
-      for (const r of values) {
-        const id = r?.[0];
-        const name = String(r?.[1] ?? "");
-        const nameNorm = name
-          .trim()
-          .toLowerCase()
-          .replace(/\s+/g, " ");
-
-        if (!id || !nameNorm) continue;
-        try {
-          db.exec(
-            `UPDATE document_types
-             SET name_norm = '${String(nameNorm).replace(/'/g, "''")}'
-             WHERE id = ${Number(id)}`
-          );
-        } catch {
-          // ignore per-row migration errors
-        }
-      }
-    } catch {
-      // ignore backfill errors
-    }
-
-    try {
-      db.exec(
-        "CREATE UNIQUE INDEX IF NOT EXISTS idx_document_types_name_norm_unique ON document_types(name_norm)"
-      );
-    } catch {
-      // ignore index errors
-    }
-
-    try {
-      const row = db.exec("SELECT COUNT(*) AS c FROM document_types");
-      const c = row?.[0]?.values?.[0]?.[0] ?? 0;
-      if (Number(c) === 0) {
-        const defaults = [
-          "Form 137",
-          "Transcript of Records",
-          "Good Moral Certificate",
-          "Diploma",
-          "Honorable Dismissal",
-          "Medical Certificate",
-          "Birth Certificate",
-        ];
-        for (const name of defaults) {
-          try {
-            const nameNorm = String(name).trim().toLowerCase().replace(/\s+/g, " ");
-            db.exec(
-              `INSERT INTO document_types (name) VALUES ('${String(name).replace(/'/g, "''")}')`
-            );
-            try {
-              db.exec(
-                `UPDATE document_types
-                 SET name_norm = '${String(nameNorm).replace(/'/g, "''")}'
-                 WHERE name = '${String(name).replace(/'/g, "''")}'`
-              );
-            } catch {
-              // ignore backfill
+      try {
+        const rows = db.exec("SELECT id, name FROM document_types");
+        if (rows && rows.length > 0) {
+          const values = rows[0].values;
+          for (const r of values) {
+            const id = r[0];
+            const name = String(r[1] || "");
+            const nameNorm = name.trim().toLowerCase().replace(/\s+/g, " ");
+            if (id && nameNorm) {
+              db.exec(`UPDATE document_types SET name_norm = '${nameNorm.replace(/'/g, "''")}' WHERE id = ${id}`);
             }
-          } catch {
-            // ignore duplicates
           }
         }
-      }
-    } catch {
-      // ignore seed errors
-    }
+      } catch (e) {}
 
-    persistDb();
-    return db;
+      try {
+        db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_document_types_name_norm_unique ON document_types(name_norm)");
+      } catch (e) {}
+
+      // Seed Document Types if empty
+      try {
+        const res = db.exec("SELECT COUNT(*) FROM document_types");
+        const count = res[0].values[0][0];
+        if (count === 0) {
+          const defaults = [
+            "Form 137", "Transcript of Records", "Good Moral Certificate",
+            "Diploma", "Honorable Dismissal", "Medical Certificate", "Birth Certificate"
+          ];
+          for (const name of defaults) {
+            const nameNorm = name.trim().toLowerCase().replace(/\s+/g, " ");
+            db.exec(`INSERT INTO document_types (name, name_norm) VALUES ('${name.replace(/'/g, "''")}', '${nameNorm.replace(/'/g, "''")}')`);
+          }
+        }
+      } catch (e) {}
+
+      persistDb();
+      initializing = null;
+      return db;
+    } catch (err) {
+      initializing = null;
+      throw err;
+    }
   })();
 
   return initializing;
@@ -235,16 +195,19 @@ export function getDb() {
 
 function persistDb() {
   if (!db) return;
-  const dbPath = getDbFilePath();
-  const bytes = db.export();
-  fs.writeFileSync(dbPath, Buffer.from(bytes));
+  try {
+    const dbPath = getDbFilePath();
+    const bytes = db.export();
+    fs.writeFileSync(dbPath, Buffer.from(bytes));
+  } catch (err) {
+    console.error("[DB] Persistence Error:", err);
+  }
 }
 
 function normalizeParams(params) {
-  if (!params) return [];
+  if (params === undefined || params === null) return [];
   if (Array.isArray(params)) return params;
-  // sql.js only supports positional binding in a straightforward way; keep repos using arrays.
-  return [];
+  return [params];
 }
 
 export async function dbAll(sql, params) {
@@ -288,4 +251,17 @@ export async function dbRun(sql, params) {
     changes: meta?.changes ?? 0,
     lastInsertRowid: meta?.lastInsertRowid ?? null,
   };
+}
+
+export function reloadDb() {
+  if (db) {
+    try {
+      db.close();
+    } catch (e) {
+      // ignore
+    }
+  }
+  db = null;
+  initializing = null;
+  console.log("[DB] In-memory database cache cleared for reload.");
 }
