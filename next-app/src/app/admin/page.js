@@ -25,8 +25,20 @@ export default function AdminPage() {
 
   const [staffData, setStaffData] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
+  const [logPage, setLogPage] = useState(1);
+  const [logTotal, setLogTotal] = useState(0);
+  const [logsPerPage, setLogsPerPage] = useState(20);
+  const [logSearch, setLogSearch] = useState("");
+
   const [autoBackupTime, setAutoBackupTime] = useState("00:00");
   const [activeSessions, setActiveSessions] = useState(0);
+  const [systemHealth, setSystemHealth] = useState({
+    cpu: 0,
+    disk: { total: 0, free: 0, percent: 0 },
+    dbSize: "0 KB",
+    dbStatus: "Healthy",
+  });
+  const [backups, setBackups] = useState([]);
 
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
@@ -51,6 +63,18 @@ export default function AdminPage() {
     email: "",
     status: "Active",
   });
+
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
+  const [backupDeleteOpen, setBackupDeleteOpen] = useState(false);
+  const [backupDeleteTarget, setBackupDeleteTarget] = useState(null);
+  const [backupDeleteLoading, setBackupDeleteLoading] = useState(false);
+
+  const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false);
+  const [restoreFile, setRestoreFile] = useState(null);
+  const [restoreLoading, setRestoreLoading] = useState(false);
 
   const [authUser, setAuthUser] = useState(null);
   const [pwOpen, setPwOpen] = useState(false);
@@ -150,17 +174,84 @@ export default function AdminPage() {
     }
   }
 
+  async function refreshSystemHealth() {
+    try {
+      const res = await fetch("/api/system/health", { cache: "no-store" });
+      const json = await res.json();
+      if (res.ok && json?.ok) {
+        setSystemHealth(json.data);
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  async function refreshHealth() {
+    await refreshSystemHealth();
+  }
+
+  async function refreshBackups() {
+    try {
+      // Add a timestamp to bypass any potential browser/intermediate caching
+      const res = await fetch(`/api/system/backup?t=${Date.now()}`, {
+        cache: "no-store",
+      });
+      const json = await res.json();
+      if (res.ok && json?.ok) {
+        setBackups(Array.isArray(json.data) ? json.data : []);
+      }
+    } catch (err) {
+      console.error("Failed to refresh backups:", err);
+    }
+  }
+
+  async function syncExternal(id) {
+    showToast("Syncing encrypted backup to external drive...", false, false);
+    try {
+      const res = await fetch("/api/system/backup/sync-external", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Sync failed");
+      showToast("Synced to external drive successfully!");
+      refreshBackups();
+    } catch (err) {
+      showToast(err?.message, true);
+    }
+  }
+
+  useEffect(() => {
+    refreshSystemHealth();
+    const timer = setInterval(refreshSystemHealth, 10000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    if (view === "backup") {
+      refreshBackups();
+    }
+  }, [view]);
+
   async function refreshStaff() {
     const res = await fetch("/api/staff?limit=500");
     const json = await res.json();
-    if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to load staff");
+    if (!res.ok || !json?.ok)
+      throw new Error(json?.error || "Failed to load staff");
     setStaffData(Array.isArray(json.data) ? json.data : []);
   }
 
   async function refreshAuditLogs() {
-    const resLogs = await fetch("/api/audit-logs?limit=200");
+    const offset = (logPage - 1) * logsPerPage;
+    const resLogs = await fetch(
+      `/api/audit-logs?limit=${logsPerPage}&offset=${offset}&search=${encodeURIComponent(logSearch)}`,
+    );
     const jsonLogs = await resLogs.json();
-    if (!resLogs.ok || !jsonLogs?.ok) throw new Error(jsonLogs?.error || "Failed to load audit logs");
+    if (!resLogs.ok || !jsonLogs?.ok)
+      throw new Error(jsonLogs?.error || "Failed to load audit logs");
+
+    setLogTotal(jsonLogs.total || 0);
     const rows = Array.isArray(jsonLogs.data) ? jsonLogs.data : [];
     setAuditLogs(
       rows.map((r) => ({
@@ -169,9 +260,15 @@ export default function AdminPage() {
         role: r.role,
         action: r.action,
         ip: r.ip || "—",
-      }))
+      })),
     );
   }
+
+  useEffect(() => {
+    if (view === "logs") {
+      refreshAuditLogs().catch((e) => showToast(e?.message, true));
+    }
+  }, [logPage, logsPerPage, logSearch, view]);
 
   useEffect(() => {
     (async () => {
@@ -352,6 +449,97 @@ export default function AdminPage() {
     });
   }
 
+  function deleteBackup(id) {
+    const backup = backups.find((b) => b.id === id);
+    if (!backup) return;
+    setBackupDeleteTarget(backup);
+    setBackupDeleteOpen(true);
+  }
+
+  async function confirmDeleteBackup() {
+    if (!backupDeleteTarget || backupDeleteLoading) return;
+    const id = backupDeleteTarget.id;
+    console.log(`[UI] Confirming delete for backup ID: ${id} (${typeof id})`);
+    setBackupDeleteLoading(true);
+    showToast("Deleting backup...", false, false);
+
+    try {
+      const res = await fetch(`/api/system/backup/${id}`, { method: "DELETE" });
+      const json = await res.json();
+      console.log(`[UI] Delete Response:`, json);
+      if (!res.ok || !json?.ok)
+        throw new Error(json?.error || "Failed to delete backup");
+
+      await logAdminAction(`Deleted backup: ${backupDeleteTarget.filename}`);
+      showToast("Backup deleted successfully.");
+      setBackupDeleteOpen(false);
+      setBackupDeleteTarget(null);
+
+      // Manually update the state to remove the item immediately from UI
+      setBackups((prev) => {
+        const next = prev.filter((b) => String(b.id) !== String(id));
+        console.log(
+          `[UI] State update: ${prev.length} -> ${next.length} items`,
+        );
+        return next;
+      });
+    } catch (err) {
+      console.error(`[UI] Delete Error:`, err);
+      showToast(err?.message || "Failed to delete backup", true);
+    } finally {
+      setBackupDeleteLoading(false);
+    }
+  }
+
+  const lastBackupTime = useMemo(() => {
+    if (!backups || backups.length === 0) return "Never";
+
+    const last = backups[0];
+
+    try {
+      const dateStr = last.created_at.replace(" ", "T") + "Z";
+      const utcDate = new Date(dateStr);
+
+      const now = new Date();
+
+      const datePH = utcDate.toLocaleDateString("en-PH", {
+        timeZone: "Asia/Manila",
+      });
+
+      const todayPH = now.toLocaleDateString("en-PH", {
+        timeZone: "Asia/Manila",
+      });
+
+      const timeStr = utcDate.toLocaleTimeString("en-PH", {
+        timeZone: "Asia/Manila",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+
+      if (datePH === todayPH) return `Today, ${timeStr}`;
+
+      return `${datePH}, ${timeStr}`;
+    } catch {
+      return last.created_at;
+    }
+  }, [backups]);
+
+  const formatPHTime = (dateString) => {
+    const date = new Date(dateString.replace(" ", "T") + "Z");
+
+    const datePH = date.toLocaleDateString("en-PH", {
+      timeZone: "Asia/Manila",
+    });
+
+    const timePH = date.toLocaleTimeString("en-PH", {
+      timeZone: "Asia/Manila",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+
+    return `${datePH}, ${timePH}`;
+  };
+
   function handleCreate(e) {
     e.preventDefault();
     const id = createForm.id;
@@ -367,10 +555,19 @@ export default function AdminPage() {
         const res = await fetch("/api/staff", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id, fname, lname, role, email, section, status }),
+          body: JSON.stringify({
+            id,
+            fname,
+            lname,
+            role,
+            email,
+            section,
+            status,
+          }),
         });
         const json = await res.json();
-        if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to create staff");
+        if (!res.ok || !json?.ok)
+          throw new Error(json?.error || "Failed to create staff");
 
         setStaffData((prev) => [json.data, ...prev]);
         await logAdminAction(`Created account for ${fname} ${lname}`);
@@ -386,18 +583,33 @@ export default function AdminPage() {
   }
 
   function deleteUser(id) {
+    const user = staffData.find((s) => s.id === id);
+    if (!user) return;
+    setDeleteTarget(user);
+    setDeleteOpen(true);
+  }
+
+  function confirmDelete() {
+    if (!deleteTarget || deleteLoading) return;
+    const id = deleteTarget.id;
+    setDeleteLoading(true);
     showToast("Removing staff member...", false, false);
 
     (async () => {
       try {
         const res = await fetch(`/api/staff/${id}`, { method: "DELETE" });
         const json = await res.json();
-        if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to delete staff");
+        if (!res.ok || !json?.ok)
+          throw new Error(json?.error || "Failed to delete staff");
         setStaffData((prev) => prev.filter((s) => s.id !== id));
         await logAdminAction(`Removed staff account: ${id}`);
         showToast("User removed successfully.");
+        setDeleteOpen(false);
+        setDeleteTarget(null);
       } catch (err) {
         showToast(err?.message || "Failed to delete staff", true);
+      } finally {
+        setDeleteLoading(false);
       }
     })();
   }
@@ -442,7 +654,8 @@ export default function AdminPage() {
           }),
         });
         const json = await res.json();
-        if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to update staff");
+        if (!res.ok || !json?.ok)
+          throw new Error(json?.error || "Failed to update staff");
 
         const updatedUser = json.data;
         setStaffData((prev) => {
@@ -452,7 +665,7 @@ export default function AdminPage() {
           return next;
         });
         await logAdminAction(
-          `Updated account details for ${updatedUser.fname} ${updatedUser.lname}`
+          `Updated account details for ${updatedUser.fname} ${updatedUser.lname}`,
         );
         showToast("Account updated successfully!");
         closeEditModal();
@@ -479,35 +692,81 @@ export default function AdminPage() {
 
   function simulateBackup() {
     showToast("Creating full system backup...", false, false);
-    setTimeout(() => {
-      showToast("Backup downloaded successfully!");
-    }, 1500);
+    (async () => {
+      try {
+        const res = await fetch("/api/system/backup", { method: "POST" });
+        const json = await res.json();
+        if (!res.ok || !json?.ok)
+          throw new Error(json?.error || "Failed to create backup");
+
+        // Automatically trigger download of the newly created backup
+        if (json.data && json.data.id) {
+          const link = document.createElement("a");
+          link.href = `/api/system/backup/download?id=${json.data.id}`;
+          link.download = json.data.filename;
+          link.click();
+        }
+
+        showToast("Backup created and download started!");
+        refreshBackups();
+      } catch (err) {
+        showToast(err?.message || "Backup failed", true);
+      }
+    })();
   }
 
   function handleRestoreFileChange(e) {
     const file = e.target.files && e.target.files[0];
     if (!file) return;
-    const fileName = file.name;
-    showToast(`Restoring system from '${fileName}'...`, false, false);
-    setTimeout(() => {
-      showToast("System restored successfully! Reloading...");
-      setTimeout(() => location.reload(), 2000);
-    }, 2000);
-    e.target.value = "";
+
+    if (!file.name.endsWith(".zip")) {
+      showToast("Only .zip files are supported for restore", true);
+      e.target.value = "";
+      return;
+    }
+
+    setRestoreFile(file);
+    setRestoreConfirmOpen(true);
+    e.target.value = ""; // Reset input so same file can be selected again if cancelled
   }
 
-  function clearCache() {
-    showToast("Clearing system cache...", false, false);
-    setTimeout(() => {
-      showToast("Cache cleared successfully!");
-    }, 1000);
-  }
+  async function confirmRestore() {
+    if (!restoreFile || restoreLoading) return;
 
-  function forceLogout() {
-    showToast("Processing global logout...", false, false);
-    setTimeout(() => {
-      showToast("All active sessions terminated.");
-    }, 1500);
+    setRestoreLoading(true);
+    showToast(
+      `Preparing to restore from '${restoreFile.name}'...`,
+      false,
+      false,
+    );
+
+    const formData = new FormData();
+    formData.append("file", restoreFile);
+
+    try {
+      const res = await fetch("/api/system/backup/restore", {
+        method: "POST",
+        body: formData,
+      });
+      const json = await res.json();
+
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || "Failed to restore system");
+      }
+
+      await logAdminAction(`Restored system from backup: ${restoreFile.name}`);
+      showToast("System restored successfully! Reloading in 3 seconds...");
+      setRestoreConfirmOpen(false);
+      setRestoreFile(null);
+
+      setTimeout(() => {
+        location.reload();
+      }, 3000);
+    } catch (err) {
+      console.error("[UI] Restore Error:", err);
+      showToast(err?.message || "Restore failed", true);
+      setRestoreLoading(false);
+    }
   }
 
   return (
@@ -532,28 +791,28 @@ export default function AdminPage() {
               id="nav-directory"
               className={`btn-nav ${view === "directory" ? "active" : ""}`}
             >
-              <i className="ph ph-users"></i> Staff Directory
+              <i className="ph-bold ph-users"></i> Staff Directory
             </button>
             <button
               onClick={() => switchView("create")}
               id="nav-create"
               className={`btn-nav ${view === "create" ? "active" : ""}`}
             >
-              <i className="ph ph-user-plus"></i> Register Account
+              <i className="ph-bold ph-user-plus"></i> Register Account
             </button>
             <button
               onClick={() => switchView("logs")}
               id="nav-logs"
               className={`btn-nav ${view === "logs" ? "active" : ""}`}
             >
-              <i className="ph ph-scroll"></i> Audit Logs
+              <i className="ph-bold ph-scroll"></i> Audit Logs
             </button>
             <button
               onClick={() => switchView("backup")}
               id="nav-backup"
               className={`btn-nav ${view === "backup" ? "active" : ""}`}
             >
-              <i className="ph ph-database"></i> Backup & Maintenance
+              <i className="ph-bold ph-database"></i> Backup & Maintenance
             </button>
           </div>
 
@@ -604,7 +863,9 @@ export default function AdminPage() {
             </div>
             <form onSubmit={submitChangePassword} className="p-5 space-y-4">
               {pwError ? (
-                <div className="text-sm text-red-600 font-semibold">{pwError}</div>
+                <div className="text-sm text-red-600 font-semibold">
+                  {pwError}
+                </div>
               ) : null}
 
               <div>
@@ -664,14 +925,22 @@ export default function AdminPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-md bg-white rounded-brand border border-gray-200 shadow-xl overflow-hidden">
             <div className="p-5 border-b border-gray-200 bg-gray-50/60">
-              <h3 className="font-bold text-pup-maroon">Default Temporary Password</h3>
+              <h3 className="font-bold text-pup-maroon">
+                Default Temporary Password
+              </h3>
               <p className="text-xs text-gray-500 mt-1">
-                Share this password with <span className="font-semibold">{defaultPwUserLabel || "the user"}</span>.
+                Share this password with{" "}
+                <span className="font-semibold">
+                  {defaultPwUserLabel || "the user"}
+                </span>
+                .
               </p>
             </div>
             <div className="p-5 space-y-4">
               <div className="rounded-brand border border-amber-200 bg-amber-50 px-4 py-3">
-                <div className="text-xs font-bold text-amber-800 uppercase">Temporary Password</div>
+                <div className="text-xs font-bold text-amber-800 uppercase">
+                  Temporary Password
+                </div>
                 <div className="mt-1 font-mono text-lg font-bold text-amber-900">
                   {DEFAULT_TEMP_PASSWORD}
                 </div>
@@ -725,7 +994,7 @@ export default function AdminPage() {
                 </h3>
                 <div className="space-y-3">
                   <div className="relative group">
-                    <i className="ph ph-magnifying-glass absolute left-3 top-2.5 text-gray-400 group-focus-within:text-pup-maroon"></i>
+                    <i className="ph-bold ph-magnifying-glass absolute left-3 top-2.5 text-gray-400 group-focus-within:text-pup-maroon"></i>
                     <input
                       type="text"
                       placeholder="Search name or ID..."
@@ -858,7 +1127,9 @@ export default function AdminPage() {
                           {s.id}
                         </td>
                         <td className="table-cell">
-                          <span className={`badge ${roleBadgeClass}`}>{s.role}</span>
+                          <span className={`badge ${roleBadgeClass}`}>
+                            {s.role}
+                          </span>
                         </td>
                         <td className="table-cell">
                           <span className={`badge ${statusBadgeClass}`}>
@@ -904,17 +1175,19 @@ export default function AdminPage() {
               <span>
                 Showing <span>{filteredStaff.length}</span> records
               </span>
-              <span>System v1.0.5 Admin</span>
             </div>
           </section>
         </div>
 
-        <div className={`${view === "create" ? "flex" : "hidden"} h-full flex-col animate-fade-in`}>
+        <div
+          className={`${view === "create" ? "flex" : "hidden"} h-full flex-col animate-fade-in`}
+        >
           <div className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm flex flex-col h-full overflow-hidden">
             <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50/30">
               <div>
                 <h3 className="font-bold text-pup-maroon text-lg flex items-center gap-2">
-                  <i className="ph-duotone ph-user-plus"></i> New Account Creation
+                  <i className="ph-duotone ph-user-plus"></i> New Account
+                  Creation
                 </h3>
                 <p className="text-xs text-gray-500 mt-1">
                   Create secure access credentials for Registrar Staff.
@@ -938,8 +1211,8 @@ export default function AdminPage() {
                         Role-Based Access
                       </h4>
                       <p className="text-xs text-blue-600 mt-1">
-                        Assign permissions as either Admin or Staff to keep access
-                        scoped to responsibilities.
+                        Assign permissions as either Admin or Staff to keep
+                        access scoped to responsibilities.
                       </p>
                     </div>
                   </div>
@@ -951,8 +1224,8 @@ export default function AdminPage() {
                       </h4>
                       <p className="text-xs text-amber-600 mt-1">
                         New accounts are initialized with a temporary password:
-                        <span className="font-mono font-bold"> pupstaff</span>. Users will be
-                        prompted to change it upon first login.
+                        <span className="font-mono font-bold"> pupstaff</span>.
+                        Users will be prompted to change it upon first login.
                       </p>
                     </div>
                   </div>
@@ -1008,7 +1281,10 @@ export default function AdminPage() {
                         placeholder="Juan"
                         value={createForm.fname}
                         onChange={(e) =>
-                          setCreateForm((f) => ({ ...f, fname: e.target.value }))
+                          setCreateForm((f) => ({
+                            ...f,
+                            fname: e.target.value,
+                          }))
                         }
                       />
                     </div>
@@ -1023,7 +1299,10 @@ export default function AdminPage() {
                         placeholder="Dela Cruz"
                         value={createForm.lname}
                         onChange={(e) =>
-                          setCreateForm((f) => ({ ...f, lname: e.target.value }))
+                          setCreateForm((f) => ({
+                            ...f,
+                            lname: e.target.value,
+                          }))
                         }
                       />
                     </div>
@@ -1066,23 +1345,48 @@ export default function AdminPage() {
           </div>
         </div>
 
-        <div className={`${view === "logs" ? "block" : "hidden"} h-full animate-fade-in`}>
+        <div
+          className={`${view === "logs" ? "block" : "hidden"} h-full animate-fade-in`}
+        >
           <div className="bg-white rounded-brand border border-gray-300 shadow-sm h-full flex flex-col">
             <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
               <h2 className="font-bold text-pup-maroon flex items-center gap-2">
                 <i className="ph-duotone ph-scroll"></i> System Audit Logs
               </h2>
               <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase">
+                    Show:
+                  </label>
+                  <select
+                    className="text-[10px] border-gray-300 rounded border px-1.5 py-1 focus:outline-none focus:border-pup-maroon bg-white"
+                    value={logsPerPage}
+                    onChange={(e) => {
+                      setLogsPerPage(parseInt(e.target.value));
+                      setLogPage(1);
+                    }}
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
                 <div className="relative">
-                  <i className="ph ph-magnifying-glass absolute left-2.5 top-2 text-gray-400 text-xs"></i>
+                  <i className="ph-bold ph-magnifying-glass absolute left-2.5 top-2 text-gray-400 text-xs"></i>
                   <input
                     type="text"
                     placeholder="Search logs..."
                     className="pl-7 pr-3 py-1.5 text-xs border border-gray-300 rounded-brand focus:outline-none focus:border-pup-maroon w-48"
+                    value={logSearch}
+                    onChange={(e) => {
+                      setLogSearch(e.target.value);
+                      setLogPage(1);
+                    }}
                   />
                 </div>
                 <div className="text-[10px] text-gray-400 font-mono">
-                  Total Records: 1,245
+                  Total Records: {logTotal.toLocaleString()}
                 </div>
               </div>
             </div>
@@ -1103,7 +1407,10 @@ export default function AdminPage() {
                 </thead>
                 <tbody className="text-xs text-gray-600 divide-y divide-gray-100">
                   {displayLogs.map((log, idx) => (
-                    <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                    <tr
+                      key={idx}
+                      className="hover:bg-gray-50 transition-colors"
+                    >
                       <td className="p-3 border-b border-gray-100 font-mono text-gray-500">
                         {log.time}
                       </td>
@@ -1126,10 +1433,25 @@ export default function AdminPage() {
                 </tbody>
               </table>
             </div>
-            <div className="p-2 border-t border-gray-200 bg-gray-50 text-[10px] text-gray-400 flex justify-center">
-              <button className="hover:text-pup-maroon px-2">Previous</button>
-              <span className="px-2">Page 1 of 50</span>
-              <button className="hover:text-pup-maroon px-2">Next</button>
+            <div className="p-2 border-t border-gray-200 bg-gray-50 text-[10px] text-gray-400 flex justify-center items-center gap-4">
+              <button
+                disabled={logPage <= 1}
+                onClick={() => setLogPage((p) => p - 1)}
+                className="hover:text-pup-maroon px-2 disabled:opacity-30 disabled:hover:text-gray-400 transition-colors"
+              >
+                Previous
+              </button>
+              <span className="px-2 font-medium">
+                Page {logPage} of{" "}
+                {Math.max(1, Math.ceil(logTotal / logsPerPage))}
+              </span>
+              <button
+                disabled={logPage >= Math.ceil(logTotal / logsPerPage)}
+                onClick={() => setLogPage((p) => p + 1)}
+                className="hover:text-pup-maroon px-2 disabled:opacity-30 disabled:hover:text-gray-400 transition-colors"
+              >
+                Next
+              </button>
             </div>
           </div>
         </div>
@@ -1146,29 +1468,47 @@ export default function AdminPage() {
               <div className="space-y-4">
                 <div>
                   <div className="flex justify-between text-[10px] uppercase font-bold text-gray-500 mb-1">
-                    <span>Storage (45GB/100GB)</span>
-                    <span className="text-gray-700">45%</span>
+                    <span>
+                      Storage (
+                      {systemHealth.disk.total - systemHealth.disk.free}
+                      GB/
+                      {systemHealth.disk.total}GB)
+                    </span>
+                    <span className="text-gray-700">
+                      {systemHealth.disk.percent}%
+                    </span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-1.5">
-                    <div className="bg-pup-maroon h-1.5 rounded-full" style={{ width: "45%" }}></div>
+                  <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="bg-pup-maroon h-1.5 rounded-full transition-all duration-1000"
+                      style={{ width: `${systemHealth.disk.percent}%` }}
+                    ></div>
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between text-[10px] uppercase font-bold text-gray-500 mb-1">
-                    <span>Database Load</span>
-                    <span className="text-green-600">Healthy</span>
+                    <span>Database Size ({systemHealth.dbSize})</span>
+                    <span className="text-green-600">
+                      {systemHealth.dbStatus}
+                    </span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-1.5">
-                    <div className="bg-green-500 h-1.5 rounded-full" style={{ width: "12%" }}></div>
+                  <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className="bg-green-500 h-1.5 rounded-full transition-all duration-500"
+                      style={{ width: "12%" }}
+                    ></div>
                   </div>
                 </div>
                 <div>
                   <div className="flex justify-between text-[10px] uppercase font-bold text-gray-500 mb-1">
                     <span>CPU Usage</span>
-                    <span className="text-gray-700">28%</span>
+                    <span className="text-gray-700">{systemHealth.cpu}%</span>
                   </div>
-                  <div className="w-full bg-gray-100 rounded-full h-1.5">
-                    <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: "28%" }}></div>
+                  <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
+                    <div
+                      className={`${systemHealth.cpu > 80 ? "bg-red-500" : systemHealth.cpu > 50 ? "bg-amber-500" : "bg-blue-500"} h-1.5 rounded-full transition-all duration-1000`}
+                      style={{ width: `${systemHealth.cpu}%` }}
+                    ></div>
                   </div>
                 </div>
               </div>
@@ -1193,8 +1533,8 @@ export default function AdminPage() {
                   onClick={simulateBackup}
                   className="w-full bg-pup-maroon text-white py-2.5 rounded-brand text-xs font-bold hover:bg-red-900 transition-colors flex items-center justify-center gap-2 shadow-sm mb-4"
                 >
-                  <i className="ph-bold ph-download-simple"></i> Download Full Backup
-                  (.zip)
+                  <i className="ph-bold ph-download-simple"></i> Download Full
+                  Backup (.zip)
                 </button>
 
                 <div className="border-t border-dashed border-gray-200 pt-4">
@@ -1209,14 +1549,20 @@ export default function AdminPage() {
                     onChange={handleRestoreFileChange}
                   />
                   <button
-                    onClick={() => restoreFileRef.current && restoreFileRef.current.click()}
+                    onClick={() =>
+                      restoreFileRef.current && restoreFileRef.current.click()
+                    }
                     className="w-full bg-white border border-gray-300 text-gray-600 py-2 rounded-brand text-xs font-bold hover:border-pup-maroon hover:text-pup-maroon transition-colors flex items-center justify-center gap-2"
                   >
-                    <i className="ph-bold ph-upload-simple"></i> Upload Backup File
+                    <i className="ph-bold ph-upload-simple"></i> Upload Backup
+                    File
                   </button>
                 </div>
                 <div className="mt-4 text-[10px] text-gray-400 text-center">
-                  Last backup: <span className="font-mono text-gray-600">Today, 08:00 AM</span>
+                  Last backup:{" "}
+                  <span className="font-mono text-gray-600">
+                    {lastBackupTime}
+                  </span>
                 </div>
               </div>
             </div>
@@ -1243,41 +1589,23 @@ export default function AdminPage() {
                           const value = e.target.value;
                           if (!value) return;
                           setAutoBackupTime(value);
-                          showToast(`Auto-backup time set to ${formatTime(value)}`);
+                          showToast(
+                            `Auto-backup time set to ${formatTime(value)}`,
+                          );
                         }}
                       />
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" defaultChecked className="sr-only peer" />
-                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5fter:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pup-maroon"></div>
-                  </label>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="text-xs">
-                    <div className="font-bold text-gray-700">Maintenance Mode</div>
-                    <div className="text-gray-400">Lock non-admin logins</div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" />
+                    <input
+                      type="checkbox"
+                      defaultChecked
+                      className="sr-only peer"
+                    />
                     <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pup-maroon"></div>
                   </label>
                 </div>
                 <hr className="border-gray-200 my-2" />
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    onClick={clearCache}
-                    className="px-3 py-2 border border-gray-200 rounded-brand text-[10px] font-bold text-gray-600 hover:bg-gray-50 hover:text-gray-800 transition-colors flex flex-col items-center gap-1"
-                  >
-                    <i className="ph-bold ph-broom text-lg"></i> Clear Cache
-                  </button>
-                  <button
-                    onClick={forceLogout}
-                    className="px-3 py-2 border border-red-100 bg-red-50 rounded-brand text-[10px] font-bold text-red-700 hover:bg-red-100 transition-colors flex flex-col items-center gap-1"
-                  >
-                    <i className="ph-bold ph-sign-out text-lg"></i> Force Logout
-                  </button>
-                </div>
               </div>
             </div>
           </section>
@@ -1287,82 +1615,110 @@ export default function AdminPage() {
               <h3 className="font-bold text-xs text-pup-maroon uppercase tracking-wide">
                 Backup History
               </h3>
-              <div className="flex items-center gap-2">
-                <label className="text-[10px] font-bold text-gray-500 uppercase">
-                  Retention Policy:
-                </label>
-                <select className="text-xs border-gray-300 rounded border px-2 py-1 focus:outline-none focus:border-pup-maroon">
-                  <option>Keep 30 Days</option>
-                  <option>Keep 60 Days</option>
-                  <option>Keep All</option>
-                </select>
-              </div>
             </div>
             <div className="flex-1 overflow-auto">
               <table className="w-full text-left border-collapse">
                 <thead className="bg-white text-[10px] text-gray-400 uppercase font-bold sticky top-0">
                   <tr>
                     <th className="p-3 border-b border-gray-200">Filename</th>
-                    <th className="p-3 border-b border-gray-200">Date & Time</th>
+                    <th className="p-3 border-b border-gray-200">
+                      Date & Time
+                    </th>
                     <th className="p-3 border-b border-gray-200">Size</th>
                     <th className="p-3 border-b border-gray-200">Contents</th>
                     <th className="p-3 border-b border-gray-200">Type</th>
-                    <th className="p-3 border-b border-gray-200 text-right">Action</th>
+                    <th className="p-3 border-b border-gray-200 text-right">
+                      Action
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="text-xs text-gray-600">
-                  <tr className="hover:bg-gray-50 border-b border-gray-50">
-                    <td className="p-3 font-mono text-pup-maroon">
-                      full_backup_20231126.zip
-                    </td>
-                    <td className="p-3">Nov 26, 2023 - 08:00 AM</td>
-                    <td className="p-3">1.2 GB</td>
-                    <td className="p-3">SQL + PDF Files</td>
-                    <td className="p-3">
-                      <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px] font-bold">
-                        AUTO
-                      </span>
-                    </td>
-                    <td className="p-3 text-right">
-                      <button className="text-gray-400 hover:text-pup-maroon">
-                        <i className="ph-bold ph-download-simple"></i>
-                      </button>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-50 border-b border-gray-50">
-                    <td className="p-3 font-mono text-pup-maroon">
-                      full_backup_20231125.zip
-                    </td>
-                    <td className="p-3">Nov 25, 2023 - 08:00 AM</td>
-                    <td className="p-3">1.1 GB</td>
-                    <td className="p-3">SQL + PDF Files</td>
-                    <td className="p-3">
-                      <span className="bg-green-100 text-green-700 px-1.5 py-0.5 rounded text-[10px] font-bold">
-                        AUTO
-                      </span>
-                    </td>
-                    <td className="p-3 text-right">
-                      <button className="text-gray-400 hover:text-pup-maroon">
-                        <i className="ph-bold ph-download-simple"></i>
-                      </button>
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-50 border-b border-gray-50">
-                    <td className="p-3 font-mono text-pup-maroon">db_snapshot.sql</td>
-                    <td className="p-3">Nov 24, 2023 - 03:15 PM</td>
-                    <td className="p-3">44.5 MB</td>
-                    <td className="p-3">SQL Only</td>
-                    <td className="p-3">
-                      <span className="bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-[10px] font-bold">
-                        MANUAL
-                      </span>
-                    </td>
-                    <td className="p-3 text-right">
-                      <button className="text-gray-400 hover:text-pup-maroon">
-                        <i className="ph-bold ph-download-simple"></i>
-                      </button>
-                    </td>
-                  </tr>
+                  {backups.map((b) => (
+                    <tr
+                      key={b.id}
+                      className="hover:bg-gray-50 border-b border-gray-50"
+                    >
+                      <td
+                        className="p-3 font-mono text-pup-maroon truncate max-w-[200px]"
+                        title={b.filename}
+                      >
+                        {b.filename}
+                      </td>
+                      <td className="p-3">{formatPHTime(b.created_at)}</td>
+                      <td className="p-3">
+                        {(b.size_bytes / (1024 * 1024)).toFixed(2)} MB
+                      </td>
+                      <td className="p-3">SQL + Docs</td>
+                      <td className="p-3">
+                        <div className="flex flex-col gap-1.5">
+                          <div className="flex items-center justify-between gap-3 bg-gray-50 px-2 py-1 rounded border border-gray-100">
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className={`w-2 h-2 rounded-full ${b.status_local === "Success" ? "bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]" : "bg-gray-300"}`}
+                              ></span>
+                              <span className="text-[9px] uppercase font-bold text-gray-500">
+                                1. Local
+                              </span>
+                            </div>
+                            <i
+                              className={`ph-bold ${b.status_local === "Success" ? "ph-check-circle text-green-600" : "ph-circle text-gray-300"} text-[10px]`}
+                            ></i>
+                          </div>
+
+                          <div className="flex items-center justify-between gap-3 bg-gray-50 px-2 py-1 rounded border border-gray-100">
+                            <div className="flex items-center gap-1.5">
+                              <span
+                                className={`w-2 h-2 rounded-full ${b.status_external === "Success" ? "bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.5)]" : "bg-gray-300"}`}
+                              ></span>
+                              <span className="text-[9px] uppercase font-bold text-gray-500">
+                                2. External
+                              </span>
+                            </div>
+                            {b.status_external !== "Success" ? (
+                              <button
+                                onClick={() => syncExternal(b.id)}
+                                className="text-[9px] font-bold text-pup-maroon hover:underline"
+                              >
+                                SYNC
+                              </button>
+                            ) : (
+                              <i className="ph-bold ph-check-circle text-blue-600 text-[10px]"></i>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-3 text-right">
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            onClick={() => {
+                              const link = document.createElement("a");
+                              link.href = `/api/system/backup/download?id=${b.id}`;
+                              link.download = b.filename;
+                              link.click();
+                            }}
+                            className="text-gray-400 hover:text-pup-maroon p-2 transition-colors"
+                            title="Download ZIP Backup"
+                          >
+                            <i className="ph-bold ph-file-zip text-lg"></i>
+                          </button>
+                          <button
+                            onClick={() => deleteBackup(b.id)}
+                            className="text-gray-400 hover:text-red-600 p-2 transition-colors"
+                            title="Delete Backup"
+                          >
+                            <i className="ph-bold ph-trash text-lg"></i>
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {backups.length === 0 && (
+                    <tr>
+                      <td colSpan="6" className="p-8 text-center text-gray-400">
+                        No backups found.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -1377,13 +1733,6 @@ export default function AdminPage() {
             reserved.
           </p>
           <div className="flex gap-4">
-            <a href="#" className="hover:text-pup-maroon transition-colors">
-              Privacy Policy
-            </a>
-            <a href="#" className="hover:text-pup-maroon transition-colors">
-              Terms of Use
-            </a>
-            <span className="text-gray-400">|</span>
             <span className="text-gray-500">System Version 1.0.2 (Beta)</span>
           </div>
         </div>
@@ -1526,6 +1875,174 @@ export default function AdminPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className={`${deleteOpen ? "flex" : "hidden"} fixed inset-0 bg-black/50 z-50 items-center justify-center animate-fade-in`}
+      >
+        <div className="bg-white rounded-brand shadow-lg w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200">
+          <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-red-50/50">
+            <div>
+              <h3 className="font-bold text-red-700 text-lg flex items-center gap-2">
+                <i className="ph-bold ph-warning-circle"></i> Confirm Removal
+              </h3>
+            </div>
+            <button
+              onClick={() => setDeleteOpen(false)}
+              className="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50"
+            >
+              <i className="ph-bold ph-x text-lg"></i>
+            </button>
+          </div>
+          <div className="p-8">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
+                <i className="ph-bold ph-trash text-3xl"></i>
+              </div>
+              <h4 className="text-gray-800 font-bold text-lg mb-2">
+                Remove {deleteTarget?.fname} {deleteTarget?.lname}?
+              </h4>
+              <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+                This will permanently delete the account for{" "}
+                <span className="font-semibold text-gray-700">
+                  {deleteTarget?.id}
+                </span>
+                . This action cannot be undone and all associated sessions will
+                be terminated.
+              </p>
+
+              <div className="w-full flex gap-3">
+                <button
+                  onClick={() => setDeleteOpen(false)}
+                  className="flex-1 px-5 py-2.5 border border-gray-300 rounded-brand text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  disabled={deleteLoading}
+                  className="flex-1 px-5 py-2.5 bg-red-600 text-white rounded-brand text-sm font-bold hover:bg-red-700 transition-all shadow-md hover:shadow-lg disabled:opacity-60"
+                >
+                  {deleteLoading ? "Removing..." : "Confirm Delete"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className={`${backupDeleteOpen ? "flex" : "hidden"} fixed inset-0 bg-black/50 z-50 items-center justify-center animate-fade-in`}
+      >
+        <div className="bg-white rounded-brand shadow-lg w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200">
+          <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-red-50/50">
+            <div>
+              <h3 className="font-bold text-red-700 text-lg flex items-center gap-2">
+                <i className="ph-bold ph-warning-circle"></i> Confirm Backup
+                Deletion
+              </h3>
+            </div>
+            <button
+              onClick={() => setBackupDeleteOpen(false)}
+              className="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50"
+            >
+              <i className="ph-bold ph-x text-lg"></i>
+            </button>
+          </div>
+          <div className="p-8">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
+                <i className="ph-bold ph-trash text-3xl"></i>
+              </div>
+              <h4 className="text-gray-800 font-bold text-lg mb-2 truncate max-w-full">
+                Delete {backupDeleteTarget?.filename}?
+              </h4>
+              <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+                This will permanently remove the encrypted backup file from the
+                local server storage. This action cannot be undone.
+              </p>
+
+              <div className="w-full flex gap-3">
+                <button
+                  onClick={() => setBackupDeleteOpen(false)}
+                  className="flex-1 px-5 py-2.5 border border-gray-300 rounded-brand text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmDeleteBackup}
+                  disabled={backupDeleteLoading}
+                  className="flex-1 px-5 py-2.5 bg-red-600 text-white rounded-brand text-sm font-bold hover:bg-red-700 transition-all shadow-md hover:shadow-lg disabled:opacity-60"
+                >
+                  {backupDeleteLoading ? "Deleting..." : "Confirm Delete"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div
+        className={`${restoreConfirmOpen ? "flex" : "hidden"} fixed inset-0 bg-black/50 z-50 items-center justify-center animate-fade-in`}
+      >
+        <div className="bg-white rounded-brand shadow-lg w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200">
+          <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-amber-50/50">
+            <div>
+              <h3 className="font-bold text-amber-700 text-lg flex items-center gap-2">
+                <i className="ph-bold ph-warning-circle"></i> Confirm System
+                Restore
+              </h3>
+            </div>
+            <button
+              onClick={() => {
+                setRestoreConfirmOpen(false);
+                setRestoreFile(null);
+              }}
+              className="text-gray-400 hover:text-amber-600 transition-colors p-2 rounded-full hover:bg-amber-50"
+            >
+              <i className="ph-bold ph-x text-lg"></i>
+            </button>
+          </div>
+          <div className="p-8">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-4">
+                <i className="ph-bold ph-upload-simple text-3xl"></i>
+              </div>
+              <h4 className="text-gray-800 font-bold text-lg mb-2 truncate max-w-full">
+                Restore from {restoreFile?.name}?
+              </h4>
+              <div className="text-gray-500 text-sm mb-6 leading-relaxed space-y-2">
+                <p className="text-red-600 font-semibold">
+                  Warning: This will overwrite all current system data, user
+                  accounts, and documents.
+                </p>
+                <p>
+                  An automatic snapshot of the current state will be taken
+                  before the restore proceeds, just in case you need to revert.
+                </p>
+              </div>
+
+              <div className="w-full flex gap-3">
+                <button
+                  onClick={() => {
+                    setRestoreConfirmOpen(false);
+                    setRestoreFile(null);
+                  }}
+                  className="flex-1 px-5 py-2.5 border border-gray-300 rounded-brand text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={confirmRestore}
+                  disabled={restoreLoading}
+                  className="flex-1 px-5 py-2.5 bg-amber-600 text-white rounded-brand text-sm font-bold hover:bg-amber-700 transition-all shadow-md hover:shadow-lg disabled:opacity-60"
+                >
+                  {restoreLoading ? "Restoring..." : "Proceed with Restore"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       </div>
