@@ -3,7 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import AdmZip from "adm-zip";
-import { getBackupsDir, getLocalDir, createBackupRecord } from "../../../../../lib/backupsRepo";
+import { getBackupsDir, getLocalDir, createBackupRecord, listBackups } from "../../../../../lib/backupsRepo";
 import { reloadDb } from "../../../../../lib/sqlite";
 
 export const runtime = "nodejs";
