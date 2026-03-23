@@ -108,18 +108,22 @@ export async function getDb() {
           created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
 
-        CREATE INDEX IF NOT EXISTS idx_documents_student_no ON documents(student_no);
-        CREATE INDEX IF NOT EXISTS idx_documents_doc_type ON documents(doc_type);
-        CREATE INDEX IF NOT EXISTS idx_documents_created_at ON documents(created_at);
-        CREATE INDEX IF NOT EXISTS idx_document_types_name ON document_types(name);
-        CREATE INDEX IF NOT EXISTS idx_document_types_name_norm ON document_types(name_norm);
-        CREATE INDEX IF NOT EXISTS idx_students_course_year_section ON students(course_code, year_level, section);
-        CREATE INDEX IF NOT EXISTS idx_students_name ON students(name);
-        CREATE INDEX IF NOT EXISTS idx_staff_name ON staff(lname, fname);
-        CREATE INDEX IF NOT EXISTS idx_staff_role ON staff(role);
-        CREATE INDEX IF NOT EXISTS idx_staff_status ON staff(status);
-        CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
-      `);
+    CREATE INDEX IF NOT EXISTS idx_documents_student_no ON documents(student_no);
+    CREATE INDEX IF NOT EXISTS idx_documents_doc_type ON documents(doc_type);
+    CREATE INDEX IF NOT EXISTS idx_documents_created_at ON documents(created_at);
+
+    CREATE INDEX IF NOT EXISTS idx_document_types_name ON document_types(name);
+    CREATE INDEX IF NOT EXISTS idx_document_types_name_norm ON document_types(name_norm);
+
+    CREATE INDEX IF NOT EXISTS idx_students_course_year_section ON students(course_code, year_level, section);
+    CREATE INDEX IF NOT EXISTS idx_students_name ON students(name);
+
+    CREATE INDEX IF NOT EXISTS idx_staff_name ON staff(lname, fname);
+    CREATE INDEX IF NOT EXISTS idx_staff_role ON staff(role);
+    CREATE INDEX IF NOT EXISTS idx_staff_status ON staff(status);
+
+    CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
+  `);
 
       // Migrations & Data Backfill
       try { db.exec("ALTER TABLE staff ADD COLUMN password_hash TEXT"); } catch (e) {}

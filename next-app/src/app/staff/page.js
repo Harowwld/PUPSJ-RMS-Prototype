@@ -150,10 +150,204 @@ function extractNameFromOcrText(text) {
     .filter(Boolean);
 
   const labeled = lines.join("\n");
+
+  function isProbablyNotAName(v) {
+    const s = String(v || "").trim().toLowerCase();
+    if (!s) return true;
+
+    // Avoid returning field labels themselves (common OCR failure: "Given Name" -> "even Name").
+    if (
+      /^\(?\s*(?:sur\s*name|surname|last\s*name|family\s*name|first\s*name|given\s*name|middle\s*name|m\.?i\.?|mi)\s*\)?$/i.test(
+        String(v || "").trim()
+      )
+    ) {
+      return true;
+    }
+    if (/\b(?:given|last|first|middle|family)\s+name\b/i.test(s)) return true;
+    if (/\b(?:even|iven)\s+name\b/i.test(s)) return true;
+    if (/\bsurname\b/i.test(s)) return true;
+
+    // Avoid accidentally returning other fields as the name.
+    if (
+      /\b(place\s*of\s*birth|province|town|barrio|municipality|city)\b/.test(s)
+    ) {
+      return true;
+    }
+
+    // Common form/document titles that OCR often sees near the top of the page.
+    if (
+      /\brepublic\s+of\s+the\s+philippines\b/.test(s) ||
+      /\bdepartment\s+of\s+education\b/.test(s) ||
+      /\bdeped\b/.test(s) ||
+      /\bform\b/.test(s) ||
+      /\b(form\s*137|137\s*-?\s*a)\b/.test(s) ||
+      /\btranscript\b/.test(s) ||
+      /\brecords\b/.test(s) ||
+      /\bcertificate\b/.test(s) ||
+      /\bdiploma\b/.test(s) ||
+      /\bhonorable\b/.test(s) ||
+      /\bgood\s+moral\b/.test(s)
+    ) {
+      return true;
+    }
+
+    return false;
+  }
+
+  function cleanNamePart(v) {
+    return String(v || "")
+      .replace(/\s+/g, " ")
+      .replace(/[^A-Za-z.\-\s']/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+
+  function cutAtNextFieldLabel(raw) {
+    const s = String(raw || "");
+    if (!s) return "";
+
+    // Stop once we hit other common field labels on DepEd forms.
+    const stop = s.search(
+      /\b(date\s*of\s*birth|place\s*of\s*birth|province|town|barrio|sex|female|male|year|month|day|civil|occupation|address|parent|guardian)\b/i
+    );
+    const trimmed = (stop >= 0 ? s.slice(0, stop) : s).trim();
+    return trimmed;
+  }
+
+  function splitIntoNameBlocks(raw) {
+    // DepEd Form 137 often places SURNAME and GIVEN NAME on the same row.
+    // We attempt to split the row into two blocks separated by 2+ spaces.
+    const s = cleanNamePart(cutAtNextFieldLabel(raw));
+    if (!s) return [];
+    const blocks = s
+      .split(/\s{2,}/g)
+      .map((b) => cleanNamePart(b))
+      .filter(Boolean);
+    return blocks;
+  }
+
+  function splitCombinedSurnameGiven(raw) {
+    // OCR sometimes collapses spacing between the SURNAME and GIVEN NAME columns,
+    // producing a single run like: "DELA CRUZ MARIA CLARA".
+    const s = cleanNamePart(cutAtNextFieldLabel(raw));
+    const tokens = s.split(/\s+/).filter(Boolean);
+    if (tokens.length < 2) return null;
+
+    const upperTokens = tokens.map((x) => x.toUpperCase());
+    const p1 = upperTokens[0];
+    const p2 = upperTokens[1];
+    const p3 = upperTokens[2];
+
+    // Handle common surname particles/prefixes.
+    // Examples:
+    // - DELA CRUZ -> last="DELA CRUZ", given=rest
+    // - DEL TORO -> last="DEL TORO", given=rest
+    // - DE LA CRUZ -> last="DE LA CRUZ", given=rest
+    // - VAN DYKE -> last="VAN DYKE", given=rest
+    const twoWordParticles = new Set(["DELA", "DEL", "VAN", "VON", "SAN", "SANTA", "STA", "ST"]);
+    const threeWordPatterns = [
+      ["DE", "LA"],
+      ["DE", "LOS"],
+      ["DE", "LAS"],
+    ];
+
+    let lastLen = 1;
+    if (twoWordParticles.has(p1) && upperTokens.length >= 2) {
+      lastLen = 2;
+    }
+
+    const matchesThreeWord =
+      upperTokens.length >= 3 &&
+      threeWordPatterns.some(([a, b]) => p1 === a && p2 === b);
+    if (matchesThreeWord) {
+      lastLen = 3;
+    }
+
+    const last = cleanNamePart(tokens.slice(0, lastLen).join(" "));
+    const given = cleanNamePart(tokens.slice(lastLen).join(" "));
+    if (!last || !given) return null;
+    if (isProbablyNotAName(last) || isProbablyNotAName(given)) return null;
+    return { last, given };
+  }
+
+  function findValueNearLabel(labelMatcher) {
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      if (!labelMatcher.test(line)) continue;
+
+      // Case 1: "Label: Value" or "Label - Value" or "Label  Value"
+      const sameLine = line.replace(labelMatcher, " ").trim();
+      const sameCut = cutAtNextFieldLabel(sameLine);
+      const sameClean = cleanNamePart(sameCut);
+      if (sameClean && !isProbablyNotAName(sameClean) && !/\bname\b/i.test(sameClean)) {
+        return sameClean;
+      }
+
+      // Case 2: Value is on the next line
+      for (let j = i + 1; j < Math.min(lines.length, i + 4); j++) {
+        const candidateRaw = cutAtNextFieldLabel(lines[j]);
+        const candidate = cleanNamePart(candidateRaw);
+        if (!candidate) continue;
+        if (labelMatcher.test(lines[j])) continue;
+        if (/^\(.*\)$/.test(lines[j])) continue;
+        if (/\bname\b/i.test(candidate) && candidate.split(/\s+/).length <= 3) continue;
+        if (isProbablyNotAName(candidate)) continue;
+        return candidate;
+      }
+    }
+    return "";
+  }
+
+  // Special-case DepEd Form 137 style row: "Surname DELA CRUZ   MARIA CLARA   Date of Birth ..."
+  let lastName = "";
+  let firstName = "";
+  let middleName = "";
+  const surnameRow = lines.find((l) => /(\bsurname\b|\bsumame\b|\bsumarme\b|\bimame\b|\bsurame\b)/i.test(l));
+  if (surnameRow) {
+    const after = surnameRow
+      .replace(/.*(\bsurname\b|\bsumame\b|\bsumarme\b|\bimame\b|\bsurame\b)\s*[:\-]*/i, "")
+      .trim();
+
+    const blocks = splitIntoNameBlocks(after);
+    // Most common: block[0]=last name, block[1]=given/middle names.
+    if (blocks[0] && !isProbablyNotAName(blocks[0])) lastName = blocks[0];
+    if (blocks[1] && !isProbablyNotAName(blocks[1])) firstName = blocks[1];
+
+    if (!lastName || !firstName) {
+      const combined = splitCombinedSurnameGiven(after);
+      if (combined) {
+        lastName = combined.last;
+        firstName = combined.given;
+      }
+    }
+  }
+
+  if (!lastName) {
+    lastName =
+      findValueNearLabel(/\b(?:last\s*name|surname|family\s*name|urname)\b\s*[:\-]*/i) ||
+      "";
+  }
+  if (!firstName) {
+    firstName =
+      findValueNearLabel(/\b(?:first\s*name|given\s*name|iven\s*name|even\s*name)\b\s*[:\-]*/i) ||
+      "";
+  }
+  middleName =
+    findValueNearLabel(/\b(?:middle\s*name|m\.?i\.?|mi)\b\s*[:\-]*/i) || "";
+
+  if (firstName || lastName || middleName) {
+    const full = `${lastName}${lastName && firstName ? ", " : ""}${firstName}${
+      middleName ? ` ${middleName}` : ""
+    }`.trim();
+    if (full.length >= 4 && full.length <= 80) return full;
+  }
+
   const m1 = labeled.match(/\b(?:Name|Student Name)\s*[:\-]\s*(.+)$/im);
   if (m1 && m1[1]) {
-    const candidate = String(m1[1]).trim();
-    if (candidate.length >= 4 && candidate.length <= 80) return candidate;
+    const candidate = cleanNamePart(m1[1]);
+    if (candidate.length >= 4 && candidate.length <= 80 && !isProbablyNotAName(candidate)) {
+      return candidate;
+    }
   }
 
   // Fallback: pick the first long-ish line that looks like a name
@@ -163,7 +357,7 @@ function extractNameFromOcrText(text) {
     const digits = (l.match(/\d/g) || []).length;
     if (digits > Math.max(3, Math.floor(l.length / 3))) continue;
     // likely name line
-    if (/[A-Za-z]{2,}/.test(l)) return l;
+    if (/[A-Za-z]{2,}/.test(l) && !isProbablyNotAName(l)) return l;
   }
 
   return "";
@@ -242,24 +436,100 @@ async function ocrFirstPageFromPdfFile(file) {
 
   await page.render({ canvasContext: ctx, viewport }).promise;
 
+  function preprocessForOcr(srcCanvas) {
+    const out = document.createElement("canvas");
+    out.width = srcCanvas.width;
+    out.height = srcCanvas.height;
+    const octx = out.getContext("2d", { willReadFrequently: true });
+    try {
+      octx.drawImage(srcCanvas, 0, 0);
+      const img = octx.getImageData(0, 0, out.width, out.height);
+      const d = img.data;
+
+      // Simple grayscale + threshold to boost contrast on scanned forms.
+      // (Keeps the implementation lightweight and fully offline.)
+      for (let i = 0; i < d.length; i += 4) {
+        const r = d[i];
+        const g = d[i + 1];
+        const b = d[i + 2];
+        const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+        const v = lum > 190 ? 255 : 0;
+        d[i] = v;
+        d[i + 1] = v;
+        d[i + 2] = v;
+      }
+      octx.putImageData(img, 0, 0);
+    } catch {
+      // ignore preprocessing failures
+    }
+    return out;
+  }
+
+  // Crop a region where DepEd Form 137 typically places the student name.
+  // This improves OCR accuracy versus scanning the entire page header/footer.
+  const nameCropCanvas = document.createElement("canvas");
+  const nameCropCtx = nameCropCanvas.getContext("2d");
+  const cropX = Math.floor(canvas.width * 0.04);
+  const cropY = Math.floor(canvas.height * 0.16);
+  const cropW = Math.floor(canvas.width * 0.92);
+  const cropH = Math.floor(canvas.height * 0.26);
+  nameCropCanvas.width = cropW;
+  nameCropCanvas.height = cropH;
+  try {
+    nameCropCtx.drawImage(canvas, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+  } catch {
+    // ignore crop failures; fallback to full-page OCR
+  }
+
+  const preppedCropCanvas = preprocessForOcr(nameCropCanvas);
+
   try {
     const { createWorker } = await import("tesseract.js");
-    const worker = await createWorker({
+    const worker = await createWorker("eng", undefined, {
       // Serve everything locally from /public/tesseract (offline)
       workerPath: "/tesseract/worker.min.js",
       corePath: "/tesseract/tesseract-core.wasm.js",
       langPath: "/tesseract",
+      gzip: false,
       logger: () => {},
     });
 
-    await worker.loadLanguage("eng");
-    await worker.initialize("eng");
+    try {
+      await worker.setParameters({
+        // Treat as a uniform block of text; more stable for forms.
+        tessedit_pageseg_mode: "6",
+        // Encourage better spacing retention.
+        preserve_interword_spaces: "1",
+        // Hint higher DPI for scanned docs.
+        user_defined_dpi: "300",
+      });
+    } catch {
+      // ignore parameter errors
+    }
+
     const {
       data: { text },
     } = await worker.recognize(canvas);
+
+    let nameText = "";
+    try {
+      const r2 = await worker.recognize(preppedCropCanvas);
+      nameText = String(r2?.data?.text || "");
+    } catch {
+      // ignore crop OCR errors
+    }
+
+    try {
+      console.groupCollapsed("[OCR] Raw Text Output");
+      console.log("[OCR] Full-page text:\n", String(text || ""));
+      console.log("[OCR] Cropped text:\n", String(nameText || ""));
+      console.groupEnd();
+    } catch {
+      // ignore console failures
+    }
     await worker.terminate();
 
-    return String(text || "");
+    return `${String(text || "")}\n${nameText}`.trim();
   } catch (e) {
     const msg = String(e?.message || "");
     if (
@@ -306,6 +576,7 @@ export default function StaffPage() {
   const router = useRouter();
   const fileInputRef = useRef(null);
   const docsFileInputRef = useRef(null);
+  const newStudentNoInputRef = useRef(null);
   const searchTimerRef = useRef(null);
   const toastTimerRef = useRef(null);
 
@@ -2601,7 +2872,40 @@ export default function StaffPage() {
                         type="text"
                         className="form-input font-mono"
                         placeholder="202X-XXXXX-MN-0"
+                        ref={newStudentNoInputRef}
                         value={newRec.studentNo}
+                        onKeyDown={(e) => {
+                          if (e.key !== "Backspace") return;
+                          const el = e.currentTarget;
+                          const start = el.selectionStart;
+                          const end = el.selectionEnd;
+                          if (start == null || end == null) return;
+                          if (start !== end) return;
+                          if (start <= 0) return;
+                          const v = String(el.value || "");
+                          if (v[start - 1] !== "-") return;
+                          if (start < 2) return;
+
+                          e.preventDefault();
+
+                          const raw = v.slice(0, start - 2) + v.slice(start - 1);
+                          const masked = applyStudentNoMask(raw);
+                          setNewRec((p) => ({
+                            ...p,
+                            studentNo: masked.value,
+                          }));
+
+                          const nextPos = Math.max(0, start - 2);
+                          requestAnimationFrame(() => {
+                            const node = newStudentNoInputRef.current;
+                            if (!node) return;
+                            try {
+                              node.setSelectionRange(nextPos, nextPos);
+                            } catch {
+                              // ignore
+                            }
+                          });
+                        }}
                         onChange={(e) => {
                           setUploadError("");
                           setNewRecStudentNoTouched(true);
