@@ -8,18 +8,20 @@ export const dynamic = "force-dynamic";
 
 export async function DELETE(req, { params }) {
   try {
-    const { id } = await params;
-    console.log(`[DELETE BACKUP] Attempting to delete backup with ID: ${id}`);
+    const { id: idStr } = await params;
+    const id = Number(idStr);
+    console.log(`[DELETE BACKUP] Attempting to delete backup with ID: ${id} (Original: ${idStr})`);
 
-    if (!id) return NextResponse.json({ ok: false, error: "Missing ID" }, { status: 400 });
+    if (isNaN(id)) return NextResponse.json({ ok: false, error: "Invalid ID" }, { status: 400 });
 
     const backup = await getBackupById(id);
     if (!backup) {
-      console.log(`[DELETE BACKUP] Backup not found in DB for ID: ${id}`);
+      console.log(`[DELETE BACKUP] Backup record not found in DB for ID: ${id}`);
       return NextResponse.json({ ok: false, error: "Backup record not found" }, { status: 409 });
     }
 
     console.log(`[DELETE BACKUP] Found backup in DB: ${backup.filename}`);
+    const backupsDir = getBackupsDir();
     const filePath = path.join(backupsDir, backup.filename);
 
     // Delete file from disk if it exists
