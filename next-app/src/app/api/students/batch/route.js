@@ -1,7 +1,19 @@
 import { NextResponse } from "next/server";
-import { createStudent } from "../../../../lib/studentsRepo";
+import { createStudent, listCourses } from "../../../../lib/studentsRepo";
 
 export const runtime = "nodejs";
+
+export async function GET() {
+  try {
+    const courses = await listCourses();
+    return NextResponse.json({ ok: true, data: courses });
+  } catch (e) {
+    return NextResponse.json(
+      { ok: false, error: "Failed to load courses" },
+      { status: 500 }
+    );
+  }
+}
 
 function validateStudentPayload(body) {
   const studentNo = String(body?.studentNo || "").trim();

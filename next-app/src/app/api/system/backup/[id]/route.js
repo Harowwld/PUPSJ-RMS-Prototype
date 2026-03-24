@@ -22,14 +22,34 @@ export async function DELETE(req, { params }) {
 
     console.log(`[DELETE BACKUP] Found backup in DB: ${backup.filename}`);
     const backupsDir = getBackupsDir();
-    const filePath = path.join(backupsDir, backup.filename);
+    const filePath = path.resolve(backupsDir, backup.filename);
+    console.log(`[DELETE BACKUP] Resolved absolute file path: ${filePath}`);
 
     // Delete file from disk if it exists
     if (fs.existsSync(filePath)) {
-      console.log(`[DELETE BACKUP] Deleting file from disk: ${filePath}`);
-      fs.unlinkSync(filePath);
+      try {
+        console.log(`[DELETE BACKUP] File exists. Attempting to unlink: ${filePath}`);
+        fs.unlinkSync(filePath);
+        console.log(`[DELETE BACKUP] Successfully unlinked file: ${filePath}`);
+      } catch (unlinkErr) {
+        console.error(`[DELETE BACKUP] Failed to unlink file: ${filePath}`, unlinkErr);
+        // We still want to proceed with DB deletion if the file operation failed
+        // but maybe we should throw or return error if it's a permission issue?
+      }
     } else {
-      console.log(`[DELETE BACKUP] File not found on disk, skipping file deletion: ${filePath}`);
+      console.log(`[DELETE BACKUP] File NOT FOUND on disk at: ${filePath}`);
+    }
+
+    // Also check external media
+    const EXTERNAL_BACKUP_PATH = process.env.EXTERNAL_BACKUP_PATH || path.join(process.cwd(), ".local", "external_media");
+    const externalPath = path.resolve(EXTERNAL_BACKUP_PATH, backup.filename);
+    if (fs.existsSync(externalPath)) {
+      try {
+        console.log(`[DELETE BACKUP] Found synced file on external media, deleting: ${externalPath}`);
+        fs.unlinkSync(externalPath);
+      } catch (extErr) {
+        console.error(`[DELETE BACKUP] Failed to delete external file: ${externalPath}`, extErr);
+      }
     }
 
     // Delete record from database

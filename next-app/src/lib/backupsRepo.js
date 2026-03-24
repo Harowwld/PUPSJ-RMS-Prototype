@@ -1,6 +1,8 @@
 import { dbAll, dbGet, dbRun } from "./sqlite";
 import path from "node:path";
 import fs from "node:fs";
+import crypto from "node:crypto";
+import AdmZip from "adm-zip";
 
 export function getLocalDir() {
   return process.env.LOCAL_DATA_DIR
@@ -66,4 +68,53 @@ export async function updateBackupStatus(id, field, status) {
 export async function deleteBackupRecord(id) {
   const result = await dbRun(`DELETE FROM backups WHERE id = ?`, [id]);
   return result.changes;
+}
+
+export async function executeBackup() {
+  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+  const backupFilename = `backup-${timestamp}.zip`;
+  const backupsDir = getBackupsDir();
+  const backupPath = path.join(backupsDir, backupFilename);
+  console.log(`[BACKUP] Creating: ${backupPath}`);
+  
+  const localDir = getLocalDir();
+  const dbPath = path.join(localDir, "db.sqlite");
+  const uploadsDir = path.join(localDir, "uploads");
+  
+  // Create the ZIP archive
+  const zip = new AdmZip();
+
+  // Add Database
+  if (fs.existsSync(dbPath)) {
+    zip.addLocalFile(dbPath, "", "db.sqlite");
+  }
+  
+  // Add Uploads folder
+  if (fs.existsSync(uploadsDir)) {
+    zip.addLocalFolder(uploadsDir, "uploads");
+  }
+  
+  // Save the ZIP as a standard, unencrypted archive
+  zip.writeZip(backupPath);
+
+  // Verify file was actually created and has size
+  if (!fs.existsSync(backupPath) || fs.statSync(backupPath).size === 0) {
+      throw new Error("Failed to write ZIP file to disk or file is empty.");
+  }
+
+  // Calculate Checksum (SHA-256) for integrity verification
+  const fileBuffer = fs.readFileSync(backupPath);
+  const hashSum = crypto.createHash("sha256");
+  hashSum.update(fileBuffer);
+  const checksum = hashSum.digest("hex");
+  const sizeBytes = fileBuffer.length;
+  
+  // Record in DB
+  const record = await createBackupRecord({
+    filename: backupFilename,
+    sizeBytes,
+    checksum,
+  });
+  
+  return record;
 }
