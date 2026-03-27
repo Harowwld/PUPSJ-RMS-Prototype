@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
 export default function ConfirmModal({
   open,
   title,
@@ -35,21 +42,13 @@ export default function ConfirmModal({
   const v = variantClasses[variant] || variantClasses.danger;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 animate-fade-in">
-      <div className="w-full max-w-md bg-white rounded-brand border border-gray-200 shadow-xl overflow-hidden animate-scale-in">
-        <div className={`p-6 border-b border-gray-200 flex justify-between items-center ${v.bg}`}>
-          <div>
-            <h3 className={`font-bold text-lg flex items-center gap-2 ${v.text}`}>
-              <i className={v.icon}></i> {title}
-            </h3>
-          </div>
-          <button
-            onClick={onCancel}
-            className="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50"
-          >
-            <i className="ph-bold ph-x text-lg"></i>
-          </button>
-        </div>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white rounded-brand border-gray-200 shadow-xl">
+        <DialogHeader className={`p-6 border-b border-gray-200 flex flex-row justify-between items-center space-y-0 ${v.bg}`}>
+          <DialogTitle className={`font-bold text-lg flex items-center gap-2 ${v.text}`}>
+            <i className={v.icon}></i> {title}
+          </DialogTitle>
+        </DialogHeader>
         <div className="p-8">
           <div className="flex flex-col items-center text-center">
             <div className={`w-16 h-16 ${v.iconBg} ${v.iconText} rounded-full flex items-center justify-center mb-4`}>
@@ -76,7 +75,7 @@ export default function ConfirmModal({
             </div>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

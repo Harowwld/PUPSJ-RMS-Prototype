@@ -314,11 +314,7 @@ export default function ScanUploadTab({
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50">
-          <datalist id="docTypeOptions">
-            {docTypes.map((t) => (
-              <option key={t} value={t} />
-            ))}
-          </datalist>
+
 
           {uploadMode === "existing" ? (
             <div className="space-y-5">
@@ -427,16 +423,20 @@ export default function ScanUploadTab({
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
                   Document Type
                 </label>
-
-                <input
-                  className="form-select no-glow"
-                  list="docTypeOptions"
+                <select
+                  className="form-select"
                   value={exist.docType}
-                  placeholder="Type document type..."
                   onChange={(e) => {
                     setExist((p) => ({ ...p, docType: e.target.value }));
                   }}
-                />
+                >
+                  <option value="">Select Document Type...</option>
+                  {docTypes.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <button
@@ -663,15 +663,20 @@ export default function ScanUploadTab({
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
                   Document Type
                 </label>
-                <input
-                  className="form-select no-glow"
-                  list="docTypeOptions"
+                <select
+                  className="form-select"
                   value={newRec.docType}
-                  placeholder="Type document type..."
                   onChange={(e) => {
                     setNewRec((p) => ({ ...p, docType: e.target.value }));
                   }}
-                />
+                >
+                  <option value="">Select Document Type...</option>
+                  {docTypes.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
               </div>
 
               <button
@@ -703,7 +708,7 @@ export default function ScanUploadTab({
                     onChange={(e) => handleCsvFileSelect(e.target.files?.[0] || null)}
                   />
                   <div
-                    className={`flex-shrink-0 w-32 h-11 rounded-brand border-2 border-dashed border-gray-400 bg-gray-50 flex items-center justify-center cursor-pointer hover:border-pup-maroon hover:bg-red-50/50 transition-all ${csvDropActive ? 'bg-red-50 border-pup-maroon' : ''}`}
+                    className={`shrink-0 w-32 h-11 rounded-brand border-2 border-dashed border-gray-400 bg-gray-50 flex items-center justify-center cursor-pointer hover:border-pup-maroon hover:bg-red-50/50 transition-all ${csvDropActive ? 'bg-red-50 border-pup-maroon' : ''}`}
                     onClick={() => csvInputRef.current?.click()}
                     onDragOver={(e) => {
                       e.preventDefault();

@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
 export default function PDFPreviewModal({
   open,
   onClose,
@@ -8,35 +15,23 @@ export default function PDFPreviewModal({
   if (!open) return null;
 
   return (
-    <div
-      id="previewModal"
-      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center animate-fade-in"
-      onClick={(e) => {
-        if (e.target.id === "previewModal") onClose();
-      }}
-    >
-      <div className="bg-white w-full max-w-5xl h-[90vh] rounded-brand shadow-2xl overflow-hidden flex flex-col animate-scale-in">
-        <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="max-w-5xl h-[90vh] p-0 flex flex-col overflow-hidden rounded-brand border-none shadow-2xl">
+        <DialogHeader className="p-4 border-b border-gray-200 bg-gray-50 flex flex-row items-center space-y-0">
           <div className="flex items-center gap-3">
             <div className="bg-red-50 p-2 rounded-brand border border-red-100">
               <i className="ph-fill ph-file-pdf text-2xl text-pup-maroon"></i>
             </div>
             <div>
-              <h3 className="font-bold text-pup-maroon text-lg leading-tight">
+              <DialogTitle className="font-bold text-pup-maroon text-lg leading-tight text-left">
                 {preview.docType}
-              </h3>
-              <p className="text-sm text-gray-700 font-medium">
+              </DialogTitle>
+              <p className="text-sm text-gray-700 font-medium text-left">
                 {preview.studentName}
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-500 hover:text-pup-maroon transition-colors p-2 rounded-brand"
-          >
-            <i className="ph-bold ph-x text-xl"></i>
-          </button>
-        </div>
+        </DialogHeader>
 
         <div className="flex-1 bg-gray-100 p-0 flex flex-col overflow-hidden relative">
           <div className="px-4 py-3 border-b border-gray-200 bg-white flex items-center justify-between gap-3">
@@ -69,7 +64,7 @@ export default function PDFPreviewModal({
             </div>
           )}
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

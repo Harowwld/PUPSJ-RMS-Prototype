@@ -1,5 +1,16 @@
 "use client";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+
 export default function EditUserModal({
   open,
   editForm,
@@ -7,38 +18,36 @@ export default function EditUserModal({
   onClose,
   onSubmit,
 }) {
-  if (!open) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center animate-fade-in">
-      <div className="bg-white rounded-brand shadow-lg w-full max-w-2xl overflow-hidden transform scale-95 transition-transform duration-200">
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50/30">
-          <div>
-            <h3 className="font-bold text-pup-maroon text-lg flex items-center gap-2">
-              <i className="ph-duotone ph-pencil-simple"></i> Edit Account
-            </h3>
-            <p className="text-xs text-gray-500 mt-1">
-              Update staff details and permissions.
-            </p>
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl bg-gray-50 p-0 overflow-hidden border-gray-200 sm:rounded-brand rounded-brand">
+        <DialogHeader className="p-6 bg-white border-b border-gray-200 pb-5">
+          <div className="flex items-center gap-4">
+            <div className="w-10 h-10 rounded-full bg-red-50 text-pup-maroon flex items-center justify-center border border-red-100 shadow-sm shrink-0">
+              <i className="ph-duotone ph-pencil-simple text-xl"></i>
+            </div>
+            <div>
+              <DialogTitle className="text-xl font-bold text-gray-900 tracking-tight">
+                Edit Account Details
+              </DialogTitle>
+              <DialogDescription className="text-sm font-medium text-gray-500 mt-0.5">
+                Update staff details and access permissions.
+              </DialogDescription>
+            </div>
           </div>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50"
-          >
-            <i className="ph-bold ph-x text-lg"></i>
-          </button>
-        </div>
-        <div className="p-8">
-          <form onSubmit={onSubmit} className="space-y-6">
+        </DialogHeader>
+
+        <form onSubmit={onSubmit}>
+          <div className="p-8 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                  Employee ID *
+                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                  Employee ID <span className="text-pup-maroon">*</span>
                 </label>
-                <input
+                <Input
                   type="text"
                   required
-                  className="form-input font-mono"
+                  className="font-mono bg-white shadow-sm"
                   placeholder="e.g. 2023-001"
                   value={editForm.id}
                   onChange={(e) =>
@@ -47,12 +56,12 @@ export default function EditUserModal({
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                  System Role *
+                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                  System Role <span className="text-pup-maroon">*</span>
                 </label>
                 <select
                   required
-                  className="form-select"
+                  className="w-full flex h-9 rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                   value={editForm.role}
                   onChange={(e) =>
                     setEditForm((f) => ({ ...f, role: e.target.value }))
@@ -69,13 +78,13 @@ export default function EditUserModal({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                  First Name *
+                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                  First Name <span className="text-pup-maroon">*</span>
                 </label>
-                <input
+                <Input
                   type="text"
                   required
-                  className="form-input"
+                  className="bg-white shadow-sm"
                   placeholder="Juan"
                   value={editForm.fname}
                   onChange={(e) =>
@@ -84,13 +93,13 @@ export default function EditUserModal({
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                  Last Name *
+                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                  Last Name <span className="text-pup-maroon">*</span>
                 </label>
-                <input
+                <Input
                   type="text"
                   required
-                  className="form-input"
+                  className="bg-white shadow-sm"
                   placeholder="Dela Cruz"
                   value={editForm.lname}
                   onChange={(e) =>
@@ -101,39 +110,40 @@ export default function EditUserModal({
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                Username *
+              <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                Username / Email <span className="text-pup-maroon">*</span>
               </label>
-              <input
+              <Input
                 type="text"
                 required
-                className="form-input"
-                placeholder="username"
+                className="bg-white shadow-sm"
+                placeholder="username@pup.edu.ph"
                 value={editForm.email}
                 onChange={(e) =>
                   setEditForm((f) => ({ ...f, email: e.target.value }))
                 }
               />
             </div>
+          </div>
 
-            <div className="border-t border-gray-200 pt-6 flex items-center justify-end gap-3">
-              <button
-                type="button"
-                onClick={onClose}
-                className="px-5 py-2.5 border border-gray-300 rounded-brand text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-6 py-2.5 bg-pup-maroon text-white rounded-brand text-sm font-bold hover:bg-red-900 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
-              >
-                <i className="ph-bold ph-floppy-disk"></i> Save Changes
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+          <DialogFooter className="p-4 bg-white border-t border-gray-200">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onClose}
+              className="mr-2"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="bg-pup-maroon text-white hover:bg-red-900 shadow-md flex items-center gap-2"
+            >
+              <i className="ph-bold ph-floppy-disk text-lg"></i> Save Changes
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

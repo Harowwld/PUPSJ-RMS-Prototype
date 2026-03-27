@@ -1,5 +1,13 @@
 "use client";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+
 export default function OCRPromptModal({
   open,
   onClose,
@@ -10,18 +18,14 @@ export default function OCRPromptModal({
   if (!open) return null;
 
   return (
-    <div
-      id="ocrPromptModal"
-      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-fade-in"
-      onClick={(e) => {
-        if (e.target.id === "ocrPromptModal") onClose();
-      }}
-    >
-      <div className="w-full max-w-lg bg-white rounded-brand border border-gray-300 shadow-lg p-6 animate-scale-in">
-        <div className="text-lg font-bold text-pup-maroon">Detected from PDF</div>
-        <div className="mt-2 text-sm text-gray-700 font-medium">
-          Review the detected info and choose where to apply it.
-        </div>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="sm:max-w-lg p-6 bg-white rounded-brand border-gray-300 shadow-lg">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-bold text-pup-maroon">Detected from PDF</DialogTitle>
+          <DialogDescription className="mt-2 text-sm text-gray-700 font-medium">
+            Review the detected info and choose where to apply it.
+          </DialogDescription>
+        </DialogHeader>
 
         <div className="mt-4 space-y-2 text-sm">
           <div className="flex justify-between gap-4">
@@ -32,13 +36,13 @@ export default function OCRPromptModal({
           </div>
           <div className="flex justify-between gap-4">
             <div className="text-gray-600 font-bold">Name</div>
-            <div className="text-gray-900 font-bold text-right break-words">
+            <div className="text-gray-900 font-bold text-right wrap-break-word">
               {ocrSuggestion?.name || "(not detected)"}
             </div>
           </div>
           <div className="flex justify-between gap-4">
             <div className="text-gray-600 font-bold">Document Type</div>
-            <div className="text-gray-900 font-bold text-right break-words">
+            <div className="text-gray-900 font-bold text-right wrap-break-word">
               {ocrSuggestion?.docType || "(not detected)"}
             </div>
           </div>
@@ -83,7 +87,7 @@ export default function OCRPromptModal({
             Dismiss
           </button>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

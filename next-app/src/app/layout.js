@@ -1,4 +1,5 @@
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata = {
   title: "PUP E-Manage",
@@ -22,7 +23,10 @@ export default function RootLayout({ children }) {
           href="/assets/vendor/phosphor/light/style.css"
         />
       </head>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        {children}
+        <Toaster richColors position="top-right" />
+      </body>
     </html>
   );
 }

@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
 export default function DocTypeModal({
   open,
   onClose,
@@ -13,24 +20,11 @@ export default function DocTypeModal({
   if (!open) return null;
 
   return (
-    <div
-      id="docTypeModal"
-      className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4 animate-fade-in"
-      onClick={(e) => {
-        if (e.target.id === "docTypeModal") onClose();
-      }}
-    >
-      <div className="w-full max-w-md bg-white rounded-brand border border-gray-200 shadow-2xl overflow-hidden animate-scale-in">
-        <div className="p-5 border-b border-gray-200 bg-gray-50/60 flex items-center justify-between">
-          <h3 className="font-bold text-pup-maroon">Add Document Type</h3>
-          <button
-            type="button"
-            onClick={onClose}
-            className="text-gray-500 hover:text-pup-maroon transition-colors p-2 rounded-brand"
-          >
-            <i className="ph-bold ph-x text-lg"></i>
-          </button>
-        </div>
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white rounded-brand border-gray-200 shadow-2xl">
+        <DialogHeader className="p-5 border-b border-gray-200 bg-gray-50/60 flex flex-row items-center justify-between space-y-0">
+          <DialogTitle className="font-bold text-pup-maroon">Add Document Type</DialogTitle>
+        </DialogHeader>
 
         <div className="p-5">
           <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
@@ -81,7 +75,7 @@ export default function DocTypeModal({
             </button>
           </div>
         </div>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

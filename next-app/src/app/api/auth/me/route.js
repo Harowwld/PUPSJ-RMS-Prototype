@@ -29,6 +29,8 @@ export async function GET(req) {
         role: currentRole,
         status: currentStatus,
         username: payload.username || null,
+        fname: staff?.fname || "",
+        lname: staff?.lname || "",
         mustChangePassword: Boolean(payload.mustChangePassword),
         last_active: payload.last_active || null,
       },

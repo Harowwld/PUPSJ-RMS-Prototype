@@ -5,9 +5,6 @@ export default function DocumentsTab({
   setDocsForm,
   refreshDocuments,
   docTypes,
-  docsFileInputRef,
-  setDocsFile,
-  uploadDocument,
   docsLoading,
   docsError,
   docsRows,
@@ -19,14 +16,12 @@ export default function DocumentsTab({
         <div className="p-6 border-b border-gray-200 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 flex-none">
           <div>
             <h2 className="text-xl font-bold text-pup-maroon">Documents</h2>
-            <p className="text-sm text-gray-600">
-              Stored locally in <code>.local/</code> (SQLite + uploaded PDFs).
-            </p>
+            <p className="text-sm text-gray-500 mt-1 font-medium">Search and manage existing student document records.</p>
           </div>
         </div>
 
         <div className="p-6 bg-gray-50/50 flex-none border-b border-gray-200">
-          <form onSubmit={uploadDocument} className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-end">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
             <div className="lg:col-span-1">
               <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
                 Student No
@@ -91,43 +86,7 @@ export default function DocumentsTab({
                 ))}
               </select>
             </div>
-
-            <div className="lg:col-span-1">
-              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                PDF File
-              </label>
-              <input
-                ref={docsFileInputRef}
-                type="file"
-                accept=".pdf"
-                className="block w-full h-11 text-sm text-gray-600 file:mr-3 file:h-11 file:px-4 file:rounded-brand file:border file:border-gray-300 file:bg-white file:text-gray-700 file:font-bold hover:file:border-pup-maroon"
-                onChange={(e) => setDocsFile(e.target.files?.[0] || null)}
-                required
-              />
-            </div>
-
-            <div className="lg:col-span-1 flex gap-2">
-              <button
-                type="submit"
-                disabled={docsLoading}
-                className={`flex-1 bg-pup-maroon text-white h-11 rounded-brand font-bold text-sm hover:bg-red-900 transition-colors ${
-                  docsLoading ? "opacity-75 cursor-not-allowed" : ""
-                }`}
-              >
-                Upload
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  setDocsFile(null);
-                  if (docsFileInputRef.current) docsFileInputRef.current.value = "";
-                }}
-                className="px-4 h-11 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
-              >
-                Clear
-              </button>
-            </div>
-          </form>
+          </div>
 
           {docsError ? (
             <div className="mt-4 p-3 rounded-brand bg-red-50 border border-red-200 text-sm text-red-800 font-medium">
@@ -161,10 +120,36 @@ export default function DocumentsTab({
                     docsForm.studentNo.trim() ||
                     docsForm.studentName.trim() ||
                     docsForm.docType.trim()
-                  ) ? null : docsRows.length === 0 ? (
+                  ) ? (
                   <tr>
-                    <td colSpan={7} className="p-6 text-center text-gray-500 font-medium">
-                      No matching students found.
+                    <td colSpan={7} className="p-0">
+                      <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
+                        <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                          <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon"></i>
+                        </div>
+                        <div className="text-lg font-bold text-gray-900">
+                          Search Documents
+                        </div>
+                        <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                          Enter a student number, name, or select a document type to find related records.
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : docsRows.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="p-0">
+                      <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
+                        <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                          <i className="ph-duotone ph-warning-circle text-3xl text-red-600"></i>
+                        </div>
+                        <div className="text-lg font-bold text-gray-900">
+                          No Results Found
+                        </div>
+                        <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                          We couldn't find any documents matching your search criteria.
+                        </div>
+                      </div>
                     </td>
                   </tr>
                 ) : (
@@ -267,19 +252,12 @@ export default function DocumentsTab({
             </table>
           </div>
 
-          <div className="mt-4 flex justify-between items-center">
+          <div className="mt-4 flex items-center">
             <div className="text-xs text-gray-500 font-medium">
               {docsForm.studentNo.trim() || docsForm.studentName.trim() || docsForm.docType.trim()
                 ? `Showing ${docsRows.length} documents`
                 : ""}
             </div>
-            <button
-              type="button"
-              onClick={() => refreshDocuments(docsForm)}
-              className="px-4 h-11 rounded-brand bg-gray-100 border border-gray-200 text-gray-700 font-bold text-xs hover:border-pup-maroon"
-            >
-              Refresh
-            </button>
           </div>
         </div>
       </section>

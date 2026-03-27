@@ -1,6 +1,13 @@
 "use client";
 
 import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 export default function PasswordChangeModal({
   open,
@@ -76,16 +83,16 @@ export default function PasswordChangeModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-md bg-white rounded-brand border border-gray-200 shadow-xl overflow-hidden animate-scale-in">
-        <div className="p-5 border-b border-gray-200 bg-gray-50/60">
-          <h3 className="font-bold text-pup-maroon">Change Password</h3>
-          <p className="text-xs text-gray-500 mt-1">
+    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-brand border-gray-200">
+        <DialogHeader className="p-5 border-b border-gray-200 bg-gray-50/60">
+          <DialogTitle className="font-bold text-pup-maroon">Change Password</DialogTitle>
+          <DialogDescription className="text-xs text-gray-500 mt-1">
             {authUser?.mustChangePassword
               ? "First login detected. Please change your password to continue."
               : "Update your account password."}
-          </p>
-        </div>
+          </DialogDescription>
+        </DialogHeader>
         <form onSubmit={submitChangePassword} className="p-5 space-y-4">
           {pwError ? (
             <div className="text-sm text-red-600 font-semibold">{pwError}</div>
@@ -149,7 +156,7 @@ export default function PasswordChangeModal({
             </button>
           </div>
         </form>
-      </div>
-    </div>
+      </DialogContent>
+    </Dialog>
   );
 }

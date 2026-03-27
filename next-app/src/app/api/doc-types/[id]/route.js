@@ -3,7 +3,7 @@ import { updateDocType, deleteDocType } from "../../../../lib/docTypesRepo";
 
 export async function PUT(req, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const body = await req.json().catch(() => ({}));
     const { name } = body;
 
@@ -19,7 +19,7 @@ export async function PUT(req, { params }) {
 
 export async function DELETE(req, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     await deleteDocType(id);
     return NextResponse.json({ ok: true });
   } catch (err) {
