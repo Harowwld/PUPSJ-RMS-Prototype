@@ -15,6 +15,7 @@ import RegisterAccountTab from "@/components/admin/RegisterAccountTab";
 import AuditLogsTab from "@/components/admin/AuditLogsTab";
 import BackupMaintenanceTab from "@/components/admin/BackupMaintenanceTab";
 import EditUserModal from "@/components/admin/EditUserModal";
+import SystemConfigTab from "@/components/admin/SystemConfigTab";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -468,6 +469,12 @@ export default function AdminPage() {
           <i className="ph-bold ph-scroll"></i> Audit Logs
         </button>
         <button
+          onClick={() => setView("system_data")}
+          className={`btn-nav ${view === "system_data" ? "active" : ""}`}
+        >
+          <i className="ph-bold ph-gear"></i> System Data
+        </button>
+        <button
           onClick={() => setView("system")}
           className={`btn-nav ${view === "system" || view === "backup" ? "active" : ""}`}
         >
@@ -533,6 +540,13 @@ export default function AdminPage() {
             setLogsPerPage={setLogsPerPage}
             logSearch={logSearch}
             setLogSearch={setLogSearch}
+          />
+        )}
+
+        {view === "system_data" && (
+          <SystemConfigTab
+            showToast={showToast}
+            logAdminAction={logAdminAction}
           />
         )}
 

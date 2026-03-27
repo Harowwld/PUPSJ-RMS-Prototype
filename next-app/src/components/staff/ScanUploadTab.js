@@ -35,6 +35,7 @@ export default function ScanUploadTab({
   newStudentNoInputRef,
   newAvailYears,
   rooms,
+  sysSections = [],
   csvInputRef,
   handleCsvFileSelect,
   csvDropActive,
@@ -589,8 +590,11 @@ export default function ScanUploadTab({
                     <option value="">
                       {newRec.year ? "Select Section..." : "Select year first..."}
                     </option>
-                    <option value="1">Section 1</option>
-                    <option value="2">Section 2</option>
+                    {sysSections.map((sec) => (
+                      <option key={sec.id} value={sec.name}>
+                        {sec.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>

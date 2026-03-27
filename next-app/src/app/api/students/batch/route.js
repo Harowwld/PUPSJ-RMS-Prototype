@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import { createStudent, listCourses } from "../../../../lib/studentsRepo";
+import { createStudent } from "../../../../lib/studentsRepo";
+import { listCourses } from "../../../../lib/coursesRepo";
 
 export const runtime = "nodejs";
 
 export async function GET() {
   try {
     const courses = await listCourses();
-    return NextResponse.json({ ok: true, data: courses });
+    return NextResponse.json({ ok: true, data: courses.map(c => c.code) });
   } catch (e) {
     return NextResponse.json(
       { ok: false, error: "Failed to load courses" },

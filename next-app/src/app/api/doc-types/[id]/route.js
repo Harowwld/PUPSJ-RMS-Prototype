@@ -1,0 +1,31 @@
+import { NextResponse } from "next/server";
+import { updateDocType, deleteDocType } from "../../../../lib/docTypesRepo";
+
+export async function PUT(req, { params }) {
+  try {
+    const { id } = params;
+    const body = await req.json().catch(() => ({}));
+    const { name } = body;
+
+    const updated = await updateDocType(id, name);
+    return NextResponse.json({ ok: true, data: updated });
+  } catch (err) {
+    return NextResponse.json(
+      { ok: false, error: err.message },
+      { status: 400 }
+    );
+  }
+}
+
+export async function DELETE(req, { params }) {
+  try {
+    const { id } = params;
+    await deleteDocType(id);
+    return NextResponse.json({ ok: true });
+  } catch (err) {
+    return NextResponse.json(
+      { ok: false, error: err.message },
+      { status: 400 }
+    );
+  }
+}

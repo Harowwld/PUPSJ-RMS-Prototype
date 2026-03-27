@@ -25,6 +25,7 @@ export default function StaffPage() {
   const [students, setStudents] = useState([]);
   const [docTypes, setDocTypes] = useState([]);
   const [courses, setCourses] = useState([]);
+  const [sections, setSections] = useState([]);
   const [allDocs, setAllDocs] = useState([]);
 
   const [currentLevel, setCurrentLevel] = useState("courses");
@@ -92,11 +93,12 @@ export default function StaffPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [sRes, dRes, cRes] = await Promise.all([fetch("/api/students"), fetch("/api/doc-types"), fetch("/api/students/batch")]);
-      const [sData, dData, cData] = await Promise.all([sRes.json(), dRes.json(), cRes.json()]);
+      const [sRes, dRes, cRes, secRes] = await Promise.all([fetch("/api/students"), fetch("/api/doc-types"), fetch("/api/courses"), fetch("/api/sections")]);
+      const [sData, dData, cData, secData] = await Promise.all([sRes.json(), dRes.json(), cRes.json(), secRes.json()]);
       setStudents(sData.data || []);
       setDocTypes(dData.data || []);
       setCourses(cData.data || []);
+      setSections(secData.data || []);
     } catch (err) { showToast("Failed to sync database", true); }
   }, [showToast]);
 
@@ -306,6 +308,7 @@ export default function StaffPage() {
           cabinets={cabinets} exist={exist} setExist={setExist} courses={courses} docTypes={docTypes} processSubmission={processSubmission}
           uploadError={uploadError} newRec={newRec} setNewRec={setNewRec} newRecStudentNoHint={newRecStudentNoHint} setNewRecStudentNoTouched={setNewRecStudentNoTouched}
           applyStudentNoMask={applyStudentNoMask} newStudentNoInputRef={newStudentNoInputRef} newAvailYears={[1, 2, 3, 4, 5]} rooms={rooms}
+          sysSections={sections}
           csvInputRef={csvInputRef} handleCsvFileSelect={(f) => {
             if (!f) return; setCsvFile(f); setCsvError(""); setCsvLoading(true);
             const r = new FileReader(); r.onload = (e) => {

@@ -117,11 +117,6 @@ export async function listStudents({
   );
 }
 
-export async function listCourses() {
-  const rows = await dbAll("SELECT DISTINCT course_code FROM students ORDER BY course_code ASC");
-  return rows.map(r => r.course_code);
-}
-
 export async function getStudentByStudentNo(studentNo) {
   const row = await dbGet("SELECT * FROM students WHERE student_no = ?", [studentNo]);
   return row || null;
