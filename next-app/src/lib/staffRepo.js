@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { dbAll, dbGet, dbRun } from "./sqlite";
+import { dbAll, dbGet, dbRun } from "./sqlite.js";
 
 function hashPassword(password) {
   return crypto.createHash("sha256").update(String(password)).digest("hex");

@@ -157,7 +157,7 @@ export default function StaffPage() {
     try {
       const res = await fetch("/api/documents");
       const data = await res.json();
-      setAllDocs(data.data || []);
+      setAllDocs(Array.isArray(data.data) ? data.data : []);
       docsLoadedRef.current = true;
     } catch {
       /* silent */
@@ -181,6 +181,7 @@ export default function StaffPage() {
         setLoading(false);
         setTimeout(() => {
           fetchData();
+          fetchAllDocs();
         }, 0);
       } catch {
         router.push("/");
@@ -520,14 +521,65 @@ export default function StaffPage() {
 
   const refreshDocuments = async (form) => {
     setDocsLoading(true);
+    setDocsError("");
     try {
-      const q = new URLSearchParams();
-      if (form.studentNo) q.append("studentNo", form.studentNo);
-      if (form.studentName) q.append("studentName", form.studentName);
-      if (form.docType) q.append("docType", form.docType);
-      const res = await fetch(`/api/documents?${q.toString()}`);
-      const data = await res.json();
-      setDocsRows(data.data || []);
+      const trimmedNo = String(form.studentNo || "").trim().toLowerCase();
+      const trimmedName = String(form.studentName || "").trim().toLowerCase();
+      const selectedType = String(form.docType || "").trim();
+
+      if (!trimmedNo && !trimmedName && !selectedType) {
+        setDocsRows([]);
+        return;
+      }
+
+      // Find matching students by student no or name
+      const matchingStudents = students.filter((s) => {
+        const studentNo = String(s.studentNo || "").toLowerCase();
+        const studentName = String(s.name || "").toLowerCase();
+
+        // Student No field: direct filter on ID
+        const matchIdField = trimmedNo ? studentNo.includes(trimmedNo) : true;
+
+        // Student Name field: acts as a flexible search across BOTH name and ID
+        const matchNameField = trimmedName
+          ? studentName.includes(trimmedName) || studentNo.includes(trimmedName)
+          : true;
+
+        return matchIdField && matchNameField;
+      });
+
+      if (matchingStudents.length === 0 || docTypes.length === 0) {
+        setDocsRows([]);
+        return;
+      }
+
+      const rows = [];
+
+      for (const student of matchingStudents) {
+        const studentDocs = allDocs.filter(
+          (d) => String(d.student_no || "") === String(student.studentNo || "")
+        );
+
+        for (const type of docTypes) {
+          if (selectedType && selectedType !== type) continue;
+
+          const doc = studentDocs.find((d) => d.doc_type === type) || null;
+
+          // If a document type filter is selected, only show uploaded documents
+          if (selectedType && !doc) continue;
+
+          rows.push({
+            id: doc?.id ?? `${student.studentNo}-${type}`,
+            student_no: student.studentNo,
+            student_name: student.name,
+            doc_type: type,
+            status: doc ? "uploaded" : "missing",
+            doc,
+          });
+        }
+      }
+
+      setDocsRows(rows);
     } catch {
       setDocsError("Failed to load documents");
     } finally {
