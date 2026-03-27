@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 
 export default function StaffDirectoryTab({
   staffData,
+  isLoading = false,
   search,
   setSearch,
   roleFilter,
@@ -186,7 +187,13 @@ export default function StaffDirectoryTab({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {filteredStaff.length === 0 ? (
+              {isLoading && staffData.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="p-8 text-center text-sm text-gray-500">
+                    Loading staff directory...
+                  </td>
+                </tr>
+              ) : filteredStaff.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="p-0">
                     <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">

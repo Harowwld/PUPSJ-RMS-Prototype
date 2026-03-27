@@ -20,9 +20,23 @@ import SystemConfigTab from "@/components/admin/SystemConfigTab";
 export default function AdminPage() {
   const router = useRouter();
   const toastTimerRef = useRef(null);
+  const loadedViewsRef = useRef({
+    directory: false,
+    logs: false,
+    system: false,
+    backup: false,
+    system_data: true,
+    create: true,
+  });
 
   const [view, setView] = useState("directory");
   const [toast, setToast] = useState({ open: false, msg: "", isError: false });
+  const [viewLoading, setViewLoading] = useState({
+    directory: false,
+    logs: false,
+    system: false,
+    backup: false,
+  });
 
   const [staffData, setStaffData] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
@@ -92,18 +106,23 @@ export default function AdminPage() {
   }, []);
 
   const refreshStaff = useCallback(async () => {
+    setViewLoading((prev) => ({ ...prev, directory: true }));
     try {
       const res = await fetch("/api/staff?limit=500");
       const json = await res.json();
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to load staff");
       setStaffData(Array.isArray(json.data) ? json.data : []);
+      loadedViewsRef.current.directory = true;
     } catch (err) {
       showToast(err.message, true);
+    } finally {
+      setViewLoading((prev) => ({ ...prev, directory: false }));
     }
   }, [showToast]);
 
   const refreshAuditLogs = useCallback(async () => {
+    setViewLoading((prev) => ({ ...prev, logs: true }));
     try {
       const offset = (logPage - 1) * logsPerPage;
       const resLogs = await fetch(
@@ -124,8 +143,11 @@ export default function AdminPage() {
           ip: r.ip || "—",
         })),
       );
+      loadedViewsRef.current.logs = true;
     } catch (err) {
       // silent
+    } finally {
+      setViewLoading((prev) => ({ ...prev, logs: false }));
     }
   }, [logPage, logsPerPage, logSearch]);
 
@@ -142,6 +164,7 @@ export default function AdminPage() {
   }, []);
 
   const refreshBackups = useCallback(async () => {
+    setViewLoading((prev) => ({ ...prev, system: true, backup: true }));
     try {
       const res = await fetch(`/api/system/backup?t=${Date.now()}`, {
         cache: "no-store",
@@ -149,9 +172,13 @@ export default function AdminPage() {
       const json = await res.json();
       if (res.ok && json?.ok) {
         setBackups(Array.isArray(json.data) ? json.data : []);
+        loadedViewsRef.current.system = true;
+        loadedViewsRef.current.backup = true;
       }
     } catch (err) {
       console.error("Failed to refresh backups:", err);
+    } finally {
+      setViewLoading((prev) => ({ ...prev, system: false, backup: false }));
     }
   }, []);
 
@@ -189,9 +216,10 @@ export default function AdminPage() {
         if (json?.data?.mustChangePassword) {
           setPwOpen(true);
         }
-        refreshStaff();
-        refreshAuditLogs();
-        refreshSystemHealth();
+        setTimeout(() => {
+          refreshStaff();
+          refreshSystemHealth();
+        }, 0);
       } catch {
         router.push("/");
       }
@@ -205,15 +233,43 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (view === "backup" || view === "system") {
-      refreshBackups();
+      // Render the tab first, then hydrate data in the background.
+      setTimeout(() => {
+        refreshBackups();
+      }, 0);
     }
   }, [view, refreshBackups]);
 
   useEffect(() => {
     if (view === "logs") {
-      refreshAuditLogs();
+      // Render the tab first, then hydrate data in the background.
+      setTimeout(() => {
+        refreshAuditLogs();
+      }, 0);
     }
   }, [view, refreshAuditLogs]);
+
+  const switchView = useCallback((nextView) => {
+    setView(nextView);
+    if (nextView === "directory" && !loadedViewsRef.current.directory) {
+      setTimeout(() => {
+        refreshStaff();
+      }, 0);
+    }
+    if (nextView === "logs" && !loadedViewsRef.current.logs) {
+      setTimeout(() => {
+        refreshAuditLogs();
+      }, 0);
+    }
+    if (
+      (nextView === "system" || nextView === "backup") &&
+      !loadedViewsRef.current.system
+    ) {
+      setTimeout(() => {
+        refreshBackups();
+      }, 0);
+    }
+  }, [refreshAuditLogs, refreshBackups, refreshStaff]);
 
   const [socket, setSocket] = useState(null);
 
@@ -302,7 +358,7 @@ export default function AdminPage() {
         email: "",
         status: "Active",
       });
-      setView("directory");
+      switchView("directory");
     } catch (err) {
       showToast(err.message, true);
     }
@@ -451,31 +507,31 @@ export default function AdminPage() {
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50 font-inter">
       <Header authUser={authUser} onLogout={handleLogout}>
         <button
-          onClick={() => setView("directory")}
+          onClick={() => switchView("directory")}
           className={`btn-nav ${view === "directory" ? "active" : ""}`}
         >
           <i className="ph-bold ph-users"></i> Staff Directory
         </button>
         <button
-          onClick={() => setView("create")}
+          onClick={() => switchView("create")}
           className={`btn-nav ${view === "create" ? "active" : ""}`}
         >
           <i className="ph-bold ph-user-plus"></i> Register Account
         </button>
         <button
-          onClick={() => setView("logs")}
+          onClick={() => switchView("logs")}
           className={`btn-nav ${view === "logs" ? "active" : ""}`}
         >
           <i className="ph-bold ph-scroll"></i> Audit Logs
         </button>
         <button
-          onClick={() => setView("system_data")}
+          onClick={() => switchView("system_data")}
           className={`btn-nav ${view === "system_data" ? "active" : ""}`}
         >
           <i className="ph-bold ph-gear"></i> System Data
         </button>
         <button
-          onClick={() => setView("system")}
+          onClick={() => switchView("system")}
           className={`btn-nav ${view === "system" || view === "backup" ? "active" : ""}`}
         >
           <i className="ph-bold ph-database"></i> Backup & Maintenance
@@ -486,6 +542,7 @@ export default function AdminPage() {
         {view === "directory" && (
           <StaffDirectoryTab
             staffData={staffData}
+            isLoading={viewLoading.directory}
             search={search}
             setSearch={setSearch}
             roleFilter={roleFilter}
@@ -507,7 +564,7 @@ export default function AdminPage() {
               }
             }}
             onExportData={exportData}
-            onSwitchView={setView}
+            onSwitchView={switchView}
           />
         )}
 
@@ -526,13 +583,14 @@ export default function AdminPage() {
               })
             }
             onCreateAccount={handleCreate}
-            onSwitchView={setView}
+            onSwitchView={switchView}
           />
         )}
 
         {view === "logs" && (
           <AuditLogsTab
             displayLogs={auditLogs}
+            isLoading={viewLoading.logs}
             logPage={logPage}
             setLogPage={setLogPage}
             logTotal={logTotal}
@@ -554,6 +612,7 @@ export default function AdminPage() {
           <BackupMaintenanceTab
             systemHealth={systemHealth}
             backups={backups}
+            isLoading={viewLoading.system || viewLoading.backup}
             onSimulateBackup={simulateBackup}
             onSyncExternal={syncExternal}
             onDownloadBackup={(b) => {

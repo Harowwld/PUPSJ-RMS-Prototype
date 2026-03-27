@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 
 export default function AuditLogsTab({
   displayLogs,
+  isLoading = false,
   logPage,
   setLogPage,
   logTotal,
@@ -77,7 +78,13 @@ export default function AuditLogsTab({
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {displayLogs.length === 0 ? (
+              {isLoading && displayLogs.length === 0 ? (
+                <tr>
+                  <td colSpan={5} className="p-8 text-center text-sm text-gray-500">
+                    Loading audit logs...
+                  </td>
+                </tr>
+              ) : displayLogs.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="p-0">
                     <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">

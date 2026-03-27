@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -19,13 +19,23 @@ export default function Header({ authUser, onLogout, children }) {
   const router = useRouter();
   const pathname = usePathname();
   const [isGuideOpen, setIsGuideOpen] = useState(false);
+  const isAdminRole = (role) => {
+    const normalized = String(role || "").toLowerCase();
+    return normalized === "admin" || normalized === "administrator" || normalized === "superadmin";
+  };
 
   const initials = authUser?.fname && authUser?.lname 
     ? (authUser.fname[0] + authUser.lname[0]).toUpperCase()
     : "AD";
 
   const isAdminView = pathname?.startsWith("/admin");
-  const hasAdminRights = authUser?.role === "Administrator" || authUser?.role === "SuperAdmin";
+  const hasAdminRights = isAdminRole(authUser?.role);
+
+  useEffect(() => {
+    // Warm common dashboard routes for faster view switching.
+    router.prefetch("/staff");
+    router.prefetch("/admin");
+  }, [router]);
 
   return (
     <header className="bg-white border-b border-gray-300 flex-none z-20 shadow-sm">
@@ -68,7 +78,7 @@ export default function Header({ authUser, onLogout, children }) {
                   className="cursor-pointer text-gray-700 hover:bg-red-50 hover:text-pup-maroon flex items-center gap-2 font-medium"
                   onClick={(e) => {
                     e.preventDefault();
-                    const path = authUser?.role === "Administrator" || authUser?.role === "SuperAdmin" ? "/admin" : "/staff";
+                    const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
                     router.push(path);
                   }}
                 >

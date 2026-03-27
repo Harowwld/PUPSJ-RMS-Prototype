@@ -18,6 +18,8 @@ const cabinets = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
 export default function StaffPage() {
   const router = useRouter();
+  const coreDataLoadedRef = useRef(false);
+  const docsLoadedRef = useRef(false);
   const [view, setView] = useState("search");
   const [authUser, setAuthUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -135,6 +137,7 @@ export default function StaffPage() {
       setDocTypes(dData.data || []);
       setCourses(cData.data || []);
       setSections(secData.data || []);
+      coreDataLoadedRef.current = true;
     } catch (err) {
       showToast("Failed to sync database", true);
     }
@@ -145,6 +148,7 @@ export default function StaffPage() {
       const res = await fetch("/api/documents");
       const data = await res.json();
       setAllDocs(data.data || []);
+      docsLoadedRef.current = true;
     } catch {
       /* silent */
     }
@@ -163,14 +167,24 @@ export default function StaffPage() {
         if (json?.data?.mustChangePassword) {
           setPwModalOpen(true);
         }
-        fetchData();
-        fetchAllDocs();
+        // Render first, then hydrate data in background.
         setLoading(false);
+        setTimeout(() => {
+          fetchData();
+        }, 0);
       } catch {
         router.push("/");
       }
     })();
   }, [router, fetchData, fetchAllDocs]);
+
+  useEffect(() => {
+    // Load document list lazily when search view is visible.
+    if (view !== "search" || docsLoadedRef.current) return;
+    setTimeout(() => {
+      fetchAllDocs();
+    }, 0);
+  }, [view, fetchAllDocs]);
 
   useEffect(() => {
     if (quickQuery.trim().length < 2) {
