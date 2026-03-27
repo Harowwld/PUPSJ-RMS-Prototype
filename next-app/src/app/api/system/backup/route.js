@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { executeBackup, listBackups } from "../../../../lib/backupsRepo";
+import { writeAuditLog } from "../../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -20,9 +21,10 @@ export async function GET() {
 /**
  * POST: Create a new standard ZIP backup (No Encryption)
  */
-export async function POST() {
+export async function POST(req) {
   try {
     const record = await executeBackup();
+    await writeAuditLog(req, `Created system backup: ${record?.filename || "unknown"}`);
     return NextResponse.json({
       ok: true,
       message: "Standard backup created successfully",

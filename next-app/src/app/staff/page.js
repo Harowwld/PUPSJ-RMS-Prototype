@@ -16,6 +16,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 const rooms = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const cabinets = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
+function normalizeStudentRow(row) {
+  if (!row || typeof row !== "object") return row;
+  return {
+    ...row,
+    studentNo: row.studentNo ?? row.student_no ?? "",
+    courseCode: row.courseCode ?? row.course_code ?? "",
+    yearLevel: row.yearLevel ?? row.year_level ?? null,
+  };
+}
+
 export default function StaffPage() {
   const router = useRouter();
   const coreDataLoadedRef = useRef(false);
@@ -133,7 +143,7 @@ export default function StaffPage() {
         cRes.json(),
         secRes.json(),
       ]);
-      setStudents(sData.data || []);
+      setStudents((Array.isArray(sData.data) ? sData.data : []).map(normalizeStudentRow));
       setDocTypes(dData.data || []);
       setCourses(cData.data || []);
       setSections(secData.data || []);
@@ -229,7 +239,7 @@ export default function StaffPage() {
     if (selectedYear)
       list.push({ level: "sections", label: `Year ${selectedYear}` });
     if (selectedSection)
-      list.push({ level: "students", label: `Section ${selectedSection}` });
+      list.push({ level: "students", label: `${selectedSection}` });
     return list;
   }, [selectedCourse, selectedYear, selectedSection]);
 
@@ -281,7 +291,7 @@ export default function StaffPage() {
       ).sort();
       return sections.map((sec) => ({
         key: sec,
-        title: `Section ${sec}`,
+        title: `${sec}`,
         subtitle: `${students.filter((s) => s.courseCode === selectedCourse && s.yearLevel === selectedYear && s.section === sec).length} Students`,
         icon: "ph-folder",
         onClick: () => {
@@ -356,6 +366,17 @@ export default function StaffPage() {
     activeStudent,
   ]);
 
+  const availableSectionsForNewRecord = useMemo(() => {
+    if (!newRec.course) return [];
+    const linked = sections.filter(
+      (s) =>
+        String(s.course_code || "").toUpperCase() ===
+        String(newRec.course || "").toUpperCase()
+    );
+    if (linked.length > 0) return linked;
+    return sections;
+  }, [sections, newRec.course]);
+
   const activeStudentDocs = useMemo(
     () =>
       activeStudent
@@ -363,6 +384,19 @@ export default function StaffPage() {
         : [],
     [activeStudent, allDocs],
   );
+
+  const academicYearOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const fromData = Array.from(
+      new Set(
+        students
+          .map((s) => Number(s.yearLevel))
+          .filter((y) => Number.isFinite(y) && y >= 2000 && y <= 2100),
+      ),
+    );
+    const fallbackRange = Array.from({ length: 8 }, (_, i) => currentYear - 1 + i);
+    return Array.from(new Set([...fromData, ...fallbackRange])).sort((a, b) => a - b);
+  }, [students]);
 
   const locateStudent = (s) => {
     setSelectedCourse(s.courseCode);
@@ -635,9 +669,9 @@ export default function StaffPage() {
             setNewRecStudentNoTouched={setNewRecStudentNoTouched}
             applyStudentNoMask={applyStudentNoMask}
             newStudentNoInputRef={newStudentNoInputRef}
-            newAvailYears={[1, 2, 3, 4, 5]}
+            newAvailYears={academicYearOptions}
             rooms={rooms}
-            sysSections={sections}
+            sysSections={availableSectionsForNewRecord}
             csvInputRef={csvInputRef}
             handleCsvFileSelect={(f) => {
               if (!f) return;
@@ -647,7 +681,9 @@ export default function StaffPage() {
               const r = new FileReader();
               r.onload = (e) => {
                 const lines = e.target.result.split(/\r?\n/);
-                const headers = lines[0].split(",").map((h) => h.trim());
+                const headers = lines[0]
+                  .split(",")
+                  .map((h) => h.trim().toLowerCase().replace(/\s+/g, ""));
                 const rows = lines
                   .slice(1)
                   .filter((l) => l.trim())
@@ -658,10 +694,11 @@ export default function StaffPage() {
                     return {
                       index: i + 1,
                       student: {
-                        studentNo: row.studentNo,
-                        name: row.name,
-                        courseCode: row.courseCode,
-                        yearLevel: parseInt(row.academicYear) || 1,
+                        studentNo: row.studentno || row.student_no || "",
+                        name: row.name || "",
+                        courseCode: (row.coursecode || row.course || "").toUpperCase(),
+                        yearLevel:
+                          parseInt(row.academicyear || row.yearlevel || row.year) || 1,
                         section: row.section,
                         room: parseInt(row.room) || 1,
                         cabinet: row.cabinet || "A",
@@ -671,6 +708,11 @@ export default function StaffPage() {
                     };
                   });
                 setCsvRows(rows);
+                const defaultSelection = {};
+                rows.forEach((row) => {
+                  defaultSelection[row.index] = true;
+                });
+                setCsvSelected(defaultSelection);
                 setCsvLoading(false);
               };
               r.readAsText(f);
@@ -698,25 +740,80 @@ export default function StaffPage() {
             setCsvSelected={setCsvSelected}
             importCsvStudents={async () => {
               const targets = csvRows.filter((r) => csvSelected[r.index]);
-              setCsvLoading(true);
-              const res = [];
-              for (const r of targets) {
-                try {
-                  const rs = await fetch("/api/students", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(r.student),
-                  });
-                  res.push({ ok: rs.ok });
-                } catch {
-                  res.push({ ok: false });
-                }
+              if (targets.length === 0) {
+                setCsvError("No selected rows to import. Select at least one row.");
+                showToast("No selected rows to import", true);
+                return;
               }
-              setCsvResults(res);
-              setCsvLoading(false);
-              showToast(`Processed ${res.length} students`);
-              fetchData();
-              setCsvSelected({});
+              setCsvLoading(true);
+              try {
+                const rs = await fetch("/api/students/batch", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    rows: targets.map((t) => t.student),
+                  }),
+                });
+                const json = await rs.json().catch(() => null);
+                if (!rs.ok || !json?.ok || !Array.isArray(json?.data)) {
+                  throw new Error(json?.error || "Batch import failed");
+                }
+
+                const res = json.data;
+                setCsvResults(res);
+
+                const byIndex = new Map(
+                  res.map((item, idx) => [targets[idx]?.index, item])
+                );
+                const nextRows = csvRows.map((row) => {
+                  const result = byIndex.get(row.index);
+                  if (!result) return row;
+                  return {
+                    ...row,
+                    error: result.ok ? "" : String(result.error || "Import failed"),
+                  };
+                });
+                setCsvRows(nextRows);
+
+                const createdRows = res
+                  .filter((r) => r.ok && r.data)
+                  .map((r) => normalizeStudentRow(r.data));
+                if (createdRows.length > 0) {
+                  setStudents((prev) => {
+                    const map = new Map(prev.map((s) => [s.studentNo, s]));
+                    createdRows.forEach((row) => {
+                      const key = row.studentNo;
+                      map.set(key, row);
+                    });
+                    return Array.from(map.values());
+                  });
+                }
+
+                const successCount = res.filter((r) => r.ok).length;
+                const failCount = res.length - successCount;
+                if (failCount > 0) {
+                  showToast(
+                    `Processed ${res.length} students (${successCount} success, ${failCount} failed)`,
+                    true
+                  );
+                } else {
+                  showToast(`Processed ${res.length} students`);
+                  // Clear CSV preview after fully successful import.
+                  setCsvFile(null);
+                  setCsvRows([]);
+                  setCsvResults([]);
+                }
+
+                setCsvError("");
+                setCsvSelected({});
+                // Keep data in sync in background even after optimistic in-memory update.
+                fetchData();
+              } catch (err) {
+                setCsvError(err?.message || "Batch import failed");
+                showToast(err?.message || "Batch import failed", true);
+              } finally {
+                setCsvLoading(false);
+              }
             }}
             csvLoading={csvLoading}
             csvResults={csvResults}
@@ -776,6 +873,22 @@ export default function StaffPage() {
                 });
                 if (!r.ok) throw new Error("Update failed");
                 showToast("Document updated!");
+                refreshDocuments(docsForm);
+                fetchAllDocs();
+              } catch (err) {
+                showToast(err.message, true);
+              }
+            }}
+            deleteDoc={async (id) => {
+              try {
+                const r = await fetch(`/api/documents/${id}`, {
+                  method: "DELETE",
+                });
+                const data = await r.json().catch(() => null);
+                if (!r.ok || !data?.ok) {
+                  throw new Error(data?.error || "Delete failed");
+                }
+                showToast("Document deleted successfully!");
                 refreshDocuments(docsForm);
                 fetchAllDocs();
               } catch (err) {

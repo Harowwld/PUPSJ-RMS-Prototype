@@ -7,6 +7,7 @@ import {
 import { getSessionCookieName, signSessionToken } from "../../../../lib/jwt";
 import { createSession } from "../../../../lib/sessionStore";
 import { broadcastToAdmins } from "../../../../pages/api/socket";
+import { writeAuditLog } from "../../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
@@ -23,6 +24,10 @@ export async function POST(req) {
   const password = String(body.password || "");
 
   if (!username || !password) {
+    await writeAuditLog(req, "Login attempt failed: missing credentials", {
+      actor: username || "Unknown",
+      role: "Guest",
+    });
     return NextResponse.json(
       { ok: false, error: "Missing credentials" },
       { status: 400 }
@@ -38,6 +43,7 @@ export async function POST(req) {
     };
     const token = await signSessionToken(payload);
     createSession(token, "admin", "Admin", "admin");
+    await writeAuditLog(req, "User login: admin", { actor: "admin", role: "Admin" });
     // Broadcast to admins
     broadcastToAdmins("staffLogin", {
       staffId: "admin",
@@ -61,6 +67,10 @@ export async function POST(req) {
 
   const staff = await getStaffByUsername(username);
   if (!staff) {
+    await writeAuditLog(req, `Login attempt failed: unknown user (${username})`, {
+      actor: username,
+      role: "Guest",
+    });
     return NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 });
   }
 
@@ -71,6 +81,10 @@ export async function POST(req) {
 
   const hashed = hashPasswordForStorage(password);
   if (hashed !== stored) {
+    await writeAuditLog(req, `Login attempt failed: invalid password (${username})`, {
+      actor: username,
+      role: "Guest",
+    });
     return NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 });
   }
 
@@ -94,6 +108,10 @@ export async function POST(req) {
   };
   const token = await signSessionToken(sessionPayload);
   createSession(token, touched.id, touched.role || "Staff", touched.email);
+  await writeAuditLog(req, `User login: ${touched.email || touched.id}`, {
+    actor: touched.email || touched.id,
+    role: touched.role || "Staff",
+  });
   // Broadcast to admins
   broadcastToAdmins("staffLogin", {
     staffId: touched.id,

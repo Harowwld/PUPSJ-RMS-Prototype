@@ -44,6 +44,10 @@ export async function updateCourse(id, codeRaw, nameRaw) {
 }
 
 export async function deleteCourse(id) {
+  const course = await dbGet("SELECT code FROM courses WHERE id = ?", [id]);
+  if (course?.code) {
+    await dbRun("UPDATE sections SET course_code = NULL WHERE course_code = ?", [course.code]);
+  }
   await dbRun("DELETE FROM courses WHERE id = ?", [id]);
   return true;
 }

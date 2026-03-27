@@ -5,6 +5,7 @@ import crypto from "node:crypto";
 import AdmZip from "adm-zip";
 import { getBackupsDir, getLocalDir, createBackupRecord, listBackups } from "../../../../../lib/backupsRepo";
 import { reloadDb } from "../../../../../lib/sqlite";
+import { writeAuditLog } from "../../../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
@@ -125,6 +126,7 @@ export async function POST(req) {
     fs.rmSync(stagingDir, { recursive: true, force: true });
     console.log("[RESTORE] Process complete.");
 
+    await writeAuditLog(req, `Restored system backup from uploaded file: ${file.name}`);
     return NextResponse.json({
       ok: true,
       message: "System restored successfully from backup. A safety snapshot was created."

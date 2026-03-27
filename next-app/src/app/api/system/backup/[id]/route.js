@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
 import { getBackupById, getBackupsDir, deleteBackupRecord } from "../../../../../lib/backupsRepo";
+import { writeAuditLog } from "../../../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -60,6 +61,7 @@ export async function DELETE(req, { params }) {
     if (changes === 0) {
       throw new Error("Record was not removed from database");
     }
+    await writeAuditLog(req, `Deleted backup: ${backup.filename} (id ${id})`);
 
     return NextResponse.json({
       ok: true,

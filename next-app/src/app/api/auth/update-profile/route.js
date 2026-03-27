@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { cookies } from "next/headers";
 import { updateStaff, getStaffByUsername, getStaffById } from "../../../../lib/staffRepo";
+import { writeAuditLog } from "../../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
@@ -47,6 +48,7 @@ export async function POST(req) {
     };
 
     const updated = await updateStaff(userId, updatePatch);
+    await writeAuditLog(req, `Updated profile for account: ${userId}`);
 
     return NextResponse.json({
       ok: true,

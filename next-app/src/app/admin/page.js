@@ -9,6 +9,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import PasswordChangeModal from "@/components/shared/PasswordChangeModal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import PromptModal from "@/components/shared/PromptModal";
 
 import StaffDirectoryTab from "@/components/admin/StaffDirectoryTab";
 import RegisterAccountTab from "@/components/admin/RegisterAccountTab";
@@ -16,6 +17,7 @@ import AuditLogsTab from "@/components/admin/AuditLogsTab";
 import BackupMaintenanceTab from "@/components/admin/BackupMaintenanceTab";
 import EditUserModal from "@/components/admin/EditUserModal";
 import SystemConfigTab from "@/components/admin/SystemConfigTab";
+import DigitalRecordsReviewTab from "@/components/admin/DigitalRecordsReviewTab";
 
 export default function AdminPage() {
   const router = useRouter();
@@ -24,6 +26,7 @@ export default function AdminPage() {
     logs: false,
     system: false,
     backup: false,
+    review: false,
     system_data: true,
     create: true,
   });
@@ -34,6 +37,7 @@ export default function AdminPage() {
     logs: false,
     system: false,
     backup: false,
+    review: false,
   });
 
   const [staffData, setStaffData] = useState([]);
@@ -50,6 +54,8 @@ export default function AdminPage() {
     dbStatus: "Healthy",
   });
   const [backups, setBackups] = useState([]);
+  const [reviewRecords, setReviewRecords] = useState([]);
+  const [reviewStatusFilter, setReviewStatusFilter] = useState("All");
 
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
@@ -92,6 +98,9 @@ export default function AdminPage() {
 
   const [defaultPwOpen, setDefaultPwOpen] = useState(false);
   const [defaultPwUserLabel, setDefaultPwUserLabel] = useState("");
+  const [declinePromptOpen, setDeclinePromptOpen] = useState(false);
+  const [declineReason, setDeclineReason] = useState("");
+  const [pendingDeclineDocId, setPendingDeclineDocId] = useState(null);
 
   const showToast = useCallback((msg, isError = false, autoHide = true) => {
     const text = String(msg || "");
@@ -183,6 +192,25 @@ export default function AdminPage() {
     }
   }, []);
 
+  const refreshReviewRecords = useCallback(async () => {
+    setViewLoading((prev) => ({ ...prev, review: true }));
+    try {
+      const approvalStatus =
+        reviewStatusFilter === "All" ? "" : `&approvalStatus=${encodeURIComponent(reviewStatusFilter)}`;
+      const res = await fetch(`/api/documents?limit=200${approvalStatus}`);
+      const json = await res.json();
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || "Failed to load review records");
+      }
+      setReviewRecords(Array.isArray(json.data) ? json.data : []);
+      loadedViewsRef.current.review = true;
+    } catch (err) {
+      showToast(err?.message || "Failed to load review records", true);
+    } finally {
+      setViewLoading((prev) => ({ ...prev, review: false }));
+    }
+  }, [reviewStatusFilter, showToast]);
+
   const logAdminAction = useCallback(
     async (action) => {
       try {
@@ -250,6 +278,14 @@ export default function AdminPage() {
     }
   }, [view, refreshAuditLogs]);
 
+  useEffect(() => {
+    if (view === "review") {
+      setTimeout(() => {
+        refreshReviewRecords();
+      }, 0);
+    }
+  }, [view, refreshReviewRecords]);
+
   const switchView = useCallback((nextView) => {
     setView(nextView);
     if (nextView === "directory" && !loadedViewsRef.current.directory) {
@@ -270,7 +306,50 @@ export default function AdminPage() {
         refreshBackups();
       }, 0);
     }
-  }, [refreshAuditLogs, refreshBackups, refreshStaff]);
+    if (nextView === "review" && !loadedViewsRef.current.review) {
+      setTimeout(() => {
+        refreshReviewRecords();
+      }, 0);
+    }
+  }, [refreshAuditLogs, refreshBackups, refreshStaff, refreshReviewRecords]);
+
+  const reviewDocumentStatus = useCallback(
+    async (id, approvalStatus, reviewNote = "") => {
+      try {
+        const res = await fetch(`/api/documents/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ approvalStatus, reviewNote }),
+        });
+        const json = await res.json();
+        if (!res.ok || !json?.ok) {
+          throw new Error(json?.error || "Failed to review document");
+        }
+        showToast(`Document ${approvalStatus.toLowerCase()} successfully.`);
+        await logAdminAction(`${approvalStatus} document ID ${id}`);
+        refreshReviewRecords();
+      } catch (err) {
+        showToast(err?.message || "Failed to review document", true);
+      }
+    },
+    [refreshReviewRecords, showToast, logAdminAction]
+  );
+
+  const openDeclinePrompt = useCallback((id) => {
+    setPendingDeclineDocId(id);
+    setDeclineReason("");
+    setDeclinePromptOpen(true);
+  }, []);
+
+  const submitDeclineWithReason = useCallback(async () => {
+    if (!pendingDeclineDocId) return;
+    const id = pendingDeclineDocId;
+    const note = declineReason;
+    setDeclinePromptOpen(false);
+    setPendingDeclineDocId(null);
+    setDeclineReason("");
+    await reviewDocumentStatus(id, "Declined", note);
+  }, [pendingDeclineDocId, declineReason, reviewDocumentStatus]);
 
   const [socket, setSocket] = useState(null);
 
@@ -532,6 +611,12 @@ export default function AdminPage() {
           <i className="ph-bold ph-gear"></i> System Data
         </button>
         <button
+          onClick={() => switchView("review")}
+          className={`btn-nav ${view === "review" ? "active" : ""}`}
+        >
+          <i className="ph-bold ph-seal-check"></i> Digital Records Review
+        </button>
+        <button
           onClick={() => switchView("system")}
           className={`btn-nav ${view === "system" || view === "backup" ? "active" : ""}`}
         >
@@ -606,6 +691,18 @@ export default function AdminPage() {
           <SystemConfigTab
             showToast={showToast}
             logAdminAction={logAdminAction}
+          />
+        )}
+
+        {view === "review" && (
+          <DigitalRecordsReviewTab
+            records={reviewRecords}
+            isLoading={viewLoading.review}
+            statusFilter={reviewStatusFilter}
+            setStatusFilter={setReviewStatusFilter}
+            onRefresh={refreshReviewRecords}
+            onApprove={(id) => reviewDocumentStatus(id, "Approved")}
+            onDecline={openDeclinePrompt}
           />
         )}
 
@@ -689,6 +786,23 @@ export default function AdminPage() {
         onConfirm={confirmRestore}
         onCancel={() => setRestoreConfirmOpen(false)}
         isLoading={restoreLoading}
+      />
+
+      <PromptModal
+        open={declinePromptOpen}
+        title="Decline Reason"
+        message="Provide a reason for declining this document (optional)."
+        value={declineReason}
+        onChange={setDeclineReason}
+        onConfirm={submitDeclineWithReason}
+        onCancel={() => {
+          setDeclinePromptOpen(false);
+          setPendingDeclineDocId(null);
+          setDeclineReason("");
+        }}
+        confirmLabel="Submit Decline"
+        placeholder="Enter reason..."
+        multiline
       />
 
       {defaultPwOpen && (

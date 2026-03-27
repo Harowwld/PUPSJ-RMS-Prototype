@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createStudent, listStudents } from "../../../lib/studentsRepo";
+import { writeAuditLog } from "../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
@@ -35,7 +36,7 @@ export async function POST(req) {
 
   const studentNo = String(body.studentNo || "").trim();
   const name = String(body.name || "").trim();
-  const courseCode = String(body.courseCode || "").trim();
+  const courseCode = String(body.courseCode || "").trim().toUpperCase();
   const yearLevel = parseInt(body.yearLevel);
   const section = String(body.section || "").trim();
   const room = parseInt(body.room);
@@ -96,6 +97,7 @@ export async function POST(req) {
       drawer,
       status,
     });
+    await writeAuditLog(req, `Created student: ${studentNo}`);
 
     return NextResponse.json({ ok: true, data: row }, { status: 201 });
   } catch (e) {
@@ -105,6 +107,13 @@ export async function POST(req) {
         { ok: false, error: "Student already exists" },
         { status: 409 }
       );
+    }
+    if (
+      msg.includes("Invalid courseCode") ||
+      msg.includes("Invalid section") ||
+      msg.includes("is linked to")
+    ) {
+      return NextResponse.json({ ok: false, error: msg }, { status: 400 });
     }
 
     return NextResponse.json(

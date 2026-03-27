@@ -3,6 +3,40 @@ import fs from "node:fs";
 import path from "node:path";
 import { dbAll, dbGet, dbRun } from "./sqlite";
 
+let reviewColumnsEnsured = false;
+
+async function ensureReviewColumns() {
+  if (reviewColumnsEnsured) return;
+  try {
+    const cols = await dbAll("PRAGMA table_info(documents)");
+    const names = new Set((cols || []).map((c) => String(c?.name || "")));
+    if (!names.has("approval_status")) {
+      await dbRun(
+        "ALTER TABLE documents ADD COLUMN approval_status TEXT NOT NULL DEFAULT 'Pending'"
+      );
+    }
+    if (!names.has("reviewed_by")) {
+      await dbRun("ALTER TABLE documents ADD COLUMN reviewed_by TEXT");
+    }
+    if (!names.has("reviewed_at")) {
+      await dbRun("ALTER TABLE documents ADD COLUMN reviewed_at TEXT");
+    }
+    if (!names.has("review_note")) {
+      await dbRun("ALTER TABLE documents ADD COLUMN review_note TEXT");
+    }
+    await dbRun(
+      "UPDATE documents SET approval_status = 'Approved' WHERE approval_status IS NULL OR approval_status = ''"
+    );
+    await dbRun(
+      "CREATE INDEX IF NOT EXISTS idx_documents_approval_status ON documents(approval_status)"
+    );
+  } catch {
+    // Avoid breaking all reads/writes if schema repair fails once.
+  } finally {
+    reviewColumnsEnsured = true;
+  }
+}
+
 function getLocalDir() {
   return process.env.LOCAL_DATA_DIR
     ? process.env.LOCAL_DATA_DIR
@@ -24,6 +58,8 @@ export async function createDocument({
   sizeBytes,
   buffer,
 }) {
+  await ensureReviewColumns();
+
   const ext = path.extname(originalFilename || "").toLowerCase() || ".pdf";
   const storageFilename = `${Date.now()}-${crypto.randomBytes(8).toString("hex")}${ext}`;
   const absPath = path.join(getUploadsDir(), storageFilename);
@@ -39,8 +75,9 @@ export async function createDocument({
       original_filename,
       storage_filename,
       mime_type,
-      size_bytes
-    ) VALUES (?, ?, ?, ?, ?, ?, ?)
+      size_bytes,
+      approval_status
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `,
     [
       studentNo,
@@ -50,6 +87,7 @@ export async function createDocument({
       storageFilename,
       mimeType,
       sizeBytes,
+      "Pending",
     ]
   );
 
@@ -60,9 +98,12 @@ export async function listDocuments({
   q,
   studentNo,
   docType,
+  approvalStatus,
   limit = 50,
   offset = 0,
 } = {}) {
+  await ensureReviewColumns();
+
   const filters = [];
   const params = [];
 
@@ -74,6 +115,11 @@ export async function listDocuments({
   if (docType) {
     filters.push("doc_type = ?");
     params.push(docType);
+  }
+
+  if (approvalStatus) {
+    filters.push("approval_status = ?");
+    params.push(approvalStatus);
   }
 
   if (q) {
@@ -94,7 +140,7 @@ export async function listDocuments({
       SELECT *
       FROM documents
       ${where}
-      ORDER BY datetime(created_at) DESC, id DESC
+      ORDER BY created_at DESC, id DESC
       LIMIT ? OFFSET ?
     `,
     [...params, lim, off]
@@ -102,11 +148,13 @@ export async function listDocuments({
 }
 
 export async function getDocumentById(id) {
+  await ensureReviewColumns();
   const row = await dbGet("SELECT * FROM documents WHERE id = ?", [id]);
   return row || null;
 }
 
 export async function updateDocumentMetadata(id, { studentNo, studentName, docType }) {
+  await ensureReviewColumns();
   const existing = await getDocumentById(id);
   if (!existing) return null;
 
@@ -119,6 +167,50 @@ export async function updateDocumentMetadata(id, { studentNo, studentName, docTy
      SET student_no = ?, student_name = ?, doc_type = ?
      WHERE id = ?`,
     [nextStudentNo, nextStudentName, nextDocType, id]
+  );
+
+  return await getDocumentById(id);
+}
+
+export async function reviewDocument(id, { approvalStatus, reviewedBy, reviewNote }) {
+  await ensureReviewColumns();
+  const existing = await getDocumentById(id);
+  if (!existing) return null;
+
+  await dbRun(
+    `UPDATE documents
+     SET approval_status = ?,
+         reviewed_by = ?,
+         reviewed_at = datetime('now'),
+         review_note = ?
+     WHERE id = ?`,
+    [approvalStatus, reviewedBy || null, reviewNote || null, id]
+  );
+
+  return await getDocumentById(id);
+}
+
+export async function declineDocumentAndRemoveFile(id, { reviewedBy, reviewNote }) {
+  await ensureReviewColumns();
+  const existing = await getDocumentById(id);
+  if (!existing) return null;
+
+  // Keep DB row for review/history, but remove the physical file.
+  const absPath = path.join(getUploadsDir(), existing.storage_filename);
+  try {
+    fs.unlinkSync(absPath);
+  } catch {
+    // ignore missing file
+  }
+
+  await dbRun(
+    `UPDATE documents
+     SET approval_status = 'Declined',
+         reviewed_by = ?,
+         reviewed_at = datetime('now'),
+         review_note = ?
+     WHERE id = ?`,
+    [reviewedBy || null, reviewNote || null, id]
   );
 
   return await getDocumentById(id);

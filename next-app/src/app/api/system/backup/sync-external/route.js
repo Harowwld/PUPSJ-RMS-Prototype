@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
 import { getBackupById, getBackupsDir, updateBackupStatus } from "../../../../../lib/backupsRepo";
+import { writeAuditLog } from "../../../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
@@ -37,6 +38,7 @@ export async function POST(req) {
     fs.copyFileSync(sourcePath, destPath);
 
     await updateBackupStatus(id, "status_external", "Success");
+    await writeAuditLog(req, `Synced backup to external: ${backup.filename} (id ${id})`);
 
     return NextResponse.json({
       ok: true,

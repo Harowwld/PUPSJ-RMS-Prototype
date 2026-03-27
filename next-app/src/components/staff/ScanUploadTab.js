@@ -79,7 +79,25 @@ export default function ScanUploadTab({
               </div>
             </div>
 
-            <div className="flex-1 min-h-0 overflow-auto">
+            <div
+              className={`flex-1 min-h-0 overflow-auto ${csvDropActive ? "bg-red-50/40" : ""}`}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setCsvDropActive(true);
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                setCsvDropActive(false);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                setCsvDropActive(false);
+                const file = e.dataTransfer.files?.[0];
+                if (file && (file.name.endsWith(".csv") || file.type === "text/csv")) {
+                  handleCsvFileSelect(file);
+                }
+              }}
+            >
               {csvRows.length ? (
                 <table className="min-w-full text-xs">
                   <thead className="bg-white border-b border-gray-200 sticky top-0 z-10">
@@ -179,14 +197,17 @@ export default function ScanUploadTab({
                   </tbody>
                 </table>
               ) : (
-                <div className="h-full flex items-center justify-center text-center p-8">
+                <div
+                  className="h-full flex items-center justify-center text-center p-8 cursor-pointer"
+                  onClick={() => csvInputRef.current?.click()}
+                >
                   <div className="text-gray-500">
                     <div className="w-20 h-20 mx-auto rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
                       <i className="ph-thin ph-file-csv text-4xl text-pup-maroon"></i>
                     </div>
                     <div className="font-bold text-gray-800 text-lg">Upload a CSV to preview</div>
                     <div className="mt-2 text-sm font-medium text-gray-600">
-                      The parsed rows will appear here once selected.
+                      Choose a CSV file or drop it here.
                     </div>
                   </div>
                 </div>
@@ -348,12 +369,9 @@ export default function ScanUploadTab({
                   <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
                     Academic Year
                   </label>
-                  <input
-                    className="form-select no-glow"
-                    list="existingYearOptions"
+                  <select
+                    className="form-select"
                     value={exist.year}
-                    inputMode="numeric"
-                    placeholder="e.g. 2025"
                     onChange={(e) => {
                       setExist((p) => ({
                         ...p,
@@ -362,12 +380,14 @@ export default function ScanUploadTab({
                         studentId: "",
                       }));
                     }}
-                  />
-                  <datalist id="existingYearOptions">
+                  >
+                    <option value="">Select Academic Year...</option>
                     {existingAvailYears.map((y) => (
-                      <option key={y} value={String(y)} />
+                      <option key={y} value={String(y)}>
+                        {y}
+                      </option>
                     ))}
-                  </datalist>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
@@ -538,7 +558,11 @@ export default function ScanUploadTab({
                   className="form-select"
                   value={newRec.course}
                   onChange={(e) => {
-                    setNewRec((p) => ({ ...p, course: e.target.value }));
+                    setNewRec((p) => ({
+                      ...p,
+                      course: e.target.value,
+                      sectionPart: "",
+                    }));
                   }}
                 >
                   <option value="">Select Course...</option>
@@ -555,12 +579,9 @@ export default function ScanUploadTab({
                   <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
                     Academic Year
                   </label>
-                  <input
-                    className="form-select no-glow"
-                    list="newYearOptions"
+                  <select
+                    className="form-select"
                     value={newRec.year}
-                    inputMode="numeric"
-                    placeholder="e.g. 2025"
                     onChange={(e) => {
                       setNewRec((p) => ({
                         ...p,
@@ -568,12 +589,14 @@ export default function ScanUploadTab({
                         sectionPart: "",
                       }));
                     }}
-                  />
-                  <datalist id="newYearOptions">
+                  >
+                    <option value="">Select Academic Year...</option>
                     {newAvailYears.map((y) => (
-                      <option key={y} value={String(y)} />
+                      <option key={y} value={String(y)}>
+                        {y}
+                      </option>
                     ))}
-                  </datalist>
+                  </select>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
@@ -585,10 +608,12 @@ export default function ScanUploadTab({
                     onChange={(e) => {
                       setNewRec((p) => ({ ...p, sectionPart: e.target.value }));
                     }}
-                    disabled={!newRec.year}
+                    disabled={!newRec.course}
                   >
                     <option value="">
-                      {newRec.year ? "Select Section..." : "Select year first..."}
+                      {newRec.course
+                        ? "Select Section..."
+                        : "Select course first..."}
                     </option>
                     {sysSections.map((sec) => (
                       <option key={sec.id} value={sec.name}>
@@ -707,30 +732,6 @@ export default function ScanUploadTab({
                     className="block w-full text-sm text-gray-600 file:mr-3 file:h-11 file:px-4 file:rounded-brand file:border file:border-gray-300 file:bg-white file:text-gray-700 file:font-bold hover:file:border-pup-maroon"
                     onChange={(e) => handleCsvFileSelect(e.target.files?.[0] || null)}
                   />
-                  <div
-                    className={`shrink-0 w-32 h-11 rounded-brand border-2 border-dashed border-gray-400 bg-gray-50 flex items-center justify-center cursor-pointer hover:border-pup-maroon hover:bg-red-50/50 transition-all ${csvDropActive ? 'bg-red-50 border-pup-maroon' : ''}`}
-                    onClick={() => csvInputRef.current?.click()}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      setCsvDropActive(true);
-                    }}
-                    onDragLeave={(e) => {
-                      e.preventDefault();
-                      setCsvDropActive(false);
-                    }}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      setCsvDropActive(false);
-                      const file = e.dataTransfer.files?.[0];
-                      if (file && (file.name.endsWith('.csv') || file.type === 'text/csv')) {
-                        handleCsvFileSelect(file);
-                      }
-                    }}
-                  >
-                    <span className="text-xs font-bold text-gray-600 flex items-center gap-1">
-                      <i className="ph-bold ph-upload-simple"></i> Drop CSV
-                    </span>
-                  </div>
                 </div>
               </div>
 

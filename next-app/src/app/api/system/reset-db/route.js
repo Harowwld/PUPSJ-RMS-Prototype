@@ -2,10 +2,11 @@ import { NextResponse } from "next/server";
 import { getDb } from "../../../../lib/sqlite";
 import fs from "node:fs";
 import path from "node:path";
+import { writeAuditLog } from "../../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
-export async function GET() {
+export async function GET(req) {
   try {
     const db = await getDb();
     
@@ -58,6 +59,7 @@ export async function GET() {
       }
     }
 
+    await writeAuditLog(req, "Reset database and cleared uploads");
     return NextResponse.json({
       ok: true,
       message: "Database wiped and physical uploads cleared successfully. Please RESTART your Next.js server now."
