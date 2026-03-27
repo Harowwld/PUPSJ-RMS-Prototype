@@ -3,10 +3,10 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { io } from "socket.io-client";
+import { toast } from "sonner";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import Toast from "@/components/shared/Toast";
 import PasswordChangeModal from "@/components/shared/PasswordChangeModal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 
@@ -19,7 +19,6 @@ import SystemConfigTab from "@/components/admin/SystemConfigTab";
 
 export default function AdminPage() {
   const router = useRouter();
-  const toastTimerRef = useRef(null);
   const loadedViewsRef = useRef({
     directory: false,
     logs: false,
@@ -30,7 +29,6 @@ export default function AdminPage() {
   });
 
   const [view, setView] = useState("directory");
-  const [toast, setToast] = useState({ open: false, msg: "", isError: false });
   const [viewLoading, setViewLoading] = useState({
     directory: false,
     logs: false,
@@ -96,13 +94,16 @@ export default function AdminPage() {
   const [defaultPwUserLabel, setDefaultPwUserLabel] = useState("");
 
   const showToast = useCallback((msg, isError = false, autoHide = true) => {
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    setToast({ open: true, msg, isError });
-    if (autoHide) {
-      toastTimerRef.current = setTimeout(() => {
-        setToast((t) => ({ ...t, open: false }));
-      }, 3000);
+    const text = String(msg || "");
+    if (isError) {
+      toast.error(text);
+      return;
     }
+    if (!autoHide) {
+      toast.message(text, { duration: 5000 });
+      return;
+    }
+    toast.success(text);
   }, []);
 
   const refreshStaff = useCallback(async () => {
@@ -718,7 +719,6 @@ export default function AdminPage() {
         </div>
       )}
 
-      <Toast {...toast} onClose={() => setToast({ ...toast, open: false })} />
     </div>
   );
 }

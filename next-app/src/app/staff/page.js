@@ -518,21 +518,21 @@ export default function StaffPage() {
       <Header authUser={authUser} onLogout={handleLogout}>
         <button
           onClick={() => setView("search")}
-          className={`px-4 py-2 rounded-brand text-sm font-bold transition-all ${view === "search" ? "bg-pup-maroon text-white" : "text-gray-500 hover:bg-gray-100"}`}
+          className={`btn-nav ${view === "search" ? "active" : ""}`}
         >
-          Records & Archive
+          <i className="ph-bold ph-archive-box"></i> Records & Archive
         </button>
         <button
           onClick={() => setView("upload")}
-          className={`px-4 py-2 rounded-brand text-sm font-bold transition-all ${view === "upload" ? "bg-pup-maroon text-white" : "text-gray-500 hover:bg-gray-100"}`}
+          className={`btn-nav ${view === "upload" ? "active" : ""}`}
         >
-          Scan & Upload
+          <i className="ph-bold ph-scan"></i> Scan & Upload
         </button>
         <button
           onClick={() => setView("documents")}
-          className={`px-4 py-2 rounded-brand text-sm font-bold transition-all ${view === "documents" ? "bg-pup-maroon text-white" : "text-gray-500 hover:bg-gray-100"}`}
+          className={`btn-nav ${view === "documents" ? "active" : ""}`}
         >
-          Documents
+          <i className="ph-bold ph-file-text"></i> Documents
         </button>
       </Header>
       <main className="flex-1 overflow-hidden max-w-[1600px] mx-auto w-full p-4">
