@@ -3,6 +3,7 @@ import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { removeSession } from "../../../../lib/sessionStore";
 import { setStaffStatus } from "../../../../lib/staffRepo";
 import { broadcastToAdmins } from "../../../../pages/api/socket";
+import { writeAuditLog } from "../../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
@@ -23,12 +24,14 @@ export async function POST(req) {
       const userId = payload?.sub;
       if (userId && userId !== "admin") {
         await setStaffStatus(userId, "Inactive");
+        await writeAuditLog(req, `User logout: ${userId}`);
         // Broadcast to admins
         broadcastToAdmins("staffLogout", {
           staffId: userId,
           status: "Inactive",
         });
       } else if (userId === "admin") {
+        await writeAuditLog(req, "User logout: admin", { actor: "admin", role: "Admin" });
         // Broadcast admin logout too
         broadcastToAdmins("staffLogout", {
           staffId: "admin",

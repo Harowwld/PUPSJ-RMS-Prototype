@@ -1,0 +1,861 @@
+"use client";
+
+export default function ScanUploadTab({
+  uploadMode,
+  setUploadMode,
+  dropActive,
+  setDropActive,
+  uploadedFile,
+  fileInputRef,
+  onFileSelect,
+  onClearFile,
+  ocrLoading,
+  ocrError,
+  csvFile,
+  csvRows,
+  csvSelected,
+  toggleCsvSelectAll,
+  toggleCsvRowSelected,
+  setCsvRowField,
+  cabinets,
+  exist,
+  setExist,
+  courses,
+  existingAvailYears,
+  existingAvailSections,
+  existingStudents,
+  docTypes,
+  processSubmission,
+  uploadError,
+  newRec,
+  setNewRec,
+  newRecStudentNoHint,
+  setNewRecStudentNoTouched,
+  applyStudentNoMask,
+  newStudentNoInputRef,
+  newAvailYears,
+  rooms,
+  sysSections = [],
+  csvInputRef,
+  handleCsvFileSelect,
+  csvDropActive,
+  setCsvDropActive,
+  csvError,
+  csvBulkRoom,
+  setCsvBulkRoom,
+  csvBulkCabinet,
+  setCsvBulkCabinet,
+  csvBulkDrawer,
+  setCsvBulkDrawer,
+  applyCsvBulkLocation,
+  setCsvSelected,
+  importCsvStudents,
+  csvLoading,
+  csvResults,
+}) {
+  return (
+    <div id="view-upload" className="flex flex-col lg:flex-row w-full h-full gap-4 animate-fade-in">
+      <section className="w-full lg:w-1/2 bg-white rounded-brand border border-gray-300 flex flex-col h-full p-8 items-center justify-center shadow-sm relative">
+        {uploadMode === "csv" ? (
+          <div className="w-full h-full border border-gray-200 rounded-brand bg-white overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-gray-200 bg-gray-50">
+              <div className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+                CSV Preview
+              </div>
+              <div className="mt-1 text-sm font-bold text-gray-900 break-all">
+                {csvFile ? csvFile.name : "No CSV selected"}
+              </div>
+              <div className="mt-2 text-xs font-medium text-gray-600">
+                {csvRows.length ? (
+                  <>
+                    {csvRows.length} rows
+                    {" · "}
+                    {csvRows.filter((r) => r.error).length} invalid
+                    {csvRows.filter((r) => r.error).length === 0 ? " · All valid" : ""}
+                  </>
+                ) : (
+                  "Select a CSV file to preview it here."
+                )}
+              </div>
+            </div>
+
+            <div
+              className={`flex-1 min-h-0 overflow-auto ${csvDropActive ? "bg-red-50/40" : ""}`}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setCsvDropActive(true);
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                setCsvDropActive(false);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                setCsvDropActive(false);
+                const file = e.dataTransfer.files?.[0];
+                if (file && (file.name.endsWith(".csv") || file.type === "text/csv")) {
+                  handleCsvFileSelect(file);
+                }
+              }}
+            >
+              {csvRows.length ? (
+                <table className="min-w-full text-xs">
+                  <thead className="bg-white border-b border-gray-200 sticky top-0 z-10">
+                    <tr className="text-left text-[11px] uppercase tracking-wider text-gray-600">
+                      <th className="p-1.5 font-bold w-8">
+                        <input
+                          type="checkbox"
+                          checked={
+                            csvRows.length > 0 &&
+                            Object.values(csvSelected).filter(Boolean).length === csvRows.length
+                          }
+                          onChange={(e) => toggleCsvSelectAll(e.target.checked)}
+                        />
+                      </th>
+                      <th className="p-1.5 font-bold">#</th>
+                      <th className="p-1.5 font-bold">Student No</th>
+                      <th className="p-1.5 font-bold">Name</th>
+                      <th className="p-1.5 font-bold">Course</th>
+                      <th className="p-1.5 font-bold">Year</th>
+                      <th className="p-1.5 font-bold">Section</th>
+                      <th className="p-1.5 font-bold">Room</th>
+                      <th className="p-1.5 font-bold">Cab</th>
+                      <th className="p-1.5 font-bold">Drawer</th>
+                      <th className="p-1.5 font-bold">Error</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {csvRows.slice(0, 100).map((r) => (
+                      <tr key={r.index} className={csvSelected?.[r.index] ? "bg-gray-50" : ""}>
+                        <td className="p-1.5">
+                          <input
+                            type="checkbox"
+                            checked={!!csvSelected?.[r.index]}
+                            onChange={() => toggleCsvRowSelected(r.index)}
+                          />
+                        </td>
+                        <td className="p-1.5 text-gray-500 font-mono">{r.index}</td>
+                        <td className="p-1.5 font-mono">{r.student.studentNo}</td>
+                        <td className="p-1.5">{r.student.name}</td>
+                        <td className="p-1.5">{r.student.courseCode}</td>
+                        <td className="p-1.5">{r.student.yearLevel}</td>
+                        <td className="p-1.5">{r.student.section}</td>
+                        <td className="p-1.5">
+                          <select
+                            className="form-select h-9 text-[11px] leading-none px-1 py-0 w-14"
+                            value={String(r.student.room || "")}
+                            onChange={(e) =>
+                              setCsvRowField(r.index, "room", parseInt(e.target.value))
+                            }
+                          >
+                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((room) => (
+                              <option key={room} value={room}>
+                                {room}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="p-1.5">
+                          <select
+                            className="form-select h-9 text-[11px] leading-none px-1 py-0 w-12"
+                            value={String(r.student.cabinet || "")}
+                            onChange={(e) =>
+                              setCsvRowField(r.index, "cabinet", e.target.value)
+                            }
+                          >
+                            {cabinets.map((c) => (
+                              <option key={c} value={c}>
+                                {c}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="p-1.5">
+                          <select
+                            className="form-select h-9 text-[11px] leading-none px-1 py-0 w-14"
+                            value={String(r.student.drawer || "")}
+                            onChange={(e) =>
+                              setCsvRowField(r.index, "drawer", parseInt(e.target.value))
+                            }
+                          >
+                            {[1, 2, 3, 4].map((d) => (
+                              <option key={d} value={d}>
+                                {d}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                        <td className="p-1.5">
+                          {r.error ? (
+                            <span className="text-red-700 font-bold text-xs">{r.error}</span>
+                          ) : (
+                            <span className="text-green-700 font-bold text-xs">OK</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <div
+                  className="h-full flex items-center justify-center text-center p-8 cursor-pointer"
+                  onClick={() => csvInputRef.current?.click()}
+                >
+                  <div className="text-gray-500">
+                    <div className="w-20 h-20 mx-auto rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                      <i className="ph-thin ph-file-csv text-4xl text-pup-maroon"></i>
+                    </div>
+                    <div className="font-bold text-gray-800 text-lg">Upload a CSV to preview</div>
+                    <div className="mt-2 text-sm font-medium text-gray-600">
+                      Choose a CSV file or drop it here.
+                    </div>
+                  </div>
+                </div>
+              )}
+              {csvRows.length > 100 ? (
+                <div className="p-3 border-t border-gray-200 text-xs font-medium text-gray-600">
+                  Showing first 100 rows.
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ) : (
+          <div
+            className={`w-full h-full border-2 border-dashed border-gray-400 rounded-brand bg-gray-50 p-8 flex flex-col items-center justify-center cursor-pointer hover:border-pup-maroon hover:bg-red-50/50 transition-all group relative ${
+              dropActive ? "bg-red-50" : ""
+            }`}
+            onClick={() => {
+              if (uploadedFile) return;
+              if (fileInputRef.current) fileInputRef.current.click();
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDropActive(true);
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              setDropActive(false);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              setDropActive(false);
+              onFileSelect(e.dataTransfer.files[0]);
+            }}
+          >
+            <div className="text-center pointer-events-none">
+              <div className="w-20 h-20 mx-auto rounded-full bg-white border border-gray-300 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-sm">
+                <i className="ph-thin ph-file-pdf text-4xl text-pup-maroon"></i>
+              </div>
+              <h3 className="font-bold text-xl text-gray-800">Drop PDF File Here</h3>
+              <p className="text-sm text-gray-500 mt-2 font-medium">
+                or click to browse local files
+              </p>
+            </div>
+
+            <input
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              accept=".pdf"
+              onChange={(e) => onFileSelect(e.target.files[0])}
+            />
+
+            {uploadedFile ? (
+              <div className="absolute inset-0 bg-white z-10 flex flex-col items-center justify-center p-6 rounded-brand">
+                <i className="ph-fill ph-file-pdf text-6xl text-pup-maroon mb-4"></i>
+                <h4 className="font-bold text-gray-900 text-lg text-center break-all mb-1 max-w-sm">
+                  {uploadedFile.name}
+                </h4>
+                <span className="text-sm text-gray-500 mb-6 font-medium">
+                  {(uploadedFile.size / 1024).toFixed(2)} KB
+                </span>
+
+                {uploadMode === "new" && ocrLoading ? (
+                  <div className="mb-4 text-sm font-bold text-gray-700">
+                    Scanning PDF (OCR)...
+                  </div>
+                ) : null}
+
+                {uploadMode === "new" && ocrError ? (
+                  <div className="mb-4 text-sm font-bold text-red-700 text-center max-w-md">
+                    {ocrError}
+                  </div>
+                ) : null}
+
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onClearFile();
+                  }}
+                  className="px-6 py-2.5 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
+                >
+                  Remove File
+                </button>
+              </div>
+            ) : null}
+          </div>
+        )}
+
+        {ocrLoading && uploadMode !== "csv" ? (
+          <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-brand">
+            <div className="w-12 h-12 rounded-full border-4 border-gray-200 border-t-pup-maroon animate-spin"></div>
+            <div className="mt-3 text-sm font-bold text-gray-800">Scanning file…</div>
+            <div className="mt-1 text-xs font-medium text-gray-600">Working offline (LAN)</div>
+          </div>
+        ) : null}
+      </section>
+
+      <section className="w-full lg:w-1/2 bg-white rounded-brand border border-gray-300 flex flex-col h-full shadow-sm overflow-hidden">
+        <div className="p-6 border-b border-gray-200">
+          <h2 className="text-xl font-bold text-pup-maroon mb-1">Tag Document</h2>
+          <p className="text-sm text-gray-600">
+            Associate this file with a student record.
+          </p>
+
+          <div className="flex gap-6 mt-6 border-b border-gray-200">
+            <button
+              className={`tab-btn ${uploadMode === "existing" ? "active" : ""}`}
+              onClick={() => setUploadMode("existing")}
+            >
+              Existing Student
+            </button>
+            <button
+              className={`tab-btn ${uploadMode === "new" ? "active" : ""}`}
+              onClick={() => setUploadMode("new")}
+            >
+              New Student
+            </button>
+            <button
+              className={`tab-btn ${uploadMode === "csv" ? "active" : ""}`}
+              onClick={() => setUploadMode("csv")}
+            >
+              Batch (CSV)
+            </button>
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50">
+
+
+          {uploadMode === "existing" ? (
+            <div className="space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                  Course / Program
+                </label>
+                <select
+                  className="form-select"
+                  value={exist.course}
+                  onChange={(e) => {
+                    setExist((p) => ({
+                      ...p,
+                      course: e.target.value,
+                      section: "",
+                      studentId: "",
+                    }));
+                  }}
+                >
+                  <option value="">Select Course...</option>
+                  {courses.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                    Academic Year
+                  </label>
+                  <select
+                    className="form-select"
+                    value={exist.year}
+                    onChange={(e) => {
+                      setExist((p) => ({
+                        ...p,
+                        year: e.target.value,
+                        section: "",
+                        studentId: "",
+                      }));
+                    }}
+                  >
+                    <option value="">Select Academic Year...</option>
+                    {existingAvailYears.map((y) => (
+                      <option key={y} value={String(y)}>
+                        {y}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                    Section
+                  </label>
+                  <select
+                    className="form-select"
+                    value={exist.section}
+                    onChange={(e) => {
+                      setExist((p) => ({
+                        ...p,
+                        section: e.target.value,
+                        studentId: "",
+                      }));
+                    }}
+                  >
+                    <option value="">Select Section...</option>
+                    {existingAvailSections.map((s) => (
+                      <option key={s} value={s}>
+                        {s}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                  Student Name
+                </label>
+                <select
+                  className="form-select"
+                  disabled={!exist.course || !exist.year || !exist.section}
+                  value={exist.studentId}
+                  onChange={(e) => {
+                    setExist((p) => ({ ...p, studentId: e.target.value }));
+                  }}
+                >
+                  <option value="">
+                    {exist.course && exist.year && exist.section
+                      ? "Select Student..."
+                      : "Filter options first..."}
+                  </option>
+                  {existingStudents.map((s) => (
+                    <option key={s.studentNo} value={s.studentNo}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="pt-4 border-t border-gray-200">
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                  Document Type
+                </label>
+                <select
+                  className="form-select"
+                  value={exist.docType}
+                  onChange={(e) => {
+                    setExist((p) => ({ ...p, docType: e.target.value }));
+                  }}
+                >
+                  <option value="">Select Document Type...</option>
+                  {docTypes.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                type="button"
+                onClick={processSubmission}
+                className="w-full bg-pup-maroon text-white py-3 rounded-brand font-bold text-sm hover:bg-red-900 transition-all shadow-sm flex items-center justify-center gap-2"
+              >
+                <i className="ph-bold ph-upload-simple"></i> Submit Upload
+              </button>
+
+              {uploadError ? (
+                <div className="mt-3 p-3 rounded-brand border border-red-200 bg-red-50 text-red-800 text-sm font-bold">
+                  {uploadError}
+                </div>
+              ) : null}
+            </div>
+          ) : uploadMode === "new" ? (
+            <div className="space-y-5">
+              <div className="grid grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                    Student Number
+                  </label>
+                  <input
+                    type="text"
+                    className="form-input font-mono"
+                    placeholder="202X-XXXXX-MN-0"
+                    ref={newStudentNoInputRef}
+                    value={newRec.studentNo}
+                    onKeyDown={(e) => {
+                      if (e.key !== "Backspace") return;
+                      const el = e.currentTarget;
+                      const start = el.selectionStart;
+                      const end = el.selectionEnd;
+                      if (start == null || end == null) return;
+                      if (start !== end) return;
+                      if (start <= 0) return;
+                      const v = String(el.value || "");
+                      if (v[start - 1] !== "-") return;
+                      if (start < 2) return;
+
+                      e.preventDefault();
+
+                      const raw = v.slice(0, start - 2) + v.slice(start - 1);
+                      const masked = applyStudentNoMask(raw);
+                      setNewRec((p) => ({
+                        ...p,
+                        studentNo: masked.value,
+                      }));
+
+                      const nextPos = Math.max(0, start - 2);
+                      requestAnimationFrame(() => {
+                        const node = newStudentNoInputRef.current;
+                        if (!node) return;
+                        try {
+                          node.setSelectionRange(nextPos, nextPos);
+                        } catch {
+                          // ignore
+                        }
+                      });
+                    }}
+                    onChange={(e) => {
+                      setNewRecStudentNoTouched(true);
+                      const masked = applyStudentNoMask(e.target.value);
+                      setNewRec((p) => ({
+                        ...p,
+                        studentNo: masked.value,
+                      }));
+                    }}
+                    onBlur={() => setNewRecStudentNoTouched(true)}
+                  />
+                  {newRecStudentNoHint ? (
+                    <div className="mt-2 text-xs font-bold text-red-700">
+                      {newRecStudentNoHint}
+                    </div>
+                  ) : null}
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                    Full Name
+                  </label>
+                  <input
+                    type="text"
+                    className="form-input"
+                    placeholder="Last Name, First Name"
+                    value={newRec.name}
+                    onChange={(e) => {
+                      setNewRec((p) => ({ ...p, name: e.target.value }));
+                    }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                  Course / Program
+                </label>
+                <select
+                  className="form-select"
+                  value={newRec.course}
+                  onChange={(e) => {
+                    setNewRec((p) => ({
+                      ...p,
+                      course: e.target.value,
+                      sectionPart: "",
+                    }));
+                  }}
+                >
+                  <option value="">Select Course...</option>
+                  {courses.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-5">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                    Academic Year
+                  </label>
+                  <select
+                    className="form-select"
+                    value={newRec.year}
+                    onChange={(e) => {
+                      setNewRec((p) => ({
+                        ...p,
+                        year: e.target.value,
+                        sectionPart: "",
+                      }));
+                    }}
+                  >
+                    <option value="">Select Academic Year...</option>
+                    {newAvailYears.map((y) => (
+                      <option key={y} value={String(y)}>
+                        {y}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                    Section
+                  </label>
+                  <select
+                    className="form-select"
+                    value={newRec.sectionPart}
+                    onChange={(e) => {
+                      setNewRec((p) => ({ ...p, sectionPart: e.target.value }));
+                    }}
+                    disabled={!newRec.course}
+                  >
+                    <option value="">
+                      {newRec.course
+                        ? "Select Section..."
+                        : "Select course first..."}
+                    </option>
+                    {sysSections.map((sec) => (
+                      <option key={sec.id} value={sec.name}>
+                        {sec.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-5">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                    Room
+                  </label>
+                  <select
+                    className="form-select"
+                    value={newRec.room}
+                    onChange={(e) => {
+                      setNewRec((p) => ({ ...p, room: e.target.value }));
+                    }}
+                  >
+                    <option value="">Room...</option>
+                    {rooms.map((r) => (
+                      <option key={r} value={r}>
+                        {r}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                    Cabinet
+                  </label>
+                  <select
+                    className="form-select"
+                    value={newRec.cabinet}
+                    onChange={(e) => {
+                      setNewRec((p) => ({ ...p, cabinet: e.target.value }));
+                    }}
+                  >
+                    <option value="">Cab...</option>
+                    {cabinets.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                    Drawer
+                  </label>
+                  <select
+                    className="form-select"
+                    value={newRec.drawer}
+                    onChange={(e) => {
+                      setNewRec((p) => ({ ...p, drawer: e.target.value }));
+                    }}
+                  >
+                    <option value="">D...</option>
+                    {[1, 2, 3, 4].map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-gray-200">
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                  Document Type
+                </label>
+                <select
+                  className="form-select"
+                  value={newRec.docType}
+                  onChange={(e) => {
+                    setNewRec((p) => ({ ...p, docType: e.target.value }));
+                  }}
+                >
+                  <option value="">Select Document Type...</option>
+                  {docTypes.map((t) => (
+                    <option key={t} value={t}>
+                      {t}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <button
+                type="button"
+                onClick={processSubmission}
+                className="w-full bg-pup-maroon text-white py-3 rounded-brand font-bold text-sm hover:bg-red-900 transition-all shadow-sm flex items-center justify-center gap-2"
+              >
+                <i className="ph-bold ph-upload-simple"></i> Submit Upload
+              </button>
+
+              {uploadError ? (
+                <div className="mt-3 p-3 rounded-brand border border-red-200 bg-red-50 text-red-800 text-sm font-bold">
+                  {uploadError}
+                </div>
+              ) : null}
+            </div>
+          ) : (
+            <div className="space-y-5">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                  CSV File
+                </label>
+                <div className="flex gap-3">
+                  <input
+                    ref={csvInputRef}
+                    type="file"
+                    accept=".csv,text/csv"
+                    className="block w-full text-sm text-gray-600 file:mr-3 file:h-11 file:px-4 file:rounded-brand file:border file:border-gray-300 file:bg-white file:text-gray-700 file:font-bold hover:file:border-pup-maroon"
+                    onChange={(e) => handleCsvFileSelect(e.target.files?.[0] || null)}
+                  />
+                </div>
+              </div>
+
+              {csvError ? (
+                <div className="p-3 rounded-brand border border-red-200 bg-red-50 text-red-800 text-sm font-bold">
+                  {csvError}
+                </div>
+              ) : null}
+
+              <div className="border border-gray-200 rounded-brand overflow-hidden bg-white">
+                <div className="p-3 border-b border-gray-200 bg-gray-50">
+                  <div className="text-xs font-bold text-gray-600 uppercase tracking-wider">
+                    Bulk Edit Selected
+                  </div>
+                  <div className="mt-1 text-sm font-bold text-gray-900">
+                    {Object.values(csvSelected).filter(Boolean).length} selected
+                  </div>
+                </div>
+
+                <div className="p-3 border-b border-gray-200 bg-white">
+                  <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+                        Bulk Room
+                      </label>
+                      <select
+                        className="form-select"
+                        value={csvBulkRoom}
+                        onChange={(e) => setCsvBulkRoom(e.target.value)}
+                      >
+                        <option value="">No change</option>
+                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((r) => (
+                          <option key={r} value={String(r)}>
+                            {r}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+                        Bulk Cabinet
+                      </label>
+                      <select
+                        className="form-select"
+                        value={csvBulkCabinet}
+                        onChange={(e) => setCsvBulkCabinet(e.target.value)}
+                      >
+                        <option value="">No change</option>
+                        {cabinets.map((c) => (
+                          <option key={c} value={c}>
+                            {c}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+                        Bulk Drawer
+                      </label>
+                      <select
+                        className="form-select"
+                        value={csvBulkDrawer}
+                        onChange={(e) => setCsvBulkDrawer(e.target.value)}
+                      >
+                        <option value="">No change</option>
+                        {[1, 2, 3, 4].map((d) => (
+                          <option key={d} value={String(d)}>
+                            {d}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="mt-3 flex flex-col lg:flex-row gap-2">
+                    <button
+                      type="button"
+                      onClick={applyCsvBulkLocation}
+                      className="px-4 h-11 rounded-brand bg-pup-maroon text-white font-bold text-sm hover:bg-red-900"
+                      disabled={Object.values(csvSelected).filter(Boolean).length === 0}
+                    >
+                      Apply to Selected
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setCsvSelected({})}
+                      className="px-4 h-11 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
+                      disabled={Object.values(csvSelected).filter(Boolean).length === 0}
+                    >
+                      Clear Selection
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={importCsvStudents}
+                disabled={csvLoading}
+                className={`w-full bg-pup-maroon text-white py-3 rounded-brand font-bold text-sm hover:bg-red-900 transition-all shadow-sm flex items-center justify-center gap-2 ${
+                  csvLoading ? "opacity-75 cursor-not-allowed" : ""
+                }`}
+              >
+                {csvLoading ? "Importing..." : "Import Students"}
+              </button>
+
+              {csvResults.length ? (
+                <div className="p-4 rounded-brand border border-gray-200 bg-white">
+                  <div className="text-sm font-bold text-gray-800">
+                    Import Summary
+                  </div>
+                  <div className="mt-2 text-sm text-gray-700 font-medium">
+                    {csvResults.filter((r) => r.ok).length} created
+                    {" · "}
+                    {csvResults.filter((r) => !r.ok).length} failed
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          )}
+        </div>
+      </section>
+    </div>
+  );
+}

@@ -3,6 +3,7 @@ import {
   createDocument,
   listDocuments,
 } from "../../../lib/documentsRepo";
+import { writeAuditLog } from "../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
@@ -11,6 +12,7 @@ export async function GET(req) {
   const q = searchParams.get("q") || "";
   const studentNo = searchParams.get("studentNo") || "";
   const docType = searchParams.get("docType") || "";
+  const approvalStatus = searchParams.get("approvalStatus") || "";
   const limit = searchParams.get("limit") || "50";
   const offset = searchParams.get("offset") || "0";
 
@@ -18,6 +20,7 @@ export async function GET(req) {
     q: q || undefined,
     studentNo: studentNo || undefined,
     docType: docType || undefined,
+    approvalStatus: approvalStatus || undefined,
     limit,
     offset,
   });
@@ -72,6 +75,7 @@ export async function POST(req) {
     sizeBytes: file.size || buf.length,
     buffer: buf,
   });
+  await writeAuditLog(req, `Uploaded document for student ${studentNo} (${docType})`);
 
   return NextResponse.json({ ok: true, data: row }, { status: 201 });
 }

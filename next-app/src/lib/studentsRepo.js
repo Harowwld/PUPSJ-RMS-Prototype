@@ -1,5 +1,40 @@
 import { dbAll, dbGet, dbRun } from "./sqlite";
 
+async function ensureCourseSectionMapping(courseCodeRaw, sectionRaw) {
+  const courseCode = String(courseCodeRaw || "").trim().toUpperCase();
+  const section = String(sectionRaw || "").trim();
+
+  const course = await dbGet("SELECT code FROM courses WHERE upper(code) = upper(?)", [
+    courseCode,
+  ]);
+  if (!course) {
+    throw new Error(`Invalid courseCode: ${courseCode}`);
+  }
+
+  const sectionRow = await dbGet(
+    "SELECT id, course_code FROM sections WHERE name = ?",
+    [section]
+  );
+  if (!sectionRow) {
+    throw new Error(`Invalid section: ${section}`);
+  }
+
+  const linkedCourse = String(sectionRow.course_code || "").trim().toUpperCase();
+  if (linkedCourse && linkedCourse !== courseCode) {
+    throw new Error(
+      `Section ${section} is linked to ${linkedCourse}, not ${courseCode}`
+    );
+  }
+
+  // Auto-link legacy section records that don't yet have a course assigned.
+  if (!linkedCourse) {
+    await dbRun("UPDATE sections SET course_code = ? WHERE id = ?", [
+      courseCode,
+      sectionRow.id,
+    ]);
+  }
+}
+
 export async function createStudent({
   studentNo,
   name,
@@ -11,6 +46,10 @@ export async function createStudent({
   drawer,
   status,
 }) {
+  const normalizedCourseCode = String(courseCode || "").trim().toUpperCase();
+  const normalizedSection = String(section || "").trim();
+  await ensureCourseSectionMapping(normalizedCourseCode, normalizedSection);
+
   const academicYear = parseInt(yearLevel);
   await dbRun(
     `
@@ -29,9 +68,9 @@ export async function createStudent({
     [
       studentNo,
       name,
-      courseCode,
+      normalizedCourseCode,
       academicYear,
-      section,
+      normalizedSection,
       room,
       cabinet,
       drawer,
@@ -128,15 +167,17 @@ export async function updateStudent(studentNo, patch) {
 
   const next = {
     name: patch.name ?? existing.name,
-    course_code: patch.courseCode ?? existing.course_code,
+    course_code: String(patch.courseCode ?? existing.course_code).trim().toUpperCase(),
     year_level:
       patch.yearLevel === undefined ? existing.year_level : parseInt(patch.yearLevel),
-    section: patch.section ?? existing.section,
+    section: String(patch.section ?? existing.section).trim(),
     room: patch.room === undefined ? existing.room : parseInt(patch.room),
     cabinet: patch.cabinet ?? existing.cabinet,
     drawer: patch.drawer === undefined ? existing.drawer : parseInt(patch.drawer),
     status: patch.status ?? existing.status,
   };
+
+  await ensureCourseSectionMapping(next.course_code, next.section);
 
   await dbRun(
     `

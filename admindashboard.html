@@ -853,31 +853,6 @@
             <div class="space-y-4">
               <div class="flex items-center justify-between">
                 <div class="text-xs">
-                  <div class="font-bold text-gray-700">Auto-Backup</div>
-                  <div class="text-gray-400 flex items-center gap-2">
-                    <span>Daily at</span>
-                    <span
-                      id="autoBackupTimeLabel"
-                      class="font-semibold text-gray-600"
-                      >12:00 AM</span
-                    >
-                    <input
-                      type="time"
-                      id="autoBackupTimeInput"
-                      class="text-[11px] border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-pup-maroon"
-                      onchange="setAutoBackupTime(this.value)"
-                    />
-                  </div>
-                </div>
-                <label class="relative inline-flex items-center cursor-pointer">
-                  <input type="checkbox" checked class="sr-only peer" />
-                  <div
-                    class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pup-maroon"
-                  ></div>
-                </label>
-              </div>
-              <div class="flex items-center justify-between">
-                <div class="text-xs">
                   <div class="font-bold text-gray-700">Maintenance Mode</div>
                   <div class="text-gray-400">Lock non-admin logins</div>
                 </div>
@@ -1229,7 +1204,6 @@
         "Admission",
       ];
       const roles = ["Admin", "Staff"];
-      let autoBackupTime = "00:00";
 
       let staffData = [
         {
@@ -1311,13 +1285,6 @@
           ip: "192.168.1.12",
         },
         {
-          time: "09:15 AM",
-          user: "System",
-          role: "System",
-          action: "Daily automated backup completed (1.2GB)",
-          ip: "localhost",
-        },
-        {
           time: "08:55 AM",
           user: "Lorna Tolentino",
           role: "Staff",
@@ -1374,104 +1341,7 @@
         renderStats();
         renderRecentLogins();
         renderLogs();
-        initAutoBackupTime();
       });
-
-      // --- 3. CORE FUNCTIONS ---
-
-      function switchView(viewName) {
-        // Hide all views
-        document.getElementById("view-directory").classList.add("hidden");
-        document.getElementById("view-create").classList.add("hidden");
-        document.getElementById("view-logs").classList.add("hidden");
-        document.getElementById("view-backup").classList.add("hidden");
-
-        // Reset Nav
-        document
-          .querySelectorAll(".btn-nav")
-          .forEach((b) => b.classList.remove("active"));
-
-        // Show selected
-        document.getElementById(`view-${viewName}`).classList.remove("hidden");
-        if (viewName === "backup" || viewName === "directory") {
-          document.getElementById(`view-${viewName}`).classList.add("flex");
-        } else {
-          document.getElementById(`view-${viewName}`).classList.remove("flex");
-        }
-        document.getElementById(`nav-${viewName}`).classList.add("active");
-
-        // Trigger specific renders
-        if (viewName === "directory") {
-          renderTable();
-          renderStats();
-        }
-      }
-
-      function renderStats() {
-        document.getElementById("stat-total").innerText = staffData.length;
-        document.getElementById("stat-active").innerText = staffData.filter(
-          (s) => s.status === "Active"
-        ).length;
-      }
-
-      function renderRecentLogins() {
-        const container = document.getElementById("recentLogins");
-        const recent = staffData
-          .filter((s) => s.status === "Active")
-          .slice(0, 4);
-
-        container.innerHTML = recent
-          .map(
-            (s) => `
-            <div class="flex items-center gap-2 p-2 rounded hover:bg-gray-50 transition-colors cursor-pointer group">
-               <div class="w-6 h-6 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-[10px] font-bold">
-                  ${s.fname[0]}${s.lname[0]}
-               </div>
-               <div class="overflow-hidden">
-                  <div class="text-xs font-bold text-gray-700 truncate group-hover:text-pup-maroon">${s.fname} ${s.lname}</div>
-                  <div class="text-[10px] text-gray-400 flex items-center gap-1">
-                     <div class="w-1.5 h-1.5 rounded-full bg-green-400"></div> ${s.lastActive}
-                  </div>
-               </div>
-            </div>
-         `
-          )
-          .join("");
-      }
-
-      // Auto-backup time handling
-      function initAutoBackupTime() {
-        const timeInput = document.getElementById("autoBackupTimeInput");
-        if (timeInput) {
-          if (timeInput.value) {
-            autoBackupTime = timeInput.value;
-          } else {
-            timeInput.value = autoBackupTime;
-          }
-          updateAutoBackupLabel(autoBackupTime);
-        }
-      }
-
-      function setAutoBackupTime(value) {
-        if (!value) return;
-        autoBackupTime = value;
-        updateAutoBackupLabel(value);
-        showToast(`Auto-backup time set to ${formatTime(value)}`);
-      }
-
-      function updateAutoBackupLabel(value) {
-        const label = document.getElementById("autoBackupTimeLabel");
-        if (label) label.innerText = formatTime(value);
-      }
-
-      function formatTime(value) {
-        // value in "HH:MM"
-        const [hourStr, minute] = value.split(":");
-        let hour = parseInt(hourStr, 10);
-        const suffix = hour >= 12 ? "PM" : "AM";
-        hour = hour % 12 || 12;
-        return `${hour}:${minute} ${suffix}`;
-      }
 
       function renderTable() {
         const tbody = document.getElementById("staffTableBody");

@@ -1,27 +1,44 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { io } from "socket.io-client";
+import { toast } from "sonner";
 
-function formatTime(value) {
-  const [hourStr, minute] = value.split(":");
-  let hour = parseInt(hourStr, 10);
-  const suffix = hour >= 12 ? "PM" : "AM";
-  hour = hour % 12 || 12;
-  return `${hour}:${minute} ${suffix}`;
-}
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
+import PasswordChangeModal from "@/components/shared/PasswordChangeModal";
+import ConfirmModal from "@/components/shared/ConfirmModal";
+import PromptModal from "@/components/shared/PromptModal";
+
+import StaffDirectoryTab from "@/components/admin/StaffDirectoryTab";
+import RegisterAccountTab from "@/components/admin/RegisterAccountTab";
+import AuditLogsTab from "@/components/admin/AuditLogsTab";
+import BackupMaintenanceTab from "@/components/admin/BackupMaintenanceTab";
+import EditUserModal from "@/components/admin/EditUserModal";
+import SystemConfigTab from "@/components/admin/SystemConfigTab";
+import DigitalRecordsReviewTab from "@/components/admin/DigitalRecordsReviewTab";
 
 export default function AdminPage() {
   const router = useRouter();
-  const restoreFileRef = useRef(null);
-  const toastTimerRef = useRef(null);
-
-  const DEFAULT_TEMP_PASSWORD = "pupstaff";
+  const loadedViewsRef = useRef({
+    directory: false,
+    logs: false,
+    system: false,
+    backup: false,
+    review: false,
+    system_data: true,
+    create: true,
+  });
 
   const [view, setView] = useState("directory");
-  const [profileOpen, setProfileOpen] = useState(false);
-  const [toast, setToast] = useState({ open: false, msg: "", isError: false });
+  const [viewLoading, setViewLoading] = useState({
+    directory: false,
+    logs: false,
+    system: false,
+    backup: false,
+    review: false,
+  });
 
   const [staffData, setStaffData] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
@@ -30,8 +47,6 @@ export default function AdminPage() {
   const [logsPerPage, setLogsPerPage] = useState(20);
   const [logSearch, setLogSearch] = useState("");
 
-  const [autoBackupTime, setAutoBackupTime] = useState("00:00");
-  const [activeSessions, setActiveSessions] = useState(0);
   const [systemHealth, setSystemHealth] = useState({
     cpu: 0,
     disk: { total: 0, free: 0, percent: 0 },
@@ -39,6 +54,8 @@ export default function AdminPage() {
     dbStatus: "Healthy",
   });
   const [backups, setBackups] = useState([]);
+  const [reviewRecords, setReviewRecords] = useState([]);
+  const [reviewStatusFilter, setReviewStatusFilter] = useState("All");
 
   const [search, setSearch] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
@@ -78,14 +95,142 @@ export default function AdminPage() {
 
   const [authUser, setAuthUser] = useState(null);
   const [pwOpen, setPwOpen] = useState(false);
-  const [pwCurrent, setPwCurrent] = useState("");
-  const [pwNext, setPwNext] = useState("");
-  const [pwConfirm, setPwConfirm] = useState("");
-  const [pwLoading, setPwLoading] = useState(false);
-  const [pwError, setPwError] = useState("");
 
   const [defaultPwOpen, setDefaultPwOpen] = useState(false);
   const [defaultPwUserLabel, setDefaultPwUserLabel] = useState("");
+  const [declinePromptOpen, setDeclinePromptOpen] = useState(false);
+  const [declineReason, setDeclineReason] = useState("");
+  const [pendingDeclineDocId, setPendingDeclineDocId] = useState(null);
+
+  const showToast = useCallback((msg, isError = false, autoHide = true) => {
+    const text = String(msg || "");
+    if (isError) {
+      toast.error(text);
+      return;
+    }
+    if (!autoHide) {
+      toast.message(text, { duration: 5000 });
+      return;
+    }
+    toast.success(text);
+  }, []);
+
+  const refreshStaff = useCallback(async () => {
+    setViewLoading((prev) => ({ ...prev, directory: true }));
+    try {
+      const res = await fetch("/api/staff?limit=500");
+      const json = await res.json();
+      if (!res.ok || !json?.ok)
+        throw new Error(json?.error || "Failed to load staff");
+      setStaffData(Array.isArray(json.data) ? json.data : []);
+      loadedViewsRef.current.directory = true;
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      setViewLoading((prev) => ({ ...prev, directory: false }));
+    }
+  }, [showToast]);
+
+  const refreshAuditLogs = useCallback(async () => {
+    setViewLoading((prev) => ({ ...prev, logs: true }));
+    try {
+      const offset = (logPage - 1) * logsPerPage;
+      const resLogs = await fetch(
+        `/api/audit-logs?limit=${logsPerPage}&offset=${offset}&search=${encodeURIComponent(logSearch)}`,
+      );
+      const jsonLogs = await resLogs.json();
+      if (!resLogs.ok || !jsonLogs?.ok)
+        throw new Error(jsonLogs?.error || "Failed to load audit logs");
+
+      setLogTotal(jsonLogs.total || 0);
+      const rows = Array.isArray(jsonLogs.data) ? jsonLogs.data : [];
+      setAuditLogs(
+        rows.map((r) => ({
+          time: r.created_at,
+          user: r.actor,
+          role: r.role,
+          action: r.action,
+          ip: r.ip || "—",
+        })),
+      );
+      loadedViewsRef.current.logs = true;
+    } catch (err) {
+      // silent
+    } finally {
+      setViewLoading((prev) => ({ ...prev, logs: false }));
+    }
+  }, [logPage, logsPerPage, logSearch]);
+
+  const refreshSystemHealth = useCallback(async () => {
+    try {
+      const res = await fetch("/api/system/health", { cache: "no-store" });
+      const json = await res.json();
+      if (res.ok && json?.ok) {
+        setSystemHealth(json.data);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const refreshBackups = useCallback(async () => {
+    setViewLoading((prev) => ({ ...prev, system: true, backup: true }));
+    try {
+      const res = await fetch(`/api/system/backup?t=${Date.now()}`, {
+        cache: "no-store",
+      });
+      const json = await res.json();
+      if (res.ok && json?.ok) {
+        setBackups(Array.isArray(json.data) ? json.data : []);
+        loadedViewsRef.current.system = true;
+        loadedViewsRef.current.backup = true;
+      }
+    } catch (err) {
+      console.error("Failed to refresh backups:", err);
+    } finally {
+      setViewLoading((prev) => ({ ...prev, system: false, backup: false }));
+    }
+  }, []);
+
+  const refreshReviewRecords = useCallback(async () => {
+    setViewLoading((prev) => ({ ...prev, review: true }));
+    try {
+      const approvalStatus =
+        reviewStatusFilter === "All" ? "" : `&approvalStatus=${encodeURIComponent(reviewStatusFilter)}`;
+      const res = await fetch(`/api/documents?limit=200${approvalStatus}`);
+      const json = await res.json();
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || "Failed to load review records");
+      }
+      setReviewRecords(Array.isArray(json.data) ? json.data : []);
+      loadedViewsRef.current.review = true;
+    } catch (err) {
+      showToast(err?.message || "Failed to load review records", true);
+    } finally {
+      setViewLoading((prev) => ({ ...prev, review: false }));
+    }
+  }, [reviewStatusFilter, showToast]);
+
+  const logAdminAction = useCallback(
+    async (action) => {
+      try {
+        await fetch("/api/audit-logs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            actor: "Admin User",
+            role: "Admin",
+            action,
+            ip: "localhost",
+          }),
+        });
+        refreshAuditLogs();
+      } catch {
+        // ignore
+      }
+    },
+    [refreshAuditLogs],
+  );
 
   useEffect(() => {
     (async () => {
@@ -100,112 +245,274 @@ export default function AdminPage() {
         if (json?.data?.mustChangePassword) {
           setPwOpen(true);
         }
+        setTimeout(() => {
+          refreshStaff();
+          refreshSystemHealth();
+        }, 0);
       } catch {
         router.push("/");
       }
     })();
-  }, []);
+  }, [router, refreshStaff, refreshAuditLogs, refreshSystemHealth]);
 
-  function clearPwForm() {
-    setPwCurrent("");
-    setPwNext("");
-    setPwConfirm("");
-    setPwError("");
-  }
+  useEffect(() => {
+    const timer = setInterval(refreshSystemHealth, 10000);
+    return () => clearInterval(timer);
+  }, [refreshSystemHealth]);
 
-  function submitChangePassword(e) {
-    e.preventDefault();
-    if (pwLoading) return;
-    if (!authUser?.id || authUser.id === "admin") {
-      setPwError("Password change is not available for this account");
-      return;
+  useEffect(() => {
+    if (view === "backup" || view === "system") {
+      // Render the tab first, then hydrate data in the background.
+      setTimeout(() => {
+        refreshBackups();
+      }, 0);
     }
-    if (!pwCurrent || !pwNext || !pwConfirm) {
-      setPwError("Please fill all fields");
-      return;
-    }
-    if (pwNext !== pwConfirm) {
-      setPwError("New password does not match");
-      return;
-    }
-    if (pwNext.length < 6) {
-      setPwError("Password must be at least 6 characters");
-      return;
-    }
+  }, [view, refreshBackups]);
 
-    setPwError("");
-    setPwLoading(true);
+  useEffect(() => {
+    if (view === "logs") {
+      // Render the tab first, then hydrate data in the background.
+      setTimeout(() => {
+        refreshAuditLogs();
+      }, 0);
+    }
+  }, [view, refreshAuditLogs]);
 
-    (async () => {
+  useEffect(() => {
+    if (view === "review") {
+      setTimeout(() => {
+        refreshReviewRecords();
+      }, 0);
+    }
+  }, [view, refreshReviewRecords]);
+
+  const switchView = useCallback((nextView) => {
+    setView(nextView);
+    if (nextView === "directory" && !loadedViewsRef.current.directory) {
+      setTimeout(() => {
+        refreshStaff();
+      }, 0);
+    }
+    if (nextView === "logs" && !loadedViewsRef.current.logs) {
+      setTimeout(() => {
+        refreshAuditLogs();
+      }, 0);
+    }
+    if (
+      (nextView === "system" || nextView === "backup") &&
+      !loadedViewsRef.current.system
+    ) {
+      setTimeout(() => {
+        refreshBackups();
+      }, 0);
+    }
+    if (nextView === "review" && !loadedViewsRef.current.review) {
+      setTimeout(() => {
+        refreshReviewRecords();
+      }, 0);
+    }
+  }, [refreshAuditLogs, refreshBackups, refreshStaff, refreshReviewRecords]);
+
+  const reviewDocumentStatus = useCallback(
+    async (id, approvalStatus, reviewNote = "") => {
       try {
-        const res = await fetch("/api/auth/change-password", {
-          method: "POST",
+        const res = await fetch(`/api/documents/${id}`, {
+          method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            currentPassword: pwCurrent,
-            newPassword: pwNext,
-          }),
+          body: JSON.stringify({ approvalStatus, reviewNote }),
         });
         const json = await res.json();
         if (!res.ok || !json?.ok) {
-          throw new Error(json?.error || "Failed to change password");
+          throw new Error(json?.error || "Failed to review document");
         }
-
-        setAuthUser((u) => (u ? { ...u, mustChangePassword: false } : u));
-
-        await logAdminAction("Changed account password");
-
-        clearPwForm();
-        setPwOpen(false);
-        showToast("Password updated successfully!");
+        showToast(`Document ${approvalStatus.toLowerCase()} successfully.`);
+        await logAdminAction(`${approvalStatus} document ID ${id}`);
+        refreshReviewRecords();
       } catch (err) {
-        setPwError(err?.message || "Failed to change password");
-      } finally {
-        setPwLoading(false);
+        showToast(err?.message || "Failed to review document", true);
       }
-    })();
-  }
+    },
+    [refreshReviewRecords, showToast, logAdminAction]
+  );
 
-  async function refreshActiveSessions() {
-    const res = await fetch("/api/sessions");
-    const json = await res.json();
-    if (res.ok && json?.ok) {
-      setActiveSessions(json.data.count || 0);
-    }
-  }
+  const openDeclinePrompt = useCallback((id) => {
+    setPendingDeclineDocId(id);
+    setDeclineReason("");
+    setDeclinePromptOpen(true);
+  }, []);
 
-  async function refreshSystemHealth() {
+  const submitDeclineWithReason = useCallback(async () => {
+    if (!pendingDeclineDocId) return;
+    const id = pendingDeclineDocId;
+    const note = declineReason;
+    setDeclinePromptOpen(false);
+    setPendingDeclineDocId(null);
+    setDeclineReason("");
+    await reviewDocumentStatus(id, "Declined", note);
+  }, [pendingDeclineDocId, declineReason, reviewDocumentStatus]);
+
+  const [socket, setSocket] = useState(null);
+
+  useEffect(() => {
+    const s = io({ path: "/api/socket", addTrailingSlash: false });
+    setSocket(s);
+    return () => {
+      s.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.emit("adminSubscribe");
+
+    const onStaffLogin = (data) => {
+      setStaffData((prev) => {
+        const index = prev.findIndex((s) => s.id === data.staffId);
+        if (index === -1) return prev;
+        const next = [...prev];
+        next[index] = {
+          ...next[index],
+          status: "Active",
+          last_active: data.last_active || new Date().toISOString(),
+        };
+        return next;
+      });
+    };
+
+    const onStaffLogout = (data) => {
+      setStaffData((prev) => {
+        const index = prev.findIndex((s) => s.id === data.staffId);
+        if (index === -1) return prev;
+        const next = [...prev];
+        next[index] = { ...next[index], status: "Inactive" };
+        return next;
+      });
+    };
+
+    socket.on("staffLogin", onStaffLogin);
+    socket.on("staffLogout", onStaffLogout);
+
+    return () => {
+      socket.off("staffLogin", onStaffLogin);
+      socket.off("staffLogout", onStaffLogout);
+    };
+  }, [socket, showToast, refreshBackups]);
+
+  const handleLogout = async () => {
     try {
-      const res = await fetch("/api/system/health", { cache: "no-store" });
-      const json = await res.json();
-      if (res.ok && json?.ok) {
-        setSystemHealth(json.data);
-      }
+      await fetch("/api/auth/logout", { method: "POST" });
     } catch {
-      // ignore
+      /* ignore */
     }
-  }
+    router.push("/");
+  };
 
-  async function refreshHealth() {
-    await refreshSystemHealth();
-  }
-
-  async function refreshBackups() {
+  const handleCreate = async (e) => {
+    e.preventDefault();
+    const section = createForm.role === "Admin" ? "Administrative" : "Records";
     try {
-      // Add a timestamp to bypass any potential browser/intermediate caching
-      const res = await fetch(`/api/system/backup?t=${Date.now()}`, {
-        cache: "no-store",
+      const res = await fetch("/api/staff", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...createForm, section }),
       });
       const json = await res.json();
-      if (res.ok && json?.ok) {
-        setBackups(Array.isArray(json.data) ? json.data : []);
-      }
-    } catch (err) {
-      console.error("Failed to refresh backups:", err);
-    }
-  }
+      if (!res.ok || !json?.ok)
+        throw new Error(json?.error || "Failed to create staff");
 
-  async function syncExternal(id) {
+      setStaffData((prev) => [json.data, ...prev]);
+      await logAdminAction(
+        `Created account for ${createForm.fname} ${createForm.lname}`,
+      );
+      showToast(`Account created for ${createForm.fname} ${createForm.lname}!`);
+      setDefaultPwUserLabel(
+        `${createForm.fname} ${createForm.lname}`.trim() || createForm.id,
+      );
+      setDefaultPwOpen(true);
+      setCreateForm({
+        id: "",
+        role: "",
+        fname: "",
+        lname: "",
+        email: "",
+        status: "Active",
+      });
+      switchView("directory");
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    const section = editForm.role === "Admin" ? "Administrative" : "Records";
+    try {
+      const res = await fetch(`/api/staff/${editOriginalId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...editForm, section }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json?.ok)
+        throw new Error(json?.error || "Failed to update staff");
+
+      setStaffData((prev) =>
+        prev.map((u) => (u.id === editOriginalId ? json.data : u)),
+      );
+      await logAdminAction(
+        `Updated account details for ${json.data.fname} ${json.data.lname}`,
+      );
+      showToast("Account updated successfully!");
+      setEditOpen(false);
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteTarget || deleteLoading) return;
+    setDeleteLoading(true);
+    try {
+      const res = await fetch(`/api/staff/${deleteTarget.id}`, {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (!res.ok || !json?.ok)
+        throw new Error(json?.error || "Failed to delete staff");
+      setStaffData((prev) => prev.filter((s) => s.id !== deleteTarget.id));
+      await logAdminAction(`Removed staff account: ${deleteTarget.id}`);
+      showToast("User removed successfully.");
+      setDeleteOpen(false);
+    } catch (err) {
+      showToast(err.message, true);
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const simulateBackup = async () => {
+    showToast("Creating full system backup...", false, false);
+    try {
+      const res = await fetch("/api/system/backup", { method: "POST" });
+      const json = await res.json();
+      if (!res.ok || !json?.ok)
+        throw new Error(json?.error || "Failed to create backup");
+
+      if (json.data?.id) {
+        const link = document.createElement("a");
+        link.href = `/api/system/backup/download?id=${json.data.id}`;
+        link.download = json.data.filename;
+        link.click();
+      }
+      showToast("Backup created and download started!");
+      refreshBackups();
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  };
+
+  const syncExternal = async (id) => {
     showToast("Syncing encrypted backup to external drive...", false, false);
     try {
       const res = await fetch("/api/system/backup/sync-external", {
@@ -218,1834 +525,314 @@ export default function AdminPage() {
       showToast("Synced to external drive successfully!");
       refreshBackups();
     } catch (err) {
-      showToast(err?.message, true);
+      showToast(err.message, true);
     }
-  }
+  };
 
-  useEffect(() => {
-    refreshSystemHealth();
-    const timer = setInterval(refreshSystemHealth, 10000);
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    if (view === "backup") {
-      refreshBackups();
-    }
-  }, [view]);
-
-  async function refreshStaff() {
-    const res = await fetch("/api/staff?limit=500");
-    const json = await res.json();
-    if (!res.ok || !json?.ok)
-      throw new Error(json?.error || "Failed to load staff");
-    setStaffData(Array.isArray(json.data) ? json.data : []);
-  }
-
-  async function refreshAuditLogs() {
-    const offset = (logPage - 1) * logsPerPage;
-    const resLogs = await fetch(
-      `/api/audit-logs?limit=${logsPerPage}&offset=${offset}&search=${encodeURIComponent(logSearch)}`,
-    );
-    const jsonLogs = await resLogs.json();
-    if (!resLogs.ok || !jsonLogs?.ok)
-      throw new Error(jsonLogs?.error || "Failed to load audit logs");
-
-    setLogTotal(jsonLogs.total || 0);
-    const rows = Array.isArray(jsonLogs.data) ? jsonLogs.data : [];
-    setAuditLogs(
-      rows.map((r) => ({
-        time: r.created_at,
-        user: r.actor,
-        role: r.role,
-        action: r.action,
-        ip: r.ip || "—",
-      })),
-    );
-  }
-
-  useEffect(() => {
-    if (view === "logs") {
-      refreshAuditLogs().catch((e) => showToast(e?.message, true));
-    }
-  }, [logPage, logsPerPage, logSearch, view]);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        await refreshStaff();
-        await refreshAuditLogs();
-        await refreshActiveSessions();
-      } catch (e) {
-        setStaffData([]);
-        showToast(e?.message || "Failed to load staff", true);
-      }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // WebSocket connection for real-time updates
-  useEffect(() => {
-    // Initialize Socket.io connection
-    const socket = io({
-      path: "/api/socket",
-      addTrailingSlash: false,
-    });
-
-    // Subscribe to admin events
-    socket.emit("adminSubscribe");
-
-    // Listen for staff login events
-    socket.on("staffLogin", (data) => {
-      setStaffData((prev) => {
-        const index = prev.findIndex((s) => s.id === data.staffId);
-        if (index === -1) return prev;
-        const next = [...prev];
-        next[index] = {
-          ...next[index],
-          status: "Active",
-          last_active: data.last_active || new Date().toISOString(),
-        };
-        return next;
-      });
-      refreshActiveSessions();
-    });
-
-    // Listen for staff logout events
-    socket.on("staffLogout", (data) => {
-      setStaffData((prev) => {
-        const index = prev.findIndex((s) => s.id === data.staffId);
-        if (index === -1) return prev;
-        const next = [...prev];
-        next[index] = {
-          ...next[index],
-          status: "Inactive",
-        };
-        return next;
-      });
-      refreshActiveSessions();
-    });
-
-    socket.on("connect", () => {
-      console.log("WebSocket connected");
-    });
-
-    socket.on("disconnect", () => {
-      console.log("WebSocket disconnected");
-    });
-
-    return () => {
-      socket.disconnect();
-    };
-  }, []);
-
-  function showToast(msg, isError = false, autoHide = true) {
-    if (toastTimerRef.current) clearTimeout(toastTimerRef.current);
-    setToast({ open: true, msg, isError });
-    if (autoHide) {
-      toastTimerRef.current = setTimeout(() => {
-        setToast((t) => ({ ...t, open: false }));
-      }, 3000);
-    }
-  }
-
-  const filteredStaff = useMemo(() => {
-    const q = search.toLowerCase();
-    return staffData.filter((s) => {
-      const matchesSearch =
-        `${s.fname} ${s.lname}`.toLowerCase().includes(q) ||
-        s.id.toLowerCase().includes(q);
-      const matchesRole = roleFilter === "All" || s.role === roleFilter;
-      const matchesStatus = statusFilter === "All" || s.status === statusFilter;
-      return matchesSearch && matchesRole && matchesStatus;
-    });
-  }, [search, roleFilter, staffData, statusFilter]);
-
-  const recentLogins = useMemo(() => {
-    return staffData.filter((s) => s.status === "Active").slice(0, 4);
-  }, [staffData]);
-
-  const stats = useMemo(() => {
-    return {
-      total: staffData.length,
-      active: staffData.filter((s) => s.status === "Active").length,
-    };
-  }, [staffData]);
-
-  const displayLogs = useMemo(() => auditLogs, [auditLogs]);
-
-  async function logAdminAction(action) {
-    try {
-      await fetch("/api/audit-logs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          actor: "Admin User",
-          role: "Admin",
-          action,
-          ip: "localhost",
-        }),
-      });
-    } catch {
-      // ignore logging errors
-    }
-
-    setAuditLogs((prev) => [
-      {
-        time: new Date().toISOString(),
-        user: "Admin User",
-        role: "Admin",
-        action,
-        ip: "localhost",
-      },
-      ...prev,
-    ]);
-  }
-
-  function switchView(next) {
-    setView(next);
-
-    if (next === "directory") {
-      (async () => {
-        try {
-          await refreshStaff();
-          await refreshActiveSessions();
-        } catch {
-          // ignore
-        }
-      })();
-    }
-
-    if (next === "logs") {
-      (async () => {
-        try {
-          await refreshAuditLogs();
-        } catch {
-          // ignore
-        }
-      })();
-    }
-  }
-
-  function logout() {
-    (async () => {
-      try {
-        await fetch("/api/auth/logout", { method: "POST" });
-      } catch {
-        // ignore
-      }
-      router.push("/");
-    })();
-  }
-
-  function resetCreateForm() {
-    setCreateForm({
-      id: "",
-      role: "",
-      fname: "",
-      lname: "",
-      email: "",
-      status: "Active",
-    });
-  }
-
-  function deleteBackup(id) {
-    const backup = backups.find((b) => b.id === id);
-    if (!backup) return;
-    setBackupDeleteTarget(backup);
-    setBackupDeleteOpen(true);
-  }
-
-  async function confirmDeleteBackup() {
+  const confirmDeleteBackup = async () => {
     if (!backupDeleteTarget || backupDeleteLoading) return;
-    const id = backupDeleteTarget.id;
-    console.log(`[UI] Confirming delete for backup ID: ${id} (${typeof id})`);
     setBackupDeleteLoading(true);
-    showToast("Deleting backup...", false, false);
-
     try {
-      const res = await fetch(`/api/system/backup/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/system/backup/${backupDeleteTarget.id}`, {
+        method: "DELETE",
+      });
       const json = await res.json();
-      console.log(`[UI] Delete Response:`, json);
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to delete backup");
-
       await logAdminAction(`Deleted backup: ${backupDeleteTarget.filename}`);
       showToast("Backup deleted successfully.");
       setBackupDeleteOpen(false);
-      setBackupDeleteTarget(null);
-
-      // Manually update the state to remove the item immediately from UI
-      setBackups((prev) => {
-        const next = prev.filter((b) => String(b.id) !== String(id));
-        console.log(
-          `[UI] State update: ${prev.length} -> ${next.length} items`,
-        );
-        return next;
-      });
+      refreshBackups();
     } catch (err) {
-      console.error(`[UI] Delete Error:`, err);
-      showToast(err?.message || "Failed to delete backup", true);
+      showToast(err.message, true);
     } finally {
       setBackupDeleteLoading(false);
     }
-  }
-
-  const lastBackupTime = useMemo(() => {
-    if (!backups || backups.length === 0) return "Never";
-
-    const last = backups[0];
-
-    try {
-      const dateStr = last.created_at.replace(" ", "T") + "Z";
-      const utcDate = new Date(dateStr);
-
-      const now = new Date();
-
-      const datePH = utcDate.toLocaleDateString("en-PH", {
-        timeZone: "Asia/Manila",
-      });
-
-      const todayPH = now.toLocaleDateString("en-PH", {
-        timeZone: "Asia/Manila",
-      });
-
-      const timeStr = utcDate.toLocaleTimeString("en-PH", {
-        timeZone: "Asia/Manila",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-
-      if (datePH === todayPH) return `Today, ${timeStr}`;
-
-      return `${datePH}, ${timeStr}`;
-    } catch {
-      return last.created_at;
-    }
-  }, [backups]);
-
-  const formatPHTime = (dateString) => {
-    const date = new Date(dateString.replace(" ", "T") + "Z");
-
-    const datePH = date.toLocaleDateString("en-PH", {
-      timeZone: "Asia/Manila",
-    });
-
-    const timePH = date.toLocaleTimeString("en-PH", {
-      timeZone: "Asia/Manila",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-
-    return `${datePH}, ${timePH}`;
   };
 
-  function handleCreate(e) {
-    e.preventDefault();
-    const id = createForm.id;
-    const fname = createForm.fname;
-    const lname = createForm.lname;
-    const role = createForm.role;
-    const email = createForm.email;
-    const section = role === "Admin" ? "Administrative" : "Records";
-    const status = createForm.status;
-
-    (async () => {
-      try {
-        const res = await fetch("/api/staff", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id,
-            fname,
-            lname,
-            role,
-            email,
-            section,
-            status,
-          }),
-        });
-        const json = await res.json();
-        if (!res.ok || !json?.ok)
-          throw new Error(json?.error || "Failed to create staff");
-
-        setStaffData((prev) => [json.data, ...prev]);
-        await logAdminAction(`Created account for ${fname} ${lname}`);
-        showToast(`Account created for ${fname} ${lname}!`);
-        setDefaultPwUserLabel(`${fname} ${lname}`.trim() || id);
-        setDefaultPwOpen(true);
-        resetCreateForm();
-        switchView("directory");
-      } catch (err) {
-        showToast(err?.message || "Failed to create staff", true);
-      }
-    })();
-  }
-
-  function deleteUser(id) {
-    const user = staffData.find((s) => s.id === id);
-    if (!user) return;
-    setDeleteTarget(user);
-    setDeleteOpen(true);
-  }
-
-  function confirmDelete() {
-    if (!deleteTarget || deleteLoading) return;
-    const id = deleteTarget.id;
-    setDeleteLoading(true);
-    showToast("Removing staff member...", false, false);
-
-    (async () => {
-      try {
-        const res = await fetch(`/api/staff/${id}`, { method: "DELETE" });
-        const json = await res.json();
-        if (!res.ok || !json?.ok)
-          throw new Error(json?.error || "Failed to delete staff");
-        setStaffData((prev) => prev.filter((s) => s.id !== id));
-        await logAdminAction(`Removed staff account: ${id}`);
-        showToast("User removed successfully.");
-        setDeleteOpen(false);
-        setDeleteTarget(null);
-      } catch (err) {
-        showToast(err?.message || "Failed to delete staff", true);
-      } finally {
-        setDeleteLoading(false);
-      }
-    })();
-  }
-
-  function openEditUser(id) {
-    const user = staffData.find((u) => u.id === id);
-    if (!user) return;
-    setEditOriginalId(user.id);
-    setEditForm({
-      id: user.id,
-      role: user.role,
-      fname: user.fname,
-      lname: user.lname,
-      email: user.email,
-      status: user.status,
-    });
-    setEditOpen(true);
-  }
-
-  function closeEditModal() {
-    setEditOpen(false);
-  }
-
-  function handleEditSubmit(e) {
-    e.preventDefault();
-    const originalId = editOriginalId;
-    const newId = editForm.id;
-    const section = editForm.role === "Admin" ? "Administrative" : "Records";
-
-    (async () => {
-      try {
-        const res = await fetch(`/api/staff/${originalId}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: newId,
-            fname: editForm.fname,
-            lname: editForm.lname,
-            role: editForm.role,
-            section,
-            email: editForm.email,
-          }),
-        });
-        const json = await res.json();
-        if (!res.ok || !json?.ok)
-          throw new Error(json?.error || "Failed to update staff");
-
-        const updatedUser = json.data;
-        setStaffData((prev) => {
-          const next = [...prev];
-          const index = next.findIndex((u) => u.id === originalId);
-          if (index !== -1) next[index] = updatedUser;
-          return next;
-        });
-        await logAdminAction(
-          `Updated account details for ${updatedUser.fname} ${updatedUser.lname}`,
-        );
-        showToast("Account updated successfully!");
-        closeEditModal();
-      } catch (err) {
-        showToast(err?.message || "Failed to update staff", true);
-      }
-    })();
-  }
-
-  function exportData() {
-    let csvContent = "data:text/csv;charset=utf-8,";
-    csvContent += "ID,First Name,Last Name,Role,Status,Email\n";
-    staffData.forEach((s) => {
-      csvContent += `${s.id},${s.fname},${s.lname},${s.role},${s.status},${s.email}\n`;
-    });
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
-    link.setAttribute("download", "pup_staff_list.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  }
-
-  function simulateBackup() {
-    showToast("Creating full system backup...", false, false);
-    (async () => {
-      try {
-        const res = await fetch("/api/system/backup", { method: "POST" });
-        const json = await res.json();
-        if (!res.ok || !json?.ok)
-          throw new Error(json?.error || "Failed to create backup");
-
-        // Automatically trigger download of the newly created backup
-        if (json.data && json.data.id) {
-          const link = document.createElement("a");
-          link.href = `/api/system/backup/download?id=${json.data.id}`;
-          link.download = json.data.filename;
-          link.click();
-        }
-
-        showToast("Backup created and download started!");
-        refreshBackups();
-      } catch (err) {
-        showToast(err?.message || "Backup failed", true);
-      }
-    })();
-  }
-
-  function handleRestoreFileChange(e) {
-    const file = e.target.files && e.target.files[0];
-    if (!file) return;
-
-    if (!file.name.endsWith(".zip")) {
-      showToast("Only .zip files are supported for restore", true);
-      e.target.value = "";
-      return;
-    }
-
-    setRestoreFile(file);
-    setRestoreConfirmOpen(true);
-    e.target.value = ""; // Reset input so same file can be selected again if cancelled
-  }
-
-  async function confirmRestore() {
+  const confirmRestore = async () => {
     if (!restoreFile || restoreLoading) return;
-
     setRestoreLoading(true);
-    showToast(
-      `Preparing to restore from '${restoreFile.name}'...`,
-      false,
-      false,
-    );
-
     const formData = new FormData();
     formData.append("file", restoreFile);
-
     try {
       const res = await fetch("/api/system/backup/restore", {
         method: "POST",
         body: formData,
       });
       const json = await res.json();
-
-      if (!res.ok || !json?.ok) {
+      if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to restore system");
-      }
-
       await logAdminAction(`Restored system from backup: ${restoreFile.name}`);
-      showToast("System restored successfully! Reloading in 3 seconds...");
-      setRestoreConfirmOpen(false);
-      setRestoreFile(null);
-
-      setTimeout(() => {
-        location.reload();
-      }, 3000);
+      showToast("System restored! Reloading...");
+      setTimeout(() => location.reload(), 3000);
     } catch (err) {
-      console.error("[UI] Restore Error:", err);
-      showToast(err?.message || "Restore failed", true);
+      showToast(err.message, true);
       setRestoreLoading(false);
     }
-  }
+  };
+
+  const exportData = () => {
+    let csv = "ID,First Name,Last Name,Role,Status,Email\n";
+    staffData.forEach((s) => {
+      csv += `${s.id},${s.fname},${s.lname},${s.role},${s.status},${s.email}\n`;
+    });
+    const link = document.createElement("a");
+    link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + csv));
+    link.setAttribute("download", "pup_staff_list.csv");
+    link.click();
+  };
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
-      <header className="bg-white border-b border-gray-300 flex-none z-20 shadow-sm">
-        <div className="max-w-400 mx-auto px-4 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <i className="ph-bold ph-bank text-3xl text-pup-maroon"></i>
-            <div className="leading-tight">
-              <h1 className="font-bold text-lg text-pup-maroon tracking-tight">
-                PUP E-MANAGE
-              </h1>
-              <p className="text-[10px] text-gray-500 uppercase tracking-widest">
-                Student Record Keeping
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => switchView("directory")}
-              id="nav-directory"
-              className={`btn-nav ${view === "directory" ? "active" : ""}`}
-            >
-              <i className="ph-bold ph-users"></i> Staff Directory
-            </button>
-            <button
-              onClick={() => switchView("create")}
-              id="nav-create"
-              className={`btn-nav ${view === "create" ? "active" : ""}`}
-            >
-              <i className="ph-bold ph-user-plus"></i> Register Account
-            </button>
-            <button
-              onClick={() => switchView("logs")}
-              id="nav-logs"
-              className={`btn-nav ${view === "logs" ? "active" : ""}`}
-            >
-              <i className="ph-bold ph-scroll"></i> Audit Logs
-            </button>
-            <button
-              onClick={() => switchView("backup")}
-              id="nav-backup"
-              className={`btn-nav ${view === "backup" ? "active" : ""}`}
-            >
-              <i className="ph-bold ph-database"></i> Backup & Maintenance
-            </button>
-          </div>
-
-          <div className="relative ml-4">
-            <button
-              onClick={() => setProfileOpen((o) => !o)}
-              className="h-9 w-9 border border-pup-maroon rounded-full flex items-center justify-center text-pup-maroon font-bold text-xs bg-red-50 hover:bg-pup-maroon hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pup-maroon"
-            >
-              AD
-            </button>
-
-            <div
-              className={`${profileOpen ? "" : "hidden"} absolute right-0 mt-2 w-64 bg-white rounded-brand shadow-xl border border-gray-200 z-50 animate-scale-in origin-top-right overflow-hidden`}
-            >
-              <div className="p-4 border-b border-gray-200">
-                <p className="text-sm font-bold text-pup-maroon">Admin</p>
-                <p className="text-xs text-gray-500">registrar.admin</p>
-              </div>
-              <div className="py-1">
-                <button className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-pup-maroon transition-colors flex items-center gap-3">
-                  <i className="ph-bold ph-user"></i> Account Settings
-                </button>
-                <button className="w-full text-left px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-50 hover:text-pup-maroon transition-colors flex items-center gap-3">
-                  <i className="ph-bold ph-question"></i> Help & Support
-                </button>
-              </div>
-              <div className="py-1 border-t border-gray-200">
-                <button
-                  onClick={logout}
-                  className="w-full text-left px-4 py-2.5 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors flex items-center gap-3"
-                >
-                  <i className="ph-bold ph-sign-out"></i> Sign Out
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {pwOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md bg-white rounded-brand border border-gray-200 shadow-xl overflow-hidden">
-            <div className="p-5 border-b border-gray-200 bg-gray-50/60">
-              <h3 className="font-bold text-pup-maroon">Change Password</h3>
-              <p className="text-xs text-gray-500 mt-1">
-                First login detected. Please change your password to continue.
-              </p>
-            </div>
-            <form onSubmit={submitChangePassword} className="p-5 space-y-4">
-              {pwError ? (
-                <div className="text-sm text-red-600 font-semibold">
-                  {pwError}
-                </div>
-              ) : null}
-
-              <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                  Current Password
-                </label>
-                <input
-                  type="password"
-                  className="form-input"
-                  value={pwCurrent}
-                  onChange={(e) => setPwCurrent(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                  New Password
-                </label>
-                <input
-                  type="password"
-                  className="form-input"
-                  value={pwNext}
-                  onChange={(e) => setPwNext(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                  Confirm New Password
-                </label>
-                <input
-                  type="password"
-                  className="form-input"
-                  value={pwConfirm}
-                  onChange={(e) => setPwConfirm(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="pt-2 flex justify-end">
-                <button
-                  type="submit"
-                  disabled={pwLoading}
-                  className="px-5 py-2.5 bg-pup-maroon text-white rounded-brand text-sm font-bold hover:bg-red-900 transition-colors shadow-sm disabled:opacity-60"
-                >
-                  {pwLoading ? "Saving..." : "Update Password"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      ) : null}
-
-      {defaultPwOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="w-full max-w-md bg-white rounded-brand border border-gray-200 shadow-xl overflow-hidden">
-            <div className="p-5 border-b border-gray-200 bg-gray-50/60">
-              <h3 className="font-bold text-pup-maroon">
-                Default Temporary Password
-              </h3>
-              <p className="text-xs text-gray-500 mt-1">
-                Share this password with{" "}
-                <span className="font-semibold">
-                  {defaultPwUserLabel || "the user"}
-                </span>
-                .
-              </p>
-            </div>
-            <div className="p-5 space-y-4">
-              <div className="rounded-brand border border-amber-200 bg-amber-50 px-4 py-3">
-                <div className="text-xs font-bold text-amber-800 uppercase">
-                  Temporary Password
-                </div>
-                <div className="mt-1 font-mono text-lg font-bold text-amber-900">
-                  {DEFAULT_TEMP_PASSWORD}
-                </div>
-                <div className="mt-2 text-xs text-amber-700">
-                  The user will be prompted to change it upon first login.
-                </div>
-              </div>
-
-              <div className="pt-1 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setDefaultPwOpen(false)}
-                  className="px-5 py-2.5 bg-pup-maroon text-white rounded-brand text-sm font-bold hover:bg-red-900 transition-colors shadow-sm"
-                >
-                  Confirm
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
-      <main className="flex-1 overflow-hidden w-full max-w-400 mx-auto p-4">
-        <div
-          className={`${view === "directory" ? "flex" : "hidden"} flex-col lg:flex-row gap-4 h-full animate-fade-in`}
+    <div className="h-screen flex flex-col overflow-hidden bg-gray-50 font-inter">
+      <Header authUser={authUser} onLogout={handleLogout}>
+        <button
+          onClick={() => switchView("directory")}
+          className={`btn-nav ${view === "directory" ? "active" : ""}`}
         >
-          <aside className="w-full lg:w-1/4 flex flex-col gap-4 h-full">
-            <div className="grid grid-cols-2 gap-2">
-              <div className="bg-white p-4 rounded-brand border border-gray-300 shadow-sm stats-card">
-                <div className="text-2xl font-bold text-pup-maroon">
-                  {stats.total}
-                </div>
-                <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wide">
-                  Total Staff
-                </div>
-              </div>
-              <div className="bg-white p-4 rounded-brand border border-gray-300 shadow-sm stats-card">
-                <div className="text-2xl font-bold text-green-600">
-                  {stats.active}
-                </div>
-                <div className="text-[10px] text-gray-500 uppercase font-bold tracking-wide">
-                  Active Now
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-brand border border-gray-300 shadow-sm flex-1 flex flex-col overflow-hidden">
-              <div className="p-4 border-b border-gray-200 bg-gray-50/50">
-                <h3 className="text-xs font-bold text-pup-maroon uppercase tracking-wide mb-3">
-                  Filter Directory
-                </h3>
-                <div className="space-y-3">
-                  <div className="relative group">
-                    <i className="ph-bold ph-magnifying-glass absolute left-3 top-2.5 text-gray-400 group-focus-within:text-pup-maroon"></i>
-                    <input
-                      type="text"
-                      placeholder="Search name or ID..."
-                      className="w-full pl-9 pr-3 py-2 bg-white border border-gray-300 rounded-brand text-sm focus:outline-none focus:border-pup-maroon transition-all placeholder-gray-400"
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">
-                      Role
-                    </label>
-                    <select
-                      className="form-select text-xs"
-                      value={roleFilter}
-                      onChange={(e) => setRoleFilter(e.target.value)}
-                    >
-                      <option value="All">All Roles</option>
-                      <option value="Admin">Admin</option>
-                      <option value="Staff">Staff</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-[10px] font-bold text-gray-500 uppercase mb-1 block">
-                      Status
-                    </label>
-                    <select
-                      className="form-select text-xs"
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                    >
-                      <option value="All">All Statuses</option>
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex-1 overflow-y-auto p-4 bg-white">
-                <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-3">
-                  Recent Logins
-                </h4>
-                <div className="space-y-3">
-                  {recentLogins.map((s) => (
-                    <div
-                      key={s.id}
-                      className="flex items-center gap-2 p-2 rounded hover:bg-gray-50 transition-colors cursor-pointer group"
-                    >
-                      <div className="w-6 h-6 rounded-full bg-gray-200 text-gray-500 flex items-center justify-center text-[10px] font-bold">
-                        {s.fname[0]}
-                        {s.lname[0]}
-                      </div>
-                      <div className="overflow-hidden">
-                        <div className="text-xs font-bold text-gray-700 truncate group-hover:text-pup-maroon">
-                          {s.fname} {s.lname}
-                        </div>
-                        <div className="text-[10px] text-gray-400 flex items-center gap-1">
-                          <div className="w-1.5 h-1.5 rounded-full bg-green-400"></div>
-                          {s.last_active || "—"}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </aside>
-
-          <section className="w-full lg:w-3/4 bg-white rounded-brand border border-gray-300 shadow-sm flex flex-col h-full overflow-hidden">
-            <div className="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/30">
-              <h2 className="font-bold text-pup-maroon flex items-center gap-2">
-                <i className="ph-duotone ph-table"></i> Staff Management
-              </h2>
-              <div className="flex gap-2">
-                <button
-                  onClick={exportData}
-                  className="px-3 py-1.5 border border-gray-300 rounded-brand text-xs font-bold text-gray-600 hover:bg-gray-50 hover:text-pup-maroon transition-colors"
-                >
-                  <i className="ph-bold ph-download-simple"></i> Export CSV
-                </button>
-                <button
-                  onClick={() => switchView("create")}
-                  className="px-3 py-1.5 bg-pup-maroon text-white rounded-brand text-xs font-bold hover:bg-red-900 transition-colors shadow-sm flex items-center gap-1"
-                >
-                  <i className="ph-bold ph-plus"></i> Add New
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-auto">
-              <table className="w-full border-collapse">
-                <thead className="bg-gray-50 sticky top-0 z-10">
-                  <tr>
-                    <th className="table-header">Staff Name</th>
-                    <th className="table-header w-32">ID</th>
-                    <th className="table-header">Role</th>
-                    <th className="table-header">Status</th>
-                    <th className="table-header">Last Active</th>
-                    <th className="table-header text-right w-28">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredStaff.map((s) => {
-                    const roleBadgeClass =
-                      s.role === "Admin" ? "badge-admin" : "badge-staff";
-                    const statusBadgeClass =
-                      s.status === "Active" ? "badge-active" : "badge-inactive";
-
-                    return (
-                      <tr
-                        key={s.id}
-                        className="table-row-hover transition-colors group"
-                      >
-                        <td className="table-cell">
-                          <div className="flex items-center gap-2">
-                            <div className="w-7 h-7 rounded-full bg-pup-maroon text-white flex items-center justify-center text-xs font-bold">
-                              {s.fname[0]}
-                            </div>
-                            <div>
-                              <div className="font-semibold text-gray-800 text-sm">
-                                {s.fname} {s.lname}
-                              </div>
-                              <div className="text-[10px] text-gray-400">
-                                {s.email}
-                              </div>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="table-cell font-mono text-gray-600 text-xs whitespace-nowrap">
-                          {s.id}
-                        </td>
-                        <td className="table-cell">
-                          <span className={`badge ${roleBadgeClass}`}>
-                            {s.role}
-                          </span>
-                        </td>
-                        <td className="table-cell">
-                          <span className={`badge ${statusBadgeClass}`}>
-                            {s.status}
-                          </span>
-                        </td>
-                        <td className="table-cell text-xs text-gray-500 font-mono whitespace-nowrap">
-                          {s.last_active || "—"}
-                        </td>
-                        <td className="table-cell text-right">
-                          <div className="flex items-center justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => openEditUser(s.id)}
-                              className="h-8 w-8 inline-flex items-center justify-center hover:bg-gray-100 rounded text-gray-500 hover:text-pup-maroon"
-                              title="Edit"
-                            >
-                              <i className="ph-bold ph-pencil-simple"></i>
-                            </button>
-                            <button
-                              onClick={() => deleteUser(s.id)}
-                              className="h-8 w-8 inline-flex items-center justify-center hover:bg-red-50 rounded text-gray-500 hover:text-red-600"
-                              title="Delete"
-                            >
-                              <i className="ph-bold ph-trash"></i>
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-
-              {filteredStaff.length === 0 ? (
-                <div className="flex flex-col items-center justify-center h-64 text-gray-400">
-                  <i className="ph-duotone ph-ghost text-4xl mb-2"></i>
-                  <p className="text-sm">No staff members found.</p>
-                </div>
-              ) : null}
-            </div>
-
-            <div className="p-2 border-t border-gray-200 bg-gray-50 text-[10px] text-gray-400 flex justify-between px-4">
-              <span>
-                Showing <span>{filteredStaff.length}</span> records
-              </span>
-            </div>
-          </section>
-        </div>
-
-        <div
-          className={`${view === "create" ? "flex" : "hidden"} h-full flex-col animate-fade-in`}
+          <i className="ph-bold ph-users"></i> Staff Directory
+        </button>
+        <button
+          onClick={() => switchView("create")}
+          className={`btn-nav ${view === "create" ? "active" : ""}`}
         >
-          <div className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm flex flex-col h-full overflow-hidden">
-            <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50/30">
-              <div>
-                <h3 className="font-bold text-pup-maroon text-lg flex items-center gap-2">
-                  <i className="ph-duotone ph-user-plus"></i> New Account
-                  Creation
-                </h3>
-                <p className="text-xs text-gray-500 mt-1">
-                  Create secure access credentials for Registrar Staff.
-                </p>
-              </div>
-              <button
-                onClick={() => switchView("directory")}
-                className="text-xs font-bold text-gray-500 hover:text-pup-maroon flex items-center gap-2 transition-colors"
-              >
-                <i className="ph-bold ph-arrow-left"></i> Back to Directory
-              </button>
-            </div>
-
-            <div className="flex-1 overflow-y-auto p-8">
-              <div className="max-w-4xl mx-auto">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-                  <div className="bg-blue-50 p-4 rounded-brand border border-blue-100 flex items-start gap-3">
-                    <i className="ph-fill ph-shield-check text-blue-600 text-xl mt-0.5"></i>
-                    <div>
-                      <h4 className="text-sm font-bold text-blue-800">
-                        Role-Based Access
-                      </h4>
-                      <p className="text-xs text-blue-600 mt-1">
-                        Assign permissions as either Admin or Staff to keep
-                        access scoped to responsibilities.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="bg-amber-50 p-4 rounded-brand border border-amber-100 flex items-start gap-3">
-                    <i className="ph-fill ph-key text-amber-600 text-xl mt-0.5"></i>
-                    <div>
-                      <h4 className="text-sm font-bold text-amber-800">
-                        Default Credentials
-                      </h4>
-                      <p className="text-xs text-amber-600 mt-1">
-                        New accounts are initialized with a temporary password:
-                        <span className="font-mono font-bold"> pupstaff</span>.
-                        Users will be prompted to change it upon first login.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                <form onSubmit={handleCreate} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                        Employee ID *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        className="form-input font-mono"
-                        placeholder="e.g. 2023-001"
-                        value={createForm.id}
-                        onChange={(e) =>
-                          setCreateForm((f) => ({ ...f, id: e.target.value }))
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                        System Role *
-                      </label>
-                      <select
-                        required
-                        className="form-select"
-                        value={createForm.role}
-                        onChange={(e) =>
-                          setCreateForm((f) => ({ ...f, role: e.target.value }))
-                        }
-                      >
-                        <option value="" disabled>
-                          Select Role...
-                        </option>
-                        <option value="Admin">Admin</option>
-                        <option value="Staff">Staff</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                        First Name *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        className="form-input"
-                        placeholder="Juan"
-                        value={createForm.fname}
-                        onChange={(e) =>
-                          setCreateForm((f) => ({
-                            ...f,
-                            fname: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                        Last Name *
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        className="form-input"
-                        placeholder="Dela Cruz"
-                        value={createForm.lname}
-                        onChange={(e) =>
-                          setCreateForm((f) => ({
-                            ...f,
-                            lname: e.target.value,
-                          }))
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                      Username *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      className="form-input"
-                      placeholder="username"
-                      value={createForm.email}
-                      onChange={(e) =>
-                        setCreateForm((f) => ({ ...f, email: e.target.value }))
-                      }
-                    />
-                  </div>
-
-                  <div className="border-t border-gray-200 pt-6 flex items-center justify-end gap-3">
-                    <button
-                      type="button"
-                      onClick={resetCreateForm}
-                      className="px-5 py-2.5 border border-gray-300 rounded-brand text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
-                    >
-                      Reset Form
-                    </button>
-                    <button
-                      type="submit"
-                      className="px-6 py-2.5 bg-pup-maroon text-white rounded-brand text-sm font-bold hover:bg-red-900 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
-                    >
-                      <i className="ph-bold ph-check"></i> Create Account
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div
-          className={`${view === "logs" ? "block" : "hidden"} h-full animate-fade-in`}
+          <i className="ph-bold ph-user-plus"></i> Register Account
+        </button>
+        <button
+          onClick={() => switchView("logs")}
+          className={`btn-nav ${view === "logs" ? "active" : ""}`}
         >
-          <div className="bg-white rounded-brand border border-gray-300 shadow-sm h-full flex flex-col">
-            <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-              <h2 className="font-bold text-pup-maroon flex items-center gap-2">
-                <i className="ph-duotone ph-scroll"></i> System Audit Logs
-              </h2>
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <label className="text-[10px] font-bold text-gray-500 uppercase">
-                    Show:
-                  </label>
-                  <select
-                    className="text-[10px] border-gray-300 rounded border px-1.5 py-1 focus:outline-none focus:border-pup-maroon bg-white"
-                    value={logsPerPage}
-                    onChange={(e) => {
-                      setLogsPerPage(parseInt(e.target.value));
-                      setLogPage(1);
-                    }}
-                  >
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
-                </div>
-                <div className="relative">
-                  <i className="ph-bold ph-magnifying-glass absolute left-2.5 top-2 text-gray-400 text-xs"></i>
-                  <input
-                    type="text"
-                    placeholder="Search logs..."
-                    className="pl-7 pr-3 py-1.5 text-xs border border-gray-300 rounded-brand focus:outline-none focus:border-pup-maroon w-48"
-                    value={logSearch}
-                    onChange={(e) => {
-                      setLogSearch(e.target.value);
-                      setLogPage(1);
-                    }}
-                  />
-                </div>
-                <div className="text-[10px] text-gray-400 font-mono">
-                  Total Records: {logTotal.toLocaleString()}
-                </div>
-              </div>
-            </div>
-            <div className="flex-1 overflow-y-auto p-0">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-gray-50 sticky top-0 z-10 text-[10px] uppercase text-gray-500 font-bold">
-                  <tr>
-                    <th className="p-3 border-b border-gray-200 w-32">
-                      Timestamp
-                    </th>
-                    <th className="p-3 border-b border-gray-200 w-40">User</th>
-                    <th className="p-3 border-b border-gray-200 w-32">Role</th>
-                    <th className="p-3 border-b border-gray-200">Activity</th>
-                    <th className="p-3 border-b border-gray-200 w-24 text-right">
-                      IP Address
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="text-xs text-gray-600 divide-y divide-gray-100">
-                  {displayLogs.map((log, idx) => (
-                    <tr
-                      key={idx}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="p-3 border-b border-gray-100 font-mono text-gray-500">
-                        {log.time}
-                      </td>
-                      <td className="p-3 border-b border-gray-100 font-bold text-gray-700">
-                        {log.user}
-                      </td>
-                      <td className="p-3 border-b border-gray-100">
-                        <span className="px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 text-[10px] font-bold uppercase">
-                          {log.role}
-                        </span>
-                      </td>
-                      <td className="p-3 border-b border-gray-100 text-gray-600">
-                        {log.action}
-                      </td>
-                      <td className="p-3 border-b border-gray-100 text-right font-mono text-gray-400">
-                        {log.ip}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <div className="p-2 border-t border-gray-200 bg-gray-50 text-[10px] text-gray-400 flex justify-center items-center gap-4">
-              <button
-                disabled={logPage <= 1}
-                onClick={() => setLogPage((p) => p - 1)}
-                className="hover:text-pup-maroon px-2 disabled:opacity-30 disabled:hover:text-gray-400 transition-colors"
-              >
-                Previous
-              </button>
-              <span className="px-2 font-medium">
-                Page {logPage} of{" "}
-                {Math.max(1, Math.ceil(logTotal / logsPerPage))}
-              </span>
-              <button
-                disabled={logPage >= Math.ceil(logTotal / logsPerPage)}
-                onClick={() => setLogPage((p) => p + 1)}
-                className="hover:text-pup-maroon px-2 disabled:opacity-30 disabled:hover:text-gray-400 transition-colors"
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div
-          className={`${view === "backup" ? "flex" : "hidden"} h-full gap-4 flex-row animate-fade-in items-stretch`}
+          <i className="ph-bold ph-scroll"></i> Audit Logs
+        </button>
+        <button
+          onClick={() => switchView("system_data")}
+          className={`btn-nav ${view === "system_data" ? "active" : ""}`}
         >
-          <section className="w-[30%] flex-none flex flex-col gap-4 overflow-y-auto pr-1 h-full">
-            <div className="bg-white rounded-brand border border-gray-300 shadow-sm p-5 relative flex-none">
-              <h3 className="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2">
-                <i className="ph-duotone ph-heartbeat text-pup-maroon text-lg"></i>
-                System Health
-              </h3>
-              <div className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-[10px] uppercase font-bold text-gray-500 mb-1">
-                    <span>
-                      Storage (
-                      {systemHealth.disk.total - systemHealth.disk.free}
-                      GB/
-                      {systemHealth.disk.total}GB)
-                    </span>
-                    <span className="text-gray-700">
-                      {systemHealth.disk.percent}%
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                    <div
-                      className="bg-pup-maroon h-1.5 rounded-full transition-all duration-1000"
-                      style={{ width: `${systemHealth.disk.percent}%` }}
-                    ></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-[10px] uppercase font-bold text-gray-500 mb-1">
-                    <span>Database Size ({systemHealth.dbSize})</span>
-                    <span className="text-green-600">
-                      {systemHealth.dbStatus}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                    <div
-                      className="bg-green-500 h-1.5 rounded-full transition-all duration-500"
-                      style={{ width: "12%" }}
-                    ></div>
-                  </div>
-                </div>
-                <div>
-                  <div className="flex justify-between text-[10px] uppercase font-bold text-gray-500 mb-1">
-                    <span>CPU Usage</span>
-                    <span className="text-gray-700">{systemHealth.cpu}%</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
-                    <div
-                      className={`${systemHealth.cpu > 80 ? "bg-red-500" : systemHealth.cpu > 50 ? "bg-amber-500" : "bg-blue-500"} h-1.5 rounded-full transition-all duration-1000`}
-                      style={{ width: `${systemHealth.cpu}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          <i className="ph-bold ph-gear"></i> System Data
+        </button>
+        <button
+          onClick={() => switchView("review")}
+          className={`btn-nav ${view === "review" ? "active" : ""}`}
+        >
+          <i className="ph-bold ph-seal-check"></i> Digital Records Review
+        </button>
+        <button
+          onClick={() => switchView("system")}
+          className={`btn-nav ${view === "system" || view === "backup" ? "active" : ""}`}
+        >
+          <i className="ph-bold ph-database"></i> Backup & Maintenance
+        </button>
+      </Header>
 
-            <div className="bg-white rounded-brand border border-gray-300 shadow-sm p-5 relative overflow-hidden group flex-none">
-              <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
-                <i className="ph-fill ph-database text-9xl text-pup-maroon"></i>
-              </div>
-              <div className="relative z-10">
-                <h3 className="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2">
-                  <i className="ph-duotone ph-database text-pup-maroon text-lg"></i>
-                  Full System Backup
-                </h3>
-                <p className="text-xs text-gray-500 mb-4 leading-relaxed">
-                  Create a complete snapshot including the SQL database records
-                  and all scanned PDF documents stored on the connected external
-                  drive.
-                </p>
+      <main className="flex-1 overflow-hidden w-full max-w-[1600px] mx-auto p-4">
+        {view === "directory" && (
+          <StaffDirectoryTab
+            staffData={staffData}
+            isLoading={viewLoading.directory}
+            search={search}
+            setSearch={setSearch}
+            roleFilter={roleFilter}
+            setRoleFilter={setRoleFilter}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            onEditUser={(id) => {
+              const u = staffData.find((s) => s.id === id);
+              if (!u) return;
+              setEditOriginalId(u.id);
+              setEditForm({ ...u });
+              setEditOpen(true);
+            }}
+            onDeleteUser={(id) => {
+              const u = staffData.find((s) => s.id === id);
+              if (u) {
+                setDeleteTarget(u);
+                setDeleteOpen(true);
+              }
+            }}
+            onExportData={exportData}
+            onSwitchView={switchView}
+          />
+        )}
 
-                <button
-                  onClick={simulateBackup}
-                  className="w-full bg-pup-maroon text-white py-2.5 rounded-brand text-xs font-bold hover:bg-red-900 transition-colors flex items-center justify-center gap-2 shadow-sm mb-4"
-                >
-                  <i className="ph-bold ph-download-simple"></i> Download Full
-                  Backup (.zip)
-                </button>
+        {view === "create" && (
+          <RegisterAccountTab
+            createForm={createForm}
+            setCreateForm={setCreateForm}
+            onResetForm={() =>
+              setCreateForm({
+                id: "",
+                role: "",
+                fname: "",
+                lname: "",
+                email: "",
+                status: "Active",
+              })
+            }
+            onCreateAccount={handleCreate}
+            onSwitchView={switchView}
+          />
+        )}
 
-                <div className="border-t border-dashed border-gray-200 pt-4">
-                  <label className="block text-[10px] font-bold text-gray-400 uppercase mb-2">
-                    Restore System
-                  </label>
-                  <input
-                    ref={restoreFileRef}
-                    type="file"
-                    className="hidden"
-                    accept=".zip,.sql"
-                    onChange={handleRestoreFileChange}
-                  />
-                  <button
-                    onClick={() =>
-                      restoreFileRef.current && restoreFileRef.current.click()
-                    }
-                    className="w-full bg-white border border-gray-300 text-gray-600 py-2 rounded-brand text-xs font-bold hover:border-pup-maroon hover:text-pup-maroon transition-colors flex items-center justify-center gap-2"
-                  >
-                    <i className="ph-bold ph-upload-simple"></i> Upload Backup
-                    File
-                  </button>
-                </div>
-                <div className="mt-4 text-[10px] text-gray-400 text-center">
-                  Last backup:{" "}
-                  <span className="font-mono text-gray-600">
-                    {lastBackupTime}
-                  </span>
-                </div>
-              </div>
-            </div>
+        {view === "logs" && (
+          <AuditLogsTab
+            displayLogs={auditLogs}
+            isLoading={viewLoading.logs}
+            logPage={logPage}
+            setLogPage={setLogPage}
+            logTotal={logTotal}
+            logsPerPage={logsPerPage}
+            setLogsPerPage={setLogsPerPage}
+            logSearch={logSearch}
+            setLogSearch={setLogSearch}
+          />
+        )}
 
-            <div className="bg-white rounded-brand border border-gray-300 shadow-sm p-5 flex-1">
-              <h3 className="font-bold text-gray-800 text-sm mb-4 flex items-center gap-2">
-                <i className="ph-duotone ph-wrench text-pup-maroon text-lg"></i>
-                System Operations
-              </h3>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="text-xs">
-                    <div className="font-bold text-gray-700">Auto-Backup</div>
-                    <div className="text-gray-400 flex items-center gap-2">
-                      <span>Daily at</span>
-                      <span className="font-semibold text-gray-600">
-                        {formatTime(autoBackupTime)}
-                      </span>
-                      <input
-                        type="time"
-                        className="text-[11px] border border-gray-300 rounded px-2 py-1 focus:outline-none focus:border-pup-maroon"
-                        value={autoBackupTime}
-                        onChange={(e) => {
-                          const value = e.target.value;
-                          if (!value) return;
-                          setAutoBackupTime(value);
-                          showToast(
-                            `Auto-backup time set to ${formatTime(value)}`,
-                          );
-                        }}
-                      />
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      defaultChecked
-                      className="sr-only peer"
-                    />
-                    <div className="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:left-0.5 after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-pup-maroon"></div>
-                  </label>
-                </div>
-                <hr className="border-gray-200 my-2" />
-              </div>
-            </div>
-          </section>
+        {view === "system_data" && (
+          <SystemConfigTab
+            showToast={showToast}
+            logAdminAction={logAdminAction}
+          />
+        )}
 
-          <section className="w-[70%] bg-white rounded-brand border border-gray-300 shadow-sm flex flex-col overflow-hidden h-full">
-            <div className="p-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center flex-none">
-              <h3 className="font-bold text-xs text-pup-maroon uppercase tracking-wide">
-                Backup History
-              </h3>
-            </div>
-            <div className="flex-1 overflow-auto">
-              <table className="w-full text-left border-collapse">
-                <thead className="bg-white text-[10px] text-gray-400 uppercase font-bold sticky top-0">
-                  <tr>
-                    <th className="p-3 border-b border-gray-200">Filename</th>
-                    <th className="p-3 border-b border-gray-200">
-                      Date & Time
-                    </th>
-                    <th className="p-3 border-b border-gray-200">Size</th>
-                    <th className="p-3 border-b border-gray-200">Contents</th>
-                    <th className="p-3 border-b border-gray-200">Type</th>
-                    <th className="p-3 border-b border-gray-200 text-right">
-                      Action
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="text-xs text-gray-600">
-                  {backups.map((b) => (
-                    <tr
-                      key={b.id}
-                      className="hover:bg-gray-50 border-b border-gray-50"
-                    >
-                      <td
-                        className="p-3 font-mono text-pup-maroon truncate max-w-[200px]"
-                        title={b.filename}
-                      >
-                        {b.filename}
-                      </td>
-                      <td className="p-3">{formatPHTime(b.created_at)}</td>
-                      <td className="p-3">
-                        {(b.size_bytes / (1024 * 1024)).toFixed(2)} MB
-                      </td>
-                      <td className="p-3">SQL + Docs</td>
-                      <td className="p-3">
-                        <div className="flex flex-col gap-1.5">
-                          <div className="flex items-center justify-between gap-3 bg-gray-50 px-2 py-1 rounded border border-gray-100">
-                            <div className="flex items-center gap-1.5">
-                              <span
-                                className={`w-2 h-2 rounded-full ${b.status_local === "Success" ? "bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)]" : "bg-gray-300"}`}
-                              ></span>
-                              <span className="text-[9px] uppercase font-bold text-gray-500">
-                                1. Local
-                              </span>
-                            </div>
-                            <i
-                              className={`ph-bold ${b.status_local === "Success" ? "ph-check-circle text-green-600" : "ph-circle text-gray-300"} text-[10px]`}
-                            ></i>
-                          </div>
+        {view === "review" && (
+          <DigitalRecordsReviewTab
+            records={reviewRecords}
+            isLoading={viewLoading.review}
+            statusFilter={reviewStatusFilter}
+            setStatusFilter={setReviewStatusFilter}
+            onRefresh={refreshReviewRecords}
+            onApprove={(id) => reviewDocumentStatus(id, "Approved")}
+            onDecline={openDeclinePrompt}
+          />
+        )}
 
-                          <div className="flex items-center justify-between gap-3 bg-gray-50 px-2 py-1 rounded border border-gray-100">
-                            <div className="flex items-center gap-1.5">
-                              <span
-                                className={`w-2 h-2 rounded-full ${b.status_external === "Success" ? "bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.5)]" : "bg-gray-300"}`}
-                              ></span>
-                              <span className="text-[9px] uppercase font-bold text-gray-500">
-                                2. External
-                              </span>
-                            </div>
-                            {b.status_external !== "Success" ? (
-                              <button
-                                onClick={() => syncExternal(b.id)}
-                                className="text-[9px] font-bold text-pup-maroon hover:underline"
-                              >
-                                SYNC
-                              </button>
-                            ) : (
-                              <i className="ph-bold ph-check-circle text-blue-600 text-[10px]"></i>
-                            )}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="p-3 text-right">
-                        <div className="flex items-center justify-end gap-1">
-                          <button
-                            onClick={() => {
-                              const link = document.createElement("a");
-                              link.href = `/api/system/backup/download?id=${b.id}`;
-                              link.download = b.filename;
-                              link.click();
-                            }}
-                            className="text-gray-400 hover:text-pup-maroon p-2 transition-colors"
-                            title="Download ZIP Backup"
-                          >
-                            <i className="ph-bold ph-file-zip text-lg"></i>
-                          </button>
-                          <button
-                            onClick={() => deleteBackup(b.id)}
-                            className="text-gray-400 hover:text-red-600 p-2 transition-colors"
-                            title="Delete Backup"
-                          >
-                            <i className="ph-bold ph-trash text-lg"></i>
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                  {backups.length === 0 && (
-                    <tr>
-                      <td colSpan="6" className="p-8 text-center text-gray-400">
-                        No backups found.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
-        </div>
+        {(view === "system" || view === "backup") && (
+          <BackupMaintenanceTab
+            systemHealth={systemHealth}
+            backups={backups}
+            isLoading={viewLoading.system || viewLoading.backup}
+            onSimulateBackup={simulateBackup}
+            onSyncExternal={syncExternal}
+            onDownloadBackup={(b) => {
+              const link = document.createElement("a");
+              link.href = `/api/system/backup/download?id=${b.id}`;
+              link.download = b.filename;
+              link.click();
+            }}
+            onDeleteBackup={(id) => {
+              const b = backups.find((x) => x.id === id);
+              if (b) {
+                setBackupDeleteTarget(b);
+                setBackupDeleteOpen(true);
+              }
+            }}
+            onRestoreFileChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) {
+                setRestoreFile(f);
+                setRestoreConfirmOpen(true);
+                e.target.value = "";
+              }
+            }}
+            showToast={showToast}
+          />
+        )}
       </main>
 
-      <footer className="bg-white border-t border-gray-300 p-3 flex-none z-10 shadow-inner">
-        <div className="max-w-400 mx-auto flex justify-between items-center text-xs font-medium text-gray-600">
-          <p>
-            &copy; 2024 Polytechnic University of the Philippines. All rights
-            reserved.
-          </p>
-          <div className="flex gap-4">
-            <span className="text-gray-500">System Version 1.0.2 (Beta)</span>
-          </div>
-        </div>
-      </footer>
+      <Footer />
 
-      <div
-        className={`fixed top-5 left-1/2 -translate-x-1/2 transform transition-all duration-300 z-50 px-4 py-3 rounded-brand shadow-lg flex items-center gap-3 ${
-          toast.open ? "translate-y-0 opacity-100" : "translate-y-20 opacity-0"
-        } ${toast.isError ? "bg-red-800" : "bg-gray-800"} text-white`}
-      >
-        <i
-          className={`ph-fill ${
-            toast.isError ? "ph-warning-circle" : "ph-check-circle"
-          } ${toast.isError ? "text-red-200" : "text-green-400"} text-xl`}
-        ></i>
-        <span className="text-sm font-medium">{toast.msg}</span>
-      </div>
+      <PasswordChangeModal
+        open={pwOpen}
+        authUser={authUser}
+        onClose={() => setPwOpen(false)}
+        onSuccess={(m) => showToast(m)}
+        onLogAction={logAdminAction}
+      />
 
-      <div
-        className={`${editOpen ? "flex" : "hidden"} fixed inset-0 bg-black/50 z-50 items-center justify-center animate-fade-in`}
-      >
-        <div className="bg-white rounded-brand shadow-lg w-full max-w-2xl overflow-hidden transform scale-95 transition-transform duration-200">
-          <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50/30">
-            <div>
-              <h3 className="font-bold text-pup-maroon text-lg flex items-center gap-2">
-                <i className="ph-duotone ph-pencil-simple"></i> Edit Account
+      <EditUserModal
+        open={editOpen}
+        editForm={editForm}
+        setEditForm={setEditForm}
+        onClose={() => setEditOpen(false)}
+        onSubmit={handleEditSubmit}
+      />
+
+      <ConfirmModal
+        open={deleteOpen}
+        title="Confirm Removal"
+        message={`Are you sure you want to remove ${deleteTarget?.fname} ${deleteTarget?.lname}? This action cannot be undone.`}
+        confirmLabel="Confirm Delete"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteOpen(false)}
+        isLoading={deleteLoading}
+      />
+
+      <ConfirmModal
+        open={backupDeleteOpen}
+        title="Confirm Backup Deletion"
+        message={`Delete backup ${backupDeleteTarget?.filename}? This cannot be undone.`}
+        confirmLabel="Confirm Delete"
+        onConfirm={confirmDeleteBackup}
+        onCancel={() => setBackupDeleteOpen(false)}
+        isLoading={backupDeleteLoading}
+      />
+
+      <ConfirmModal
+        open={restoreConfirmOpen}
+        title="Confirm System Restore"
+        variant="warning"
+        message={`This will overwrite current system data with ${restoreFile?.name}. Continue?`}
+        confirmLabel="Confirm Restore"
+        onConfirm={confirmRestore}
+        onCancel={() => setRestoreConfirmOpen(false)}
+        isLoading={restoreLoading}
+      />
+
+      <PromptModal
+        open={declinePromptOpen}
+        title="Decline Reason"
+        message="Provide a reason for declining this document (optional)."
+        value={declineReason}
+        onChange={setDeclineReason}
+        onConfirm={submitDeclineWithReason}
+        onCancel={() => {
+          setDeclinePromptOpen(false);
+          setPendingDeclineDocId(null);
+          setDeclineReason("");
+        }}
+        confirmLabel="Submit Decline"
+        placeholder="Enter reason..."
+        multiline
+      />
+
+      {defaultPwOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="bg-white rounded-brand shadow-xl max-w-sm w-full overflow-hidden animate-scale-in">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i className="ph-bold ph-key text-3xl"></i>
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">
+                Default Password
               </h3>
-              <p className="text-xs text-gray-500 mt-1">
-                Update staff details and permissions.
-              </p>
-            </div>
-            <button
-              onClick={closeEditModal}
-              className="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50"
-            >
-              <i className="ph-bold ph-x text-lg"></i>
-            </button>
-          </div>
-          <div className="p-8">
-            <form onSubmit={handleEditSubmit} className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                    Employee ID *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="form-input font-mono"
-                    placeholder="e.g. 2023-001"
-                    value={editForm.id}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, id: e.target.value }))
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                    System Role *
-                  </label>
-                  <select
-                    required
-                    className="form-select"
-                    value={editForm.role}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, role: e.target.value }))
-                    }
-                  >
-                    <option value="" disabled>
-                      Select Role...
-                    </option>
-                    <option value="Admin">Admin</option>
-                    <option value="Staff">Staff</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                    First Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="form-input"
-                    placeholder="Juan"
-                    value={editForm.fname}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, fname: e.target.value }))
-                    }
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                    Last Name *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="form-input"
-                    placeholder="Dela Cruz"
-                    value={editForm.lname}
-                    onChange={(e) =>
-                      setEditForm((f) => ({ ...f, lname: e.target.value }))
-                    }
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
-                  Username *
-                </label>
-                <input
-                  type="text"
-                  required
-                  className="form-input"
-                  placeholder="username"
-                  value={editForm.email}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, email: e.target.value }))
-                  }
-                />
-              </div>
-
-              <div className="border-t border-gray-200 pt-6 flex items-center justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={closeEditModal}
-                  className="px-5 py-2.5 border border-gray-300 rounded-brand text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-6 py-2.5 bg-pup-maroon text-white rounded-brand text-sm font-bold hover:bg-red-900 transition-all shadow-md hover:shadow-lg flex items-center gap-2"
-                >
-                  <i className="ph-bold ph-floppy-disk"></i> Save Changes
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      </div>
-
-      <div
-        className={`${deleteOpen ? "flex" : "hidden"} fixed inset-0 bg-black/50 z-50 items-center justify-center animate-fade-in`}
-      >
-        <div className="bg-white rounded-brand shadow-lg w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200">
-          <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-red-50/50">
-            <div>
-              <h3 className="font-bold text-red-700 text-lg flex items-center gap-2">
-                <i className="ph-bold ph-warning-circle"></i> Confirm Removal
-              </h3>
-            </div>
-            <button
-              onClick={() => setDeleteOpen(false)}
-              className="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50"
-            >
-              <i className="ph-bold ph-x text-lg"></i>
-            </button>
-          </div>
-          <div className="p-8">
-            <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
-                <i className="ph-bold ph-trash text-3xl"></i>
-              </div>
-              <h4 className="text-gray-800 font-bold text-lg mb-2">
-                Remove {deleteTarget?.fname} {deleteTarget?.lname}?
-              </h4>
-              <p className="text-gray-500 text-sm mb-6 leading-relaxed">
-                This will permanently delete the account for{" "}
-                <span className="font-semibold text-gray-700">
-                  {deleteTarget?.id}
+              <p className="text-sm text-gray-600 mb-6">
+                Password for <b>{defaultPwUserLabel}</b> is:
+                <br />
+                <span className="text-lg font-mono font-bold text-pup-maroon mt-2 block p-2 bg-gray-50 rounded border border-dashed">
+                  pupstaff
                 </span>
-                . This action cannot be undone and all associated sessions will
-                be terminated.
               </p>
-
-              <div className="w-full flex gap-3">
-                <button
-                  onClick={() => setDeleteOpen(false)}
-                  className="flex-1 px-5 py-2.5 border border-gray-300 rounded-brand text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmDelete}
-                  disabled={deleteLoading}
-                  className="flex-1 px-5 py-2.5 bg-red-600 text-white rounded-brand text-sm font-bold hover:bg-red-700 transition-all shadow-md hover:shadow-lg disabled:opacity-60"
-                >
-                  {deleteLoading ? "Removing..." : "Confirm Delete"}
-                </button>
-              </div>
+              <button
+                onClick={() => setDefaultPwOpen(false)}
+                className="w-full bg-pup-maroon text-white py-2.5 rounded-brand font-bold"
+              >
+                Confirm
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
-      <div
-        className={`${backupDeleteOpen ? "flex" : "hidden"} fixed inset-0 bg-black/50 z-50 items-center justify-center animate-fade-in`}
-      >
-        <div className="bg-white rounded-brand shadow-lg w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200">
-          <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-red-50/50">
-            <div>
-              <h3 className="font-bold text-red-700 text-lg flex items-center gap-2">
-                <i className="ph-bold ph-warning-circle"></i> Confirm Backup
-                Deletion
-              </h3>
-            </div>
-            <button
-              onClick={() => setBackupDeleteOpen(false)}
-              className="text-gray-400 hover:text-red-600 transition-colors p-2 rounded-full hover:bg-red-50"
-            >
-              <i className="ph-bold ph-x text-lg"></i>
-            </button>
-          </div>
-          <div className="p-8">
-            <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-red-100 text-red-600 rounded-full flex items-center justify-center mb-4">
-                <i className="ph-bold ph-trash text-3xl"></i>
-              </div>
-              <h4 className="text-gray-800 font-bold text-lg mb-2 truncate max-w-full">
-                Delete {backupDeleteTarget?.filename}?
-              </h4>
-              <p className="text-gray-500 text-sm mb-6 leading-relaxed">
-                This will permanently remove the encrypted backup file from the
-                local server storage. This action cannot be undone.
-              </p>
-
-              <div className="w-full flex gap-3">
-                <button
-                  onClick={() => setBackupDeleteOpen(false)}
-                  className="flex-1 px-5 py-2.5 border border-gray-300 rounded-brand text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmDeleteBackup}
-                  disabled={backupDeleteLoading}
-                  className="flex-1 px-5 py-2.5 bg-red-600 text-white rounded-brand text-sm font-bold hover:bg-red-700 transition-all shadow-md hover:shadow-lg disabled:opacity-60"
-                >
-                  {backupDeleteLoading ? "Deleting..." : "Confirm Delete"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div
-        className={`${restoreConfirmOpen ? "flex" : "hidden"} fixed inset-0 bg-black/50 z-50 items-center justify-center animate-fade-in`}
-      >
-        <div className="bg-white rounded-brand shadow-lg w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-200">
-          <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-amber-50/50">
-            <div>
-              <h3 className="font-bold text-amber-700 text-lg flex items-center gap-2">
-                <i className="ph-bold ph-warning-circle"></i> Confirm System
-                Restore
-              </h3>
-            </div>
-            <button
-              onClick={() => {
-                setRestoreConfirmOpen(false);
-                setRestoreFile(null);
-              }}
-              className="text-gray-400 hover:text-amber-600 transition-colors p-2 rounded-full hover:bg-amber-50"
-            >
-              <i className="ph-bold ph-x text-lg"></i>
-            </button>
-          </div>
-          <div className="p-8">
-            <div className="flex flex-col items-center text-center">
-              <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mb-4">
-                <i className="ph-bold ph-upload-simple text-3xl"></i>
-              </div>
-              <h4 className="text-gray-800 font-bold text-lg mb-2 truncate max-w-full">
-                Restore from {restoreFile?.name}?
-              </h4>
-              <div className="text-gray-500 text-sm mb-6 leading-relaxed space-y-2">
-                <p className="text-red-600 font-semibold">
-                  Warning: This will overwrite all current system data, user
-                  accounts, and documents.
-                </p>
-                <p>
-                  An automatic snapshot of the current state will be taken
-                  before the restore proceeds, just in case you need to revert.
-                </p>
-              </div>
-
-              <div className="w-full flex gap-3">
-                <button
-                  onClick={() => {
-                    setRestoreConfirmOpen(false);
-                    setRestoreFile(null);
-                  }}
-                  className="flex-1 px-5 py-2.5 border border-gray-300 rounded-brand text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={confirmRestore}
-                  disabled={restoreLoading}
-                  className="flex-1 px-5 py-2.5 bg-amber-600 text-white rounded-brand text-sm font-bold hover:bg-amber-700 transition-all shadow-md hover:shadow-lg disabled:opacity-60"
-                >
-                  {restoreLoading ? "Restoring..." : "Proceed with Restore"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }

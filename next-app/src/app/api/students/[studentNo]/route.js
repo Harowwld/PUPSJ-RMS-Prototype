@@ -4,6 +4,7 @@ import {
   getStudentByStudentNo,
   updateStudent,
 } from "../../../../lib/studentsRepo";
+import { writeAuditLog } from "../../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
@@ -21,6 +22,7 @@ export async function GET(_req, ctx) {
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
+  await writeAuditLog(req, `Updated student: ${studentNo}`);
 
   return NextResponse.json({ ok: true, data: row });
 }
@@ -76,6 +78,7 @@ export async function DELETE(_req, ctx) {
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
+  await writeAuditLog(_req, `Deleted student: ${studentNo}`);
 
   return NextResponse.json({ ok: true, data: row });
 }

@@ -3,8 +3,9 @@ import path from "node:path";
 import crypto from "node:crypto";
 import { createRequire } from "node:module";
 
-let db = null;
-let SQL = null;
+// Use global variable to persist DB connection across HMR reloads in development
+let db = global.sqliteDb || null;
+let SQL = global.sqliteLib || null;
 let initializing = null;
 
 function getDbFilePath() {
@@ -31,6 +32,7 @@ export async function getDb() {
         const require = createRequire(import.meta.url);
         const initSqlJs = require("sql.js/dist/sql-asm.js");
         SQL = await initSqlJs();
+        global.sqliteLib = SQL;
       }
 
       if (fs.existsSync(dbPath)) {
@@ -39,6 +41,7 @@ export async function getDb() {
       } else {
         db = new SQL.Database();
       }
+      global.sqliteDb = db;
 
       // Initial Schema
       db.exec(`
@@ -51,6 +54,10 @@ export async function getDb() {
           storage_filename TEXT NOT NULL,
           mime_type TEXT NOT NULL,
           size_bytes INTEGER NOT NULL,
+          approval_status TEXT NOT NULL DEFAULT 'Pending',
+          reviewed_by TEXT,
+          reviewed_at TEXT,
+          review_note TEXT,
           created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
 
@@ -58,6 +65,20 @@ export async function getDb() {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL UNIQUE,
           name_norm TEXT NOT NULL UNIQUE,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS courses (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          code TEXT NOT NULL UNIQUE,
+          name TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS sections (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          name TEXT NOT NULL UNIQUE,
+          course_code TEXT,
           created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
 
@@ -108,15 +129,23 @@ export async function getDb() {
           created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
 
+        CREATE TABLE IF NOT EXISTS settings (
+          key TEXT PRIMARY KEY,
+          value TEXT,
+          updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
     CREATE INDEX IF NOT EXISTS idx_documents_student_no ON documents(student_no);
     CREATE INDEX IF NOT EXISTS idx_documents_doc_type ON documents(doc_type);
     CREATE INDEX IF NOT EXISTS idx_documents_created_at ON documents(created_at);
+    CREATE INDEX IF NOT EXISTS idx_documents_approval_status ON documents(approval_status);
 
     CREATE INDEX IF NOT EXISTS idx_document_types_name ON document_types(name);
     CREATE INDEX IF NOT EXISTS idx_document_types_name_norm ON document_types(name_norm);
 
     CREATE INDEX IF NOT EXISTS idx_students_course_year_section ON students(course_code, year_level, section);
     CREATE INDEX IF NOT EXISTS idx_students_name ON students(name);
+    CREATE INDEX IF NOT EXISTS idx_sections_course_code ON sections(course_code);
 
     CREATE INDEX IF NOT EXISTS idx_staff_name ON staff(lname, fname);
     CREATE INDEX IF NOT EXISTS idx_staff_role ON staff(role);
@@ -125,66 +154,150 @@ export async function getDb() {
     CREATE INDEX IF NOT EXISTS idx_audit_logs_created_at ON audit_logs(created_at);
   `);
 
-      // Migrations & Data Backfill
-      try { db.exec("ALTER TABLE staff ADD COLUMN password_hash TEXT"); } catch (e) {}
-      try { db.exec("ALTER TABLE staff ADD COLUMN last_active TEXT"); } catch (e) {}
-      try { db.exec("ALTER TABLE staff ADD COLUMN updated_at TEXT NOT NULL DEFAULT (datetime('now'))"); } catch (e) {}
-
-      // Default Password for Staff
+      // Migration Check
+      let schemaVersion = 0;
       try {
-        const defaultHash = crypto.createHash("sha256").update("pupstaff").digest("hex");
-        db.exec(`UPDATE staff SET password_hash = '${defaultHash}' WHERE password_hash IS NULL OR password_hash = ''`);
-      } catch (e) {}
+        const res = db.exec("SELECT value FROM settings WHERE key = 'schema_version'");
+        if (res && res.length > 0) schemaVersion = parseInt(res[0].values[0][0]) || 0;
+      } catch (e) {
+        // settings table might not exist yet if db.exec failed somehow
+      }
 
-      // Year Level Migration
-      try {
-        db.exec("UPDATE students SET year_level = 2024 + year_level WHERE year_level IS NOT NULL AND year_level < 100");
-      } catch (e) {}
+      if (schemaVersion < 1) {
+        // Migrations & Data Backfill
+        try { db.exec("ALTER TABLE staff ADD COLUMN password_hash TEXT"); } catch (e) {}
+        try { db.exec("ALTER TABLE staff ADD COLUMN last_active TEXT"); } catch (e) {}
+        try { db.exec("ALTER TABLE staff ADD COLUMN updated_at TEXT NOT NULL DEFAULT (datetime('now'))"); } catch (e) {}
 
-      // Document Types Normalization Migration
-      try {
-        db.exec("ALTER TABLE document_types ADD COLUMN name_norm TEXT");
-      } catch (e) {}
+        // Default Password for Staff
+        try {
+          const defaultHash = crypto.createHash("sha256").update("pupstaff").digest("hex");
+          db.exec(`UPDATE staff SET password_hash = '${defaultHash}' WHERE password_hash IS NULL OR password_hash = ''`);
+        } catch (e) {}
 
-      try {
-        const rows = db.exec("SELECT id, name FROM document_types");
-        if (rows && rows.length > 0) {
-          const values = rows[0].values;
-          for (const r of values) {
-            const id = r[0];
-            const name = String(r[1] || "");
-            const nameNorm = name.trim().toLowerCase().replace(/\s+/g, " ");
-            if (id && nameNorm) {
-              db.exec(`UPDATE document_types SET name_norm = '${nameNorm.replace(/'/g, "''")}' WHERE id = ${id}`);
+        // Year Level Migration
+        try {
+          db.exec("UPDATE students SET year_level = 2024 + year_level WHERE year_level IS NOT NULL AND year_level < 100");
+        } catch (e) {}
+
+        // Document Types Normalization Migration
+        try {
+          db.exec("ALTER TABLE document_types ADD COLUMN name_norm TEXT");
+        } catch (e) {}
+
+        try {
+          const rows = db.exec("SELECT id, name FROM document_types");
+          if (rows && rows.length > 0) {
+            const values = rows[0].values;
+            for (const r of values) {
+              const id = r[0];
+              const name = String(r[1] || "");
+              const nameNorm = name.trim().toLowerCase().replace(/\s+/g, " ");
+              if (id && nameNorm) {
+                db.exec(`UPDATE document_types SET name_norm = '${nameNorm.replace(/'/g, "''")}' WHERE id = ${id}`);
+              }
             }
           }
-        }
-      } catch (e) {}
+        } catch (e) {}
 
-      try {
-        db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_document_types_name_norm_unique ON document_types(name_norm)");
-      } catch (e) {}
+        try {
+          db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_document_types_name_norm_unique ON document_types(name_norm)");
+        } catch (e) {}
 
-      // Seed Document Types if empty
-      try {
-        const res = db.exec("SELECT COUNT(*) FROM document_types");
-        const count = res[0].values[0][0];
-        if (count === 0) {
-          const defaults = [
-            "Form 137", "Transcript of Records", "Good Moral Certificate",
-            "Diploma", "Honorable Dismissal", "Medical Certificate", "Birth Certificate"
-          ];
-          for (const name of defaults) {
-            const nameNorm = name.trim().toLowerCase().replace(/\s+/g, " ");
-            db.exec(`INSERT INTO document_types (name, name_norm) VALUES ('${name.replace(/'/g, "''")}', '${nameNorm.replace(/'/g, "''")}')`);
+        // Seed Document Types if empty
+        try {
+          const res = db.exec("SELECT COUNT(*) FROM document_types");
+          const count = res[0].values[0][0];
+          if (count === 0) {
+            const defaults = [
+              "Form 137", "Transcript of Records", "Good Moral Certificate",
+              "Diploma", "Honorable Dismissal", "Medical Certificate", "Birth Certificate"
+            ];
+            for (const name of defaults) {
+              const nameNorm = name.trim().toLowerCase().replace(/\s+/g, " ");
+              db.exec(`INSERT INTO document_types (name, name_norm) VALUES ('${name.replace(/'/g, "''")}', '${nameNorm.replace(/'/g, "''")}')`);
+            }
           }
-        }
-      } catch (e) {}
+        } catch (e) {}
 
-      persistDb();
+        db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '1')");
+        persistDb();
+      }
+
+      if (schemaVersion < 2) {
+        try { db.exec("ALTER TABLE documents ADD COLUMN approval_status TEXT NOT NULL DEFAULT 'Pending'"); } catch (e) {}
+        try { db.exec("ALTER TABLE documents ADD COLUMN reviewed_by TEXT"); } catch (e) {}
+        try { db.exec("ALTER TABLE documents ADD COLUMN reviewed_at TEXT"); } catch (e) {}
+        try { db.exec("ALTER TABLE documents ADD COLUMN review_note TEXT"); } catch (e) {}
+        try { db.exec("UPDATE documents SET approval_status = 'Approved' WHERE approval_status IS NULL OR approval_status = ''"); } catch (e) {}
+        try { db.exec("CREATE INDEX IF NOT EXISTS idx_documents_approval_status ON documents(approval_status)"); } catch (e) {}
+        db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '2')");
+        persistDb();
+      }
+
+      if (schemaVersion < 3) {
+        try { db.exec("ALTER TABLE sections ADD COLUMN course_code TEXT"); } catch (e) {}
+        try {
+          db.exec(`
+            UPDATE sections
+            SET course_code = (
+              SELECT s.course_code
+              FROM students s
+              WHERE s.section = sections.name
+              LIMIT 1
+            )
+            WHERE course_code IS NULL OR course_code = ''
+          `);
+        } catch (e) {}
+        try { db.exec("CREATE INDEX IF NOT EXISTS idx_sections_course_code ON sections(course_code)"); } catch (e) {}
+        db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '3')");
+        persistDb();
+      }
+
+      // Safety net for environments where schema_version may be out of sync.
+      // This ensures review columns exist before any API query references them.
+      try {
+        const pragma = db.exec("PRAGMA table_info(documents)");
+        const cols = new Set(
+          (pragma?.[0]?.values || []).map((r) => String(r?.[1] || ""))
+        );
+        if (!cols.has("approval_status")) {
+          db.exec("ALTER TABLE documents ADD COLUMN approval_status TEXT NOT NULL DEFAULT 'Pending'");
+        }
+        if (!cols.has("reviewed_by")) {
+          db.exec("ALTER TABLE documents ADD COLUMN reviewed_by TEXT");
+        }
+        if (!cols.has("reviewed_at")) {
+          db.exec("ALTER TABLE documents ADD COLUMN reviewed_at TEXT");
+        }
+        if (!cols.has("review_note")) {
+          db.exec("ALTER TABLE documents ADD COLUMN review_note TEXT");
+        }
+        db.exec("UPDATE documents SET approval_status = 'Approved' WHERE approval_status IS NULL OR approval_status = ''");
+        db.exec("CREATE INDEX IF NOT EXISTS idx_documents_approval_status ON documents(approval_status)");
+        persistDb();
+      } catch (e) {
+        // ignore schema safety-net errors
+      }
+
+      try {
+        const pragma = db.exec("PRAGMA table_info(sections)");
+        const cols = new Set(
+          (pragma?.[0]?.values || []).map((r) => String(r?.[1] || ""))
+        );
+        if (!cols.has("course_code")) {
+          db.exec("ALTER TABLE sections ADD COLUMN course_code TEXT");
+        }
+        db.exec("CREATE INDEX IF NOT EXISTS idx_sections_course_code ON sections(course_code)");
+        persistDb();
+      } catch (e) {
+        // ignore sections safety-net errors
+      }
+
       initializing = null;
       return db;
     } catch (err) {
+
       initializing = null;
       throw err;
     }

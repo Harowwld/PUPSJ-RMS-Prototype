@@ -1,12 +1,26 @@
 import { NextResponse } from "next/server";
 import { createStudent } from "../../../../lib/studentsRepo";
+import { listCourses } from "../../../../lib/coursesRepo";
+import { writeAuditLog } from "../../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
+
+export async function GET() {
+  try {
+    const courses = await listCourses();
+    return NextResponse.json({ ok: true, data: courses.map(c => c.code) });
+  } catch (e) {
+    return NextResponse.json(
+      { ok: false, error: "Failed to load courses" },
+      { status: 500 }
+    );
+  }
+}
 
 function validateStudentPayload(body) {
   const studentNo = String(body?.studentNo || "").trim();
   const name = String(body?.name || "").trim();
-  const courseCode = String(body?.courseCode || "").trim();
+  const courseCode = String(body?.courseCode || "").trim().toUpperCase();
   const yearLevel = parseInt(body?.yearLevel);
   const section = String(body?.section || "").trim();
   const room = parseInt(body?.room);
@@ -89,11 +103,23 @@ export async function POST(req) {
       const msg = String(e?.message || "");
       if (msg.includes("UNIQUE") || msg.includes("PRIMARY")) {
         results.push({ index: i, ok: false, error: "Student already exists" });
+      } else if (
+        msg.includes("Invalid courseCode") ||
+        msg.includes("Invalid section") ||
+        msg.includes("is linked to")
+      ) {
+        results.push({ index: i, ok: false, error: msg });
       } else {
         results.push({ index: i, ok: false, error: "Failed to create student" });
       }
     }
   }
+  const successCount = results.filter((r) => r.ok).length;
+  const failCount = results.length - successCount;
+  await writeAuditLog(
+    req,
+    `Batch student import: ${rows.length} rows (${successCount} success, ${failCount} failed)`
+  );
 
   return NextResponse.json({ ok: true, data: results });
 }
