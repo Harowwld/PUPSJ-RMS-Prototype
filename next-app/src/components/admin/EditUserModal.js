@@ -6,7 +6,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -126,12 +125,11 @@ export default function EditUserModal({
             </div>
           </div>
 
-          <DialogFooter className="p-4 bg-white border-t border-gray-200">
+          <div className="p-4 bg-white border-t border-gray-200 flex items-center justify-end gap-2">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
-              className="mr-2"
             >
               Cancel
             </Button>
@@ -141,7 +139,7 @@ export default function EditUserModal({
             >
               <i className="ph-bold ph-floppy-disk text-lg"></i> Save Changes
             </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>
