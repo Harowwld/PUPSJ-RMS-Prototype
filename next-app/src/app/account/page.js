@@ -26,6 +26,11 @@ export default function AccountPage() {
   const [pwLoading, setPwLoading] = useState(false);
   const [pwError, setPwError] = useState("");
 
+  const isAdminRole = (role) => {
+    const normalized = String(role || "").toLowerCase();
+    return normalized === "admin" || normalized === "administrator" || normalized === "superadmin";
+  };
+
   useEffect(() => {
     (async () => {
       try {
@@ -186,7 +191,7 @@ export default function AccountPage() {
           
           <button
             onClick={() => {
-              const path = authUser?.role === "Administrator" || authUser?.role === "SuperAdmin" ? "/admin" : "/staff";
+              const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
               router.push(path);
             }}
             className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-pup-maroon px-4 py-2 rounded-brand font-bold text-sm shadow-sm transition-all active:scale-[0.98] flex items-center gap-2 group shrink-0"

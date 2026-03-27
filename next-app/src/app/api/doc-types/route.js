@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createDocType, listDocTypes, listAllDocTypes, createDocTypeFull } from "../../../lib/docTypesRepo";
+import { writeAuditLog } from "../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
@@ -35,10 +36,12 @@ export async function POST(req) {
     const { searchParams } = new URL(req.url);
     if (searchParams.get("admin") === "true") {
       const created = await createDocTypeFull(name);
+      await writeAuditLog(req, `Created document type (admin): ${name}`);
       return NextResponse.json({ ok: true, data: created }, { status: 201 });
     }
 
     const created = await createDocType(name);
+    await writeAuditLog(req, `Created document type: ${name}`);
     return NextResponse.json({ ok: true, data: created }, { status: 201 });
   } catch (e) {
     const msg = String(e?.message || "");

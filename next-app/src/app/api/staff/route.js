@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createStaff, listStaff } from "../../../lib/staffRepo";
+import { writeAuditLog } from "../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
@@ -66,6 +67,7 @@ export async function POST(req) {
       lastActive,
       password,
     });
+    await writeAuditLog(req, `Created staff account: ${id}`);
 
     return NextResponse.json({ ok: true, data: row }, { status: 201 });
   } catch (e) {

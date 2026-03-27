@@ -54,6 +54,10 @@ export async function getDb() {
           storage_filename TEXT NOT NULL,
           mime_type TEXT NOT NULL,
           size_bytes INTEGER NOT NULL,
+          approval_status TEXT NOT NULL DEFAULT 'Pending',
+          reviewed_by TEXT,
+          reviewed_at TEXT,
+          review_note TEXT,
           created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
 
@@ -74,6 +78,7 @@ export async function getDb() {
         CREATE TABLE IF NOT EXISTS sections (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL UNIQUE,
+          course_code TEXT,
           created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
 
@@ -133,12 +138,14 @@ export async function getDb() {
     CREATE INDEX IF NOT EXISTS idx_documents_student_no ON documents(student_no);
     CREATE INDEX IF NOT EXISTS idx_documents_doc_type ON documents(doc_type);
     CREATE INDEX IF NOT EXISTS idx_documents_created_at ON documents(created_at);
+    CREATE INDEX IF NOT EXISTS idx_documents_approval_status ON documents(approval_status);
 
     CREATE INDEX IF NOT EXISTS idx_document_types_name ON document_types(name);
     CREATE INDEX IF NOT EXISTS idx_document_types_name_norm ON document_types(name_norm);
 
     CREATE INDEX IF NOT EXISTS idx_students_course_year_section ON students(course_code, year_level, section);
     CREATE INDEX IF NOT EXISTS idx_students_name ON students(name);
+    CREATE INDEX IF NOT EXISTS idx_sections_course_code ON sections(course_code);
 
     CREATE INDEX IF NOT EXISTS idx_staff_name ON staff(lname, fname);
     CREATE INDEX IF NOT EXISTS idx_staff_role ON staff(role);
@@ -215,6 +222,76 @@ export async function getDb() {
 
         db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '1')");
         persistDb();
+      }
+
+      if (schemaVersion < 2) {
+        try { db.exec("ALTER TABLE documents ADD COLUMN approval_status TEXT NOT NULL DEFAULT 'Pending'"); } catch (e) {}
+        try { db.exec("ALTER TABLE documents ADD COLUMN reviewed_by TEXT"); } catch (e) {}
+        try { db.exec("ALTER TABLE documents ADD COLUMN reviewed_at TEXT"); } catch (e) {}
+        try { db.exec("ALTER TABLE documents ADD COLUMN review_note TEXT"); } catch (e) {}
+        try { db.exec("UPDATE documents SET approval_status = 'Approved' WHERE approval_status IS NULL OR approval_status = ''"); } catch (e) {}
+        try { db.exec("CREATE INDEX IF NOT EXISTS idx_documents_approval_status ON documents(approval_status)"); } catch (e) {}
+        db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '2')");
+        persistDb();
+      }
+
+      if (schemaVersion < 3) {
+        try { db.exec("ALTER TABLE sections ADD COLUMN course_code TEXT"); } catch (e) {}
+        try {
+          db.exec(`
+            UPDATE sections
+            SET course_code = (
+              SELECT s.course_code
+              FROM students s
+              WHERE s.section = sections.name
+              LIMIT 1
+            )
+            WHERE course_code IS NULL OR course_code = ''
+          `);
+        } catch (e) {}
+        try { db.exec("CREATE INDEX IF NOT EXISTS idx_sections_course_code ON sections(course_code)"); } catch (e) {}
+        db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '3')");
+        persistDb();
+      }
+
+      // Safety net for environments where schema_version may be out of sync.
+      // This ensures review columns exist before any API query references them.
+      try {
+        const pragma = db.exec("PRAGMA table_info(documents)");
+        const cols = new Set(
+          (pragma?.[0]?.values || []).map((r) => String(r?.[1] || ""))
+        );
+        if (!cols.has("approval_status")) {
+          db.exec("ALTER TABLE documents ADD COLUMN approval_status TEXT NOT NULL DEFAULT 'Pending'");
+        }
+        if (!cols.has("reviewed_by")) {
+          db.exec("ALTER TABLE documents ADD COLUMN reviewed_by TEXT");
+        }
+        if (!cols.has("reviewed_at")) {
+          db.exec("ALTER TABLE documents ADD COLUMN reviewed_at TEXT");
+        }
+        if (!cols.has("review_note")) {
+          db.exec("ALTER TABLE documents ADD COLUMN review_note TEXT");
+        }
+        db.exec("UPDATE documents SET approval_status = 'Approved' WHERE approval_status IS NULL OR approval_status = ''");
+        db.exec("CREATE INDEX IF NOT EXISTS idx_documents_approval_status ON documents(approval_status)");
+        persistDb();
+      } catch (e) {
+        // ignore schema safety-net errors
+      }
+
+      try {
+        const pragma = db.exec("PRAGMA table_info(sections)");
+        const cols = new Set(
+          (pragma?.[0]?.values || []).map((r) => String(r?.[1] || ""))
+        );
+        if (!cols.has("course_code")) {
+          db.exec("ALTER TABLE sections ADD COLUMN course_code TEXT");
+        }
+        db.exec("CREATE INDEX IF NOT EXISTS idx_sections_course_code ON sections(course_code)");
+        persistDb();
+      } catch (e) {
+        // ignore sections safety-net errors
       }
 
       initializing = null;

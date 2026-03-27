@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { deleteStaff, getStaffById, updateStaff } from "../../../../lib/staffRepo";
+import { writeAuditLog } from "../../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
@@ -39,6 +40,7 @@ export async function PATCH(req, ctx) {
     if (!row) {
       return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
     }
+    await writeAuditLog(req, `Updated staff account: ${id}`);
 
     return NextResponse.json({ ok: true, data: row });
   } catch (e) {
@@ -72,6 +74,7 @@ export async function DELETE(_req, ctx) {
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
+  await writeAuditLog(_req, `Deleted staff account: ${id}`);
 
   return NextResponse.json({ ok: true, data: row });
 }

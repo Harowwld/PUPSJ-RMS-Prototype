@@ -1,5 +1,9 @@
 "use client";
 
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import ConfirmModal from "@/components/shared/ConfirmModal";
+
 export default function DocumentsTab({
   docsForm,
   setDocsForm,
@@ -9,7 +13,16 @@ export default function DocumentsTab({
   docsError,
   docsRows,
   updateDoc,
+  deleteDoc,
 }) {
+  const [updatePromptOpen, setUpdatePromptOpen] = useState(false);
+  const [updateTargetId, setUpdateTargetId] = useState(null);
+  const [updateStudentNo, setUpdateStudentNo] = useState("");
+  const [updateStudentName, setUpdateStudentName] = useState("");
+  const [updateDocType, setUpdateDocType] = useState("");
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+
   return (
     <div id="view-documents" className="flex flex-col w-full h-full gap-4 animate-fade-in">
       <section className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col">
@@ -213,33 +226,25 @@ export default function DocumentsTab({
                                 type="button"
                                 onClick={async () => {
                                   if (!r.doc?.id) return;
-                                  const nextStudentNo = prompt(
-                                    "Update Student No:",
-                                    String(r.student_no || "")
-                                  );
-                                  if (nextStudentNo === null) return;
-
-                                  const nextStudentName = prompt(
-                                    "Update Student Name (optional):",
-                                    String(r.student_name || "")
-                                  );
-                                  if (nextStudentName === null) return;
-
-                                  const nextDocType = prompt(
-                                    "Update Document Type:",
-                                    String(r.doc_type || "")
-                                  );
-                                  if (nextDocType === null) return;
-
-                                  await updateDoc(r.doc.id, {
-                                    studentNo: String(nextStudentNo).trim(),
-                                    studentName: String(nextStudentName).trim(),
-                                    docType: String(nextDocType).trim(),
-                                  });
+                                  setUpdateTargetId(r.doc.id);
+                                  setUpdateStudentNo(String(r.student_no || ""));
+                                  setUpdateStudentName(String(r.student_name || ""));
+                                  setUpdateDocType(String(r.doc_type || ""));
+                                  setUpdatePromptOpen(true);
                                 }}
                                 className="px-3 h-11 rounded-brand bg-pup-maroon text-white font-bold text-xs hover:bg-red-900"
                               >
                                 Update
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setDeleteTarget(r.doc);
+                                  setDeleteOpen(true);
+                                }}
+                                className="px-3 h-11 rounded-brand bg-red-600 text-white font-bold text-xs hover:bg-red-700"
+                              >
+                                Delete
                               </button>
                             </>
                           ) : null}
@@ -261,6 +266,91 @@ export default function DocumentsTab({
           </div>
         </div>
       </section>
+      <Dialog
+        open={updatePromptOpen}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            setUpdatePromptOpen(false);
+            setUpdateTargetId(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white rounded-brand border-gray-200 shadow-xl">
+          <DialogHeader className="p-5 border-b border-gray-200 bg-gray-50/60 flex flex-row items-center justify-between space-y-0">
+            <DialogTitle className="font-bold text-pup-maroon">Update Document Metadata</DialogTitle>
+          </DialogHeader>
+          <div className="p-5">
+            <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+              Student No
+            </label>
+            <input
+              className="form-input mb-3"
+              value={updateStudentNo}
+              onChange={(e) => setUpdateStudentNo(e.target.value)}
+            />
+            <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+              Student Name
+            </label>
+            <input
+              className="form-input mb-3"
+              value={updateStudentName}
+              onChange={(e) => setUpdateStudentName(e.target.value)}
+            />
+            <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+              Document Type
+            </label>
+            <input
+              className="form-input"
+              value={updateDocType}
+              onChange={(e) => setUpdateDocType(e.target.value)}
+            />
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setUpdatePromptOpen(false);
+                  setUpdateTargetId(null);
+                }}
+                className="px-4 h-11 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!updateTargetId) return;
+                  await updateDoc(updateTargetId, {
+                    studentNo: String(updateStudentNo).trim(),
+                    studentName: String(updateStudentName).trim(),
+                    docType: String(updateDocType).trim(),
+                  });
+                  setUpdatePromptOpen(false);
+                  setUpdateTargetId(null);
+                }}
+                className="px-4 h-11 rounded-brand bg-pup-maroon text-white font-bold text-sm hover:bg-red-900"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <ConfirmModal
+        open={deleteOpen}
+        title="Delete Document"
+        message={`Delete "${deleteTarget?.original_filename || "this document"}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        onConfirm={async () => {
+          if (!deleteTarget?.id) return;
+          await deleteDoc(deleteTarget.id);
+          setDeleteOpen(false);
+          setDeleteTarget(null);
+        }}
+        onCancel={() => {
+          setDeleteOpen(false);
+          setDeleteTarget(null);
+        }}
+      />
     </div>
   );
 }

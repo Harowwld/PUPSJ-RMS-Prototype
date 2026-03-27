@@ -9,6 +9,7 @@ import {
   signSessionToken,
   verifySessionToken,
 } from "../../../../lib/jwt";
+import { writeAuditLog } from "../../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
@@ -66,6 +67,7 @@ export async function POST(req) {
       { status: 404 }
     );
   }
+  await writeAuditLog(req, `Changed password for account: ${id}`);
 
   const nextPayload = {
     sub: session?.sub || id,

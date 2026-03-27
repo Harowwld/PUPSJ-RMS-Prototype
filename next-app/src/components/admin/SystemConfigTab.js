@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import ConfirmModal from "@/components/shared/ConfirmModal";
 
 export default function SystemConfigTab({ showToast, logAdminAction }) {
   const [docTypes, setDocTypes] = useState([]);
@@ -21,8 +22,11 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
   const [cCode, setCCode] = useState("");
   const [cName, setCName] = useState("");
   const [secName, setSecName] = useState("");
+  const [secCourseCode, setSecCourseCode] = useState("");
 
   const [activeSubTab, setActiveSubTab] = useState("document-types");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmPayload, setConfirmPayload] = useState(null);
 
   const fetchData = async () => {
     setLoading(true);
@@ -70,7 +74,6 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
   };
 
   const delDocType = async (id, name) => {
-    if (!confirm(`Delete document type "${name}"?`)) return;
     try {
       const res = await fetch(`/api/doc-types/${id}`, { method: "DELETE" });
       const json = await res.json();
@@ -105,7 +108,6 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
   };
 
   const delCourse = async (id, code) => {
-    if (!confirm(`Delete degree program "${code}"?`)) return;
     try {
       const res = await fetch(`/api/courses/${id}`, { method: "DELETE" });
       const json = await res.json();
@@ -120,18 +122,19 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
 
   const addSection = async (e) => {
     e.preventDefault();
-    if (!secName.trim()) return;
+    if (!secName.trim() || !secCourseCode.trim()) return;
     try {
       const res = await fetch("/api/sections", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: secName }),
+        body: JSON.stringify({ name: secName, courseCode: secCourseCode }),
       });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Failed");
       setSecName("");
+      setSecCourseCode("");
       showToast("Section block added");
-      logAdminAction(`Added section block: ${secName}`);
+      logAdminAction(`Added section block: ${secName} (${secCourseCode})`);
       fetchData();
     } catch (err) {
       showToast(err.message, true);
@@ -139,7 +142,6 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
   };
 
   const delSection = async (id, name) => {
-    if (!confirm(`Delete section block "${name}"?`)) return;
     try {
       const res = await fetch(`/api/sections/${id}`, { method: "DELETE" });
       const json = await res.json();
@@ -172,7 +174,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
 
         if (catIdx === -1 || nameIdx === -1) {
           throw new Error(
-            "CSV must have 'Category' and 'Name' columns. 'Code' is required for Courses.",
+            "CSV must have 'Category' and 'Name' columns. 'Code' is required for Courses and Sections.",
           );
         }
 
@@ -203,7 +205,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
               res = await fetch("/api/sections", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name }),
+                body: JSON.stringify({ name, courseCode: code }),
               });
             } else {
               continue; 
@@ -310,7 +312,20 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                     <tr key={dt.id} className="hover:bg-red-50/50 transition-colors group">
                       <td className="p-3 px-6 font-bold text-gray-800">{dt.name}</td>
                       <td className="p-3 px-6 text-right">
-                        <Button variant="ghost" size="sm" onClick={() => delDocType(dt.id, dt.name)} className="text-gray-400 group-hover:text-red-700 hover:bg-red-100 uppercase tracking-widest text-[10px] font-bold h-7 inline-flex"><i className="ph-bold ph-trash text-sm mr-1.5"></i> Delete</Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setConfirmPayload({
+                              title: "Delete Document Type",
+                              message: `Delete document type "${dt.name}"?`,
+                              confirmLabel: "Delete",
+                              onConfirm: () => delDocType(dt.id, dt.name),
+                            });
+                            setConfirmOpen(true);
+                          }}
+                          className="text-gray-400 group-hover:text-red-700 hover:bg-red-100 uppercase tracking-widest text-[10px] font-bold h-7 inline-flex"
+                        ><i className="ph-bold ph-trash text-sm mr-1.5"></i> Delete</Button>
                       </td>
                     </tr>
                   ))}
@@ -361,7 +376,20 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                       <td className="p-3 px-6 font-black text-gray-900">{c.code}</td>
                       <td className="p-3 px-6 font-bold text-gray-600">{c.name}</td>
                       <td className="p-3 px-6 text-right">
-                        <Button variant="ghost" size="sm" onClick={() => delCourse(c.id, c.code)} className="text-gray-400 group-hover:text-red-700 hover:bg-red-100 uppercase tracking-widest text-[10px] font-bold h-7 inline-flex"><i className="ph-bold ph-trash text-sm mr-1.5"></i> Delete</Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setConfirmPayload({
+                              title: "Delete Degree Program",
+                              message: `Delete degree program "${c.code}"?`,
+                              confirmLabel: "Delete",
+                              onConfirm: () => delCourse(c.id, c.code),
+                            });
+                            setConfirmOpen(true);
+                          }}
+                          className="text-gray-400 group-hover:text-red-700 hover:bg-red-100 uppercase tracking-widest text-[10px] font-bold h-7 inline-flex"
+                        ><i className="ph-bold ph-trash text-sm mr-1.5"></i> Delete</Button>
                       </td>
                     </tr>
                   ))}
@@ -391,7 +419,19 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                 <CardTitle className="font-bold text-gray-900 text-base">Add New Course Block (Section)</CardTitle>
                 <CardDescription className="text-xs font-medium text-gray-500 mt-0.5">Construct logical section blocks for student routing.</CardDescription>
               </div>
-              <form onSubmit={addSection} className="flex gap-2 w-full md:w-auto">
+              <form onSubmit={addSection} className="flex flex-col md:flex-row gap-2 w-full md:w-auto">
+                <select
+                  className="form-select h-10 md:w-[220px] shadow-sm bg-white"
+                  value={secCourseCode}
+                  onChange={(e) => setSecCourseCode(e.target.value)}
+                >
+                  <option value="">Select Degree Program...</option>
+                  {courses.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.code} - {c.name}
+                    </option>
+                  ))}
+                </select>
                 <Input type="text" placeholder="E.g. Block 1, Section A" className="w-full md:w-[320px] h-10 shadow-sm bg-white" value={secName} onChange={(e) => setSecName(e.target.value)} />
                 <Button type="submit" className="bg-pup-maroon text-white h-10 px-6 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors"><i className="ph-bold ph-plus"></i> Add</Button>
               </form>
@@ -401,6 +441,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                 <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 shadow-sm">
                   <tr className="text-left text-xs uppercase tracking-wider text-gray-500">
                     <th className="p-3 font-bold px-6">Block Identifier</th>
+                    <th className="p-3 font-bold px-6 border-l border-gray-200 w-64">Degree Program</th>
                     <th className="p-3 font-bold text-right px-6 w-32 border-l border-gray-200">Actions</th>
                   </tr>
                 </thead>
@@ -408,14 +449,30 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                   {sections.map((sec) => (
                     <tr key={sec.id} className="hover:bg-red-50/50 transition-colors group">
                       <td className="p-3 px-6 font-bold text-gray-800">{sec.name}</td>
+                      <td className="p-3 px-6 border-l border-gray-100 text-gray-700 font-medium">
+                        {sec.course_code ? `${sec.course_code}${sec.course_name ? ` - ${sec.course_name}` : ""}` : "—"}
+                      </td>
                       <td className="p-3 px-6 text-right">
-                        <Button variant="ghost" size="sm" onClick={() => delSection(sec.id, sec.name)} className="text-gray-400 group-hover:text-red-700 hover:bg-red-100 uppercase tracking-widest text-[10px] font-bold h-7 inline-flex"><i className="ph-bold ph-trash text-sm mr-1.5"></i> Delete</Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setConfirmPayload({
+                              title: "Delete Section Block",
+                              message: `Delete section block "${sec.name}"?`,
+                              confirmLabel: "Delete",
+                              onConfirm: () => delSection(sec.id, sec.name),
+                            });
+                            setConfirmOpen(true);
+                          }}
+                          className="text-gray-400 group-hover:text-red-700 hover:bg-red-100 uppercase tracking-widest text-[10px] font-bold h-7 inline-flex"
+                        ><i className="ph-bold ph-trash text-sm mr-1.5"></i> Delete</Button>
                       </td>
                     </tr>
                   ))}
                   {sections.length === 0 && (
                     <tr>
-                      <td colSpan={2} className="p-0">
+                      <td colSpan={3} className="p-0">
                         <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
                           <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
                             <i className="ph-duotone ph-list-numbers text-3xl text-pup-maroon"></i>
@@ -487,6 +544,21 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
           </div>
         )}
       </Card>
+      <ConfirmModal
+        open={confirmOpen}
+        title={confirmPayload?.title || "Confirm Action"}
+        message={confirmPayload?.message || "Are you sure?"}
+        confirmLabel={confirmPayload?.confirmLabel || "Confirm"}
+        onConfirm={async () => {
+          if (!confirmPayload?.onConfirm) return;
+          setConfirmOpen(false);
+          await confirmPayload.onConfirm();
+        }}
+        onCancel={() => {
+          setConfirmOpen(false);
+          setConfirmPayload(null);
+        }}
+      />
     </div>
   );
 }

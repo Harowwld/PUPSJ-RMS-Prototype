@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { listCourses, createCourse } from "../../../lib/coursesRepo";
+import { writeAuditLog } from "../../../lib/auditLogRequest";
 
 export const dynamic = "force-dynamic";
 
@@ -28,6 +29,7 @@ export async function POST(req) {
     }
 
     const newCourse = await createCourse(code, name);
+    await writeAuditLog(req, `Created course: ${code}`);
     return NextResponse.json({ ok: true, data: newCourse });
   } catch (error) {
     return NextResponse.json(
