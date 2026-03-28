@@ -56,7 +56,10 @@ export default function StaffPage() {
   const [selectedRoom, setSelectedRoom] = useState(null);
   const [selectedCabinet, setSelectedCabinet] = useState(null);
 
-  const [uploadMode, setUploadMode] = useState("existing");
+  /** "pdf" = single PDF upload (existing or new student); "csv" = batch import */
+  const [uploadMode, setUploadMode] = useState("pdf");
+  /** When true, submit attaches the PDF to an existing student (no new student row). */
+  const [uploadStudentIsExisting, setUploadStudentIsExisting] = useState(false);
   const [dropActive, setDropActive] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
   const fileInputRef = useRef(null);
@@ -65,13 +68,6 @@ export default function StaffPage() {
   const [ocrPromptOpen, setOcrPromptOpen] = useState(false);
   const [ocrError, setOcrError] = useState("");
 
-  const [exist, setExist] = useState({
-    course: "",
-    year: "",
-    section: "",
-    studentId: "",
-    docType: "",
-  });
   const [newRec, setNewRec] = useState({
     studentNo: "",
     name: "",
@@ -94,6 +90,8 @@ export default function StaffPage() {
   const [csvResults, setCsvResults] = useState([]);
   const [csvError, setCsvError] = useState("");
   const [uploadError, setUploadError] = useState("");
+  /** Keys: pdfFile, studentNo, name, course, year, sectionPart, room, cabinet, drawer, docType */
+  const [uploadFieldErrors, setUploadFieldErrors] = useState({});
   const [csvBulkRoom, setCsvBulkRoom] = useState("");
   const [csvBulkCabinet, setCsvBulkCabinet] = useState("");
   const [csvBulkDrawer, setCsvBulkDrawer] = useState("");
@@ -458,12 +456,55 @@ export default function StaffPage() {
     return { value: res, invalid };
   };
 
+  const clearUploadFieldError = useCallback((key) => {
+    setUploadFieldErrors((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  }, []);
+
+  const clearAllUploadFieldErrors = useCallback(() => setUploadFieldErrors({}), []);
+
+  const applyStudentToPdfForm = useCallback((student, docTypeFromOcr) => {
+    const s = normalizeStudentRow(student);
+    const yearStr = String(s.yearLevel ?? "").trim();
+    const sec = String(s.section ?? "").trim();
+    let sectionPart = "";
+    if (yearStr && sec.startsWith(`${yearStr}-`)) {
+      sectionPart = sec.slice(yearStr.length + 1);
+    } else if (sec) {
+      const parts = sec.split("-");
+      sectionPart = parts.length > 1 ? parts.slice(1).join("-") : sec;
+    }
+    setNewRec((p) => ({
+      ...p,
+      studentNo: s.studentNo ?? "",
+      name: String(s.name ?? "")
+        .trim()
+        .replace(/\s+/g, " ")
+        .toUpperCase(),
+      course: s.courseCode ?? "",
+      year: yearStr,
+      sectionPart,
+      room: String(s.room ?? ""),
+      cabinet: s.cabinet ?? "",
+      drawer: String(s.drawer ?? ""),
+      docType:
+        docTypeFromOcr != null && String(docTypeFromOcr).trim() !== ""
+          ? String(docTypeFromOcr).trim()
+          : p.docType,
+    }));
+  }, []);
+
   const handleFileSelect = async (file) => {
     if (!file) return;
     setUploadedFile(file);
+    clearUploadFieldError("pdfFile");
     setOcrError("");
     setOcrSuggestion(null);
-    if (uploadMode === "new") {
+    if (uploadMode === "pdf") {
       setOcrLoading(true);
       try {
         const suggestion = await scanPdfForSuggestion({
@@ -472,7 +513,48 @@ export default function StaffPage() {
           docTypes,
         });
         setOcrSuggestion(suggestion);
-        setOcrPromptOpen(true);
+
+        const nameMatches = Array.isArray(suggestion.nameMatchesByName)
+          ? suggestion.nameMatchesByName
+          : [];
+        const ambiguous = nameMatches.length > 1;
+
+        if (ambiguous) {
+          setNewRec((p) => ({
+            ...p,
+            name: String(suggestion.name || p.name || "")
+              .trim()
+              .replace(/\s+/g, " ")
+              .toUpperCase(),
+            docType:
+              suggestion.docType != null && String(suggestion.docType).trim() !== ""
+                ? String(suggestion.docType).trim()
+                : p.docType,
+          }));
+          setUploadStudentIsExisting(false);
+          clearAllUploadFieldErrors();
+          setOcrPromptOpen(true);
+        } else if (suggestion.matchedStudent) {
+          applyStudentToPdfForm(suggestion.matchedStudent, suggestion.docType);
+          setUploadStudentIsExisting(true);
+          clearAllUploadFieldErrors();
+          setOcrPromptOpen(false);
+        } else {
+          setNewRec((p) => ({
+            ...p,
+            name: String(suggestion.name || p.name || "")
+              .trim()
+              .replace(/\s+/g, " ")
+              .toUpperCase(),
+            docType:
+              suggestion.docType != null && String(suggestion.docType).trim() !== ""
+                ? String(suggestion.docType).trim()
+                : p.docType,
+          }));
+          setUploadStudentIsExisting(false);
+          clearAllUploadFieldErrors();
+          setOcrPromptOpen(false);
+        }
       } catch (err) {
         const message =
           err?.message || "Automatic detection failed. Please fill manually.";
@@ -486,38 +568,50 @@ export default function StaffPage() {
 
   const processSubmission = async () => {
     if (!uploadedFile) {
+      setUploadFieldErrors({ pdfFile: true });
       showToast("Please select a PDF file first", true);
       return;
     }
     const payload = new FormData();
     payload.append("file", uploadedFile);
-    if (uploadMode === "existing") {
-      if (!exist.studentId || !exist.docType) {
-        showToast("Please select student and document type", true);
+    if (uploadMode !== "pdf") {
+      showToast("Select the PDF upload tab to submit a document", true);
+      return;
+    }
+    if (uploadStudentIsExisting) {
+      const err = {};
+      if (!String(newRec.studentNo || "").trim()) err.studentNo = true;
+      if (!newRec.docType) err.docType = true;
+      if (Object.keys(err).length) {
+        setUploadFieldErrors(err);
+        showToast("Student number and document type are required", true);
         return;
       }
-      payload.append("studentNo", exist.studentId);
-      payload.append("docType", exist.docType);
+      setUploadFieldErrors({});
+      payload.append("studentNo", String(newRec.studentNo).trim());
+      payload.append("docType", newRec.docType);
     } else {
-      if (
-        !newRec.studentNo ||
-        !newRec.name ||
-        !newRec.course ||
-        !newRec.year ||
-        !newRec.sectionPart ||
-        !newRec.room ||
-        !newRec.cabinet ||
-        !newRec.drawer ||
-        !newRec.docType
-      ) {
+      const err = {};
+      if (!String(newRec.studentNo || "").trim()) err.studentNo = true;
+      if (!String(newRec.name || "").trim()) err.name = true;
+      if (!newRec.course) err.course = true;
+      if (!newRec.year) err.year = true;
+      if (!newRec.sectionPart) err.sectionPart = true;
+      if (!newRec.room) err.room = true;
+      if (!newRec.cabinet) err.cabinet = true;
+      if (!newRec.drawer) err.drawer = true;
+      if (!newRec.docType) err.docType = true;
+      if (Object.keys(err).length) {
+        setUploadFieldErrors(err);
         showToast("Please fill all student details", true);
         return;
       }
+      setUploadFieldErrors({});
       payload.append("studentNo", newRec.studentNo);
       payload.append("studentName", newRec.name);
       payload.append("courseCode", newRec.course);
       payload.append("yearLevel", newRec.year);
-      payload.append("section", `${newRec.year}-${newRec.sectionPart}`);
+      payload.append("section", String(newRec.sectionPart || "").trim());
       payload.append("room", newRec.room);
       payload.append("cabinet", newRec.cabinet);
       payload.append("drawer", newRec.drawer);
@@ -531,11 +625,37 @@ export default function StaffPage() {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Upload failed");
+      let locationUpdateFailed = false;
+      if (uploadStudentIsExisting) {
+        const sn = String(newRec.studentNo || "").trim();
+        const room = parseInt(String(newRec.room || ""), 10);
+        const drawer = parseInt(String(newRec.drawer || ""), 10);
+        const cabinet = String(newRec.cabinet || "").trim();
+        if (sn && Number.isFinite(room) && cabinet && Number.isFinite(drawer)) {
+          const patchRes = await fetch(
+            `/api/students/${encodeURIComponent(sn)}`,
+            {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ room, cabinet, drawer }),
+            },
+          );
+          if (!patchRes.ok) locationUpdateFailed = true;
+        }
+      }
       await logAction(
         `Uploaded ${payload.get("docType")} for ${payload.get("studentNo")}`,
       );
-      showToast("Upload successful!");
+      if (locationUpdateFailed) {
+        showToast(
+          "Document uploaded, but room/cabinet/drawer could not be updated.",
+          true,
+        );
+      } else {
+        showToast("Upload successful!");
+      }
       setUploadedFile(null);
+      setUploadFieldErrors({});
       fetchData();
       fetchAllDocs();
     } catch (err) {
@@ -719,6 +839,8 @@ export default function StaffPage() {
         {view === "upload" && (
           <ScanUploadTab
             uploadMode={uploadMode}
+            uploadStudentIsExisting={uploadStudentIsExisting}
+            setUploadStudentIsExisting={setUploadStudentIsExisting}
             setUploadMode={(m) => {
               setUploadMode(m);
               setUploadError("");
@@ -732,6 +854,8 @@ export default function StaffPage() {
             onClearFile={() => {
               setUploadedFile(null);
               setOcrSuggestion(null);
+              setUploadStudentIsExisting(false);
+              setUploadFieldErrors({});
             }}
             ocrLoading={ocrLoading}
             ocrError={ocrError}
@@ -753,11 +877,12 @@ export default function StaffPage() {
               setCsvRows(n);
             }}
             cabinets={cabinets}
-            exist={exist}
-            setExist={setExist}
             courses={courses}
             docTypes={docTypes}
             processSubmission={processSubmission}
+            uploadFieldErrors={uploadFieldErrors}
+            clearUploadFieldError={clearUploadFieldError}
+            clearAllUploadFieldErrors={clearAllUploadFieldErrors}
             uploadError={uploadError}
             newRec={newRec}
             setNewRec={setNewRec}
@@ -913,42 +1038,6 @@ export default function StaffPage() {
             }}
             csvLoading={csvLoading}
             csvResults={csvResults}
-            existingAvailYears={
-              exist.course
-                ? Array.from(
-                    new Set(
-                      students
-                        .filter((s) => s.courseCode === exist.course)
-                        .map((s) => s.yearLevel),
-                    ),
-                  ).sort()
-                : []
-            }
-            existingAvailSections={
-              exist.course && exist.year
-                ? Array.from(
-                    new Set(
-                      students
-                        .filter(
-                          (s) =>
-                            s.courseCode === exist.course &&
-                            s.yearLevel === parseInt(exist.year),
-                        )
-                        .map((s) => s.section),
-                    ),
-                  ).sort()
-                : []
-            }
-            existingStudents={
-              exist.course && exist.year && exist.section
-                ? students.filter(
-                    (s) =>
-                      s.courseCode === exist.course &&
-                      s.yearLevel === parseInt(exist.year) &&
-                      s.section === exist.section,
-                  )
-                : []
-            }
           />
         )}
         {view === "documents" && (
@@ -1011,30 +1100,10 @@ export default function StaffPage() {
         open={ocrPromptOpen}
         onClose={() => setOcrPromptOpen(false)}
         ocrSuggestion={ocrSuggestion}
-        onApplyToExisting={() => {
-          const s = ocrSuggestion.matchedStudent;
-          setUploadMode("existing");
-          setExist((p) => ({
-            ...p,
-            course: s.courseCode,
-            year: String(s.yearLevel),
-            section: s.section,
-            studentId: s.studentNo,
-            docType: ocrSuggestion.docType || p.docType,
-          }));
-          setOcrPromptOpen(false);
-        }}
-        onApplyToNew={() => {
-          setUploadMode("new");
-          setNewRec((p) => ({
-            ...p,
-            studentNo: ocrSuggestion?.studentNo || p.studentNo,
-            name: String(ocrSuggestion?.name || p.name || "")
-              .trim()
-              .replace(/\s+/g, " ")
-              .toUpperCase(),
-            docType: ocrSuggestion?.docType || p.docType,
-          }));
+        onConfirmStudent={(s) => {
+          applyStudentToPdfForm(s, ocrSuggestion?.docType);
+          setUploadStudentIsExisting(true);
+          clearAllUploadFieldErrors();
           setOcrPromptOpen(false);
         }}
       />

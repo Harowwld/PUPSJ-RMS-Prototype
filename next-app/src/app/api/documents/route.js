@@ -3,6 +3,7 @@ import {
   createDocument,
   listDocuments,
 } from "../../../lib/documentsRepo";
+import { createStudent } from "../../../lib/studentsRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
@@ -58,15 +59,101 @@ export async function POST(req) {
     );
   }
 
-  const studentNo = String(form.get("studentNo") || "").trim();
+  const studentNoRaw = String(form.get("studentNo") || "").trim();
+  const studentNo = studentNoRaw.toUpperCase();
   const studentName = String(form.get("studentName") || "").trim();
   const docType = String(form.get("docType") || "").trim();
+  const isNewStudent =
+    String(form.get("isNewStudent") || "").toLowerCase() === "true";
 
   if (!studentNo || !docType) {
     return NextResponse.json(
       { ok: false, error: "studentNo and docType are required" },
       { status: 400 }
     );
+  }
+
+  if (isNewStudent) {
+    if (!studentName) {
+      return NextResponse.json(
+        { ok: false, error: "studentName is required when creating a new student" },
+        { status: 400 }
+      );
+    }
+
+    const courseCode = String(form.get("courseCode") || "").trim().toUpperCase();
+    const yearLevel = parseInt(String(form.get("yearLevel") || ""), 10);
+    const section = String(form.get("section") || "").trim();
+    const room = parseInt(String(form.get("room") || ""), 10);
+    const cabinet = String(form.get("cabinet") || "").trim();
+    const drawer = parseInt(String(form.get("drawer") || ""), 10);
+
+    const studentNoPattern = /^\d{4}-\d{5}-[A-Z]{2}-\d$/;
+    if (!studentNoPattern.test(studentNo)) {
+      return NextResponse.json(
+        { ok: false, error: "Invalid studentNo format" },
+        { status: 400 }
+      );
+    }
+
+    if (!courseCode || !section) {
+      return NextResponse.json(
+        { ok: false, error: "courseCode and section are required for a new student" },
+        { status: 400 }
+      );
+    }
+
+    if (!Number.isFinite(yearLevel) || yearLevel < 2000 || yearLevel > 2100) {
+      return NextResponse.json(
+        { ok: false, error: "Invalid yearLevel" },
+        { status: 400 }
+      );
+    }
+
+    if (!Number.isFinite(room) || room < 1) {
+      return NextResponse.json({ ok: false, error: "Invalid room" }, { status: 400 });
+    }
+
+    if (!cabinet) {
+      return NextResponse.json({ ok: false, error: "Invalid cabinet" }, { status: 400 });
+    }
+
+    if (!Number.isFinite(drawer) || drawer < 1) {
+      return NextResponse.json({ ok: false, error: "Invalid drawer" }, { status: 400 });
+    }
+
+    try {
+      await createStudent({
+        studentNo,
+        name: studentName,
+        courseCode,
+        yearLevel,
+        section,
+        room,
+        cabinet,
+        drawer,
+        status: "Active",
+      });
+    } catch (e) {
+      const msg = String(e?.message || "");
+      if (msg.includes("UNIQUE") || msg.includes("PRIMARY")) {
+        return NextResponse.json(
+          { ok: false, error: "Student already exists" },
+          { status: 409 }
+        );
+      }
+      if (
+        msg.includes("Invalid courseCode") ||
+        msg.includes("Invalid section") ||
+        msg.includes("is linked to")
+      ) {
+        return NextResponse.json({ ok: false, error: msg }, { status: 400 });
+      }
+      return NextResponse.json(
+        { ok: false, error: msg || "Failed to create student" },
+        { status: 500 }
+      );
+    }
   }
 
   const buf = Buffer.from(await file.arrayBuffer());
@@ -80,7 +167,12 @@ export async function POST(req) {
     sizeBytes: file.size || buf.length,
     buffer: buf,
   });
-  await writeAuditLog(req, `Uploaded document for student ${studentNo} (${docType})`);
+  await writeAuditLog(
+    req,
+    isNewStudent
+      ? `Created student ${studentNo} and uploaded ${docType}`
+      : `Uploaded document for student ${studentNo} (${docType})`
+  );
 
   return NextResponse.json({ ok: true, data: row }, { status: 201 });
 }

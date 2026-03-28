@@ -15,41 +15,6 @@ function makeUpperSafe(value) {
   return String(value || "").toUpperCase();
 }
 
-function detectStudentNo(rawText) {
-  const raw = String(rawText || "");
-  // Normalize common OCR separators so regexes can match more often.
-  const compact = makeUpperSafe(raw)
-    .replace(/\u00AD/g, "") // soft hyphen
-    .replace(/[\s\u00A0]+/g, " ")
-    .trim();
-
-  // Expected format: 2026-10001-SJ-0
-  const exact = compact.match(/\b\d{4}\s*-\s*\d{5}\s*-\s*[A-Z]{2}\s*-\s*\d\b/);
-  if (exact?.[0]) {
-    const normalized = exact[0]
-      .replace(/\s+/g, "")
-      .replace(/-+/g, "-")
-      .replace(/^(\d{4})-(\d{5})-([A-Z]{2})-(\d)$/, "$1-$2-$3-$4");
-    return normalized;
-  }
-
-  // Tolerant: allow separators with optional spaces and slightly looser code matching.
-  const loose = compact.match(
-    /\b(\d{4})\s*[- ]\s*(\d{5})\s*[- ]\s*([A-Z]{1,3})\s*[- ]\s*(\d)\b/
-  );
-  if (!loose) return "";
-
-  const year = loose[1];
-  const num = loose[2];
-  const code = loose[3];
-  const last = loose[4];
-
-  const normCode = makeUpperSafe(code).replace(/[^A-Z]/g, "");
-  const finalCode = normCode.length >= 2 ? normCode.slice(0, 2) : normCode.padEnd(2, "X");
-  if (!finalCode) return "";
-  return `${year}-${num}-${finalCode}-${last}`;
-}
-
 function detectName(lines) {
   const blacklist = [
     "SECONDARY",
@@ -173,6 +138,31 @@ function detectName(lines) {
   return "";
 }
 
+function normalizeNameForMatch(value) {
+  return String(value || "")
+    .toLowerCase()
+    .replace(/[.,'\u2019`]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Find all students whose stored name matches the OCR name (normalized equality).
+ * Used when student number is missing or does not match, to detect existing records.
+ */
+export function findStudentsByOcrName(ocrName, students) {
+  if (!ocrName || !Array.isArray(students)) return [];
+  const o = normalizeNameForMatch(ocrName);
+  if (o.length < 2) return [];
+  const matches = [];
+  for (const s of students) {
+    const n = normalizeNameForMatch(s?.name || s?.Name || "");
+    if (!n) continue;
+    if (n === o) matches.push(s);
+  }
+  return matches;
+}
+
 function detectDocType(rawText, docTypes) {
   const hay = normalizeLoose(rawText);
   if (!hay || !Array.isArray(docTypes)) return "";
@@ -286,22 +276,20 @@ export async function scanPdfForSuggestion({ file, students, docTypes }) {
   const ocrTextPreview = text.slice(0, 2000);
   const ocrLinesPreview = lines.slice(0, 18);
 
-  const studentNo = detectStudentNo(text);
   const name = detectName(lines);
   const docType = detectDocType(text, docTypes);
-  const matchedStudent = Array.isArray(students)
-    ? students.find(
-        (s) =>
-          normalizeLoose(s?.studentNo || s?.student_no || "") ===
-          normalizeLoose(studentNo)
-      ) || null
-    : null;
+
+  const nameMatchesByName =
+    name && Array.isArray(students) ? findStudentsByOcrName(name, students) : [];
+
+  const matchedStudent =
+    nameMatchesByName.length === 1 ? nameMatchesByName[0] : null;
 
   return {
-    studentNo,
     name,
     docType,
     matchedStudent,
+    nameMatchesByName,
     ocrTextPreview,
     ocrLinesPreview,
   };
