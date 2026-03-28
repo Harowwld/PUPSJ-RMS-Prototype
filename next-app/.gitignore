@@ -23,6 +23,9 @@
 # misc
 .DS_Store
 
+# Cursor IDE (debug logs, local session files)
+.cursor/
+
 *.pem
 
 # debug
