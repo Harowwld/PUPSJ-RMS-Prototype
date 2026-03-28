@@ -17,6 +17,9 @@ export default function OCRPromptModal({
 }) {
   if (!open) return null;
 
+  const previewText = ocrSuggestion?.ocrTextPreview || "";
+  const hasPreview = previewText.trim().length > 0;
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <DialogContent className="sm:max-w-lg p-6 bg-white rounded-brand border-gray-300 shadow-lg">
@@ -58,6 +61,22 @@ export default function OCRPromptModal({
             )}
           </div>
         </div>
+
+        {hasPreview ? (
+          <div className="mt-4 pt-3 border-t border-gray-200">
+            <div className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">
+              OCR Preview (first page excerpt)
+            </div>
+            <details>
+              <summary className="cursor-pointer text-xs font-bold text-pup-maroon hover:text-red-900">
+                View scanned text
+              </summary>
+              <pre className="mt-3 max-h-56 overflow-auto text-xs leading-relaxed font-mono bg-gray-50 border border-gray-200 rounded-brand p-3 whitespace-pre-wrap wrap-break-word">
+                {previewText}
+              </pre>
+            </details>
+          </div>
+        ) : null}
 
         <div className="mt-5 flex flex-col gap-2">
           <button

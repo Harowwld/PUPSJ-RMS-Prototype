@@ -19,7 +19,10 @@ export async function GET() {
 
 function validateStudentPayload(body) {
   const studentNo = String(body?.studentNo || "").trim();
-  const name = String(body?.name || "").trim();
+  const name = String(body?.name || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toUpperCase();
   const courseCode = String(body?.courseCode || "").trim().toUpperCase();
   const yearLevel = parseInt(body?.yearLevel);
   const section = String(body?.section || "").trim();

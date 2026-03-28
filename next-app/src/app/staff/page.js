@@ -12,6 +12,7 @@ import DocumentsTab from "@/components/staff/DocumentsTab";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import OCRPromptModal from "@/components/staff/OCRPromptModal";
 import { Skeleton } from "@/components/ui/skeleton";
+import { scanPdfForSuggestion, warmupOcrWorker } from "@/lib/ocrClient";
 
 const rooms = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const cabinets = ["A", "B", "C", "D", "E", "F", "G", "H"];
@@ -155,7 +156,7 @@ export default function StaffPage() {
 
   const fetchAllDocs = useCallback(async () => {
     try {
-      const res = await fetch("/api/documents");
+      const res = await fetch("/api/documents?excludeDeclined=1&limit=500");
       const data = await res.json();
       setAllDocs(Array.isArray(data.data) ? data.data : []);
       docsLoadedRef.current = true;
@@ -182,12 +183,28 @@ export default function StaffPage() {
         setTimeout(() => {
           fetchData();
           fetchAllDocs();
+          warmupOcrWorker().catch(() => {
+            // Keep silent; OCR path will show explicit errors on scan.
+          });
         }, 0);
       } catch {
         router.push("/");
       }
     })();
   }, [router, fetchData, fetchAllDocs]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      fetchAllDocs();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
+    };
+  }, [fetchAllDocs]);
 
   useEffect(() => {
     // Load document list lazily when search view is visible.
@@ -378,12 +395,18 @@ export default function StaffPage() {
     return sections;
   }, [sections, newRec.course]);
 
+  const staffDocs = useMemo(
+    () =>
+      allDocs.filter((d) => String(d?.approval_status || "") !== "Declined"),
+    [allDocs],
+  );
+
   const activeStudentDocs = useMemo(
     () =>
       activeStudent
-        ? allDocs.filter((d) => d.student_no === activeStudent.studentNo)
+        ? staffDocs.filter((d) => d.student_no === activeStudent.studentNo)
         : [],
-    [activeStudent, allDocs],
+    [activeStudent, staffDocs],
   );
 
   const academicYearOptions = useMemo(() => {
@@ -439,21 +462,22 @@ export default function StaffPage() {
     if (!file) return;
     setUploadedFile(file);
     setOcrError("");
+    setOcrSuggestion(null);
     if (uploadMode === "new") {
       setOcrLoading(true);
       try {
-        const formData = new FormData();
-        formData.append("file", file);
-        const res = await fetch("/api/system/tools/decrypt-script", {
-          method: "POST",
-          body: formData,
+        const suggestion = await scanPdfForSuggestion({
+          file,
+          students,
+          docTypes,
         });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "OCR failed");
-        setOcrSuggestion(data);
+        setOcrSuggestion(suggestion);
         setOcrPromptOpen(true);
-      } catch {
-        setOcrError("Automatic detection failed. Please fill manually.");
+      } catch (err) {
+        const message =
+          err?.message || "Automatic detection failed. Please fill manually.";
+        setOcrError(message);
+        showToast(message, true);
       } finally {
         setOcrLoading(false);
       }
@@ -519,73 +543,93 @@ export default function StaffPage() {
     }
   };
 
-  const refreshDocuments = async (form) => {
-    setDocsLoading(true);
-    setDocsError("");
-    try {
-      const trimmedNo = String(form.studentNo || "").trim().toLowerCase();
-      const trimmedName = String(form.studentName || "").trim().toLowerCase();
-      const selectedType = String(form.docType || "").trim();
+  const refreshDocuments = useCallback(
+    async (form) => {
+      setDocsLoading(true);
+      setDocsError("");
+      try {
+        const trimmedNo = String(form.studentNo || "").trim().toLowerCase();
+        const trimmedName = String(form.studentName || "").trim().toLowerCase();
+        const selectedType = String(form.docType || "").trim();
 
-      if (!trimmedNo && !trimmedName && !selectedType) {
-        setDocsRows([]);
-        return;
-      }
-
-      // Find matching students by student no or name
-      const matchingStudents = students.filter((s) => {
-        const studentNo = String(s.studentNo || "").toLowerCase();
-        const studentName = String(s.name || "").toLowerCase();
-
-        // Student No field: direct filter on ID
-        const matchIdField = trimmedNo ? studentNo.includes(trimmedNo) : true;
-
-        // Student Name field: acts as a flexible search across BOTH name and ID
-        const matchNameField = trimmedName
-          ? studentName.includes(trimmedName) || studentNo.includes(trimmedName)
-          : true;
-
-        return matchIdField && matchNameField;
-      });
-
-      if (matchingStudents.length === 0 || docTypes.length === 0) {
-        setDocsRows([]);
-        return;
-      }
-
-      const rows = [];
-
-      for (const student of matchingStudents) {
-        const studentDocs = allDocs.filter(
-          (d) => String(d.student_no || "") === String(student.studentNo || "")
-        );
-
-        for (const type of docTypes) {
-          if (selectedType && selectedType !== type) continue;
-
-          const doc = studentDocs.find((d) => d.doc_type === type) || null;
-
-          // If a document type filter is selected, only show uploaded documents
-          if (selectedType && !doc) continue;
-
-          rows.push({
-            id: doc?.id ?? `${student.studentNo}-${type}`,
-            student_no: student.studentNo,
-            student_name: student.name,
-            doc_type: type,
-            status: doc ? "uploaded" : "missing",
-            doc,
-          });
+        if (!trimmedNo && !trimmedName && !selectedType) {
+          setDocsRows([]);
+          return;
         }
-      }
 
-      setDocsRows(rows);
-    } catch {
-      setDocsError("Failed to load documents");
-    } finally {
-      setDocsLoading(false);
-    }
-  };
+        // Find matching students by student no or name
+        const matchingStudents = students.filter((s) => {
+          const studentNo = String(s.studentNo || "").toLowerCase();
+          const studentName = String(s.name || "").toLowerCase();
+
+          // Student No field: direct filter on ID
+          const matchIdField = trimmedNo ? studentNo.includes(trimmedNo) : true;
+
+          // Student Name field: acts as a flexible search across BOTH name and ID
+          const matchNameField = trimmedName
+            ? studentName.includes(trimmedName) || studentNo.includes(trimmedName)
+            : true;
+
+          return matchIdField && matchNameField;
+        });
+
+        if (matchingStudents.length === 0 || docTypes.length === 0) {
+          setDocsRows([]);
+          return;
+        }
+
+        const rows = [];
+
+        for (const student of matchingStudents) {
+          const studentDocs = staffDocs.filter(
+            (d) => String(d.student_no || "") === String(student.studentNo || "")
+          );
+
+          for (const type of docTypes) {
+            if (selectedType && selectedType !== type) continue;
+
+            const doc = studentDocs.find((d) => d.doc_type === type) || null;
+
+            // If a document type filter is selected, only show uploaded documents
+            if (selectedType && !doc) continue;
+
+            rows.push({
+              id: doc?.id ?? `${student.studentNo}-${type}`,
+              student_no: student.studentNo,
+              student_name: student.name,
+              doc_type: type,
+              status: doc ? "uploaded" : "missing",
+              doc,
+            });
+          }
+        }
+
+        setDocsRows(rows);
+      } catch {
+        setDocsError("Failed to load documents");
+      } finally {
+        setDocsLoading(false);
+      }
+    },
+    [students, docTypes, staffDocs],
+  );
+
+  useEffect(() => {
+    if (view !== "documents") return;
+    const hasQuery =
+      String(docsForm.studentNo || "").trim() ||
+      String(docsForm.studentName || "").trim() ||
+      String(docsForm.docType || "").trim();
+    if (!hasQuery) return;
+    refreshDocuments(docsForm);
+  }, [
+    view,
+    staffDocs,
+    docsForm.studentNo,
+    docsForm.studentName,
+    docsForm.docType,
+    refreshDocuments,
+  ]);
 
   if (loading) {
     return (
@@ -985,7 +1029,10 @@ export default function StaffPage() {
           setNewRec((p) => ({
             ...p,
             studentNo: ocrSuggestion?.studentNo || p.studentNo,
-            name: ocrSuggestion?.name || p.name,
+            name: String(ocrSuggestion?.name || p.name || "")
+              .trim()
+              .replace(/\s+/g, " ")
+              .toUpperCase(),
             docType: ocrSuggestion?.docType || p.docType,
           }));
           setOcrPromptOpen(false);

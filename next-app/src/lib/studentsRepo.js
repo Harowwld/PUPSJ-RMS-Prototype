@@ -1,4 +1,11 @@
-import { dbAll, dbGet, dbRun } from "./sqlite";
+import { dbAll, dbGet, dbRun } from "./sqlite.js";
+
+function normalizeStudentName(name) {
+  return String(name || "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .toUpperCase();
+}
 
 async function ensureCourseSectionMapping(courseCodeRaw, sectionRaw) {
   const courseCode = String(courseCodeRaw || "").trim().toUpperCase();
@@ -47,6 +54,7 @@ export async function createStudent({
   status,
 }) {
   const normalizedCourseCode = String(courseCode || "").trim().toUpperCase();
+  const normalizedName = normalizeStudentName(name);
   const normalizedSection = String(section || "").trim();
   await ensureCourseSectionMapping(normalizedCourseCode, normalizedSection);
 
@@ -67,7 +75,7 @@ export async function createStudent({
   `,
     [
       studentNo,
-      name,
+      normalizedName,
       normalizedCourseCode,
       academicYear,
       normalizedSection,
@@ -166,7 +174,10 @@ export async function updateStudent(studentNo, patch) {
   if (!existing) return null;
 
   const next = {
-    name: patch.name ?? existing.name,
+    name:
+      patch.name === undefined || patch.name === null
+        ? existing.name
+        : normalizeStudentName(patch.name),
     course_code: String(patch.courseCode ?? existing.course_code).trim().toUpperCase(),
     year_level:
       patch.yearLevel === undefined ? existing.year_level : parseInt(patch.yearLevel),

@@ -13,6 +13,10 @@ export async function GET(req) {
   const studentNo = searchParams.get("studentNo") || "";
   const docType = searchParams.get("docType") || "";
   const approvalStatus = searchParams.get("approvalStatus") || "";
+  const excludeDeclinedRaw = searchParams.get("excludeDeclined");
+  const excludeDeclined =
+    excludeDeclinedRaw === "1" ||
+    String(excludeDeclinedRaw || "").toLowerCase() === "true";
   const limit = searchParams.get("limit") || "50";
   const offset = searchParams.get("offset") || "0";
 
@@ -21,6 +25,7 @@ export async function GET(req) {
     studentNo: studentNo || undefined,
     docType: docType || undefined,
     approvalStatus: approvalStatus || undefined,
+    excludeDeclined: approvalStatus ? false : excludeDeclined,
     limit,
     offset,
   });
