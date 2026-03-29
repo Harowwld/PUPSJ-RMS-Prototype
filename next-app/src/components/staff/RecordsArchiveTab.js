@@ -42,8 +42,18 @@ export default function RecordsArchiveTab({
   const [listType, setListType] = useState("card");
 
   return (
-    <div id="view-search" className="flex flex-col lg:flex-row w-full gap-4 lg:h-full min-h-0 animate-fade-in">
-      <section className="w-full lg:w-1/4 bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm flex-shrink-0 lg:h-full min-h-0">
+    <div id="view-search" className="h-full flex flex-col gap-6 p-6 overflow-y-auto animate-fade-in font-inter">
+      <div className="flex justify-between items-end shrink-0">
+        <div>
+          <h2 className="text-2xl font-black text-pup-maroon tracking-tight">Records Archive</h2>
+          <p className="text-sm font-medium text-gray-500 mt-1 max-w-2xl">
+            Navigate through the physical and digital storage layout to locate and preview student record folders within the university repository.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-col lg:flex-row flex-1 gap-4 items-stretch overflow-hidden">
+        <section className="w-full lg:w-1/4 bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm flex-shrink-0 h-full overflow-hidden">
         <div className="p-4 border-b border-gray-200 bg-gray-50">
           <h2 className="text-xs font-bold text-pup-maroon uppercase tracking-wide mb-3">
             Quick Find
@@ -79,9 +89,8 @@ export default function RecordsArchiveTab({
                 No records found
               </div>
               <div className="text-xs font-medium text-gray-600 mt-1 max-w-[200px]">
-                We couldn't find any students matching your search.
-              </div>
-            </div>
+                We couldn&apos;t find any students matching your search.
+              </div>            </div>
           ) : (
             quickResults.map((s) => (
               <div
@@ -520,6 +529,7 @@ export default function RecordsArchiveTab({
           </div>
         </div>
       </section>
+      </div>
     </div>
   );
 }

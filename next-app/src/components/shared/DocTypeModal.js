@@ -6,6 +6,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function DocTypeModal({
   open,
@@ -21,7 +23,7 @@ export default function DocTypeModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white rounded-brand border-gray-200 shadow-2xl">
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white sm:rounded-sm rounded-sm border-gray-200 shadow-2xl">
         <DialogHeader className="p-5 border-b border-gray-200 bg-gray-50/60 flex flex-row items-center justify-between space-y-0">
           <DialogTitle className="font-bold text-pup-maroon">Add Document Type</DialogTitle>
         </DialogHeader>
@@ -30,9 +32,9 @@ export default function DocTypeModal({
           <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
             Document Type
           </label>
-          <input
+          <Input
             type="text"
-            className="form-input"
+            className="bg-white shadow-sm h-10"
             placeholder="Enter new document type..."
             value={value}
             onChange={(e) => {
@@ -54,25 +56,24 @@ export default function DocTypeModal({
             </div>
           ) : null}
 
-          <div className="mt-5 flex justify-end gap-2">
-            <button
+          <div className="mt-6 flex justify-end gap-2">
+            <Button
               type="button"
+              variant="outline"
               onClick={onClose}
-              className="px-4 h-11 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
+              className="h-10 px-5 text-sm border-gray-300 text-gray-700 hover:bg-gray-50 font-bold"
               disabled={isLoading}
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={onSave}
-              className={`px-4 h-11 rounded-brand bg-pup-maroon text-white font-bold text-sm hover:bg-red-900 ${
-                isLoading ? "opacity-75 cursor-not-allowed" : ""
-              }`}
+              className="h-10 px-5 bg-pup-maroon text-white hover:bg-red-900 font-bold shadow-sm"
               disabled={isLoading}
             >
               {isLoading ? "Saving..." : "Save"}
-            </button>
+            </Button>
           </div>
         </div>
       </DialogContent>

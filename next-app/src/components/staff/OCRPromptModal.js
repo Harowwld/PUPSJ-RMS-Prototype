@@ -9,6 +9,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 function studentKey(s) {
   return String(s?.studentNo ?? s?.student_no ?? "");
@@ -86,8 +87,8 @@ export default function OCRPromptModal({ open, onClose, ocrSuggestion, onConfirm
           </div>
         </div>
 
-        <div className="mt-5 flex flex-col gap-2">
-          <button
+        <div className="mt-6 flex flex-col gap-2.5">
+          <Button
             type="button"
             onClick={() => selected && onConfirmStudent(selected)}
             disabled={!selected}
@@ -101,6 +102,7 @@ export default function OCRPromptModal({ open, onClose, ocrSuggestion, onConfirm
           </button>
           <button
             type="button"
+            variant="ghost"
             onClick={onClose}
             className="w-full h-11 rounded-brand font-bold text-sm bg-white border border-gray-300 text-gray-700 hover:border-pup-maroon"
           >

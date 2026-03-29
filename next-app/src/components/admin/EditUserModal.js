@@ -19,7 +19,7 @@ export default function EditUserModal({
 }) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-gray-50 p-0 overflow-hidden border-gray-200 sm:rounded-brand rounded-brand">
+      <DialogContent className="max-w-2xl bg-gray-50 p-0 overflow-hidden border-gray-200 sm:rounded-sm rounded-sm">
         <DialogHeader className="p-6 bg-white border-b border-gray-200 pb-5">
           <div className="flex items-center gap-4">
             <div className="w-10 h-10 rounded-full bg-red-50 text-pup-maroon flex items-center justify-center border border-red-100 shadow-sm shrink-0">

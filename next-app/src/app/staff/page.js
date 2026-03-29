@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { toast } from "sonner";
+import Sidebar from "@/components/shared/Sidebar";
 import PasswordChangeModal from "@/components/shared/PasswordChangeModal";
 import RecordsArchiveTab from "@/components/staff/RecordsArchiveTab";
 import ScanUploadTab from "@/components/staff/ScanUploadTab";
@@ -236,12 +237,17 @@ export default function StaffPage() {
       await fetch("/api/audit-logs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
+        body: JSON.stringify({
+          actor: authUser ? `${authUser.fname} ${authUser.lname}`.trim() : "Staff User",
+          role: authUser ? authUser.role : "Staff",
+          action,
+          ip: "localhost"
+        }),
       });
     } catch {
       /* silent */
     }
-  }, []);
+  }, [authUser]);
 
   const handleLogout = async () => {
     await logAction("Logged out from system");
@@ -763,29 +769,20 @@ export default function StaffPage() {
     );
   }
 
+  const sidebarItems = [
+    { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
+    { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
+    { key: "documents", label: "Documents", iconClass: "ph-bold ph-file-text" },
+  ];
+
   return (
     <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden">
-      <Header authUser={authUser} onLogout={handleLogout}>
-        <button
-          onClick={() => setView("search")}
-          className={`btn-nav ${view === "search" ? "active" : ""}`}
-        >
-          <i className="ph-bold ph-archive-box"></i> Records & Archive
-        </button>
-        <button
-          onClick={() => setView("upload")}
-          className={`btn-nav ${view === "upload" ? "active" : ""}`}
-        >
-          <i className="ph-bold ph-scan"></i> Scan & Upload
-        </button>
-        <button
-          onClick={() => setView("documents")}
-          className={`btn-nav ${view === "documents" ? "active" : ""}`}
-        >
-          <i className="ph-bold ph-file-text"></i> Documents
-        </button>
-      </Header>
-      <main className="flex-1 overflow-hidden max-w-[1600px] mx-auto w-full p-4">
+      <Header authUser={authUser} onLogout={handleLogout} />
+
+      <div className="flex-1 flex overflow-hidden w-full">
+        <Sidebar items={sidebarItems} activeKey={view} onSelect={setView} />
+
+        <main className="flex-1 overflow-hidden p-4 relative w-full min-w-0 max-w-[1600px] mx-auto">
         {view === "search" && (
           <RecordsArchiveTab
             quickQuery={quickQuery}
@@ -1082,7 +1079,8 @@ export default function StaffPage() {
             }}
           />
         )}
-      </main>
+        </main>
+      </div>
       <Footer />
       <PasswordChangeModal
         open={pwModalOpen}
