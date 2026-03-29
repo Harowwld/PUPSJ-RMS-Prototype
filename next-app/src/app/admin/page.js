@@ -281,12 +281,12 @@ export default function AdminPage() {
 
   useEffect(() => {
     if (view === "backup" || view === "system") {
-      // Render the tab first, then hydrate data in the background.
       setTimeout(() => {
         refreshBackups();
+        refreshSystemHealth();
       }, 0);
     }
-  }, [view, refreshBackups]);
+  }, [view, refreshBackups, refreshSystemHealth]);
 
   useEffect(() => {
     if (view === "logs") {

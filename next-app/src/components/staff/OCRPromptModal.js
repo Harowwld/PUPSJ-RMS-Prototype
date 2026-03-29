@@ -9,13 +9,17 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 
 function studentKey(s) {
   return String(s?.studentNo ?? s?.student_no ?? "");
 }
 
-export default function OCRPromptModal({ open, onClose, ocrSuggestion, onConfirmStudent }) {
+export default function OCRPromptModal({
+  open,
+  onClose,
+  ocrSuggestion,
+  onConfirmStudent,
+}) {
   const [selectedStudentNo, setSelectedStudentNo] = useState("");
 
   const nameMatches = Array.isArray(ocrSuggestion?.nameMatchesByName)
@@ -33,7 +37,8 @@ export default function OCRPromptModal({ open, onClose, ocrSuggestion, onConfirm
 
   if (!open) return null;
 
-  const detectedName = String(ocrSuggestion?.name || "").trim() || "(not detected)";
+  const detectedName =
+    String(ocrSuggestion?.name || "").trim() || "(not detected)";
   const selected = nameMatches.find((s) => studentKey(s) === selectedStudentNo);
 
   return (
@@ -45,9 +50,9 @@ export default function OCRPromptModal({ open, onClose, ocrSuggestion, onConfirm
           </DialogTitle>
           <DialogDescription className="mt-2 text-sm text-gray-700 font-medium">
             OCR matched multiple records for{" "}
-            <span className="font-bold text-gray-900">{detectedName}</span>. Choose which student
-            number this document belongs to. The form is already filled with the scanned name and
-            document type.
+            <span className="font-bold text-gray-900">{detectedName}</span>.
+            Choose which student number this document belongs to. The form is
+            already filled with the scanned name and document type.
           </DialogDescription>
         </DialogHeader>
 
@@ -63,7 +68,9 @@ export default function OCRPromptModal({ open, onClose, ocrSuggestion, onConfirm
                 <label
                   key={id}
                   className={`flex items-start gap-2 rounded-md border p-2 cursor-pointer text-xs ${
-                    checked ? "border-pup-maroon bg-red-50/60" : "border-gray-200 bg-white"
+                    checked
+                      ? "border-pup-maroon bg-red-50/60"
+                      : "border-gray-200 bg-white"
                   }`}
                 >
                   <input
@@ -74,11 +81,15 @@ export default function OCRPromptModal({ open, onClose, ocrSuggestion, onConfirm
                     onChange={() => setSelectedStudentNo(id)}
                   />
                   <span className="flex-1">
-                    <span className="font-mono font-bold text-gray-900">{id}</span>
-                    <span className="block text-gray-700 font-medium">{s.name}</span>
+                    <span className="font-mono font-bold text-gray-900">
+                      {id}
+                    </span>
+                    <span className="block text-gray-700 font-medium">
+                      {s.name}
+                    </span>
                     <span className="block text-gray-500">
-                      {s.courseCode || s.course_code} · Year {s.yearLevel ?? s.year_level} ·{" "}
-                      {s.section}
+                      {s.courseCode || s.course_code} · Year{" "}
+                      {s.yearLevel ?? s.year_level} · {s.section}
                     </span>
                   </span>
                 </label>
@@ -87,8 +98,8 @@ export default function OCRPromptModal({ open, onClose, ocrSuggestion, onConfirm
           </div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-2.5">
-          <Button
+        <div className="mt-5 flex flex-col gap-2">
+          <button
             type="button"
             onClick={() => selected && onConfirmStudent(selected)}
             disabled={!selected}
@@ -102,7 +113,6 @@ export default function OCRPromptModal({ open, onClose, ocrSuggestion, onConfirm
           </button>
           <button
             type="button"
-            variant="ghost"
             onClick={onClose}
             className="w-full h-11 rounded-brand font-bold text-sm bg-white border border-gray-300 text-gray-700 hover:border-pup-maroon"
           >
