@@ -8,6 +8,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function PasswordChangeModal({
   open,
@@ -84,7 +86,7 @@ export default function PasswordChangeModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden rounded-brand border-gray-200">
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden sm:rounded-sm rounded-sm border-gray-200">
         <DialogHeader className="p-5 border-b border-gray-200 bg-gray-50/60">
           <DialogTitle className="font-bold text-pup-maroon">Change Password</DialogTitle>
           <DialogDescription className="text-xs text-gray-500 mt-1">
@@ -102,9 +104,9 @@ export default function PasswordChangeModal({
             <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
               Current Password
             </label>
-            <input
+            <Input
               type="password"
-              className="form-input"
+              className="bg-white shadow-sm h-10"
               value={pwCurrent}
               onChange={(e) => setPwCurrent(e.target.value)}
               required
@@ -115,9 +117,9 @@ export default function PasswordChangeModal({
             <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
               New Password
             </label>
-            <input
+            <Input
               type="password"
-              className="form-input"
+              className="bg-white shadow-sm h-10"
               value={pwNext}
               onChange={(e) => setPwNext(e.target.value)}
               required
@@ -128,32 +130,33 @@ export default function PasswordChangeModal({
             <label className="block text-xs font-bold text-gray-600 mb-1.5 uppercase">
               Confirm New Password
             </label>
-            <input
+            <Input
               type="password"
-              className="form-input"
+              className="bg-white shadow-sm h-10"
               value={pwConfirm}
               onChange={(e) => setPwConfirm(e.target.value)}
               required
             />
           </div>
 
-          <div className="pt-2 flex justify-end gap-2">
+          <div className="pt-4 flex justify-end gap-2">
             {!authUser?.mustChangePassword && (
-              <button
+              <Button
                 type="button"
+                variant="outline"
                 onClick={onClose}
-                className="px-5 py-2.5 border border-gray-300 rounded-brand text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
+                className="h-10 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50"
               >
                 Cancel
-              </button>
+              </Button>
             )}
-            <button
+            <Button
               type="submit"
               disabled={pwLoading}
-              className="px-5 py-2.5 bg-pup-maroon text-white rounded-brand text-sm font-bold hover:bg-red-900 transition-colors shadow-sm disabled:opacity-60"
+              className="h-10 px-5 bg-pup-maroon text-white font-bold hover:bg-red-900 shadow-sm"
             >
               {pwLoading ? "Saving..." : "Update Password"}
-            </button>
+            </Button>
           </div>
         </form>
       </DialogContent>

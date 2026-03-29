@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 export default function PDFPreviewModal({
   open,
@@ -16,7 +17,7 @@ export default function PDFPreviewModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-5xl h-[90vh] p-0 flex flex-col overflow-hidden rounded-brand border-none shadow-2xl">
+      <DialogContent className="max-w-5xl h-[90vh] p-0 flex flex-col overflow-hidden sm:rounded-sm rounded-sm border-none shadow-2xl">
         <DialogHeader className="p-4 border-b border-gray-200 bg-gray-50 flex flex-row items-center space-y-0">
           <div className="flex items-center gap-3">
             <div className="bg-red-50 p-2 rounded-brand border border-red-100">
@@ -39,14 +40,20 @@ export default function PDFPreviewModal({
               REF: <span className="font-mono">{preview.refId}</span>
             </div>
             {preview.docId ? (
-              <a
-                className="px-3 py-2 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-xs hover:border-pup-maroon"
-                href={`/api/documents/${preview.docId}`}
-                target="_blank"
-                rel="noreferrer"
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="font-bold text-xs text-gray-700 border-gray-300 hover:text-pup-maroon hover:bg-red-50 shadow-sm"
               >
-                Open in New Tab
-              </a>
+                <a
+                  href={`/api/documents/${preview.docId}`}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  <i className="ph-bold ph-arrow-square-out mr-1.5 text-sm"></i> Open in New Tab
+                </a>
+              </Button>
             ) : null}
           </div>
 

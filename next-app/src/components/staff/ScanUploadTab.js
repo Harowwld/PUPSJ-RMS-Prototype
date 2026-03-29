@@ -54,8 +54,18 @@ export default function ScanUploadTab({
   csvResults,
 }) {
   return (
-    <div id="view-upload" className="flex flex-col lg:flex-row w-full h-full gap-4 animate-fade-in">
-      <section className="w-full lg:w-1/2 bg-white rounded-brand border border-gray-300 flex flex-col h-full p-8 items-center justify-center shadow-sm relative">
+    <div id="view-upload" className="h-full flex flex-col gap-6 p-6 overflow-y-auto animate-fade-in font-inter">
+      <div className="flex justify-between items-end shrink-0">
+        <div>
+          <h2 className="text-2xl font-black text-pup-maroon tracking-tight">Scan & Upload</h2>
+          <p className="text-sm font-medium text-gray-500 mt-1 max-w-2xl">
+            Digitize physical records through OCR scanning or batch import student data via CSV payloads. Ensure all scans are high-resolution for accurate metadata extraction.
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-col lg:flex-row flex-1 gap-4 items-stretch overflow-hidden">
+        <section className="w-full lg:w-1/2 bg-white rounded-brand border border-gray-300 flex flex-col h-full p-8 items-center justify-center shadow-sm relative">
         {uploadMode === "csv" ? (
           <div className="w-full h-full border border-gray-200 rounded-brand bg-white overflow-hidden flex flex-col">
             <div className="p-4 border-b border-gray-200 bg-gray-50">
@@ -856,6 +866,7 @@ export default function ScanUploadTab({
           )}
         </div>
       </section>
+      </div>
     </div>
   );
 }

@@ -7,6 +7,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 export default function OCRPromptModal({
   open,
@@ -19,7 +20,7 @@ export default function OCRPromptModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="sm:max-w-lg p-6 bg-white rounded-brand border-gray-300 shadow-lg">
+      <DialogContent className="sm:max-w-md p-6 bg-white sm:rounded-sm rounded-sm border-gray-300 shadow-lg">
         <DialogHeader>
           <DialogTitle className="text-lg font-bold text-pup-maroon">Detected from PDF</DialogTitle>
           <DialogDescription className="mt-2 text-sm text-gray-700 font-medium">
@@ -59,33 +60,31 @@ export default function OCRPromptModal({
           </div>
         </div>
 
-        <div className="mt-5 flex flex-col gap-2">
-          <button
+        <div className="mt-6 flex flex-col gap-2.5">
+          <Button
             type="button"
             onClick={onApplyToExisting}
             disabled={!ocrSuggestion?.matchedStudent}
-            className={`w-full h-11 rounded-brand font-bold text-sm border ${
-              ocrSuggestion?.matchedStudent
-                ? "bg-pup-maroon text-white hover:bg-red-900"
-                : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
-            }`}
+            className="w-full h-11 bg-pup-maroon text-white hover:bg-red-900 font-bold shadow-sm"
           >
             Apply to Existing Student
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="outline"
             onClick={onApplyToNew}
-            className="w-full h-11 rounded-brand font-bold text-sm bg-white border border-gray-300 text-gray-700 hover:border-pup-maroon"
+            className="w-full h-11 border-gray-300 text-gray-700 hover:bg-gray-50 hover:text-pup-maroon font-bold"
           >
             Use as New Student Prefill
-          </button>
-          <button
+          </Button>
+          <Button
             type="button"
+            variant="ghost"
             onClick={onClose}
-            className="w-full h-11 rounded-brand font-bold text-sm bg-white text-gray-600 hover:text-gray-900"
+            className="w-full h-11 text-gray-500 hover:bg-gray-100 hover:text-gray-900 font-bold"
           >
             Dismiss
-          </button>
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

@@ -24,15 +24,17 @@ export default function DocumentsTab({
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   return (
-    <div id="view-documents" className="flex flex-col w-full h-full gap-4 animate-fade-in">
-      <section className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col">
-        <div className="p-6 border-b border-gray-200 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 flex-none">
-          <div>
-            <h2 className="text-xl font-bold text-pup-maroon">Documents</h2>
-            <p className="text-sm text-gray-500 mt-1 font-medium">Search and manage existing student document records.</p>
-          </div>
+    <div id="view-documents" className="h-full flex flex-col gap-6 p-6 overflow-y-auto animate-fade-in font-inter">
+      <div className="flex justify-between items-end shrink-0">
+        <div>
+          <h2 className="text-2xl font-black text-pup-maroon tracking-tight">Documents Repository</h2>
+          <p className="text-sm font-medium text-gray-500 mt-1 max-w-2xl">
+            Search and manage existing student document records within the centralized digital archives. Repository access is logged for compliance.
+          </p>
         </div>
+      </div>
 
+      <section className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col">
         <div className="p-6 bg-gray-50/50 flex-none border-b border-gray-200">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
             <div className="lg:col-span-1">
@@ -160,7 +162,7 @@ export default function DocumentsTab({
                           No Results Found
                         </div>
                         <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                          We couldn't find any documents matching your search criteria.
+                          We couldn&apos;t find any documents matching your search criteria.
                         </div>
                       </div>
                     </td>
@@ -275,7 +277,7 @@ export default function DocumentsTab({
           }
         }}
       >
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white rounded-brand border-gray-200 shadow-xl">
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white sm:rounded-sm rounded-sm border-gray-200 shadow-xl">
           <DialogHeader className="p-5 border-b border-gray-200 bg-gray-50/60 flex flex-row items-center justify-between space-y-0">
             <DialogTitle className="font-bold text-pup-maroon">Update Document Metadata</DialogTitle>
           </DialogHeader>

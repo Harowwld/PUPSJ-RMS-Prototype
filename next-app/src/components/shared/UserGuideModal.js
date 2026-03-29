@@ -6,11 +6,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 export default function UserGuideModal({ open, onClose }) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-5xl md:max-w-6xl w-[90vw] p-0 overflow-hidden bg-gray-50 border-gray-200 shadow-2xl rounded-brand flex flex-col max-h-[90vh]">
+      <DialogContent className="sm:max-w-5xl md:max-w-6xl w-[90vw] p-0 overflow-hidden bg-gray-50 border-gray-200 shadow-2xl sm:rounded-sm rounded-sm flex flex-col max-h-[90vh]">
         <DialogHeader className="p-6 bg-white border-b border-gray-200 pb-5 shrink-0">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-full bg-red-50 text-pup-maroon flex items-center justify-center border border-red-100 shadow-sm shrink-0">
@@ -96,12 +97,12 @@ export default function UserGuideModal({ open, onClose }) {
         </div>
 
         <div className="p-4 bg-white border-t border-gray-200 flex justify-end shrink-0">
-          <button
+          <Button
             onClick={onClose}
-            className="px-6 py-2.5 bg-gray-900 hover:bg-black text-white rounded-brand font-bold text-sm shadow-sm transition-all flex items-center gap-2"
+            className="px-6 h-10 bg-gray-900 hover:bg-black text-white font-bold shadow-sm flex items-center gap-2"
           >
             Acknowledge <i className="ph-bold ph-check"></i>
-          </button>
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

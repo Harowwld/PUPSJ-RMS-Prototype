@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import Sidebar from "@/components/shared/Sidebar";
 import PasswordChangeModal from "@/components/shared/PasswordChangeModal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import PromptModal from "@/components/shared/PromptModal";
@@ -18,6 +19,24 @@ import BackupMaintenanceTab from "@/components/admin/BackupMaintenanceTab";
 import EditUserModal from "@/components/admin/EditUserModal";
 import SystemConfigTab from "@/components/admin/SystemConfigTab";
 import DigitalRecordsReviewTab from "@/components/admin/DigitalRecordsReviewTab";
+
+const formatPHTime = (dateString) => {
+  if (!dateString) return "—";
+  try {
+    const date = new Date(dateString.replace(" ", "T") + "Z");
+    const datePH = date.toLocaleDateString("en-PH", {
+      timeZone: "Asia/Manila",
+    });
+    const timePH = date.toLocaleTimeString("en-PH", {
+      timeZone: "Asia/Manila",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    return `${datePH}, ${timePH}`;
+  } catch {
+    return dateString;
+  }
+};
 
 export default function AdminPage() {
   const router = useRouter();
@@ -146,7 +165,7 @@ export default function AdminPage() {
       const rows = Array.isArray(jsonLogs.data) ? jsonLogs.data : [];
       setAuditLogs(
         rows.map((r) => ({
-          time: r.created_at,
+          time: formatPHTime(r.created_at),
           user: r.actor,
           role: r.role,
           action: r.action,
@@ -218,8 +237,8 @@ export default function AdminPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            actor: "Admin User",
-            role: "Admin",
+            actor: authUser ? `${authUser.fname} ${authUser.lname}`.trim() : "Admin User",
+            role: authUser ? authUser.role : "Admin",
             action,
             ip: "localhost",
           }),
@@ -229,7 +248,7 @@ export default function AdminPage() {
         // ignore
       }
     },
-    [refreshAuditLogs],
+    [refreshAuditLogs, authUser],
   );
 
   useEffect(() => {
@@ -583,48 +602,25 @@ export default function AdminPage() {
     link.click();
   };
 
+  const sidebarItems = [
+    { key: "directory", label: "Staff Directory", iconClass: "ph-bold ph-users" },
+    { key: "create", label: "Register Account", iconClass: "ph-bold ph-user-plus" },
+    { key: "logs", label: "Audit Logs", iconClass: "ph-bold ph-scroll" },
+    { key: "system_data", label: "System Data", iconClass: "ph-bold ph-gear" },
+    { key: "review", label: "Digital Records Review", iconClass: "ph-bold ph-seal-check" },
+    { key: "system", label: "Backup & Maintenance", iconClass: "ph-bold ph-database" },
+  ];
+
+  const sidebarActiveKey = view === "backup" ? "system" : view;
+
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50 font-inter">
-      <Header authUser={authUser} onLogout={handleLogout}>
-        <button
-          onClick={() => switchView("directory")}
-          className={`btn-nav ${view === "directory" ? "active" : ""}`}
-        >
-          <i className="ph-bold ph-users"></i> Staff Directory
-        </button>
-        <button
-          onClick={() => switchView("create")}
-          className={`btn-nav ${view === "create" ? "active" : ""}`}
-        >
-          <i className="ph-bold ph-user-plus"></i> Register Account
-        </button>
-        <button
-          onClick={() => switchView("logs")}
-          className={`btn-nav ${view === "logs" ? "active" : ""}`}
-        >
-          <i className="ph-bold ph-scroll"></i> Audit Logs
-        </button>
-        <button
-          onClick={() => switchView("system_data")}
-          className={`btn-nav ${view === "system_data" ? "active" : ""}`}
-        >
-          <i className="ph-bold ph-gear"></i> System Data
-        </button>
-        <button
-          onClick={() => switchView("review")}
-          className={`btn-nav ${view === "review" ? "active" : ""}`}
-        >
-          <i className="ph-bold ph-seal-check"></i> Digital Records Review
-        </button>
-        <button
-          onClick={() => switchView("system")}
-          className={`btn-nav ${view === "system" || view === "backup" ? "active" : ""}`}
-        >
-          <i className="ph-bold ph-database"></i> Backup & Maintenance
-        </button>
-      </Header>
+      <Header authUser={authUser} onLogout={handleLogout} />
 
-      <main className="flex-1 overflow-hidden w-full max-w-[1600px] mx-auto p-4">
+      <div className="flex-1 flex overflow-hidden w-full">
+        <Sidebar items={sidebarItems} activeKey={sidebarActiveKey} onSelect={switchView} />
+
+        <main className="flex-1 overflow-hidden p-4 relative w-full min-w-0 max-w-[1600px] mx-auto">
         {view === "directory" && (
           <StaffDirectoryTab
             staffData={staffData}
@@ -737,7 +733,8 @@ export default function AdminPage() {
             showToast={showToast}
           />
         )}
-      </main>
+        </main>
+      </div>
 
       <Footer />
 

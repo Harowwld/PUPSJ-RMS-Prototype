@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 export default function ConfirmModal({
   open,
@@ -43,7 +44,7 @@ export default function ConfirmModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white rounded-brand border-gray-200 shadow-xl">
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white sm:rounded-sm rounded-sm border-gray-200 shadow-xl">
         <DialogHeader className={`p-6 border-b border-gray-200 flex flex-row justify-between items-center space-y-0 ${v.bg}`}>
           <DialogTitle className={`font-bold text-lg flex items-center gap-2 ${v.text}`}>
             <i className={v.icon}></i> {title}
@@ -58,20 +59,21 @@ export default function ConfirmModal({
               {message}
             </p>
 
-            <div className="w-full flex gap-3">
-              <button
+            <div className="w-full flex gap-3 mt-2">
+              <Button
+                variant="outline"
                 onClick={onCancel}
-                className="flex-1 px-5 py-2.5 border border-gray-300 rounded-brand text-sm font-bold text-gray-600 hover:bg-gray-50 transition-colors"
+                className="flex-1 h-11 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50"
               >
                 {cancelLabel}
-              </button>
-              <button
+              </Button>
+              <Button
                 onClick={onConfirm}
                 disabled={isLoading}
-                className={`flex-1 px-5 py-2.5 ${v.btn} text-white rounded-brand text-sm font-bold transition-all shadow-md hover:shadow-lg disabled:opacity-60`}
+                className={`flex-1 h-11 text-sm font-bold text-white transition-all shadow-md hover:shadow-lg ${v.btn}`}
               >
                 {isLoading ? "Processing..." : confirmLabel}
-              </button>
+              </Button>
             </div>
           </div>
         </div>
