@@ -2,6 +2,8 @@
 
 export default function ScanUploadTab({
   uploadMode,
+  uploadStudentIsExisting,
+  setUploadStudentIsExisting,
   setUploadMode,
   dropActive,
   setDropActive,
@@ -18,14 +20,12 @@ export default function ScanUploadTab({
   toggleCsvRowSelected,
   setCsvRowField,
   cabinets,
-  exist,
-  setExist,
   courses,
-  existingAvailYears,
-  existingAvailSections,
-  existingStudents,
   docTypes,
   processSubmission,
+  uploadFieldErrors = {},
+  clearUploadFieldError,
+  clearAllUploadFieldErrors,
   uploadError,
   newRec,
   setNewRec,
@@ -53,6 +53,14 @@ export default function ScanUploadTab({
   csvLoading,
   csvResults,
 }) {
+  const fe = uploadFieldErrors || {};
+  const ring = (key) => (fe[key] ? "ring-2 ring-orange-400 border-orange-400" : "");
+  /** When linking to an existing student, only room / cabinet / drawer / doc type may change. */
+  const lockIdentity = uploadStudentIsExisting;
+  const lockedField =
+    "!bg-gray-200 !text-gray-500 !border-gray-300 cursor-not-allowed placeholder:!text-gray-400 focus:!border-gray-300 focus:!shadow-none focus:!ring-0";
+  const lockedLabel = "text-gray-400";
+
   return (
     <div id="view-upload" className="h-full flex flex-col gap-6 p-6 overflow-y-auto animate-fade-in font-inter">
       <div className="flex justify-between items-end shrink-0">
@@ -231,9 +239,11 @@ export default function ScanUploadTab({
           </div>
         ) : (
           <div
-            className={`w-full h-full border-2 border-dashed border-gray-400 rounded-brand bg-gray-50 p-8 flex flex-col items-center justify-center cursor-pointer hover:border-pup-maroon hover:bg-red-50/50 transition-all group relative ${
-              dropActive ? "bg-red-50" : ""
-            }`}
+            className={`w-full h-full border-2 border-dashed rounded-brand bg-gray-50 p-8 flex flex-col items-center justify-center cursor-pointer transition-all group relative ${
+              fe.pdfFile
+                ? "border-orange-400 ring-2 ring-orange-400 bg-orange-50/30"
+                : "border-gray-400 hover:border-pup-maroon hover:bg-red-50/50"
+            } ${dropActive ? "bg-red-50" : ""}`}
             onClick={() => {
               if (uploadedFile) return;
               if (fileInputRef.current) fileInputRef.current.click();
@@ -280,13 +290,13 @@ export default function ScanUploadTab({
                   {(uploadedFile.size / 1024).toFixed(2)} KB
                 </span>
 
-                {uploadMode === "new" && ocrLoading ? (
+                {uploadMode === "pdf" && ocrLoading ? (
                   <div className="mb-4 text-sm font-bold text-gray-700">
                     Scanning PDF (OCR)...
                   </div>
                 ) : null}
 
-                {uploadMode === "new" && ocrError ? (
+                {uploadMode === "pdf" && ocrError ? (
                   <div className="mb-4 text-sm font-bold text-red-700 text-center max-w-md">
                     {ocrError}
                   </div>
@@ -306,7 +316,7 @@ export default function ScanUploadTab({
           </div>
         )}
 
-        {ocrLoading && uploadMode !== "csv" ? (
+        {ocrLoading && uploadMode === "pdf" ? (
           <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-brand">
             <div className="w-12 h-12 rounded-full border-4 border-gray-200 border-t-pup-maroon animate-spin"></div>
             <div className="mt-3 text-sm font-bold text-gray-800">Scanning file…</div>
@@ -324,16 +334,10 @@ export default function ScanUploadTab({
 
           <div className="flex gap-6 mt-6 border-b border-gray-200">
             <button
-              className={`tab-btn ${uploadMode === "existing" ? "active" : ""}`}
-              onClick={() => setUploadMode("existing")}
+              className={`tab-btn ${uploadMode === "pdf" ? "active" : ""}`}
+              onClick={() => setUploadMode("pdf")}
             >
-              Existing Student
-            </button>
-            <button
-              className={`tab-btn ${uploadMode === "new" ? "active" : ""}`}
-              onClick={() => setUploadMode("new")}
-            >
-              New Student
+              PDF upload
             </button>
             <button
               className={`tab-btn ${uploadMode === "csv" ? "active" : ""}`}
@@ -347,155 +351,53 @@ export default function ScanUploadTab({
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50">
 
 
-          {uploadMode === "existing" ? (
+          {uploadMode === "pdf" ? (
             <div className="space-y-5">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
-                  Course / Program
-                </label>
-                <select
-                  className="form-select"
-                  value={exist.course}
-                  onChange={(e) => {
-                    setExist((p) => ({
-                      ...p,
-                      course: e.target.value,
-                      section: "",
-                      studentId: "",
-                    }));
-                  }}
-                >
-                  <option value="">Select Course...</option>
-                  {courses.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-5">
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
-                    Academic Year
-                  </label>
-                  <select
-                    className="form-select"
-                    value={exist.year}
-                    onChange={(e) => {
-                      setExist((p) => ({
-                        ...p,
-                        year: e.target.value,
-                        section: "",
-                        studentId: "",
-                      }));
+              {uploadStudentIsExisting ? (
+                <div className="rounded-brand border border-emerald-200 bg-emerald-50/90 px-3 py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                  <span className="text-xs font-bold text-emerald-900 inline-flex items-start gap-2">
+                    <i className="ph-bold ph-check-circle shrink-0 mt-0.5" aria-hidden />
+                    <span>
+                      Existing student — profile fields below are locked. Adjust room, cabinet,
+                      drawer, or document type if needed, then submit.
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    className="shrink-0 text-xs font-bold text-pup-maroon hover:underline underline-offset-2 text-left sm:text-right"
+                    onClick={() => {
+                      setUploadStudentIsExisting(false);
+                      clearAllUploadFieldErrors?.();
                     }}
                   >
-                    <option value="">Select Academic Year...</option>
-                    {existingAvailYears.map((y) => (
-                      <option key={y} value={String(y)}>
-                        {y}
-                      </option>
-                    ))}
-                  </select>
+                    Switch to new student
+                  </button>
                 </div>
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
-                    Section
-                  </label>
-                  <select
-                    className="form-select"
-                    value={exist.section}
-                    onChange={(e) => {
-                      setExist((p) => ({
-                        ...p,
-                        section: e.target.value,
-                        studentId: "",
-                      }));
-                    }}
-                  >
-                    <option value="">Select Section...</option>
-                    {existingAvailSections.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
+              ) : (
+                <div className="rounded-brand border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700">
+                  New student — submitting creates the student record and uploads the document.
                 </div>
-              </div>
+              )}
 
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
-                  Student Name
-                </label>
-                <select
-                  className="form-select"
-                  disabled={!exist.course || !exist.year || !exist.section}
-                  value={exist.studentId}
-                  onChange={(e) => {
-                    setExist((p) => ({ ...p, studentId: e.target.value }));
-                  }}
-                >
-                  <option value="">
-                    {exist.course && exist.year && exist.section
-                      ? "Select Student..."
-                      : "Filter options first..."}
-                  </option>
-                  {existingStudents.map((s) => (
-                    <option key={s.studentNo} value={s.studentNo}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="pt-4 border-t border-gray-200">
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
-                  Document Type
-                </label>
-                <select
-                  className="form-select"
-                  value={exist.docType}
-                  onChange={(e) => {
-                    setExist((p) => ({ ...p, docType: e.target.value }));
-                  }}
-                >
-                  <option value="">Select Document Type...</option>
-                  {docTypes.map((t) => (
-                    <option key={t} value={t}>
-                      {t}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <button
-                type="button"
-                onClick={processSubmission}
-                className="w-full bg-pup-maroon text-white py-3 rounded-brand font-bold text-sm hover:bg-red-900 transition-all shadow-sm flex items-center justify-center gap-2"
-              >
-                <i className="ph-bold ph-upload-simple"></i> Submit Upload
-              </button>
-
-              {uploadError ? (
-                <div className="mt-3 p-3 rounded-brand border border-red-200 bg-red-50 text-red-800 text-sm font-bold">
-                  {uploadError}
-                </div>
-              ) : null}
-            </div>
-          ) : uploadMode === "new" ? (
             <div className="space-y-5">
               <div className="grid grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                  <label
+                    className={`block text-xs font-bold mb-1.5 uppercase ${
+                      lockIdentity ? lockedLabel : "text-gray-700"
+                    }`}
+                  >
                     Student Number
                   </label>
                   <input
                     type="text"
-                    className="form-input font-mono"
+                    className={`form-input font-mono ${ring("studentNo")} ${
+                      lockIdentity ? lockedField : ""
+                    }`}
                     placeholder="202X-XXXXX-MN-0"
                     ref={newStudentNoInputRef}
                     value={newRec.studentNo}
+                    disabled={lockIdentity}
                     onKeyDown={(e) => {
                       if (e.key !== "Backspace") return;
                       const el = e.currentTarget;
@@ -510,6 +412,7 @@ export default function ScanUploadTab({
 
                       e.preventDefault();
 
+                      clearUploadFieldError?.("studentNo");
                       const raw = v.slice(0, start - 2) + v.slice(start - 1);
                       const masked = applyStudentNoMask(raw);
                       setNewRec((p) => ({
@@ -529,6 +432,7 @@ export default function ScanUploadTab({
                       });
                     }}
                     onChange={(e) => {
+                      clearUploadFieldError?.("studentNo");
                       setNewRecStudentNoTouched(true);
                       const masked = applyStudentNoMask(e.target.value);
                       setNewRec((p) => ({
@@ -545,15 +449,21 @@ export default function ScanUploadTab({
                   ) : null}
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                  <label
+                    className={`block text-xs font-bold mb-1.5 uppercase ${
+                      lockIdentity ? lockedLabel : "text-gray-700"
+                    }`}
+                  >
                     Full Name
                   </label>
                   <input
                     type="text"
-                    className="form-input"
+                    className={`form-input ${ring("name")} ${lockIdentity ? lockedField : ""}`}
                     placeholder="Last Name, First Name"
                     value={newRec.name}
+                    disabled={lockIdentity}
                     onChange={(e) => {
+                      clearUploadFieldError?.("name");
                       setNewRec((p) => ({ ...p, name: e.target.value }));
                     }}
                   />
@@ -561,13 +471,19 @@ export default function ScanUploadTab({
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                <label
+                  className={`block text-xs font-bold mb-1.5 uppercase ${
+                    lockIdentity ? lockedLabel : "text-gray-700"
+                  }`}
+                >
                   Course / Program
                 </label>
                 <select
-                  className="form-select"
+                  className={`form-select ${ring("course")} ${lockIdentity ? lockedField : ""}`}
                   value={newRec.course}
+                  disabled={lockIdentity}
                   onChange={(e) => {
+                    clearUploadFieldError?.("course");
                     setNewRec((p) => ({
                       ...p,
                       course: e.target.value,
@@ -586,13 +502,19 @@ export default function ScanUploadTab({
 
               <div className="grid grid-cols-2 gap-5">
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                  <label
+                    className={`block text-xs font-bold mb-1.5 uppercase ${
+                      lockIdentity ? lockedLabel : "text-gray-700"
+                    }`}
+                  >
                     Academic Year
                   </label>
                   <select
-                    className="form-select"
+                    className={`form-select ${ring("year")} ${lockIdentity ? lockedField : ""}`}
                     value={newRec.year}
+                    disabled={lockIdentity}
                     onChange={(e) => {
+                      clearUploadFieldError?.("year");
                       setNewRec((p) => ({
                         ...p,
                         year: e.target.value,
@@ -609,16 +531,21 @@ export default function ScanUploadTab({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                  <label
+                    className={`block text-xs font-bold mb-1.5 uppercase ${
+                      lockIdentity ? lockedLabel : "text-gray-700"
+                    }`}
+                  >
                     Section
                   </label>
                   <select
-                    className="form-select"
+                    className={`form-select ${ring("sectionPart")} ${lockIdentity ? lockedField : ""}`}
                     value={newRec.sectionPart}
                     onChange={(e) => {
+                      clearUploadFieldError?.("sectionPart");
                       setNewRec((p) => ({ ...p, sectionPart: e.target.value }));
                     }}
-                    disabled={!newRec.course}
+                    disabled={lockIdentity || !newRec.course}
                   >
                     <option value="">
                       {newRec.course
@@ -640,9 +567,10 @@ export default function ScanUploadTab({
                     Room
                   </label>
                   <select
-                    className="form-select"
+                    className={`form-select ${ring("room")}`}
                     value={newRec.room}
                     onChange={(e) => {
+                      clearUploadFieldError?.("room");
                       setNewRec((p) => ({ ...p, room: e.target.value }));
                     }}
                   >
@@ -659,9 +587,10 @@ export default function ScanUploadTab({
                     Cabinet
                   </label>
                   <select
-                    className="form-select"
+                    className={`form-select ${ring("cabinet")}`}
                     value={newRec.cabinet}
                     onChange={(e) => {
+                      clearUploadFieldError?.("cabinet");
                       setNewRec((p) => ({ ...p, cabinet: e.target.value }));
                     }}
                   >
@@ -678,9 +607,10 @@ export default function ScanUploadTab({
                     Drawer
                   </label>
                   <select
-                    className="form-select"
+                    className={`form-select ${ring("drawer")}`}
                     value={newRec.drawer}
                     onChange={(e) => {
+                      clearUploadFieldError?.("drawer");
                       setNewRec((p) => ({ ...p, drawer: e.target.value }));
                     }}
                   >
@@ -699,9 +629,10 @@ export default function ScanUploadTab({
                   Document Type
                 </label>
                 <select
-                  className="form-select"
+                  className={`form-select ${ring("docType")}`}
                   value={newRec.docType}
                   onChange={(e) => {
+                    clearUploadFieldError?.("docType");
                     setNewRec((p) => ({ ...p, docType: e.target.value }));
                   }}
                 >
@@ -727,6 +658,7 @@ export default function ScanUploadTab({
                   {uploadError}
                 </div>
               ) : null}
+            </div>
             </div>
           ) : (
             <div className="space-y-5">

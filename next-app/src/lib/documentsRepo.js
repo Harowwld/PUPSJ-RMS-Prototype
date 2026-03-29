@@ -1,7 +1,7 @@
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-import { dbAll, dbGet, dbRun } from "./sqlite";
+import { dbAll, dbGet, dbRun } from "./sqlite.js";
 
 let reviewColumnsEnsured = false;
 
@@ -99,6 +99,7 @@ export async function listDocuments({
   studentNo,
   docType,
   approvalStatus,
+  excludeDeclined,
   limit = 50,
   offset = 0,
 } = {}) {
@@ -120,6 +121,8 @@ export async function listDocuments({
   if (approvalStatus) {
     filters.push("approval_status = ?");
     params.push(approvalStatus);
+  } else if (excludeDeclined) {
+    filters.push("(approval_status IS NULL OR approval_status != 'Declined')");
   }
 
   if (q) {

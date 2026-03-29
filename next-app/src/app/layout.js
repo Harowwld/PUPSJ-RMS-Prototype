@@ -18,10 +18,7 @@ export default function RootLayout({ children }) {
           href="/assets/vendor/phosphor/duotone/style.css"
         />
         <link rel="stylesheet" href="/assets/vendor/phosphor/thin/style.css" />
-        <link
-          rel="stylesheet"
-          href="/assets/vendor/phosphor/light/style.css"
-        />
+        <link rel="stylesheet" href="/assets/vendor/phosphor/light/style.css" />
       </head>
       <body className="antialiased">
         {children}

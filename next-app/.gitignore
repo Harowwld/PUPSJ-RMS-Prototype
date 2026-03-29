@@ -23,6 +23,9 @@
 # misc
 .DS_Store
 
+# Cursor IDE (debug logs, local session files)
+.cursor/
+
 *.pem
 
 # debug
@@ -45,3 +48,4 @@ yarn-error.log*
 next-env.d.ts
 
 sample pdf.pdf
+.env
