@@ -1,8 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function AuditLogsTab({
   displayLogs,
@@ -15,60 +17,115 @@ export default function AuditLogsTab({
   logSearch,
   setLogSearch,
 }) {
+  const [searchQuery, setSearchQuery] = useState("");
+  const [itemsPerPage, setItemsPerPage] = useState(logsPerPage || 10);
+
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    setLogSearch(e.target.value);
+    setLogPage(1);
+  };
+
+  const handleItemsPerPageChange = (e) => {
+    const value = Number(e.target.value);
+    setItemsPerPage(value);
+    setLogsPerPage(value);
+    setLogPage(1);
+  };
+
+  const startItem = (logPage - 1) * itemsPerPage + 1;
+  const endItem = Math.min(logPage * itemsPerPage, logTotal);
+
+  const handleDownloadCSV = () => {
+    if (displayLogs.length === 0) return;
+
+    const headers = ["Date & Time", "User", "Role", "Action", "IP Address"];
+    const rows = displayLogs.map((log) => [
+      log.time,
+      log.user,
+      log.role,
+      log.action,
+      log.ip,
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map((row) =>
+        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+      ),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `audit-logs-${new Date().toISOString().split("T")[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
-    <div className="h-full flex flex-col gap-6 p-6 overflow-y-auto animate-fade-in font-inter">
-      <div className="flex justify-between items-end shrink-0">
-        <div>
-          <h2 className="text-2xl font-black text-pup-maroon tracking-tight">
-            System Audit Logs
-          </h2>
-          <p className="text-sm font-medium text-gray-500 mt-1 max-w-2xl">
-            Monitor all administrative and staff actions performed across the
-            repository platform for security and compliance tracking.
-          </p>
+    <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter">
+      <Card className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col">
+        {/* Header with filters */}
+        <div className="p-4 bg-gray-50/50 flex-none border-b border-gray-200">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-end">
+            <div className="lg:col-span-1">
+              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+                Search Audit Logs
+              </label>
+              <div className="relative">
+                <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <Input
+                  type="text"
+                  placeholder="Search by user, action, or IP address..."
+                  className="pl-10 h-12 w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                />
+              </div>
+            </div>
+
+            <div className="lg:col-span-1 flex gap-2">
+              <div className="flex-1">
+                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+                  Items Per Page
+                </label>
+                <select
+                  className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                  value={itemsPerPage}
+                  onChange={handleItemsPerPageChange}
+                >
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                  <option value={100}>100</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+                  Export
+                </label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadCSV}
+                  disabled={displayLogs.length === 0}
+                  className="h-12 px-4 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50"
+                >
+                  <i className="ph-bold ph-download-simple mr-1.5"></i>
+                  CSV
+                </Button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3 bg-white p-2 rounded-lg border border-gray-200 shadow-sm">
-          <div className="flex items-center gap-2 pl-2">
-            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest shrink-0">
-              Page Limit:
-            </label>
-            <select
-              className="flex h-8 rounded-md border border-gray-200 bg-white px-2 py-1 text-xs font-medium shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon"
-              value={logsPerPage}
-              onChange={(e) => {
-                setLogsPerPage(parseInt(e.target.value));
-                setLogPage(1);
-              }}
-            >
-              <option value={10}>10 records</option>
-              <option value={20}>20 records</option>
-              <option value={50}>50 records</option>
-              <option value={100}>100 records</option>
-            </select>
-          </div>
-
-          <div className="w-px h-6 bg-gray-200 hidden sm:block"></div>
-
-          <div className="relative">
-            <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-pup-maroon transition-colors"></i>
-            <Input
-              type="text"
-              placeholder="Query events..."
-              className="pl-9 h-8 text-xs border-gray-200 bg-white w-[180px] sm:w-[220px]"
-              value={logSearch}
-              onChange={(e) => {
-                setLogSearch(e.target.value);
-                setLogPage(1);
-              }}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white rounded-brand border border-gray-200 shadow-sm flex-1 flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-auto">
-          <table className="min-w-full text-sm">
+        {/* Table content */}
+        <CardContent className="p-6 flex-1 flex flex-col min-h-0">
+          <div className={`flex-1 overflow-auto rounded-brand ${displayLogs.length === 0 && !isLoading ? '' : 'border border-gray-200'}`}>
+            <table className="min-w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
               <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
                 <th className="p-3 font-bold w-44">Date & Time</th>
@@ -81,16 +138,18 @@ export default function AuditLogsTab({
             <tbody className="divide-y divide-gray-200">
               {isLoading && displayLogs.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={5}
-                    className="p-8 text-center text-sm text-gray-500"
-                  >
-                    Loading audit logs...
+                  <td colSpan={5} className="p-8 text-center">
+                    <div className="flex flex-col items-center justify-center gap-3">
+                      <div className="w-10 h-10 border-2 border-gray-200 border-t-pup-maroon rounded-full animate-spin"></div>
+                      <span className="text-sm font-medium text-gray-500">
+                        Loading audit logs...
+                      </span>
+                    </div>
                   </td>
                 </tr>
               ) : displayLogs.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="p-0">
+                <tr className="border-0 hover:bg-transparent">
+                  <td colSpan={5} className="p-0 border-0">
                     <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
                       <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
                         <i className="ph-duotone ph-list-magnifying-glass text-3xl text-pup-maroon"></i>
@@ -174,13 +233,19 @@ export default function AuditLogsTab({
           </table>
         </div>
 
-        <div className="p-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between px-6 shrink-0">
+        <div className="mt-4 flex items-center justify-between">
           <div className="text-xs font-medium text-gray-500">
-            Showing{" "}
-            <strong className="text-gray-900">
-              {logTotal.toLocaleString()}
-            </strong>{" "}
-            captured system telemetry events
+            {logTotal > 0 ? (
+              <>
+                Showing {startItem}-{endItem} of{" "}
+                <strong className="text-gray-900">{logTotal.toLocaleString()}</strong>{" "}
+                audit log entries
+              </>
+            ) : (
+              <>
+                Showing <strong className="text-gray-900">0</strong> audit log entries
+              </>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -194,12 +259,12 @@ export default function AuditLogsTab({
               <i className="ph-bold ph-caret-left"></i> Previous
             </Button>
             <div className="px-3 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-md h-8 flex items-center justify-center min-w-12 shadow-sm">
-              {logPage} / {Math.max(1, Math.ceil(logTotal / logsPerPage))}
+              {logPage} / {Math.max(1, Math.ceil(logTotal / itemsPerPage))}
             </div>
             <Button
               variant="outline"
               size="sm"
-              disabled={logPage >= Math.ceil(logTotal / logsPerPage)}
+              disabled={logPage >= Math.ceil(logTotal / itemsPerPage)}
               onClick={() => setLogPage((p) => p + 1)}
               className="h-8 text-xs font-bold text-gray-600"
             >
@@ -207,7 +272,8 @@ export default function AuditLogsTab({
             </Button>
           </div>
         </div>
-      </div>
-    </div>
-  );
+      </CardContent>
+    </Card>
+  </div>
+);
 }

@@ -34,37 +34,6 @@ export async function POST(req) {
     );
   }
 
-  if (username === "admin" && password === "admin") {
-    const payload = {
-      sub: "admin",
-      role: "Admin",
-      username: "admin",
-      mustChangePassword: false,
-    };
-    const token = await signSessionToken(payload);
-    createSession(token, "admin", "Admin", "admin");
-    await writeAuditLog(req, "User login: admin", { actor: "admin", role: "Admin" });
-    // Broadcast to admins
-    broadcastToAdmins("staffLogin", {
-      staffId: "admin",
-      role: "Admin",
-      username: "admin",
-    });
-    const res = NextResponse.json({
-      ok: true,
-      data: { role: "Admin", id: "admin", username: "admin", mustChangePassword: false },
-    });
-    res.cookies.set({
-      name: getSessionCookieName(),
-      value: token,
-      httpOnly: true,
-      sameSite: "lax",
-      secure: process.env.NODE_ENV === "production",
-      path: "/",
-    });
-    return res;
-  }
-
   const staff = await getStaffByUsername(username);
   if (!staff) {
     await writeAuditLog(req, `Login attempt failed: unknown user (${username})`, {

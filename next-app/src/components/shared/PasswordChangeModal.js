@@ -117,7 +117,7 @@ export default function PasswordChangeModal({
               </label>
               <Input
                 type="password"
-                className="bg-white shadow-sm h-11 rounded-brand"
+                className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                 value={pwCurrent}
                 onChange={(e) => setPwCurrent(e.target.value)}
                 required
@@ -130,7 +130,7 @@ export default function PasswordChangeModal({
               </label>
               <Input
                 type="password"
-                className="bg-white shadow-sm h-11 rounded-brand"
+                className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                 value={pwNext}
                 onChange={(e) => setPwNext(e.target.value)}
                 required
@@ -143,7 +143,7 @@ export default function PasswordChangeModal({
               </label>
               <Input
                 type="password"
-                className="bg-white shadow-sm h-11 rounded-brand"
+                className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                 value={pwConfirm}
                 onChange={(e) => setPwConfirm(e.target.value)}
                 required

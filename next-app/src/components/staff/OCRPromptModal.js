@@ -30,9 +30,9 @@ export default function OCRPromptModal({
     open && nameMatches.length > 0 ? studentKey(nameMatches[0]) : "";
 
   const resolvedSelectedStudentNo = nameMatches.some(
-    (s) => studentKey(s) === manualSelectedStudentNo,
+    (s) => studentKey(s) === selectedStudentNo,
   )
-    ? manualSelectedStudentNo
+    ? selectedStudentNo
     : defaultSelectedStudentNo;
 
   if (!open) return null;
@@ -42,18 +42,22 @@ export default function OCRPromptModal({
   const selected = nameMatches.find((s) => studentKey(s) === selectedStudentNo);
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="sm:max-w-lg p-6 bg-white rounded-brand border-gray-300 shadow-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-lg font-bold text-pup-maroon">
-            Same name, different student numbers
-          </DialogTitle>
-          <DialogDescription className="mt-2 text-sm text-gray-700 font-medium">
-            OCR matched multiple records for{" "}
-            <span className="font-bold text-gray-900">{detectedName}</span>.
-            Choose which student number this document belongs to. The form is
-            already filled with the scanned name and document type.
-          </DialogDescription>
+    <Dialog open={open} onOpenChange={(isOpen) => { if (!isOpen) { setSelectedStudentNo(""); onClose(); }}}>
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl max-h-[90vh]">
+        <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-full border border-amber-100 bg-amber-50 text-amber-600 shadow-sm flex items-center justify-center shrink-0">
+              <i className="ph-duotone ph-scanner text-2xl"></i>
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="text-lg font-black tracking-tight text-gray-900">
+                OCR Match Resolution Required
+              </DialogTitle>
+              <DialogDescription className="text-sm font-medium mt-1 text-gray-600">
+                The optical character recognition system detected multiple student records matching the scanned name. Please select the correct student number to ensure accurate document association.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
         <div className="p-6">
@@ -76,10 +80,10 @@ export default function OCRPromptModal({
               return (
                 <label
                   key={id}
-                  className={`flex items-start gap-2 rounded-md border p-2 cursor-pointer text-xs ${
+                  className={`flex items-start gap-3 rounded-brand border p-3 cursor-pointer transition-colors ${
                     checked
                       ? "border-pup-maroon bg-red-50/60"
-                      : "border-gray-200 bg-white"
+                      : "border-gray-200 bg-white hover:bg-gray-50"
                   }`}
                 >
                   <input
@@ -87,18 +91,13 @@ export default function OCRPromptModal({
                     name="ocr-student-pick"
                     className="mt-1"
                     checked={checked}
-                    onChange={() => setManualSelectedStudentNo(id)}
+                    onChange={() => setSelectedStudentNo(id)}
                   />
                   <span className="flex-1">
-                    <span className="font-mono font-bold text-gray-900">
-                      {id}
-                    </span>
-                    <span className="block text-gray-700 font-medium">
-                      {s.name}
-                    </span>
-                    <span className="block text-gray-500">
-                      {s.courseCode || s.course_code} · Year{" "}
-                      {s.yearLevel ?? s.year_level} · {s.section}
+                    <span className="font-mono font-bold text-gray-900 text-sm">{id}</span>
+                    <span className="block text-gray-700 font-medium">{s.name}</span>
+                    <span className="block text-gray-500 text-xs">
+                      {s.courseCode || s.course_code} · Year {s.yearLevel ?? s.year_level} · {s.section}
                     </span>
                   </span>
                 </label>
@@ -107,7 +106,14 @@ export default function OCRPromptModal({
           </div>
         </div>
 
-        <div className="mt-5 flex flex-col gap-2">
+        <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-11 px-5 text-sm font-bold border border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+          >
+            Cancel
+          </button>
           <button
             type="button"
             onClick={() => selected && onConfirmStudent(selected)}
@@ -118,14 +124,7 @@ export default function OCRPromptModal({
                 : "bg-gray-100 text-gray-400 cursor-not-allowed"
             }`}
           >
-            Use selected student
-          </button>
-          <button
-            type="button"
-            onClick={onClose}
-            className="w-full h-11 rounded-brand font-bold text-sm bg-white border border-gray-300 text-gray-700 hover:border-pup-maroon"
-          >
-            Cancel
+            Confirm Selection
           </button>
         </div>
       </DialogContent>

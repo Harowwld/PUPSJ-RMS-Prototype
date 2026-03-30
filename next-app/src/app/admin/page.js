@@ -11,6 +11,7 @@ import Sidebar from "@/components/shared/Sidebar";
 import PasswordChangeModal from "@/components/shared/PasswordChangeModal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import PromptModal from "@/components/shared/PromptModal";
+import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 
 import StaffDirectoryTab from "@/components/admin/StaffDirectoryTab";
 import RegisterAccountTab from "@/components/admin/RegisterAccountTab";
@@ -120,6 +121,15 @@ export default function AdminPage() {
   const [declinePromptOpen, setDeclinePromptOpen] = useState(false);
   const [declineReason, setDeclineReason] = useState("");
   const [pendingDeclineDocId, setPendingDeclineDocId] = useState(null);
+
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewData, setPreviewData] = useState({
+    docId: null,
+    docType: "",
+    studentName: "",
+    studentNo: "",
+    refId: "",
+  });
 
   const showToast = useCallback((msg, isError = false, autoHide = true) => {
     const text = String(msg || "");
@@ -369,6 +379,11 @@ export default function AdminPage() {
     setDeclineReason("");
     await reviewDocumentStatus(id, "Declined", note);
   }, [pendingDeclineDocId, declineReason, reviewDocumentStatus]);
+
+  const handlePreviewDocument = useCallback((preview) => {
+    setPreviewData(preview);
+    setPreviewOpen(true);
+  }, []);
 
   const [socket, setSocket] = useState(null);
 
@@ -699,6 +714,7 @@ export default function AdminPage() {
             onRefresh={refreshReviewRecords}
             onApprove={(id) => reviewDocumentStatus(id, "Approved")}
             onDecline={openDeclinePrompt}
+            onPreviewDocument={handlePreviewDocument}
           />
         )}
 
@@ -800,6 +816,12 @@ export default function AdminPage() {
         confirmLabel="Submit Decline"
         placeholder="Enter reason..."
         multiline
+      />
+
+      <PDFPreviewModal
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        preview={previewData}
       />
 
       {defaultPwOpen && (

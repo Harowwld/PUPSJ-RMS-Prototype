@@ -18,7 +18,6 @@ async function resolveActor() {
     const payload = await verifySessionToken(token);
     const id = String(payload?.sub || "").trim();
     if (!id) return { actor: "System", role: "System" };
-    if (id === "admin") return { actor: "admin", role: "Admin" };
 
     const staff = await getStaffById(id);
     if (staff) {

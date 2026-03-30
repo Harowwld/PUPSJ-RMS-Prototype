@@ -47,7 +47,7 @@ export default function DocTypeModal({
           </label>
           <Input
             type="text"
-            className="bg-white shadow-sm h-11 rounded-brand"
+            className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
             placeholder="Enter new document type..."
             value={value}
             onChange={(e) => {

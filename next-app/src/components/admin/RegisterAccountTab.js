@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -15,92 +9,88 @@ export default function RegisterAccountTab({
   setCreateForm,
   onResetForm,
   onCreateAccount,
-  onSwitchView,
 }) {
   return (
-    <div className="h-full flex flex-col gap-6 p-6 overflow-y-auto animate-fade-in font-inter">
-      <div className="flex justify-between items-end shrink-0">
-        <div>
-          <h2 className="text-2xl font-black text-pup-maroon tracking-tight">
-            Register New Account
-          </h2>
-          <p className="text-sm font-medium text-gray-500 mt-1 max-w-2xl">
-            Establish secure access credentials for new directory personnel and
-            assign role-based permissions to enforce strict access scopes across
-            records operations.
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          onClick={() => onSwitchView("directory")}
-          className="h-11 gap-2 text-gray-700 font-bold border-gray-300 shadow-sm"
-        >
-          <i className="ph-bold ph-arrow-left text-base"></i> Back to Directory
-        </Button>
-      </div>
-
+    <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter">
       <div className="flex-1 bg-white rounded-brand border border-gray-200 shadow-sm flex flex-col overflow-hidden">
-        <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-gray-50/50">
-          <div className="max-w-3xl mx-auto space-y-6">
+        <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50">
+          <div className="max-w-4xl mx-auto space-y-6">
+            {/* Info Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card className="bg-blue-50/50 border-blue-100 shadow-sm rounded-brand">
+              <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-200 shadow-sm rounded-brand">
                 <CardContent className="p-4 flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                    <i className="ph-fill ph-shield-check text-blue-600 text-lg"></i>
+                  <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                    <i className="ph-fill ph-shield-check text-blue-600 text-xl"></i>
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-blue-900">
                       Role-Based Access
                     </h4>
                     <p className="text-xs font-medium text-blue-700 mt-1 leading-relaxed">
-                      Assign precise System Roles to enforce strict access
-                      scopes across records operations.
+                      Choose a role based on required permissions before account activation.
                     </p>
+                    <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
+                      <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 font-bold text-amber-800">
+                        Admin: full system control
+                      </span>
+                      <span className="inline-flex items-center rounded-full border border-sky-200 bg-sky-50 px-2 py-0.5 font-bold text-sky-800">
+                        Staff: records operations only
+                      </span>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card className="bg-amber-50/50 border-amber-100 shadow-sm rounded-brand">
+              <Card className="bg-gradient-to-br from-amber-50 to-white border-amber-200 shadow-sm rounded-brand">
                 <CardContent className="p-4 flex items-start gap-4">
-                  <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                    <i className="ph-fill ph-key text-amber-600 text-lg"></i>
+                  <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
+                    <i className="ph-fill ph-key text-amber-600 text-xl"></i>
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-amber-900">
                       Default Credentials
                     </h4>
-                    <p className="text-xs font-medium text-amber-700 mt-1 leading-relaxed">
-                      New accounts are initialized with a temporary password:
-                      <strong className="font-mono bg-amber-200/50 px-1 rounded mx-1">
-                        pupstaff
-                      </strong>
-                      . Users will be prompted to change it upon first login.
-                    </p>
+                    <div className="text-xs font-medium text-amber-700 mt-1 leading-relaxed space-y-2">
+                      <p>
+                        New accounts are created with a temporary password.
+                      </p>
+                      <p>
+                        Password:
+                        <strong className="font-mono bg-amber-200/50 px-1.5 py-0.5 rounded mx-1">
+                          pupstaff
+                        </strong>
+                      </p>
+                      <p className="font-semibold text-amber-800">
+                        Require users to change password on first login.
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            <Card className="border-gray-200 shadow-sm rounded-brand overflow-hidden">
-              <CardHeader className="border-b border-gray-100 bg-white p-6">
-                <CardTitle className="text-base font-bold text-gray-900">
-                  Registration Form
+            {/* Registration Form */}
+            <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden bg-white">
+              <CardHeader className="border-b border-gray-100 bg-gradient-to-r from-red-50/80 via-white to-red-50/60 px-5 py-4">
+                <CardTitle className="text-base font-bold text-gray-900 flex items-center gap-2">
+                  <span className="inline-flex items-center gap-2">
+                    <i className="ph-duotone ph-user-plus text-pup-maroon text-xl"></i>
+                    Account Registration
+                  </span>
                 </CardTitle>
-                <CardDescription className="text-xs font-medium text-gray-500">
-                  Ensure exact detail mapping to the employee HR profile.
-                </CardDescription>
               </CardHeader>
               <CardContent className="p-6 bg-white">
                 <form onSubmit={onCreateAccount} className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                  {/* Employee ID & Role Row */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">
                         Employee ID <span className="text-pup-maroon">*</span>
                       </label>
                       <Input
                         type="text"
                         required
-                        className="font-mono bg-white shadow-sm"
+                        className="h-12 font-mono bg-white border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                         placeholder="e.g. 2023-001"
                         value={createForm.id}
                         onChange={(e) =>
@@ -108,13 +98,13 @@ export default function RegisterAccountTab({
                         }
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">
                         System Role <span className="text-pup-maroon">*</span>
                       </label>
                       <select
                         required
-                        className="flex h-9 w-full rounded-md border border-gray-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                        className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
                         value={createForm.role}
                         onChange={(e) =>
                           setCreateForm((f) => ({ ...f, role: e.target.value }))
@@ -129,15 +119,16 @@ export default function RegisterAccountTab({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                  {/* Name Row */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">
                         First Name <span className="text-pup-maroon">*</span>
                       </label>
                       <Input
                         type="text"
                         required
-                        className="bg-white shadow-sm"
+                        className="h-12 bg-white border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                         placeholder="Juan"
                         value={createForm.fname}
                         onChange={(e) =>
@@ -148,14 +139,14 @@ export default function RegisterAccountTab({
                         }
                       />
                     </div>
-                    <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                    <div className="space-y-2">
+                      <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">
                         Last Name <span className="text-pup-maroon">*</span>
                       </label>
                       <Input
                         type="text"
                         required
-                        className="bg-white shadow-sm"
+                        className="h-12 bg-white border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                         placeholder="Dela Cruz"
                         value={createForm.lname}
                         onChange={(e) =>
@@ -168,15 +159,16 @@ export default function RegisterAccountTab({
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                  {/* Email */}
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">
                       Institutional Username / Email{" "}
                       <span className="text-pup-maroon">*</span>
                     </label>
                     <Input
-                      type="text"
+                      type="email"
                       required
-                      className="bg-white shadow-sm"
+                      className="h-12 bg-white border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                       placeholder="username@pup.edu.ph"
                       value={createForm.email}
                       onChange={(e) =>
@@ -185,21 +177,23 @@ export default function RegisterAccountTab({
                     />
                   </div>
 
-                  <div className="border-t border-gray-100 pt-6 mt-6 flex flex-col-reverse sm:flex-row items-center justify-end gap-3">
+                  {/* Action Buttons */}
+                  <div className="pt-4 border-t border-gray-100 flex flex-col-reverse sm:flex-row items-center justify-end gap-3">
                     <Button
                       type="button"
                       variant="outline"
                       onClick={onResetForm}
-                      className="w-full sm:w-auto font-bold text-gray-600"
+                      className="w-full sm:w-auto h-11 px-6 font-bold text-gray-600 border-gray-300 rounded-brand hover:bg-gray-50"
                     >
+                      <i className="ph-bold ph-arrow-counter-clockwise mr-2"></i>
                       Clear Form
                     </Button>
                     <Button
                       type="submit"
-                      className="w-full sm:w-auto bg-pup-maroon text-white hover:bg-red-900 shadow-md font-bold gap-2"
+                      className="w-full sm:w-auto h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-md font-bold rounded-brand gap-2"
                     >
-                      <i className="ph-bold ph-check text-lg"></i> Provision
-                      Account
+                      <i className="ph-bold ph-check-circle text-lg"></i>
+                      Create Account
                     </Button>
                   </div>
                 </form>

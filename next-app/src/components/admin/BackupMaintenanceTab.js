@@ -63,20 +63,7 @@ export default function BackupMaintenanceTab({
   };
 
   return (
-    <div className="h-full flex flex-col gap-6 p-6 overflow-hidden animate-fade-in font-inter">
-      <div className="flex justify-between items-end shrink-0">
-        <div>
-          <h2 className="text-2xl font-black text-pup-maroon tracking-tight">
-            Backup & Maintenance
-          </h2>
-          <p className="text-sm font-medium text-gray-500 mt-1 max-w-2xl">
-            Manage system data backups, monitor server health metrics, and
-            perform critical restoration procedures to ensure repository
-            continuity.
-          </p>
-        </div>
-      </div>
-
+    <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter">
       <div className="flex flex-col lg:flex-row flex-1 gap-4 items-stretch overflow-hidden">
         {/* LEFT COLUMN: Operations and Health Metrics */}
         <section className="w-full lg:w-[30%] flex-none flex flex-col gap-4 overflow-y-auto pr-1 h-full">
@@ -251,8 +238,8 @@ export default function BackupMaintenanceTab({
                     </td>
                   </tr>
                 ) : backups.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="p-0">
+                  <tr className="border-0 hover:bg-transparent">
+                    <td colSpan={5} className="p-0 border-0">
                       <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
                         <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
                           <i className="ph-duotone ph-archive text-3xl text-pup-maroon"></i>
@@ -337,24 +324,26 @@ export default function BackupMaintenanceTab({
                         </div>
                       </td>
                       <td className="p-3 text-right">
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-end gap-2">
                           <Button
-                            variant="ghost"
-                            size="icon-sm"
+                            variant="outline"
+                            size="sm"
                             onClick={() => onDownloadBackup(b)}
-                            className="h-8 w-8 text-gray-400 hover:text-pup-maroon hover:bg-red-50"
+                            className="h-8 px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50"
                             title="Extract ZIP Package"
                           >
-                            <i className="ph-bold ph-file-zip text-base"></i>
+                            <i className="ph-bold ph-file-zip mr-1.5"></i>
+                            Download
                           </Button>
                           <Button
-                            variant="ghost"
-                            size="icon-sm"
+                            variant="outline"
+                            size="sm"
                             onClick={() => onDeleteBackup(b.id)}
-                            className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                            className="h-8 px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
                             title="Destroy Volume"
                           >
-                            <i className="ph-bold ph-trash text-base"></i>
+                            <i className="ph-bold ph-trash mr-1.5"></i>
+                            Delete
                           </Button>
                         </div>
                       </td>

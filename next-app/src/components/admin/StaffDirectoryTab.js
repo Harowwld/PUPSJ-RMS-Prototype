@@ -63,36 +63,8 @@ export default function StaffDirectoryTab({
   }, [filteredStaff, displayPage, itemsPerPage]);
 
   return (
-    <div className="h-full flex flex-col gap-6 p-6 overflow-y-auto animate-fade-in font-inter">
-      <div className="flex justify-between items-end shrink-0">
-        <div>
-          <h2 className="text-2xl font-black text-pup-maroon tracking-tight">
-            Staff Management
-          </h2>
-          <p className="text-sm font-medium text-gray-500 mt-1 max-w-2xl">
-            Oversee university administrative personnel profiles, monitor active
-            network sessions, and manage role-based access rights across the
-            platform.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="secondary"
-            onClick={onExportData}
-            className="h-11 gap-2 font-bold shadow-sm border border-gray-200"
-          >
-            <i className="ph-bold ph-download-simple text-base"></i> Export CSV
-          </Button>
-          <Button
-            onClick={() => onSwitchView("create")}
-            className="h-11 gap-2 bg-pup-maroon hover:bg-red-900 text-white font-bold shadow-sm"
-          >
-            <i className="ph-bold ph-plus text-base"></i> Add Staff Account
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex flex-col lg:flex-row gap-4 flex-1 items-stretch overflow-hidden">
+    <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter">
+      <div className="flex flex-col lg:flex-row flex-1 gap-4 items-stretch overflow-hidden">
         <aside className="w-full lg:w-1/4 flex flex-col gap-4 h-full overflow-y-auto pr-1">
           <div className="grid grid-cols-2 gap-2">
             <div className="bg-white p-4 rounded-brand border border-gray-200 shadow-sm">
@@ -124,7 +96,7 @@ export default function StaffDirectoryTab({
                   <Input
                     type="text"
                     placeholder="Query name or ID..."
-                    className="pl-9 h-9 border-gray-200 bg-white"
+                    className="pl-9 h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                   />
@@ -134,7 +106,7 @@ export default function StaffDirectoryTab({
                     System Role
                   </label>
                   <select
-                    className="flex h-9 w-full rounded-md border border-gray-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
                     value={roleFilter}
                     onChange={(e) => setRoleFilter(e.target.value)}
                   >
@@ -148,7 +120,7 @@ export default function StaffDirectoryTab({
                     Activity Status
                   </label>
                   <select
-                    className="flex h-9 w-full rounded-md border border-gray-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
                     value={statusFilter}
                     onChange={(e) => setStatusFilter(e.target.value)}
                   >
@@ -213,16 +185,18 @@ export default function StaffDirectoryTab({
               <tbody className="divide-y divide-gray-200">
                 {isLoading && staffData.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={6}
-                      className="p-8 text-center text-sm text-gray-500"
-                    >
-                      Loading staff directory...
+                    <td colSpan={6} className="p-8 text-center">
+                      <div className="flex flex-col items-center justify-center gap-3">
+                        <div className="w-10 h-10 border-2 border-gray-200 border-t-pup-maroon rounded-full animate-spin"></div>
+                        <span className="text-sm font-medium text-gray-500">
+                          Loading staff directory...
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 ) : filteredStaff.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="p-0">
+                  <tr className="border-0 hover:bg-transparent">
+                    <td colSpan={6} className="p-0 border-0">
                       <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
                         <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
                           <i className="ph-duotone ph-users-three text-3xl text-pup-maroon"></i>
@@ -300,24 +274,26 @@ export default function StaffDirectoryTab({
                         {s.last_active || "—"}
                       </td>
                       <td className="p-3 text-right">
-                        <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-end gap-2">
                           <Button
-                            variant="ghost"
-                            size="icon-sm"
+                            variant="outline"
+                            size="sm"
                             onClick={() => onEditUser(s.id)}
-                            className="h-8 w-8 text-gray-400 hover:text-pup-maroon hover:bg-red-50"
+                            className="h-8 px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50"
                             title="Modify Account"
                           >
-                            <i className="ph-bold ph-pencil-simple text-base"></i>
+                            <i className="ph-bold ph-pencil-simple mr-1.5"></i>
+                            Edit
                           </Button>
                           <Button
-                            variant="ghost"
-                            size="icon-sm"
+                            variant="outline"
+                            size="sm"
                             onClick={() => onDeleteUser(s.id)}
-                            className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50"
+                            className="h-8 px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
                             title="Revoke Network Credentials"
                           >
-                            <i className="ph-bold ph-trash text-base"></i>
+                            <i className="ph-bold ph-trash mr-1.5"></i>
+                            Delete
                           </Button>
                         </div>
                       </td>

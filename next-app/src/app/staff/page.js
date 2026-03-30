@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import Sidebar from "@/components/shared/Sidebar";
 import { toast } from "sonner";
 import PasswordChangeModal from "@/components/shared/PasswordChangeModal";
 import RecordsArchiveTab from "@/components/staff/RecordsArchiveTab";
@@ -13,9 +14,6 @@ import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import OCRPromptModal from "@/components/staff/OCRPromptModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { scanPdfForSuggestion, warmupOcrWorker } from "@/lib/ocrClient";
-
-const rooms = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-const cabinets = ["A", "B", "C", "D", "E", "F", "G", "H"];
 
 function normalizeStudentRow(row) {
   if (!row || typeof row !== "object") return row;
@@ -39,6 +37,7 @@ export default function StaffPage() {
   const [docTypes, setDocTypes] = useState([]);
   const [courses, setCourses] = useState([]);
   const [sections, setSections] = useState([]);
+  const [storageLayout, setStorageLayout] = useState(null);
   const [allDocs, setAllDocs] = useState([]);
 
   const [currentLevel, setCurrentLevel] = useState("courses");
@@ -130,22 +129,25 @@ export default function StaffPage() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [sRes, dRes, cRes, secRes] = await Promise.all([
+      const [sRes, dRes, cRes, secRes, layoutRes] = await Promise.all([
         fetch("/api/students"),
         fetch("/api/doc-types"),
         fetch("/api/courses"),
         fetch("/api/sections"),
+        fetch("/api/storage-layout"),
       ]);
-      const [sData, dData, cData, secData] = await Promise.all([
+      const [sData, dData, cData, secData, layoutData] = await Promise.all([
         sRes.json(),
         dRes.json(),
         cRes.json(),
         secRes.json(),
+        layoutRes.json(),
       ]);
       setStudents((Array.isArray(sData.data) ? sData.data : []).map(normalizeStudentRow));
       setDocTypes(dData.data || []);
       setCourses(cData.data || []);
       setSections(secData.data || []);
+      setStorageLayout(layoutData?.data || null);
       coreDataLoadedRef.current = true;
     } catch (err) {
       showToast("Failed to sync database", true);
@@ -211,6 +213,37 @@ export default function StaffPage() {
       fetchAllDocs();
     }, 0);
   }, [view, fetchAllDocs]);
+
+  // Keep locator selection valid when layout changes (rooms/cabinets can be added/removed).
+  useEffect(() => {
+    const rooms = storageLayout?.rooms || [];
+    if (!rooms.length) return;
+
+    // If no room selected and we're not at the room selection level, default to first room.
+    if (currentLocatorLevel !== "rooms" && selectedRoom == null) {
+      setSelectedRoom(rooms[0].id);
+      return;
+    }
+
+    if (selectedRoom != null) {
+      const roomDef = rooms.find((r) => r.id === selectedRoom);
+      if (!roomDef) {
+        // Selected room removed -> fallback.
+        setSelectedRoom(rooms[0].id);
+        setSelectedCabinet(null);
+        setCurrentLocatorLevel("cabinets");
+        return;
+      }
+
+      // If cabinet selected but removed, fallback to first cabinet (or null).
+      if (selectedCabinet) {
+        const exists = roomDef.cabinets?.some((c) => c.id === selectedCabinet);
+        if (!exists) {
+          setSelectedCabinet(roomDef.cabinets?.[0]?.id || null);
+        }
+      }
+    }
+  }, [storageLayout, currentLocatorLevel, selectedRoom, selectedCabinet]);
 
   useEffect(() => {
     if (quickQuery.trim().length < 2) {
@@ -330,35 +363,67 @@ export default function StaffPage() {
   }, [currentLevel, students, selectedCourse, selectedYear, selectedSection]);
 
   const locatorModel = useMemo(() => {
+    if (!storageLayout?.rooms?.length) return { kind: "none" };
+
     if (currentLocatorLevel === "rooms") {
       return {
         kind: "rooms",
         title: "PUP Storage Rooms",
-        rooms: rooms.map((r) => ({
-          room: r,
-          occupiedCount: students.filter((s) => s.room === r).length,
-          isTarget: activeStudent?.room === r,
+        rooms: storageLayout.rooms.map((r) => ({
+          room: r.id,
+          occupiedCount: students.filter((s) => s.room === r.id).length,
+          isTarget: activeStudent?.room === r.id,
         })),
       };
     }
     if (currentLocatorLevel === "cabinets") {
+      const roomDef = storageLayout.rooms.find((r) => r.id === selectedRoom);
+      if (!roomDef) return { kind: "cabinets", cabinets: [] };
       return {
         kind: "cabinets",
-        cabinets: cabinets.map((c) => ({
-          cab: c,
+        room: selectedRoom,
+        cabinets: roomDef.cabinets.map((c) => ({
+          cab: c.id,
           occupiedCount: students.filter(
-            (s) => s.room === selectedRoom && s.cabinet === c,
+            (s) => s.room === selectedRoom && s.cabinet === c.id,
           ).length,
           isTarget:
             activeStudent?.room === selectedRoom &&
-            activeStudent?.cabinet === c,
+            activeStudent?.cabinet === c.id,
+          rect: c.rect,
+          rotation: c.rotation || 0,
+          drawerIds: c.drawerIds,
         })),
       };
     }
     if (currentLocatorLevel === "drawers") {
+      const roomDef = storageLayout.rooms.find((r) => r.id === selectedRoom);
+      const cabinetDef = roomDef?.cabinets?.find((c) => c.id === selectedCabinet);
+      if (!cabinetDef)
+        return {
+          kind: "drawers",
+          drawers: [],
+          cabinetRect: null,
+          cabinets: [],
+        };
       return {
         kind: "drawers",
-        drawers: [1, 2, 3, 4].map((d) => ({
+        room: selectedRoom,
+        cabinet: selectedCabinet,
+        cabinetRect: cabinetDef.rect,
+        cabinets: roomDef.cabinets.map((c) => ({
+          cab: c.id,
+          occupiedCount: students.filter(
+            (s) => s.room === selectedRoom && s.cabinet === c.id,
+          ).length,
+          isTarget:
+            activeStudent?.room === selectedRoom &&
+            activeStudent?.cabinet === c.id,
+          rect: c.rect,
+          rotation: c.rotation || 0,
+          drawerIds: c.drawerIds,
+        })),
+        drawers: cabinetDef.drawerIds.map((d) => ({
           drawer: d,
           count: students.filter(
             (s) =>
@@ -380,6 +445,7 @@ export default function StaffPage() {
     selectedCabinet,
     students,
     activeStudent,
+    storageLayout,
   ]);
 
   const availableSectionsForNewRecord = useMemo(() => {
@@ -763,29 +829,20 @@ export default function StaffPage() {
     );
   }
 
+  const sidebarItems = [
+    { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
+    { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
+    { key: "documents", label: "Documents", iconClass: "ph-bold ph-file-text" },
+  ];
+
   return (
-    <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden">
-      <Header authUser={authUser} onLogout={handleLogout}>
-        <button
-          onClick={() => setView("search")}
-          className={`btn-nav ${view === "search" ? "active" : ""}`}
-        >
-          <i className="ph-bold ph-archive-box"></i> Records & Archive
-        </button>
-        <button
-          onClick={() => setView("upload")}
-          className={`btn-nav ${view === "upload" ? "active" : ""}`}
-        >
-          <i className="ph-bold ph-scan"></i> Scan & Upload
-        </button>
-        <button
-          onClick={() => setView("documents")}
-          className={`btn-nav ${view === "documents" ? "active" : ""}`}
-        >
-          <i className="ph-bold ph-file-text"></i> Documents
-        </button>
-      </Header>
-      <main className="flex-1 overflow-hidden max-w-[1600px] mx-auto w-full p-4">
+    <div className="h-screen flex flex-col overflow-hidden bg-gray-50 font-inter">
+      <Header authUser={authUser} onLogout={handleLogout} />
+
+      <div className="flex-1 flex overflow-hidden w-full">
+        <Sidebar items={sidebarItems} activeKey={view} onSelect={setView} />
+
+        <main className="flex-1 overflow-hidden p-4 relative w-full min-w-0 max-w-[1600px] mx-auto">
         {view === "search" && (
           <RecordsArchiveTab
             quickQuery={quickQuery}
@@ -876,7 +933,6 @@ export default function StaffPage() {
               if (r) r.student[f] = v;
               setCsvRows(n);
             }}
-            cabinets={cabinets}
             courses={courses}
             docTypes={docTypes}
             processSubmission={processSubmission}
@@ -891,8 +947,8 @@ export default function StaffPage() {
             applyStudentNoMask={applyStudentNoMask}
             newStudentNoInputRef={newStudentNoInputRef}
             newAvailYears={academicYearOptions}
-            rooms={rooms}
             sysSections={availableSectionsForNewRecord}
+            storageLayout={storageLayout}
             csvInputRef={csvInputRef}
             handleCsvFileSelect={(f) => {
               if (!f) return;
@@ -1082,7 +1138,9 @@ export default function StaffPage() {
             }}
           />
         )}
-      </main>
+        </main>
+      </div>
+
       <Footer />
       <PasswordChangeModal
         open={pwModalOpen}

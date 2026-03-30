@@ -51,7 +51,7 @@ export default function PromptModal({
         <div className="p-6">
           {multiline ? (
             <textarea
-              className="flex w-full rounded-brand border border-gray-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-gray-400 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon/50 disabled:cursor-not-allowed disabled:opacity-50 min-h-[96px] transition-all"
+              className="flex w-full h-24 rounded-brand border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon min-h-[96px] transition-all"
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder={placeholder}
@@ -60,7 +60,7 @@ export default function PromptModal({
           ) : (
             <Input
               type="text"
-              className="bg-white shadow-sm h-11 rounded-brand border-gray-300 focus-visible:ring-pup-maroon/50"
+              className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder={placeholder}

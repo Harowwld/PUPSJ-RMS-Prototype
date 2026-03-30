@@ -15,6 +15,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import RoomMap2D from "@/components/staff/RoomMap2D";
 
 export default function RecordsArchiveTab({
   quickQuery,
@@ -42,28 +43,16 @@ export default function RecordsArchiveTab({
   const [listType, setListType] = useState("card");
 
   return (
-    <div id="view-search" className="h-full flex flex-col gap-6 p-6 overflow-y-auto animate-fade-in font-inter">
-      <div className="flex justify-between items-end shrink-0">
-        <div>
-          <h2 className="text-2xl font-black text-pup-maroon tracking-tight">Records Archive</h2>
-          <p className="text-sm font-medium text-gray-500 mt-1 max-w-2xl">
-            Navigate through the physical and digital storage layout to locate and preview student record folders within the university repository.
-          </p>
-        </div>
-      </div>
-
+        <div id="view-search" className="flex flex-col lg:flex-row w-full h-full gap-4 animate-fade-in">
       <div className="flex flex-col lg:flex-row flex-1 gap-4 items-stretch overflow-hidden">
         <section className="w-full lg:w-1/4 bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm flex-shrink-0 h-full overflow-hidden">
         <div className="p-4 border-b border-gray-200 bg-gray-50">
-          <h2 className="text-xs font-bold text-pup-maroon uppercase tracking-wide mb-3">
-            Quick Find
-          </h2>
           <div className="relative group">
             <i className="ph-bold ph-magnifying-glass absolute left-3 top-3 text-gray-500 group-focus-within:text-pup-maroon"></i>
             <Input
               type="text"
               placeholder="Search ID or Name..."
-              className="w-full pl-10 pr-3 h-11 bg-white border border-gray-300 rounded-brand text-sm font-medium focus-visible:ring-pup-maroon focus-visible:border-pup-maroon transition-all placeholder-gray-500 text-gray-900"
+              className="w-full pl-10 pr-3 h-12 bg-white border border-gray-300 rounded-brand text-sm font-medium focus-visible:ring-pup-maroon focus-visible:border-pup-maroon transition-all placeholder-gray-500 text-gray-900"
               value={quickQuery}
               onChange={(e) => setQuickQuery(e.target.value)}
             />
@@ -299,7 +288,7 @@ export default function RecordsArchiveTab({
           </div>
         </div>
 
-        <div className="h-[40%] min-h-[250px] bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm relative min-h-0">
+        <div className="h-[44%] min-h-[280px] bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm relative min-h-0">
           <div className="p-3 border-b border-gray-200 flex justify-between items-center bg-white rounded-t-brand">
             <h3 className="font-bold text-pup-maroon text-sm flex items-center gap-2">
               <i className="ph-fill ph-drawers text-lg"></i> Storage Layout
@@ -367,29 +356,16 @@ export default function RecordsArchiveTab({
                       </span>{" "}
                       / Room {selectedRoom} Cabinets
                     </h4>
-                    <div className="grid grid-cols-4 gap-3">
-                      {locatorModel.cabinets.map((c) => (
-                        <div
-                          key={c.cab}
-                          className={`locator-tile p-3 rounded-brand flex flex-col h-full ${
-                            c.isTarget ? "cabinet-located" : ""
-                          }`}
-                          onClick={() => {
-                            setSelectedCabinet(c.cab);
-                            setCurrentLocatorLevel("drawers");
-                          }}
-                        >
-                          <div className="text-center mb-2">
-                            <i className="ph-duotone ph-archive-box text-3xl text-gray-600"></i>
-                            <h5 className="font-bold text-base text-gray-900 leading-tight mt-1">
-                              CAB-{c.cab}
-                            </h5>
-                          </div>
-                          <div className="flex-1 bg-gray-50/50 p-2 rounded text-xs font-semibold text-gray-500 flex items-center justify-center">
-                            {c.occupiedCount} Folders
-                          </div>
-                        </div>
-                      ))}
+                    <div className="h-[380px] w-full">
+                      <RoomMap2D
+                        kind="cabinets"
+                        cabinets={locatorModel.cabinets}
+                        selectedCabinetId={selectedCabinet}
+                        onCabinetClick={(cabId) => {
+                          setSelectedCabinet(cabId);
+                          setCurrentLocatorLevel("drawers");
+                        }}
+                      />
                     </div>
                   </>
                 ) : (
@@ -403,46 +379,13 @@ export default function RecordsArchiveTab({
                       </span>{" "}
                       / Room {selectedRoom} / Cabinet {selectedCabinet} Drawers
                     </h4>
-                    <div className="flex justify-center w-full p-2">
-                      <div className="border border-gray-300 p-2 rounded-brand bg-white relative flex flex-col h-full w-[30%] min-h-0">
-                        <div className="absolute -top-2 left-2 bg-white px-2 text-xs font-bold text-gray-600 border border-gray-300 rounded-sm">
-                          CAB-{selectedCabinet}
-                        </div>
-                        <div className="flex-1 flex flex-col gap-3 mt-3 min-h-0">
-                          {locatorModel.drawers.map((d) => {
-                            const countText =
-                              d.count === 1 ? "1 Folder" : `${d.count} Folders`;
-                            const drawerClass =
-                              d.count > 0
-                                ? "drawer-occupied"
-                                : "bg-white border-gray-200 text-gray-300";
-                            return (
-                              <div
-                                key={d.drawer}
-                                className={`drawer-box flex-1 rounded-brand flex items-center justify-center transition-all border locator-tile ${drawerClass} ${
-                                  d.isTarget ? "drawer-located" : ""
-                                }`}
-                              >
-                                {d.count > 0 ? (
-                                  <span
-                                    className={`text-xs font-bold ${
-                                      d.isTarget
-                                        ? "text-pup-maroon"
-                                        : "text-gray-900"
-                                    }`}
-                                  >
-                                    {countText}
-                                  </span>
-                                ) : (
-                                  <span className="text-xs font-medium text-gray-400">
-                                    0 Folders
-                                  </span>
-                                )}
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
+                    <div className="h-[380px] w-full">
+                      <RoomMap2D
+                        kind="drawers"
+                        cabinets={locatorModel.cabinets || []}
+                        selectedCabinetId={selectedCabinet}
+                        drawerSlots={locatorModel.drawers}
+                      />
                     </div>
                   </>
                 )}
@@ -515,7 +458,7 @@ export default function RecordsArchiveTab({
                                 <span className="text-gray-700 group-hover:text-pup-maroon font-bold group-hover:underline underline-offset-2 truncate">
                                   {doc.doc_type}
                                 </span>
-                                <i className="ph-bold ph-arrow-square-out text-gray-400 ml-auto group-hover:text-pup-maroon opacity-0 group-hover:opacity-100 transition-all shrink-0"></i>
+                                <i className="ph-bold ph-arrow-square-out text-gray-400 ml-auto group-hover:text-pup-maroon transition-all shrink-0"></i>
                               </Button>
                             </li>
                           ))

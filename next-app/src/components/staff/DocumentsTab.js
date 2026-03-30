@@ -24,25 +24,16 @@ export default function DocumentsTab({
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   return (
-    <div id="view-documents" className="h-full flex flex-col gap-6 p-6 overflow-y-auto animate-fade-in font-inter">
-      <div className="flex justify-between items-end shrink-0">
-        <div>
-          <h2 className="text-2xl font-black text-pup-maroon tracking-tight">Documents Repository</h2>
-          <p className="text-sm font-medium text-gray-500 mt-1 max-w-2xl">
-            Search and manage existing student document records within the centralized digital archives. Repository access is logged for compliance.
-          </p>
-        </div>
-      </div>
-
+       <div id="view-documents" className="flex flex-col lg:flex-row w-full h-full gap-4 animate-fade-in">
       <section className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col">
-        <div className="p-6 bg-gray-50/50 flex-none border-b border-gray-200">
+        <div className="p-4 bg-gray-50/50 flex-none border-b border-gray-200">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
             <div className="lg:col-span-1">
               <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
                 Student No
               </label>
               <input
-                className="form-input font-mono h-11"
+                className="w-full h-12 font-mono bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={docsForm.studentNo}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -62,7 +53,7 @@ export default function DocumentsTab({
                 Student Name
               </label>
               <input
-                className="form-input h-11"
+                className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={docsForm.studentName}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -81,7 +72,7 @@ export default function DocumentsTab({
                 Document Type
               </label>
               <select
-                className="form-select h-11"
+                className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={docsForm.docType}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -136,8 +127,8 @@ export default function DocumentsTab({
                     docsForm.studentName.trim() ||
                     docsForm.docType.trim()
                   ) ? (
-                  <tr>
-                    <td colSpan={7} className="p-0">
+                  <tr className="border-0 hover:bg-transparent">
+                    <td colSpan={7} className="p-0 border-0">
                       <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
                         <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
                           <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon"></i>
@@ -152,8 +143,8 @@ export default function DocumentsTab({
                     </td>
                   </tr>
                 ) : docsRows.length === 0 ? (
-                  <tr>
-                    <td colSpan={7} className="p-0">
+                  <tr className="border-0 hover:bg-transparent">
+                    <td colSpan={7} className="p-0 border-0">
                       <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
                         <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
                           <i className="ph-duotone ph-warning-circle text-3xl text-red-600"></i>
@@ -300,7 +291,7 @@ export default function DocumentsTab({
                 Student Number
               </label>
               <input
-                className="form-input rounded-brand"
+                className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={updateStudentNo}
                 onChange={(e) => setUpdateStudentNo(e.target.value)}
               />
@@ -310,7 +301,7 @@ export default function DocumentsTab({
                 Student Name
               </label>
               <input
-                className="form-input rounded-brand"
+                className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={updateStudentName}
                 onChange={(e) => setUpdateStudentName(e.target.value)}
               />
@@ -320,7 +311,7 @@ export default function DocumentsTab({
                 Document Type
               </label>
               <input
-                className="form-input rounded-brand"
+                className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={updateDocType}
                 onChange={(e) => setUpdateDocType(e.target.value)}
               />

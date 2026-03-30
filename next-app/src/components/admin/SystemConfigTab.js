@@ -16,6 +16,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import StorageLayoutEditorTab from "@/components/admin/StorageLayoutEditorTab";
 
 export default function SystemConfigTab({ showToast, logAdminAction }) {
   const [docTypes, setDocTypes] = useState([]);
@@ -257,19 +258,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
   };
 
   return (
-    <div className="h-full flex flex-col gap-6 p-6 overflow-y-auto animate-fade-in font-inter">
-      <div className="flex justify-between items-end shrink-0">
-        <div>
-          <h2 className="text-2xl font-black text-pup-maroon tracking-tight">
-            System Configuration
-          </h2>
-          <p className="text-sm font-medium text-gray-500 mt-1 max-w-2xl">
-            Configure baseline taxonomy parameters for the Records Repository.
-            Modifications immediately restrict or expand Staff options.
-          </p>
-        </div>
-      </div>
-
+    <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter">
       <div className="bg-gray-100 p-1.5 rounded-brand inline-flex gap-1 w-full sm:w-fit shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] overflow-x-auto shrink-0 border border-gray-200/60">
         <button
           onClick={() => setActiveSubTab("document-types")}
@@ -310,6 +299,16 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
           }`}
         >
           <i className="ph-duotone ph-database-export text-lg"></i> Bulk Import
+        </button>
+        <button
+          onClick={() => setActiveSubTab("storage-layout")}
+          className={`px-5 py-2.5 text-sm font-bold rounded flex shrink-0 items-center justify-center gap-2 transition-all ${
+            activeSubTab === "storage-layout"
+              ? "bg-white text-pup-maroon shadow-sm ring-1 ring-gray-200"
+              : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
+          }`}
+        >
+          <i className="ph-duotone ph-warehouse text-lg"></i> Storage Layout
         </button>
       </div>
 
@@ -353,7 +352,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                       </td>
                       <td className="p-3 px-6 text-right">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => {
                             setConfirmPayload({
@@ -364,17 +363,17 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                             });
                             setConfirmOpen(true);
                           }}
-                          className="text-gray-400 group-hover:text-red-700 hover:bg-red-100 uppercase tracking-widest text-[10px] font-bold h-7 inline-flex"
+                          className="h-8 px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
                         >
-                          <i className="ph-bold ph-trash text-sm mr-1.5"></i>{" "}
+                          <i className="ph-bold ph-trash mr-1.5"></i>
                           Delete
                         </Button>
                       </td>
                     </tr>
                   ))}
                   {docTypes.length === 0 && (
-                    <tr>
-                      <td colSpan={2} className="p-0">
+                    <tr className="border-0 hover:bg-transparent">
+                      <td colSpan={2} className="p-0 border-0">
                         <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
                           <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
                             <i className="ph-duotone ph-files text-3xl text-pup-maroon"></i>
@@ -441,7 +440,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                       </td>
                       <td className="p-3 px-6 text-right">
                         <Button
-                          variant="ghost"
+                          variant="outline"
                           size="sm"
                           onClick={() => {
                             setConfirmPayload({
@@ -452,17 +451,17 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                             });
                             setConfirmOpen(true);
                           }}
-                          className="text-gray-400 group-hover:text-red-700 hover:bg-red-100 uppercase tracking-widest text-[10px] font-bold h-7 inline-flex"
+                          className="h-8 px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
                         >
-                          <i className="ph-bold ph-trash text-sm mr-1.5"></i>{" "}
+                          <i className="ph-bold ph-trash mr-1.5"></i>
                           Delete
                         </Button>
                       </td>
                     </tr>
                   ))}
                   {courses.length === 0 && (
-                    <tr>
-                      <td colSpan={3} className="p-0">
+                    <tr className="border-0 hover:bg-transparent">
+                      <td colSpan={3} className="p-0 border-0">
                         <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
                           <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
                             <i className="ph-duotone ph-books text-3xl text-pup-maroon"></i>
@@ -497,7 +496,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
                 <select
-                  className="h-10 rounded-md border border-gray-200 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring font-medium text-gray-700"
+                  className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
                   value={selectedCourseFilter}
                   onChange={(e) => setSelectedCourseFilter(e.target.value)}
                 >
@@ -552,7 +551,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                         </td>
                         <td className="p-3 px-6 text-right">
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
                             onClick={() => {
                               setConfirmPayload({
@@ -563,9 +562,9 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                               });
                               setConfirmOpen(true);
                             }}
-                            className="text-gray-400 group-hover:text-red-700 hover:bg-red-100 uppercase tracking-widest text-[10px] font-bold h-7 inline-flex"
+                            className="h-8 px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
                           >
-                            <i className="ph-bold ph-trash text-sm mr-1.5"></i>{" "}
+                            <i className="ph-bold ph-trash mr-1.5"></i>
                             Delete
                           </Button>
                         </td>
@@ -576,8 +575,8 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                       selectedCourseFilter === "" ||
                       sec.course_code === selectedCourseFilter,
                   ).length === 0 && (
-                    <tr>
-                      <td colSpan={3} className="p-0">
+                    <tr className="border-0 hover:bg-transparent">
+                      <td colSpan={3} className="p-0 border-0">
                         <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
                           <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
                             <i className="ph-duotone ph-list-numbers text-3xl text-pup-maroon"></i>
@@ -598,6 +597,12 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                 </tbody>
               </table>
             </div>
+          </div>
+        )}
+
+        {activeSubTab === "storage-layout" && (
+          <div className="flex flex-col h-full animate-fade-in w-full overflow-hidden">
+            <StorageLayoutEditorTab showToast={showToast} logAdminAction={logAdminAction} />
           </div>
         )}
 
@@ -716,7 +721,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
               <Input
                 type="text"
                 placeholder="E.g. Birth Certificate, Transcript of Records"
-                className="w-full h-11 shadow-sm bg-white rounded-brand"
+                className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                 value={dtName}
                 onChange={(e) => setDtName(e.target.value)}
                 autoFocus
@@ -769,7 +774,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                 <Input
                   type="text"
                   placeholder="E.g. BSIT, BSCS, BSBA"
-                  className="w-full h-11 shadow-sm bg-white rounded-brand"
+                  className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                   value={cCode}
                   onChange={(e) => setCCode(e.target.value)}
                   autoFocus
@@ -783,7 +788,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                 <Input
                   type="text"
                   placeholder="E.g. Bachelor of Science in Information Technology"
-                  className="w-full h-11 shadow-sm bg-white rounded-brand"
+                  className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                   value={cName}
                   onChange={(e) => setCName(e.target.value)}
                   required
@@ -834,7 +839,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                   Degree Program <span className="text-pup-maroon">*</span>
                 </label>
                 <select
-                  className="w-full flex h-11 rounded-brand border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 font-medium"
+                  className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors font-medium"
                   value={secCourseCode}
                   onChange={(e) => setSecCourseCode(e.target.value)}
                   required
@@ -856,7 +861,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                 <Input
                   type="text"
                   placeholder="E.g. Block 1, Section A, Group 2024"
-                  className="w-full h-11 shadow-sm bg-white rounded-brand"
+                  className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                   value={secName}
                   onChange={(e) => setSecName(e.target.value)}
                   required

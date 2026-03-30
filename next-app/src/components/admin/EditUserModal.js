@@ -47,7 +47,7 @@ export default function EditUserModal({
                 <Input
                   type="text"
                   required
-                  className="font-mono bg-white shadow-sm h-11 rounded-brand border-gray-300 focus-visible:ring-pup-maroon/50"
+                  className="h-12 font-mono bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                   placeholder="e.g. 2023-001"
                   value={editForm.id}
                   onChange={(e) =>
@@ -61,7 +61,7 @@ export default function EditUserModal({
                 </label>
                 <select
                   required
-                  className="w-full flex h-11 rounded-brand border border-gray-300 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon/50 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
                   value={editForm.role}
                   onChange={(e) =>
                     setEditForm((f) => ({ ...f, role: e.target.value }))
@@ -84,7 +84,7 @@ export default function EditUserModal({
                 <Input
                   type="text"
                   required
-                  className="bg-white shadow-sm h-11 rounded-brand border-gray-300 focus-visible:ring-pup-maroon/50"
+                  className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                   placeholder="Juan"
                   value={editForm.fname}
                   onChange={(e) =>
@@ -99,7 +99,7 @@ export default function EditUserModal({
                 <Input
                   type="text"
                   required
-                  className="bg-white shadow-sm h-11 rounded-brand border-gray-300 focus-visible:ring-pup-maroon/50"
+                  className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                   placeholder="Dela Cruz"
                   value={editForm.lname}
                   onChange={(e) =>
@@ -114,9 +114,9 @@ export default function EditUserModal({
                 Institutional Username / Email <span className="text-pup-maroon">*</span>
               </label>
               <Input
-                type="text"
+                type="email"
                 required
-                className="bg-white shadow-sm h-11 rounded-brand border-gray-300 focus-visible:ring-pup-maroon/50"
+                className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                 placeholder="username@pup.edu.ph"
                 value={editForm.email}
                 onChange={(e) =>

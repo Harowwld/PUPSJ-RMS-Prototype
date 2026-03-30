@@ -19,7 +19,7 @@ export default function ScanUploadTab({
   toggleCsvSelectAll,
   toggleCsvRowSelected,
   setCsvRowField,
-  cabinets,
+  storageLayout,
   courses,
   docTypes,
   processSubmission,
@@ -34,7 +34,6 @@ export default function ScanUploadTab({
   applyStudentNoMask,
   newStudentNoInputRef,
   newAvailYears,
-  rooms,
   sysSections = [],
   csvInputRef,
   handleCsvFileSelect,
@@ -55,6 +54,39 @@ export default function ScanUploadTab({
 }) {
   const fe = uploadFieldErrors || {};
   const ring = (key) => (fe[key] ? "ring-2 ring-orange-400 border-orange-400" : "");
+
+  const roomOptions = storageLayout?.rooms?.map((r) => r.id) || [];
+  const coerceRoomId = (v) => {
+    if (typeof v === "number") return v;
+    const n = parseInt(String(v), 10);
+    return Number.isFinite(n) ? n : null;
+  };
+  const getRoomDef = (roomIdRaw) => {
+    const roomId = coerceRoomId(roomIdRaw);
+    if (roomId == null) return null;
+    return storageLayout?.rooms?.find((r) => r.id === roomId) || null;
+  };
+  const getCabinetsForRoom = (roomIdRaw) => getRoomDef(roomIdRaw)?.cabinets || [];
+  const getDrawerIdsFor = (roomIdRaw, cabinetIdRaw) => {
+    const roomDef = getRoomDef(roomIdRaw);
+    const cabId = String(cabinetIdRaw ?? "").trim();
+    if (!roomDef || !cabId) return [];
+    const cab = roomDef.cabinets.find((c) => c.id === cabId);
+    return cab?.drawerIds || [];
+  };
+  const mergeSelectedCabinetId = (roomIdRaw, cabIdRaw) => {
+    const cabId = String(cabIdRaw || "").trim();
+    const ids = getCabinetsForRoom(roomIdRaw).map((c) => c.id);
+    if (cabId && !ids.includes(cabId)) return [cabId, ...ids];
+    return ids;
+  };
+  const mergeSelectedDrawerId = (roomIdRaw, cabIdRaw, drawerRaw) => {
+    const ids = getDrawerIdsFor(roomIdRaw, cabIdRaw);
+    const selected = parseInt(String(drawerRaw || ""), 10);
+    if (Number.isFinite(selected) && !ids.includes(selected)) return [selected, ...ids];
+    return ids;
+  };
+
   /** When linking to an existing student, only room / cabinet / drawer / doc type may change. */
   const lockIdentity = uploadStudentIsExisting;
   const lockedField =
@@ -156,7 +188,7 @@ export default function ScanUploadTab({
                               setCsvRowField(r.index, "room", parseInt(e.target.value))
                             }
                           >
-                            {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((room) => (
+                            {roomOptions.map((room) => (
                               <option key={room} value={room}>
                                 {room}
                               </option>
@@ -171,7 +203,7 @@ export default function ScanUploadTab({
                               setCsvRowField(r.index, "cabinet", e.target.value)
                             }
                           >
-                            {cabinets.map((c) => (
+                            {mergeSelectedCabinetId(r.student.room, r.student.cabinet).map((c) => (
                               <option key={c} value={c}>
                                 {c}
                               </option>
@@ -186,7 +218,11 @@ export default function ScanUploadTab({
                               setCsvRowField(r.index, "drawer", parseInt(e.target.value))
                             }
                           >
-                            {[1, 2, 3, 4].map((d) => (
+                            {mergeSelectedDrawerId(
+                              r.student.room,
+                              r.student.cabinet,
+                              r.student.drawer
+                            ).map((d) => (
                               <option key={d} value={d}>
                                 {d}
                               </option>
@@ -558,14 +594,15 @@ export default function ScanUploadTab({
                   </label>
                   <select
                     className={`form-select ${ring("room")}`}
-                    value={newRec.room}
+                    value={String(newRec.room || "")}
                     onChange={(e) => {
                       clearUploadFieldError?.("room");
-                      setNewRec((p) => ({ ...p, room: e.target.value }));
+                      const nextRoom = e.target.value ? parseInt(e.target.value, 10) : "";
+                      setNewRec((p) => ({ ...p, room: nextRoom, cabinet: "", drawer: "" }));
                     }}
                   >
                     <option value="">Room...</option>
-                    {rooms.map((r) => (
+                    {roomOptions.map((r) => (
                       <option key={r} value={r}>
                         {r}
                       </option>
@@ -581,11 +618,11 @@ export default function ScanUploadTab({
                     value={newRec.cabinet}
                     onChange={(e) => {
                       clearUploadFieldError?.("cabinet");
-                      setNewRec((p) => ({ ...p, cabinet: e.target.value }));
+                      setNewRec((p) => ({ ...p, cabinet: e.target.value, drawer: "" }));
                     }}
                   >
                     <option value="">Cab...</option>
-                    {cabinets.map((c) => (
+                    {mergeSelectedCabinetId(newRec.room, newRec.cabinet).map((c) => (
                       <option key={c} value={c}>
                         {c}
                       </option>
@@ -598,14 +635,14 @@ export default function ScanUploadTab({
                   </label>
                   <select
                     className={`form-select ${ring("drawer")}`}
-                    value={newRec.drawer}
+                    value={String(newRec.drawer || "")}
                     onChange={(e) => {
                       clearUploadFieldError?.("drawer");
                       setNewRec((p) => ({ ...p, drawer: e.target.value }));
                     }}
                   >
                     <option value="">D...</option>
-                    {[1, 2, 3, 4].map((d) => (
+                    {mergeSelectedDrawerId(newRec.room, newRec.cabinet, newRec.drawer).map((d) => (
                       <option key={d} value={d}>
                         {d}
                       </option>
@@ -695,7 +732,7 @@ export default function ScanUploadTab({
                         onChange={(e) => setCsvBulkRoom(e.target.value)}
                       >
                         <option value="">No change</option>
-                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((r) => (
+                        {roomOptions.map((r) => (
                           <option key={r} value={String(r)}>
                             {r}
                           </option>
@@ -713,11 +750,22 @@ export default function ScanUploadTab({
                         onChange={(e) => setCsvBulkCabinet(e.target.value)}
                       >
                         <option value="">No change</option>
-                        {cabinets.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
+                        {(() => {
+                          const bulkRoomId = coerceRoomId(csvBulkRoom);
+                          const roomCabs = bulkRoomId
+                            ? getCabinetsForRoom(bulkRoomId).map((c) => c.id)
+                            : [];
+                          const allCabs =
+                            storageLayout?.rooms
+                              ?.flatMap((r) => r.cabinets.map((c) => c.id))
+                              .filter(Boolean) || [];
+                          const ids = roomCabs.length ? roomCabs : Array.from(new Set(allCabs));
+                          return ids.map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ));
+                        })()}
                       </select>
                     </div>
 
@@ -731,11 +779,26 @@ export default function ScanUploadTab({
                         onChange={(e) => setCsvBulkDrawer(e.target.value)}
                       >
                         <option value="">No change</option>
-                        {[1, 2, 3, 4].map((d) => (
-                          <option key={d} value={String(d)}>
-                            {d}
-                          </option>
-                        ))}
+                        {(() => {
+                          const bulkRoomId = coerceRoomId(csvBulkRoom);
+                          const bulkCabId = String(csvBulkCabinet || "").trim();
+                          const fromCombo =
+                            bulkRoomId && bulkCabId
+                              ? getDrawerIdsFor(bulkRoomId, bulkCabId)
+                              : [];
+                          const allDrawerIds =
+                            storageLayout?.rooms
+                              ?.flatMap((r) => r.cabinets.flatMap((c) => c.drawerIds || [])) || [];
+                          const ids = fromCombo.length
+                            ? fromCombo
+                            : Array.from(new Set(allDrawerIds));
+                          ids.sort((a, b) => a - b);
+                          return ids.map((d) => (
+                            <option key={d} value={String(d)}>
+                              {d}
+                            </option>
+                          ));
+                        })()}
                       </select>
                     </div>
                   </div>

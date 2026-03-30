@@ -3,6 +3,8 @@ import { getDb } from "../../../../lib/sqlite";
 import fs from "node:fs";
 import path from "node:path";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
+import { buildDefaultStorageLayout } from "../../../../lib/storageLayoutDefaults";
+import { hashPasswordForStorage } from "../../../../lib/staffRepo";
 
 export const runtime = "nodejs";
 
@@ -44,6 +46,56 @@ export async function GET(req) {
 
     // Set schema version back to 1
     db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '1')");
+
+    // Seed default storage layout (SLV)
+    try {
+      const layout = buildDefaultStorageLayout();
+      const json = JSON.stringify(layout).replace(/'/g, "''");
+      db.exec(
+        `INSERT OR REPLACE INTO settings (key, value) VALUES ('storage_layout', '${json}')`
+      );
+    } catch (e) {
+      // If defaults fail for any reason, still allow reset to succeed.
+      console.error("Failed to seed storage_layout defaults:", e?.message || e);
+    }
+
+    // Seed default Admin staff account (bootstrap)
+    try {
+      const id = "admin.eli@pup.local";
+      const fname = "System";
+      const lname = "Administrator";
+      const role = "Admin";
+      const section = "Administrative";
+      const status = "Active";
+      const email = "admin.eli@pup.local";
+      const passwordHash = hashPasswordForStorage("pupstaff").replace(/'/g, "''");
+      const idEsc = id.replace(/'/g, "''");
+      const fnameEsc = fname.replace(/'/g, "''");
+      const lnameEsc = lname.replace(/'/g, "''");
+      const roleEsc = role.replace(/'/g, "''");
+      const sectionEsc = section.replace(/'/g, "''");
+      const statusEsc = status.replace(/'/g, "''");
+      const emailEsc = email.replace(/'/g, "''");
+
+      db.exec(`
+        INSERT INTO staff (
+          id, fname, lname, role, section, status, email, last_active, password_hash, updated_at
+        ) VALUES (
+          '${idEsc}',
+          '${fnameEsc}',
+          '${lnameEsc}',
+          '${roleEsc}',
+          '${sectionEsc}',
+          '${statusEsc}',
+          '${emailEsc}',
+          datetime('now'),
+          '${passwordHash}',
+          datetime('now')
+        );
+      `);
+    } catch (e) {
+      console.error("Failed to seed admin staff account:", e?.message || e);
+    }
     
     // Export and persist the empty database
     const bytes = db.export();
