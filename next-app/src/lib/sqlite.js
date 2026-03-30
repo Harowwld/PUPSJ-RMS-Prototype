@@ -42,6 +42,7 @@ export async function getDb() {
         db = new SQL.Database();
       }
       global.sqliteDb = db;
+      db.exec("PRAGMA foreign_keys = ON");
 
       // Initial Schema
       db.exec(`
@@ -58,7 +59,10 @@ export async function getDb() {
           reviewed_by TEXT,
           reviewed_at TEXT,
           review_note TEXT,
-          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY (student_no) REFERENCES students(student_no) ON UPDATE CASCADE ON DELETE RESTRICT,
+          FOREIGN KEY (doc_type) REFERENCES document_types(name) ON UPDATE CASCADE ON DELETE RESTRICT,
+          FOREIGN KEY (reviewed_by) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE SET NULL
         );
 
         CREATE TABLE IF NOT EXISTS document_types (
@@ -79,7 +83,8 @@ export async function getDb() {
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           name TEXT NOT NULL UNIQUE,
           course_code TEXT,
-          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY (course_code) REFERENCES courses(code) ON UPDATE CASCADE ON DELETE SET NULL
         );
 
         CREATE TABLE IF NOT EXISTS students (
@@ -92,7 +97,9 @@ export async function getDb() {
           cabinet TEXT NOT NULL,
           drawer INTEGER NOT NULL,
           status TEXT NOT NULL DEFAULT 'Active',
-          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+          created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          FOREIGN KEY (course_code) REFERENCES courses(code) ON UPDATE CASCADE ON DELETE RESTRICT,
+          FOREIGN KEY (section) REFERENCES sections(name) ON UPDATE CASCADE ON DELETE RESTRICT
         );
 
         CREATE TABLE IF NOT EXISTS staff (
@@ -254,6 +261,179 @@ export async function getDb() {
         persistDb();
       }
 
+      if (schemaVersion < 4) {
+        try {
+          db.exec("PRAGMA foreign_keys = OFF");
+          db.exec(`
+            BEGIN;
+
+            UPDATE students
+            SET
+              course_code = UPPER(TRIM(COALESCE(course_code, ''))),
+              section = TRIM(COALESCE(section, ''));
+
+            UPDATE documents
+            SET
+              student_no = TRIM(COALESCE(student_no, '')),
+              doc_type = TRIM(COALESCE(doc_type, '')),
+              reviewed_by = NULLIF(TRIM(COALESCE(reviewed_by, '')), '');
+
+            INSERT OR IGNORE INTO courses(code, name)
+            SELECT DISTINCT UPPER(TRIM(course_code)), UPPER(TRIM(course_code))
+            FROM students
+            WHERE TRIM(COALESCE(course_code, '')) <> '';
+
+            INSERT OR IGNORE INTO courses(code, name) VALUES ('UNKN', 'Unknown');
+            INSERT OR IGNORE INTO sections(name, course_code) VALUES ('UNASSIGNED', 'UNKN');
+
+            UPDATE students
+            SET course_code = 'UNKN'
+            WHERE TRIM(COALESCE(course_code, '')) = '';
+
+            UPDATE students
+            SET section = 'UNASSIGNED'
+            WHERE TRIM(COALESCE(section, '')) = '';
+
+            INSERT OR IGNORE INTO sections(name, course_code)
+            SELECT DISTINCT
+              TRIM(section),
+              CASE
+                WHEN TRIM(COALESCE(course_code, '')) = '' THEN 'UNKN'
+                ELSE UPPER(TRIM(course_code))
+              END
+            FROM students
+            WHERE TRIM(COALESCE(section, '')) <> '';
+
+            UPDATE sections
+            SET course_code = NULL
+            WHERE TRIM(COALESCE(course_code, '')) <> ''
+              AND NOT EXISTS (
+                SELECT 1 FROM courses c WHERE c.code = sections.course_code
+              );
+
+            INSERT OR IGNORE INTO document_types(name, name_norm)
+            SELECT DISTINCT
+              TRIM(doc_type),
+              lower(trim(doc_type))
+            FROM documents
+            WHERE TRIM(COALESCE(doc_type, '')) <> '';
+
+            INSERT OR IGNORE INTO students (
+              student_no, name, course_code, year_level, section, room, cabinet, drawer, status, created_at
+            )
+            SELECT DISTINCT
+              d.student_no,
+              COALESCE(NULLIF(TRIM(d.student_name), ''), 'UNKNOWN'),
+              'UNKN',
+              2000,
+              'UNASSIGNED',
+              1,
+              'A',
+              1,
+              'Active',
+              datetime('now')
+            FROM documents d
+            LEFT JOIN students s ON s.student_no = d.student_no
+            WHERE s.student_no IS NULL
+              AND TRIM(COALESCE(d.student_no, '')) <> '';
+
+            UPDATE documents
+            SET reviewed_by = NULL
+            WHERE reviewed_by IS NOT NULL
+              AND NOT EXISTS (SELECT 1 FROM staff st WHERE st.id = documents.reviewed_by);
+
+            CREATE TABLE sections_new (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL UNIQUE,
+              course_code TEXT,
+              created_at TEXT NOT NULL DEFAULT (datetime('now')),
+              FOREIGN KEY (course_code) REFERENCES courses(code) ON UPDATE CASCADE ON DELETE SET NULL
+            );
+
+            INSERT INTO sections_new (id, name, course_code, created_at)
+            SELECT id, name, course_code, created_at FROM sections;
+
+            DROP TABLE sections;
+            ALTER TABLE sections_new RENAME TO sections;
+
+            CREATE TABLE students_new (
+              student_no TEXT PRIMARY KEY,
+              name TEXT NOT NULL,
+              course_code TEXT NOT NULL,
+              year_level INTEGER NOT NULL,
+              section TEXT NOT NULL,
+              room INTEGER NOT NULL,
+              cabinet TEXT NOT NULL,
+              drawer INTEGER NOT NULL,
+              status TEXT NOT NULL DEFAULT 'Active',
+              created_at TEXT NOT NULL DEFAULT (datetime('now')),
+              FOREIGN KEY (course_code) REFERENCES courses(code) ON UPDATE CASCADE ON DELETE RESTRICT,
+              FOREIGN KEY (section) REFERENCES sections(name) ON UPDATE CASCADE ON DELETE RESTRICT
+            );
+
+            INSERT INTO students_new (
+              student_no, name, course_code, year_level, section, room, cabinet, drawer, status, created_at
+            )
+            SELECT
+              student_no, name, course_code, year_level, section, room, cabinet, drawer, status, created_at
+            FROM students;
+
+            DROP TABLE students;
+            ALTER TABLE students_new RENAME TO students;
+
+            CREATE TABLE documents_new (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              student_no TEXT NOT NULL,
+              student_name TEXT,
+              doc_type TEXT NOT NULL,
+              original_filename TEXT NOT NULL,
+              storage_filename TEXT NOT NULL,
+              mime_type TEXT NOT NULL,
+              size_bytes INTEGER NOT NULL,
+              approval_status TEXT NOT NULL DEFAULT 'Pending',
+              reviewed_by TEXT,
+              reviewed_at TEXT,
+              review_note TEXT,
+              created_at TEXT NOT NULL DEFAULT (datetime('now')),
+              FOREIGN KEY (student_no) REFERENCES students(student_no) ON UPDATE CASCADE ON DELETE RESTRICT,
+              FOREIGN KEY (doc_type) REFERENCES document_types(name) ON UPDATE CASCADE ON DELETE RESTRICT,
+              FOREIGN KEY (reviewed_by) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE SET NULL
+            );
+
+            INSERT INTO documents_new (
+              id, student_no, student_name, doc_type, original_filename, storage_filename,
+              mime_type, size_bytes, approval_status, reviewed_by, reviewed_at, review_note, created_at
+            )
+            SELECT
+              id, student_no, student_name, doc_type, original_filename, storage_filename,
+              mime_type, size_bytes, approval_status, reviewed_by, reviewed_at, review_note, created_at
+            FROM documents;
+
+            DROP TABLE documents;
+            ALTER TABLE documents_new RENAME TO documents;
+
+            CREATE INDEX IF NOT EXISTS idx_documents_student_no ON documents(student_no);
+            CREATE INDEX IF NOT EXISTS idx_documents_doc_type ON documents(doc_type);
+            CREATE INDEX IF NOT EXISTS idx_documents_created_at ON documents(created_at);
+            CREATE INDEX IF NOT EXISTS idx_documents_approval_status ON documents(approval_status);
+            CREATE INDEX IF NOT EXISTS idx_document_types_name ON document_types(name);
+            CREATE INDEX IF NOT EXISTS idx_document_types_name_norm ON document_types(name_norm);
+            CREATE INDEX IF NOT EXISTS idx_students_course_year_section ON students(course_code, year_level, section);
+            CREATE INDEX IF NOT EXISTS idx_students_name ON students(name);
+            CREATE INDEX IF NOT EXISTS idx_sections_course_code ON sections(course_code);
+
+            INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '4');
+            COMMIT;
+          `);
+          persistDb();
+        } catch (e) {
+          try { db.exec("ROLLBACK"); } catch (_) {}
+          throw e;
+        } finally {
+          try { db.exec("PRAGMA foreign_keys = ON"); } catch (_) {}
+        }
+      }
+
       // Safety net for environments where schema_version may be out of sync.
       // This ensures review columns exist before any API query references them.
       try {
@@ -292,6 +472,12 @@ export async function getDb() {
         persistDb();
       } catch (e) {
         // ignore sections safety-net errors
+      }
+
+      try {
+        db.exec("PRAGMA foreign_keys = ON");
+      } catch (e) {
+        // ignore foreign key pragma errors
       }
 
       initializing = null;
