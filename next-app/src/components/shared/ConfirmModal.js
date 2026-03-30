@@ -5,7 +5,9 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 export default function ConfirmModal({
@@ -23,59 +25,72 @@ export default function ConfirmModal({
 
   const variantClasses = {
     danger: {
-      bg: "bg-red-50/50",
-      text: "text-red-700",
-      icon: "ph-bold ph-warning-circle",
-      iconBg: "bg-red-100",
-      iconText: "text-red-600",
-      btn: "bg-red-600 hover:bg-red-700",
+      icon: "ph-duotone ph-warning-circle",
+      iconWrap: "bg-red-50 border-red-100 text-red-600 shadow-sm",
+      title: "text-gray-900",
+      description: "text-gray-600",
+      confirmVariant: "destructive",
     },
     warning: {
-      bg: "bg-amber-50/50",
-      text: "text-amber-700",
-      icon: "ph-bold ph-warning-circle",
-      iconBg: "bg-amber-100",
-      iconText: "text-amber-600",
-      btn: "bg-amber-600 hover:bg-amber-700",
+      icon: "ph-duotone ph-warning",
+      iconWrap: "bg-amber-50 border-amber-100 text-amber-600 shadow-sm",
+      title: "text-gray-900",
+      description: "text-gray-600",
+      confirmVariant: "secondary",
+    },
+    default: {
+      icon: "ph-duotone ph-info",
+      iconWrap: "bg-blue-50 border-blue-100 text-blue-600 shadow-sm",
+      title: "text-gray-900",
+      description: "text-gray-600",
+      confirmVariant: "default",
     },
   };
 
-  const v = variantClasses[variant] || variantClasses.danger;
+  const v = variantClasses[variant] || variantClasses.default;
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white sm:rounded-sm rounded-sm border-gray-200 shadow-xl">
-        <DialogHeader className={`p-6 border-b border-gray-200 flex flex-row justify-between items-center space-y-0 ${v.bg}`}>
-          <DialogTitle className={`font-bold text-lg flex items-center gap-2 ${v.text}`}>
-            <i className={v.icon}></i> {title}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="p-8">
-          <div className="flex flex-col items-center text-center">
-            <div className={`w-16 h-16 ${v.iconBg} ${v.iconText} rounded-full flex items-center justify-center mb-4`}>
-              <i className={`${v.icon.replace('ph-bold', 'ph-fill')} text-3xl`}></i>
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
+        <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+          <div className="flex items-start gap-4">
+            <div className={`w-12 h-12 rounded-full border flex items-center justify-center shrink-0 ${v.iconWrap}`}>
+              <i className={`${v.icon} text-2xl`}></i>
             </div>
-            <p className="text-gray-500 text-sm mb-6 leading-relaxed">
-              {message}
-            </p>
-
-            <div className="w-full flex gap-3 mt-2">
-              <Button
-                variant="outline"
-                onClick={onCancel}
-                className="flex-1 h-11 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50"
-              >
-                {cancelLabel}
-              </Button>
-              <Button
-                onClick={onConfirm}
-                disabled={isLoading}
-                className={`flex-1 h-11 text-sm font-bold text-white transition-all shadow-md hover:shadow-lg ${v.btn}`}
-              >
-                {isLoading ? "Processing..." : confirmLabel}
-              </Button>
+            <div className="min-w-0">
+              <DialogTitle className={`text-lg font-black tracking-tight leading-tight ${v.title}`}>
+                {title}
+              </DialogTitle>
+              <DialogDescription className={`text-sm font-medium mt-1.5 leading-relaxed ${v.description}`}>
+                {message}
+              </DialogDescription>
             </div>
           </div>
+        </DialogHeader>
+
+        <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onCancel}
+            className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+            disabled={isLoading}
+          >
+            {cancelLabel}
+          </Button>
+          <Button
+            type="button"
+            variant={v.confirmVariant}
+            onClick={onConfirm}
+            disabled={isLoading}
+            className={cn(
+              "h-11 px-6 text-sm font-bold shadow-sm rounded-brand",
+              v.confirmVariant === "default" && "bg-pup-maroon hover:bg-red-900 text-white",
+              v.confirmVariant === "destructive" && "bg-red-600 hover:bg-red-700 text-white"
+            )}
+          >
+            {isLoading ? "Processing..." : confirmLabel}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

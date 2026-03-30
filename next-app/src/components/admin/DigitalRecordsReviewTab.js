@@ -70,11 +70,19 @@ export default function DigitalRecordsReviewTab({
                 </tr>
               ) : records.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={7}
-                    className="p-8 text-center text-sm text-gray-500"
-                  >
-                    No records found for this status.
+                  <td colSpan={7} className="p-0">
+                    <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
+                      <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                        <i className="ph-duotone ph-stack text-3xl text-pup-maroon"></i>
+                      </div>
+                      <div className="text-lg font-bold text-gray-900">
+                        No records for review
+                      </div>
+                      <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                        We couldn&apos;t find any digital records matching your
+                        current filter criteria.
+                      </div>
+                    </div>
                   </td>
                 </tr>
               ) : (

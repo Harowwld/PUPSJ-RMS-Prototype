@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent , DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 
 export default function DocumentsTab({
@@ -277,71 +277,91 @@ export default function DocumentsTab({
           }
         }}
       >
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white sm:rounded-sm rounded-sm border-gray-200 shadow-xl">
-          <DialogHeader className="p-5 border-b border-gray-200 bg-gray-50/60 flex flex-row items-center justify-between space-y-0">
-            <DialogTitle className="font-bold text-pup-maroon">Update Document Metadata</DialogTitle>
-          </DialogHeader>
-          <div className="p-5">
-            <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-              Student No
-            </label>
-            <input
-              className="form-input mb-3"
-              value={updateStudentNo}
-              onChange={(e) => setUpdateStudentNo(e.target.value)}
-            />
-            <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-              Student Name
-            </label>
-            <input
-              className="form-input mb-3"
-              value={updateStudentName}
-              onChange={(e) => setUpdateStudentName(e.target.value)}
-            />
-            <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-              Document Type
-            </label>
-            <input
-              className="form-input"
-              value={updateDocType}
-              onChange={(e) => setUpdateDocType(e.target.value)}
-            />
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setUpdatePromptOpen(false);
-                  setUpdateTargetId(null);
-                }}
-                className="px-4 h-11 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={async () => {
-                  if (!updateTargetId) return;
-                  await updateDoc(updateTargetId, {
-                    studentNo: String(updateStudentNo).trim(),
-                    studentName: String(updateStudentName).trim(),
-                    docType: String(updateDocType).trim(),
-                  });
-                  setUpdatePromptOpen(false);
-                  setUpdateTargetId(null);
-                }}
-                className="px-4 h-11 rounded-brand bg-pup-maroon text-white font-bold text-sm hover:bg-red-900"
-              >
-                Save
-              </button>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
+          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
+                <i className="ph-duotone ph-pencil-line text-2xl"></i>
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-lg font-black tracking-tight text-gray-900">
+                  Edit Document Metadata
+                </DialogTitle>
+                <DialogDescription className="text-sm font-medium mt-1 text-gray-600">
+                  Update student details and document type to ensure this record remains searchable and properly indexed.
+                </DialogDescription>
+              </div>
             </div>
+          </DialogHeader>
+
+          <div className="p-6 space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                Student Number
+              </label>
+              <input
+                className="form-input rounded-brand"
+                value={updateStudentNo}
+                onChange={(e) => setUpdateStudentNo(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                Student Name
+              </label>
+              <input
+                className="form-input rounded-brand"
+                value={updateStudentName}
+                onChange={(e) => setUpdateStudentName(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                Document Type
+              </label>
+              <input
+                className="form-input rounded-brand"
+                value={updateDocType}
+                onChange={(e) => setUpdateDocType(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                setUpdatePromptOpen(false);
+                setUpdateTargetId(null);
+              }}
+              className="px-4 h-11 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!updateTargetId) return;
+                await updateDoc(updateTargetId, {
+                  studentNo: String(updateStudentNo).trim(),
+                  studentName: String(updateStudentName).trim(),
+                  docType: String(updateDocType).trim(),
+                });
+                setUpdatePromptOpen(false);
+                setUpdateTargetId(null);
+              }}
+              className="px-4 h-11 rounded-brand bg-pup-maroon text-white font-bold text-sm hover:bg-red-900"
+            >
+              Save Changes
+            </button>
           </div>
         </DialogContent>
       </Dialog>
       <ConfirmModal
         open={deleteOpen}
-        title="Delete Document"
-        message={`Delete "${deleteTarget?.original_filename || "this document"}"? This action cannot be undone.`}
-        confirmLabel="Delete"
+        title="Delete Digital Record"
+        message={`Permanently remove ${deleteTarget?.original_filename}? This file cannot be recovered once deleted.`}
+        confirmLabel="Destroy Record"
         onConfirm={async () => {
           if (!deleteTarget?.id) return;
           await deleteDoc(deleteTarget.id);

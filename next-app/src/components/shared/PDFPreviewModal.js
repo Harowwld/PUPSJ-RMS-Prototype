@@ -17,18 +17,18 @@ export default function PDFPreviewModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-5xl h-[90vh] p-0 flex flex-col overflow-hidden sm:rounded-sm rounded-sm border-none shadow-2xl">
-        <DialogHeader className="p-4 border-b border-gray-200 bg-gray-50 flex flex-row items-center space-y-0">
-          <div className="flex items-center gap-3">
-            <div className="bg-red-50 p-2 rounded-brand border border-red-100">
-              <i className="ph-fill ph-file-pdf text-2xl text-pup-maroon"></i>
+      <DialogContent className="max-w-5xl h-[90vh] p-0 flex flex-col overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
+        <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-full border border-blue-100 bg-blue-50 text-blue-700 shadow-sm flex items-center justify-center shrink-0">
+              <i className="ph-duotone ph-info text-2xl"></i>
             </div>
-            <div>
-              <DialogTitle className="font-bold text-pup-maroon text-lg leading-tight text-left">
-                {preview.docType}
+            <div className="min-w-0">
+              <DialogTitle className="text-lg font-black tracking-tight text-gray-900 text-left">
+                Preview Document: {preview.docType}
               </DialogTitle>
-              <p className="text-sm text-gray-700 font-medium text-left">
-                {preview.studentName}
+              <p className="text-sm font-medium mt-1 text-gray-600 text-left">
+                Reviewing {preview.docType} for {preview.studentName}. Ensure the content is legible and correct.
               </p>
             </div>
           </div>
@@ -44,7 +44,7 @@ export default function PDFPreviewModal({
                 asChild
                 variant="outline"
                 size="sm"
-                className="font-bold text-xs text-gray-700 border-gray-300 hover:text-pup-maroon hover:bg-red-50 shadow-sm"
+                className="font-bold text-xs text-gray-700 border-gray-300 hover:text-pup-maroon hover:bg-red-50 shadow-sm h-11 px-5 rounded-brand"
               >
                 <a
                   href={`/api/documents/${preview.docId}`}

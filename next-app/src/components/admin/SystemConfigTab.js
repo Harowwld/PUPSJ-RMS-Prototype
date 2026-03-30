@@ -14,6 +14,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 export default function SystemConfigTab({ showToast, logAdminAction }) {
@@ -691,39 +692,51 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
       />
 
       <Dialog open={isAddDocTypeOpen} onOpenChange={setIsAddDocTypeOpen}>
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white sm:rounded-sm rounded-sm border-gray-200">
-          <DialogHeader className="p-5 border-b border-gray-200 bg-gray-50/60 flex flex-row items-center justify-between space-y-0">
-            <DialogTitle className="font-bold text-pup-maroon">
-              Add New Document Type
-            </DialogTitle>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
+          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
+                <i className="ph-duotone ph-pencil-line text-2xl"></i>
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-lg font-black tracking-tight text-gray-900">
+                  Create Document Type
+                </DialogTitle>
+                <DialogDescription className="text-sm font-medium mt-1 text-gray-600">
+                  Create a new classification category to organize uploaded records and improve retrieval efficiency.
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
-          <form onSubmit={addDocType} className="p-5">
-            <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-              Document Type Name <span className="text-pup-maroon">*</span>
-            </label>
-            <Input
-              type="text"
-              placeholder="E.g. Birth Certificate"
-              className="w-full h-10 shadow-sm bg-white mb-6"
-              value={dtName}
-              onChange={(e) => setDtName(e.target.value)}
-              autoFocus
-              required
-            />
-            <div className="flex justify-end gap-2">
+          <form onSubmit={addDocType}>
+            <div className="p-6">
+              <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                Document Type Name <span className="text-pup-maroon">*</span>
+              </label>
+              <Input
+                type="text"
+                placeholder="E.g. Birth Certificate, Transcript of Records"
+                className="w-full h-11 shadow-sm bg-white rounded-brand"
+                value={dtName}
+                onChange={(e) => setDtName(e.target.value)}
+                autoFocus
+                required
+              />
+            </div>
+            <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsAddDocTypeOpen(false)}
-                className="h-10 px-5 text-sm font-bold border-gray-300 text-gray-700"
+                className="h-11 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="bg-pup-maroon text-white h-10 px-6 font-bold shadow-sm hover:bg-red-900 transition-colors"
+                className="h-11 px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
               >
-                Save
+                Save Document Type
               </Button>
             </div>
           </form>
@@ -731,54 +744,66 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
       </Dialog>
 
       <Dialog open={isAddCourseOpen} onOpenChange={setIsAddCourseOpen}>
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white sm:rounded-sm rounded-sm border-gray-200">
-          <DialogHeader className="p-5 border-b border-gray-200 bg-gray-50/60 flex flex-row items-center justify-between space-y-0">
-            <DialogTitle className="font-bold text-pup-maroon">
-              Add New Degree Program
-            </DialogTitle>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
+          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
+                <i className="ph-duotone ph-pencil-line text-2xl"></i>
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-lg font-black tracking-tight text-gray-900">
+                  Create Degree Program
+                </DialogTitle>
+                <DialogDescription className="text-sm font-medium mt-1 text-gray-600">
+                  Register a new academic program with its official code and designation for proper student categorization.
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
-          <form onSubmit={addCourse} className="p-5">
-            <div className="mb-4">
-              <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-                Short Code <span className="text-pup-maroon">*</span>
-              </label>
-              <Input
-                type="text"
-                placeholder="E.g. BSIT"
-                className="w-full h-10 shadow-sm bg-white"
-                value={cCode}
-                onChange={(e) => setCCode(e.target.value)}
-                autoFocus
-                required
-              />
+          <form onSubmit={addCourse}>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                  Short Code <span className="text-pup-maroon">*</span>
+                </label>
+                <Input
+                  type="text"
+                  placeholder="E.g. BSIT, BSCS, BSBA"
+                  className="w-full h-11 shadow-sm bg-white rounded-brand"
+                  value={cCode}
+                  onChange={(e) => setCCode(e.target.value)}
+                  autoFocus
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                  Full Designation <span className="text-pup-maroon">*</span>
+                </label>
+                <Input
+                  type="text"
+                  placeholder="E.g. Bachelor of Science in Information Technology"
+                  className="w-full h-11 shadow-sm bg-white rounded-brand"
+                  value={cName}
+                  onChange={(e) => setCName(e.target.value)}
+                  required
+                />
+              </div>
             </div>
-            <div className="mb-6">
-              <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-                Full Designation <span className="text-pup-maroon">*</span>
-              </label>
-              <Input
-                type="text"
-                placeholder="E.g. Bachelor of Science in Information Technology"
-                className="w-full h-10 shadow-sm bg-white"
-                value={cName}
-                onChange={(e) => setCName(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex justify-end gap-2">
+            <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsAddCourseOpen(false)}
-                className="h-10 px-5 text-sm font-bold border-gray-300 text-gray-700"
+                className="h-11 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="bg-pup-maroon text-white h-10 px-6 font-bold shadow-sm hover:bg-red-900 transition-colors"
+                className="h-11 px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
               >
-                Save
+                Save Program
               </Button>
             </div>
           </form>
@@ -786,60 +811,72 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
       </Dialog>
 
       <Dialog open={isAddSectionOpen} onOpenChange={setIsAddSectionOpen}>
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white sm:rounded-sm rounded-sm border-gray-200">
-          <DialogHeader className="p-5 border-b border-gray-200 bg-gray-50/60 flex flex-row items-center justify-between space-y-0">
-            <DialogTitle className="font-bold text-pup-maroon">
-              Add New Course Block
-            </DialogTitle>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
+          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
+                <i className="ph-duotone ph-pencil-line text-2xl"></i>
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-lg font-black tracking-tight text-gray-900">
+                  Create Course Block
+                </DialogTitle>
+                <DialogDescription className="text-sm font-medium mt-1 text-gray-600">
+                  Define a new course section or block to organize student records by cohort and facilitate batch management.
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
-          <form onSubmit={addSection} className="p-5">
-            <div className="mb-4">
-              <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-                Degree Program <span className="text-pup-maroon">*</span>
-              </label>
-              <select
-                className="w-full flex h-10 rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 font-medium"
-                value={secCourseCode}
-                onChange={(e) => setSecCourseCode(e.target.value)}
-                required
-              >
-                <option value="" disabled>
-                  Select Degree Program...
-                </option>
-                {courses.map((c) => (
-                  <option key={c.code} value={c.code}>
-                    {c.code} - {c.name}
+          <form onSubmit={addSection}>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                  Degree Program <span className="text-pup-maroon">*</span>
+                </label>
+                <select
+                  className="w-full flex h-11 rounded-brand border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 font-medium"
+                  value={secCourseCode}
+                  onChange={(e) => setSecCourseCode(e.target.value)}
+                  required
+                >
+                  <option value="" disabled>
+                    Select Degree Program...
                   </option>
-                ))}
-              </select>
+                  {courses.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.code} - {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                  Block Identifier <span className="text-pup-maroon">*</span>
+                </label>
+                <Input
+                  type="text"
+                  placeholder="E.g. Block 1, Section A, Group 2024"
+                  className="w-full h-11 shadow-sm bg-white rounded-brand"
+                  value={secName}
+                  onChange={(e) => setSecName(e.target.value)}
+                  required
+                />
+              </div>
             </div>
-            <div className="mb-6">
-              <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-                Block Identifier <span className="text-pup-maroon">*</span>
-              </label>
-              <Input
-                type="text"
-                placeholder="E.g. Block 1, Section A"
-                className="w-full h-10 shadow-sm bg-white"
-                value={secName}
-                onChange={(e) => setSecName(e.target.value)}
-                required
-              />
-            </div>
-            <div className="flex justify-end gap-2">
+            <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsAddSectionOpen(false)}
-                className="h-10 px-5 text-sm font-bold border-gray-300 text-gray-700"
+                className="h-11 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="bg-pup-maroon text-white h-10 px-6 font-bold shadow-sm hover:bg-red-900 transition-colors"
+                className="h-11 px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
               >
-                Save
+                Save Block
               </Button>
             </div>
           </form>

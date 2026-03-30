@@ -329,38 +329,37 @@ export default function StaffDirectoryTab({
           </CardContent>
 
           {filteredStaff.length > 0 && (
-            <div className="p-3 border-t border-gray-100 bg-gray-50 text-xs font-medium text-gray-500 flex justify-between items-center px-6 shrink-0">
-              <span>
+            <div className="p-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between px-6 shrink-0">
+              <div className="text-xs font-medium text-gray-500">
                 Showing {(displayPage - 1) * itemsPerPage + 1}-
                 {Math.min(displayPage * itemsPerPage, filteredStaff.length)} of{" "}
                 <strong className="text-gray-900">
                   {filteredStaff.length}
                 </strong>{" "}
                 personnel records
-              </span>
+              </div>
+
               <div className="flex items-center gap-2">
-                <span className="mr-2 hidden sm:inline-block">
-                  Page {displayPage} of {totalPages}
-                </span>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 px-3 text-xs bg-white text-gray-700 font-bold hover:bg-gray-100 disabled:opacity-50 border-gray-300"
+                  disabled={displayPage <= 1}
                   onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={displayPage === 1}
+                  className="h-8 text-xs font-bold text-gray-600"
                 >
-                  Prev
+                  <i className="ph-bold ph-caret-left"></i> Previous
                 </Button>
+                <div className="px-3 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-md h-8 flex items-center justify-center min-w-12 shadow-sm">
+                  {displayPage} / {totalPages}
+                </div>
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-7 px-3 text-xs bg-white text-gray-700 font-bold hover:bg-gray-100 disabled:opacity-50 border-gray-300"
-                  onClick={() =>
-                    setCurrentPage((p) => Math.min(totalPages, p + 1))
-                  }
-                  disabled={displayPage === totalPages}
+                  disabled={displayPage >= totalPages}
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  className="h-8 text-xs font-bold text-gray-600"
                 >
-                  Next
+                  Next <i className="ph-bold ph-caret-right"></i>
                 </Button>
               </div>
             </div>

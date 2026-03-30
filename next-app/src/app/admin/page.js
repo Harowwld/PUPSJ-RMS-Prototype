@@ -756,9 +756,9 @@ export default function AdminPage() {
 
       <ConfirmModal
         open={deleteOpen}
-        title="Confirm Removal"
-        message={`Are you sure you want to remove ${deleteTarget?.fname} ${deleteTarget?.lname}? This action cannot be undone.`}
-        confirmLabel="Confirm Delete"
+        title="Remove Personnel Profile"
+        message={`This will permanently delete ${deleteTarget?.fname}'s account. This action cannot be undone.`}
+        confirmLabel="Remove Account"
         onConfirm={confirmDelete}
         onCancel={() => setDeleteOpen(false)}
         isLoading={deleteLoading}
@@ -766,9 +766,9 @@ export default function AdminPage() {
 
       <ConfirmModal
         open={backupDeleteOpen}
-        title="Confirm Backup Deletion"
-        message={`Delete backup ${backupDeleteTarget?.filename}? This cannot be undone.`}
-        confirmLabel="Confirm Delete"
+        title="Delete System Backup"
+        message={`Permanently remove ${backupDeleteTarget?.filename}? This volume cannot be recovered once destroyed.`}
+        confirmLabel="Destroy Volume"
         onConfirm={confirmDeleteBackup}
         onCancel={() => setBackupDeleteOpen(false)}
         isLoading={backupDeleteLoading}
@@ -776,10 +776,10 @@ export default function AdminPage() {
 
       <ConfirmModal
         open={restoreConfirmOpen}
-        title="Confirm System Restore"
+        title="Restore System Image"
         variant="warning"
-        message={`This will overwrite current system data with ${restoreFile?.name}. Continue?`}
-        confirmLabel="Confirm Restore"
+        message={`Overwrite all repository data with ${restoreFile?.name}? This action is irreversible.`}
+        confirmLabel="Begin Restoration"
         onConfirm={confirmRestore}
         onCancel={() => setRestoreConfirmOpen(false)}
         isLoading={restoreLoading}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 import {
   Dialog,
@@ -16,67 +16,90 @@ function studentKey(s) {
 }
 
 export default function OCRPromptModal({ open, onClose, ocrSuggestion, onConfirmStudent }) {
-  const [selectedStudentNo, setSelectedStudentNo] = useState("");
+  const [manualSelectedStudentNo, setManualSelectedStudentNo] = useState("");
 
   const nameMatches = Array.isArray(ocrSuggestion?.nameMatchesByName)
     ? ocrSuggestion.nameMatchesByName
     : [];
 
-  useEffect(() => {
-    if (!open) return;
-    if (nameMatches.length > 0) {
-      setSelectedStudentNo(studentKey(nameMatches[0]));
-    } else {
-      setSelectedStudentNo("");
-    }
-  }, [open, ocrSuggestion, nameMatches.length]);
+  const defaultSelectedStudentNo =
+    open && nameMatches.length > 0 ? studentKey(nameMatches[0]) : "";
+
+  const resolvedSelectedStudentNo = nameMatches.some(
+    (s) => studentKey(s) === manualSelectedStudentNo,
+  )
+    ? manualSelectedStudentNo
+    : defaultSelectedStudentNo;
 
   if (!open) return null;
 
   const detectedName = String(ocrSuggestion?.name || "").trim() || "(not detected)";
-  const selected = nameMatches.find((s) => studentKey(s) === selectedStudentNo);
+  const selected = nameMatches.find((s) => studentKey(s) === resolvedSelectedStudentNo);
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="sm:max-w-lg p-6 bg-white rounded-brand border-gray-300 shadow-lg max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="text-lg font-bold text-pup-maroon">
-            Same name, different student numbers
-          </DialogTitle>
-          <DialogDescription className="mt-2 text-sm text-gray-700 font-medium">
-            OCR matched multiple records for{" "}
-            <span className="font-bold text-gray-900">{detectedName}</span>. Choose which student
-            number this document belongs to. The form is already filled with the scanned name and
-            document type.
-          </DialogDescription>
+    <Dialog
+      open={open}
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          setManualSelectedStudentNo("");
+          onClose();
+        }
+      }}
+    >
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl max-h-[90vh] rounded-brand">
+        <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-full border border-blue-100 bg-blue-50 text-blue-700 shadow-sm flex items-center justify-center shrink-0">
+              <i className="ph-duotone ph-info text-2xl"></i>
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="text-lg font-black tracking-tight text-gray-900">
+                Resolve OCR Match
+              </DialogTitle>
+              <DialogDescription className="text-sm font-medium mt-1 text-gray-600">
+                Multiple students match this scan. Select the correct record to ensure accurate document association.
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <div className="mt-4 rounded-brand border border-amber-200 bg-amber-50/80 p-3 space-y-2">
-          <div className="text-xs font-bold text-amber-900">
-            Select the correct record (student number is different for each):
+        <div className="p-6">
+          <div className="mb-4">
+            <div className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">
+              Detected Name from Document
+            </div>
+            <div className="text-sm font-bold text-pup-maroon bg-red-50 border border-red-100 rounded-brand px-3 py-2">
+              {detectedName}
+            </div>
           </div>
-          <div className="flex flex-col gap-2 max-h-64 overflow-y-auto">
+
+          <div className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-2">
+            Select Correct Student Record
+          </div>
+          <div className="flex flex-col gap-2 max-h-64 overflow-y-auto rounded-brand border border-gray-200 p-2">
             {nameMatches.map((s) => {
               const id = studentKey(s);
-              const checked = selectedStudentNo === id;
+              const checked = resolvedSelectedStudentNo === id;
               return (
                 <label
                   key={id}
-                  className={`flex items-start gap-2 rounded-md border p-2 cursor-pointer text-xs ${
-                    checked ? "border-pup-maroon bg-red-50/60" : "border-gray-200 bg-white"
+                  className={`flex items-start gap-3 rounded-brand border p-3 cursor-pointer transition-colors ${
+                    checked
+                      ? "border-pup-maroon bg-red-50/60"
+                      : "border-gray-200 bg-white hover:bg-gray-50"
                   }`}
                 >
                   <input
                     type="radio"
                     name="ocr-student-pick"
-                    className="mt-0.5"
+                    className="mt-1"
                     checked={checked}
-                    onChange={() => setSelectedStudentNo(id)}
+                    onChange={() => setManualSelectedStudentNo(id)}
                   />
                   <span className="flex-1">
-                    <span className="font-mono font-bold text-gray-900">{id}</span>
+                    <span className="font-mono font-bold text-gray-900 text-sm">{id}</span>
                     <span className="block text-gray-700 font-medium">{s.name}</span>
-                    <span className="block text-gray-500">
+                    <span className="block text-gray-500 text-xs">
                       {s.courseCode || s.course_code} · Year {s.yearLevel ?? s.year_level} ·{" "}
                       {s.section}
                     </span>
@@ -87,27 +110,28 @@ export default function OCRPromptModal({ open, onClose, ocrSuggestion, onConfirm
           </div>
         </div>
 
-        <div className="mt-6 flex flex-col gap-2.5">
+        <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onClose}
+            className="h-11 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+          >
+            Cancel
+          </Button>
           <Button
             type="button"
             onClick={() => selected && onConfirmStudent(selected)}
             disabled={!selected}
-            className={`w-full h-11 rounded-brand font-bold text-sm border ${
+            className={`h-11 px-5 text-sm font-bold shadow-sm rounded-brand ${
               selected
                 ? "bg-pup-maroon text-white hover:bg-red-900"
-                : "bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed"
+                : "bg-gray-100 text-gray-400 cursor-not-allowed"
             }`}
           >
-            Use selected student
-          </button>
-          <button
-            type="button"
-            variant="ghost"
-            onClick={onClose}
-            className="w-full h-11 rounded-brand font-bold text-sm bg-white border border-gray-300 text-gray-700 hover:border-pup-maroon"
-          >
-            Cancel
-          </button>
+            <i className="ph-bold ph-check mr-1.5"></i>
+            Confirm Selection
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

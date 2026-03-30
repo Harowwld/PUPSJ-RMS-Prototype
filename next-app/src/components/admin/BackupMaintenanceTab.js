@@ -63,7 +63,7 @@ export default function BackupMaintenanceTab({
   };
 
   return (
-    <div className="h-full flex flex-col gap-6 p-6 overflow-y-auto animate-fade-in font-inter">
+    <div className="h-full flex flex-col gap-6 p-6 overflow-hidden animate-fade-in font-inter">
       <div className="flex justify-between items-end shrink-0">
         <div>
           <h2 className="text-2xl font-black text-pup-maroon tracking-tight">
@@ -81,9 +81,9 @@ export default function BackupMaintenanceTab({
         {/* LEFT COLUMN: Operations and Health Metrics */}
         <section className="w-full lg:w-[30%] flex-none flex flex-col gap-4 overflow-y-auto pr-1 h-full">
           {/* System Health Card */}
-          <Card className="flex-none bg-white rounded-brand shadow-sm border-gray-200">
-            <CardHeader className="p-5 pb-0">
-              <CardTitle className="font-bold text-gray-900 text-sm flex items-center gap-2">
+          <Card className="flex-none bg-white rounded-brand shadow-sm border border-gray-200 overflow-hidden">
+            <CardHeader className="p-4 border-b border-gray-100 bg-gray-50/50">
+              <CardTitle className="font-bold text-gray-900 text-xs flex items-center gap-2 uppercase tracking-wider">
                 <i className="ph-duotone ph-heartbeat text-pup-maroon text-lg"></i>
                 System Health
               </CardTitle>
@@ -144,22 +144,22 @@ export default function BackupMaintenanceTab({
           </Card>
 
           {/* Backup Operations Card */}
-          <Card className="flex-none bg-white rounded-brand shadow-sm border-gray-200 relative overflow-hidden group">
+          <Card className="flex-none bg-white rounded-brand shadow-sm border border-gray-200 relative overflow-hidden group">
             <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity pointer-events-none">
               <i className="ph-fill ph-database text-[8rem] text-pup-maroon -mr-4 -mt-4"></i>
             </div>
             <div className="relative z-10">
-              <CardHeader className="p-5 pb-0">
-                <CardTitle className="font-bold text-gray-900 text-sm flex items-center gap-2">
+              <CardHeader className="p-4 border-b border-gray-100 bg-gray-50/50">
+                <CardTitle className="font-bold text-gray-900 text-xs flex items-center gap-2 uppercase tracking-wider">
                   <i className="ph-duotone ph-database text-pup-maroon text-lg"></i>
                   Full System Backup
                 </CardTitle>
-                <CardDescription className="text-xs text-gray-500 mt-2 leading-relaxed font-medium">
-                  Compute a secure snapshot of both the SQL database schema and
-                  all serialized PDF records.
-                </CardDescription>
               </CardHeader>
               <CardContent className="p-5 pt-4">
+                <p className="text-[11px] text-gray-500 mb-4 leading-relaxed font-medium">
+                  Compute a secure snapshot of both the SQL database schema and
+                  all serialized PDF records.
+                </p>
                 <Button
                   onClick={onSimulateBackup}
                   className="w-full bg-pup-maroon text-white h-10 rounded-brand text-xs font-bold hover:bg-red-900 transition-colors flex items-center justify-center gap-2 shadow-sm mb-5"
@@ -201,9 +201,9 @@ export default function BackupMaintenanceTab({
           </Card>
 
           {/* Maintenance Utilities Card */}
-          <Card className="flex-1 bg-white rounded-brand shadow-sm border-gray-200">
-            <CardHeader className="p-5 pb-0">
-              <CardTitle className="font-bold text-gray-900 text-sm flex items-center gap-2">
+          <Card className="flex-none bg-white rounded-brand shadow-sm border border-gray-200 overflow-hidden mb-2">
+            <CardHeader className="p-4 border-b border-gray-100 bg-gray-50/50">
+              <CardTitle className="font-bold text-gray-900 text-xs flex items-center gap-2 uppercase tracking-wider">
                 <i className="ph-duotone ph-wrench text-pup-maroon text-lg"></i>
                 Low-Level Operations
               </CardTitle>
@@ -218,12 +218,12 @@ export default function BackupMaintenanceTab({
 
         {/* RIGHT COLUMN: History Table */}
         <section className="w-full lg:w-[70%] bg-white rounded-brand border border-gray-200 shadow-sm flex flex-col h-full overflow-hidden">
-          <div className="p-5 border-b border-gray-100 bg-gray-50/50 flex flex-none justify-between items-center">
+          <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex flex-none justify-between items-center">
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center shrink-0 border border-gray-200 shadow-sm">
-                <i className="ph-duotone ph-clock-counter-clockwise text-lg"></i>
+              <div className="w-8 h-8 rounded-full bg-white text-gray-600 flex items-center justify-center shrink-0 border border-gray-200 shadow-sm">
+                <i className="ph-duotone ph-clock-counter-clockwise text-lg text-pup-maroon"></i>
               </div>
-              <h3 className="font-bold text-sm text-gray-900 tracking-wide uppercase">
+              <h3 className="font-bold text-xs text-gray-900 tracking-wider uppercase">
                 Encrypted Backup History
               </h3>
             </div>

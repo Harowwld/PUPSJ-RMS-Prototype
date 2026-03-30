@@ -16,28 +16,29 @@ export default function EditUserModal({
   setEditForm,
   onClose,
   onSubmit,
+  isLoading = false,
 }) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl bg-gray-50 p-0 overflow-hidden border-gray-200 sm:rounded-sm rounded-sm">
-        <DialogHeader className="p-6 bg-white border-b border-gray-200 pb-5">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-full bg-red-50 text-pup-maroon flex items-center justify-center border border-red-100 shadow-sm shrink-0">
-              <i className="ph-duotone ph-pencil-simple text-xl"></i>
+     <DialogContent className="sm:max-w-3xl max-w-3xl w-full p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
+        <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
+              <i className="ph-duotone ph-user-gear text-2xl"></i>
             </div>
-            <div>
-              <DialogTitle className="text-xl font-bold text-gray-900 tracking-tight">
-                Edit Account Details
+            <div className="min-w-0">
+              <DialogTitle className="text-lg font-black tracking-tight text-gray-900 leading-tight">
+                Update Personnel Profile
               </DialogTitle>
-              <DialogDescription className="text-sm font-medium text-gray-500 mt-0.5">
-                Update staff details and access permissions.
+              <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 leading-relaxed">
+                Modify staff credentials and role assignments. Changes will sync across the repository immediately after saving.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
         <form onSubmit={onSubmit}>
-          <div className="p-8 space-y-6">
+          <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
@@ -46,7 +47,7 @@ export default function EditUserModal({
                 <Input
                   type="text"
                   required
-                  className="font-mono bg-white shadow-sm"
+                  className="font-mono bg-white shadow-sm h-11 rounded-brand border-gray-300 focus-visible:ring-pup-maroon/50"
                   placeholder="e.g. 2023-001"
                   value={editForm.id}
                   onChange={(e) =>
@@ -60,7 +61,7 @@ export default function EditUserModal({
                 </label>
                 <select
                   required
-                  className="w-full flex h-9 rounded-md border border-input bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                  className="w-full flex h-11 rounded-brand border border-gray-300 bg-white px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-pup-maroon/50 disabled:cursor-not-allowed disabled:opacity-50"
                   value={editForm.role}
                   onChange={(e) =>
                     setEditForm((f) => ({ ...f, role: e.target.value }))
@@ -83,7 +84,7 @@ export default function EditUserModal({
                 <Input
                   type="text"
                   required
-                  className="bg-white shadow-sm"
+                  className="bg-white shadow-sm h-11 rounded-brand border-gray-300 focus-visible:ring-pup-maroon/50"
                   placeholder="Juan"
                   value={editForm.fname}
                   onChange={(e) =>
@@ -98,7 +99,7 @@ export default function EditUserModal({
                 <Input
                   type="text"
                   required
-                  className="bg-white shadow-sm"
+                  className="bg-white shadow-sm h-11 rounded-brand border-gray-300 focus-visible:ring-pup-maroon/50"
                   placeholder="Dela Cruz"
                   value={editForm.lname}
                   onChange={(e) =>
@@ -110,12 +111,12 @@ export default function EditUserModal({
 
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-                Username / Email <span className="text-pup-maroon">*</span>
+                Institutional Username / Email <span className="text-pup-maroon">*</span>
               </label>
               <Input
                 type="text"
                 required
-                className="bg-white shadow-sm"
+                className="bg-white shadow-sm h-11 rounded-brand border-gray-300 focus-visible:ring-pup-maroon/50"
                 placeholder="username@pup.edu.ph"
                 value={editForm.email}
                 onChange={(e) =>
@@ -125,19 +126,23 @@ export default function EditUserModal({
             </div>
           </div>
 
-          <div className="p-4 bg-white border-t border-gray-200 flex items-center justify-end gap-2">
+          <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
+              disabled={isLoading}
+              className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="bg-pup-maroon text-white hover:bg-red-900 shadow-md flex items-center gap-2"
+              disabled={isLoading}
+              className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand"
             >
-              <i className="ph-bold ph-floppy-disk text-lg"></i> Save Changes
+              <i className="ph-bold ph-floppy-disk"></i>
+              {isLoading ? "Saving Changes..." : "Save Changes"}
             </Button>
           </div>
         </form>

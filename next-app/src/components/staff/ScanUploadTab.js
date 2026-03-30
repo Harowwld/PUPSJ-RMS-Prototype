@@ -73,7 +73,7 @@ export default function ScanUploadTab({
       </div>
 
       <div className="flex flex-col lg:flex-row flex-1 gap-4 items-stretch overflow-hidden">
-        <section className="w-full lg:w-1/2 bg-white rounded-brand border border-gray-300 flex flex-col h-full p-8 items-center justify-center shadow-sm relative">
+        <section className="w-full lg:w-[42%] bg-white rounded-brand border border-gray-300 flex flex-col h-full p-8 items-center justify-center shadow-sm relative">
         {uploadMode === "csv" ? (
           <div className="w-full h-full border border-gray-200 rounded-brand bg-white overflow-hidden flex flex-col">
             <div className="p-4 border-b border-gray-200 bg-gray-50">
@@ -325,7 +325,7 @@ export default function ScanUploadTab({
         ) : null}
       </section>
 
-      <section className="w-full lg:w-1/2 bg-white rounded-brand border border-gray-300 flex flex-col h-full shadow-sm overflow-hidden">
+      <section className="w-full lg:w-[58%] bg-white rounded-brand border border-gray-300 flex flex-col h-full shadow-sm overflow-hidden">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-pup-maroon mb-1">Tag Document</h2>
           <p className="text-sm text-gray-600">
