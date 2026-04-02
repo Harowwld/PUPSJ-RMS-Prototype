@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { io } from "socket.io-client";
 import { toast } from "sonner";
 
@@ -20,27 +20,12 @@ import BackupMaintenanceTab from "@/components/admin/BackupMaintenanceTab";
 import EditUserModal from "@/components/admin/EditUserModal";
 import SystemConfigTab from "@/components/admin/SystemConfigTab";
 import DigitalRecordsReviewTab from "@/components/admin/DigitalRecordsReviewTab";
-
-const formatPHTime = (dateString) => {
-  if (!dateString) return "—";
-  try {
-    const date = new Date(dateString.replace(" ", "T") + "Z");
-    const datePH = date.toLocaleDateString("en-PH", {
-      timeZone: "Asia/Manila",
-    });
-    const timePH = date.toLocaleTimeString("en-PH", {
-      timeZone: "Asia/Manila",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    return `${datePH}, ${timePH}`;
-  } catch {
-    return dateString;
-  }
-};
+import StorageLayoutEditorTab from "@/components/admin/StorageLayoutEditorTab";
+import { formatPHDateTime } from "@/lib/timeFormat";
 
 export default function AdminPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const loadedViewsRef = useRef({
     directory: false,
     logs: false,
@@ -66,6 +51,7 @@ export default function AdminPage() {
   const [logTotal, setLogTotal] = useState(0);
   const [logsPerPage, setLogsPerPage] = useState(20);
   const [logSearch, setLogSearch] = useState("");
+  const [logsMineOnly, setLogsMineOnly] = useState(false);
 
   const [systemHealth, setSystemHealth] = useState({
     cpu: 0,
@@ -164,8 +150,9 @@ export default function AdminPage() {
     setViewLoading((prev) => ({ ...prev, logs: true }));
     try {
       const offset = (logPage - 1) * logsPerPage;
+      const mineQuery = logsMineOnly ? "&mine=1" : "";
       const resLogs = await fetch(
-        `/api/audit-logs?limit=${logsPerPage}&offset=${offset}&search=${encodeURIComponent(logSearch)}`,
+        `/api/audit-logs?limit=${logsPerPage}&offset=${offset}&search=${encodeURIComponent(logSearch)}${mineQuery}`,
       );
       const jsonLogs = await resLogs.json();
       if (!resLogs.ok || !jsonLogs?.ok)
@@ -175,7 +162,7 @@ export default function AdminPage() {
       const rows = Array.isArray(jsonLogs.data) ? jsonLogs.data : [];
       setAuditLogs(
         rows.map((r) => ({
-          time: formatPHTime(r.created_at),
+          time: formatPHDateTime(r.created_at),
           user: r.actor,
           role: r.role,
           action: r.action,
@@ -188,7 +175,7 @@ export default function AdminPage() {
     } finally {
       setViewLoading((prev) => ({ ...prev, logs: false }));
     }
-  }, [logPage, logsPerPage, logSearch]);
+  }, [logPage, logsPerPage, logSearch, logsMineOnly]);
 
   const refreshSystemHealth = useCallback(async () => {
     try {
@@ -260,6 +247,15 @@ export default function AdminPage() {
     },
     [refreshAuditLogs, authUser],
   );
+
+  useEffect(() => {
+    const tab = String(searchParams?.get("tab") || "").trim();
+    const mine = searchParams?.get("mine") === "1";
+    const allowedTabs = new Set(["directory", "create", "logs", "system_data", "review", "system", "backup"]);
+    if (allowedTabs.has(tab)) setView(tab);
+    setLogsMineOnly(mine);
+    if (mine) setLogPage(1);
+  }, [searchParams]);
 
   useEffect(() => {
     (async () => {
@@ -526,8 +522,8 @@ export default function AdminPage() {
   };
 
   const simulateBackup = async () => {
-    showToast("Creating full system backup...", false, false);
-    try {
+    await toast.promise(
+      (async () => {
       const res = await fetch("/api/system/backup", { method: "POST" });
       const json = await res.json();
       if (!res.ok || !json?.ok)
@@ -539,11 +535,15 @@ export default function AdminPage() {
         link.download = json.data.filename;
         link.click();
       }
-      showToast("Backup created and download started!");
       refreshBackups();
-    } catch (err) {
-      showToast(err.message, true);
-    }
+      return json?.data?.filename || "backup package";
+      })(),
+      {
+        loading: "Creating full system backup...",
+        success: (filename) => `Backup ready: ${filename}`,
+        error: (err) => err?.message || "Failed to create backup",
+      }
+    );
   };
 
   const syncExternal = async (id) => {
@@ -622,6 +622,7 @@ export default function AdminPage() {
     { key: "create", label: "Register Account", iconClass: "ph-bold ph-user-plus" },
     { key: "logs", label: "Audit Logs", iconClass: "ph-bold ph-scroll" },
     { key: "system_data", label: "System Data", iconClass: "ph-bold ph-gear" },
+    { key: "storage_layout", label: "Storage Layout", iconClass: "ph-bold ph-warehouse" },
     { key: "review", label: "Digital Records Review", iconClass: "ph-bold ph-seal-check" },
     { key: "system", label: "Backup & Maintenance", iconClass: "ph-bold ph-database" },
   ];
@@ -703,6 +704,10 @@ export default function AdminPage() {
             showToast={showToast}
             logAdminAction={logAdminAction}
           />
+        )}
+
+        {view === "storage_layout" && (
+          <StorageLayoutEditorTab showToast={showToast} />
         )}
 
         {view === "review" && (

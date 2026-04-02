@@ -344,9 +344,26 @@ export default function ScanUploadTab({
 
         {ocrLoading && uploadMode === "pdf" ? (
           <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-brand">
-            <div className="w-12 h-12 rounded-full border-4 border-gray-200 border-t-pup-maroon animate-spin"></div>
-            <div className="mt-3 text-sm font-bold text-gray-800">Scanning file…</div>
-            <div className="mt-1 text-xs font-medium text-gray-600">Working offline (LAN)</div>
+            <div className="w-full max-w-md px-6">
+              <div className="text-sm font-bold text-gray-800 mb-4 text-center">
+                Scanning file…
+              </div>
+              <div className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm">
+                <div className="flex items-center justify-center gap-3">
+                  <div className="h-10 w-10 rounded-full border-2 border-pup-maroon/20 border-t-pup-maroon animate-spin"></div>
+                  <i className="ph-duotone ph-scan text-3xl text-pup-maroon animate-pulse"></i>
+                </div>
+                <div className="mt-4 h-2 w-full overflow-hidden rounded bg-gray-100">
+                  <div className="h-full w-1/2 bg-pup-maroon/80 animate-pulse"></div>
+                </div>
+                <div className="mt-3 text-xs font-medium text-gray-600 text-center">
+                  Extracting text and tags from PDF...
+                </div>
+              </div>
+              <div className="mt-4 text-xs font-medium text-gray-600 text-center">
+                Working offline (LAN)
+              </div>
+            </div>
           </div>
         ) : null}
       </section>

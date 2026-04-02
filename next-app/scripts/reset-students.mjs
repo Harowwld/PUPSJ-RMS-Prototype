@@ -15,16 +15,6 @@ import { getDb, reloadDb } from "../src/lib/sqlite.js";
 
 const SCHEMA_VERSION = "3";
 
-const DEFAULT_DOC_TYPES = [
-  "Form 137",
-  "Transcript of Records",
-  "Good Moral Certificate",
-  "Diploma",
-  "Honorable Dismissal",
-  "Medical Certificate",
-  "Birth Certificate",
-];
-
 function getLocalDir() {
   return process.env.LOCAL_DATA_DIR
     ? process.env.LOCAL_DATA_DIR
@@ -102,13 +92,6 @@ async function main() {
   db.exec(
     `INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '${SCHEMA_VERSION}')`
   );
-
-  for (const name of DEFAULT_DOC_TYPES) {
-    const nameNorm = name.trim().toLowerCase().replace(/\s+/g, " ");
-    db.exec(
-      `INSERT INTO document_types (name, name_norm) VALUES ('${name.replace(/'/g, "''")}', '${nameNorm.replace(/'/g, "''")}')`
-    );
-  }
 
   persistDatabase(db);
 

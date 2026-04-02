@@ -1,5 +1,8 @@
 import { dbAll, dbGet, dbRun } from "./sqlite.js";
-import { buildDefaultStorageLayout } from "./storageLayoutDefaults.js";
+import {
+  buildDefaultStorageLayout,
+  getDefaultDoor,
+} from "./storageLayoutDefaults.js";
 
 const STORAGE_LAYOUT_KEY = "storage_layout";
 
@@ -93,7 +96,21 @@ function normalizeStorageLayout(layoutRaw) {
 
     // Stable ordering for predictable rendering.
     cabinets.sort((a, b) => String(a.id).localeCompare(String(b.id), undefined, { numeric: true }));
-    rooms.push({ id: roomId, name: roomName || `Room ${roomId}`, cabinets });
+    const doorX = coerceFiniteNumber(r?.door?.x);
+    const doorY = coerceFiniteNumber(r?.door?.y);
+    const fallbackDoor = getDefaultDoor();
+    const door = {
+      x:
+        doorX === null
+          ? fallbackDoor.x
+          : Math.max(0, Math.min(1, doorX)),
+      y:
+        doorY === null
+          ? fallbackDoor.y
+          : Math.max(0, Math.min(1, doorY)),
+    };
+
+    rooms.push({ id: roomId, name: roomName || `Room ${roomId}`, cabinets, door });
   }
 
   if (rooms.length === 0) return null;
@@ -114,20 +131,16 @@ export async function getStorageLayout() {
   );
 
   if (!row?.value) {
-    const defaults = getDefaultStorageLayout();
-    await setStorageLayout(defaults);
-    return defaults;
+    return { version: 2, rooms: [] };
   }
 
   try {
     const parsed = JSON.parse(String(row.value));
     const normalized = normalizeStorageLayout(parsed);
-    if (!normalized) throw new Error("Invalid storage_layout; using defaults.");
+    if (!normalized) return { version: 2, rooms: [] };
     return normalized;
   } catch {
-    const defaults = getDefaultStorageLayout();
-    await setStorageLayout(defaults);
-    return defaults;
+    return { version: 2, rooms: [] };
   }
 }
 

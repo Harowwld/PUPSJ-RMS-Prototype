@@ -16,11 +16,18 @@ export async function createAuditLog({ actor, role, action, ip }) {
   return true;
 }
 
-export async function countAuditLogs(search = "") {
+export async function countAuditLogs(search = "", actorExact = "") {
   let query = `SELECT COUNT(*) as count FROM audit_logs`;
   let params = [];
 
-  if (search) {
+  if (actorExact && search) {
+    query += ` WHERE actor = ? AND (actor LIKE ? OR action LIKE ? OR ip LIKE ?)`;
+    const term = `%${search}%`;
+    params = [actorExact, term, term, term];
+  } else if (actorExact) {
+    query += ` WHERE actor = ?`;
+    params = [actorExact];
+  } else if (search) {
     query += ` WHERE actor LIKE ? OR action LIKE ? OR ip LIKE ?`;
     const term = `%${search}%`;
     params = [term, term, term];
@@ -30,7 +37,7 @@ export async function countAuditLogs(search = "") {
   return rows?.[0]?.count || 0;
 }
 
-export async function listAuditLogs({ limit = 200, offset = 0, search = "" } = {}) {
+export async function listAuditLogs({ limit = 200, offset = 0, search = "", actorExact = "" } = {}) {
   const lim = Math.min(Math.max(parseInt(limit) || 200, 1), 500);
   const off = Math.max(parseInt(offset) || 0, 0);
 
@@ -40,7 +47,14 @@ export async function listAuditLogs({ limit = 200, offset = 0, search = "" } = {
   `;
   let params = [];
 
-  if (search) {
+  if (actorExact && search) {
+    query += ` WHERE actor = ? AND (actor LIKE ? OR action LIKE ? OR ip LIKE ?)`;
+    const term = `%${search}%`;
+    params = [actorExact, term, term, term];
+  } else if (actorExact) {
+    query += ` WHERE actor = ?`;
+    params = [actorExact];
+  } else if (search) {
     query += ` WHERE actor LIKE ? OR action LIKE ? OR ip LIKE ?`;
     const term = `%${search}%`;
     params = [term, term, term];

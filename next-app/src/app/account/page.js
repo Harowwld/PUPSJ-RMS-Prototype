@@ -6,6 +6,9 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -25,6 +28,7 @@ export default function AccountPage() {
   const [pwConfirm, setPwConfirm] = useState("");
   const [pwLoading, setPwLoading] = useState(false);
   const [pwError, setPwError] = useState("");
+  const [activeTab, setActiveTab] = useState("profile");
 
   const isAdminRole = (role) => {
     const normalized = String(role || "").toLowerCase();
@@ -44,7 +48,7 @@ export default function AccountPage() {
         setAuthUser(user);
         setFname(user.fname || "");
         setLname(user.lname || "");
-        setUsername(user.username || "");
+        setUsername(user.email || user.username || "");
       } catch {
         router.push("/");
       } finally {
@@ -155,13 +159,19 @@ export default function AccountPage() {
   if (loading) {
     return (
       <div className="h-screen flex flex-col bg-gray-50/50">
-        <header className="bg-white border-b border-gray-200 h-16 flex items-center px-4">
+        <header className="bg-white border-b border-gray-200 h-16 flex items-center px-4 shrink-0">
           <Skeleton className="w-10 h-10 rounded-full" />
           <Skeleton className="w-48 h-6 ml-3" />
         </header>
-        <main className="flex-1 p-8 w-full max-w-[1000px] mx-auto space-y-8">
-          <Skeleton className="w-64 h-8" />
-          <Skeleton className="w-full h-[400px] rounded-brand" />
+        <main className="flex-1 p-8 w-full max-w-[1200px] mx-auto space-y-8">
+          <div className="flex flex-col gap-2">
+            <Skeleton className="w-64 h-8" />
+            <Skeleton className="w-96 h-4" />
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8">
+            <Skeleton className="h-[300px] rounded-brand" />
+            <Skeleton className="h-[500px] rounded-brand" />
+          </div>
         </main>
       </div>
     );
@@ -177,188 +187,265 @@ export default function AccountPage() {
     : "bg-red-50 text-pup-maroon border-red-100";
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50/50 font-inter selection:bg-pup-maroon selection:text-white pb-24">
+    <div className="min-h-screen flex flex-col bg-gray-50/30 font-inter selection:bg-pup-maroon selection:text-white">
       <Header authUser={authUser} onLogout={handleLogout} />
 
-      <main className="flex-1 w-full max-w-[760px] mx-auto py-8 px-6">
+      <main className="flex-1 w-full max-w-[1200px] mx-auto py-8 px-6">
         
         {/* Sleek Page Header */}
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-200 pb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-1">Account Settings</h1>
-            <p className="text-sm text-gray-500 font-medium">Manage your personal profile and security preferences.</p>
+            <div className="flex items-center gap-2 text-xs font-black text-pup-maroon uppercase tracking-widest mb-1">
+              <i className="ph-bold ph-gear"></i>
+              System Settings
+            </div>
+            <h1 className="text-3xl font-black text-gray-900 tracking-tight">Account Settings</h1>
+            <p className="text-sm text-gray-500 font-medium mt-1">Configure your professional identity and security protocol.</p>
           </div>
           
-          <button
+          <Button
+            variant="outline"
             onClick={() => {
               const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
               router.push(path);
             }}
-            className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-pup-maroon px-4 py-2 rounded-brand font-bold text-sm shadow-sm transition-all active:scale-[0.98] flex items-center gap-2 group shrink-0"
+            className="h-11 px-6 font-black uppercase tracking-widest text-xs border-gray-300 hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-sm flex items-center gap-2 shrink-0 rounded-brand"
           >
-            <i className="ph-bold ph-arrow-left transition-transform group-hover:-translate-x-1"></i> Back to Dashboard
-          </button>
+            <i className="ph-bold ph-arrow-left"></i> 
+            Return to Dashboard
+          </Button>
         </div>
 
-        <div className="space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
+          {/* Sidebar Navigation */}
+          <aside className="space-y-6 shrink-0">
+            <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden">
+               <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-col items-center text-center">
+                  <div className="w-16 h-16 rounded-full bg-pup-maroon text-white flex items-center justify-center text-xl font-black shadow-lg shadow-red-900/20 mb-3 border-4 border-white">
+                    {initials}
+                  </div>
+                  <h3 className="font-black text-gray-900 text-sm tracking-tight truncate w-full px-2">
+                    {fname} {lname}
+                  </h3>
+                  <div className={`mt-2 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${roleBadgeColor}`}>
+                    {authUser?.role || "User"}
+                  </div>
+               </div>
+               
+               <nav className="p-2 flex flex-col gap-1">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("profile")}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-brand text-sm font-bold transition-all ${
+                    activeTab === "profile"
+                      ? "bg-pup-maroon text-white shadow-md shadow-red-900/10"
+                      : "text-gray-600 hover:bg-red-50 hover:text-pup-maroon"
+                  }`}
+                >
+                  <i className="ph-bold ph-user-circle text-lg"></i>
+                  Profile Details
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("security")}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-brand text-sm font-bold transition-all ${
+                    activeTab === "security"
+                      ? "bg-pup-maroon text-white shadow-md shadow-red-900/10"
+                      : "text-gray-600 hover:bg-red-50 hover:text-pup-maroon"
+                  }`}
+                >
+                  <i className="ph-bold ph-shield-check text-lg"></i>
+                  Security
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push("/account/activity")}
+                  className="flex items-center gap-3 px-4 py-3 rounded-brand text-sm font-bold transition-all text-gray-600 hover:bg-red-50 hover:text-pup-maroon"
+                >
+                  <i className="ph-bold ph-clock-counter-clockwise text-lg"></i>
+                  Audit Activity
+                </button>
+               </nav>
+            </div>
+
+            <div className="bg-amber-50 border border-amber-200 rounded-brand p-4">
+              <div className="flex items-center gap-2 text-amber-900 font-black text-[10px] uppercase tracking-widest mb-1">
+                <i className="ph-fill ph-warning"></i>
+                Security Note
+              </div>
+              <p className="text-[11px] text-amber-800 font-medium leading-relaxed">
+                Changes to your professional credentials will be logged in the system audit for compliance tracking.
+              </p>
+            </div>
+          </aside>
+
+          {/* Content Area */}
+          <div className="min-w-0">
           
-          {/* Profile Card */}
-          <section className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden transition-shadow hover:shadow-md">
-            <div className="px-6 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-gray-50/30">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-red-50 text-pup-maroon flex items-center justify-center text-lg font-bold border border-white shadow-sm shrink-0">
-                  {initials}
-                </div>
-                <div>
-                  <h2 className="text-lg font-bold text-gray-900">Personal Profile</h2>
-                  <div className="flex items-center gap-2 mt-1">
-                    <span className="text-sm font-medium text-gray-500">Currently logged in as</span>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-widest border ${roleBadgeColor}`}>
-                      {authUser?.role || "Admin"}
-                    </span>
+            {activeTab === "profile" ? (
+              <Card className="rounded-brand border-gray-200 shadow-sm overflow-hidden animate-fade-in">
+                <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
+                      <i className="ph-duotone ph-identification-badge text-2xl"></i>
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-black text-gray-900 tracking-tight">Personal Identity</CardTitle>
+                      <CardDescription className="font-medium text-gray-500">Update your public name and system identifier.</CardDescription>
+                    </div>
                   </div>
-                </div>
-              </div>
-            </div>
+                </CardHeader>
 
-            <form onSubmit={submitProfile} className="p-6">
-              {profileError && (
-                <div className="mb-6 p-4 bg-red-50/80 border border-red-200 text-red-700 text-sm font-semibold rounded-brand flex items-center gap-3">
-                  <i className="ph-fill ph-warning-circle text-xl"></i>
-                  {profileError}
-                </div>
-              )}
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">First Name</label>
-                  <input
-                    type="text"
-                    className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-brand focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon outline-none transition-all placeholder:text-gray-400 font-medium text-gray-900 shadow-sm"
-                    placeholder="Enter your first name"
-                    value={fname}
-                    onChange={(e) => setFname(e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Last Name</label>
-                  <input
-                    type="text"
-                    className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-brand focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon outline-none transition-all placeholder:text-gray-400 font-medium text-gray-900 shadow-sm"
-                    placeholder="Enter your last name"
-                    value={lname}
-                    onChange={(e) => setLname(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
+                <CardContent className="p-8">
+                  <form onSubmit={submitProfile} className="space-y-8">
+                    {profileError && (
+                      <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm font-bold rounded-brand flex items-center gap-3">
+                        <i className="ph-bold ph-warning-circle text-xl"></i>
+                        {profileError}
+                      </div>
+                    )}
+                    
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">First Name</label>
+                        <Input
+                          type="text"
+                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
+                          placeholder="Your given name"
+                          value={fname}
+                          onChange={(e) => setFname(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">Last Name</label>
+                        <Input
+                          type="text"
+                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
+                          placeholder="Your family name"
+                          value={lname}
+                          onChange={(e) => setLname(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
 
-              <div className="mb-8">
-                <label className="block text-sm font-bold text-gray-700 mb-2">Email Address (Username)</label>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <i className="ph-bold ph-envelope-simple text-gray-400 text-lg"></i>
+                    <div className="space-y-2 max-w-lg">
+                      <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">System Email / Username</label>
+                      <div className="relative">
+                        <i className="ph-bold ph-envelope-simple absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
+                        <Input
+                          type="email"
+                          className="h-12 pl-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
+                          placeholder="professional.email@pup.edu.ph"
+                          value={username}
+                          onChange={(e) => setUsername(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2 ml-1">Primary identifier for authentication.</p>
+                    </div>
+
+                    <div className="pt-6 border-t border-gray-100 flex justify-end">
+                      <Button
+                        type="submit"
+                        disabled={profileLoading}
+                        className="h-12 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+                      >
+                        {profileLoading ? (
+                          <i className="ph-bold ph-spinner animate-spin"></i>
+                        ) : (
+                          <i className="ph-bold ph-check-circle"></i>
+                        )}
+                        {profileLoading ? "Synchronizing..." : "Update Profile"}
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            ) : null}
+
+            {activeTab === "security" ? (
+              <Card className="rounded-brand border-gray-200 shadow-sm overflow-hidden animate-fade-in">
+                <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
+                      <i className="ph-duotone ph-key text-2xl"></i>
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-black text-gray-900 tracking-tight">Security Credentials</CardTitle>
+                      <CardDescription className="font-medium text-gray-500">Rotate your password regularly to maintain account integrity.</CardDescription>
+                    </div>
                   </div>
-                  <input
-                    type="email"
-                    className="w-full pl-11 pr-4 py-3 bg-white border border-gray-300 rounded-brand focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon outline-none transition-all placeholder:text-gray-400 font-medium text-gray-900 shadow-sm"
-                    placeholder="name@pup.edu.ph"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                  />
-                </div>
-                <p className="text-xs text-gray-500 mt-2.5 font-medium ml-1">This email acts as your primary login identifier.</p>
-              </div>
+                </CardHeader>
 
-              <div className="flex items-center justify-end border-t border-gray-100 pt-6">
-                <button
-                  type="submit"
-                  disabled={profileLoading}
-                  className="bg-pup-maroon hover:bg-red-900 text-white px-6 py-2.5 rounded-brand font-bold shadow-sm transition-all active:scale-[0.98] disabled:opacity-70 disabled:pointer-events-none flex items-center gap-2"
-                >
-                  {profileLoading ? <i className="ph-bold ph-spinner animate-spin text-lg"></i> : <i className="ph-bold ph-check text-lg"></i>}
-                  {profileLoading ? "Saving Changes..." : "Save Profile"}
-                </button>
-              </div>
-            </form>
-          </section>
+                <CardContent className="p-8">
+                  <form onSubmit={submitPassword} className="space-y-8 max-w-lg">
+                    {pwError && (
+                      <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm font-bold rounded-brand flex items-center gap-3">
+                        <i className="ph-bold ph-warning-circle text-xl"></i>
+                        {pwError}
+                      </div>
+                    )}
+                    
+                    <div className="space-y-2">
+                      <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">Current Password</label>
+                      <Input
+                        type="password"
+                        className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
+                        placeholder="••••••••"
+                        value={pwCurrent}
+                        onChange={(e) => setPwCurrent(e.target.value)}
+                        required
+                      />
+                    </div>
 
-          {/* Security Card */}
-          <section className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden transition-shadow hover:shadow-md">
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3 bg-gray-50/30">
-              <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center shrink-0">
-                <i className="ph-duotone ph-shield-check text-xl"></i>
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-gray-900">Security Credentials</h2>
-                <p className="text-sm font-medium text-gray-500 mt-0.5">Update your password to stay secure.</p>
-              </div>
-            </div>
+                    <div className="space-y-6 pt-4">
+                      <div className="space-y-2">
+                        <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">New Password</label>
+                        <Input
+                          type="password"
+                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
+                          placeholder="Min. 6 alphanumeric characters"
+                          value={pwNext}
+                          onChange={(e) => setPwNext(e.target.value)}
+                          required
+                        />
+                      </div>
 
-            <form onSubmit={submitPassword} className="p-6">
-              {pwError && (
-                <div className="mb-6 p-4 bg-red-50/80 border border-red-200 text-red-700 text-sm font-semibold rounded-brand flex items-center gap-3">
-                  <i className="ph-fill ph-warning-circle text-xl"></i>
-                  {pwError}
-                </div>
-              )}
-              
-              <div className="space-y-6 mb-8 max-w-lg">
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Current Password</label>
-                  <input
-                    type="password"
-                    className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-brand focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon outline-none transition-all placeholder:text-gray-400 font-medium text-gray-900 shadow-sm"
-                    placeholder="••••••••"
-                    value={pwCurrent}
-                    onChange={(e) => setPwCurrent(e.target.value)}
-                    required
-                  />
-                </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">Confirm New Password</label>
+                        <Input
+                          type="password"
+                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
+                          placeholder="Must match the entry above"
+                          value={pwConfirm}
+                          onChange={(e) => setPwConfirm(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
 
-                <div className="pt-2">
-                  <label className="block text-sm font-bold text-gray-700 mb-2">New Password</label>
-                  <input
-                    type="password"
-                    className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-brand focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon outline-none transition-all placeholder:text-gray-400 font-medium text-gray-900 shadow-sm"
-                    placeholder="Minimal 6 characters"
-                    value={pwNext}
-                    onChange={(e) => setPwNext(e.target.value)}
-                    required
-                  />
-                </div>
+                    <div className="pt-6 border-t border-gray-100 flex justify-end">
+                      <Button
+                        type="submit"
+                        disabled={pwLoading}
+                        className="h-12 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+                      >
+                        {pwLoading ? (
+                          <i className="ph-bold ph-spinner animate-spin"></i>
+                        ) : (
+                          <i className="ph-bold ph-shield-check"></i>
+                        )}
+                        {pwLoading ? "Enforcing..." : "Rotate Password"}
+                      </Button>
+                    </div>
+                  </form>
+                </CardContent>
+              </Card>
+            ) : null}
 
-                <div>
-                  <label className="block text-sm font-bold text-gray-700 mb-2">Confirm New Password</label>
-                  <input
-                    type="password"
-                    className="w-full px-3.5 py-2.5 bg-white border border-gray-300 rounded-brand focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon outline-none transition-all placeholder:text-gray-400 font-medium text-gray-900 shadow-sm"
-                    placeholder="Repeat new password"
-                    value={pwConfirm}
-                    onChange={(e) => setPwConfirm(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between border-t border-gray-100 pt-6">
-                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest hidden sm:block">
-                  Protected <i className="ph-fill ph-lock-key"></i>
-                </span>
-                <button
-                  type="submit"
-                  disabled={pwLoading}
-                  className="bg-pup-maroon hover:bg-red-900 text-white px-6 py-2.5 rounded-brand font-bold shadow-sm transition-all active:scale-[0.98] disabled:opacity-70 disabled:pointer-events-none flex items-center gap-2 w-full sm:w-auto justify-center"
-                >
-                  {pwLoading ? <i className="ph-bold ph-spinner animate-spin text-lg"></i> : <i className="ph-bold ph-shield text-lg"></i>}
-                  {pwLoading ? "Updating Security..." : "Update Password"}
-                </button>
-              </div>
-            </form>
-          </section>
-
+          </div>
         </div>
       </main>
     </div>

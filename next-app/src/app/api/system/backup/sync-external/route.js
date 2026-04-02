@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
-import { getBackupById, getBackupsDir, updateBackupStatus } from "../../../../../lib/backupsRepo";
+import {
+  getBackupById,
+  getBackupsDir,
+  getExternalBackupsDir,
+  updateBackupStatus,
+} from "../../../../../lib/backupsRepo";
 import { writeAuditLog } from "../../../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
-
-const EXTERNAL_BACKUP_PATH = process.env.EXTERNAL_BACKUP_PATH || path.join(process.cwd(), ".local", "external_media");
 
 export async function POST(req) {
   try {
@@ -25,12 +28,9 @@ export async function POST(req) {
       return NextResponse.json({ ok: false, error: "Source file not found" }, { status: 404 });
     }
 
-    if (!fs.existsSync(EXTERNAL_BACKUP_PATH)) {
-      console.log(`[SYNC EXTERNAL] creating external dir: ${EXTERNAL_BACKUP_PATH}`);
-      fs.mkdirSync(EXTERNAL_BACKUP_PATH, { recursive: true });
-    }
+    const externalDir = getExternalBackupsDir();
 
-    const destPath = path.join(EXTERNAL_BACKUP_PATH, backup.filename);
+    const destPath = path.join(externalDir, backup.filename);
     console.log(`[SYNC EXTERNAL] destination path: ${destPath}`);
     
     await new Promise(r => setTimeout(r, 2000));

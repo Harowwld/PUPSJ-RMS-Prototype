@@ -18,6 +18,17 @@ export function getBackupsDir() {
   return dir;
 }
 
+export function getExternalBackupsDir() {
+  const explicit = process.env.EXTERNAL_BACKUP_PATH;
+  const dir = explicit
+    ? explicit
+    : path.join(getLocalDir(), "external_media");
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  return dir;
+}
+
 export async function createBackupRecord({
   filename,
   sizeBytes,

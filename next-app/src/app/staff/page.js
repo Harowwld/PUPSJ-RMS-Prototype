@@ -10,10 +10,12 @@ import PasswordChangeModal from "@/components/shared/PasswordChangeModal";
 import RecordsArchiveTab from "@/components/staff/RecordsArchiveTab";
 import ScanUploadTab from "@/components/staff/ScanUploadTab";
 import DocumentsTab from "@/components/staff/DocumentsTab";
+import DocumentRequestsTab from "@/components/staff/DocumentRequestsTab";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import OCRPromptModal from "@/components/staff/OCRPromptModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { scanPdfForSuggestion, warmupOcrWorker } from "@/lib/ocrClient";
+import { findMatchingDocument } from "@/lib/docAvailability";
 
 function normalizeStudentRow(row) {
   if (!row || typeof row !== "object") return row;
@@ -23,6 +25,14 @@ function normalizeStudentRow(row) {
     courseCode: row.courseCode ?? row.course_code ?? "",
     yearLevel: row.yearLevel ?? row.year_level ?? null,
   };
+}
+
+function getStudentNoYear(studentNo) {
+  const raw = String(studentNo || "").trim();
+  const yearPart = raw.split("-")[0];
+  const year = Number(yearPart);
+  if (!Number.isInteger(year) || year < 1900 || year > 2200) return null;
+  return year;
 }
 
 export default function StaffPage() {
@@ -40,10 +50,8 @@ export default function StaffPage() {
   const [storageLayout, setStorageLayout] = useState(null);
   const [allDocs, setAllDocs] = useState([]);
 
-  const [currentLevel, setCurrentLevel] = useState("courses");
-  const [selectedCourse, setSelectedCourse] = useState(null);
+  const [currentLevel, setCurrentLevel] = useState("years");
   const [selectedYear, setSelectedYear] = useState(null);
-  const [selectedSection, setSelectedSection] = useState(null);
 
   const [quickQuery, setQuickQuery] = useState("");
   const [quickResults, setQuickResults] = useState([]);
@@ -154,6 +162,17 @@ export default function StaffPage() {
     }
   }, [showToast]);
 
+  const refreshStorageLayout = useCallback(async () => {
+    try {
+      const res = await fetch("/api/storage-layout", { cache: "no-store" });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) return;
+      setStorageLayout(json.data || null);
+    } catch {
+      // ignore
+    }
+  }, []);
+
   const fetchAllDocs = useCallback(async () => {
     try {
       const res = await fetch("/api/documents?excludeDeclined=1&limit=500");
@@ -213,6 +232,12 @@ export default function StaffPage() {
       fetchAllDocs();
     }, 0);
   }, [view, fetchAllDocs]);
+
+  useEffect(() => {
+    if (view !== "upload" && view !== "search") return;
+    // Keep staff selectors/SLV in sync with admin layout edits.
+    refreshStorageLayout();
+  }, [view, refreshStorageLayout]);
 
   // Keep locator selection valid when layout changes (rooms/cabinets can be added/removed).
   useEffect(() => {
@@ -282,85 +307,48 @@ export default function StaffPage() {
     router.push("/");
   };
 
+  const academicYearOptions = useMemo(() => {
+    const currentYear = new Date().getFullYear();
+    const fromData = Array.from(
+      new Set(
+        students
+          .map((s) => Number(s.yearLevel))
+          .filter((y) => Number.isFinite(y) && y >= 2000 && y <= 2100),
+      ),
+    );
+    const fallbackRange = Array.from({ length: 8 }, (_, i) => currentYear - 1 + i);
+    return Array.from(new Set([...fromData, ...fallbackRange])).sort((a, b) => a - b);
+  }, [students]);
+
   const breadcrumbs = useMemo(() => {
-    const list = [{ level: "courses", label: "Courses" }];
-    if (selectedCourse) list.push({ level: "years", label: selectedCourse });
-    if (selectedYear)
-      list.push({ level: "sections", label: `Year ${selectedYear}` });
-    if (selectedSection)
-      list.push({ level: "students", label: `${selectedSection}` });
+    const list = [{ level: "years", label: "Years" }];
+    if (selectedYear) {
+      list.push({ level: "students", label: `Year ${selectedYear}` });
+    }
     return list;
-  }, [selectedCourse, selectedYear, selectedSection]);
+  }, [selectedYear]);
 
   const explorerItems = useMemo(() => {
-    if (currentLevel === "courses") {
-      const uniqueCourses = Array.from(
-        new Set(students.map((s) => s.courseCode)),
-      );
-      return uniqueCourses.map((c) => ({
-        key: c,
-        title: c,
-        subtitle: `${students.filter((s) => s.courseCode === c).length} Students`,
-        icon: "ph-folder",
-        onClick: () => {
-          setSelectedCourse(c);
-          setCurrentLevel("years");
-        },
-      }));
-    }
     if (currentLevel === "years") {
-      const years = Array.from(
-        new Set(
-          students
-            .filter((s) => s.courseCode === selectedCourse)
-            .map((s) => s.yearLevel),
-        ),
-      ).sort();
+      const years = [...academicYearOptions].sort((a, b) => b - a);
       return years.map((y) => ({
         key: String(y),
         title: `Year ${y}`,
-        subtitle: `${students.filter((s) => s.courseCode === selectedCourse && s.yearLevel === y).length} Students`,
-        icon: "ph-folder",
+        subtitle: `${students.filter((s) => Number(s.yearLevel) === y).length} Students`,
+        icon: "ph-calendar-blank",
         onClick: () => {
           setSelectedYear(y);
-          setCurrentLevel("sections");
-        },
-      }));
-    }
-    if (currentLevel === "sections") {
-      const sections = Array.from(
-        new Set(
-          students
-            .filter(
-              (s) =>
-                s.courseCode === selectedCourse && s.yearLevel === selectedYear,
-            )
-            .map((s) => s.section),
-        ),
-      ).sort();
-      return sections.map((sec) => ({
-        key: sec,
-        title: `${sec}`,
-        subtitle: `${students.filter((s) => s.courseCode === selectedCourse && s.yearLevel === selectedYear && s.section === sec).length} Students`,
-        icon: "ph-folder",
-        onClick: () => {
-          setSelectedSection(sec);
           setCurrentLevel("students");
         },
       }));
     }
     if (currentLevel === "students") {
       return students
-        .filter(
-          (s) =>
-            s.courseCode === selectedCourse &&
-            s.yearLevel === selectedYear &&
-            s.section === selectedSection,
-        )
+        .filter((s) => Number(s.yearLevel) === Number(selectedYear))
         .map((s) => ({ key: s.studentNo, student: s }));
     }
     return [];
-  }, [currentLevel, students, selectedCourse, selectedYear, selectedSection]);
+  }, [currentLevel, students, selectedYear, academicYearOptions]);
 
   const locatorModel = useMemo(() => {
     if (!storageLayout?.rooms?.length) return { kind: "none" };
@@ -382,6 +370,7 @@ export default function StaffPage() {
       return {
         kind: "cabinets",
         room: selectedRoom,
+        roomDoor: roomDef.door || null,
         cabinets: roomDef.cabinets.map((c) => ({
           cab: c.id,
           occupiedCount: students.filter(
@@ -410,6 +399,7 @@ export default function StaffPage() {
         kind: "drawers",
         room: selectedRoom,
         cabinet: selectedCabinet,
+        roomDoor: roomDef?.door || null,
         cabinetRect: cabinetDef.rect,
         cabinets: roomDef.cabinets.map((c) => ({
           cab: c.id,
@@ -473,29 +463,25 @@ export default function StaffPage() {
     [activeStudent, staffDocs],
   );
 
-  const academicYearOptions = useMemo(() => {
-    const currentYear = new Date().getFullYear();
-    const fromData = Array.from(
-      new Set(
-        students
-          .map((s) => Number(s.yearLevel))
-          .filter((y) => Number.isFinite(y) && y >= 2000 && y <= 2100),
-      ),
+  const locateStudent = useCallback((s) => {
+    const nextYear = Number(s.yearLevel);
+    setSelectedYear(
+      Number.isFinite(nextYear) ? nextYear : getStudentNoYear(s.studentNo)
     );
-    const fallbackRange = Array.from({ length: 8 }, (_, i) => currentYear - 1 + i);
-    return Array.from(new Set([...fromData, ...fallbackRange])).sort((a, b) => a - b);
-  }, [students]);
-
-  const locateStudent = (s) => {
-    setSelectedCourse(s.courseCode);
-    setSelectedYear(s.yearLevel);
-    setSelectedSection(s.section);
     setCurrentLevel("students");
     setActiveStudent(s);
     setSelectedRoom(s.room);
     setSelectedCabinet(s.cabinet);
     setCurrentLocatorLevel("drawers");
-  };
+  }, []);
+
+  const goToStorageMapFromRequest = useCallback(
+    (studentRow) => {
+      locateStudent(studentRow);
+      setView("search");
+    },
+    [locateStudent],
+  );
 
   const applyStudentNoMask = (val) => {
     let clean = val.replace(/[^0-9A-Z]/g, "").toUpperCase();
@@ -774,9 +760,15 @@ export default function StaffPage() {
           for (const type of docTypes) {
             if (selectedType && selectedType !== type) continue;
 
-            const doc = studentDocs.find((d) => d.doc_type === type) || null;
+            const doc =
+              findMatchingDocument(studentDocs, student.studentNo, type) || null;
 
-            // If a document type filter is selected, only show uploaded documents
+            const approvalStatus = String(doc?.approval_status || "");
+            const hasApprovedFile = Boolean(doc) && approvalStatus === "Approved";
+            const isPendingReview = Boolean(doc) && approvalStatus === "Pending";
+
+            // If a document type filter is selected, only show rows with a file
+            // (approved or pending review).
             if (selectedType && !doc) continue;
 
             rows.push({
@@ -784,8 +776,13 @@ export default function StaffPage() {
               student_no: student.studentNo,
               student_name: student.name,
               doc_type: type,
-              status: doc ? "uploaded" : "missing",
-              doc,
+              status: hasApprovedFile
+                ? "uploaded"
+                : isPendingReview
+                  ? "to_review"
+                  : "missing",
+              doc: hasApprovedFile ? doc : null,
+              reviewDoc: doc,
             });
           }
         }
@@ -817,6 +814,13 @@ export default function StaffPage() {
     refreshDocuments,
   ]);
 
+  const sidebarItems = [
+    { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
+    { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
+    { key: "documents", label: "Documents", iconClass: "ph-bold ph-file-text" },
+    { key: "requests", label: "Document requests", iconClass: "ph-bold ph-tray-arrow-up" },
+  ];
+
   if (loading) {
     return (
       <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4">
@@ -828,12 +832,6 @@ export default function StaffPage() {
       </div>
     );
   }
-
-  const sidebarItems = [
-    { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
-    { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
-    { key: "documents", label: "Documents", iconClass: "ph-bold ph-file-text" },
-  ];
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50 font-inter">
@@ -853,20 +851,13 @@ export default function StaffPage() {
             breadcrumbs={breadcrumbs}
             currentLevel={currentLevel}
             onBreadcrumbClick={(b) => {
-              if (b.level === "courses") {
-                setCurrentLevel("courses");
-                setSelectedCourse(null);
-                setSelectedYear(null);
-                setSelectedSection(null);
-                setActiveStudent(null);
-                setCurrentLocatorLevel("rooms");
-              } else if (b.level === "years") {
+              if (b.level === "years") {
                 setCurrentLevel("years");
                 setSelectedYear(null);
-                setSelectedSection(null);
-              } else if (b.level === "sections") {
-                setCurrentLevel("sections");
-                setSelectedSection(null);
+                setActiveStudent(null);
+                setCurrentLocatorLevel("rooms");
+              } else if (b.level === "students") {
+                setCurrentLevel("students");
               }
             }}
             students={students}
@@ -1096,6 +1087,15 @@ export default function StaffPage() {
             csvResults={csvResults}
           />
         )}
+        {view === "requests" && (
+          <DocumentRequestsTab
+            students={students}
+            docTypes={docTypes}
+            staffDocs={staffDocs}
+            onLocateOnMap={goToStorageMapFromRequest}
+            showToast={showToast}
+          />
+        )}
         {view === "documents" && (
           <DocumentsTab
             docsForm={docsForm}
@@ -1107,12 +1107,28 @@ export default function StaffPage() {
             docsRows={docsRows}
             updateDoc={async (id, data) => {
               try {
-                const r = await fetch(`/api/documents/${id}`, {
-                  method: "PUT",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(data),
-                });
-                if (!r.ok) throw new Error("Update failed");
+                let r;
+                if (data?.file) {
+                  const form = new FormData();
+                  form.set("studentNo", String(data.studentNo || "").trim());
+                  form.set("studentName", String(data.studentName || "").trim());
+                  form.set("docType", String(data.docType || "").trim());
+                  form.set("file", data.file);
+                  r = await fetch(`/api/documents/${id}`, {
+                    method: "PATCH",
+                    body: form,
+                  });
+                } else {
+                  r = await fetch(`/api/documents/${id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data),
+                  });
+                }
+                const payload = await r.json().catch(() => null);
+                if (!r.ok || !payload?.ok) {
+                  throw new Error(payload?.error || "Update failed");
+                }
                 showToast("Document updated!");
                 refreshDocuments(docsForm);
                 fetchAllDocs();
@@ -1120,21 +1136,15 @@ export default function StaffPage() {
                 showToast(err.message, true);
               }
             }}
-            deleteDoc={async (id) => {
-              try {
-                const r = await fetch(`/api/documents/${id}`, {
-                  method: "DELETE",
-                });
-                const data = await r.json().catch(() => null);
-                if (!r.ok || !data?.ok) {
-                  throw new Error(data?.error || "Delete failed");
-                }
-                showToast("Document deleted successfully!");
-                refreshDocuments(docsForm);
-                fetchAllDocs();
-              } catch (err) {
-                showToast(err.message, true);
-              }
+            onPreviewDocument={(docType, name, no, id) => {
+              setPreview({
+                docType,
+                studentName: name,
+                studentNo: no,
+                docId: id,
+                refId: `DOC-${Date.now()}`,
+              });
+              setPreviewOpen(true);
             }}
           />
         )}

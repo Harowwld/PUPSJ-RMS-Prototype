@@ -7,41 +7,52 @@
  * - w,h are width/height
  */
 
-export function buildDefaultStorageLayout() {
-  const roomIds = Array.from({ length: 10 }, (_, i) => i + 1); // 1..10
-  const cabinetIds = ["A", "B", "C", "D", "E", "F", "G", "H"];
+export const ROOM_TEMPLATES = [
+  { id: "empty", name: "Empty room", cabinets: [] },
+  { id: "grid-4x2", name: "Grid 4x2 (A-H)", cabinets: buildGridCabinets() },
+  { id: "grid-3x2", name: "Grid 3x2 (A-F)", cabinets: buildGridCabinets({ cols: 3, rows: 2, cabinetIds: ["A", "B", "C", "D", "E", "F"] }) },
+];
 
-  // Default "physical" placement: a simple 4x2 grid inside the room canvas.
-  const cols = 4;
-  const rows = 2;
+export function getDefaultDoor() {
+  return { x: 0.05, y: 0.96 };
+}
+
+function buildGridCabinets({
+  cols = 4,
+  rows = 2,
+  cabinetIds = ["A", "B", "C", "D", "E", "F", "G", "H"],
+  pad = 0.05,
+} = {}) {
   const cellW = 1 / cols;
   const cellH = 1 / rows;
-  const pad = 0.05; // normalized padding inside each grid cell
-  const w = cellW - pad * 2; // ~0.15 with current settings
-  const h = cellH - pad * 2; // ~0.4 with current settings
+  const w = cellW - pad * 2;
+  const h = cellH - pad * 2;
+  return cabinetIds.map((cabId, idx) => {
+    const col = idx % cols;
+    const row = Math.floor(idx / cols);
+    return {
+      id: cabId,
+      rect: {
+        x: col * cellW + pad,
+        y: row * cellH + pad,
+        w,
+        h,
+      },
+      rotation: 0,
+      drawerIds: [1, 2, 3, 4],
+    };
+  });
+}
+
+export function buildDefaultStorageLayout() {
+  const roomIds = Array.from({ length: 10 }, (_, i) => i + 1); // 1..10
 
   const rooms = roomIds.map((roomId) => {
-    const cabinets = cabinetIds.map((cabId, idx) => {
-      const col = idx % cols;
-      const row = Math.floor(idx / cols);
-      return {
-        id: cabId,
-        rect: {
-          x: col * cellW + pad,
-          y: row * cellH + pad,
-          w,
-          h,
-        },
-        rotation: 0,
-        // Default matches current app behavior: drawers are 1..4.
-        drawerIds: [1, 2, 3, 4],
-      };
-    });
-
     return {
       id: roomId,
       name: `Room ${roomId}`,
-      cabinets,
+      cabinets: buildGridCabinets(),
+      door: getDefaultDoor(),
     };
   });
 

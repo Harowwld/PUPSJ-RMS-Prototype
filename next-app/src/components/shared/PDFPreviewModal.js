@@ -6,6 +6,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect, useState } from "react";
 
 export default function PDFPreviewModal({
   open,
@@ -14,13 +16,19 @@ export default function PDFPreviewModal({
 }) {
   if (!open) return null;
 
+  const [frameReady, setFrameReady] = useState(false);
+
+  useEffect(() => {
+    setFrameReady(false);
+  }, [preview?.docId, open]);
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="w-[98vw] max-w-[1500px] h-[92vh] p-0 flex flex-col overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
-        <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+      <DialogContent className="w-[96vw] max-w-[96vw] xl:max-w-[1400px] h-[88vh] p-0 flex flex-col overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
+        <DialogHeader className="p-5 border-b border-gray-100 bg-gray-50/50">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-full border border-blue-100 bg-blue-50 text-blue-700 shadow-sm flex items-center justify-center shrink-0">
-              <i className="ph-duotone ph-info text-2xl"></i>
+            <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
+              <i className="ph-duotone ph-file-pdf text-2xl"></i>
             </div>
             <div className="min-w-0">
               <DialogTitle className="text-lg font-black tracking-tight text-gray-900 text-left">
@@ -52,11 +60,21 @@ export default function PDFPreviewModal({
 
           {preview.docId ? (
             <div className="relative flex-1 min-h-0 min-w-0">
+              {!frameReady ? (
+                <div className="absolute inset-0 p-6 bg-white">
+                  <div className="space-y-4">
+                    <Skeleton className="h-6 w-56" />
+                    <Skeleton className="h-4 w-80" />
+                    <Skeleton className="h-[55vh] w-full" />
+                  </div>
+                </div>
+              ) : null}
               <iframe
                 title="PDF Preview"
-                src={`/api/documents/${preview.docId}`}
+                src={`/api/documents/${preview.docId}#view=FitH`}
                 className="absolute inset-0 w-full h-full bg-gray-200"
                 style={{ border: "none" }}
+                onLoad={() => setFrameReady(true)}
               />
             </div>
           ) : (

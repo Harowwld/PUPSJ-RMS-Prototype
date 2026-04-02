@@ -5,6 +5,8 @@ import { useMemo, useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatPHDateTime } from "@/lib/timeFormat";
 import {
   Card,
   CardContent,
@@ -51,7 +53,7 @@ export default function StaffDirectoryTab({
   }, [staffData]);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const totalPages = Math.ceil(filteredStaff.length / itemsPerPage) || 1;
 
   // Cap current page if filtering reduces dataset below current page
@@ -61,6 +63,14 @@ export default function StaffDirectoryTab({
     const start = (displayPage - 1) * itemsPerPage;
     return filteredStaff.slice(start, start + itemsPerPage);
   }, [filteredStaff, displayPage, itemsPerPage]);
+
+  const formatLastActive = (v) => {
+    const raw = String(v || "").trim();
+    if (!raw) return "—";
+    // If it's already a human label, keep it.
+    if (!raw.includes("-") && !raw.includes(":")) return raw;
+    return formatPHDateTime(raw);
+  };
 
   return (
     <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter">
@@ -152,7 +162,7 @@ export default function StaffDirectoryTab({
                       </div>
                       <div className="text-[10px] font-medium text-gray-400 flex items-center gap-1.5">
                         <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
-                        {s.last_active || "Currently Online"}
+                        {s.last_active ? formatLastActive(s.last_active) : "Currently Online"}
                       </div>
                     </div>
                   </div>
@@ -186,11 +196,22 @@ export default function StaffDirectoryTab({
                 {isLoading && staffData.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="p-8 text-center">
-                      <div className="flex flex-col items-center justify-center gap-3">
-                        <div className="w-10 h-10 border-2 border-gray-200 border-t-pup-maroon rounded-full animate-spin"></div>
-                        <span className="text-sm font-medium text-gray-500">
-                          Loading staff directory...
-                        </span>
+                      <div className="max-w-3xl mx-auto w-full">
+                        <div className="space-y-3">
+                          <Skeleton className="h-4 w-64 mx-auto" />
+                          <div className="grid grid-cols-1 gap-2">
+                            {Array.from({ length: 6 }).map((_, idx) => (
+                              <div key={idx} className="flex items-center gap-3 px-4 py-3">
+                                <Skeleton className="h-8 w-8" />
+                                <div className="flex-1">
+                                  <Skeleton className="h-4 w-56" />
+                                  <Skeleton className="h-3 w-40 mt-2" />
+                                </div>
+                                <Skeleton className="h-7 w-20 ml-auto" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -271,7 +292,7 @@ export default function StaffDirectoryTab({
                         )}
                       </td>
                       <td className="p-3 text-xs text-gray-500 font-mono">
-                        {s.last_active || "—"}
+                        {formatLastActive(s.last_active)}
                       </td>
                       <td className="p-3 text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -316,6 +337,24 @@ export default function StaffDirectoryTab({
               </div>
 
               <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 mr-2">
+                  <label className="text-[10px] font-bold text-gray-500 uppercase">
+                    Items
+                  </label>
+                  <select
+                    className="h-8 rounded-brand border border-gray-300 bg-white px-2 py-1 text-xs font-bold text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
                 <Button
                   variant="outline"
                   size="sm"

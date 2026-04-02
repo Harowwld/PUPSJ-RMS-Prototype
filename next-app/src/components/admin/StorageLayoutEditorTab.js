@@ -5,32 +5,23 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ROOM_TEMPLATES, getDefaultDoor } from "@/lib/storageLayoutDefaults";
 
 function clamp(n, min, max) {
   if (!Number.isFinite(n)) return min;
   return Math.max(min, Math.min(max, n));
 }
 
-function parseDrawerIds(text) {
-  const raw = String(text || "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const ids = raw
-    .map((v) => (v.includes("-") ? null : Number(v)))
-    .filter((v) => Number.isFinite(v) && Number.isInteger(v) && v >= 1);
-  const unique = Array.from(new Set(ids));
-  unique.sort((a, b) => a - b);
-  return unique;
-}
-
 export default function StorageLayoutEditorTab({ showToast }) {
   const [layout, setLayout] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [studentRoomUsage, setStudentRoomUsage] = useState(new Map());
 
   const [activeRoomId, setActiveRoomId] = useState(null);
   const [selectedCabinetId, setSelectedCabinetId] = useState(null);
+  const [selectedTemplateId, setSelectedTemplateId] = useState("grid-4x2");
 
   const canvasRef = useRef(null);
   const dragRef = useRef(null);
@@ -65,11 +56,6 @@ export default function StorageLayoutEditorTab({ showToast }) {
     return activeRoom.cabinets.find((c) => c.id === selectedCabinetId) || null;
   }, [activeRoom, selectedCabinetId]);
 
-  const drawerIdsText = useMemo(() => {
-    if (!selectedCabinet) return "";
-    return (selectedCabinet.drawerIds || []).join(",");
-  }, [selectedCabinet]);
-
   useEffect(() => {
     (async () => {
       setLoading(true);
@@ -87,6 +73,41 @@ export default function StorageLayoutEditorTab({ showToast }) {
       }
     })();
   }, [showToast]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const limit = 200;
+        let offset = 0;
+        const map = new Map();
+        while (true) {
+          const qs = new URLSearchParams();
+          qs.set("limit", String(limit));
+          qs.set("offset", String(offset));
+          const res = await fetch(`/api/students?${qs}`, { cache: "no-store" });
+          const json = await res.json().catch(() => null);
+          if (!res.ok || !json?.ok) break;
+          const rows = Array.isArray(json.data) ? json.data : [];
+          for (const s of rows) {
+            const roomId = Number(s?.room);
+            if (!Number.isFinite(roomId)) continue;
+            map.set(roomId, (map.get(roomId) || 0) + 1);
+          }
+          if (rows.length < limit) break;
+          offset += limit;
+          if (offset > 20000) break;
+        }
+        setStudentRoomUsage(map);
+      } catch {
+        // silent; server-side save validation still protects integrity
+      }
+    })();
+  }, []);
+
+  const activeRoomStudentCount = useMemo(() => {
+    if (!activeRoom) return 0;
+    return Number(studentRoomUsage.get(Number(activeRoom.id)) || 0);
+  }, [activeRoom, studentRoomUsage]);
 
   useEffect(() => {
     if (!activeRoom || !selectedCabinetId) {
@@ -128,23 +149,34 @@ export default function StorageLayoutEditorTab({ showToast }) {
   }
 
   function addRoom() {
+    let createdRoomId = null;
     setLayout((prev) => {
       if (!prev) return prev;
       const nextId = getNextRoomId(prev.rooms);
+      createdRoomId = nextId;
       const next = {
         id: nextId,
         name: `Room ${nextId}`,
         cabinets: [],
+        door: getDefaultDoor(),
       };
       return { ...prev, rooms: [...prev.rooms, next].sort((a, b) => a.id - b.id) };
     });
-    setTimeout(() => {
-      setActiveRoomId((prevId) => prevId);
-    }, 0);
+    setSelectedCabinetId(null);
+    if (createdRoomId != null) {
+      setActiveRoomId(createdRoomId);
+    }
   }
 
   function removeActiveRoom() {
     if (!layout || !activeRoom) return;
+    if (activeRoomStudentCount > 0) {
+      showToast?.(
+        `Cannot remove Room ${activeRoom.id} — ${activeRoomStudentCount} student record(s) still assigned.`,
+        true,
+      );
+      return;
+    }
     if (activeRoom.cabinets?.length) {
       showToast?.("Remove cabinets first before deleting a room.", true);
       return;
@@ -157,6 +189,54 @@ export default function StorageLayoutEditorTab({ showToast }) {
     const fallback = layout.rooms.find((r) => r.id !== activeRoom.id)?.id || null;
     setActiveRoomId(fallback);
     setSelectedCabinetId(null);
+  }
+
+  function resetActiveRoomCabinets() {
+    if (!layout || !activeRoom) return;
+    if (activeRoomStudentCount > 0) {
+      showToast?.(
+        `Cannot reset Room ${activeRoom.id} — ${activeRoomStudentCount} student record(s) still assigned.`,
+        true,
+      );
+      return;
+    }
+    if (!activeRoom.cabinets?.length) {
+      showToast?.("Room already has no cabinets.");
+      return;
+    }
+    updateRoom(activeRoom.id, (r) => ({
+      ...r,
+      cabinets: [],
+    }));
+    setSelectedCabinetId(null);
+    showToast?.(
+      "Room layout reset. Save to apply. If student records still reference this room, saving will be blocked."
+    );
+  }
+
+  function applyTemplateToActiveRoom() {
+    if (!activeRoom) return;
+    if (activeRoomStudentCount > 0) {
+      showToast?.(
+        `Cannot apply template to Room ${activeRoom.id} — ${activeRoomStudentCount} student record(s) still assigned.`,
+        true,
+      );
+      return;
+    }
+    const tpl = ROOM_TEMPLATES.find((t) => t.id === selectedTemplateId);
+    if (!tpl) return;
+    updateRoom(activeRoom.id, (r) => ({
+      ...r,
+      cabinets: (tpl.cabinets || []).map((c) => ({
+        id: c.id,
+        rect: { ...c.rect },
+        rotation: Number(c.rotation) === 90 ? 90 : 0,
+        drawerIds: [...(c.drawerIds || [1])],
+      })),
+      door: r.door || getDefaultDoor(),
+    }));
+    setSelectedCabinetId(null);
+    showToast?.(`Applied template: ${tpl.name}`);
   }
 
   function addCabinet() {
@@ -228,6 +308,29 @@ export default function StorageLayoutEditorTab({ showToast }) {
     });
   }
 
+  function updateSelectedSizeNormalized(nextW, nextH) {
+    if (!activeRoom || !selectedCabinet) return;
+    updateCabinet(activeRoom.id, selectedCabinet.id, (c) => {
+      const rot = Number(c.rotation) === 90 ? 90 : 0;
+      const x = Number(c.rect?.x) || 0;
+      const y = Number(c.rect?.y) || 0;
+      const requestedW = clamp(Number(nextW), MIN_SIZE, 1);
+      const requestedH = clamp(Number(nextH), MIN_SIZE, 1);
+      const effW = rot === 90 ? requestedH : requestedW;
+      const effH = rot === 90 ? requestedW : requestedH;
+      const maxEffW = Math.max(MIN_SIZE, 1 - x);
+      const maxEffH = Math.max(MIN_SIZE, 1 - y);
+      const finalEffW = clamp(effW, MIN_SIZE, maxEffW);
+      const finalEffH = clamp(effH, MIN_SIZE, maxEffH);
+      const finalW = rot === 90 ? finalEffH : finalEffW;
+      const finalH = rot === 90 ? finalEffW : finalEffH;
+      return {
+        ...c,
+        rect: { ...c.rect, w: finalW, h: finalH },
+      };
+    });
+  }
+
   function updateSelectedSizeFromPointer(relX, relY) {
     if (!activeRoom || !selectedCabinet) return;
     const rot = Number(selectedCabinet.rotation) === 90 ? 90 : 0;
@@ -265,6 +368,17 @@ export default function StorageLayoutEditorTab({ showToast }) {
 
     if (d.mode === "resize") {
       updateSelectedSizeFromPointer(relX, relY);
+      return;
+    }
+
+    if (d.mode === "door") {
+      if (!activeRoom) return;
+      const nextX = clamp(relX, 0, 1);
+      const nextY = clamp(relY, 0, 1);
+      updateRoom(activeRoom.id, (r) => ({
+        ...r,
+        door: { x: nextX, y: nextY },
+      }));
       return;
     }
 
@@ -310,8 +424,24 @@ export default function StorageLayoutEditorTab({ showToast }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[400px] text-gray-500 font-semibold">
-        Loading storage layout...
+      <div className="w-full h-full animate-fade-in">
+        <div className="p-5 border-b border-gray-200 bg-gray-50">
+          <Skeleton className="h-5 w-48" />
+          <Skeleton className="h-3 w-72 mt-2" />
+        </div>
+        <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 space-y-4">
+            <div className="flex gap-3 items-center">
+              <Skeleton className="h-12 flex-1" />
+              <Skeleton className="h-10 w-28" />
+              <Skeleton className="h-10 w-28" />
+            </div>
+            <Skeleton className="w-full rounded-brand" style={{ aspectRatio: "16 / 10" }} />
+          </div>
+          <div className="lg:col-span-1">
+            <Skeleton className="h-[420px] w-full rounded-brand" />
+          </div>
+        </div>
       </div>
     );
   }
@@ -326,70 +456,121 @@ export default function StorageLayoutEditorTab({ showToast }) {
 
   return (
     <div className="flex flex-col h-full animate-fade-in w-full overflow-hidden">
-      <div className="p-5 border-b border-gray-200 bg-gray-50 flex flex-col lg:flex-row gap-4 justify-between lg:items-center">
-        <div>
-          <CardTitle className="font-bold text-gray-900 text-base">Storage Layout Editor</CardTitle>
-          <CardDescription className="text-xs font-medium text-gray-500 mt-0.5">
-            Drag steel cabinets into their real-room positions and configure drawer IDs per cabinet.
-          </CardDescription>
-        </div>
-        <div className="flex gap-3 items-center">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={addRoom}
-            className="h-10 px-4 font-bold"
-          >
-            <i className="ph-bold ph-plus" /> Add Room
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={removeActiveRoom}
-            className="h-10 px-4 font-bold"
-            disabled={!activeRoom}
-          >
-            <i className="ph-bold ph-trash" /> Remove Room
-          </Button>
-          <Button
-            onClick={saveLayout}
-            disabled={saving}
-            className="bg-pup-maroon text-white h-10 px-5 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors"
-          >
-            <i className="ph-bold ph-floppy-disk" /> {saving ? "Saving..." : "Save Layout"}
-          </Button>
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-auto min-h-0 bg-white relative">
-        <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <div className="flex gap-3 items-center mb-4">
-              <label className="text-xs font-bold text-gray-700 uppercase tracking-wide">Room</label>
-              <select
-                className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors font-medium text-gray-700"
-                value={String(activeRoomId ?? "")}
-                onChange={(e) => {
-                  const nextId = Number(e.target.value);
-                  setActiveRoomId(Number.isFinite(nextId) ? nextId : null);
-                }}
+      {/* Unified Toolbar */}
+      <div className="p-4 bg-gray-50/80 border-b border-gray-200 flex flex-col lg:flex-row gap-6 lg:items-end shrink-0">
+        {/* Group 1: Room Selection & Global Room Actions */}
+        <div className="flex flex-col gap-1.5 min-w-[320px]">
+          <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest ml-1">Room Management</label>
+          <div className="flex items-center gap-2">
+            <select
+              className="flex-1 h-11 bg-white border border-gray-300 rounded-brand text-sm px-3 focus:outline-none focus:ring-2 focus:ring-pup-maroon font-bold text-gray-800 shadow-sm cursor-pointer"
+              value={String(activeRoomId ?? "")}
+              onChange={(e) => {
+                const nextId = Number(e.target.value);
+                setActiveRoomId(Number.isFinite(nextId) ? nextId : null);
+              }}
+            >
+              {layout.rooms.map((r) => (
+                <option key={r.id} value={String(r.id)}>
+                  {r.name || `Room ${r.id}`}
+                </option>
+              ))}
+            </select>
+            <div className="flex items-center gap-1 bg-white p-1 border border-gray-300 rounded-brand shadow-sm">
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={addRoom}
+                className="h-9 w-9 text-pup-maroon hover:bg-red-50 rounded-sm"
+                title="Add Room"
               >
-                {layout.rooms.map((r) => (
-                  <option key={r.id} value={String(r.id)}>
-                    {r.name || `Room ${r.id}`}
+                <i className="ph-bold ph-plus" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={removeActiveRoom}
+                className="h-9 w-9 text-gray-600 hover:bg-gray-100 hover:text-red-600 rounded-sm"
+                disabled={!activeRoom || activeRoomStudentCount > 0}
+                title="Delete Room"
+              >
+                <i className="ph-bold ph-trash" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={resetActiveRoomCabinets}
+                className="h-9 w-9 text-gray-600 hover:bg-gray-100 hover:text-amber-600 rounded-sm"
+                disabled={
+                  !activeRoom ||
+                  !(activeRoom.cabinets?.length > 0) ||
+                  activeRoomStudentCount > 0
+                }
+                title="Clear Layout"
+              >
+                <i className="ph-bold ph-arrow-counter-clockwise" />
+              </Button>
+            </div>
+          </div>
+        </div>
+
+        {/* Group 2: Cabinet and Template Tools */}
+        <div className="flex flex-col gap-1.5 flex-1">
+          <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest ml-1">Editor Tools</label>
+          <div className="flex flex-wrap items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={addCabinet}
+              className="h-11 px-4 font-bold border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 rounded-brand"
+              disabled={!activeRoom}
+            >
+              <i className="ph-bold ph-plus-square mr-2 text-pup-maroon" /> Add Cabinet
+            </Button>
+            
+            <div className="flex items-center shadow-sm rounded-brand overflow-hidden border border-gray-300">
+              <select
+                className="h-11 bg-white px-3 text-sm font-bold text-gray-700 focus:outline-none border-r border-gray-300 cursor-pointer"
+                value={selectedTemplateId}
+                onChange={(e) => setSelectedTemplateId(e.target.value)}
+                disabled={!activeRoom}
+              >
+                {ROOM_TEMPLATES.map((tpl) => (
+                  <option key={tpl.id} value={tpl.id}>
+                    {tpl.name}
                   </option>
                 ))}
               </select>
               <Button
                 type="button"
-                variant="outline"
-                onClick={addCabinet}
-                className="h-10 px-4 font-bold"
+                variant="ghost"
+                onClick={applyTemplateToActiveRoom}
+                className="h-11 px-4 font-black text-xs uppercase tracking-wider bg-gray-50 hover:bg-pup-maroon hover:text-white transition-colors border-0 rounded-none"
                 disabled={!activeRoom}
               >
-                <i className="ph-bold ph-plus" /> Add Cabinet
+                Apply
               </Button>
             </div>
+          </div>
+        </div>
+
+        {/* Save Button */}
+        <Button
+          onClick={saveLayout}
+          disabled={saving}
+          className="bg-pup-maroon text-white h-11 px-8 font-black uppercase tracking-widest shadow-lg hover:bg-red-900 transition-all flex items-center gap-2 rounded-brand"
+        >
+          <i className="ph-bold ph-floppy-disk text-lg" />
+          {saving ? "Saving..." : "Save Layout"}
+        </Button>
+      </div>
+
+      <div className="flex-1 overflow-auto min-h-0 bg-white relative">
+        <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
 
             <div
               ref={canvasRef}
@@ -404,6 +585,34 @@ export default function StorageLayoutEditorTab({ showToast }) {
                 backgroundImage: "linear-gradient(to right, rgba(0,0,0,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.06) 1px, transparent 1px)",
                 backgroundSize: "10% 10%",
               }} />
+
+              {/* Orientation marker */}
+              <button
+                type="button"
+                className="absolute z-[2] rounded-sm border border-gray-300 bg-white/90 px-2 py-1 text-[10px] font-black tracking-wide text-gray-700 shadow-sm flex items-center"
+                style={{
+                  left: `${(activeRoom?.door?.x ?? getDefaultDoor().x) * 100}%`,
+                  top: `${(activeRoom?.door?.y ?? getDefaultDoor().y) * 100}%`,
+                  transform: "translate(-50%, -50%)",
+                }}
+                title="Drag to move door marker"
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  dragRef.current = {
+                    pointerId: e.pointerId,
+                    mode: "door",
+                  };
+                  try {
+                    e.currentTarget.setPointerCapture(e.pointerId);
+                  } catch {
+                    // ignore
+                  }
+                }}
+              >
+                <i className="ph-bold ph-door mr-1 text-pup-maroon"></i>
+                DOOR
+              </button>
 
               {activeRoom?.cabinets?.map((cab) => {
                 const isSelected = cab.id === selectedCabinetId;
@@ -451,19 +660,27 @@ export default function StorageLayoutEditorTab({ showToast }) {
                     }}
                     title={`Cabinet ${cab.id}`}
                   >
-                    <div className="absolute left-2 top-2 text-[10px] font-extrabold text-gray-600">
-                      CAB-{cab.id}
-                    </div>
-                    <div className="absolute right-2 top-2 text-[10px] font-extrabold text-gray-500">
-                      {rot === 90 ? "V" : "H"}
-                    </div>
-                    <div className="absolute bottom-2 left-2 right-2 text-[10px] text-gray-500 font-bold">
-                      {cab.drawerIds.length} drawers
-                    </div>
+                    {eff.w >= 0.12 && eff.h >= 0.14 ? (
+                      <>
+                        <div className="absolute left-2 top-2 text-[10px] font-extrabold text-gray-600">
+                          CAB-{cab.id}
+                        </div>
+                        <div className="absolute right-2 top-2 text-[10px] font-extrabold text-gray-500">
+                          {rot === 90 ? "V" : "H"}
+                        </div>
+                        <div className="absolute bottom-2 left-2 right-2 text-[10px] text-gray-500 font-bold">
+                          {cab.drawerIds.length} drawers
+                        </div>
+                      </>
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-gray-700">
+                        CAB-{cab.id}
+                      </div>
+                    )}
                     {isSelected ? (
                       <button
                         type="button"
-                        className="absolute -bottom-1.5 -right-1.5 h-4 w-4 rounded-sm border border-pup-maroon bg-white text-pup-maroon shadow"
+                        className="absolute -bottom-1.5 -right-1.5 h-5 w-5 rounded-sm border border-pup-maroon bg-white text-pup-maroon shadow flex items-center justify-center leading-none"
                         title="Resize cabinet"
                         onPointerDown={(e) => {
                           if (!canvasRef.current) return;
@@ -481,7 +698,7 @@ export default function StorageLayoutEditorTab({ showToast }) {
                           }
                         }}
                       >
-                        <i className="ph-bold ph-corners-out text-[10px]" />
+                        <i className="ph-bold ph-corners-out text-[11px]" />
                       </button>
                     ) : null}
                   </div>
@@ -508,57 +725,55 @@ export default function StorageLayoutEditorTab({ showToast }) {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div className="flex gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <Button
                         type="button"
                         variant="outline"
                         onClick={rotateSelectedCabinet}
-                        className="h-10 px-4 font-bold"
+                        className="h-10 font-bold"
                       >
-                        <i className="ph-bold ph-arrow-clockwise" /> Rotate
+                        <i className="ph-bold ph-arrow-clockwise mr-2" />
+                        Rotate
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
                         onClick={removeSelectedCabinet}
-                        className="h-10 px-4 font-bold"
+                        className="h-10 font-bold"
                       >
-                        <i className="ph-bold ph-trash" /> Remove
+                        <i className="ph-bold ph-trash mr-2" />
+                        Remove
                       </Button>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wide">
-                        Drawer IDs (comma-separated)
-                      </label>
-                      <Input
-                        value={drawerIdsText}
-                        onChange={(e) => {
-                          const parsed = parseDrawerIds(e.target.value);
-                          if (!parsed.length) return;
-                          updateCabinet(activeRoom.id, selectedCabinet.id, (c) => ({
-                            ...c,
-                            drawerIds: parsed,
-                          }));
-                        }}
-                        placeholder="e.g. 1,2,3,4"
-                        className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                      />
-                      <div className="text-xs text-gray-500 font-medium mt-2">
-                        Drawer count: <b>{selectedCabinet.drawerIds.length}</b>
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="text-xs font-bold text-gray-700 uppercase tracking-wide">
+                          Drawer count
+                        </div>
+                        <div className="text-sm font-black text-gray-900">
+                          {selectedCabinet.drawerIds.length}
+                        </div>
                       </div>
-                      <div className="flex gap-2 mt-3">
-                        <Button type="button" variant="outline" className="h-9 px-3 font-bold" onClick={addDrawerToSelected}>
-                          <i className="ph-bold ph-plus" /> Drawer
+                      <div className="grid grid-cols-2 gap-2 mt-3">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          className="h-9 font-bold"
+                          onClick={addDrawerToSelected}
+                        >
+                          <i className="ph-bold ph-plus mr-2" />
+                          Add drawer
                         </Button>
                         <Button
                           type="button"
                           variant="outline"
-                          className="h-9 px-3 font-bold"
+                          className="h-9 font-bold"
                           onClick={removeDrawerFromSelected}
                           disabled={(selectedCabinet.drawerIds || []).length <= 1}
                         >
-                          <i className="ph-bold ph-minus" /> Drawer
+                          <i className="ph-bold ph-minus mr-2" />
+                          Remove drawer
                         </Button>
                       </div>
                     </div>
@@ -594,8 +809,39 @@ export default function StorageLayoutEditorTab({ showToast }) {
                       </div>
                     </div>
 
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wide">
+                          W
+                        </label>
+                        <Input
+                          value={Number(selectedCabinet.rect.w).toFixed(3)}
+                          onChange={(e) => {
+                            const w = Number(e.target.value);
+                            if (!Number.isFinite(w)) return;
+                            updateSelectedSizeNormalized(w, selectedCabinet.rect.h);
+                          }}
+                          className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wide">
+                          H
+                        </label>
+                        <Input
+                          value={Number(selectedCabinet.rect.h).toFixed(3)}
+                          onChange={(e) => {
+                            const h = Number(e.target.value);
+                            if (!Number.isFinite(h)) return;
+                            updateSelectedSizeNormalized(selectedCabinet.rect.w, h);
+                          }}
+                          className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                        />
+                      </div>
+                    </div>
+
                     <div className="text-xs text-gray-500 font-medium leading-relaxed">
-                      Tip: drag cabinets on the canvas. Drawer IDs affect dropdown options and the SLV drawer view.
+                      Tip: drag cabinets on the canvas. Drawer count controls available drawer slots for this cabinet.
                     </div>
                   </div>
                 )}

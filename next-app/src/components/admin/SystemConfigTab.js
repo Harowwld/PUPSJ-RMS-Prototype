@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import {
   Dialog,
@@ -16,7 +17,6 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import StorageLayoutEditorTab from "@/components/admin/StorageLayoutEditorTab";
 
 export default function SystemConfigTab({ showToast, logAdminAction }) {
   const [docTypes, setDocTypes] = useState([]);
@@ -40,6 +40,17 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
   const [isAddDocTypeOpen, setIsAddDocTypeOpen] = useState(false);
   const [isAddCourseOpen, setIsAddCourseOpen] = useState(false);
   const [isAddSectionOpen, setIsAddSectionOpen] = useState(false);
+  const [isEditDocTypeOpen, setIsEditDocTypeOpen] = useState(false);
+  const [isEditCourseOpen, setIsEditCourseOpen] = useState(false);
+  const [isEditSectionOpen, setIsEditSectionOpen] = useState(false);
+
+  const [editDocType, setEditDocType] = useState({ id: null, name: "" });
+  const [editCourse, setEditCourse] = useState({ id: null, code: "", name: "" });
+  const [editSection, setEditSection] = useState({
+    id: null,
+    name: "",
+    courseCode: "",
+  });
 
   const fetchData = async () => {
     setLoading(true);
@@ -65,6 +76,29 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
   useEffect(() => {
     fetchData();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter">
+        <Skeleton className="h-12 w-full sm:w-[620px] rounded-brand" />
+        <Card className="flex-1 bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden">
+          <div className="p-5 border-b border-gray-200 bg-gray-50 space-y-2">
+            <Skeleton className="h-5 w-48" />
+            <Skeleton className="h-3 w-72" />
+          </div>
+          <div className="p-6 space-y-3">
+            {Array.from({ length: 7 }).map((_, i) => (
+              <div key={i} className="grid grid-cols-12 gap-3 items-center">
+                <Skeleton className="h-4 col-span-8" />
+                <Skeleton className="h-8 col-span-2" />
+                <Skeleton className="h-8 col-span-2" />
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   const addDocType = async (e) => {
     e.preventDefault();
@@ -94,6 +128,26 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
       if (!res.ok || !json.ok) throw new Error(json.error || "Failed");
       showToast("Document Type deleted");
       logAdminAction(`Deleted document type: ${name}`);
+      fetchData();
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  };
+
+  const updDocType = async (e) => {
+    e.preventDefault();
+    if (!editDocType?.id || !String(editDocType.name || "").trim()) return;
+    try {
+      const res = await fetch(`/api/doc-types/${editDocType.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editDocType.name }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.error || "Failed");
+      setIsEditDocTypeOpen(false);
+      showToast("Document Type updated");
+      logAdminAction(`Updated document type: ${editDocType.name}`);
       fetchData();
     } catch (err) {
       showToast(err.message, true);
@@ -135,6 +189,26 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
     }
   };
 
+  const updCourse = async (e) => {
+    e.preventDefault();
+    if (!editCourse?.id || !String(editCourse.code || "").trim() || !String(editCourse.name || "").trim()) return;
+    try {
+      const res = await fetch(`/api/courses/${editCourse.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: editCourse.code, name: editCourse.name }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.error || "Failed");
+      setIsEditCourseOpen(false);
+      showToast("Degree Program updated");
+      logAdminAction(`Updated program: ${editCourse.code}`);
+      fetchData();
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  };
+
   const addSection = async (e) => {
     e.preventDefault();
     if (!secName.trim() || !secCourseCode.trim()) return;
@@ -164,6 +238,26 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
       if (!res.ok || !json.ok) throw new Error(json.error || "Failed");
       showToast("Section block deleted");
       logAdminAction(`Deleted section: ${name}`);
+      fetchData();
+    } catch (err) {
+      showToast(err.message, true);
+    }
+  };
+
+  const updSection = async (e) => {
+    e.preventDefault();
+    if (!editSection?.id || !String(editSection.name || "").trim() || !String(editSection.courseCode || "").trim()) return;
+    try {
+      const res = await fetch(`/api/sections/${editSection.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editSection.name, courseCode: editSection.courseCode }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.error || "Failed");
+      setIsEditSectionOpen(false);
+      showToast("Section block updated");
+      logAdminAction(`Updated section block: ${editSection.name} (${editSection.courseCode})`);
       fetchData();
     } catch (err) {
       showToast(err.message, true);
@@ -298,17 +392,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
               : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
           }`}
         >
-          <i className="ph-duotone ph-database-export text-lg"></i> Bulk Import
-        </button>
-        <button
-          onClick={() => setActiveSubTab("storage-layout")}
-          className={`px-5 py-2.5 text-sm font-bold rounded flex shrink-0 items-center justify-center gap-2 transition-all ${
-            activeSubTab === "storage-layout"
-              ? "bg-white text-pup-maroon shadow-sm ring-1 ring-gray-200"
-              : "text-gray-500 hover:text-gray-900 hover:bg-gray-200/50"
-          }`}
-        >
-          <i className="ph-duotone ph-warehouse text-lg"></i> Storage Layout
+          <i className="ph-duotone ph-upload-simple text-lg"></i> Imports
         </button>
       </div>
 
@@ -336,7 +420,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                 <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 shadow-sm">
                   <tr className="text-left text-xs uppercase tracking-wider text-gray-500">
                     <th className="p-3 font-bold px-6">Document Name</th>
-                    <th className="p-3 font-bold text-right px-6 w-32 border-l border-gray-200">
+                    <th className="p-3 font-bold text-right px-6 w-48 border-l border-gray-200">
                       Actions
                     </th>
                   </tr>
@@ -351,7 +435,20 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                         {dt.name}
                       </td>
                       <td className="p-3 px-6 text-right">
-                        <Button
+                        <div className="inline-flex items-center justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditDocType({ id: dt.id, name: dt.name });
+                              setIsEditDocTypeOpen(true);
+                            }}
+                            className="h-8 px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50"
+                          >
+                            <i className="ph-bold ph-pencil-simple mr-1.5"></i>
+                            Edit
+                          </Button>
+                          <Button
                           variant="outline"
                           size="sm"
                           onClick={() => {
@@ -368,6 +465,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                           <i className="ph-bold ph-trash mr-1.5"></i>
                           Delete
                         </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -421,7 +519,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                       Course Code
                     </th>
                     <th className="p-3 font-bold px-6">Full Designation</th>
-                    <th className="p-3 font-bold text-right px-6 w-32 border-l border-gray-200">
+                    <th className="p-3 font-bold text-right px-6 w-56 border-l border-gray-200">
                       Actions
                     </th>
                   </tr>
@@ -439,7 +537,20 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                         {c.name}
                       </td>
                       <td className="p-3 px-6 text-right">
-                        <Button
+                        <div className="inline-flex items-center justify-end gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setEditCourse({ id: c.id, code: c.code, name: c.name });
+                              setIsEditCourseOpen(true);
+                            }}
+                            className="h-8 px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50"
+                          >
+                            <i className="ph-bold ph-pencil-simple mr-1.5"></i>
+                            Edit
+                          </Button>
+                          <Button
                           variant="outline"
                           size="sm"
                           onClick={() => {
@@ -456,6 +567,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                           <i className="ph-bold ph-trash mr-1.5"></i>
                           Delete
                         </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -526,7 +638,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                       Degree Program
                     </th>
                     <th className="p-3 font-bold px-6">Block Identifier</th>
-                    <th className="p-3 font-bold text-right px-6 w-32 border-l border-gray-200">
+                    <th className="p-3 font-bold text-right px-6 w-56 border-l border-gray-200">
                       Actions
                     </th>
                   </tr>
@@ -550,7 +662,24 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                           {sec.name}
                         </td>
                         <td className="p-3 px-6 text-right">
-                          <Button
+                          <div className="inline-flex items-center justify-end gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setEditSection({
+                                  id: sec.id,
+                                  name: sec.name,
+                                  courseCode: sec.course_code || "",
+                                });
+                                setIsEditSectionOpen(true);
+                              }}
+                              className="h-8 px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50"
+                            >
+                              <i className="ph-bold ph-pencil-simple mr-1.5"></i>
+                              Edit
+                            </Button>
+                            <Button
                             variant="outline"
                             size="sm"
                             onClick={() => {
@@ -567,6 +696,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                             <i className="ph-bold ph-trash mr-1.5"></i>
                             Delete
                           </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -600,79 +730,99 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
           </div>
         )}
 
-        {activeSubTab === "storage-layout" && (
-          <div className="flex flex-col h-full animate-fade-in w-full overflow-hidden">
-            <StorageLayoutEditorTab showToast={showToast} logAdminAction={logAdminAction} />
-          </div>
-        )}
-
         {activeSubTab === "bulk-import" && (
-          <div className="flex flex-col h-full animate-fade-in w-full overflow-hidden bg-gray-50">
-            <div className="flex-1 overflow-auto min-h-0 p-8 flex flex-col items-center justify-center">
-              <div className="w-full max-w-4xl bg-white border border-gray-200 shadow-sm rounded-brand overflow-hidden flex flex-col md:flex-row">
-                <div className="p-8 border-b md:border-b-0 md:border-r border-gray-200 w-full md:w-1/2 flex flex-col justify-center bg-white">
-                  <h3 className="text-xl font-black text-gray-900 flex items-center gap-2 mb-2">
-                    <i className="ph-duotone ph-database-export text-pup-maroon text-2xl"></i>
-                    Mass Taxonomy Ingestion
-                  </h3>
-                  <p className="text-sm font-medium text-gray-500 leading-relaxed mb-6">
-                    Upload a properly formatted .CSV payload to seed Document
-                    Types, Degree Programs, and Sections instantly rather than
-                    adding them one by one.
-                  </p>
-
-                  <div className="bg-white border-2 border-dashed border-gray-300 rounded-brand p-8 hover:bg-gray-50 hover:border-pup-maroon transition-all group relative cursor-pointer flex flex-col items-center justify-center text-center shadow-sm">
-                    <input
-                      type="file"
-                      accept=".csv"
-                      disabled={importing}
-                      onChange={handleCsvImport}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
-                    />
-                    <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-red-50 transition-colors mb-4 shadow-sm border border-gray-200 group-hover:border-red-200">
-                      <i className="ph-duotone ph-cloud-arrow-up text-3xl text-gray-400 group-hover:text-pup-maroon transition-colors"></i>
+          <div className="flex flex-col h-full animate-fade-in w-full overflow-hidden bg-gray-50/50">
+            <div className="flex-1 overflow-auto min-h-0 p-6">
+              <div className="max-w-5xl mx-auto space-y-4">
+                <div className="bg-white border border-gray-200 rounded-brand shadow-sm p-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
+                      <i className="ph-duotone ph-upload-simple text-2xl"></i>
                     </div>
-                    <p className="text-base font-bold text-gray-800">
-                      {importing
-                        ? "Parsing Payload..."
-                        : "Click or drag CSV here"}
-                    </p>
-                    <p className="text-xs text-gray-400 font-bold mt-2">
-                      CSV format explicitly required.
-                    </p>
+                    <div className="min-w-0">
+                      <h3 className="text-lg font-black text-gray-900">
+                        Import System Data (CSV)
+                      </h3>
+                      <p className="text-sm font-medium text-gray-600 mt-1 leading-relaxed">
+                        Upload a CSV to bulk-create Document Types, Degree Programs, and Course Blocks.
+                      </p>
+                      <div className="mt-3 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                        Required header: <span className="font-mono normal-case text-gray-700">Category,Name,Code</span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                <div className="p-8 w-full md:w-1/2 bg-gray-[900] flex flex-col justify-center relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-gray-800 rounded-bl-full -mr-10 -mt-10 opacity-50"></div>
-                  <h4 className="text-xs font-bold text-gray-300 mb-4 uppercase tracking-wider flex items-center gap-2">
-                    <i className="ph-bold ph-shield-check text-green-500 text-lg"></i>
-                    Header Integrity Array
-                  </h4>
-                  <div className="bg-gray-[950] rounded border border-gray-800 p-5 text-sm font-mono text-green-400 leading-relaxed shadow-inner">
-                    <span className="text-gray-500 select-none text-xs block mb-1">
-                      # Target Line 0 Schema
-                    </span>
-                    Category,Name,Code
-                    <br />
-                    <br />
-                    <span className="text-gray-500 select-none text-xs block mb-1">
-                      # Supported Types (Category)
-                    </span>
-                    <span className="text-amber-400">Document Type</span> |{" "}
-                    <span className="text-amber-400">Course</span> |{" "}
-                    <span className="text-amber-400">Section</span>
-                    <br />
-                    <br />
-                    <span className="text-gray-500 select-none text-xs block mb-1">
-                      # Array Payload Example
-                    </span>
-                    DocumentType,Birth Certificate,
-                    <br />
-                    Course,Information Tech,BSIT
-                    <br />
-                    Section,Block 1,BSIT
-                    <br />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <div className="bg-white border border-gray-200 rounded-brand shadow-sm overflow-hidden">
+                    <div className="p-4 border-b border-gray-100 bg-gray-50/50">
+                      <div className="text-xs font-bold text-gray-900 uppercase tracking-wider">
+                        Upload CSV
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <div className="mb-4 flex items-center justify-between gap-2">
+                        <a
+                          href="data:text/csv;charset=utf-8,Category,Name,Code%0ADocumentType,Birth Certificate,%0ACourse,Bachelor of Science in IT,BSIT%0ASection,Block 1,BSIT"
+                          download="taxonomy-import-template.csv"
+                          className="inline-flex items-center h-9 px-3 rounded-brand border border-gray-300 bg-white text-xs font-bold text-gray-700 hover:text-pup-maroon hover:border-pup-maroon"
+                        >
+                          <i className="ph-bold ph-file-csv mr-1.5"></i>
+                          Download Template
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            navigator.clipboard?.writeText(
+                              "Category,Name,Code\nDocumentType,Birth Certificate,\nCourse,Bachelor of Science in IT,BSIT\nSection,Block 1,BSIT"
+                            )
+                          }
+                          className="inline-flex items-center h-9 px-3 rounded-brand border border-gray-300 bg-white text-xs font-bold text-gray-700 hover:text-pup-maroon hover:border-pup-maroon"
+                        >
+                          <i className="ph-bold ph-copy mr-1.5"></i>
+                          Copy Sample
+                        </button>
+                      </div>
+                      <div className="bg-white border-2 border-dashed border-gray-300 rounded-brand p-8 hover:bg-red-50/20 hover:border-pup-maroon transition-all group relative cursor-pointer flex flex-col items-center justify-center text-center shadow-sm">
+                        <input
+                          type="file"
+                          accept=".csv"
+                          disabled={importing}
+                          onChange={handleCsvImport}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
+                        />
+                        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-red-50 transition-colors mb-4 shadow-sm border border-gray-200 group-hover:border-red-200">
+                          <i className="ph-duotone ph-cloud-arrow-up text-3xl text-gray-400 group-hover:text-pup-maroon transition-colors"></i>
+                        </div>
+                        <p className="text-base font-bold text-gray-800">
+                          {importing ? "Importing..." : "Click or drop CSV here"}
+                        </p>
+                        <p className="text-xs text-gray-500 font-medium mt-2">
+                          File must be <span className="font-mono">.csv</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="bg-white border border-gray-200 rounded-brand shadow-sm overflow-hidden">
+                    <div className="p-4 border-b border-gray-100 bg-gray-50/50">
+                      <div className="text-xs font-bold text-gray-900 uppercase tracking-wider">
+                        Example
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <div className="rounded-brand border border-gray-200 bg-gray-50 p-4 text-sm font-mono text-gray-700 leading-relaxed">
+                        <div className="text-xs font-bold text-gray-500 mb-2">Category,Name,Code</div>
+                        DocumentType,Birth Certificate,\n
+                        Course,Bachelor of Science in IT,BSIT\n
+                        Section,Block 1,BSIT
+                      </div>
+                      <div className="mt-4 text-xs font-medium text-gray-600">
+                        - <strong>DocumentType</strong>: Code optional\n
+                        - <strong>Course</strong>: Code required\n
+                        - <strong>Section</strong>: Code = Degree Program code
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -680,6 +830,158 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
           </div>
         )}
       </Card>
+
+      <Dialog open={isEditDocTypeOpen} onOpenChange={setIsEditDocTypeOpen}>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
+          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+            <DialogTitle className="text-lg font-black tracking-tight text-gray-900">
+              Edit Document Type
+            </DialogTitle>
+            <DialogDescription className="text-sm font-medium mt-1 text-gray-600">
+              Update the document category label.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={updDocType}>
+            <div className="p-6">
+              <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                Document Type Name <span className="text-pup-maroon">*</span>
+              </label>
+              <Input
+                type="text"
+                className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                value={editDocType.name}
+                onChange={(e) =>
+                  setEditDocType((prev) => ({ ...prev, name: e.target.value }))
+                }
+                required
+              />
+            </div>
+            <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setIsEditDocTypeOpen(false)} className="h-11 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand">
+                Cancel
+              </Button>
+              <Button type="submit" className="h-11 px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand">
+                Save Changes
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditCourseOpen} onOpenChange={setIsEditCourseOpen}>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
+          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+            <DialogTitle className="text-lg font-black tracking-tight text-gray-900">
+              Edit Degree Program
+            </DialogTitle>
+            <DialogDescription className="text-sm font-medium mt-1 text-gray-600">
+              Update the code and designation for this program.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={updCourse}>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                  Short Code <span className="text-pup-maroon">*</span>
+                </label>
+                <Input
+                  type="text"
+                  className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  value={editCourse.code}
+                  onChange={(e) =>
+                    setEditCourse((prev) => ({ ...prev, code: e.target.value }))
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                  Full Designation <span className="text-pup-maroon">*</span>
+                </label>
+                <Input
+                  type="text"
+                  className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  value={editCourse.name}
+                  onChange={(e) =>
+                    setEditCourse((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  required
+                />
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setIsEditCourseOpen(false)} className="h-11 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand">
+                Cancel
+              </Button>
+              <Button type="submit" className="h-11 px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand">
+                Save Changes
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isEditSectionOpen} onOpenChange={setIsEditSectionOpen}>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
+          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+            <DialogTitle className="text-lg font-black tracking-tight text-gray-900">
+              Edit Course Block
+            </DialogTitle>
+            <DialogDescription className="text-sm font-medium mt-1 text-gray-600">
+              Update the section block and assigned degree program.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={updSection}>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                  Degree Program <span className="text-pup-maroon">*</span>
+                </label>
+                <select
+                  className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors font-medium"
+                  value={editSection.courseCode}
+                  onChange={(e) =>
+                    setEditSection((prev) => ({ ...prev, courseCode: e.target.value }))
+                  }
+                  required
+                >
+                  <option value="" disabled>
+                    Select Degree Program...
+                  </option>
+                  {courses.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.code} - {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                  Block Identifier <span className="text-pup-maroon">*</span>
+                </label>
+                <Input
+                  type="text"
+                  className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  value={editSection.name}
+                  onChange={(e) =>
+                    setEditSection((prev) => ({ ...prev, name: e.target.value }))
+                  }
+                  required
+                />
+              </div>
+            </div>
+            <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setIsEditSectionOpen(false)} className="h-11 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand">
+                Cancel
+              </Button>
+              <Button type="submit" className="h-11 px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand">
+                Save Changes
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
       <ConfirmModal
         open={confirmOpen}
         title={confirmPayload?.title || "Confirm Action"}

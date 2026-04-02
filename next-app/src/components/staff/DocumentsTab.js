@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Dialog, DialogContent , DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import ConfirmModal from "@/components/shared/ConfirmModal";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatPHDateTime } from "@/lib/timeFormat";
 
 export default function DocumentsTab({
   docsForm,
@@ -13,15 +14,23 @@ export default function DocumentsTab({
   docsError,
   docsRows,
   updateDoc,
-  deleteDoc,
+  onPreviewDocument,
 }) {
   const [updatePromptOpen, setUpdatePromptOpen] = useState(false);
   const [updateTargetId, setUpdateTargetId] = useState(null);
   const [updateStudentNo, setUpdateStudentNo] = useState("");
   const [updateStudentName, setUpdateStudentName] = useState("");
   const [updateDocType, setUpdateDocType] = useState("");
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [updateFile, setUpdateFile] = useState(null);
+  const [isDragActive, setIsDragActive] = useState(false);
+  const [updateSaving, setUpdateSaving] = useState(false);
+  const fileRef = useRef(null);
+
+  const handlePickedFile = (file) => {
+    if (!file) return;
+    if (file.type !== "application/pdf") return;
+    setUpdateFile(file);
+  };
 
   return (
        <div id="view-documents" className="flex flex-col lg:flex-row w-full h-full gap-4 animate-fade-in">
@@ -118,8 +127,20 @@ export default function DocumentsTab({
               <tbody className="divide-y divide-gray-200">
                 {docsLoading ? (
                   <tr>
-                    <td colSpan={7} className="p-6 text-center text-gray-500 font-medium">
-                      Loading...
+                    <td colSpan={7} className="p-6">
+                      <div className="space-y-3">
+                        {Array.from({ length: 6 }).map((_, idx) => (
+                          <div key={idx} className="grid grid-cols-7 gap-3 items-center">
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-8 w-full" />
+                          </div>
+                        ))}
+                      </div>
                     </td>
                   </tr>
                 ) : !(
@@ -163,7 +184,11 @@ export default function DocumentsTab({
                     <tr
                       key={r.id || idx}
                       className={`hover:bg-gray-50 ${
-                        r.status === "uploaded" ? "bg-green-50/40" : "bg-red-50/40"
+                        r.status === "uploaded"
+                          ? "bg-green-50/40"
+                          : r.status === "to_review"
+                            ? "bg-amber-50/50"
+                            : "bg-red-50/40"
                       }`}
                     >
                       <td className="p-3 font-mono font-bold text-gray-900">
@@ -182,6 +207,10 @@ export default function DocumentsTab({
                           <span className="inline-flex items-center px-2 py-1 rounded-full bg-green-50 text-green-800 border border-green-200 text-xs font-bold">
                             Uploaded
                           </span>
+                        ) : r.status === "to_review" ? (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold">
+                            To be reviewed
+                          </span>
                         ) : (
                           <span className="inline-flex items-center px-2 py-1 rounded-full bg-red-50 text-red-800 border border-red-200 text-xs font-bold">
                             Missing
@@ -196,25 +225,35 @@ export default function DocumentsTab({
                               {(r.doc.size_bytes / 1024).toFixed(1)} KB
                             </div>
                           </>
+                        ) : r.status === "to_review" ? (
+                          <span className="text-xs text-amber-800 font-medium">
+                            Hidden until review approval
+                          </span>
                         ) : (
                           <span className="text-xs text-gray-500 font-medium">Not uploaded</span>
                         )}
                       </td>
                       <td className="p-3 text-gray-600 font-medium">
-                        {r.doc ? String(r.doc.created_at || "").replace("T", " ") : "—"}
+                        {formatPHDateTime(r.reviewDoc?.created_at)}
                       </td>
                       <td className="p-3">
-                        <div className="flex justify-end gap-2">
+                        <div className="flex justify-end flex-wrap gap-2">
                           {r.doc ? (
                             <>
-                              <a
+                              <button
+                                type="button"
                                 className="px-3 h-11 inline-flex items-center rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-xs hover:border-pup-maroon"
-                                href={`/api/documents/${r.doc.id}`}
-                                target="_blank"
-                                rel="noreferrer"
+                                onClick={() =>
+                                  onPreviewDocument?.(
+                                    r.doc_type,
+                                    r.student_name || "",
+                                    r.student_no,
+                                    r.doc.id
+                                  )
+                                }
                               >
-                                Open
-                              </a>
+                                View
+                              </button>
                               <button
                                 type="button"
                                 onClick={async () => {
@@ -223,24 +262,23 @@ export default function DocumentsTab({
                                   setUpdateStudentNo(String(r.student_no || ""));
                                   setUpdateStudentName(String(r.student_name || ""));
                                   setUpdateDocType(String(r.doc_type || ""));
+                                  setUpdateFile(null);
                                   setUpdatePromptOpen(true);
                                 }}
                                 className="px-3 h-11 rounded-brand bg-pup-maroon text-white font-bold text-xs hover:bg-red-900"
                               >
                                 Update
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setDeleteTarget(r.doc);
-                                  setDeleteOpen(true);
-                                }}
-                                className="px-3 h-11 rounded-brand bg-red-600 text-white font-bold text-xs hover:bg-red-700"
-                              >
-                                Delete
-                              </button>
                             </>
-                          ) : null}
+                          ) : r.status === "to_review" ? (
+                            <span className="text-xs font-medium text-amber-800">
+                              Waiting for admin review
+                            </span>
+                          ) : (
+                            <span className="text-xs font-medium text-gray-400">
+                              No file — use Scan & Upload
+                            </span>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -276,16 +314,64 @@ export default function DocumentsTab({
               </div>
               <div className="min-w-0">
                 <DialogTitle className="text-lg font-black tracking-tight text-gray-900">
-                  Edit Document Metadata
+                  Update Document File
                 </DialogTitle>
                 <DialogDescription className="text-sm font-medium mt-1 text-gray-600">
-                  Update student details and document type to ensure this record remains searchable and properly indexed.
+                  Replace the PDF with a clearer copy, then update metadata if needed.
                 </DialogDescription>
               </div>
             </div>
           </DialogHeader>
 
           <div className="p-6 space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
+                Replacement PDF
+              </label>
+              <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  setIsDragActive(true);
+                }}
+                onDragLeave={() => setIsDragActive(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setIsDragActive(false);
+                  handlePickedFile(e.dataTransfer?.files?.[0] || null);
+                }}
+                className={`w-full rounded-brand border-2 border-dashed px-4 py-6 text-left transition-colors ${
+                  isDragActive
+                    ? "border-pup-maroon bg-red-50/40"
+                    : "border-gray-300 bg-white hover:border-pup-maroon/60"
+                }`}
+              >
+                <div className="flex items-start gap-3">
+                  <div className="h-10 w-10 rounded-full border border-red-100 bg-red-50 text-pup-maroon flex items-center justify-center shrink-0">
+                    <i className="ph-duotone ph-file-pdf text-xl"></i>
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-gray-900">
+                      Drag and drop a PDF here, or click to browse
+                    </p>
+                    <p className="mt-1 text-xs font-medium text-gray-600">
+                      Use a cleaner scan so staff can view and print a better copy.
+                    </p>
+                    <p className="mt-2 text-xs font-mono text-gray-700 truncate">
+                      {updateFile ? updateFile.name : "No replacement file selected"}
+                    </p>
+                  </div>
+                </div>
+              </button>
+              <input
+                ref={fileRef}
+                type="file"
+                accept="application/pdf"
+                className="hidden"
+                onChange={(e) => handlePickedFile(e.target.files?.[0] || null)}
+              />
+            </div>
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
                 Student Number
@@ -310,11 +396,17 @@ export default function DocumentsTab({
               <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
                 Document Type
               </label>
-              <input
-                className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+              <select
+                className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors font-semibold"
                 value={updateDocType}
                 onChange={(e) => setUpdateDocType(e.target.value)}
-              />
+              >
+                {docTypes.map((t) => (
+                  <option key={t} value={t}>
+                    {t}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -324,6 +416,7 @@ export default function DocumentsTab({
               onClick={() => {
                 setUpdatePromptOpen(false);
                 setUpdateTargetId(null);
+                setUpdateFile(null);
               }}
               className="px-4 h-11 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
             >
@@ -333,37 +426,29 @@ export default function DocumentsTab({
               type="button"
               onClick={async () => {
                 if (!updateTargetId) return;
-                await updateDoc(updateTargetId, {
-                  studentNo: String(updateStudentNo).trim(),
-                  studentName: String(updateStudentName).trim(),
-                  docType: String(updateDocType).trim(),
-                });
-                setUpdatePromptOpen(false);
-                setUpdateTargetId(null);
+                setUpdateSaving(true);
+                try {
+                  await updateDoc(updateTargetId, {
+                    studentNo: String(updateStudentNo).trim(),
+                    studentName: String(updateStudentName).trim(),
+                    docType: String(updateDocType).trim(),
+                    file: updateFile || undefined,
+                  });
+                  setUpdatePromptOpen(false);
+                  setUpdateTargetId(null);
+                  setUpdateFile(null);
+                } finally {
+                  setUpdateSaving(false);
+                }
               }}
-              className="px-4 h-11 rounded-brand bg-pup-maroon text-white font-bold text-sm hover:bg-red-900"
+              disabled={updateSaving}
+              className="px-4 h-11 rounded-brand bg-pup-maroon text-white font-bold text-sm hover:bg-red-900 disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              Save Changes
+              {updateSaving ? "Saving..." : "Save Changes"}
             </button>
           </div>
         </DialogContent>
       </Dialog>
-      <ConfirmModal
-        open={deleteOpen}
-        title="Delete Digital Record"
-        message={`Permanently remove ${deleteTarget?.original_filename}? This file cannot be recovered once deleted.`}
-        confirmLabel="Destroy Record"
-        onConfirm={async () => {
-          if (!deleteTarget?.id) return;
-          await deleteDoc(deleteTarget.id);
-          setDeleteOpen(false);
-          setDeleteTarget(null);
-        }}
-        onCancel={() => {
-          setDeleteOpen(false);
-          setDeleteTarget(null);
-        }}
-      />
     </div>
   );
 }

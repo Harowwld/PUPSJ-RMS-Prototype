@@ -218,3 +218,15 @@ export async function deleteStudent(studentNo) {
   await dbRun("DELETE FROM students WHERE student_no = ?", [studentNo]);
   return existing;
 }
+
+export async function listStudentLocationUsage() {
+  return await dbAll(
+    `
+      SELECT room, cabinet, drawer, COUNT(*) as count
+      FROM students
+      GROUP BY room, cabinet, drawer
+      ORDER BY room ASC, cabinet ASC, drawer ASC
+    `,
+    []
+  );
+}

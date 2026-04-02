@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
-import { getBackupById, getBackupsDir, deleteBackupRecord } from "../../../../../lib/backupsRepo";
+import {
+  getBackupById,
+  getBackupsDir,
+  getExternalBackupsDir,
+  deleteBackupRecord,
+} from "../../../../../lib/backupsRepo";
 import { writeAuditLog } from "../../../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
@@ -26,31 +31,20 @@ export async function DELETE(req, { params }) {
     const filePath = path.resolve(backupsDir, backup.filename);
     console.log(`[DELETE BACKUP] Resolved absolute file path: ${filePath}`);
 
-    // Delete file from disk if it exists
+    // Strict deletion: if any existing file cannot be removed, fail and keep DB record.
     if (fs.existsSync(filePath)) {
-      try {
-        console.log(`[DELETE BACKUP] File exists. Attempting to unlink: ${filePath}`);
-        fs.unlinkSync(filePath);
-        console.log(`[DELETE BACKUP] Successfully unlinked file: ${filePath}`);
-      } catch (unlinkErr) {
-        console.error(`[DELETE BACKUP] Failed to unlink file: ${filePath}`, unlinkErr);
-        // We still want to proceed with DB deletion if the file operation failed
-        // but maybe we should throw or return error if it's a permission issue?
-      }
+      console.log(`[DELETE BACKUP] File exists. Attempting to unlink: ${filePath}`);
+      fs.unlinkSync(filePath);
+      console.log(`[DELETE BACKUP] Successfully unlinked file: ${filePath}`);
     } else {
       console.log(`[DELETE BACKUP] File NOT FOUND on disk at: ${filePath}`);
     }
 
-    // Also check external media
-    const EXTERNAL_BACKUP_PATH = process.env.EXTERNAL_BACKUP_PATH || path.join(process.cwd(), ".local", "external_media");
-    const externalPath = path.resolve(EXTERNAL_BACKUP_PATH, backup.filename);
+    const externalDir = getExternalBackupsDir();
+    const externalPath = path.resolve(externalDir, backup.filename);
     if (fs.existsSync(externalPath)) {
-      try {
-        console.log(`[DELETE BACKUP] Found synced file on external media, deleting: ${externalPath}`);
-        fs.unlinkSync(externalPath);
-      } catch (extErr) {
-        console.error(`[DELETE BACKUP] Failed to delete external file: ${externalPath}`, extErr);
-      }
+      console.log(`[DELETE BACKUP] Found synced file on external media, deleting: ${externalPath}`);
+      fs.unlinkSync(externalPath);
     }
 
     // Delete record from database

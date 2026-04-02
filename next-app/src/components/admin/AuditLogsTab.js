@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AuditLogsTab({
   displayLogs,
@@ -80,7 +81,7 @@ export default function AuditLogsTab({
                 <Input
                   type="text"
                   placeholder="Search by user, action, or IP address..."
-                  className="pl-10 h-12 w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  className="pl-10 h-9 w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                   value={searchQuery}
                   onChange={handleSearchChange}
                 />
@@ -93,7 +94,7 @@ export default function AuditLogsTab({
                   Items Per Page
                 </label>
                 <select
-                  className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                  className="h-9 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
                   value={itemsPerPage}
                   onChange={handleItemsPerPageChange}
                 >
@@ -108,14 +109,14 @@ export default function AuditLogsTab({
                   Export
                 </label>
                 <Button
-                  variant="outline"
+                  variant="default"
                   size="sm"
                   onClick={handleDownloadCSV}
                   disabled={displayLogs.length === 0}
-                  className="h-12 px-4 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50"
+                  className="h-9 px-4 min-w-32 font-bold text-sm bg-pup-maroon text-white hover:bg-red-900 border border-pup-maroon shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <i className="ph-bold ph-download-simple mr-1.5"></i>
-                  CSV
+                  <i className="ph-bold ph-download-simple text-sm mr-1.5"></i>
+                  Export CSV
                 </Button>
               </div>
             </div>
@@ -139,11 +140,17 @@ export default function AuditLogsTab({
               {isLoading && displayLogs.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="p-8 text-center">
-                    <div className="flex flex-col items-center justify-center gap-3">
-                      <div className="w-10 h-10 border-2 border-gray-200 border-t-pup-maroon rounded-full animate-spin"></div>
-                      <span className="text-sm font-medium text-gray-500">
-                        Loading audit logs...
-                      </span>
+                    <div className="max-w-3xl mx-auto w-full space-y-3">
+                      <Skeleton className="h-4 w-56 mx-auto" />
+                      {Array.from({ length: 6 }).map((_, idx) => (
+                        <div key={idx} className="grid grid-cols-5 gap-3 items-center px-4 py-2">
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-full" />
+                          <Skeleton className="h-4 w-full" />
+                        </div>
+                      ))}
                     </div>
                   </td>
                 </tr>
@@ -241,11 +248,7 @@ export default function AuditLogsTab({
                 <strong className="text-gray-900">{logTotal.toLocaleString()}</strong>{" "}
                 audit log entries
               </>
-            ) : (
-              <>
-                Showing <strong className="text-gray-900">0</strong> audit log entries
-              </>
-            )}
+            ) : null}
           </div>
 
           <div className="flex items-center gap-2">

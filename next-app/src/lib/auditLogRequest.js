@@ -21,8 +21,9 @@ async function resolveActor() {
 
     const staff = await getStaffById(id);
     if (staff) {
+      const fullName = `${staff.fname || ""} ${staff.lname || ""}`.trim();
       return {
-        actor: staff.email || `${staff.fname || ""} ${staff.lname || ""}`.trim() || id,
+        actor: fullName || staff.id || id,
         role: staff.role || "Staff",
       };
     }

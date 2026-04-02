@@ -3,6 +3,7 @@
 export default function RoomMap2D({
   kind, // "cabinets" | "drawers"
   cabinets,
+  roomDoor,
   selectedCabinetId,
   drawerSlots,
   onCabinetClick,
@@ -27,10 +28,24 @@ export default function RoomMap2D({
         }}
       />
 
+      {/* Orientation marker for staff navigation */}
+      <div
+        className="absolute z-[2] rounded-sm border border-gray-300 bg-white/90 px-2 py-1 text-[10px] font-black tracking-wide text-gray-700 shadow-sm"
+        style={{
+          left: `${(roomDoor?.x ?? 0.05) * 100}%`,
+          top: `${(roomDoor?.y ?? 0.96) * 100}%`,
+          transform: "translate(-50%, -50%)",
+        }}
+      >
+        <i className="ph-bold ph-door mr-1 text-pup-maroon"></i>
+        DOOR
+      </div>
+
       {cabinetRects.map((c) => {
         const isSelected = kind === "drawers" && c.cab === selectedCabinetId;
         const isTarget = Boolean(c.isTarget);
         const rect = getEffectiveRect(c);
+        const showCabBadge = !(kind === "drawers" && isSelected);
 
         return (
           <div
@@ -50,47 +65,51 @@ export default function RoomMap2D({
               onCabinetClick?.(c.cab);
             }}
           >
-            <div className="absolute left-1.5 top-1.5 text-[11px] font-black text-gray-800 bg-white/80 px-1.5 py-0.5 rounded-sm border border-gray-200">
-              CAB-{c.cab}
-            </div>
+            {showCabBadge ? (
+              <div className="absolute left-1.5 top-1.5 z-[1] text-[11px] font-black text-gray-800 bg-white/80 px-1.5 py-0.5 rounded-sm border border-gray-200">
+                CAB-{c.cab}
+              </div>
+            ) : null}
 
             {kind === "cabinets" ? (
               <div className="absolute inset-x-0 bottom-1.5 px-1 text-[11px] text-center font-bold text-gray-700 bg-white/80 mx-1 rounded-sm border border-gray-200">
-                {c.occupiedCount} Folders
+                {c.occupiedCount} Records
               </div>
             ) : isSelected ? (
-              // Drawer overlay (occupies the cabinet rect)
-              <div className="absolute inset-1 flex flex-col gap-1.5">
-                {drawerSlots?.map((d) => {
-                  const countText =
-                    d.count === 1 ? "1 Folder" : `${d.count} Folders`;
-                  const drawerClass =
-                    d.count > 0
-                      ? "drawer-occupied"
-                      : "bg-white border-gray-200 text-gray-300";
+              <div className="absolute inset-1 flex min-h-0 flex-col gap-1.5">
+                <div className="shrink-0 rounded-sm border border-gray-200 bg-white/95 px-1.5 py-0.5 text-center text-[10px] font-black tracking-wide text-gray-800 shadow-sm">
+                  CAB-{c.cab}
+                </div>
+                <div className="flex min-h-0 flex-1 flex-col gap-1.5">
+                  {drawerSlots?.map((d) => {
+                    const drawerText = `Drawer ${d.drawer}`;
+                    const drawerClass =
+                      d.count > 0
+                        ? "drawer-occupied"
+                        : "bg-white border-gray-200 text-gray-300";
 
-                  return (
-                    <div
-                      key={d.drawer}
-                      className={`drawer-box flex-1 rounded-brand flex items-center justify-center transition-all border locator-tile ${drawerClass} ${
-                        d.isTarget ? "drawer-located" : ""
-                      }`}
-                    >
-                      <span
-                        className={`text-[10px] font-bold ${
-                          d.isTarget ? "text-pup-maroon" : "text-gray-900"
+                    return (
+                      <div
+                        key={d.drawer}
+                        className={`drawer-box flex min-h-0 flex-1 rounded-brand items-center justify-center transition-all border locator-tile ${drawerClass} ${
+                          d.isTarget ? "drawer-located" : ""
                         }`}
                       >
-                        {countText}
-                      </span>
-                    </div>
-                  );
-                })}
+                        <span
+                          className={`text-[10px] font-bold ${
+                            d.isTarget ? "text-pup-maroon" : "text-gray-900"
+                          }`}
+                        >
+                          {drawerText}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             ) : (
-              // Non-selected cabinet: show occupancy only
               <div className="absolute inset-x-0 bottom-1.5 px-1 text-[10px] text-center font-bold text-gray-600">
-                {c.occupiedCount} Folders
+                {c.occupiedCount} Records
               </div>
             )}
           </div>

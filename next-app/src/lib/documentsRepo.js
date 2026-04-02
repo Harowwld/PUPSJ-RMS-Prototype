@@ -175,6 +175,45 @@ export async function updateDocumentMetadata(id, { studentNo, studentName, docTy
   return await getDocumentById(id);
 }
 
+export async function replaceDocumentFile(
+  id,
+  { originalFilename, mimeType, sizeBytes, buffer }
+) {
+  await ensureReviewColumns();
+  const existing = await getDocumentById(id);
+  if (!existing) return null;
+
+  const ext = path.extname(originalFilename || "").toLowerCase() || ".pdf";
+  const storageFilename = `${Date.now()}-${crypto
+    .randomBytes(8)
+    .toString("hex")}${ext}`;
+  const absPath = path.join(getUploadsDir(), storageFilename);
+  fs.writeFileSync(absPath, buffer);
+
+  const prevAbsPath = path.join(getUploadsDir(), existing.storage_filename);
+  try {
+    fs.unlinkSync(prevAbsPath);
+  } catch {
+    // ignore missing file
+  }
+
+  await dbRun(
+    `UPDATE documents
+     SET original_filename = ?,
+         storage_filename = ?,
+         mime_type = ?,
+         size_bytes = ?,
+         approval_status = 'Pending',
+         reviewed_by = NULL,
+         reviewed_at = NULL,
+         review_note = NULL
+     WHERE id = ?`,
+    [originalFilename, storageFilename, mimeType, sizeBytes, id]
+  );
+
+  return await getDocumentById(id);
+}
+
 export async function reviewDocument(id, { approvalStatus, reviewedBy, reviewNote }) {
   await ensureReviewColumns();
   const existing = await getDocumentById(id);

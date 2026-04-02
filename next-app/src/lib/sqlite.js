@@ -16,8 +16,60 @@ function getDbFilePath() {
   return path.join(base, "db.sqlite");
 }
 
+/** Ensures document_requests exists (migrations only run on first DB init; HMR/cache skips them). */
+function ensureDocumentRequestsTable() {
+  if (!db) return;
+  try {
+    const check = db.exec(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='document_requests'"
+    );
+    if (check?.[0]?.values?.length > 0) return;
+
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS document_requests (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        student_no TEXT NOT NULL,
+        doc_type TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'Pending',
+        notes TEXT,
+        linked_document_id INTEGER,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+        created_by TEXT,
+        updated_by TEXT,
+        FOREIGN KEY (student_no) REFERENCES students(student_no) ON UPDATE CASCADE ON DELETE RESTRICT,
+        FOREIGN KEY (doc_type) REFERENCES document_types(name) ON UPDATE CASCADE ON DELETE RESTRICT,
+        FOREIGN KEY (linked_document_id) REFERENCES documents(id) ON UPDATE CASCADE ON DELETE SET NULL,
+        FOREIGN KEY (created_by) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE SET NULL,
+        FOREIGN KEY (updated_by) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE SET NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_document_requests_student_no ON document_requests(student_no);
+      CREATE INDEX IF NOT EXISTS idx_document_requests_status ON document_requests(status);
+      CREATE INDEX IF NOT EXISTS idx_document_requests_created_at ON document_requests(created_at);
+    `);
+    try {
+      const ver = db.exec("SELECT value FROM settings WHERE key = 'schema_version'");
+      const v =
+        ver?.[0]?.values?.[0]?.[0] != null
+          ? parseInt(String(ver[0].values[0][0]), 10)
+          : 0;
+      if (!Number.isFinite(v) || v < 5) {
+        db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '5')");
+      }
+    } catch {
+      // ignore
+    }
+    persistDb();
+  } catch (e) {
+    console.error("[DB] ensureDocumentRequestsTable:", e);
+  }
+}
+
 export async function getDb() {
-  if (db) return db;
+  if (db) {
+    ensureDocumentRequestsTable();
+    return db;
+  }
   if (initializing) return initializing;
 
   initializing = (async () => {
@@ -209,22 +261,6 @@ export async function getDb() {
 
         try {
           db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_document_types_name_norm_unique ON document_types(name_norm)");
-        } catch (e) {}
-
-        // Seed Document Types if empty
-        try {
-          const res = db.exec("SELECT COUNT(*) FROM document_types");
-          const count = res[0].values[0][0];
-          if (count === 0) {
-            const defaults = [
-              "Form 137", "Transcript of Records", "Good Moral Certificate",
-              "Diploma", "Honorable Dismissal", "Medical Certificate", "Birth Certificate"
-            ];
-            for (const name of defaults) {
-              const nameNorm = name.trim().toLowerCase().replace(/\s+/g, " ");
-              db.exec(`INSERT INTO document_types (name, name_norm) VALUES ('${name.replace(/'/g, "''")}', '${nameNorm.replace(/'/g, "''")}')`);
-            }
-          }
         } catch (e) {}
 
         db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '1')");
@@ -434,6 +470,37 @@ export async function getDb() {
         }
       }
 
+      if (schemaVersion < 5) {
+        try {
+          db.exec(`
+            CREATE TABLE IF NOT EXISTS document_requests (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              student_no TEXT NOT NULL,
+              doc_type TEXT NOT NULL,
+              status TEXT NOT NULL DEFAULT 'Pending',
+              notes TEXT,
+              linked_document_id INTEGER,
+              created_at TEXT NOT NULL DEFAULT (datetime('now')),
+              updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+              created_by TEXT,
+              updated_by TEXT,
+              FOREIGN KEY (student_no) REFERENCES students(student_no) ON UPDATE CASCADE ON DELETE RESTRICT,
+              FOREIGN KEY (doc_type) REFERENCES document_types(name) ON UPDATE CASCADE ON DELETE RESTRICT,
+              FOREIGN KEY (linked_document_id) REFERENCES documents(id) ON UPDATE CASCADE ON DELETE SET NULL,
+              FOREIGN KEY (created_by) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE SET NULL,
+              FOREIGN KEY (updated_by) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_document_requests_student_no ON document_requests(student_no);
+            CREATE INDEX IF NOT EXISTS idx_document_requests_status ON document_requests(status);
+            CREATE INDEX IF NOT EXISTS idx_document_requests_created_at ON document_requests(created_at);
+          `);
+          db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '5')");
+          persistDb();
+        } catch (e) {
+          console.error("[DB] document_requests migration:", e);
+        }
+      }
+
       // Safety net for environments where schema_version may be out of sync.
       // This ensures review columns exist before any API query references them.
       try {
@@ -479,6 +546,8 @@ export async function getDb() {
       } catch (e) {
         // ignore foreign key pragma errors
       }
+
+      ensureDocumentRequestsTable();
 
       initializing = null;
       return db;

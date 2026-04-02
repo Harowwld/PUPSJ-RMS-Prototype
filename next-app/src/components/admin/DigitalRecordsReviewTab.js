@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatPHDateTimeParts } from "@/lib/timeFormat";
 
 export default function DigitalRecordsReviewTab({
   records,
@@ -69,26 +71,6 @@ export default function DigitalRecordsReviewTab({
     }
   };
 
-  const formatPHTime = (dateString) => {
-    if (!dateString) return { date: "—", time: "" };
-    try {
-      const date = new Date(String(dateString).replace(" ", "T") + "Z");
-      const datePart = date.toLocaleDateString("en-PH", {
-        timeZone: "Asia/Manila",
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit",
-      });
-      const timePart = date.toLocaleTimeString("en-PH", {
-        timeZone: "Asia/Manila",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      return { date: datePart, time: timePart };
-    } catch {
-      return { date: String(dateString), time: "" };
-    }
-  };
 
   return (
     <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter">
@@ -167,11 +149,18 @@ export default function DigitalRecordsReviewTab({
                 {isLoading ? (
                   <tr>
                     <td colSpan={6} className="p-8 text-center">
-                      <div className="flex flex-col items-center justify-center gap-3">
-                        <div className="w-10 h-10 border-2 border-gray-200 border-t-pup-maroon rounded-full animate-spin"></div>
-                        <span className="text-sm font-medium text-gray-500">
-                          Loading records for review...
-                        </span>
+                      <div className="max-w-3xl mx-auto w-full space-y-3">
+                        <Skeleton className="h-4 w-64 mx-auto" />
+                        {Array.from({ length: 6 }).map((_, idx) => (
+                          <div key={idx} className="grid grid-cols-6 gap-3 items-center px-4 py-2">
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-8 w-full" />
+                          </div>
+                        ))}
                       </div>
                     </td>
                   </tr>
@@ -227,7 +216,7 @@ export default function DigitalRecordsReviewTab({
                       </td>
                       <td className="p-3">
                         {(() => {
-                          const t = formatPHTime(r.created_at);
+                          const t = formatPHDateTimeParts(r.created_at);
                           return (
                             <div className="font-mono text-[11px] text-gray-500 whitespace-nowrap">
                               <div>{t.date}</div>
@@ -293,11 +282,7 @@ export default function DigitalRecordsReviewTab({
                   <strong className="text-gray-900">{filteredRecords.length}</strong>{" "}
                   digital records
                 </>
-              ) : (
-                <>
-                  Showing <strong className="text-gray-900">0</strong> digital records
-                </>
-              )}
+              ) : null}
             </div>
 
             {filteredRecords.length > 0 && (

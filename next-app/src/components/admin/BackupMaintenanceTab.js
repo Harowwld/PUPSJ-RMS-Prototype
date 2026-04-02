@@ -10,6 +10,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { formatPHDateTime } from "@/lib/timeFormat";
 
 export default function BackupMaintenanceTab({
   systemHealth,
@@ -27,40 +29,8 @@ export default function BackupMaintenanceTab({
   const lastBackupTime = useMemo(() => {
     if (!backups || backups.length === 0) return "Never";
     const last = backups[0];
-    try {
-      const dateStr = last.created_at.replace(" ", "T") + "Z";
-      const utcDate = new Date(dateStr);
-      const now = new Date();
-      const datePH = utcDate.toLocaleDateString("en-PH", {
-        timeZone: "Asia/Manila",
-      });
-      const todayPH = now.toLocaleDateString("en-PH", {
-        timeZone: "Asia/Manila",
-      });
-      const timeStr = utcDate.toLocaleTimeString("en-PH", {
-        timeZone: "Asia/Manila",
-        hour: "2-digit",
-        minute: "2-digit",
-      });
-      if (datePH === todayPH) return `Today, ${timeStr}`;
-      return `${datePH}, ${timeStr}`;
-    } catch {
-      return last.created_at;
-    }
+    return formatPHDateTime(last.created_at);
   }, [backups]);
-
-  const formatPHTime = (dateString) => {
-    const date = new Date(dateString.replace(" ", "T") + "Z");
-    const datePH = date.toLocaleDateString("en-PH", {
-      timeZone: "Asia/Manila",
-    });
-    const timePH = date.toLocaleTimeString("en-PH", {
-      timeZone: "Asia/Manila",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-    return `${datePH}, ${timePH}`;
-  };
 
   return (
     <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter">
@@ -230,11 +200,18 @@ export default function BackupMaintenanceTab({
               <tbody className="divide-y divide-gray-200">
                 {isLoading && backups.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={5}
-                      className="p-8 text-center text-sm text-gray-500"
-                    >
-                      Loading backup records...
+                    <td colSpan={5} className="p-6">
+                      <div className="space-y-3">
+                        {Array.from({ length: 6 }).map((_, idx) => (
+                          <div key={idx} className="grid grid-cols-5 gap-3 items-center">
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-8 w-full" />
+                          </div>
+                        ))}
+                      </div>
                     </td>
                   </tr>
                 ) : backups.length === 0 ? (
@@ -268,7 +245,7 @@ export default function BackupMaintenanceTab({
                         </span>
                       </td>
                       <td className="p-3 text-[11px] font-medium text-gray-600 whitespace-nowrap">
-                        {formatPHTime(b.created_at)}
+                        {formatPHDateTime(b.created_at)}
                       </td>
                       <td className="p-3 text-xs font-bold text-gray-700">
                         {(b.size_bytes / (1024 * 1024)).toFixed(2)} MB
@@ -307,7 +284,7 @@ export default function BackupMaintenanceTab({
                                 }`}
                               ></span>
                               <span className="text-[9px] uppercase font-bold text-gray-500 tracking-wider">
-                                NODE 2: Remote
+                                NODE 2: External
                               </span>
                             </div>
                             {b.status_external !== "Success" ? (
@@ -320,6 +297,18 @@ export default function BackupMaintenanceTab({
                             ) : (
                               <i className="ph-bold ph-check-circle text-blue-600 text-[10px]"></i>
                             )}
+                          </div>
+
+                          <div className="flex items-center justify-between gap-3 bg-gray-50 px-2 py-1 rounded border border-gray-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] opacity-70">
+                            <div className="flex items-center gap-1.5">
+                              <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
+                              <span className="text-[9px] uppercase font-bold text-gray-500 tracking-wider">
+                                NODE 3: Offsite
+                              </span>
+                            </div>
+                            <span className="text-[9px] font-bold text-gray-400">
+                              Not configured
+                            </span>
                           </div>
                         </div>
                       </td>

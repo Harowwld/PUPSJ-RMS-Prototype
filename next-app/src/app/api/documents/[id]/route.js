@@ -6,6 +6,7 @@ import {
   deleteDocument,
   getDocumentById,
   getDocumentFilePath,
+  replaceDocumentFile,
   reviewDocument,
   updateDocumentMetadata,
 } from "../../../../lib/documentsRepo";
@@ -74,23 +75,51 @@ export async function PATCH(req, ctx) {
     );
   }
 
-  const body = await req.json().catch(() => null);
-  if (!body || typeof body !== "object") {
-    return NextResponse.json(
-      { ok: false, error: "Invalid JSON body" },
-      { status: 400 }
-    );
-  }
+  const contentType = String(req.headers.get("content-type") || "").toLowerCase();
+  let body = null;
+  let replacementFile = null;
+  let studentNo;
+  let studentName;
+  let docType;
+  let approvalStatus;
+  let reviewNote;
 
-  const studentNo =
-    body.studentNo === undefined ? undefined : String(body.studentNo).trim();
-  const studentName =
-    body.studentName === undefined ? undefined : String(body.studentName).trim();
-  const docType = body.docType === undefined ? undefined : String(body.docType).trim();
-  const approvalStatus =
-    body.approvalStatus === undefined ? undefined : String(body.approvalStatus).trim();
-  const reviewNote =
-    body.reviewNote === undefined ? undefined : String(body.reviewNote).trim();
+  if (contentType.includes("multipart/form-data")) {
+    const form = await req.formData().catch(() => null);
+    if (!form) {
+      return NextResponse.json(
+        { ok: false, error: "Invalid form data" },
+        { status: 400 }
+      );
+    }
+    const file = form.get("file");
+    if (file && typeof file !== "string") replacementFile = file;
+    studentNo = String(form.get("studentNo") || "").trim() || undefined;
+    studentName = String(form.get("studentName") || "").trim() || undefined;
+    docType = String(form.get("docType") || "").trim() || undefined;
+    approvalStatus = String(form.get("approvalStatus") || "").trim() || undefined;
+    reviewNote = String(form.get("reviewNote") || "").trim() || undefined;
+  } else {
+    body = await req.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return NextResponse.json(
+        { ok: false, error: "Invalid JSON body" },
+        { status: 400 }
+      );
+    }
+    studentNo =
+      body.studentNo === undefined ? undefined : String(body.studentNo).trim();
+    studentName =
+      body.studentName === undefined ? undefined : String(body.studentName).trim();
+    docType = body.docType === undefined ? undefined : String(body.docType).trim();
+    approvalStatus =
+      body.approvalStatus === undefined ? undefined : String(body.approvalStatus).trim();
+    reviewNote =
+      body.reviewNote === undefined ? undefined : String(body.reviewNote).trim();
+    if (body.file && typeof body.file !== "string") {
+      replacementFile = body.file;
+    }
+  }
 
   if (approvalStatus !== undefined) {
     if (!["Pending", "Approved", "Declined"].includes(approvalStatus)) {
@@ -139,11 +168,31 @@ export async function PATCH(req, ctx) {
     return NextResponse.json({ ok: true, data: row });
   }
 
-  const row = await updateDocumentMetadata(id, { studentNo, studentName, docType });
+  let row = await updateDocumentMetadata(id, { studentNo, studentName, docType });
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
-  await writeAuditLog(req, `Updated document metadata #${id}`);
+  let replaced = false;
+  if (replacementFile) {
+    if (replacementFile.type !== "application/pdf") {
+      return NextResponse.json(
+        { ok: false, error: "Only PDF files are allowed" },
+        { status: 400 }
+      );
+    }
+    const buf = Buffer.from(await replacementFile.arrayBuffer());
+    row = await replaceDocumentFile(id, {
+      originalFilename: replacementFile.name || "document.pdf",
+      mimeType: replacementFile.type || "application/pdf",
+      sizeBytes: replacementFile.size || buf.length,
+      buffer: buf,
+    });
+    replaced = true;
+  }
+  await writeAuditLog(
+    req,
+    replaced ? `Replaced document file #${id}` : `Updated document metadata #${id}`
+  );
 
   return NextResponse.json({ ok: true, data: row });
 }

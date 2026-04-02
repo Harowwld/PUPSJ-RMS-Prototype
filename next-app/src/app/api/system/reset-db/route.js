@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getDb } from "../../../../lib/sqlite";
 import fs from "node:fs";
 import path from "node:path";
-import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { buildDefaultStorageLayout } from "../../../../lib/storageLayoutDefaults";
 import { hashPasswordForStorage } from "../../../../lib/staffRepo";
 
@@ -22,7 +21,10 @@ export async function GET(req) {
       "audit_logs",
       "backups",
       "settings",
-      "document_types"
+      "document_types",
+      "courses",
+      "sections",
+      "document_requests"
     ];
 
     for (const table of tables) {
@@ -34,30 +36,8 @@ export async function GET(req) {
       }
     }
 
-    // Seed default document types
-    const defaults = [
-      "Form 137", "Transcript of Records", "Good Moral Certificate",
-      "Diploma", "Honorable Dismissal", "Medical Certificate", "Birth Certificate"
-    ];
-    for (const name of defaults) {
-      const nameNorm = name.trim().toLowerCase().replace(/\s+/g, " ");
-      db.exec(`INSERT INTO document_types (name, name_norm) VALUES ('${name.replace(/'/g, "''")}', '${nameNorm.replace(/'/g, "''")}')`);
-    }
-
     // Set schema version back to 1
     db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '1')");
-
-    // Seed default storage layout (SLV)
-    try {
-      const layout = buildDefaultStorageLayout();
-      const json = JSON.stringify(layout).replace(/'/g, "''");
-      db.exec(
-        `INSERT OR REPLACE INTO settings (key, value) VALUES ('storage_layout', '${json}')`
-      );
-    } catch (e) {
-      // If defaults fail for any reason, still allow reset to succeed.
-      console.error("Failed to seed storage_layout defaults:", e?.message || e);
-    }
 
     // Seed default Admin staff account (bootstrap)
     try {
@@ -111,10 +91,9 @@ export async function GET(req) {
       }
     }
 
-    await writeAuditLog(req, "Reset database and cleared uploads");
     return NextResponse.json({
       ok: true,
-      message: "Database wiped and physical uploads cleared successfully. Please RESTART your Next.js server now."
+      message: "Database wiped and physical uploads cleared successfully. Please RESTART your Next.js server now. The default admin account is: admin.eli@pup.local / pupstaff"
     });
   } catch (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });

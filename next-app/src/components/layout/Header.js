@@ -113,19 +113,10 @@ export default function Header({ authUser, onLogout, children }) {
                 >
                   <i className="ph-bold ph-user-gear"></i> Account Settings
                 </DropdownMenuItem>
-                <DropdownMenuItem 
-                  className="cursor-pointer rounded-md text-gray-700 hover:bg-red-50 hover:text-pup-maroon flex items-center gap-2 font-medium"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    router.push("/account");
-                  }}
-                >
-                  <i className="ph-bold ph-lock-key"></i> Change Password
-                </DropdownMenuItem>
-                {isAdminView && (
+                {hasAdminRights && (
                   <DropdownMenuItem 
                     className="cursor-pointer rounded-md text-gray-700 hover:bg-red-50 hover:text-pup-maroon flex items-center gap-2 font-medium"
-                    onClick={() => router.push("/admin?tab=auditLogs")}
+                    onClick={() => router.push("/account/activity")}
                   >
                     <i className="ph-bold ph-clock-counter-clockwise"></i> My Activity
                   </DropdownMenuItem>
