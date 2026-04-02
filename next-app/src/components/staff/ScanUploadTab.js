@@ -33,7 +33,6 @@ export default function ScanUploadTab({
   setNewRecStudentNoTouched,
   applyStudentNoMask,
   newStudentNoInputRef,
-  newAvailYears,
   sysSections = [],
   csvInputRef,
   handleCsvFileSelect,
@@ -85,6 +84,14 @@ export default function ScanUploadTab({
     const selected = parseInt(String(drawerRaw || ""), 10);
     if (Number.isFinite(selected) && !ids.includes(selected)) return [selected, ...ids];
     return ids;
+  };
+
+  const deriveYearFromStudentNo = (studentNoRaw) => {
+    const raw = String(studentNoRaw || "").trim();
+    const yearPart = raw.split("-")[0];
+    const year = Number(yearPart);
+    if (!Number.isFinite(year) || year < 2000 || year > 2100) return "";
+    return String(year);
   };
 
   /** When linking to an existing student, only room / cabinet / drawer / doc type may change. */
@@ -458,9 +465,12 @@ export default function ScanUploadTab({
                       clearUploadFieldError?.("studentNo");
                       const raw = v.slice(0, start - 2) + v.slice(start - 1);
                       const masked = applyStudentNoMask(raw);
+                      const derivedYear = deriveYearFromStudentNo(masked.value);
                       setNewRec((p) => ({
                         ...p,
                         studentNo: masked.value,
+                        year: derivedYear,
+                        sectionPart: "",
                       }));
 
                       const nextPos = Math.max(0, start - 2);
@@ -476,11 +486,16 @@ export default function ScanUploadTab({
                     }}
                     onChange={(e) => {
                       clearUploadFieldError?.("studentNo");
+                      clearUploadFieldError?.("year");
+                      clearUploadFieldError?.("sectionPart");
                       setNewRecStudentNoTouched(true);
                       const masked = applyStudentNoMask(e.target.value);
+                      const derivedYear = deriveYearFromStudentNo(masked.value);
                       setNewRec((p) => ({
                         ...p,
                         studentNo: masked.value,
+                        year: derivedYear,
+                        sectionPart: "",
                       }));
                     }}
                     onBlur={() => setNewRecStudentNoTouched(true)}
@@ -543,36 +558,7 @@ export default function ScanUploadTab({
                 </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-5">
-                <div>
-                  <label
-                    className={`block text-xs font-bold mb-1.5 uppercase ${
-                      lockIdentity ? lockedLabel : "text-gray-700"
-                    }`}
-                  >
-                    Academic Year
-                  </label>
-                  <select
-                    className={`form-select ${ring("year")} ${lockIdentity ? lockedField : ""}`}
-                    value={newRec.year}
-                    disabled={lockIdentity}
-                    onChange={(e) => {
-                      clearUploadFieldError?.("year");
-                      setNewRec((p) => ({
-                        ...p,
-                        year: e.target.value,
-                        sectionPart: "",
-                      }));
-                    }}
-                  >
-                    <option value="">Select Academic Year...</option>
-                    {newAvailYears.map((y) => (
-                      <option key={y} value={String(y)}>
-                        {y}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+              <div className="grid grid-cols-1 gap-5">
                 <div>
                   <label
                     className={`block text-xs font-bold mb-1.5 uppercase ${

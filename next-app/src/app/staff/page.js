@@ -307,12 +307,21 @@ export default function StaffPage() {
     router.push("/");
   };
 
+  const getStudentFolderYear = (s) => {
+    const derived = getStudentNoYear(s.studentNo);
+    if (derived != null) return derived;
+    const fromDb = Number(s.yearLevel);
+    return Number.isFinite(fromDb) ? fromDb : null;
+  };
+
   const academicYearOptions = useMemo(() => {
     const currentYear = new Date().getFullYear();
     const fromData = Array.from(
       new Set(
         students
-          .map((s) => Number(s.yearLevel))
+          .map((s) => getStudentFolderYear(s))
+          .filter((y) => y != null)
+          .map((y) => Number(y))
           .filter((y) => Number.isFinite(y) && y >= 2000 && y <= 2100),
       ),
     );
@@ -334,7 +343,7 @@ export default function StaffPage() {
       return years.map((y) => ({
         key: String(y),
         title: `Year ${y}`,
-        subtitle: `${students.filter((s) => Number(s.yearLevel) === y).length} Students`,
+        subtitle: `${students.filter((s) => getStudentFolderYear(s) === y).length} Students`,
         icon: "ph-calendar-blank",
         onClick: () => {
           setSelectedYear(y);
@@ -344,7 +353,7 @@ export default function StaffPage() {
     }
     if (currentLevel === "students") {
       return students
-        .filter((s) => Number(s.yearLevel) === Number(selectedYear))
+        .filter((s) => getStudentFolderYear(s) === Number(selectedYear))
         .map((s) => ({ key: s.studentNo, student: s }));
     }
     return [];
@@ -464,10 +473,16 @@ export default function StaffPage() {
   );
 
   const locateStudent = useCallback((s) => {
-    const nextYear = Number(s.yearLevel);
-    setSelectedYear(
-      Number.isFinite(nextYear) ? nextYear : getStudentNoYear(s.studentNo)
-    );
+    const derivedYear = getStudentNoYear(s.studentNo);
+    const yearFromDb = Number(s.yearLevel);
+    const nextYear =
+      derivedYear != null
+        ? derivedYear
+        : Number.isFinite(yearFromDb)
+          ? yearFromDb
+          : null;
+
+    setSelectedYear(nextYear);
     setCurrentLevel("students");
     setActiveStudent(s);
     setSelectedRoom(s.room);
@@ -521,7 +536,11 @@ export default function StaffPage() {
 
   const applyStudentToPdfForm = useCallback((student, docTypeFromOcr) => {
     const s = normalizeStudentRow(student);
-    const yearStr = String(s.yearLevel ?? "").trim();
+    const derivedYear = getStudentNoYear(s.studentNo);
+    const yearStr =
+      derivedYear != null
+        ? String(derivedYear)
+        : String(s.yearLevel ?? "").trim();
     const sec = String(s.section ?? "").trim();
     let sectionPart = "";
     if (yearStr && sec.startsWith(`${yearStr}-`)) {
@@ -818,7 +837,7 @@ export default function StaffPage() {
     { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
     { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
     { key: "documents", label: "Documents", iconClass: "ph-bold ph-file-text" },
-    { key: "requests", label: "Document requests", iconClass: "ph-bold ph-tray-arrow-up" },
+    { key: "requests", label: "Document Requests", iconClass: "ph-bold ph-tray-arrow-up" },
   ];
 
   if (loading) {
@@ -937,7 +956,6 @@ export default function StaffPage() {
             setNewRecStudentNoTouched={setNewRecStudentNoTouched}
             applyStudentNoMask={applyStudentNoMask}
             newStudentNoInputRef={newStudentNoInputRef}
-            newAvailYears={academicYearOptions}
             sysSections={availableSectionsForNewRecord}
             storageLayout={storageLayout}
             csvInputRef={csvInputRef}

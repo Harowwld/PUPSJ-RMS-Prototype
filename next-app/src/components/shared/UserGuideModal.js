@@ -135,7 +135,7 @@ export default function UserGuideModal({ open, onClose }) {
                           </div>
                           <div className="flex gap-3">
                             <div className="w-6 h-6 rounded-full bg-red-100 text-pup-maroon flex items-center justify-center text-xs font-black shrink-0">4</div>
-                            <p className="text-sm font-medium text-gray-700">Click <strong>Locate on Map</strong> to visualize the drawer's position in the room.</p>
+                            <p className="text-sm font-medium text-gray-700">Click <strong>Locate on Map</strong> to visualize the drawer&apos;s position in the room.</p>
                           </div>
                         </div>
                       </div>

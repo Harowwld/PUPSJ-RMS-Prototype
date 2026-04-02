@@ -319,8 +319,20 @@ export async function getDb() {
             FROM students
             WHERE TRIM(COALESCE(course_code, '')) <> '';
 
-            INSERT OR IGNORE INTO courses(code, name) VALUES ('UNKN', 'Unknown');
-            INSERT OR IGNORE INTO sections(name, course_code) VALUES ('UNASSIGNED', 'UNKN');
+            -- Only create placeholder taxonomy rows if legacy student rows need them.
+            INSERT OR IGNORE INTO courses(code, name)
+            SELECT 'UNKN', 'Unknown'
+            WHERE EXISTS (
+              SELECT 1 FROM students
+              WHERE TRIM(COALESCE(course_code, '')) = ''
+            );
+
+            INSERT OR IGNORE INTO sections(name, course_code)
+            SELECT 'UNASSIGNED', 'UNKN'
+            WHERE EXISTS (
+              SELECT 1 FROM students
+              WHERE TRIM(COALESCE(section, '')) = ''
+            );
 
             UPDATE students
             SET course_code = 'UNKN'

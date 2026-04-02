@@ -7,20 +7,37 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
-export default function PDFPreviewModal({
-  open,
-  onClose,
-  preview,
-}) {
-  if (!open) return null;
-
+function PDFFrame({ docId }) {
   const [frameReady, setFrameReady] = useState(false);
 
-  useEffect(() => {
-    setFrameReady(false);
-  }, [preview?.docId, open]);
+  return (
+    <div className="relative flex-1 min-h-0 min-w-0">
+      {!frameReady ? (
+        <div className="absolute inset-0 p-6 bg-white">
+          <div className="space-y-4">
+            <Skeleton className="h-6 w-56" />
+            <Skeleton className="h-4 w-80" />
+            <Skeleton className="h-[55vh] w-full" />
+          </div>
+        </div>
+      ) : null}
+      <iframe
+        title="PDF Preview"
+        src={`/api/documents/${docId}#view=FitH`}
+        className="absolute inset-0 w-full h-full bg-gray-200"
+        style={{ border: "none" }}
+        onLoad={() => setFrameReady(true)}
+      />
+    </div>
+  );
+}
+
+export default function PDFPreviewModal({ open, onClose, preview }) {
+  if (!open) return null;
+
+  const docId = preview?.docId;
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
@@ -46,9 +63,9 @@ export default function PDFPreviewModal({
             <div className="text-xs font-bold text-gray-600 uppercase tracking-widest">
               REF: <span className="font-mono">{preview.refId}</span>
             </div>
-            {preview.docId ? (
+            {docId ? (
               <a
-                href={`/api/documents/${preview.docId}`}
+                href={`/api/documents/${docId}`}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center rounded-brand border border-gray-300 bg-white h-11 px-5 text-xs font-bold text-gray-700 shadow-sm hover:text-pup-maroon hover:bg-red-50"
@@ -58,25 +75,8 @@ export default function PDFPreviewModal({
             ) : null}
           </div>
 
-          {preview.docId ? (
-            <div className="relative flex-1 min-h-0 min-w-0">
-              {!frameReady ? (
-                <div className="absolute inset-0 p-6 bg-white">
-                  <div className="space-y-4">
-                    <Skeleton className="h-6 w-56" />
-                    <Skeleton className="h-4 w-80" />
-                    <Skeleton className="h-[55vh] w-full" />
-                  </div>
-                </div>
-              ) : null}
-              <iframe
-                title="PDF Preview"
-                src={`/api/documents/${preview.docId}#view=FitH`}
-                className="absolute inset-0 w-full h-full bg-gray-200"
-                style={{ border: "none" }}
-                onLoad={() => setFrameReady(true)}
-              />
-            </div>
+          {docId ? (
+            <PDFFrame key={docId} docId={docId} />
           ) : (
             <div className="flex-1 p-6 flex items-center justify-center">
               <div className="max-w-lg text-center text-sm text-gray-600 font-medium">
