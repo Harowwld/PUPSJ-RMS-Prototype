@@ -1,17 +1,29 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PDFDocument } from "pdf-lib";
 
 function randomRef() {
   return `scan-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
 }
 
-/** iOS Safari only exposes camera on HTTPS or localhost — not on http://192.168.x.x */
+/** Secure context: HTTPS or localhost — required for `navigator.mediaDevices` on most mobile browsers */
 function canUseCamera() {
   if (typeof navigator === "undefined") return false;
   const md = navigator.mediaDevices;
   return typeof md?.getUserMedia === "function";
+}
+
+function detectPlatform() {
+  if (typeof navigator === "undefined") {
+    return { isAndroid: false, isIOS: false };
+  }
+  const ua = navigator.userAgent || "";
+  const isIOS =
+    /iPad|iPhone|iPod/i.test(ua) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/i.test(ua);
+  return { isAndroid, isIOS };
 }
 
 export default function ScanLinkPage() {
@@ -25,10 +37,17 @@ export default function ScanLinkPage() {
   const [videoStream, setVideoStream] = useState(null);
   const [captured, setCaptured] = useState([]);
   const [busy, setBusy] = useState(false);
+  const [cameraStarting, setCameraStarting] = useState(false);
+  /** null until client mount — avoids auto-camera before we know Android vs iOS */
+  const [platform, setPlatform] = useState(null);
   const fileInputRef = useRef(null);
 
   const canSend = useMemo(() => state === "paired" && sessionId && token, [state, sessionId, token]);
   const cameraSupported = useMemo(() => canUseCamera(), []);
+
+  useEffect(() => {
+    setPlatform(detectPlatform());
+  }, []);
 
   useEffect(() => {
     const url = new URL(window.location.href);
@@ -85,14 +104,30 @@ export default function ScanLinkPage() {
     return () => clearInterval(timer);
   }, [canSend, sessionId, token]);
 
+  /** iOS / desktop: auto-request camera when paired. Android: use "Start camera" button instead. */
   useEffect(() => {
-    if (state !== "paired") return;
+    if (state !== "paired" || platform === null) return;
     if (!canUseCamera()) {
-      setCameraError(
-        "Camera is not available on this connection. iPhone Safari only allows the camera on HTTPS (or localhost). Use “Choose PDF” below, or open this app through an HTTPS tunnel (e.g. ngrok / cloudflared) so the address starts with https://."
-      );
+      if (platform.isIOS) {
+        setCameraError(
+          "Camera is not available on this connection. iPhone Safari only allows the camera on HTTPS (or localhost). Use “Choose PDF” below, or open this app through an HTTPS tunnel (e.g. ngrok / cloudflared) so the address starts with https://."
+        );
+      } else if (platform.isAndroid) {
+        setCameraError(
+          "Camera is not available on this connection. On Android Chrome, the camera usually requires HTTPS (except localhost). Tap “Start camera” after using HTTPS, or use “Choose PDF” below."
+        );
+      } else {
+        setCameraError(
+          "Camera is not available (secure context required). Use HTTPS or localhost, or choose a PDF below."
+        );
+      }
       return;
     }
+    if (platform.isAndroid) {
+      setCameraError("");
+      return;
+    }
+
     let stream;
     (async () => {
       try {
@@ -113,7 +148,35 @@ export default function ScanLinkPage() {
         // ignore
       }
     };
-  }, [state]);
+  }, [state, platform]);
+
+  useEffect(() => {
+    return () => {
+      try {
+        videoStream?.getTracks?.().forEach((t) => t.stop());
+      } catch {
+        // ignore
+      }
+    };
+  }, [videoStream]);
+
+  const startAndroidCamera = useCallback(async () => {
+    if (!canUseCamera()) return;
+    setCameraError("");
+    setCameraStarting(true);
+    try {
+      const s = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: "environment" } },
+        audio: false,
+      });
+      setVideoStream(s);
+      setMessage("Camera ready. Capture one or more pages, then upload the PDF.");
+    } catch (e) {
+      setCameraError(e?.message || "Camera permission denied");
+    } finally {
+      setCameraStarting(false);
+    }
+  }, []);
 
   const capturePage = async () => {
     setCameraError("");
@@ -131,8 +194,11 @@ export default function ScanLinkPage() {
         canvas.toBlob(resolve, "image/jpeg", 0.85)
       );
       if (!blob) throw new Error("Capture failed");
-      setCaptured((prev) => [...prev, blob]);
-      setMessage(`Captured ${captured.length + 1} page(s).`);
+      setCaptured((prev) => {
+        const next = [...prev, blob];
+        setMessage(`Captured ${next.length} page(s).`);
+        return next;
+      });
     } catch (e) {
       setCameraError(e?.message || "Capture failed");
     }
@@ -229,6 +295,16 @@ export default function ScanLinkPage() {
     }
   };
 
+  const isAndroid = platform?.isAndroid;
+  const isIOS = platform?.isIOS;
+  const showAndroidCameraStart =
+    canSend &&
+    cameraSupported &&
+    isAndroid &&
+    !videoStream &&
+    state === "paired";
+  const showCameraScanner = cameraSupported && !!videoStream;
+
   return (
     <main className="min-h-screen bg-gray-50 p-5 font-inter">
       <div className="max-w-md mx-auto rounded-brand border border-gray-200 bg-white p-5 shadow-sm">
@@ -243,6 +319,26 @@ export default function ScanLinkPage() {
           </span>
         </div>
         {message ? <div className="mt-2 text-xs text-gray-600 font-medium">{message}</div> : null}
+
+        {showAndroidCameraStart ? (
+          <div className="mt-4">
+            <p className="text-xs font-medium text-gray-600 mb-2">
+              Android: allow camera access, then capture pages. Pages are combined into one PDF for staff.
+            </p>
+            <button
+              type="button"
+              disabled={busy || cameraStarting}
+              onClick={startAndroidCamera}
+              className={`w-full h-12 rounded-brand font-bold text-sm ${
+                busy || cameraStarting
+                  ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+                  : "bg-pup-maroon text-white hover:bg-red-900"
+              }`}
+            >
+              {cameraStarting ? "Opening camera…" : "Start camera & scan"}
+            </button>
+          </div>
+        ) : null}
 
         <div className="mt-5">
           <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Capture filename</label>
@@ -261,7 +357,13 @@ export default function ScanLinkPage() {
         ) : null}
 
         <div className="mt-4 space-y-3">
-          <div className="text-xs font-bold text-gray-700 uppercase">Or upload a PDF from this phone</div>
+          <div className="text-xs font-bold text-gray-700 uppercase">
+            {isAndroid && cameraSupported
+              ? "Or upload an existing PDF"
+              : isIOS
+                ? "Upload a PDF (recommended on iPhone over HTTP)"
+                : "Or upload a PDF from this phone"}
+          </div>
           <input
             ref={fileInputRef}
             type="file"
@@ -276,14 +378,14 @@ export default function ScanLinkPage() {
             className={`w-full h-11 rounded-brand font-bold text-sm border ${
               !canSend || busy
                 ? "bg-gray-200 text-gray-500 cursor-not-allowed border-gray-200"
-                : "bg-white border-gray-300 text-gray-800 hover:border-pup-maroon"
+                : "bg-white border border-gray-300 text-gray-800 hover:border-pup-maroon"
             }`}
           >
             {busy ? "Uploading..." : "Choose PDF from phone"}
           </button>
         </div>
 
-        {cameraSupported ? (
+        {showCameraScanner ? (
           <>
             <div className="mt-4 border border-gray-200 rounded-brand overflow-hidden bg-black min-h-[200px]">
               <video
