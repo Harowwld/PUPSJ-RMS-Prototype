@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 
 export default function ScanUploadTab({
   uploadMode,
@@ -51,6 +52,13 @@ export default function ScanUploadTab({
   importCsvStudents,
   csvLoading,
   csvResults,
+  phoneLinkLoading,
+  phoneLinkError,
+  phoneLinkUrl,
+  phoneSession,
+  phoneIncoming,
+  createPhoneLinkSession,
+  onUseIncomingFromPhone,
 }) {
   const fe = uploadFieldErrors || {};
   const ring = (key) => (fe[key] ? "ring-2 ring-orange-400 border-orange-400" : "");
@@ -92,6 +100,12 @@ export default function ScanUploadTab({
   const lockedField =
     "!bg-gray-200 !text-gray-500 !border-gray-300 cursor-not-allowed placeholder:!text-gray-400 focus:!border-gray-300 focus:!shadow-none focus:!ring-0";
   const lockedLabel = "text-gray-400";
+  const phoneStatus =
+    phoneSession?.status === "Paired"
+      ? phoneSession?.is_online
+        ? "Paired (online)"
+        : "Paired (offline)"
+      : phoneSession?.status || "Not linked";
 
   return (
     <div id="view-upload" className="flex flex-col lg:flex-row w-full h-full gap-4 animate-fade-in">
@@ -367,6 +381,94 @@ export default function ScanUploadTab({
           </div>
         ) : null}
       </section>
+
+      {uploadMode === "pdf" ? (
+        <section className="w-full lg:w-1/2 bg-white rounded-brand border border-gray-300 p-4 shadow-sm">
+          <div className="text-xs font-bold text-gray-700 uppercase mb-2">Link Phone Camera</div>
+          <div className="text-sm font-medium text-gray-600">
+            Pair a phone to sync incoming scan metadata to this tab.
+          </div>
+          <div className="mt-3 flex flex-col sm:flex-row gap-3 sm:items-center">
+            <button
+              type="button"
+              onClick={createPhoneLinkSession}
+              disabled={phoneLinkLoading}
+              className={`h-10 px-4 rounded-brand bg-pup-maroon text-white text-sm font-bold hover:bg-red-900 ${
+                phoneLinkLoading ? "opacity-70 cursor-not-allowed" : ""
+              }`}
+            >
+              {phoneLinkLoading ? "Creating link..." : "Link phone camera"}
+            </button>
+            <span className="text-xs font-bold text-gray-700">
+              Status: <span className="text-pup-maroon">{phoneStatus}</span>
+            </span>
+          </div>
+
+          {phoneLinkUrl ? (
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-[180px_1fr] gap-4 border border-gray-200 rounded-brand p-3 bg-gray-50/70">
+              <div className="flex items-center justify-center">
+                <Image
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(phoneLinkUrl)}`}
+                  alt="Phone linking QR"
+                  className="w-40 h-40 rounded border border-gray-200 bg-white"
+                  width={160}
+                  height={160}
+                  unoptimized
+                />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-gray-700 uppercase mb-1">Pairing link</div>
+                <div className="text-xs font-mono text-gray-700 break-all border border-gray-200 rounded bg-white p-2">
+                  {phoneLinkUrl}
+                </div>
+                <div className="mt-2 text-xs text-gray-600 font-medium">
+                  Open this link on the phone or scan the QR code.
+                </div>
+              </div>
+            </div>
+          ) : null}
+
+          {phoneLinkError ? (
+            <div className="mt-3 p-2 rounded-brand border border-red-200 bg-red-50 text-red-700 text-xs font-bold">
+              {phoneLinkError}
+            </div>
+          ) : null}
+
+          <div className="mt-4 border border-gray-200 rounded-brand overflow-hidden bg-white">
+            <div className="px-3 py-2 border-b border-gray-200 bg-gray-50 text-xs font-bold text-gray-700 uppercase">
+              Incoming from phone
+            </div>
+            {Array.isArray(phoneIncoming) && phoneIncoming.length > 0 ? (
+              <div className="max-h-40 overflow-auto divide-y divide-gray-100">
+                {phoneIncoming.map((item) => (
+                  <div key={item.id} className="px-3 py-2 text-xs">
+                    <div className="font-bold text-gray-800">
+                      {item.filename || "Untitled capture"}
+                    </div>
+                    <div className="text-gray-600 font-medium">
+                      {item.mime_type || "unknown mime"}
+                      {item.size_bytes ? ` · ${item.size_bytes} bytes` : ""}
+                    </div>
+                    {String(item.mime_type || "") === "application/pdf" && item.storage_filename ? (
+                      <button
+                        type="button"
+                        onClick={() => onUseIncomingFromPhone?.(item)}
+                        className="mt-2 h-8 px-3 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-xs hover:border-pup-maroon"
+                      >
+                        Use in upload
+                      </button>
+                    ) : null}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="px-3 py-4 text-xs text-gray-500 font-medium">
+                No incoming items yet.
+              </div>
+            )}
+          </div>
+        </section>
+      ) : null}
 
       <section className="w-full lg:w-[58%] bg-white rounded-brand border border-gray-300 flex flex-col h-full shadow-sm overflow-hidden">
         <div className="p-6 border-b border-gray-200">

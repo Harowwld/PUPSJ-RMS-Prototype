@@ -30,6 +30,18 @@ export default function handler(req, res) {
       console.log("Admin subscribed:", socket.id);
     });
 
+    socket.on("pairSubscribe", (sessionIdRaw) => {
+      const sessionId = Number(sessionIdRaw);
+      if (!Number.isFinite(sessionId)) return;
+      socket.join(`pair:${sessionId}`);
+    });
+
+    socket.on("pairUnsubscribe", (sessionIdRaw) => {
+      const sessionId = Number(sessionIdRaw);
+      if (!Number.isFinite(sessionId)) return;
+      socket.leave(`pair:${sessionId}`);
+    });
+
     socket.on("disconnect", () => {
       console.log("Socket disconnected:", socket.id);
     });
@@ -49,4 +61,11 @@ export function broadcastToAdmins(event, data) {
   if (io) {
     io.to("admins").emit(event, data);
   }
+}
+
+export function broadcastToPairSession(sessionId, event, data) {
+  if (!io) return;
+  const id = Number(sessionId);
+  if (!Number.isFinite(id)) return;
+  io.to(`pair:${id}`).emit(event, data);
 }
