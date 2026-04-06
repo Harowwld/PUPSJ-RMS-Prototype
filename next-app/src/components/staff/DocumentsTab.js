@@ -1,7 +1,14 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Dialog, DialogContent , DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
+import { CardContent } from "../ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPHDateTime } from "@/lib/timeFormat";
 
@@ -33,7 +40,10 @@ export default function DocumentsTab({
   };
 
   return (
-       <div id="view-documents" className="flex flex-col lg:flex-row w-full h-full gap-4 animate-fade-in">
+    <div
+      id="view-documents"
+      className="flex flex-col lg:flex-row w-full h-full gap-4 animate-fade-in"
+    >
       <section className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col">
         <div className="p-4 bg-gray-50/50 flex-none border-b border-gray-200">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
@@ -110,192 +120,212 @@ export default function DocumentsTab({
           ) : null}
         </div>
 
-        <div className="p-6 flex-1 flex flex-col min-h-0">
-          <div className="flex-1 overflow-y-auto overflow-x-auto border border-gray-200 rounded-brand">
-            <table className="min-w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
-                  <th className="p-3 font-bold">Student No</th>
-                  <th className="p-3 font-bold">Name</th>
-                  <th className="p-3 font-bold">Type</th>
-                  <th className="p-3 font-bold">Status</th>
-                  <th className="p-3 font-bold">File</th>
-                  <th className="p-3 font-bold">Created</th>
-                  <th className="p-3 font-bold text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {docsLoading ? (
-                  <tr>
-                    <td colSpan={7} className="p-6">
-                      <div className="space-y-3">
-                        {Array.from({ length: 6 }).map((_, idx) => (
-                          <div key={idx} className="grid grid-cols-7 gap-3 items-center">
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-8 w-full" />
-                          </div>
-                        ))}
-                      </div>
-                    </td>
-                  </tr>
-                ) : !(
-                    docsForm.studentNo.trim() ||
-                    docsForm.studentName.trim() ||
-                    docsForm.docType.trim()
-                  ) ? (
-                  <tr className="border-0 hover:bg-transparent">
-                    <td colSpan={7} className="p-0 border-0">
-                      <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
-                        <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                          <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon"></i>
-                        </div>
-                        <div className="text-lg font-bold text-gray-900">
-                          Search Documents
-                        </div>
-                        <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                          Enter a student number, name, or select a document type to find related records.
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                ) : docsRows.length === 0 ? (
-                  <tr className="border-0 hover:bg-transparent">
-                    <td colSpan={7} className="p-0 border-0">
-                      <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
-                        <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                          <i className="ph-duotone ph-warning-circle text-3xl text-red-600"></i>
-                        </div>
-                        <div className="text-lg font-bold text-gray-900">
-                          No Results Found
-                        </div>
-                        <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                          We couldn&apos;t find any documents matching your search criteria.
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  docsRows.map((r, idx) => (
-                    <tr
-                      key={r.id || idx}
-                      className={`hover:bg-gray-50 ${
-                        r.status === "uploaded"
-                          ? "bg-green-50/40"
-                          : r.status === "to_review"
-                            ? "bg-amber-50/50"
-                            : "bg-red-50/40"
-                      }`}
-                    >
-                      <td className="p-3 font-mono font-bold text-gray-900">
-                        {r.student_no}
-                      </td>
-                      <td className="p-3 text-gray-800 font-medium">
-                        {r.student_name || "—"}
-                      </td>
-                      <td className="p-3">
-                        <span className="inline-flex items-center px-2 py-1 rounded-full bg-red-50 text-pup-maroon border border-red-100 text-xs font-bold">
-                          {r.doc_type}
-                        </span>
-                      </td>
-                      <td className="p-3">
-                        {r.status === "uploaded" ? (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full bg-green-50 text-green-800 border border-green-200 text-xs font-bold">
-                            Uploaded
-                          </span>
-                        ) : r.status === "to_review" ? (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold">
-                            To be reviewed
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-1 rounded-full bg-red-50 text-red-800 border border-red-200 text-xs font-bold">
-                            Missing
-                          </span>
-                        )}
-                      </td>
-                      <td className="p-3 text-gray-700">
-                        {r.doc ? (
-                          <>
-                            {r.doc.original_filename}
-                            <div className="text-xs text-gray-500 font-mono">
-                              {(r.doc.size_bytes / 1024).toFixed(1)} KB
-                            </div>
-                          </>
-                        ) : r.status === "to_review" ? (
-                          <span className="text-xs text-amber-800 font-medium">
-                            Hidden until review approval
-                          </span>
-                        ) : (
-                          <span className="text-xs text-gray-500 font-medium">Not uploaded</span>
-                        )}
-                      </td>
-                      <td className="p-3 text-gray-600 font-medium">
-                        {formatPHDateTime(r.reviewDoc?.created_at)}
-                      </td>
-                      <td className="p-3">
-                        <div className="flex justify-end flex-wrap gap-2">
-                          {r.doc ? (
-                            <>
-                              <button
-                                type="button"
-                                className="px-3 h-11 inline-flex items-center rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-xs hover:border-pup-maroon"
-                                onClick={() =>
-                                  onPreviewDocument?.(
-                                    r.doc_type,
-                                    r.student_name || "",
-                                    r.student_no,
-                                    r.doc.id
-                                  )
-                                }
-                              >
-                                View
-                              </button>
-                              <button
-                                type="button"
-                                onClick={async () => {
-                                  if (!r.doc?.id) return;
-                                  setUpdateTargetId(r.doc.id);
-                                  setUpdateStudentNo(String(r.student_no || ""));
-                                  setUpdateStudentName(String(r.student_name || ""));
-                                  setUpdateDocType(String(r.doc_type || ""));
-                                  setUpdateFile(null);
-                                  setUpdatePromptOpen(true);
-                                }}
-                                className="px-3 h-11 rounded-brand bg-pup-maroon text-white font-bold text-xs hover:bg-red-900"
-                              >
-                                Update
-                              </button>
-                            </>
-                          ) : r.status === "to_review" ? (
-                            <span className="text-xs font-medium text-amber-800">
-                              Waiting for admin review
-                            </span>
-                          ) : (
-                            <span className="text-xs font-medium text-gray-400">
-                              No file — use Scan & Upload
-                            </span>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-4 flex items-center">
-            <div className="text-xs text-gray-500 font-medium">
-              {docsForm.studentNo.trim() || docsForm.studentName.trim() || docsForm.docType.trim()
-                ? `Showing ${docsRows.length} documents`
-                : ""}
+        <CardContent className="p-6 flex-1 flex flex-col min-h-0">
+          {docsLoading ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="h-20 rounded-brand" />
+                ))}
+              </div>
+              <Skeleton className="h-4 w-full max-w-md rounded-brand" />
+              <Skeleton className="h-32 rounded-brand" />
             </div>
-          </div>
-        </div>
+          ) : docsError ? (
+            <div className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500">
+              <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
+              </div>
+              <p className="text-lg font-bold text-gray-900">
+                Could not load report
+              </p>
+              <p className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                {docsError}
+              </p>
+            </div>
+          ) : (
+            <>
+              <div className="flex-1 overflow-y-auto overflow-x-auto border border-gray-200 rounded-brand">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+                    <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
+                      <th className="p-3 font-bold">Student No</th>
+                      <th className="p-3 font-bold">Name</th>
+                      <th className="p-3 font-bold">Type</th>
+                      <th className="p-3 font-bold">Status</th>
+                      <th className="p-3 font-bold">File</th>
+                      <th className="p-3 font-bold">Created</th>
+                      <th className="p-3 font-bold text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {!(
+                      docsForm.studentNo.trim() ||
+                      docsForm.studentName.trim() ||
+                      docsForm.docType.trim()
+                    ) ? (
+                      <tr className="border-0 hover:bg-transparent">
+                        <td colSpan={7} className="p-0 border-0">
+                          <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
+                            <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                              <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon"></i>
+                            </div>
+                            <div className="text-lg font-bold text-gray-900">
+                              Search Documents
+                            </div>
+                            <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                              Enter a student number, name, or select a document
+                              type to find related records.
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : docsRows.length === 0 ? (
+                      <tr className="border-0 hover:bg-transparent">
+                        <td colSpan={7} className="p-0 border-0">
+                          <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
+                            <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                              <i className="ph-duotone ph-warning-circle text-3xl text-red-600"></i>
+                            </div>
+                            <div className="text-lg font-bold text-gray-900">
+                              No Results Found
+                            </div>
+                            <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                              We couldn&apos;t find any documents matching your
+                              search criteria.
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      docsRows.map((r, idx) => (
+                        <tr
+                          key={r.id || idx}
+                          className={`hover:bg-gray-50 ${
+                            r.status === "uploaded"
+                              ? "bg-green-50/40"
+                              : r.status === "to_review"
+                                ? "bg-amber-50/50"
+                                : "bg-red-50/40"
+                          }`}
+                        >
+                          <td className="p-3 font-mono font-bold text-gray-900">
+                            {r.student_no}
+                          </td>
+                          <td className="p-3 text-gray-800 font-medium">
+                            {r.student_name || "—"}
+                          </td>
+                          <td className="p-3">
+                            <span className="inline-flex items-center px-2 py-1 rounded-full bg-red-50 text-pup-maroon border border-red-100 text-xs font-bold">
+                              {r.doc_type}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            {r.status === "uploaded" ? (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full bg-green-50 text-green-800 border border-green-200 text-xs font-bold">
+                                Uploaded
+                              </span>
+                            ) : r.status === "to_review" ? (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold">
+                                To be reviewed
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center px-2 py-1 rounded-full bg-red-50 text-red-800 border border-red-200 text-xs font-bold">
+                                Missing
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-3 text-gray-700">
+                            {r.doc ? (
+                              <>
+                                {r.doc.original_filename}
+                                <div className="text-xs text-gray-500 font-mono">
+                                  {(r.doc.size_bytes / 1024).toFixed(1)} KB
+                                </div>
+                              </>
+                            ) : r.status === "to_review" ? (
+                              <span className="text-xs text-amber-800 font-medium">
+                                Hidden until review approval
+                              </span>
+                            ) : (
+                              <span className="text-xs text-gray-500 font-medium">
+                                Not uploaded
+                              </span>
+                            )}
+                          </td>
+                          <td className="p-3 text-gray-600 font-medium">
+                            {formatPHDateTime(r.reviewDoc?.created_at)}
+                          </td>
+                          <td className="p-3">
+                            <div className="flex justify-end flex-wrap gap-2">
+                              {r.doc ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    className="px-3 h-11 inline-flex items-center rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-xs hover:border-pup-maroon"
+                                    onClick={() =>
+                                      onPreviewDocument?.(
+                                        r.doc_type,
+                                        r.student_name || "",
+                                        r.student_no,
+                                        r.doc.id,
+                                      )
+                                    }
+                                  >
+                                    View
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={async () => {
+                                      if (!r.doc?.id) return;
+                                      setUpdateTargetId(r.doc.id);
+                                      setUpdateStudentNo(
+                                        String(r.student_no || ""),
+                                      );
+                                      setUpdateStudentName(
+                                        String(r.student_name || ""),
+                                      );
+                                      setUpdateDocType(
+                                        String(r.doc_type || ""),
+                                      );
+                                      setUpdateFile(null);
+                                      setUpdatePromptOpen(true);
+                                    }}
+                                    className="px-3 h-11 rounded-brand bg-pup-maroon text-white font-bold text-xs hover:bg-red-900"
+                                  >
+                                    Update
+                                  </button>
+                                </>
+                              ) : r.status === "to_review" ? (
+                                <span className="text-xs font-medium text-amber-800">
+                                  Waiting for admin review
+                                </span>
+                              ) : (
+                                <span className="text-xs font-medium text-gray-400">
+                                  No file — use Scan & Upload
+                                </span>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-4 flex items-center">
+                <div className="text-xs text-gray-500 font-medium">
+                  {docsForm.studentNo.trim() ||
+                  docsForm.studentName.trim() ||
+                  docsForm.docType.trim()
+                    ? `Showing ${docsRows.length} documents`
+                    : ""}
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
       </section>
       <Dialog
         open={updatePromptOpen}
@@ -317,7 +347,8 @@ export default function DocumentsTab({
                   Update Document File
                 </DialogTitle>
                 <DialogDescription className="text-sm font-medium mt-1 text-gray-600">
-                  Replace the PDF with a clearer copy, then update metadata if needed.
+                  Replace the PDF with a clearer copy, then update metadata if
+                  needed.
                 </DialogDescription>
               </div>
             </div>
@@ -356,10 +387,13 @@ export default function DocumentsTab({
                       Drag and drop a PDF here, or click to browse
                     </p>
                     <p className="mt-1 text-xs font-medium text-gray-600">
-                      Use a cleaner scan so staff can view and print a better copy.
+                      Use a cleaner scan so staff can view and print a better
+                      copy.
                     </p>
                     <p className="mt-2 text-xs font-mono text-gray-700 truncate">
-                      {updateFile ? updateFile.name : "No replacement file selected"}
+                      {updateFile
+                        ? updateFile.name
+                        : "No replacement file selected"}
                     </p>
                   </div>
                 </div>

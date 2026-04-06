@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -37,6 +38,7 @@ export default function DocumentRequestsTab({
   staffDocs,
   onLocateOnMap,
   showToast,
+  error = null,
 }) {
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
@@ -239,275 +241,295 @@ export default function DocumentRequestsTab({
 
   return (
     <div className="flex flex-col h-full min-h-0 gap-4 animate-fade-in">
-      <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
-        <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0">
-          <div className="p-4 bg-gray-50/50 border-b border-gray-200 flex flex-col lg:flex-row gap-3 lg:items-end">
-            <div className="flex-1 min-w-0">
-              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                Search
-              </label>
-              <div className="relative">
-                <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                <Input
-                  className="pl-10 h-11 rounded-brand border-gray-300"
-                  placeholder="Student no., name, document type…"
-                  value={q}
-                  onChange={(e) => {
-                    setQ(e.target.value);
-                    setPage(1);
-                  }}
-                />
-              </div>
-            </div>
-            <div className="w-full sm:w-48">
-              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                Status
-              </label>
-              <select
-                className="h-11 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-800"
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setPage(1);
-                }}
-              >
-                <option value="">All</option>
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
+      {loading ? (
+        <Card className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col">
+          <CardContent className="p-6 flex-1 flex flex-col min-h-0">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="h-20 rounded-brand" />
                 ))}
-              </select>
-            </div>
-            <Button
-              type="button"
-              className="bg-pup-maroon hover:bg-red-900 font-bold shrink-0 h-11"
-              onClick={() => setCreateOpen(true)}
-            >
-              <i className="ph-bold ph-plus mr-2"></i>
-              New request
-            </Button>
-          </div>
-          <div className="flex-1 overflow-auto">
-            <table className="min-w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
-                  <th className="p-3 font-bold w-16">ID</th>
-                  <th className="p-3 font-bold">Student</th>
-                  <th className="p-3 font-bold">Document</th>
-                  <th className="p-3 font-bold">Status</th>
-                  <th className="p-3 font-bold text-right">Created</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {loading ? (
-                  Array.from({ length: 6 }).map((_, i) => (
-                    <tr key={i}>
-                      <td className="p-3" colSpan={5}>
-                        <Skeleton className="h-9 w-full" />
-                      </td>
-                    </tr>
-                  ))
-                ) : rows.length === 0 ? (
-                  <tr className="border-0 hover:bg-transparent">
-                    <td colSpan={5} className="p-0 border-0">
-                      <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
-                        <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                          <i className="ph-duotone ph-tray text-3xl text-pup-maroon"></i>
-                        </div>
-                        <div className="text-lg font-bold text-gray-900">
-                          No document requests yet
-                        </div>
-                        <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                          Create a request when an alumnus asks for a record.
-                          Track status and use the storage map to pull the
-                          physical drawer.
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  rows.map((r) => (
-                    <tr
-                      key={r.id}
-                      className={`cursor-pointer hover:bg-red-50/40 transition-colors ${
-                        selectedId === r.id ? "bg-red-50/60" : ""
-                      }`}
-                      onClick={() => openDetail(r.id)}
-                    >
-                      <td className="p-3 font-mono text-xs text-gray-500">
-                        #{r.id}
-                      </td>
-                      <td className="p-3">
-                        <div className="font-bold text-gray-900">
-                          {r.student_name || "—"}
-                        </div>
-                        <div className="font-mono text-[11px] text-gray-500">
-                          {r.student_no}
-                        </div>
-                      </td>
-                      <td className="p-3 font-medium text-gray-800">
-                        {r.doc_type}
-                      </td>
-                      <td className="p-3">
-                        <span
-                          className={`inline-flex text-[11px] font-bold px-2 py-0.5 rounded border ${statusBadgeClass(r.status)}`}
-                        >
-                          {r.status}
-                        </span>
-                      </td>
-                      <td className="p-3 text-right text-[11px] font-mono text-gray-500 whitespace-nowrap">
-                        {formatPHDateTime(r.created_at)}
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-          {total > 0 ? (
-            <div className="p-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between text-xs font-medium text-gray-600">
-              <span>
-                Showing {(page - 1) * perPage + 1}-{Math.min(page * perPage, total)} of{" "}
-                <strong className="text-gray-900">{total.toLocaleString()}</strong>{" "}
-                audit log entries
-              </span>
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="h-8 text-xs font-bold text-gray-600"
-                >
-                  <i className="ph-bold ph-caret-left text-[10px] mr-1"></i>
-                  Previous
-                </Button>
-                <span className="text-xs font-bold text-gray-600 px-2">
-                  {page} / {totalPages}
-                </span>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  className="h-8 text-xs font-bold text-gray-600"
-                >
-                  Next
-                  <i className="ph-bold ph-caret-right text-[10px] ml-1"></i>
-                </Button>
               </div>
+              <Skeleton className="h-4 w-full max-w-md rounded-brand" />
+              <Skeleton className="h-32 rounded-brand" />
             </div>
-          ) : null}
-        </div>
-
-        <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0">
-          <div className="p-4 border-b border-gray-100 bg-gray-50/80">
-            <div className="text-xs font-bold uppercase tracking-wider text-gray-500">
-              Request detail
+          </CardContent>
+        </Card>
+      ) : error ? (
+        <Card className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col">
+          <CardContent className="p-6 flex-1 flex flex-col min-h-0">
+            <div className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500">
+              <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
+              </div>
+              <p className="text-lg font-bold text-gray-900">Could not load report</p>
+              <p className="text-sm font-medium text-gray-600 mt-1 max-w-md">{error}</p>
             </div>
-          </div>
-          <div className="p-4 flex-1 overflow-auto">
-            {!selectedId && (
-              <div className="text-sm text-gray-500 font-medium text-center py-12">
-                Select a request to see details and storage location.
-              </div>
-            )}
-            {selectedId && detailLoading && (
-              <div className="space-y-3">
-                <Skeleton className="h-6 w-3/4" />
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-full" />
-              </div>
-            )}
-            {detail && !detailLoading && (
-              <div className="space-y-4">
-                <div>
-                  <div className="text-xs font-bold text-gray-500 uppercase">
-                    Student
-                  </div>
-                  <div className="font-bold text-gray-900">{detail.student_name}</div>
-                  <div className="font-mono text-xs text-gray-600">{detail.student_no}</div>
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-gray-500 uppercase">
-                    Document type
-                  </div>
-                  <div className="font-semibold text-gray-900">{detail.doc_type}</div>
-                </div>
-
-                <div className="rounded-brand border border-gray-200 p-3">
-                  <div className="text-xs font-bold text-gray-600 uppercase mb-1">
-                    Physical location
-                  </div>
-                  {studentForRequest ? (
-                    <div className="text-sm font-mono text-gray-800">
-                      Room {studentForRequest.room} · Cabinet {studentForRequest.cabinet}{" "}
-                      · Drawer {studentForRequest.drawer}
-                    </div>
-                  ) : (
-                    <div className="text-sm text-amber-800 font-medium">
-                      Student record not loaded — refresh data or check student no.
-                    </div>
-                  )}
-                  <Button
-                    type="button"
-                    className="mt-3 w-full bg-pup-maroon hover:bg-red-900 font-bold"
-                    disabled={!studentForRequest}
-                    onClick={() => {
-                      if (!studentForRequest) return;
-                      if (requestNeedsPhysicalVerification) {
-                        setFileWarningOpen(true);
-                        return;
-                      }
-                      onLocateOnMap(studentForRequest);
-                    }}
-                  >
-                    <i className="ph-bold ph-map-pin mr-2"></i>
-                    Locate on storage map
-                  </Button>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-gray-600 uppercase">
-                    Status
-                  </label>
-                  <select
-                    className="mt-1 h-10 w-full rounded-brand border border-gray-300 bg-white text-sm font-semibold"
-                    value={detail.status}
-                    disabled={saving}
-                    onChange={(e) => patchDetail({ status: e.target.value })}
-                  >
-                    {STATUS_OPTIONS.map((s) => (
-                      <option key={s} value={s}>
-                        {s}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="text-xs font-bold text-gray-600 uppercase">
-                    Notes
-                  </label>
-                  <textarea
-                    className="mt-1 w-full min-h-[72px] rounded-brand border border-gray-300 p-2 text-sm"
-                    defaultValue={detail.notes || ""}
-                    key={detail.id + (detail.updated_at || "")}
-                    onBlur={(e) => {
-                      const v = e.target.value.trim();
-                      if (v === (detail.notes || "").trim()) return;
-                      patchDetail({ notes: v || null });
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
+          <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0">
+            <div className="p-4 bg-gray-50/50 border-b border-gray-200 flex flex-col lg:flex-row gap-3 lg:items-end">
+              <div className="flex-1 min-w-0">
+                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+                  Search
+                </label>
+                <div className="relative">
+                  <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                  <Input
+                    className="pl-10 h-11 rounded-brand border-gray-300"
+                    placeholder="Student no., name, document type…"
+                    value={q}
+                    onChange={(e) => {
+                      setQ(e.target.value);
+                      setPage(1);
                     }}
                   />
                 </div>
               </div>
-            )}
+              <div className="w-full sm:w-48">
+                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+                  Status
+                </label>
+                <select
+                  className="h-11 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-800"
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setPage(1);
+                  }}
+                >
+                  <option value="">All</option>
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <Button
+                type="button"
+                className="bg-pup-maroon hover:bg-red-900 font-bold shrink-0 h-11"
+                onClick={() => setCreateOpen(true)}
+              >
+                <i className="ph-bold ph-plus mr-2"></i>
+                New request
+              </Button>
+            </div>
+            <div className="flex-1 overflow-auto">
+              <table className="min-w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+                  <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
+                    <th className="p-3 font-bold w-16">ID</th>
+                    <th className="p-3 font-bold">Student</th>
+                    <th className="p-3 font-bold">Document</th>
+                    <th className="p-3 font-bold">Status</th>
+                    <th className="p-3 font-bold text-right">Created</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {rows.length === 0 ? (
+                    <tr className="border-0 hover:bg-transparent">
+                      <td colSpan={5} className="p-0 border-0">
+                        <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
+                          <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                            <i className="ph-duotone ph-tray text-3xl text-pup-maroon"></i>
+                          </div>
+                          <div className="text-lg font-bold text-gray-900">
+                            No document requests yet
+                          </div>
+                          <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                            Create a request when an alumnus asks for a record.
+                            Track status and use the storage map to pull the
+                            physical drawer.
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : (
+                    rows.map((r) => (
+                      <tr
+                        key={r.id}
+                        className={`cursor-pointer hover:bg-red-50/40 transition-colors ${
+                          selectedId === r.id ? "bg-red-50/60" : ""
+                        }`}
+                        onClick={() => openDetail(r.id)}
+                      >
+                        <td className="p-3 font-mono text-xs text-gray-500">
+                          #{r.id}
+                        </td>
+                        <td className="p-3">
+                          <div className="font-bold text-gray-900">
+                            {r.student_name || "—"}
+                          </div>
+                          <div className="font-mono text-[11px] text-gray-500">
+                            {r.student_no}
+                          </div>
+                        </td>
+                        <td className="p-3 font-medium text-gray-800">
+                          {r.doc_type}
+                        </td>
+                        <td className="p-3">
+                          <span
+                            className={`inline-flex text-[11px] font-bold px-2 py-0.5 rounded border ${statusBadgeClass(r.status)}`}
+                          >
+                            {r.status}
+                          </span>
+                        </td>
+                        <td className="p-3 text-right text-[11px] font-mono text-gray-500 whitespace-nowrap">
+                          {formatPHDateTime(r.created_at)}
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {total > 0 ? (
+              <div className="p-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between text-xs font-medium text-gray-600">
+                <span>
+                  Showing {(page - 1) * perPage + 1}-{Math.min(page * perPage, total)} of{" "}
+                  <strong className="text-gray-900">{total.toLocaleString()}</strong>{" "}
+                  audit log entries
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    className="h-8 text-xs font-bold text-gray-600"
+                  >
+                    <i className="ph-bold ph-caret-left text-[10px] mr-1"></i>
+                    Previous
+                  </Button>
+                  <span className="text-xs font-bold text-gray-600 px-2">
+                    {page} / {totalPages}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    className="h-8 text-xs font-bold text-gray-600"
+                  >
+                    Next
+                    <i className="ph-bold ph-caret-right text-[10px] ml-1"></i>
+                  </Button>
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0">
+            <div className="p-4 border-b border-gray-100 bg-gray-50/80">
+              <div className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                Request detail
+              </div>
+            </div>
+            <div className="p-4 flex-1 overflow-auto">
+              {!selectedId && (
+                <div className="text-sm text-gray-500 font-medium text-center py-12">
+                  Select a request to see details and storage location.
+                </div>
+              )}
+              {selectedId && detailLoading && (
+                <div className="space-y-3">
+                  <Skeleton className="h-6 w-3/4" />
+                  <Skeleton className="h-4 w-full" />
+                  <Skeleton className="h-4 w-full" />
+                </div>
+              )}
+              {detail && !detailLoading && (
+                <div className="space-y-4">
+                  <div>
+                    <div className="text-xs font-bold text-gray-500 uppercase">
+                      Student
+                    </div>
+                    <div className="font-bold text-gray-900">{detail.student_name}</div>
+                    <div className="font-mono text-xs text-gray-600">{detail.student_no}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold text-gray-500 uppercase">
+                      Document type
+                    </div>
+                    <div className="font-semibold text-gray-900">{detail.doc_type}</div>
+                  </div>
+
+                  <div className="rounded-brand border border-gray-200 p-3">
+                    <div className="text-xs font-bold text-gray-600 uppercase mb-1">
+                      Physical location
+                    </div>
+                    {studentForRequest ? (
+                      <div className="text-sm font-mono text-gray-800">
+                        Room {studentForRequest.room} · Cabinet {studentForRequest.cabinet}{" "}
+                        · Drawer {studentForRequest.drawer}
+                      </div>
+                    ) : (
+                      <div className="text-sm text-amber-800 font-medium">
+                        Student record not loaded — refresh data or check student no.
+                      </div>
+                    )}
+                    <Button
+                      type="button"
+                      className="mt-3 w-full bg-pup-maroon hover:bg-red-900 font-bold"
+                      disabled={!studentForRequest}
+                      onClick={() => {
+                        if (!studentForRequest) return;
+                        if (requestNeedsPhysicalVerification) {
+                          setFileWarningOpen(true);
+                          return;
+                        }
+                        onLocateOnMap(studentForRequest);
+                      }}
+                    >
+                      <i className="ph-bold ph-map-pin mr-2"></i>
+                      Locate on storage map
+                    </Button>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-gray-600 uppercase">
+                      Status
+                    </label>
+                    <select
+                      className="mt-1 h-10 w-full rounded-brand border border-gray-300 bg-white text-sm font-semibold"
+                      value={detail.status}
+                      disabled={saving}
+                      onChange={(e) => patchDetail({ status: e.target.value })}
+                    >
+                      {STATUS_OPTIONS.map((s) => (
+                        <option key={s} value={s}>
+                          {s}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-bold text-gray-600 uppercase">
+                      Notes
+                    </label>
+                    <textarea
+                      className="mt-1 w-full min-h-[72px] rounded-brand border border-gray-300 p-2 text-sm"
+                      defaultValue={detail.notes || ""}
+                      key={detail.id + (detail.updated_at || "")}
+                      onBlur={(e) => {
+                        const v = e.target.value.trim();
+                        if (v === (detail.notes || "").trim()) return;
+                        patchDetail({ notes: v || null });
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">

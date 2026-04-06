@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export default function AuditLogsTab({
   displayLogs,
   isLoading = false,
+  error = null,
   logPage,
   setLogPage,
   logTotal,
@@ -125,157 +126,163 @@ export default function AuditLogsTab({
 
         {/* Table content */}
         <CardContent className="p-6 flex-1 flex flex-col min-h-0">
-          <div className={`flex-1 overflow-auto rounded-brand ${displayLogs.length === 0 && !isLoading ? '' : 'border border-gray-200'}`}>
-            <table className="min-w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-              <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
-                <th className="p-3 font-bold w-44">Date & Time</th>
-                <th className="p-3 font-bold w-48">User</th>
-                <th className="p-3 font-bold w-32">Role</th>
-                <th className="p-3 font-bold">Action</th>
-                <th className="p-3 font-bold text-right w-40">IP Address</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {isLoading && displayLogs.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="p-8 text-center">
-                    <div className="max-w-3xl mx-auto w-full space-y-3">
-                      <Skeleton className="h-4 w-56 mx-auto" />
-                      {Array.from({ length: 6 }).map((_, idx) => (
-                        <div key={idx} className="grid grid-cols-5 gap-3 items-center px-4 py-2">
-                          <Skeleton className="h-4 w-full" />
-                          <Skeleton className="h-4 w-full" />
-                          <Skeleton className="h-4 w-full" />
-                          <Skeleton className="h-4 w-full" />
-                          <Skeleton className="h-4 w-full" />
+          {isLoading ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="h-20 rounded-brand" />
+                ))}
+              </div>
+              <Skeleton className="h-4 w-full max-w-md rounded-brand" />
+              <Skeleton className="h-32 rounded-brand" />
+            </div>
+          ) : error ? (
+            <div className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500">
+              <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
+              </div>
+              <p className="text-lg font-bold text-gray-900">Could not load report</p>
+              <p className="text-sm font-medium text-gray-600 mt-1 max-w-md">{error}</p>
+            </div>
+          ) : (
+            <>
+              <div className={`flex-1 overflow-auto rounded-brand ${displayLogs.length === 0 ? '' : 'border border-gray-200'}`}>
+                <table className="min-w-full text-sm">
+                <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+                  <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
+                    <th className="p-3 font-bold w-44">Date & Time</th>
+                    <th className="p-3 font-bold w-48">User</th>
+                    <th className="p-3 font-bold w-32">Role</th>
+                    <th className="p-3 font-bold">Action</th>
+                    <th className="p-3 font-bold text-right w-40">IP Address</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {displayLogs.length === 0 ? (
+                    <tr className="border-0 hover:bg-transparent">
+                      <td colSpan={5} className="p-0 border-0">
+                        <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
+                          <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                            <i className="ph-duotone ph-list-magnifying-glass text-3xl text-pup-maroon"></i>
+                          </div>
+                          <div className="text-lg font-bold text-gray-900">
+                            No audit logs yet
+                          </div>
+                          <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                            We couldn&apos;t find any audit logs matching your search criteria.
+                          </div>
                         </div>
-                      ))}
-                    </div>
-                  </td>
-                </tr>
-              ) : displayLogs.length === 0 ? (
-                <tr className="border-0 hover:bg-transparent">
-                  <td colSpan={5} className="p-0 border-0">
-                    <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
-                      <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                        <i className="ph-duotone ph-list-magnifying-glass text-3xl text-pup-maroon"></i>
-                      </div>
-                      <div className="text-lg font-bold text-gray-900">
-                        No audit logs yet
-                      </div>
-                      <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                        We couldn&apos;t find any audit logs matching your search criteria.
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                displayLogs.map((log, idx) => {
-                  // Determine badge type based on action severity (mock logic)
-                  const isDestructive =
-                    log.action.toLowerCase().includes("delete") ||
-                    log.action.toLowerCase().includes("remove");
-                  const isAuth =
-                    log.action.toLowerCase().includes("login") ||
-                    log.action.toLowerCase().includes("logout");
-
-                  return (
-                    <tr
-                      key={idx}
-                      className="hover:bg-gray-50 group cursor-default transition-colors"
-                    >
-                      <td className="p-3 font-mono text-[11px] text-gray-500 whitespace-nowrap">
-                        {log.time}
-                      </td>
-                      <td className="p-3 font-bold text-gray-900 text-sm whitespace-nowrap capitalize">
-                        {log.user}
-                      </td>
-                      <td className="p-3">
-                        {log.role === "System" ? (
-                          <Badge
-                            variant="outline"
-                            className="bg-purple-50 text-purple-700 border-purple-200 font-bold uppercase text-[9px] tracking-wider px-2 py-0.5"
-                          >
-                            {log.role}
-                          </Badge>
-                        ) : log.role === "Admin" ||
-                          log.role === "SuperAdmin" ? (
-                          <Badge
-                            variant="outline"
-                            className="bg-amber-50 text-amber-700 border-amber-200 font-bold uppercase text-[9px] tracking-wider px-2 py-0.5"
-                          >
-                            {log.role}
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className="bg-blue-50 text-blue-700 border-blue-200 font-bold uppercase text-[9px] tracking-wider px-2 py-0.5"
-                          >
-                            {log.role}
-                          </Badge>
-                        )}
-                      </td>
-                      <td className="p-3 text-xs font-medium text-gray-700">
-                        {isDestructive ? (
-                          <span className="text-red-600 font-bold">
-                            {log.action}
-                          </span>
-                        ) : isAuth ? (
-                          <span className="text-blue-600 font-semibold">
-                            {log.action}
-                          </span>
-                        ) : (
-                          <span>{log.action}</span>
-                        )}
-                      </td>
-                      <td className="p-3 text-right font-mono text-[11px] text-gray-400">
-                        {log.ip}
                       </td>
                     </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+                  ) : (
+                    displayLogs.map((log, idx) => {
+                      // Determine badge type based on action severity (mock logic)
+                      const isDestructive =
+                        log.action.toLowerCase().includes("delete") ||
+                        log.action.toLowerCase().includes("remove");
+                      const isAuth =
+                        log.action.toLowerCase().includes("login") ||
+                        log.action.toLowerCase().includes("logout");
 
-        <div className="mt-4 flex items-center justify-between">
-          <div className="text-xs font-medium text-gray-500">
-            {logTotal > 0 ? (
-              <>
-                Showing {startItem}-{endItem} of{" "}
-                <strong className="text-gray-900">{logTotal.toLocaleString()}</strong>{" "}
-                audit log entries
-              </>
-            ) : null}
-          </div>
+                      return (
+                        <tr
+                          key={idx}
+                          className="hover:bg-gray-50 group cursor-default transition-colors"
+                        >
+                          <td className="p-3 font-mono text-[11px] text-gray-500 whitespace-nowrap">
+                            {log.time}
+                          </td>
+                          <td className="p-3 font-bold text-gray-900 text-sm whitespace-nowrap capitalize">
+                            {log.user}
+                          </td>
+                          <td className="p-3">
+                            {log.role === "System" ? (
+                              <Badge
+                                variant="outline"
+                                className="bg-purple-50 text-purple-700 border-purple-200 font-bold uppercase text-[9px] tracking-wider px-2 py-0.5"
+                              >
+                                {log.role}
+                              </Badge>
+                            ) : log.role === "Admin" ||
+                              log.role === "SuperAdmin" ? (
+                              <Badge
+                                variant="outline"
+                                className="bg-amber-50 text-amber-700 border-amber-200 font-bold uppercase text-[9px] tracking-wider px-2 py-0.5"
+                              >
+                                {log.role}
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant="outline"
+                                className="bg-blue-50 text-blue-700 border-blue-200 font-bold uppercase text-[9px] tracking-wider px-2 py-0.5"
+                              >
+                                {log.role}
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="p-3 text-xs font-medium text-gray-700">
+                            {isDestructive ? (
+                              <span className="text-red-600 font-bold">
+                                {log.action}
+                              </span>
+                            ) : isAuth ? (
+                              <span className="text-blue-600 font-semibold">
+                                {log.action}
+                              </span>
+                            ) : (
+                              <span>{log.action}</span>
+                            )}
+                          </td>
+                          <td className="p-3 text-right font-mono text-[11px] text-gray-400">
+                            {log.ip}
+                          </td>
+                        </tr>
+                      );
+                    })
+                  )}
+                </tbody>
+                </table>
+              </div>
 
-          <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={logPage <= 1}
-              onClick={() => setLogPage((p) => p - 1)}
-              className="h-8 text-xs font-bold text-gray-600"
-            >
-              <i className="ph-bold ph-caret-left"></i> Previous
-            </Button>
-            <div className="px-3 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-md h-8 flex items-center justify-center min-w-12 shadow-sm">
-              {logPage} / {Math.max(1, Math.ceil(logTotal / itemsPerPage))}
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={logPage >= Math.ceil(logTotal / itemsPerPage)}
-              onClick={() => setLogPage((p) => p + 1)}
-              className="h-8 text-xs font-bold text-gray-600"
-            >
-              Next <i className="ph-bold ph-caret-right"></i>
-            </Button>
-          </div>
-        </div>
-      </CardContent>
+              <div className="mt-4 flex items-center justify-between">
+                <div className="text-xs font-medium text-gray-500">
+                  {logTotal > 0 ? (
+                    <>
+                      Showing {startItem}-{endItem} of{" "}
+                      <strong className="text-gray-900">{logTotal.toLocaleString()}</strong>{" "}
+                      audit log entries
+                    </>
+                  ) : null}
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={logPage <= 1}
+                    onClick={() => setLogPage((p) => p - 1)}
+                    className="h-8 text-xs font-bold text-gray-600"
+                  >
+                    <i className="ph-bold ph-caret-left"></i> Previous
+                  </Button>
+                  <div className="px-3 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-md h-8 flex items-center justify-center min-w-12 shadow-sm">
+                    {logPage} / {Math.max(1, Math.ceil(logTotal / itemsPerPage))}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={logPage >= Math.ceil(logTotal / itemsPerPage)}
+                    onClick={() => setLogPage((p) => p + 1)}
+                    className="h-8 text-xs font-bold text-gray-600"
+                  >
+                    Next <i className="ph-bold ph-caret-right"></i>
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+
     </Card>
   </div>
 );

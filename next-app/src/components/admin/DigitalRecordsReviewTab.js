@@ -11,6 +11,7 @@ import { formatPHDateTimeParts } from "@/lib/timeFormat";
 export default function DigitalRecordsReviewTab({
   records,
   isLoading,
+  error = null,
   statusFilter,
   setStatusFilter,
   onRefresh,
@@ -133,184 +134,188 @@ export default function DigitalRecordsReviewTab({
 
         {/* Table content */}
         <CardContent className="p-6 flex-1 flex flex-col min-h-0">
-          <div className={`flex-1 overflow-auto rounded-brand ${filteredRecords.length === 0 && !isLoading ? '' : 'border border-gray-200'}`}>
-            <table className="min-w-full text-sm">
-              <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
-                  <th className="p-3 font-bold">Student Info</th>
-                  <th className="p-3 font-bold">Document Type</th>
-                  <th className="p-3 font-bold">Filename</th>
-                  <th className="p-3 font-bold">Status</th>
-                  <th className="p-3 font-bold">Uploaded</th>
-                  <th className="p-3 font-bold text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {isLoading ? (
-                  <tr>
-                    <td colSpan={6} className="p-8 text-center">
-                      <div className="max-w-3xl mx-auto w-full space-y-3">
-                        <Skeleton className="h-4 w-64 mx-auto" />
-                        {Array.from({ length: 6 }).map((_, idx) => (
-                          <div key={idx} className="grid grid-cols-6 gap-3 items-center px-4 py-2">
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-4 w-full" />
-                            <Skeleton className="h-8 w-full" />
-                          </div>
-                        ))}
-                      </div>
-                    </td>
-                  </tr>
-                ) : filteredRecords.length === 0 ? (
-                  <tr className="border-0 hover:bg-transparent">
-                    <td colSpan={6} className="p-0 border-0">
-                      <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
-                        <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                          <i className="ph-duotone ph-stack text-3xl text-pup-maroon"></i>
-                        </div>
-                        <div className="text-lg font-bold text-gray-900">
-                          No records found
-                        </div>
-                        <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                          {searchQuery
-                            ? "No records match your search criteria. Try adjusting your filters."
-                            : "We couldn't find any digital records matching your current filter criteria."}
-                        </div>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  paginatedRecords.map((r) => (
-                    <tr key={r.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="p-3">
-                        <div className="flex flex-col">
-                          <span className="font-bold text-gray-900">
-                            {r.student_name || "Unknown Student"}
-                          </span>
-                          <span className="font-mono text-xs text-gray-500">
-                            {r.student_no}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="p-3">
-                        <span className="text-sm font-medium text-gray-700">
-                          {r.doc_type}
-                        </span>
-                      </td>
-                      <td className="p-3">
-                        <span className="text-sm text-gray-600 font-mono truncate max-w-[200px] block">
-                          {r.original_filename}
-                        </span>
-                      </td>
-                      <td className="p-3">
-                        <Badge
-                          variant="outline"
-                          className={`${getStatusBadge(r.approval_status)} font-bold text-xs px-3 py-1 rounded-full border`}
-                        >
-                          <i className={`ph-fill ${getStatusIcon(r.approval_status)} mr-1.5`}></i>
-                          {r.approval_status || "Pending"}
-                        </Badge>
-                      </td>
-                      <td className="p-3">
-                        {(() => {
-                          const t = formatPHDateTimeParts(r.created_at);
-                          return (
-                            <div className="font-mono text-[11px] text-gray-500 whitespace-nowrap">
-                              <div>{t.date}</div>
-                              {t.time ? <div>{t.time}</div> : null}
-                            </div>
-                          );
-                        })()}
-                      </td>
-                      <td className="p-3">
-                        <div className="flex justify-end gap-2">
-                          {r.approval_status === "Declined" ? (
-                            <span className="px-3 h-9 inline-flex items-center rounded-brand border border-gray-200 text-gray-400 font-bold text-xs bg-gray-50">
-                              <i className="ph-bold ph-file-x mr-1.5"></i>
-                              File Removed
-                            </span>
-                          ) : (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handlePreview(r)}
-                              className="h-9 px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50 hover:border-pup-maroon rounded-brand"
-                            >
-                              <i className="ph-bold ph-eye mr-1.5"></i>
-                              View
-                            </Button>
-                          )}
-                          {r.approval_status !== "Declined" && r.approval_status !== "Approved" && (
-                            <Button
-                              size="sm"
-                              onClick={() => onApprove(r.id)}
-                              className="h-9 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded-brand"
-                            >
-                              <i className="ph-bold ph-check mr-1.5"></i>
-                              Approve
-                            </Button>
-                          )}
-                          {r.approval_status !== "Declined" && (
-                            <Button
-                              size="sm"
-                              variant="destructive"
-                              onClick={() => onDecline(r.id)}
-                              className="h-9 font-bold text-xs rounded-brand bg-red-600 hover:bg-red-700 text-white"
-                            >
-                              <i className="ph-bold ph-x mr-1.5"></i>
-                              Decline
-                            </Button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="mt-4 flex items-center justify-between">
-            <div className="text-xs font-medium text-gray-500">
-              {filteredRecords.length > 0 ? (
-                <>
-                  Showing {(displayPage - 1) * itemsPerPage + 1}-
-                  {Math.min(displayPage * itemsPerPage, filteredRecords.length)} of{" "}
-                  <strong className="text-gray-900">{filteredRecords.length}</strong>{" "}
-                  digital records
-                </>
-              ) : null}
-            </div>
-
-            {filteredRecords.length > 0 && (
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={displayPage <= 1}
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  className="h-8 text-xs font-bold text-gray-600"
-                >
-                  <i className="ph-bold ph-caret-left"></i> Previous
-                </Button>
-                <div className="px-3 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-md h-8 flex items-center justify-center min-w-12 shadow-sm">
-                  {displayPage} / {totalPages}
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={displayPage >= totalPages}
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  className="h-8 text-xs font-bold text-gray-600"
-                >
-                  Next <i className="ph-bold ph-caret-right"></i>
-                </Button>
+          {isLoading ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="h-20 rounded-brand" />
+                ))}
               </div>
-            )}
-          </div>
+              <Skeleton className="h-4 w-full max-w-md rounded-brand" />
+              <Skeleton className="h-32 rounded-brand" />
+            </div>
+          ) : error ? (
+            <div className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500">
+              <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
+              </div>
+              <p className="text-lg font-bold text-gray-900">Could not load report</p>
+              <p className="text-sm font-medium text-gray-600 mt-1 max-w-md">{error}</p>
+            </div>
+          ) : (
+            <>
+              <div className={`flex-1 overflow-auto rounded-brand ${filteredRecords.length === 0 ? '' : 'border border-gray-200'}`}>
+                <table className="min-w-full text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+                    <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
+                      <th className="p-3 font-bold">Student Info</th>
+                      <th className="p-3 font-bold">Document Type</th>
+                      <th className="p-3 font-bold">Filename</th>
+                      <th className="p-3 font-bold">Status</th>
+                      <th className="p-3 font-bold">Uploaded</th>
+                      <th className="p-3 font-bold text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {filteredRecords.length === 0 ? (
+                      <tr className="border-0 hover:bg-transparent">
+                        <td colSpan={6} className="p-0 border-0">
+                          <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
+                            <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                              <i className="ph-duotone ph-stack text-3xl text-pup-maroon"></i>
+                            </div>
+                            <div className="text-lg font-bold text-gray-900">
+                              No records found
+                            </div>
+                            <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                              {searchQuery
+                                ? "No records match your search criteria. Try adjusting your filters."
+                                : "We couldn't find any digital records matching your current filter criteria."}
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      paginatedRecords.map((r) => (
+                        <tr key={r.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="p-3">
+                            <div className="flex flex-col">
+                              <span className="font-bold text-gray-900">
+                                {r.student_name || "Unknown Student"}
+                              </span>
+                              <span className="font-mono text-xs text-gray-500">
+                                {r.student_no}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="p-3">
+                            <span className="text-sm font-medium text-gray-700">
+                              {r.doc_type}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <span className="text-sm text-gray-600 font-mono truncate max-w-[200px] block">
+                              {r.original_filename}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <Badge
+                              variant="outline"
+                              className={`${getStatusBadge(r.approval_status)} font-bold text-xs px-3 py-1 rounded-full border`}
+                            >
+                              <i className={`ph-fill ${getStatusIcon(r.approval_status)} mr-1.5`}></i>
+                              {r.approval_status || "Pending"}
+                            </Badge>
+                          </td>
+                          <td className="p-3">
+                            {(() => {
+                              const t = formatPHDateTimeParts(r.created_at);
+                              return (
+                                <div className="font-mono text-[11px] text-gray-500 whitespace-nowrap">
+                                  <div>{t.date}</div>
+                                  {t.time ? <div>{t.time}</div> : null}
+                                </div>
+                              );
+                            })()}
+                          </td>
+                          <td className="p-3">
+                            <div className="flex justify-end gap-2">
+                              {r.approval_status === "Declined" ? (
+                                <span className="px-3 h-9 inline-flex items-center rounded-brand border border-gray-200 text-gray-400 font-bold text-xs bg-gray-50">
+                                  <i className="ph-bold ph-file-x mr-1.5"></i>
+                                  File Removed
+                                </span>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handlePreview(r)}
+                                  className="h-9 px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50 hover:border-pup-maroon rounded-brand"
+                                >
+                                  <i className="ph-bold ph-eye mr-1.5"></i>
+                                  View
+                                </Button>
+                              )}
+                              {r.approval_status !== "Declined" && r.approval_status !== "Approved" && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => onApprove(r.id)}
+                                  className="h-9 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded-brand"
+                                >
+                                  <i className="ph-bold ph-check mr-1.5"></i>
+                                  Approve
+                                </Button>
+                              )}
+                              {r.approval_status !== "Declined" && (
+                                <Button
+                                  size="sm"
+                                  variant="destructive"
+                                  onClick={() => onDecline(r.id)}
+                                  className="h-9 font-bold text-xs rounded-brand bg-red-600 hover:bg-red-700 text-white"
+                                >
+                                  <i className="ph-bold ph-x mr-1.5"></i>
+                                  Decline
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="mt-4 flex items-center justify-between">
+                <div className="text-xs font-medium text-gray-500">
+                  {filteredRecords.length > 0 ? (
+                    <>
+                      Showing {(displayPage - 1) * itemsPerPage + 1}-
+                      {Math.min(displayPage * itemsPerPage, filteredRecords.length)} of{" "}
+                      <strong className="text-gray-900">{filteredRecords.length}</strong>{" "}
+                      digital records
+                    </>
+                  ) : null}
+                </div>
+
+                {filteredRecords.length > 0 && (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={displayPage <= 1}
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      className="h-8 text-xs font-bold text-gray-600"
+                    >
+                      <i className="ph-bold ph-caret-left"></i> Previous
+                    </Button>
+                    <div className="px-3 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-md h-8 flex items-center justify-center min-w-12 shadow-sm">
+                      {displayPage} / {totalPages}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={displayPage >= totalPages}
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      className="h-8 text-xs font-bold text-gray-600"
+                    >
+                      Next <i className="ph-bold ph-caret-right"></i>
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
     </div>

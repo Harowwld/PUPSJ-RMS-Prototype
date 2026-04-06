@@ -3,7 +3,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ROOM_TEMPLATES, getDefaultDoor } from "@/lib/storageLayoutDefaults";
@@ -13,7 +19,7 @@ function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n));
 }
 
-export default function StorageLayoutEditorTab({ showToast }) {
+export default function StorageLayoutEditorTab({ showToast, error = null }) {
   const [layout, setLayout] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -62,12 +68,21 @@ export default function StorageLayoutEditorTab({ showToast }) {
       try {
         const res = await fetch("/api/storage-layout", { cache: "no-store" });
         const json = await res.json();
-        if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to load layout");
+        if (!res.ok || !json?.ok)
+          throw new Error(json?.error || "Failed to load layout");
         setLayout(json.data);
-        const firstRoom = Array.isArray(json.data?.rooms) ? json.data.rooms[0]?.id : null;
+        const firstRoom = Array.isArray(json.data?.rooms)
+          ? json.data.rooms[0]?.id
+          : null;
         setActiveRoomId(firstRoom);
       } catch (err) {
-        showToast?.({ title: "Load Failed", description: err?.message || "Unable to load storage layout." }, true);
+        showToast?.(
+          {
+            title: "Load Failed",
+            description: err?.message || "Unable to load storage layout.",
+          },
+          true,
+        );
       } finally {
         setLoading(false);
       }
@@ -114,7 +129,9 @@ export default function StorageLayoutEditorTab({ showToast }) {
       const firstCabinet = activeRoom?.cabinets?.[0]?.id || null;
       setSelectedCabinetId(firstCabinet);
     } else if (activeRoom && selectedCabinetId) {
-      const exists = activeRoom.cabinets.some((c) => c.id === selectedCabinetId);
+      const exists = activeRoom.cabinets.some(
+        (c) => c.id === selectedCabinetId,
+      );
       if (!exists) setSelectedCabinetId(activeRoom.cabinets[0]?.id || null);
     }
   }, [activeRoom, selectedCabinetId]);
@@ -160,7 +177,10 @@ export default function StorageLayoutEditorTab({ showToast }) {
         cabinets: [],
         door: getDefaultDoor(),
       };
-      return { ...prev, rooms: [...prev.rooms, next].sort((a, b) => a.id - b.id) };
+      return {
+        ...prev,
+        rooms: [...prev.rooms, next].sort((a, b) => a.id - b.id),
+      };
     });
     setSelectedCabinetId(null);
     if (createdRoomId != null) {
@@ -172,13 +192,22 @@ export default function StorageLayoutEditorTab({ showToast }) {
     if (!layout || !activeRoom) return;
     if (activeRoomStudentCount > 0) {
       showToast?.(
-        { title: "Cannot Remove Room", description: `Room ${activeRoom.id} has ${activeRoomStudentCount} student record(s) still assigned.` },
+        {
+          title: "Cannot Remove Room",
+          description: `Room ${activeRoom.id} has ${activeRoomStudentCount} student record(s) still assigned.`,
+        },
         true,
       );
       return;
     }
     if (activeRoom.cabinets?.length) {
-      showToast?.({ title: "Cannot Remove Room", description: "Remove all cabinets first before deleting a room." }, true);
+      showToast?.(
+        {
+          title: "Cannot Remove Room",
+          description: "Remove all cabinets first before deleting a room.",
+        },
+        true,
+      );
       return;
     }
     setLayout((prev) => {
@@ -186,7 +215,8 @@ export default function StorageLayoutEditorTab({ showToast }) {
       const rooms = prev.rooms.filter((r) => r.id !== activeRoom.id);
       return { ...prev, rooms };
     });
-    const fallback = layout.rooms.find((r) => r.id !== activeRoom.id)?.id || null;
+    const fallback =
+      layout.rooms.find((r) => r.id !== activeRoom.id)?.id || null;
     setActiveRoomId(fallback);
     setSelectedCabinetId(null);
   }
@@ -195,13 +225,19 @@ export default function StorageLayoutEditorTab({ showToast }) {
     if (!layout || !activeRoom) return;
     if (activeRoomStudentCount > 0) {
       showToast?.(
-        { title: "Cannot Reset Room", description: `Room ${activeRoom.id} has ${activeRoomStudentCount} student record(s) still assigned.` },
+        {
+          title: "Cannot Reset Room",
+          description: `Room ${activeRoom.id} has ${activeRoomStudentCount} student record(s) still assigned.`,
+        },
         true,
       );
       return;
     }
     if (!activeRoom.cabinets?.length) {
-      showToast?.({ title: "Nothing to Reset", description: "This room has no cabinet layout to clear." });
+      showToast?.({
+        title: "Nothing to Reset",
+        description: "This room has no cabinet layout to clear.",
+      });
       return;
     }
     updateRoom(activeRoom.id, (r) => ({
@@ -209,16 +245,21 @@ export default function StorageLayoutEditorTab({ showToast }) {
       cabinets: [],
     }));
     setSelectedCabinetId(null);
-    showToast?.(
-      { title: "Layout Reset", description: "Room cleared. Save to apply. Blocked if students still reference this room." }
-    );
+    showToast?.({
+      title: "Layout Reset",
+      description:
+        "Room cleared. Save to apply. Blocked if students still reference this room.",
+    });
   }
 
   function applyTemplateToActiveRoom() {
     if (!activeRoom) return;
     if (activeRoomStudentCount > 0) {
       showToast?.(
-        { title: "Cannot Apply Template", description: `Room ${activeRoom.id} has ${activeRoomStudentCount} student record(s) still assigned.` },
+        {
+          title: "Cannot Apply Template",
+          description: `Room ${activeRoom.id} has ${activeRoomStudentCount} student record(s) still assigned.`,
+        },
         true,
       );
       return;
@@ -236,7 +277,10 @@ export default function StorageLayoutEditorTab({ showToast }) {
       door: r.door || getDefaultDoor(),
     }));
     setSelectedCabinetId(null);
-    showToast?.({ title: "Template Applied", description: `"${tpl.name}" has been loaded into the active room.` });
+    showToast?.({
+      title: "Template Applied",
+      description: `"${tpl.name}" has been loaded into the active room.`,
+    });
   }
 
   function addCabinet() {
@@ -257,7 +301,9 @@ export default function StorageLayoutEditorTab({ showToast }) {
     };
     updateRoom(activeRoom.id, (r) => ({
       ...r,
-      cabinets: [...r.cabinets, cab].sort((a, b) => String(a.id).localeCompare(String(b.id))),
+      cabinets: [...r.cabinets, cab].sort((a, b) =>
+        String(a.id).localeCompare(String(b.id)),
+      ),
     }));
     setSelectedCabinetId(id);
   }
@@ -268,7 +314,8 @@ export default function StorageLayoutEditorTab({ showToast }) {
       ...r,
       cabinets: r.cabinets.filter((c) => c.id !== selectedCabinet.id),
     }));
-    const fallback = activeRoom.cabinets.find((c) => c.id !== selectedCabinet.id)?.id || null;
+    const fallback =
+      activeRoom.cabinets.find((c) => c.id !== selectedCabinet.id)?.id || null;
     setSelectedCabinetId(fallback);
   }
 
@@ -414,9 +461,18 @@ export default function StorageLayoutEditorTab({ showToast }) {
       const json = await res.json();
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Save failed");
       setLayout(json.data);
-      showToast?.({ title: "Layout Saved", description: "All room and cabinet changes have been applied." });
+      showToast?.({
+        title: "Layout Saved",
+        description: "All room and cabinet changes have been applied.",
+      });
     } catch (err) {
-      showToast?.({ title: "Save Failed", description: err?.message || "Unable to save storage layout." }, true);
+      showToast?.(
+        {
+          title: "Save Failed",
+          description: err?.message || "Unable to save storage layout.",
+        },
+        true,
+      );
     } finally {
       setSaving(false);
     }
@@ -436,7 +492,10 @@ export default function StorageLayoutEditorTab({ showToast }) {
               <Skeleton className="h-10 w-28" />
               <Skeleton className="h-10 w-28" />
             </div>
-            <Skeleton className="w-full rounded-brand" style={{ aspectRatio: "16 / 10" }} />
+            <Skeleton
+              className="w-full rounded-brand"
+              style={{ aspectRatio: "16 / 10" }}
+            />
           </div>
           <div className="lg:col-span-1">
             <Skeleton className="h-[420px] w-full rounded-brand" />
@@ -460,7 +519,9 @@ export default function StorageLayoutEditorTab({ showToast }) {
       <div className="p-4 bg-gray-50/80 border-b border-gray-200 flex flex-col lg:flex-row gap-6 lg:items-end shrink-0">
         {/* Group 1: Room Selection & Global Room Actions */}
         <div className="flex flex-col gap-1.5 min-w-[320px]">
-          <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest ml-1">Room Management</label>
+          <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest ml-1">
+            Room Management
+          </label>
           <div className="flex items-center gap-2">
             <select
               className="flex-1 h-11 bg-white border border-gray-300 rounded-brand text-sm px-3 focus:outline-none focus:ring-2 focus:ring-pup-maroon font-bold text-gray-800 shadow-sm cursor-pointer"
@@ -519,7 +580,9 @@ export default function StorageLayoutEditorTab({ showToast }) {
 
         {/* Group 2: Cabinet and Template Tools */}
         <div className="flex flex-col gap-1.5 flex-1">
-          <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest ml-1">Editor Tools</label>
+          <label className="text-[10px] font-black uppercase text-gray-500 tracking-widest ml-1">
+            Editor Tools
+          </label>
           <div className="flex flex-wrap items-center gap-3">
             <Button
               type="button"
@@ -528,7 +591,8 @@ export default function StorageLayoutEditorTab({ showToast }) {
               className="h-11 px-4 font-bold border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 rounded-brand"
               disabled={!activeRoom}
             >
-              <i className="ph-bold ph-plus-square mr-2 text-pup-maroon" /> Add Cabinet
+              <i className="ph-bold ph-plus-square mr-2 text-pup-maroon" /> Add
+              Cabinet
             </Button>
 
             <div className="flex items-center shadow-sm rounded-brand overflow-hidden border border-gray-300">
@@ -571,7 +635,6 @@ export default function StorageLayoutEditorTab({ showToast }) {
       <div className="flex-1 overflow-auto min-h-0 bg-white relative">
         <div className="p-6 grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-
             <div
               ref={canvasRef}
               className="relative w-full border border-gray-200 rounded-brand bg-gray-50 overflow-hidden"
@@ -581,10 +644,14 @@ export default function StorageLayoutEditorTab({ showToast }) {
               onPointerCancel={handleCanvasPointerUp}
             >
               {/* subtle grid */}
-              <div className="absolute inset-0 pointer-events-none opacity-40" style={{
-                backgroundImage: "linear-gradient(to right, rgba(0,0,0,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.06) 1px, transparent 1px)",
-                backgroundSize: "10% 10%",
-              }} />
+              <div
+                className="absolute inset-0 pointer-events-none opacity-40"
+                style={{
+                  backgroundImage:
+                    "linear-gradient(to right, rgba(0,0,0,0.06) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.06) 1px, transparent 1px)",
+                  backgroundSize: "10% 10%",
+                }}
+              />
 
               {/* Orientation marker */}
               <button
@@ -636,8 +703,10 @@ export default function StorageLayoutEditorTab({ showToast }) {
                       setSelectedCabinetId(cab.id);
 
                       const box = canvasRef.current.getBoundingClientRect();
-                      const relX = (e.clientX - box.left) / Math.max(1, box.width);
-                      const relY = (e.clientY - box.top) / Math.max(1, box.height);
+                      const relX =
+                        (e.clientX - box.left) / Math.max(1, box.width);
+                      const relY =
+                        (e.clientY - box.top) / Math.max(1, box.height);
 
                       // Keep the cabinet's top-left under the pointer.
                       const offsetX = relX - cab.rect.x;
@@ -714,7 +783,9 @@ export default function StorageLayoutEditorTab({ showToast }) {
                   Cabinet Details
                 </CardTitle>
                 <CardDescription className="text-gray-500 text-xs font-medium mt-0.5">
-                  {selectedCabinet ? `CAB-${selectedCabinet.id}` : "Select a cabinet on the map"}
+                  {selectedCabinet
+                    ? `CAB-${selectedCabinet.id}`
+                    : "Select a cabinet on the map"}
                 </CardDescription>
               </CardHeader>
 
@@ -770,7 +841,9 @@ export default function StorageLayoutEditorTab({ showToast }) {
                           variant="outline"
                           className="h-9 font-bold"
                           onClick={removeDrawerFromSelected}
-                          disabled={(selectedCabinet.drawerIds || []).length <= 1}
+                          disabled={
+                            (selectedCabinet.drawerIds || []).length <= 1
+                          }
                         >
                           <i className="ph-bold ph-minus mr-2" />
                           Remove drawer
@@ -788,7 +861,10 @@ export default function StorageLayoutEditorTab({ showToast }) {
                           onChange={(e) => {
                             const x = Number(e.target.value);
                             if (!Number.isFinite(x)) return;
-                            updateSelectedRectFromNormalized({ ...selectedCabinet.rect, x });
+                            updateSelectedRectFromNormalized({
+                              ...selectedCabinet.rect,
+                              x,
+                            });
                           }}
                           className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                         />
@@ -802,7 +878,10 @@ export default function StorageLayoutEditorTab({ showToast }) {
                           onChange={(e) => {
                             const y = Number(e.target.value);
                             if (!Number.isFinite(y)) return;
-                            updateSelectedRectFromNormalized({ ...selectedCabinet.rect, y });
+                            updateSelectedRectFromNormalized({
+                              ...selectedCabinet.rect,
+                              y,
+                            });
                           }}
                           className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                         />
@@ -819,7 +898,10 @@ export default function StorageLayoutEditorTab({ showToast }) {
                           onChange={(e) => {
                             const w = Number(e.target.value);
                             if (!Number.isFinite(w)) return;
-                            updateSelectedSizeNormalized(w, selectedCabinet.rect.h);
+                            updateSelectedSizeNormalized(
+                              w,
+                              selectedCabinet.rect.h,
+                            );
                           }}
                           className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                         />
@@ -833,7 +915,10 @@ export default function StorageLayoutEditorTab({ showToast }) {
                           onChange={(e) => {
                             const h = Number(e.target.value);
                             if (!Number.isFinite(h)) return;
-                            updateSelectedSizeNormalized(selectedCabinet.rect.w, h);
+                            updateSelectedSizeNormalized(
+                              selectedCabinet.rect.w,
+                              h,
+                            );
                           }}
                           className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                         />
@@ -841,7 +926,8 @@ export default function StorageLayoutEditorTab({ showToast }) {
                     </div>
 
                     <div className="text-xs text-gray-500 font-medium leading-relaxed">
-                      Tip: drag cabinets on the canvas. Drawer count controls available drawer slots for this cabinet.
+                      Tip: drag cabinets on the canvas. Drawer count controls
+                      available drawer slots for this cabinet.
                     </div>
                   </div>
                 )}
@@ -853,4 +939,3 @@ export default function StorageLayoutEditorTab({ showToast }) {
     </div>
   );
 }
-

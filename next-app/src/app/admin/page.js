@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+  Suspense,
+} from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { io } from "socket.io-client";
 import { toast } from "sonner";
@@ -20,11 +27,12 @@ import BackupMaintenanceTab from "@/components/admin/BackupMaintenanceTab";
 import EditUserModal from "@/components/admin/EditUserModal";
 import SystemConfigTab from "@/components/admin/SystemConfigTab";
 import DigitalRecordsReviewTab from "@/components/admin/DigitalRecordsReviewTab";
+import DigitizationComplianceTab from "@/components/admin/DigitizationComplianceTab";
 import StorageLayoutEditorTab from "@/components/admin/StorageLayoutEditorTab";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { Skeleton } from "@/components/ui/skeleton";
 
-export default function AdminPage() {
+function AdminPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
@@ -255,7 +263,16 @@ export default function AdminPage() {
   useEffect(() => {
     const tab = String(searchParams?.get("tab") || "").trim();
     const mine = searchParams?.get("mine") === "1";
-    const allowedTabs = new Set(["directory", "create", "logs", "system_data", "review", "system", "backup"]);
+    const allowedTabs = new Set([
+      "directory",
+      "create",
+      "logs",
+      "system_data",
+      "review",
+      "digitization",
+      "system",
+      "backup",
+    ]);
     if (allowedTabs.has(tab)) setView(tab);
     setLogsMineOnly(mine);
     if (mine) setLogPage(1);
@@ -620,6 +637,11 @@ export default function AdminPage() {
     { key: "system_data", label: "System Data", iconClass: "ph-bold ph-gear" },
     { key: "storage_layout", label: "Storage Layout", iconClass: "ph-bold ph-warehouse" },
     { key: "review", label: "Digital Records Review", iconClass: "ph-bold ph-seal-check" },
+    {
+      key: "digitization",
+      label: "Digitization Compliance",
+      iconClass: "ph-bold ph-chart-bar",
+    },
     { key: "system", label: "Backup & Maintenance", iconClass: "ph-bold ph-database" },
   ];
 
@@ -729,6 +751,10 @@ export default function AdminPage() {
             onDecline={openDeclinePrompt}
             onPreviewDocument={handlePreviewDocument}
           />
+        )}
+
+        {view === "digitization" && (
+          <DigitizationComplianceTab showToast={showToast} onLogAction={logAdminAction} />
         )}
 
         {(view === "system" || view === "backup") && (
@@ -866,5 +892,23 @@ export default function AdminPage() {
       )}
 
     </div>
+  );
+}
+
+export default function AdminPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4">
+          <Skeleton className="h-16 w-full rounded-brand shrink-0" />
+          <div className="flex-1 flex gap-4">
+            <Skeleton className="w-[30%] h-full rounded-brand" />
+            <Skeleton className="w-[70%] h-full rounded-brand" />
+          </div>
+        </div>
+      }
+    >
+      <AdminPageContent />
+    </Suspense>
   );
 }

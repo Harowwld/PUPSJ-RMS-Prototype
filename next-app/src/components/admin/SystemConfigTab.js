@@ -18,7 +18,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-export default function SystemConfigTab({ showToast, logAdminAction }) {
+export default function SystemConfigTab({ showToast, logAdminAction, error = null }) {
   const [docTypes, setDocTypes] = useState([]);
   const [courses, setCourses] = useState([]);
   const [sections, setSections] = useState([]);
@@ -80,21 +80,36 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
   if (loading) {
     return (
       <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter">
-        <Skeleton className="h-12 w-full sm:w-[620px] rounded-brand" />
-        <Card className="flex-1 bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-gray-200 bg-gray-50 space-y-2">
-            <Skeleton className="h-5 w-48" />
-            <Skeleton className="h-3 w-72" />
-          </div>
-          <div className="p-6 space-y-3">
-            {Array.from({ length: 7 }).map((_, i) => (
-              <div key={i} className="grid grid-cols-12 gap-3 items-center">
-                <Skeleton className="h-4 col-span-8" />
-                <Skeleton className="h-8 col-span-2" />
-                <Skeleton className="h-8 col-span-2" />
+        <Card className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col">
+          <CardContent className="p-6 flex-1 flex flex-col min-h-0">
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[1, 2, 3, 4].map((i) => (
+                  <Skeleton key={i} className="h-20 rounded-brand" />
+                ))}
               </div>
-            ))}
-          </div>
+              <Skeleton className="h-4 w-full max-w-md rounded-brand" />
+              <Skeleton className="h-32 rounded-brand" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter">
+        <Card className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col">
+          <CardContent className="p-6 flex-1 flex flex-col min-h-0">
+            <div className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500">
+              <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
+              </div>
+              <p className="text-lg font-bold text-gray-900">Could not load report</p>
+              <p className="text-sm font-medium text-gray-600 mt-1 max-w-md">{error}</p>
+            </div>
+          </CardContent>
         </Card>
       </div>
     );
