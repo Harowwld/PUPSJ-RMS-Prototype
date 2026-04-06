@@ -8,7 +8,13 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -32,7 +38,11 @@ export default function AccountPage() {
 
   const isAdminRole = (role) => {
     const normalized = String(role || "").toLowerCase();
-    return normalized === "admin" || normalized === "administrator" || normalized === "superadmin";
+    return (
+      normalized === "admin" ||
+      normalized === "administrator" ||
+      normalized === "superadmin"
+    );
   };
 
   useEffect(() => {
@@ -98,13 +108,17 @@ export default function AccountPage() {
         throw new Error(json?.error || "Failed to update profile");
       }
 
-      toast.success("Profile updated perfectly. Reloading session...");
+      toast.success("Profile Updated", {
+        description: "Your changes will take effect after the page reloads.",
+      });
       setTimeout(() => {
         window.location.reload();
       }, 1500);
     } catch (err) {
       setProfileError(err?.message || "Failed to update profile");
-      toast.error(err?.message || "Failed to update profile");
+      toast.error("Update Failed", {
+        description: err?.message || "Unable to save profile changes.",
+      });
     } finally {
       setProfileLoading(false);
     }
@@ -144,13 +158,17 @@ export default function AccountPage() {
         throw new Error(json?.error || "Failed to change password");
       }
 
-      toast.success("Security credentials updated securely!");
+      toast.success("Password Changed", {
+        description: "Your new credentials are now active.",
+      });
       setPwCurrent("");
       setPwNext("");
       setPwConfirm("");
     } catch (err) {
       setPwError(err?.message || "Failed to change password");
-      toast.error(err?.message || "Failed to change password");
+      toast.error("Password Change Failed", {
+        description: err?.message || "Unable to update credentials.",
+      });
     } finally {
       setPwLoading(false);
     }
@@ -177,13 +195,14 @@ export default function AccountPage() {
     );
   }
 
-  const initials = authUser?.fname && authUser?.lname 
-    ? (authUser.fname[0] + authUser.lname[0]).toUpperCase()
-    : "AD";
+  const initials =
+    authUser?.fname && authUser?.lname
+      ? (authUser.fname[0] + authUser.lname[0]).toUpperCase()
+      : "AD";
 
   const isSuperAdmin = authUser?.role === "SuperAdmin";
-  const roleBadgeColor = isSuperAdmin 
-    ? "bg-amber-100/50 text-amber-800 border-amber-200" 
+  const roleBadgeColor = isSuperAdmin
+    ? "bg-amber-100/50 text-amber-800 border-amber-200"
     : "bg-red-50 text-pup-maroon border-red-100";
 
   return (
@@ -191,7 +210,6 @@ export default function AccountPage() {
       <Header authUser={authUser} onLogout={handleLogout} />
 
       <main className="flex-1 w-full max-w-[1200px] mx-auto py-8 px-6">
-        
         {/* Sleek Page Header */}
         <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-200 pb-6">
           <div>
@@ -199,10 +217,14 @@ export default function AccountPage() {
               <i className="ph-bold ph-gear"></i>
               System Settings
             </div>
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight">Account Settings</h1>
-            <p className="text-sm text-gray-500 font-medium mt-1">Configure your professional identity and security protocol.</p>
+            <h1 className="text-3xl font-black text-gray-900 tracking-tight">
+              Account Settings
+            </h1>
+            <p className="text-sm text-gray-500 font-medium mt-1">
+              Configure your professional identity and security protocol.
+            </p>
           </div>
-          
+
           <Button
             variant="outline"
             onClick={() => {
@@ -211,7 +233,7 @@ export default function AccountPage() {
             }}
             className="h-11 px-6 font-black uppercase tracking-widest text-xs border-gray-300 hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-sm flex items-center gap-2 shrink-0 rounded-brand"
           >
-            <i className="ph-bold ph-arrow-left"></i> 
+            <i className="ph-bold ph-arrow-left"></i>
             Return to Dashboard
           </Button>
         </div>
@@ -220,19 +242,21 @@ export default function AccountPage() {
           {/* Sidebar Navigation */}
           <aside className="space-y-6 shrink-0">
             <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden">
-               <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-col items-center text-center">
-                  <div className="w-16 h-16 rounded-full bg-pup-maroon text-white flex items-center justify-center text-xl font-black shadow-lg shadow-red-900/20 mb-3 border-4 border-white">
-                    {initials}
-                  </div>
-                  <h3 className="font-black text-gray-900 text-sm tracking-tight truncate w-full px-2">
-                    {fname} {lname}
-                  </h3>
-                  <div className={`mt-2 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${roleBadgeColor}`}>
-                    {authUser?.role || "User"}
-                  </div>
-               </div>
-               
-               <nav className="p-2 flex flex-col gap-1">
+              <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-col items-center text-center">
+                <div className="w-16 h-16 rounded-full bg-pup-maroon text-white flex items-center justify-center text-xl font-black shadow-lg shadow-red-900/20 mb-3 border-4 border-white">
+                  {initials}
+                </div>
+                <h3 className="font-black text-gray-900 text-sm tracking-tight truncate w-full px-2">
+                  {fname} {lname}
+                </h3>
+                <div
+                  className={`mt-2 px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest border ${roleBadgeColor}`}
+                >
+                  {authUser?.role || "User"}
+                </div>
+              </div>
+
+              <nav className="p-2 flex flex-col gap-1">
                 <button
                   type="button"
                   onClick={() => setActiveTab("profile")}
@@ -265,7 +289,7 @@ export default function AccountPage() {
                   <i className="ph-bold ph-clock-counter-clockwise text-lg"></i>
                   Audit Activity
                 </button>
-               </nav>
+              </nav>
             </div>
 
             <div className="bg-amber-50 border border-amber-200 rounded-brand p-4">
@@ -274,14 +298,14 @@ export default function AccountPage() {
                 Security Note
               </div>
               <p className="text-[11px] text-amber-800 font-medium leading-relaxed">
-                Changes to your professional credentials will be logged in the system audit for compliance tracking.
+                Changes to your professional credentials will be logged in the
+                system audit for compliance tracking.
               </p>
             </div>
           </aside>
 
           {/* Content Area */}
           <div className="min-w-0">
-          
             {activeTab === "profile" ? (
               <Card className="rounded-brand border-gray-200 shadow-sm overflow-hidden animate-fade-in">
                 <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
@@ -290,8 +314,12 @@ export default function AccountPage() {
                       <i className="ph-duotone ph-identification-badge text-2xl"></i>
                     </div>
                     <div>
-                      <CardTitle className="text-xl font-black text-gray-900 tracking-tight">Personal Identity</CardTitle>
-                      <CardDescription className="font-medium text-gray-500">Update your public name and system identifier.</CardDescription>
+                      <CardTitle className="text-xl font-black text-gray-900 tracking-tight">
+                        Personal Identity
+                      </CardTitle>
+                      <CardDescription className="font-medium text-gray-500">
+                        Update your public name and system identifier.
+                      </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
@@ -304,10 +332,12 @@ export default function AccountPage() {
                         {profileError}
                       </div>
                     )}
-                    
+
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                       <div className="space-y-2">
-                        <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">First Name</label>
+                        <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">
+                          First Name
+                        </label>
                         <Input
                           type="text"
                           className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
@@ -318,7 +348,9 @@ export default function AccountPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">Last Name</label>
+                        <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">
+                          Last Name
+                        </label>
                         <Input
                           type="text"
                           className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
@@ -330,8 +362,10 @@ export default function AccountPage() {
                       </div>
                     </div>
 
-                    <div className="space-y-2 max-w-lg">
-                      <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">System Email / Username</label>
+                    <div className="space-y-2">
+                      <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">
+                        System Email / Username
+                      </label>
                       <div className="relative">
                         <i className="ph-bold ph-envelope-simple absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
                         <Input
@@ -343,7 +377,9 @@ export default function AccountPage() {
                           required
                         />
                       </div>
-                      <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2 ml-1">Primary identifier for authentication.</p>
+                      <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2 ml-1">
+                        Primary identifier for authentication.
+                      </p>
                     </div>
 
                     <div className="pt-6 border-t border-gray-100 flex justify-end">
@@ -373,23 +409,30 @@ export default function AccountPage() {
                       <i className="ph-duotone ph-key text-2xl"></i>
                     </div>
                     <div>
-                      <CardTitle className="text-xl font-black text-gray-900 tracking-tight">Security Credentials</CardTitle>
-                      <CardDescription className="font-medium text-gray-500">Rotate your password regularly to maintain account integrity.</CardDescription>
+                      <CardTitle className="text-xl font-black text-gray-900 tracking-tight">
+                        Security Credentials
+                      </CardTitle>
+                      <CardDescription className="font-medium text-gray-500">
+                        Rotate your password regularly to maintain account
+                        integrity.
+                      </CardDescription>
                     </div>
                   </div>
                 </CardHeader>
 
                 <CardContent className="p-8">
-                  <form onSubmit={submitPassword} className="space-y-8 max-w-lg">
+                  <form onSubmit={submitPassword} className="space-y-8">
                     {pwError && (
                       <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm font-bold rounded-brand flex items-center gap-3">
                         <i className="ph-bold ph-warning-circle text-xl"></i>
                         {pwError}
                       </div>
                     )}
-                    
+
                     <div className="space-y-2">
-                      <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">Current Password</label>
+                      <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">
+                        Current Password
+                      </label>
                       <Input
                         type="password"
                         className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
@@ -400,30 +443,32 @@ export default function AccountPage() {
                       />
                     </div>
 
-                    <div className="space-y-6 pt-4">
-                      <div className="space-y-2">
-                        <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">New Password</label>
-                        <Input
-                          type="password"
-                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
-                          placeholder="Min. 6 alphanumeric characters"
-                          value={pwNext}
-                          onChange={(e) => setPwNext(e.target.value)}
-                          required
-                        />
-                      </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">
+                        New Password
+                      </label>
+                      <Input
+                        type="password"
+                        className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
+                        placeholder="Min. 6 alphanumeric characters"
+                        value={pwNext}
+                        onChange={(e) => setPwNext(e.target.value)}
+                        required
+                      />
+                    </div>
 
-                      <div className="space-y-2">
-                        <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">Confirm New Password</label>
-                        <Input
-                          type="password"
-                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
-                          placeholder="Must match the entry above"
-                          value={pwConfirm}
-                          onChange={(e) => setPwConfirm(e.target.value)}
-                          required
-                        />
-                      </div>
+                    <div className="space-y-2">
+                      <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">
+                        Confirm New Password
+                      </label>
+                      <Input
+                        type="password"
+                        className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
+                        placeholder="Must match the entry above"
+                        value={pwConfirm}
+                        onChange={(e) => setPwConfirm(e.target.value)}
+                        required
+                      />
                     </div>
 
                     <div className="pt-6 border-t border-gray-100 flex justify-end">
@@ -444,7 +489,6 @@ export default function AccountPage() {
                 </CardContent>
               </Card>
             ) : null}
-
           </div>
         </div>
       </main>

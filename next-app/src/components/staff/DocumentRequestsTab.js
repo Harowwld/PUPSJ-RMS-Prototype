@@ -95,7 +95,7 @@ export default function DocumentRequestsTab({
         setTotal(Number(json.total) || 0);
       } catch (e) {
         if (showLoading) {
-          showToast(e?.message || "Failed to load requests", true);
+          showToast({ title: "Load Failed", description: e?.message || "Unable to fetch document requests." }, true);
           setRows([]);
           setTotal(0);
         }
@@ -137,7 +137,7 @@ export default function DocumentRequestsTab({
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Not found");
       setDetail(json.data);
     } catch (e) {
-      showToast(e?.message || "Failed to load", true);
+      showToast({ title: "Load Failed", description: e?.message || "Unable to load request details." }, true);
       setSelectedId(null);
     } finally {
       setDetailLoading(false);
@@ -182,14 +182,14 @@ export default function DocumentRequestsTab({
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Update failed");
       setDetail(json.data);
       if (!silent) {
-        showToast("Request updated");
+        showToast({ title: "Request Updated", description: "Status and notes have been saved." });
       }
       loadList({ showLoading: false });
     } catch (e) {
       if (body.linkedDocumentId != null) {
         autoLinkAttempted.current.delete(reqId);
       }
-      showToast(e?.message || "Update failed", true);
+      showToast({ title: "Update Failed", description: e?.message || "Unable to save changes." }, true);
     } finally {
       setSaving(false);
     }
@@ -221,7 +221,7 @@ export default function DocumentRequestsTab({
       });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to create");
-      showToast("Request created");
+      showToast({ title: "Request Created", description: "A new document request has been logged." });
       setCreateOpen(false);
       setCreateStudentNo("");
       setCreateDocType("");
@@ -229,7 +229,7 @@ export default function DocumentRequestsTab({
       setPage(1);
       loadList({ showLoading: true });
     } catch (err) {
-      showToast(err?.message || "Failed to create", true);
+      showToast({ title: "Creation Failed", description: err?.message || "Unable to create the request." }, true);
     } finally {
       setSubmitting(false);
     }
@@ -510,68 +510,79 @@ export default function DocumentRequestsTab({
       </div>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-md rounded-brand">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-black">New document request</DialogTitle>
-            <DialogDescription className="text-sm font-medium text-gray-600">
-              Enter the student number and the document being requested.
-            </DialogDescription>
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
+          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
+                <i className="ph-duotone ph-pencil-line text-2xl"></i>
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-lg font-black tracking-tight text-gray-900">New document request</DialogTitle>
+                <DialogDescription className="text-sm font-medium text-gray-600 mt-1">
+                  Enter the student number and the document being requested.
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
-          <form onSubmit={handleCreate} className="space-y-4 pt-2">
-            <div>
-              <label className="text-xs font-bold text-gray-700 uppercase">
-                Student number
-              </label>
-              <Input
-                className="mt-1 h-11 font-mono uppercase"
-                value={createStudentNo}
-                onChange={(e) => setCreateStudentNo(e.target.value)}
-                placeholder="202X-XXXXX-MN-0"
-                required
-              />
+          <form onSubmit={handleCreate}>
+            <div className="p-6 space-y-4">
+              <div>
+                <label className="text-xs font-bold text-gray-700 uppercase">
+                  Student number
+                </label>
+                <Input
+                  className="mt-1.5 h-11 font-mono uppercase bg-white border-gray-300 rounded-brand focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  value={createStudentNo}
+                  onChange={(e) => setCreateStudentNo(e.target.value)}
+                  placeholder="202X-XXXXX-MN-0"
+                  required
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-700 uppercase">
+                  Document type
+                </label>
+                <select
+                  className="mt-1.5 h-11 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  value={createDocType}
+                  onChange={(e) => setCreateDocType(e.target.value)}
+                  required
+                >
+                  <option value="">Select type…</option>
+                  {docTypes.map((dt) => (
+                    <option key={dt} value={dt}>
+                      {dt}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-gray-700 uppercase">
+                  Notes (optional)
+                </label>
+                <textarea
+                  className="mt-1.5 w-full min-h-[72px] rounded-brand border border-gray-300 p-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  value={createNotes}
+                  onChange={(e) => setCreateNotes(e.target.value)}
+                  placeholder="Requester name, contact, purpose…"
+                />
+              </div>
             </div>
-            <div>
-              <label className="text-xs font-bold text-gray-700 uppercase">
-                Document type
-              </label>
-              <select
-                className="mt-1 h-11 w-full rounded-brand border border-gray-300 bg-white text-sm font-semibold"
-                value={createDocType}
-                onChange={(e) => setCreateDocType(e.target.value)}
-                required
-              >
-                <option value="">Select type…</option>
-                {docTypes.map((dt) => (
-                  <option key={dt} value={dt}>
-                    {dt}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-xs font-bold text-gray-700 uppercase">
-                Notes (optional)
-              </label>
-              <textarea
-                className="mt-1 w-full min-h-[72px] rounded-brand border border-gray-300 p-2 text-sm"
-                value={createNotes}
-                onChange={(e) => setCreateNotes(e.target.value)}
-                placeholder="Requester name, contact, purpose…"
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-2">
+            <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
               <Button
                 type="button"
                 variant="outline"
+                className="h-11 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
                 onClick={() => setCreateOpen(false)}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="bg-pup-maroon hover:bg-red-900 font-bold"
+                className="h-11 px-5 bg-pup-maroon text-white font-bold hover:bg-red-900 shadow-sm rounded-brand gap-2 flex items-center"
                 disabled={submitting}
               >
+                <i className="ph-bold ph-plus-circle text-lg"></i>
                 {submitting ? "Saving…" : "Create request"}
               </Button>
             </div>
@@ -579,43 +590,58 @@ export default function DocumentRequestsTab({
         </DialogContent>
       </Dialog>
       <Dialog open={fileWarningOpen} onOpenChange={setFileWarningOpen}>
-        <DialogContent className="sm:max-w-md rounded-brand">
-          <DialogHeader>
-            <DialogTitle className="text-lg font-black text-gray-900">
-              No approved file in system
-            </DialogTitle>
-            <DialogDescription className="text-sm font-medium text-gray-600">
-              The requested document is not uploaded yet or is still pending review.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3 text-sm">
-            <div className="rounded-brand border border-amber-200 bg-amber-50 px-3 py-2 text-amber-900 font-semibold">
-              Verify the physical storage first before proceeding with release.
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
+          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-red-700 shadow-sm flex items-center justify-center shrink-0">
+                <i className="ph-duotone ph-warning-circle text-2xl"></i>
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-lg font-black tracking-tight text-gray-900">
+                  No approved file in system
+                </DialogTitle>
+                <DialogDescription className="text-sm font-medium text-gray-600 mt-1">
+                  The requested document is not uploaded yet or is still pending review.
+                </DialogDescription>
+              </div>
             </div>
-            {studentForRequest ? (
-              <div className="rounded-brand border border-gray-200 bg-gray-50 px-3 py-2 font-mono text-gray-800">
-                Room {studentForRequest.room} · Cabinet {studentForRequest.cabinet} · Drawer{" "}
-                {studentForRequest.drawer}
+          </DialogHeader>
+          <div className="p-6 space-y-4">
+            <div className="space-y-3 text-sm">
+              <div className="rounded-brand border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900 font-medium">
+                Verify the physical storage first before proceeding with release.
               </div>
-            ) : (
-              <div className="rounded-brand border border-red-200 bg-red-50 px-3 py-2 text-red-800 font-medium">
-                No mapped storage location found for this student record.
-              </div>
-            )}
+              {studentForRequest ? (
+                <div className="rounded-brand border border-gray-200 bg-gray-50 px-4 py-3 font-mono text-gray-800 font-medium">
+                  Room {studentForRequest.room} · Cabinet {studentForRequest.cabinet} · Drawer{" "}
+                  {studentForRequest.drawer}
+                </div>
+              ) : (
+                <div className="rounded-brand border border-red-200 bg-red-50 px-4 py-3 text-red-800 font-medium">
+                  No mapped storage location found for this student record.
+                </div>
+              )}
+            </div>
           </div>
-          <div className="pt-2 flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setFileWarningOpen(false)}>
+          <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+            <Button 
+              type="button" 
+              variant="outline" 
+              className="h-11 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+              onClick={() => setFileWarningOpen(false)}
+            >
               Close
             </Button>
             {studentForRequest ? (
               <Button
                 type="button"
-                className="bg-pup-maroon hover:bg-red-900 font-bold"
+                className="h-11 px-5 bg-pup-maroon text-white font-bold hover:bg-red-900 shadow-sm rounded-brand gap-2 flex items-center"
                 onClick={() => {
                   setFileWarningOpen(false);
                   onLocateOnMap(studentForRequest);
                 }}
               >
+                <i className="ph-bold ph-map-pin text-lg"></i>
                 Check storage map anyway
               </Button>
             ) : null}

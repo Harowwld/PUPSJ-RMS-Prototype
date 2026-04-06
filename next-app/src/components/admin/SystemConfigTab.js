@@ -68,7 +68,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
       if (jsonC.ok) setCourses(jsonC.data);
       if (jsonSec.ok) setSections(jsonSec.data);
     } catch (err) {
-      showToast("Failed to load system config data", true);
+      showToast({ title: "Load Failed", description: "Unable to load system configuration data." }, true);
     }
     setLoading(false);
   };
@@ -113,11 +113,10 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
       if (!res.ok || !json.ok) throw new Error(json.error || "Failed");
       setDtName("");
       setIsAddDocTypeOpen(false);
-      showToast("Document Type added");
-      logAdminAction(`Added document type: ${dtName}`);
+      showToast({ title: "Document Type Added", description: `"${dtName.trim()}" is now available as a document category.` });
       fetchData();
     } catch (err) {
-      showToast(err.message, true);
+      showToast({ title: "Creation Failed", description: err.message }, true);
     }
   };
 
@@ -126,11 +125,10 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
       const res = await fetch(`/api/doc-types/${id}`, { method: "DELETE" });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Failed");
-      showToast("Document Type deleted");
-      logAdminAction(`Deleted document type: ${name}`);
+      showToast({ title: "Document Type Removed", description: `"${name}" has been permanently deleted.` });
       fetchData();
     } catch (err) {
-      showToast(err.message, true);
+      showToast({ title: "Deletion Failed", description: err.message }, true);
     }
   };
 
@@ -146,11 +144,10 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Failed");
       setIsEditDocTypeOpen(false);
-      showToast("Document Type updated");
-      logAdminAction(`Updated document type: ${editDocType.name}`);
+      showToast({ title: "Document Type Updated", description: "Changes to the document type have been saved." });
       fetchData();
     } catch (err) {
-      showToast(err.message, true);
+      showToast({ title: "Update Failed", description: err.message }, true);
     }
   };
 
@@ -168,11 +165,10 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
       setCCode("");
       setCName("");
       setIsAddCourseOpen(false);
-      showToast("Degree Program added");
-      logAdminAction(`Added program: ${cCode}`);
+      showToast({ title: "Program Added", description: `"${cName.trim()}" has been registered as a degree program.` });
       fetchData();
     } catch (err) {
-      showToast(err.message, true);
+      showToast({ title: "Creation Failed", description: err.message }, true);
     }
   };
 
@@ -181,11 +177,10 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
       const res = await fetch(`/api/courses/${id}`, { method: "DELETE" });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Failed");
-      showToast("Degree Program deleted");
-      logAdminAction(`Deleted program: ${code}`);
+      showToast({ title: "Program Removed", description: `"${code}" has been permanently deleted.` });
       fetchData();
     } catch (err) {
-      showToast(err.message, true);
+      showToast({ title: "Deletion Failed", description: err.message }, true);
     }
   };
 
@@ -201,11 +196,10 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Failed");
       setIsEditCourseOpen(false);
-      showToast("Degree Program updated");
-      logAdminAction(`Updated program: ${editCourse.code}`);
+      showToast({ title: "Program Updated", description: "Changes to the degree program have been saved." });
       fetchData();
     } catch (err) {
-      showToast(err.message, true);
+      showToast({ title: "Update Failed", description: err.message }, true);
     }
   };
 
@@ -223,11 +217,10 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
       setSecName("");
       setSecCourseCode("");
       setIsAddSectionOpen(false);
-      showToast("Section block added");
-      logAdminAction(`Added section block: ${secName} (${secCourseCode})`);
+      showToast({ title: "Section Added", description: `"${secName.trim()}" block has been created.` });
       fetchData();
     } catch (err) {
-      showToast(err.message, true);
+      showToast({ title: "Creation Failed", description: err.message }, true);
     }
   };
 
@@ -236,11 +229,10 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
       const res = await fetch(`/api/sections/${id}`, { method: "DELETE" });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Failed");
-      showToast("Section block deleted");
-      logAdminAction(`Deleted section: ${name}`);
+      showToast({ title: "Section Removed", description: `"${name}" has been permanently deleted.` });
       fetchData();
     } catch (err) {
-      showToast(err.message, true);
+      showToast({ title: "Deletion Failed", description: err.message }, true);
     }
   };
 
@@ -256,11 +248,38 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Failed");
       setIsEditSectionOpen(false);
-      showToast("Section block updated");
-      logAdminAction(`Updated section block: ${editSection.name} (${editSection.courseCode})`);
+      showToast({ title: "Section Updated", description: "Changes to the section block have been saved." });
       fetchData();
     } catch (err) {
-      showToast(err.message, true);
+      showToast({ title: "Update Failed", description: err.message }, true);
+    }
+  };
+
+  const handleCopySample = async () => {
+    const text = "Category,Name,Code\nDocumentType,Birth Certificate,\nCourse,Bachelor of Science in IT,BSIT\nSection,Block 1,BSIT";
+    if (navigator.clipboard && window.isSecureContext) {
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast({ title: "Copied", description: "CSV template sample is on your clipboard." });
+        return;
+      } catch (err) {
+        // Fallback below
+      }
+    }
+
+    try {
+      const textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-9999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      document.execCommand("copy");
+      textArea.remove();
+      showToast({ title: "Copied", description: "CSV template sample is on your clipboard." });
+    } catch (err) {
+      showToast({ title: "Copy Failed", description: "Please manually copy the example from the preview." }, true);
     }
   };
 
@@ -335,14 +354,11 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
         }
 
         showToast(
-          `Bulk Import Finished: ${successCount} processed, ${failCount} failed`,
-        );
-        logAdminAction(
-          `Executed bulk CSV taxonomy import (${successCount} records structured)`,
+          { title: "Bulk Import Complete", description: `${successCount} records processed, ${failCount} failed.` },
         );
         fetchData();
       } catch (err) {
-        showToast(err.message, true);
+        showToast({ title: "Import Failed", description: err.message }, true);
       } finally {
         setImporting(false);
         e.target.value = "";
@@ -772,11 +788,7 @@ export default function SystemConfigTab({ showToast, logAdminAction }) {
                         </a>
                         <button
                           type="button"
-                          onClick={() =>
-                            navigator.clipboard?.writeText(
-                              "Category,Name,Code\nDocumentType,Birth Certificate,\nCourse,Bachelor of Science in IT,BSIT\nSection,Block 1,BSIT"
-                            )
-                          }
+                          onClick={handleCopySample}
                           className="inline-flex items-center h-9 px-3 rounded-brand border border-gray-300 bg-white text-xs font-bold text-gray-700 hover:text-pup-maroon hover:border-pup-maroon"
                         >
                           <i className="ph-bold ph-copy mr-1.5"></i>

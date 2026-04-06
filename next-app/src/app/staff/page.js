@@ -128,10 +128,13 @@ export default function StaffPage() {
   const [pwModalOpen, setPwModalOpen] = useState(false);
 
   const showToast = useCallback((msg, isError = false) => {
+    const isRich = msg && typeof msg === "object" && msg.title;
+    const title = isRich ? msg.title : String(msg || "");
+    const opts = isRich && msg.description ? { description: msg.description } : {};
     if (isError) {
-      toast.error(msg);
+      toast.error(title, opts);
     } else {
-      toast.success(msg);
+      toast.success(title, opts);
     }
   }, []);
 
@@ -158,7 +161,7 @@ export default function StaffPage() {
       setStorageLayout(layoutData?.data || null);
       coreDataLoadedRef.current = true;
     } catch (err) {
-      showToast("Failed to sync database", true);
+      showToast({ title: "Sync Failed", description: "Unable to refresh data from the server." }, true);
     }
   }, [showToast]);
 
@@ -630,7 +633,7 @@ export default function StaffPage() {
         const message =
           err?.message || "Automatic detection failed. Please fill manually.";
         setOcrError(message);
-        showToast(message, true);
+        showToast({ title: "OCR Failed", description: message }, true);
       } finally {
         setOcrLoading(false);
       }
@@ -640,13 +643,13 @@ export default function StaffPage() {
   const processSubmission = async () => {
     if (!uploadedFile) {
       setUploadFieldErrors({ pdfFile: true });
-      showToast("Please select a PDF file first", true);
+      showToast({ title: "No File Selected", description: "Attach a PDF document before submitting." }, true);
       return;
     }
     const payload = new FormData();
     payload.append("file", uploadedFile);
     if (uploadMode !== "pdf") {
-      showToast("Select the PDF upload tab to submit a document", true);
+      showToast({ title: "Wrong Mode", description: "Switch to the PDF upload tab to submit a document." }, true);
       return;
     }
     if (uploadStudentIsExisting) {
@@ -655,7 +658,7 @@ export default function StaffPage() {
       if (!newRec.docType) err.docType = true;
       if (Object.keys(err).length) {
         setUploadFieldErrors(err);
-        showToast("Student number and document type are required", true);
+        showToast({ title: "Missing Fields", description: "Provide the student number and document type." }, true);
         return;
       }
       setUploadFieldErrors({});
@@ -674,7 +677,7 @@ export default function StaffPage() {
       if (!newRec.docType) err.docType = true;
       if (Object.keys(err).length) {
         setUploadFieldErrors(err);
-        showToast("Please fill all student details", true);
+        showToast({ title: "Incomplete Form", description: "All student detail fields are required." }, true);
         return;
       }
       setUploadFieldErrors({});
@@ -719,18 +722,18 @@ export default function StaffPage() {
       );
       if (locationUpdateFailed) {
         showToast(
-          "Document uploaded, but room/cabinet/drawer could not be updated.",
+          { title: "Partial Upload", description: "Document saved, but storage location was not updated." },
           true,
         );
       } else {
-        showToast("Upload successful!");
+        showToast({ title: "Upload Complete", description: "Document has been submitted for review." });
       }
       setUploadedFile(null);
       setUploadFieldErrors({});
       fetchData();
       fetchAllDocs();
     } catch (err) {
-      showToast(err.message, true);
+      showToast({ title: "Upload Failed", description: err.message }, true);
     }
   };
 
@@ -1028,7 +1031,7 @@ export default function StaffPage() {
               const targets = csvRows.filter((r) => csvSelected[r.index]);
               if (targets.length === 0) {
                 setCsvError("No selected rows to import. Select at least one row.");
-                showToast("No selected rows to import", true);
+                showToast({ title: "No Rows Selected", description: "Select at least one row from the CSV to import." }, true);
                 return;
               }
               setCsvLoading(true);
@@ -1079,11 +1082,11 @@ export default function StaffPage() {
                 const failCount = res.length - successCount;
                 if (failCount > 0) {
                   showToast(
-                    `Processed ${res.length} students (${successCount} success, ${failCount} failed)`,
+                    { title: "Batch Import Partial", description: `${successCount} succeeded, ${failCount} failed out of ${res.length} records.` },
                     true
                   );
                 } else {
-                  showToast(`Processed ${res.length} students`);
+                  showToast({ title: "Batch Import Complete", description: `${res.length} student records have been processed.` });
                   // Clear CSV preview after fully successful import.
                   setCsvFile(null);
                   setCsvRows([]);
@@ -1096,7 +1099,7 @@ export default function StaffPage() {
                 fetchData();
               } catch (err) {
                 setCsvError(err?.message || "Batch import failed");
-                showToast(err?.message || "Batch import failed", true);
+                showToast({ title: "Import Failed", description: err?.message || "Batch import encountered an error." }, true);
               } finally {
                 setCsvLoading(false);
               }
@@ -1147,11 +1150,11 @@ export default function StaffPage() {
                 if (!r.ok || !payload?.ok) {
                   throw new Error(payload?.error || "Update failed");
                 }
-                showToast("Document updated!");
+                showToast({ title: "Document Updated", description: "Changes to the document have been saved." });
                 refreshDocuments(docsForm);
                 fetchAllDocs();
               } catch (err) {
-                showToast(err.message, true);
+                showToast({ title: "Update Failed", description: err.message }, true);
               }
             }}
             onPreviewDocument={(docType, name, no, id) => {
@@ -1174,7 +1177,7 @@ export default function StaffPage() {
         open={pwModalOpen}
         authUser={authUser}
         onClose={() => setPwModalOpen(false)}
-        onSuccess={showToast}
+        onSuccess={(msg) => showToast({ title: "Password Changed", description: typeof msg === "string" ? msg : "Your new credentials are now active." })}
         onLogAction={logAction}
       />
       <PDFPreviewModal

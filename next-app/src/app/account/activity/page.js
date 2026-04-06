@@ -97,23 +97,25 @@ export default function AccountActivityPage() {
       <Header authUser={authUser} onLogout={handleLogout} />
 
       <main className="flex-1 w-full max-w-[1100px] mx-auto py-8 px-6">
-        <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        {/* Sleek Page Header */}
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-200 pb-6">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 tracking-tight mb-1">
-              My Activity
-            </h1>
-            <p className="text-sm text-gray-500 font-medium">
-              Recent actions performed by your account.
-            </p>
+            <div className="flex items-center gap-2 text-xs font-black text-pup-maroon uppercase tracking-widest mb-1">
+              <i className="ph-bold ph-clock-counter-clockwise"></i>
+              Audit Activity
+            </div>
+            <h1 className="text-3xl font-black text-gray-900 tracking-tight">My Activity</h1>
+            <p className="text-sm text-gray-500 font-medium mt-1">Recent actions performed by your account.</p>
           </div>
 
-          <button
+          <Button
+            variant="outline"
             onClick={() => router.push("/account")}
-            className="bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-pup-maroon px-4 py-2 rounded-brand font-bold text-sm shadow-sm transition-all active:scale-[0.98] flex items-center gap-2 group shrink-0"
+            className="h-11 px-6 font-black uppercase tracking-widest text-xs border-gray-300 hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-sm flex items-center gap-2 shrink-0 rounded-brand group"
           >
-            <i className="ph-bold ph-arrow-left transition-transform group-hover:-translate-x-1"></i>{" "}
-            Back to Account
-          </button>
+            <i className="ph-bold ph-arrow-left transition-transform group-hover:-translate-x-1"></i>
+            Return to Account
+          </Button>
         </div>
 
         <Card className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden">
@@ -156,13 +158,6 @@ export default function AccountActivityPage() {
                     <option value={50}>50</option>
                   </select>
                 </div>
-                <Button
-                  onClick={refresh}
-                  className="h-12 px-6 bg-pup-maroon text-white hover:bg-red-900 font-bold"
-                >
-                  <i className="ph-bold ph-arrow-clockwise mr-1.5"></i>
-                  Refresh
-                </Button>
               </div>
             </div>
           </div>

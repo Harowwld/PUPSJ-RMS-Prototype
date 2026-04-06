@@ -61,7 +61,7 @@ function normalizeStorageLayout(layoutRaw) {
   const version = Number(layoutRaw.version);
   if (!Number.isFinite(version) || (version !== 1 && version !== 2)) return null;
 
-  if (!Array.isArray(layoutRaw.rooms) || layoutRaw.rooms.length === 0) return null;
+  if (!Array.isArray(layoutRaw.rooms)) return null;
 
   const rooms = [];
   for (const r of layoutRaw.rooms) {
@@ -113,7 +113,6 @@ function normalizeStorageLayout(layoutRaw) {
     rooms.push({ id: roomId, name: roomName || `Room ${roomId}`, cabinets, door });
   }
 
-  if (rooms.length === 0) return null;
   rooms.sort((a, b) => a.id - b.id);
 
   // Always normalize to v2.

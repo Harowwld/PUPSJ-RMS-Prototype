@@ -82,9 +82,10 @@ export default function PromptModal({
           <Button
             type="button"
             onClick={onConfirm}
-            className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 text-sm font-bold shadow-sm rounded-brand"
+            className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 text-sm font-bold shadow-sm rounded-brand gap-2 flex items-center"
             disabled={isLoading}
           >
+            <i className="ph-bold ph-check-circle text-lg"></i>
             {isLoading ? "Processing..." : confirmLabel}
           </Button>
         </div>

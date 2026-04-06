@@ -22,10 +22,12 @@ import SystemConfigTab from "@/components/admin/SystemConfigTab";
 import DigitalRecordsReviewTab from "@/components/admin/DigitalRecordsReviewTab";
 import StorageLayoutEditorTab from "@/components/admin/StorageLayoutEditorTab";
 import { formatPHDateTime } from "@/lib/timeFormat";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function AdminPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [loading, setLoading] = useState(true);
   const loadedViewsRef = useRef({
     directory: false,
     logs: false,
@@ -118,16 +120,18 @@ export default function AdminPage() {
   });
 
   const showToast = useCallback((msg, isError = false, autoHide = true) => {
-    const text = String(msg || "");
+    const isRich = msg && typeof msg === "object" && msg.title;
+    const title = isRich ? msg.title : String(msg || "");
+    const opts = isRich && msg.description ? { description: msg.description } : {};
     if (isError) {
-      toast.error(text);
+      toast.error(title, opts);
       return;
     }
     if (!autoHide) {
-      toast.message(text, { duration: 5000 });
+      toast.message(title, { ...opts, duration: 5000 });
       return;
     }
-    toast.success(text);
+    toast.success(title, opts);
   }, []);
 
   const refreshStaff = useCallback(async () => {
@@ -140,7 +144,7 @@ export default function AdminPage() {
       setStaffData(Array.isArray(json.data) ? json.data : []);
       loadedViewsRef.current.directory = true;
     } catch (err) {
-      showToast(err.message, true);
+      showToast({ title: "Load Failed", description: err.message }, true);
     } finally {
       setViewLoading((prev) => ({ ...prev, directory: false }));
     }
@@ -221,7 +225,7 @@ export default function AdminPage() {
       setReviewRecords(Array.isArray(json.data) ? json.data : []);
       loadedViewsRef.current.review = true;
     } catch (err) {
-      showToast(err?.message || "Failed to load review records", true);
+      showToast({ title: "Load Failed", description: err?.message || "Unable to fetch review records." }, true);
     } finally {
       setViewLoading((prev) => ({ ...prev, review: false }));
     }
@@ -270,6 +274,8 @@ export default function AdminPage() {
         if (json?.data?.mustChangePassword) {
           setPwOpen(true);
         }
+        // Render first, then hydrate data in background.
+        setLoading(false);
         setTimeout(() => {
           refreshStaff();
           refreshSystemHealth();
@@ -350,11 +356,10 @@ export default function AdminPage() {
         if (!res.ok || !json?.ok) {
           throw new Error(json?.error || "Failed to review document");
         }
-        showToast(`Document ${approvalStatus.toLowerCase()} successfully.`);
-        await logAdminAction(`${approvalStatus} document ID ${id}`);
+        showToast({ title: "Review Complete", description: `The document has been ${approvalStatus.toLowerCase()}.` });
         refreshReviewRecords();
       } catch (err) {
-        showToast(err?.message || "Failed to review document", true);
+        showToast({ title: "Review Failed", description: err?.message || "Unable to update document status." }, true);
       }
     },
     [refreshReviewRecords, showToast, logAdminAction]
@@ -452,10 +457,7 @@ export default function AdminPage() {
         throw new Error(json?.error || "Failed to create staff");
 
       setStaffData((prev) => [json.data, ...prev]);
-      await logAdminAction(
-        `Created account for ${createForm.fname} ${createForm.lname}`,
-      );
-      showToast(`Account created for ${createForm.fname} ${createForm.lname}!`);
+      showToast({ title: "Account Created", description: `Staff account for ${createForm.fname} ${createForm.lname} is now active.` });
       setDefaultPwUserLabel(
         `${createForm.fname} ${createForm.lname}`.trim() || createForm.id,
       );
@@ -470,7 +472,7 @@ export default function AdminPage() {
       });
       switchView("directory");
     } catch (err) {
-      showToast(err.message, true);
+      showToast({ title: "Creation Failed", description: err.message }, true);
     }
   };
 
@@ -490,13 +492,10 @@ export default function AdminPage() {
       setStaffData((prev) =>
         prev.map((u) => (u.id === editOriginalId ? json.data : u)),
       );
-      await logAdminAction(
-        `Updated account details for ${json.data.fname} ${json.data.lname}`,
-      );
-      showToast("Account updated successfully!");
+      showToast({ title: "Account Updated", description: "Staff profile changes have been saved." });
       setEditOpen(false);
     } catch (err) {
-      showToast(err.message, true);
+      showToast({ title: "Update Failed", description: err.message }, true);
     }
   };
 
@@ -511,11 +510,10 @@ export default function AdminPage() {
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to delete staff");
       setStaffData((prev) => prev.filter((s) => s.id !== deleteTarget.id));
-      await logAdminAction(`Removed staff account: ${deleteTarget.id}`);
-      showToast("User removed successfully.");
+      showToast({ title: "Account Removed", description: "The staff account has been permanently deleted." });
       setDeleteOpen(false);
     } catch (err) {
-      showToast(err.message, true);
+      showToast({ title: "Deletion Failed", description: err.message }, true);
     } finally {
       setDeleteLoading(false);
     }
@@ -539,15 +537,15 @@ export default function AdminPage() {
       return json?.data?.filename || "backup package";
       })(),
       {
-        loading: "Creating full system backup...",
-        success: (filename) => `Backup ready: ${filename}`,
-        error: (err) => err?.message || "Failed to create backup",
+        loading: "Creating full system backup…",
+        success: (filename) => ({ title: "Backup Complete", description: `Package ready: ${filename}` }),
+        error: (err) => ({ title: "Backup Failed", description: err?.message || "Unable to create system backup." }),
       }
     );
   };
 
   const syncExternal = async (id) => {
-    showToast("Syncing encrypted backup to external drive...", false, false);
+    showToast({ title: "Sync In Progress", description: "Transferring encrypted backup to external drive…" }, false, false);
     try {
       const res = await fetch("/api/system/backup/sync-external", {
         method: "POST",
@@ -556,10 +554,10 @@ export default function AdminPage() {
       });
       const json = await res.json();
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Sync failed");
-      showToast("Synced to external drive successfully!");
+      showToast({ title: "Sync Complete", description: "Backup has been transferred to the external drive." });
       refreshBackups();
     } catch (err) {
-      showToast(err.message, true);
+      showToast({ title: "Sync Failed", description: err.message }, true);
     }
   };
 
@@ -573,12 +571,11 @@ export default function AdminPage() {
       const json = await res.json();
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to delete backup");
-      await logAdminAction(`Deleted backup: ${backupDeleteTarget.filename}`);
-      showToast("Backup deleted successfully.");
+      showToast({ title: "Backup Removed", description: "The selected backup has been permanently deleted." });
       setBackupDeleteOpen(false);
       refreshBackups();
     } catch (err) {
-      showToast(err.message, true);
+      showToast({ title: "Deletion Failed", description: err.message }, true);
     } finally {
       setBackupDeleteLoading(false);
     }
@@ -597,11 +594,10 @@ export default function AdminPage() {
       const json = await res.json();
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to restore system");
-      await logAdminAction(`Restored system from backup: ${restoreFile.name}`);
-      showToast("System restored! Reloading...");
+      showToast({ title: "System Restored", description: "Database restored from backup. Reloading in 3s…" });
       setTimeout(() => location.reload(), 3000);
     } catch (err) {
-      showToast(err.message, true);
+      showToast({ title: "Restore Failed", description: err.message }, true);
       setRestoreLoading(false);
     }
   };
@@ -628,6 +624,18 @@ export default function AdminPage() {
   ];
 
   const sidebarActiveKey = view === "backup" ? "system" : view;
+
+  if (loading) {
+    return (
+      <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4">
+        <Skeleton className="h-16 w-full rounded-brand shrink-0" />
+        <div className="flex-1 flex gap-4">
+          <Skeleton className="w-[30%] h-full rounded-brand" />
+          <Skeleton className="w-[70%] h-full rounded-brand" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50 font-inter">

@@ -67,7 +67,7 @@ export default function StorageLayoutEditorTab({ showToast }) {
         const firstRoom = Array.isArray(json.data?.rooms) ? json.data.rooms[0]?.id : null;
         setActiveRoomId(firstRoom);
       } catch (err) {
-        showToast?.(err?.message || "Failed to load storage layout", true);
+        showToast?.({ title: "Load Failed", description: err?.message || "Unable to load storage layout." }, true);
       } finally {
         setLoading(false);
       }
@@ -172,13 +172,13 @@ export default function StorageLayoutEditorTab({ showToast }) {
     if (!layout || !activeRoom) return;
     if (activeRoomStudentCount > 0) {
       showToast?.(
-        `Cannot remove Room ${activeRoom.id} — ${activeRoomStudentCount} student record(s) still assigned.`,
+        { title: "Cannot Remove Room", description: `Room ${activeRoom.id} has ${activeRoomStudentCount} student record(s) still assigned.` },
         true,
       );
       return;
     }
     if (activeRoom.cabinets?.length) {
-      showToast?.("Remove cabinets first before deleting a room.", true);
+      showToast?.({ title: "Cannot Remove Room", description: "Remove all cabinets first before deleting a room." }, true);
       return;
     }
     setLayout((prev) => {
@@ -195,13 +195,13 @@ export default function StorageLayoutEditorTab({ showToast }) {
     if (!layout || !activeRoom) return;
     if (activeRoomStudentCount > 0) {
       showToast?.(
-        `Cannot reset Room ${activeRoom.id} — ${activeRoomStudentCount} student record(s) still assigned.`,
+        { title: "Cannot Reset Room", description: `Room ${activeRoom.id} has ${activeRoomStudentCount} student record(s) still assigned.` },
         true,
       );
       return;
     }
     if (!activeRoom.cabinets?.length) {
-      showToast?.("Room already has no cabinets.");
+      showToast?.({ title: "Nothing to Reset", description: "This room has no cabinet layout to clear." });
       return;
     }
     updateRoom(activeRoom.id, (r) => ({
@@ -210,7 +210,7 @@ export default function StorageLayoutEditorTab({ showToast }) {
     }));
     setSelectedCabinetId(null);
     showToast?.(
-      "Room layout reset. Save to apply. If student records still reference this room, saving will be blocked."
+      { title: "Layout Reset", description: "Room cleared. Save to apply. Blocked if students still reference this room." }
     );
   }
 
@@ -218,7 +218,7 @@ export default function StorageLayoutEditorTab({ showToast }) {
     if (!activeRoom) return;
     if (activeRoomStudentCount > 0) {
       showToast?.(
-        `Cannot apply template to Room ${activeRoom.id} — ${activeRoomStudentCount} student record(s) still assigned.`,
+        { title: "Cannot Apply Template", description: `Room ${activeRoom.id} has ${activeRoomStudentCount} student record(s) still assigned.` },
         true,
       );
       return;
@@ -236,7 +236,7 @@ export default function StorageLayoutEditorTab({ showToast }) {
       door: r.door || getDefaultDoor(),
     }));
     setSelectedCabinetId(null);
-    showToast?.(`Applied template: ${tpl.name}`);
+    showToast?.({ title: "Template Applied", description: `"${tpl.name}" has been loaded into the active room.` });
   }
 
   function addCabinet() {
@@ -414,9 +414,9 @@ export default function StorageLayoutEditorTab({ showToast }) {
       const json = await res.json();
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Save failed");
       setLayout(json.data);
-      showToast?.("Storage layout saved.");
+      showToast?.({ title: "Layout Saved", description: "All room and cabinet changes have been applied." });
     } catch (err) {
-      showToast?.(err?.message || "Failed to save storage layout", true);
+      showToast?.({ title: "Save Failed", description: err?.message || "Unable to save storage layout." }, true);
     } finally {
       setSaving(false);
     }
@@ -530,7 +530,7 @@ export default function StorageLayoutEditorTab({ showToast }) {
             >
               <i className="ph-bold ph-plus-square mr-2 text-pup-maroon" /> Add Cabinet
             </Button>
-            
+
             <div className="flex items-center shadow-sm rounded-brand overflow-hidden border border-gray-300">
               <select
                 className="h-11 bg-white px-3 text-sm font-bold text-gray-700 focus:outline-none border-r border-gray-300 cursor-pointer"

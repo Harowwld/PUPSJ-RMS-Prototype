@@ -30,6 +30,7 @@ export default function ConfirmModal({
       title: "text-gray-900",
       description: "text-gray-600",
       confirmVariant: "destructive",
+      buttonIcon: "ph-bold ph-trash",
     },
     warning: {
       icon: "ph-duotone ph-warning",
@@ -37,6 +38,7 @@ export default function ConfirmModal({
       title: "text-gray-900",
       description: "text-gray-600",
       confirmVariant: "secondary",
+      buttonIcon: "ph-bold ph-warning",
     },
     default: {
       icon: "ph-duotone ph-info",
@@ -44,6 +46,7 @@ export default function ConfirmModal({
       title: "text-gray-900",
       description: "text-gray-600",
       confirmVariant: "default",
+      buttonIcon: "ph-bold ph-check",
     },
   };
 
@@ -84,11 +87,12 @@ export default function ConfirmModal({
             onClick={onConfirm}
             disabled={isLoading}
             className={cn(
-              "h-11 px-6 text-sm font-bold shadow-sm rounded-brand",
+              "h-11 px-6 text-sm font-bold shadow-sm rounded-brand gap-2 flex items-center",
               v.confirmVariant === "default" && "bg-pup-maroon hover:bg-red-900 text-white",
               v.confirmVariant === "destructive" && "bg-red-600 hover:bg-red-700 text-white"
             )}
           >
+            <i className={`${v.buttonIcon} text-lg`}></i>
             {isLoading ? "Processing..." : confirmLabel}
           </Button>
         </div>

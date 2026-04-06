@@ -71,8 +71,6 @@ export default function PasswordChangeModal({
           throw new Error(json?.error || "Failed to change password");
         }
 
-        if (onLogAction) await onLogAction("Changed account password");
-
         clearPwForm();
         onSuccess("Password updated successfully!");
         onClose();
@@ -166,8 +164,9 @@ export default function PasswordChangeModal({
             <Button
               type="submit"
               disabled={pwLoading}
-              className="h-11 px-5 bg-pup-maroon text-white font-bold hover:bg-red-900 shadow-sm rounded-brand"
+              className="h-11 px-5 bg-pup-maroon text-white font-bold hover:bg-red-900 shadow-sm rounded-brand gap-2 flex items-center"
             >
+              <i className="ph-bold ph-floppy-disk text-lg"></i>
               {pwLoading ? "Saving..." : "Update Password"}
             </Button>
           </div>

@@ -12,12 +12,10 @@ import {
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
-import UserGuideModal from "@/components/shared/UserGuideModal";
 
 export default function Header({ authUser, onLogout, children }) {
   const router = useRouter();
   const pathname = usePathname();
-  const [isGuideOpen, setIsGuideOpen] = useState(false);
   const isAdminRole = (role) => {
     const normalized = String(role || "").toLowerCase();
     return normalized === "admin" || normalized === "administrator" || normalized === "superadmin";
@@ -123,22 +121,9 @@ export default function Header({ authUser, onLogout, children }) {
                 )}
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
-              <DropdownMenuGroup>
-                <DropdownMenuItem 
-                  className="cursor-pointer rounded-md text-gray-700 hover:bg-blue-50 hover:text-blue-700 flex items-center gap-2 font-medium"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    setIsGuideOpen(true);
-                  }}
-                >
-                  <i className="ph-bold ph-book-open-text"></i> System User Guide
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
               {hasAdminRights && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuGroup>
-                    {isAdminView ? (
+                <DropdownMenuGroup>
+                  {isAdminView ? (
                       <DropdownMenuItem 
                         className="cursor-pointer rounded-md text-gray-700 hover:bg-red-50 hover:text-pup-maroon flex items-center gap-2 font-medium"
                         onClick={() => router.push("/staff")}
@@ -154,7 +139,6 @@ export default function Header({ authUser, onLogout, children }) {
                       </DropdownMenuItem>
                     )}
                   </DropdownMenuGroup>
-                </>
               )}
 
               <DropdownMenuSeparator />
@@ -170,8 +154,6 @@ export default function Header({ authUser, onLogout, children }) {
           </DropdownMenu>
         </div>
       </div>
-
-      <UserGuideModal open={isGuideOpen} onClose={() => setIsGuideOpen(false)} />
     </header>
   );
 }
