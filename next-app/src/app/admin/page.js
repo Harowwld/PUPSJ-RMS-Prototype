@@ -15,7 +15,6 @@ import { toast } from "sonner";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Sidebar from "@/components/shared/Sidebar";
-import PasswordChangeModal from "@/components/shared/PasswordChangeModal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import PromptModal from "@/components/shared/PromptModal";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
@@ -110,7 +109,6 @@ function AdminPageContent() {
   const [restoreLoading, setRestoreLoading] = useState(false);
 
   const [authUser, setAuthUser] = useState(null);
-  const [pwOpen, setPwOpen] = useState(false);
 
   const [defaultPwOpen, setDefaultPwOpen] = useState(false);
   const [defaultPwUserLabel, setDefaultPwUserLabel] = useState("");
@@ -288,9 +286,6 @@ function AdminPageContent() {
           return;
         }
         setAuthUser(json.data);
-        if (json?.data?.mustChangePassword) {
-          setPwOpen(true);
-        }
         // Render first, then hydrate data in background.
         setLoading(false);
         setTimeout(() => {
@@ -800,14 +795,6 @@ function AdminPageContent() {
       </div>
 
       <Footer />
-
-      <PasswordChangeModal
-        open={pwOpen}
-        authUser={authUser}
-        onClose={() => setPwOpen(false)}
-        onSuccess={(m) => showToast(m)}
-        onLogAction={logAdminAction}
-      />
 
       <EditUserModal
         open={editOpen}

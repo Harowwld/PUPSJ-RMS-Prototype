@@ -18,18 +18,28 @@ export async function POST(req) {
     }
 
     const staff = await dbGet(
-      "SELECT id, role, security_answer_hash FROM staff WHERE id = ?",
+      "SELECT id, fname, lname, role FROM staff WHERE id = ?",
       [id]
     );
 
-    if (!staff || !staff.security_answer_hash) {
+    if (!staff) {
       return NextResponse.json({ ok: false, error: "Invalid request" }, { status: 400 });
+    }
+
+    const resAnswer = await dbGet(`
+      SELECT answer_hash 
+      FROM staff_security_answers
+      WHERE staff_id = ?
+    `, [staff.id]);
+
+    if (!resAnswer || !resAnswer.answer_hash) {
+      return NextResponse.json({ ok: false, error: "Security answer not found" }, { status: 400 });
     }
 
     const answerNormalized = String(answer).trim().toLowerCase();
     const providedHash = crypto.createHash("sha256").update(answerNormalized).digest("hex");
 
-    if (providedHash !== staff.security_answer_hash) {
+    if (providedHash !== resAnswer.answer_hash) {
       return NextResponse.json({ ok: false, error: "Incorrect security answer" }, { status: 401 });
     }
 
@@ -39,10 +49,14 @@ export async function POST(req) {
       newPasswordHash, staff.id
     ]);
 
-    await writeAuditLog(staff.id, staff.role, "Reset Password via Security Question");
+    await writeAuditLog(req, "Reset Password via Security Question", {
+      actor: `${staff.fname || ""} ${staff.lname || ""}`.trim() || staff.id,
+      role: staff.role
+    });
 
     return NextResponse.json({ ok: true, data: { success: true } });
   } catch (error) {
-    return NextResponse.json({ ok: false, error: "Internal server error" }, { status: 500 });
+    console.error("[Forgot-Password Reset Error]:", error);
+    return NextResponse.json({ ok: false, error: error.message || "Internal server error" }, { status: 500 });
   }
 }

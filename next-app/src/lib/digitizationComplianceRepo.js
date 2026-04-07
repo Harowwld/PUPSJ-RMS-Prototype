@@ -1,19 +1,6 @@
 import { dbAll, dbGet } from "./sqlite.js";
 import { listDocuments } from "./documentsRepo.js";
-
-/**
- * Digitization compliance analytics (single source of truth for KPIs).
- *
- * Population: rows in `students`, optionally filtered by status and course_code.
- *
- * Student is "digitized" when they have ≥1 row in `documents` that qualifies:
- * - Default (requireApproved=false): approval_status is NULL or not 'Declined'
- *   (aligned with staff `excludeDeclined` / staffDocs filter).
- * - Strict (requireApproved=true): approval_status = 'Approved' only.
- *
- * Compliance: (digitizedStudents / totalStudents) >= threshold when totalStudents > 0;
- * when totalStudents === 0, isCompliant is true and percentDigitized is null.
- */
+import { listDocTypes } from "./docTypesRepo.js";
 
 function buildDocQualifiesSql(requireApproved) {
   if (requireApproved) {
@@ -51,104 +38,98 @@ export async function getDigitizationComplianceSummary({
   studentStatus = "Active",
   courseCode,
   requireApproved = false,
-  threshold = 0.95,
 } = {}) {
   await listDocuments({ limit: 1 });
+
+  // 1. Get all doc types currently configured in the system
+  const allDocTypes = await listDocTypes();
+  const expectedCountPerStudent = allDocTypes.length;
 
   const docQualifies = buildDocQualifiesSql(Boolean(requireApproved));
   const { where, params } = buildStudentWhere({ studentStatus, courseCode });
 
-  const thr = Number(threshold);
-  const safeThreshold =
-    Number.isFinite(thr) && thr >= 0 && thr <= 1 ? thr : 0.95;
-
-  const summaryRow = await dbGet(
+  // 2. Fetch students and their unique document counts
+  const students = await dbAll(
     `
     SELECT
-      COUNT(*) AS total,
-      SUM(
-        CASE WHEN EXISTS (
-          SELECT 1 FROM documents d
-          WHERE d.student_no = s.student_no
-            AND ${docQualifies}
-        ) THEN 1 ELSE 0 END
-      ) AS digitized
+      s.student_no,
+      s.course_code,
+      (
+        SELECT COUNT(DISTINCT d.doc_type)
+        FROM documents d
+        WHERE d.student_no = s.student_no
+          AND ${docQualifies}
+          AND d.doc_type IN (${allDocTypes.length ? allDocTypes.map(() => "?").join(",") : "NULL"})
+      ) AS actual_count
     FROM students s
     ${where}
     `,
-    params
+    [...(allDocTypes.length ? allDocTypes : []), ...params]
   );
 
-  const totalStudents = Number(summaryRow?.total || 0) || 0;
-  const digitizedStudents = Number(summaryRow?.digitized || 0) || 0;
-  const notDigitizedStudents = Math.max(0, totalStudents - digitizedStudents);
+  let totalStudents = students.length;
+  let fullyDigitizedCount = 0;
+  let totalCompletenessRatio = 0;
+  let totalDigitizedDocsCount = 0;
+  let totalExpectedDocsCount = totalStudents * expectedCountPerStudent;
 
-  let percentDigitized = null;
-  let isCompliant = true;
-  if (totalStudents > 0) {
-    const ratio = digitizedStudents / totalStudents;
-    percentDigitized = roundPercent(ratio);
-    isCompliant = ratio >= safeThreshold;
-  }
+  const courseStats = {};
 
-  let byCourse = [];
-  if (!String(courseCode || "").trim()) {
-    byCourse = await dbAll(
-      `
-      SELECT
-        s.course_code AS course_code,
-        COUNT(*) AS total,
-        SUM(
-          CASE WHEN EXISTS (
-            SELECT 1 FROM documents d
-            WHERE d.student_no = s.student_no
-              AND ${docQualifies}
-          ) THEN 1 ELSE 0 END
-        ) AS digitized
-      FROM students s
-      ${where}
-      GROUP BY s.course_code
-      ORDER BY s.course_code ASC
-      `,
-      params
-    );
-  }
+  students.forEach((s) => {
+    const actual = Number(s.actual_count) || 0;
+    
+    // 100% completion is the goal
+    const completeness = expectedCountPerStudent > 0 ? Math.min(1.0, actual / expectedCountPerStudent) : 1.0;
+    const isFullyDigitized = completeness >= 1.0;
 
-  const byCourseNorm = (byCourse || []).map((row) => {
-    const t = Number(row?.total || 0) || 0;
-    const d = Number(row?.digitized || 0) || 0;
-    const pct = t > 0 ? roundPercent(d / t) : null;
-    return {
-      courseCode: String(row?.course_code || "").trim(),
-      total: t,
-      digitized: d,
-      percent: pct,
-    };
+    if (isFullyDigitized) fullyDigitizedCount++;
+    totalCompletenessRatio += completeness;
+    totalDigitizedDocsCount += actual;
+
+    const cc = String(s.course_code || "").trim();
+    if (!courseStats[cc]) {
+      courseStats[cc] = { total: 0, fullyDigitized: 0, completeness: 0, digitizedDocs: 0 };
+    }
+    courseStats[cc].total++;
+    if (isFullyDigitized) courseStats[cc].fullyDigitized++;
+    courseStats[cc].completeness += completeness;
+    courseStats[cc].digitizedDocs += actual;
   });
+
+  const avgCompleteness = totalStudents > 0 ? roundPercent(totalCompletenessRatio / totalStudents) : null;
+  const fullyDigitizedRate = totalStudents > 0 ? roundPercent(fullyDigitizedCount / totalStudents) : null;
+
+  const byCourse = Object.entries(courseStats).map(([code, stats]) => ({
+    courseCode: code,
+    total: stats.total,
+    digitized: stats.fullyDigitized, // Number of 100% complete students
+    percent: roundPercent(stats.completeness / stats.total),
+    fullyDigitizedRate: roundPercent(stats.fullyDigitized / stats.total)
+  })).sort((a, b) => a.courseCode.localeCompare(b.courseCode));
 
   const generatedAt = new Date().toISOString();
 
   return {
     summary: {
       totalStudents,
-      digitizedStudents,
-      notDigitizedStudents,
-      percentDigitized,
-      isCompliant,
-      threshold: safeThreshold,
+      digitizedStudents: fullyDigitizedCount,
+      notDigitizedStudents: Math.max(0, totalStudents - fullyDigitizedCount),
+      percentDigitized: avgCompleteness,
+      fullyDigitizedRate,
+      totalDigitizedDocsCount,
+      totalExpectedDocsCount,
     },
-    byCourse: byCourseNorm,
+    byCourse,
     meta: {
       studentStatus: String(studentStatus || "").trim() || "Active",
       courseCode: String(courseCode || "").trim() || null,
       requireApproved: Boolean(requireApproved),
       definitions: {
-        population:
-          "students table rows matching status (default Active) and optional course filter",
-        digitizedStudent:
-          requireApproved
-            ? "≥1 document with approval_status Approved"
-            : "≥1 document where approval_status is not Declined",
+        population: "students table rows matching status and optional course filter",
+        digitizedStudent: "Student who has uploaded all configured document types.",
+        expectedCountFormula: `Requirement: All ${expectedCountPerStudent} document types defined in system settings.`,
+        completenessMetric: "Average ratio of (Unique Uploaded Types / Total System Types) across all students.",
+        configuredDocTypes: allDocTypes
       },
       generatedAt,
     },

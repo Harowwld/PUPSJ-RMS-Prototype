@@ -915,42 +915,53 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                   </div>
                 </div>
 
-                <form onSubmit={saveSecurityQuestions} className="bg-white border border-gray-200 rounded-brand shadow-sm overflow-hidden">
-                  <div className="p-4 border-b border-gray-100 bg-gray-50/50">
-                    <div className="text-xs font-bold text-gray-900 uppercase tracking-wider">
-                      Configure Questions
-                    </div>
-                  </div>
-                  <div className="p-6 space-y-4">
-                    {securityQuestions.map((q, i) => (
-                      <div key={i}>
-                        <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wide">
-                          Question {i + 1}
-                        </label>
-                        <Input
-                          type="text"
-                          placeholder="e.g. What is your mother's maiden name?"
-                          className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                          value={q}
-                          onChange={(e) => {
-                            const updated = [...securityQuestions];
-                            updated[i] = e.target.value;
-                            setSecurityQuestions(updated);
-                          }}
-                        />
+                {loading ? (
+                  <div className="p-6 space-y-4 bg-white border border-gray-200 rounded-brand shadow-sm">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <div key={i} className="space-y-2">
+                        <Skeleton className="h-3 w-24" />
+                        <Skeleton className="h-10 w-full" />
                       </div>
                     ))}
                   </div>
-                  <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">
-                    <Button
-                      type="submit"
-                      disabled={securitySaving}
-                      className="bg-pup-maroon text-white h-10 px-6 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors"
-                    >
-                      <i className="ph-bold ph-floppy-disk"></i> {securitySaving ? "Saving..." : "Save Questions"}
-                    </Button>
-                  </div>
-                </form>
+                ) : (
+                  <form onSubmit={saveSecurityQuestions} className="bg-white border border-gray-200 rounded-brand shadow-sm overflow-hidden">
+                    <div className="p-4 border-b border-gray-100 bg-gray-50/50">
+                      <div className="text-xs font-bold text-gray-900 uppercase tracking-wider">
+                        Configure Questions
+                      </div>
+                    </div>
+                    <div className="p-6 space-y-4">
+                      {securityQuestions.map((q, i) => (
+                        <div key={i}>
+                          <label className="block text-xs font-bold text-gray-700 mb-1 uppercase tracking-wide">
+                            Question {i + 1}
+                          </label>
+                          <Input
+                            type="text"
+                            placeholder="e.g. What is your mother's maiden name?"
+                            className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                            value={q}
+                            onChange={(e) => {
+                              const updated = [...securityQuestions];
+                              updated[i] = e.target.value;
+                              setSecurityQuestions(updated);
+                            }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">
+                      <Button
+                        type="submit"
+                        disabled={securitySaving}
+                        className="bg-pup-maroon text-white h-10 px-6 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors"
+                      >
+                        <i className="ph-bold ph-floppy-disk"></i> {securitySaving ? "Saving..." : "Save Questions"}
+                      </Button>
+                    </div>
+                  </form>
+                )}
               </div>
             </div>
           </div>

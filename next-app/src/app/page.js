@@ -21,6 +21,7 @@ export default function Home() {
   const [forgotStep, setForgotStep] = useState(1);
   const [forgotIdentifier, setForgotIdentifier] = useState("");
   const [forgotUserId, setForgotUserId] = useState(null);
+  const [forgotQuestionId, setForgotQuestionId] = useState(null);
   const [forgotQuestion, setForgotQuestion] = useState("");
   const [forgotAnswer, setForgotAnswer] = useState("");
   const [forgotNewPassword, setForgotNewPassword] = useState("");

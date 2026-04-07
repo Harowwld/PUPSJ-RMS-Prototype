@@ -6,7 +6,6 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Sidebar from "@/components/shared/Sidebar";
 import { toast } from "sonner";
-import PasswordChangeModal from "@/components/shared/PasswordChangeModal";
 import RecordsArchiveTab from "@/components/staff/RecordsArchiveTab";
 import ScanUploadTab from "@/components/staff/ScanUploadTab";
 import DocumentsTab from "@/components/staff/DocumentsTab";
@@ -125,8 +124,6 @@ export default function StaffPage() {
     refId: "",
   });
 
-  const [pwModalOpen, setPwModalOpen] = useState(false);
-
   const showToast = useCallback((msg, isError = false) => {
     const isRich = msg && typeof msg === "object" && msg.title;
     const title = isRich ? msg.title : String(msg || "");
@@ -197,9 +194,6 @@ export default function StaffPage() {
           return;
         }
         setAuthUser(json.data);
-        if (json?.data?.mustChangePassword) {
-          setPwModalOpen(true);
-        }
         // Render first, then hydrate data in background.
         setLoading(false);
         setTimeout(() => {
@@ -1176,13 +1170,6 @@ export default function StaffPage() {
       </div>
 
       <Footer />
-      <PasswordChangeModal
-        open={pwModalOpen}
-        authUser={authUser}
-        onClose={() => setPwModalOpen(false)}
-        onSuccess={(msg) => showToast({ title: "Password Changed", description: typeof msg === "string" ? msg : "Your new credentials are now active." })}
-        onLogAction={logAction}
-      />
       <PDFPreviewModal
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}

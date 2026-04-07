@@ -4,8 +4,13 @@ import { getSessionCookieName, verifySessionToken } from "./src/lib/jwt";
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
 
-  // Allow auth endpoints without session
-  if (pathname.startsWith("/api/auth/login") || pathname.startsWith("/api/auth/logout")) {
+  // Allow auth endpoints without session or with their own checks
+  if (
+    pathname.startsWith("/api/auth/login") || 
+    pathname.startsWith("/api/auth/logout") ||
+    pathname.startsWith("/api/auth/me") ||
+    pathname.startsWith("/api/auth/forgot-password")
+  ) {
     return NextResponse.next();
   }
 
@@ -16,8 +21,9 @@ export async function middleware(req) {
 
   const token = req.cookies.get(getSessionCookieName())?.value || "";
   if (!token) {
+    console.log(`[Middleware] No token found for ${pathname}`);
     if (pathname.startsWith("/api/")) {
-      return NextResponse.json({ ok: false, error: "Not authenticated" }, { status: 401 });
+      return NextResponse.json({ ok: false, error: "Not authenticated (Middleware)" }, { status: 401 });
     }
     const url = req.nextUrl.clone();
     url.pathname = "/";
@@ -27,9 +33,10 @@ export async function middleware(req) {
   let payload;
   try {
     payload = await verifySessionToken(token);
-  } catch {
+  } catch (err) {
+    console.log(`[Middleware] Token verification failed for ${pathname}: ${err.message}`);
     if (pathname.startsWith("/api/")) {
-      return NextResponse.json({ ok: false, error: "Invalid session" }, { status: 401 });
+      return NextResponse.json({ ok: false, error: "Invalid session (Middleware): " + err.message }, { status: 401 });
     }
     const url = req.nextUrl.clone();
     url.pathname = "/";

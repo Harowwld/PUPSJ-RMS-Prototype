@@ -1,7 +1,14 @@
 export function formatPHDateTime(dateString) {
   if (!dateString) return "—";
   try {
-    const date = new Date(String(dateString).replace(" ", "T") + "Z");
+    // If it already has T or Z, don't append Z again.
+    let normalized = String(dateString);
+    if (!normalized.includes("T") && !normalized.includes("Z")) {
+      normalized = normalized.replace(" ", "T") + "Z";
+    }
+    const date = new Date(normalized);
+    if (isNaN(date.getTime())) throw new Error("Invalid");
+
     const datePH = date.toLocaleDateString("en-PH", {
       timeZone: "Asia/Manila",
     });
@@ -19,7 +26,13 @@ export function formatPHDateTime(dateString) {
 export function formatPHDateTimeParts(dateString) {
   if (!dateString) return { date: "—", time: "" };
   try {
-    const date = new Date(String(dateString).replace(" ", "T") + "Z");
+    let normalized = String(dateString);
+    if (!normalized.includes("T") && !normalized.includes("Z")) {
+      normalized = normalized.replace(" ", "T") + "Z";
+    }
+    const date = new Date(normalized);
+    if (isNaN(date.getTime())) throw new Error("Invalid");
+
     const datePart = date.toLocaleDateString("en-PH", {
       timeZone: "Asia/Manila",
       year: "numeric",

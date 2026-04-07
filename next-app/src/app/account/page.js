@@ -36,8 +36,7 @@ export default function AccountPage() {
   
   // Security Form State
   const [globalQuestions, setGlobalQuestions] = useState([]);
-  const [secQuestion, setSecQuestion] = useState("");
-  const [secAnswer, setSecAnswer] = useState("");
+  const [secAnswers, setSecAnswers] = useState({});
   const [secLoading, setSecLoading] = useState(false);
   const [secError, setSecError] = useState("");
   const [hasSetSecurity, setHasSetSecurity] = useState(false);
@@ -56,9 +55,8 @@ export default function AccountPage() {
   useEffect(() => {
     (async () => {
       try {
-        const [resAuth, resGlobalQs, resUserSecurity] = await Promise.all([
+        const [resAuth, resUserSecurity] = await Promise.all([
           fetch("/api/auth/me"),
-          fetch("/api/system/security-questions"),
           fetch("/api/staff/security")
         ]);
 
@@ -73,16 +71,11 @@ export default function AccountPage() {
         setLname(user.lname || "");
         setUsername(user.email || user.username || "");
 
-        const jsonGlobalQs = await resGlobalQs.json().catch(() => null);
-        if (jsonGlobalQs?.ok && Array.isArray(jsonGlobalQs.data)) {
-          setGlobalQuestions(jsonGlobalQs.data);
-        }
-
         const jsonUserSecurity = await resUserSecurity.json().catch(() => null);
-        if (jsonUserSecurity?.ok) {
-          setHasSetSecurity(jsonUserSecurity.data.hasSecurityQuestion);
-          if (jsonUserSecurity.data.securityQuestion) {
-            setSecQuestion(jsonUserSecurity.data.securityQuestion);
+        if (jsonUserSecurity?.ok && jsonUserSecurity.data) {
+          setHasSetSecurity(jsonUserSecurity.data.hasAllQuestions);
+          if (Array.isArray(jsonUserSecurity.data.questions)) {
+            setGlobalQuestions(jsonUserSecurity.data.questions);
           }
         }
       } catch {
@@ -204,8 +197,16 @@ export default function AccountPage() {
     e.preventDefault();
     if (secLoading) return;
 
-    if (!secQuestion || !secAnswer.trim()) {
-      setSecError("Please select a question and provide an answer.");
+    const payload = [];
+    for (const q of globalQuestions) {
+      const val = secAnswers[q.id];
+      if (val && val.trim()) {
+        payload.push({ questionId: q.id, answer: val.trim() });
+      }
+    }
+
+    if (payload.length === 0) {
+      setSecError("Please provide an answer for at least one question to update.");
       return;
     }
 
@@ -216,23 +217,29 @@ export default function AccountPage() {
       const res = await fetch("/api/staff/security", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          question: secQuestion,
-          answer: secAnswer.trim(),
-        }),
+        body: JSON.stringify({ answers: payload }),
       });
       const json = await res.json();
       if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Failed to update security question");
+        throw new Error(json?.error || "Failed to update security questions");
       }
 
       toast.success("Security Updated", {
-        description: "Your security question and answer are now active.",
+        description: "Your security answers have been saved.",
       });
-      setSecAnswer("");
-      setHasSetSecurity(true);
+      setSecAnswers({});
+      
+      // Re-fetch to update hasAnswer statuses
+      const resUserSecurity = await fetch("/api/staff/security");
+      const jsonUserSecurity = await resUserSecurity.json().catch(() => null);
+      if (jsonUserSecurity?.ok && jsonUserSecurity.data) {
+        setHasSetSecurity(jsonUserSecurity.data.hasAllQuestions);
+        if (Array.isArray(jsonUserSecurity.data.questions)) {
+          setGlobalQuestions(jsonUserSecurity.data.questions);
+        }
+      }
     } catch (err) {
-      setSecError(err?.message || "Failed to update security question");
+      setSecError(err?.message || "Failed to update security questions");
       toast.error("Update Failed", {
         description: err?.message || "Unable to save your security settings.",
       });
@@ -579,13 +586,13 @@ export default function AccountPage() {
                        <div className="mb-6 p-4 bg-emerald-50 border border-emerald-100 text-emerald-800 text-sm font-bold rounded-brand flex items-start gap-3">
                          <i className="ph-fill ph-check-circle text-xl mt-0.5 shrink-0 text-emerald-600"></i>
                          <div>
-                            <p>You have configured a security question.</p>
-                            <p className="text-xs font-medium text-emerald-700 mt-1">If you need to change it, simply select a new question and answer below.</p>
+                            <p>You have configured your security questions.</p>
+                            <p className="text-xs font-medium text-emerald-700 mt-1">If you need to change any, type a new answer below and save.</p>
                          </div>
                        </div>
                     ) : null}
 
-                    <form onSubmit={submitSecurity} className="space-y-8">
+                    <form onSubmit={submitSecurity} className="space-y-6">
                       {secError && (
                         <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm font-bold rounded-brand flex items-center gap-3">
                           <i className="ph-bold ph-warning-circle text-xl"></i>
@@ -593,36 +600,31 @@ export default function AccountPage() {
                         </div>
                       )}
 
-                      <div className="space-y-2">
-                        <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">
-                          Security Question
-                        </label>
-                        <select
-                          className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm px-4 focus:outline-none focus:ring-2 focus:ring-pup-maroon font-bold text-gray-900 shadow-sm"
-                          value={secQuestion}
-                          onChange={(e) => setSecQuestion(e.target.value)}
-                          required
-                        >
-                          <option value="" disabled>Select a question...</option>
-                          {globalQuestions.map((q, i) => (
-                            <option key={i} value={q}>{q}</option>
+                      {globalQuestions.length === 0 ? (
+                        <div className="text-sm text-gray-500 font-medium">No global security questions have been configured yet.</div>
+                      ) : (
+                        <div className="space-y-5">
+                          {globalQuestions.map((q) => (
+                            <div key={q.id} className="space-y-2">
+                              <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1 flex items-center gap-2">
+                                {q.question}
+                                {q.hasAnswer && (
+                                  <span className="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                    <i className="ph-bold ph-check"></i> Answered
+                                  </span>
+                                )}
+                              </label>
+                              <Input
+                                type="password"
+                                className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
+                                placeholder={q.hasAnswer ? "Answer securely saved. Type to overwrite." : "Your answer"}
+                                value={secAnswers[q.id] || ""}
+                                onChange={(e) => setSecAnswers({ ...secAnswers, [q.id]: e.target.value })}
+                              />
+                            </div>
                           ))}
-                        </select>
-                      </div>
-
-                      <div className="space-y-2">
-                        <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">
-                          Your Answer
-                        </label>
-                        <Input
-                          type="password"
-                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
-                          placeholder="Your answer"
-                          value={secAnswer}
-                          onChange={(e) => setSecAnswer(e.target.value)}
-                          required
-                        />
-                      </div>
+                        </div>
+                      )}
 
                       <div className="pt-6 border-t border-gray-100 flex justify-end">
                         <Button

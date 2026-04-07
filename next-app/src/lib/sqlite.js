@@ -194,6 +194,22 @@ export async function getDb() {
           updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
 
+        CREATE TABLE IF NOT EXISTS security_questions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          question TEXT NOT NULL,
+          created_at TEXT NOT NULL DEFAULT (datetime('now'))
+        );
+
+        CREATE TABLE IF NOT EXISTS staff_security_answers (
+          staff_id TEXT NOT NULL,
+          question_id INTEGER NOT NULL,
+          answer_hash TEXT NOT NULL,
+          updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+          PRIMARY KEY (staff_id, question_id),
+          FOREIGN KEY (staff_id) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE CASCADE,
+          FOREIGN KEY (question_id) REFERENCES security_questions(id) ON UPDATE CASCADE ON DELETE CASCADE
+        );
+
     CREATE INDEX IF NOT EXISTS idx_documents_student_no ON documents(student_no);
     CREATE INDEX IF NOT EXISTS idx_documents_doc_type ON documents(doc_type);
     CREATE INDEX IF NOT EXISTS idx_documents_created_at ON documents(created_at);
@@ -515,22 +531,32 @@ export async function getDb() {
 
       if (schemaVersion < 6) {
         try {
-          db.exec("ALTER TABLE staff ADD COLUMN security_question TEXT");
-        } catch (e) {}
-        try {
-          db.exec("ALTER TABLE staff ADD COLUMN security_answer_hash TEXT");
-        } catch (e) {}
-        try {
-          const defaultQs = JSON.stringify([
+          db.exec(`
+            CREATE TABLE IF NOT EXISTS security_questions (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              question TEXT NOT NULL,
+              created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            CREATE TABLE IF NOT EXISTS staff_security_answers (
+              staff_id TEXT NOT NULL,
+              question_id INTEGER NOT NULL,
+              answer_hash TEXT NOT NULL,
+              updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+              PRIMARY KEY (staff_id, question_id),
+              FOREIGN KEY (staff_id) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE CASCADE,
+              FOREIGN KEY (question_id) REFERENCES security_questions(id) ON UPDATE CASCADE ON DELETE CASCADE
+            );
+          `);
+          const defaultQs = [
             "What was the name of your first pet?",
             "What is your mother's maiden name?",
             "What high school did you attend?",
             "What is the name of the street you grew up on?",
             "What was your childhood nickname?"
-          ]);
-          db.exec(`INSERT OR IGNORE INTO settings (key, value) VALUES ('security_questions', '${defaultQs}')`);
-        } catch (e) {}
-        try {
+          ];
+          for (const q of defaultQs) {
+            db.exec(`INSERT OR IGNORE INTO security_questions (question) VALUES ('${q.replace(/'/g, "''")}')`);
+          }
           db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '6')");
           persistDb();
         } catch (e) {}

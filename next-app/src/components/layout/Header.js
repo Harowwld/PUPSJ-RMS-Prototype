@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
+import AccountSetupModal from "@/components/shared/AccountSetupModal";
 
 export default function Header({ authUser, onLogout, children }) {
   const router = useRouter();
@@ -36,6 +37,7 @@ export default function Header({ authUser, onLogout, children }) {
 
   return (
     <header className="bg-white border-b border-gray-300 flex-none z-20 shadow-sm">
+      <AccountSetupModal authUser={authUser} />
       <div className="w-full px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <i className="ph-bold ph-bank text-3xl text-pup-maroon"></i>
