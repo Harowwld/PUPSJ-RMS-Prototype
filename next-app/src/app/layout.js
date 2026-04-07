@@ -1,3 +1,4 @@
+import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -21,7 +22,7 @@ export default function RootLayout({ children }) {
         <link rel="stylesheet" href="/assets/vendor/phosphor/light/style.css" />
       </head>
       <body className="antialiased">
-        {children}
+        <TooltipProvider>{children}</TooltipProvider>
         <Toaster richColors position="top-right" />
       </body>
     </html>

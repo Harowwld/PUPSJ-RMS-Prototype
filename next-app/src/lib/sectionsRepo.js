@@ -45,7 +45,7 @@ export async function createSection(nameRaw, courseCodeRaw) {
   if (existing) throw new Error("Section name already exists");
 
   const res = await dbRun("INSERT INTO sections (name, course_code) VALUES (?, ?)", [name, courseCode]);
-  
+
   return await dbGet(
     `SELECT s.*, c.name as course_name
      FROM sections s

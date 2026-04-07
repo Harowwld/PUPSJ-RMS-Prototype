@@ -169,7 +169,7 @@ export default function BackupMaintenanceTab({
                       onClick={() =>
                         restoreFileRef.current && restoreFileRef.current.click()
                       }
-                      className="w-full h-9 bg-white border-gray-300 text-gray-600 rounded-brand text-xs font-bold hover:bg-gray-50 hover:text-pup-maroon transition-colors flex items-center justify-center gap-2 shadow-sm"
+                      className="w-full h-10 bg-white border-gray-300 text-gray-600 rounded-brand text-xs font-bold hover:bg-gray-50 hover:text-pup-maroon transition-colors flex items-center justify-center gap-2 shadow-sm"
                     >
                       <i className="ph-bold ph-upload-simple text-sm"></i> Upload
                       System Image

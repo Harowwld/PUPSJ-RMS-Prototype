@@ -10,10 +10,10 @@ export const runtime = "nodejs";
 export async function GET(req) {
   try {
     const db = await getDb();
-    
+
     // Disable foreign keys for bulk deletion
     db.exec("PRAGMA foreign_keys = OFF;");
-    
+
     const tables = [
       "documents",
       "students",
@@ -76,7 +76,7 @@ export async function GET(req) {
     } catch (e) {
       console.error("Failed to seed admin staff account:", e?.message || e);
     }
-    
+
     // Export and persist the empty database
     const bytes = db.export();
     const dbPath = path.join(process.cwd(), ".local", "db.sqlite");

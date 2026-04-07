@@ -513,6 +513,29 @@ export async function getDb() {
         }
       }
 
+      if (schemaVersion < 6) {
+        try {
+          db.exec("ALTER TABLE staff ADD COLUMN security_question TEXT");
+        } catch (e) {}
+        try {
+          db.exec("ALTER TABLE staff ADD COLUMN security_answer_hash TEXT");
+        } catch (e) {}
+        try {
+          const defaultQs = JSON.stringify([
+            "What was the name of your first pet?",
+            "What is your mother's maiden name?",
+            "What high school did you attend?",
+            "What is the name of the street you grew up on?",
+            "What was your childhood nickname?"
+          ]);
+          db.exec(`INSERT OR IGNORE INTO settings (key, value) VALUES ('security_questions', '${defaultQs}')`);
+        } catch (e) {}
+        try {
+          db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '6')");
+          persistDb();
+        } catch (e) {}
+      }
+
       // Safety net for environments where schema_version may be out of sync.
       // This ensures review columns exist before any API query references them.
       try {

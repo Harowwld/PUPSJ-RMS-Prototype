@@ -276,7 +276,7 @@ export default function RecordsArchiveTab({
             <Input
               type="text"
               placeholder="Search ID or Name..."
-              className="w-full pl-10 pr-3 h-12 bg-white border border-gray-300 rounded-brand text-sm font-medium focus-visible:ring-pup-maroon focus-visible:border-pup-maroon transition-all placeholder-gray-500 text-gray-900"
+              className="w-full pl-10 pr-3 h-10 bg-white border border-gray-300 rounded-brand text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon transition-all placeholder-gray-500 text-gray-900"
               value={quickQuery}
               onChange={(e) => setQuickQuery(e.target.value)}
             />

@@ -90,7 +90,7 @@ export default function RegisterAccountTab({
                       <Input
                         type="text"
                         required
-                        className="h-12 font-mono bg-white border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                        className="h-10 font-mono bg-white border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                         placeholder="e.g. 2023-001"
                         value={createForm.id}
                         onChange={(e) =>
@@ -104,7 +104,7 @@ export default function RegisterAccountTab({
                       </label>
                       <select
                         required
-                        className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                        className="h-10 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
                         value={createForm.role}
                         onChange={(e) =>
                           setCreateForm((f) => ({ ...f, role: e.target.value }))
@@ -128,7 +128,7 @@ export default function RegisterAccountTab({
                       <Input
                         type="text"
                         required
-                        className="h-12 bg-white border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                        className="h-10 bg-white border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                         placeholder="Juan"
                         value={createForm.fname}
                         onChange={(e) =>
@@ -146,7 +146,7 @@ export default function RegisterAccountTab({
                       <Input
                         type="text"
                         required
-                        className="h-12 bg-white border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                        className="h-10 bg-white border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                         placeholder="Dela Cruz"
                         value={createForm.lname}
                         onChange={(e) =>
@@ -168,7 +168,7 @@ export default function RegisterAccountTab({
                     <Input
                       type="email"
                       required
-                      className="h-12 bg-white border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                      className="h-10 bg-white border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                       placeholder="username@pup.edu.ph"
                       value={createForm.email}
                       onChange={(e) =>

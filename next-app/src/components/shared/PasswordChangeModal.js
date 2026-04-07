@@ -115,7 +115,7 @@ export default function PasswordChangeModal({
               </label>
               <Input
                 type="password"
-                className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                 value={pwCurrent}
                 onChange={(e) => setPwCurrent(e.target.value)}
                 required
@@ -128,7 +128,7 @@ export default function PasswordChangeModal({
               </label>
               <Input
                 type="password"
-                className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                 value={pwNext}
                 onChange={(e) => setPwNext(e.target.value)}
                 required
@@ -141,7 +141,7 @@ export default function PasswordChangeModal({
               </label>
               <Input
                 type="password"
-                className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                 value={pwConfirm}
                 onChange={(e) => setPwConfirm(e.target.value)}
                 required

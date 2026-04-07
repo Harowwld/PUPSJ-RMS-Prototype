@@ -52,7 +52,7 @@ export default function DocumentsTab({
                 Student No
               </label>
               <input
-                className="w-full h-12 font-mono bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+                className="w-full h-10 font-mono bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={docsForm.studentNo}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -72,7 +72,7 @@ export default function DocumentsTab({
                 Student Name
               </label>
               <input
-                className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+                className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={docsForm.studentName}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -91,7 +91,7 @@ export default function DocumentsTab({
                 Document Type
               </label>
               <select
-                className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+                className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={docsForm.docType}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -262,7 +262,7 @@ export default function DocumentsTab({
                                 <>
                                   <button
                                     type="button"
-                                    className="px-3 h-11 inline-flex items-center rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-xs hover:border-pup-maroon"
+                                    className="px-3 h-10 inline-flex items-center rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-xs hover:border-pup-maroon"
                                     onClick={() =>
                                       onPreviewDocument?.(
                                         r.doc_type,
@@ -291,7 +291,7 @@ export default function DocumentsTab({
                                       setUpdateFile(null);
                                       setUpdatePromptOpen(true);
                                     }}
-                                    className="px-3 h-11 rounded-brand bg-pup-maroon text-white font-bold text-xs hover:bg-red-900"
+                                    className="px-3 h-10 rounded-brand bg-pup-maroon text-white font-bold text-xs hover:bg-red-900"
                                   >
                                     Update
                                   </button>
@@ -411,7 +411,7 @@ export default function DocumentsTab({
                 Student Number
               </label>
               <input
-                className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+                className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={updateStudentNo}
                 onChange={(e) => setUpdateStudentNo(e.target.value)}
               />
@@ -421,7 +421,7 @@ export default function DocumentsTab({
                 Student Name
               </label>
               <input
-                className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+                className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={updateStudentName}
                 onChange={(e) => setUpdateStudentName(e.target.value)}
               />
@@ -431,7 +431,7 @@ export default function DocumentsTab({
                 Document Type
               </label>
               <select
-                className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors font-semibold"
+                className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors font-semibold"
                 value={updateDocType}
                 onChange={(e) => setUpdateDocType(e.target.value)}
               >
@@ -452,7 +452,7 @@ export default function DocumentsTab({
                 setUpdateTargetId(null);
                 setUpdateFile(null);
               }}
-              className="px-4 h-11 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
+              className="px-4 h-10 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
             >
               Cancel
             </button>
@@ -476,7 +476,7 @@ export default function DocumentsTab({
                 }
               }}
               disabled={updateSaving}
-              className="px-4 h-11 rounded-brand bg-pup-maroon text-white font-bold text-sm hover:bg-red-900 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="px-4 h-10 rounded-brand bg-pup-maroon text-white font-bold text-sm hover:bg-red-900 disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {updateSaving ? "Saving..." : "Save Changes"}
             </button>

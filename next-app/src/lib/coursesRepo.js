@@ -21,7 +21,7 @@ export async function createCourse(codeRaw, nameRaw) {
     code,
     name,
   ]);
-  
+
   return await dbGet("SELECT * FROM courses WHERE id = ?", [res.lastInsertRowid]);
 }
 

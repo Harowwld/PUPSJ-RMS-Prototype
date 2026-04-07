@@ -27,7 +27,7 @@ import BackupMaintenanceTab from "@/components/admin/BackupMaintenanceTab";
 import EditUserModal from "@/components/admin/EditUserModal";
 import SystemConfigTab from "@/components/admin/SystemConfigTab";
 import DigitalRecordsReviewTab from "@/components/admin/DigitalRecordsReviewTab";
-import DigitizationComplianceTab from "@/components/admin/DigitizationComplianceTab";
+import SystemAnalyticsTab from "@/components/admin/SystemAnalyticsTab";
 import StorageLayoutEditorTab from "@/components/admin/StorageLayoutEditorTab";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -631,18 +631,23 @@ function AdminPageContent() {
   };
 
   const sidebarItems = [
+    { type: "header", label: "User Management" },
     { key: "directory", label: "Staff Directory", iconClass: "ph-bold ph-users" },
     { key: "create", label: "Register Account", iconClass: "ph-bold ph-user-plus" },
-    { key: "logs", label: "Audit Logs", iconClass: "ph-bold ph-scroll" },
-    { key: "system_data", label: "System Data", iconClass: "ph-bold ph-gear" },
-    { key: "storage_layout", label: "Storage Layout", iconClass: "ph-bold ph-warehouse" },
+
+    { type: "header", label: "Operations & Analytics" },
     { key: "review", label: "Digital Records Review", iconClass: "ph-bold ph-seal-check" },
     {
       key: "digitization",
-      label: "Digitization Compliance",
+      label: "System Analytics",
       iconClass: "ph-bold ph-chart-bar",
     },
+
+    { type: "header", label: "System Configuration" },
+    { key: "storage_layout", label: "Storage Layout", iconClass: "ph-bold ph-warehouse" },
+    { key: "system_data", label: "System Data", iconClass: "ph-bold ph-gear" },
     { key: "system", label: "Backup & Maintenance", iconClass: "ph-bold ph-database" },
+    { key: "logs", label: "Audit Logs", iconClass: "ph-bold ph-scroll" },
   ];
 
   const sidebarActiveKey = view === "backup" ? "system" : view;
@@ -666,7 +671,7 @@ function AdminPageContent() {
       <div className="flex-1 flex overflow-hidden w-full">
         <Sidebar items={sidebarItems} activeKey={sidebarActiveKey} onSelect={switchView} />
 
-        <main className="flex-1 overflow-hidden p-4 relative w-full min-w-0 max-w-[1600px] mx-auto">
+        <main className="flex-1 overflow-hidden p-4 relative w-full min-w-0">
         {view === "directory" && (
           <StaffDirectoryTab
             staffData={staffData}
@@ -754,7 +759,10 @@ function AdminPageContent() {
         )}
 
         {view === "digitization" && (
-          <DigitizationComplianceTab showToast={showToast} onLogAction={logAdminAction} />
+          <SystemAnalyticsTab
+            showToast={showToast}
+            onLogAction={logAdminAction}
+          />
         )}
 
         {(view === "system" || view === "backup") && (

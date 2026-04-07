@@ -82,8 +82,7 @@ export default function AuditLogsTab({
                 <Input
                   type="text"
                   placeholder="Search by user, action, or IP address..."
-                  className="pl-10 h-9 w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                  value={searchQuery}
+                  className="pl-10 h-10 w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"                  value={searchQuery}
                   onChange={handleSearchChange}
                 />
               </div>
@@ -95,7 +94,7 @@ export default function AuditLogsTab({
                   Items Per Page
                 </label>
                 <select
-                  className="h-9 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                  className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
                   value={itemsPerPage}
                   onChange={handleItemsPerPageChange}
                 >

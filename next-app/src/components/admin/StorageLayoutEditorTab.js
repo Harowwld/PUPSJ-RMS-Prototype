@@ -12,6 +12,11 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { ROOM_TEMPLATES, getDefaultDoor } from "@/lib/storageLayoutDefaults";
 
 function clamp(n, min, max) {
@@ -524,7 +529,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
           </label>
           <div className="flex items-center gap-2">
             <select
-              className="flex-1 h-11 bg-white border border-gray-300 rounded-brand text-sm px-3 focus:outline-none focus:ring-2 focus:ring-pup-maroon font-bold text-gray-800 shadow-sm cursor-pointer"
+              className="flex-1 h-10 bg-white border border-gray-300 rounded-brand text-sm px-3 focus:outline-none focus:ring-2 focus:ring-pup-maroon font-bold text-gray-800 shadow-sm cursor-pointer"
               value={String(activeRoomId ?? "")}
               onChange={(e) => {
                 const nextId = Number(e.target.value);
@@ -538,42 +543,56 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
               ))}
             </select>
             <div className="flex items-center gap-1 bg-white p-1 border border-gray-300 rounded-brand shadow-sm">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={addRoom}
-                className="h-9 w-9 text-pup-maroon hover:bg-red-50 rounded-sm"
-                title="Add Room"
-              >
-                <i className="ph-bold ph-plus" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={removeActiveRoom}
-                className="h-9 w-9 text-gray-600 hover:bg-gray-100 hover:text-red-600 rounded-sm"
-                disabled={!activeRoom || activeRoomStudentCount > 0}
-                title="Delete Room"
-              >
-                <i className="ph-bold ph-trash" />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={resetActiveRoomCabinets}
-                className="h-9 w-9 text-gray-600 hover:bg-gray-100 hover:text-amber-600 rounded-sm"
-                disabled={
-                  !activeRoom ||
-                  !(activeRoom.cabinets?.length > 0) ||
-                  activeRoomStudentCount > 0
-                }
-                title="Clear Layout"
-              >
-                <i className="ph-bold ph-arrow-counter-clockwise" />
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={addRoom}
+                    className="h-10 w-10 text-pup-maroon hover:bg-red-50 rounded-sm"
+                  >
+                    <i className="ph-bold ph-plus" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Add New Room</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={removeActiveRoom}
+                    className="h-10 w-10 text-gray-600 hover:bg-gray-100 hover:text-red-600 rounded-sm"
+                    disabled={!activeRoom || activeRoomStudentCount > 0}
+                  >
+                    <i className="ph-bold ph-trash" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Delete Active Room</TooltipContent>
+              </Tooltip>
+
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    onClick={resetActiveRoomCabinets}
+                    className="h-10 w-10 text-gray-600 hover:bg-gray-100 hover:text-amber-600 rounded-sm"
+                    disabled={
+                      !activeRoom ||
+                      !(activeRoom.cabinets?.length > 0) ||
+                      activeRoomStudentCount > 0
+                    }
+                  >
+                    <i className="ph-bold ph-arrow-counter-clockwise" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="bottom">Clear Room Layout</TooltipContent>
+              </Tooltip>
             </div>
           </div>
         </div>
@@ -588,7 +607,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
               type="button"
               variant="outline"
               onClick={addCabinet}
-              className="h-11 px-4 font-bold border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 rounded-brand"
+              className="h-10 px-4 font-bold border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 rounded-brand"
               disabled={!activeRoom}
             >
               <i className="ph-bold ph-plus-square mr-2 text-pup-maroon" /> Add
@@ -597,7 +616,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
 
             <div className="flex items-center shadow-sm rounded-brand overflow-hidden border border-gray-300">
               <select
-                className="h-11 bg-white px-3 text-sm font-bold text-gray-700 focus:outline-none border-r border-gray-300 cursor-pointer"
+                className="h-10 bg-white px-3 text-sm font-bold text-gray-700 focus:outline-none border-r border-gray-300 cursor-pointer"
                 value={selectedTemplateId}
                 onChange={(e) => setSelectedTemplateId(e.target.value)}
                 disabled={!activeRoom}
@@ -612,7 +631,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                 type="button"
                 variant="ghost"
                 onClick={applyTemplateToActiveRoom}
-                className="h-11 px-4 font-black text-xs uppercase tracking-wider bg-gray-50 hover:bg-pup-maroon hover:text-white transition-colors border-0 rounded-none"
+                className="h-10 px-4 font-black text-xs uppercase tracking-wider bg-gray-50 hover:bg-pup-maroon hover:text-white transition-colors border-0 rounded-none"
                 disabled={!activeRoom}
               >
                 Apply
@@ -625,7 +644,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
         <Button
           onClick={saveLayout}
           disabled={saving}
-          className="bg-pup-maroon text-white h-11 px-8 font-black uppercase tracking-widest shadow-lg hover:bg-red-900 transition-all flex items-center gap-2 rounded-brand"
+          className="bg-pup-maroon text-white h-10 px-8 font-black uppercase tracking-widest shadow-lg hover:bg-red-900 transition-all flex items-center gap-2 rounded-brand"
         >
           <i className="ph-bold ph-floppy-disk text-lg" />
           {saving ? "Saving..." : "Save Layout"}
@@ -747,28 +766,32 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                       </div>
                     )}
                     {isSelected ? (
-                      <button
-                        type="button"
-                        className="absolute -bottom-1.5 -right-1.5 h-5 w-5 rounded-sm border border-pup-maroon bg-white text-pup-maroon shadow flex items-center justify-center leading-none"
-                        title="Resize cabinet"
-                        onPointerDown={(e) => {
-                          if (!canvasRef.current) return;
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setSelectedCabinetId(cab.id);
-                          dragRef.current = {
-                            pointerId: e.pointerId,
-                            mode: "resize",
-                          };
-                          try {
-                            e.currentTarget.setPointerCapture(e.pointerId);
-                          } catch {
-                            // ignore
-                          }
-                        }}
-                      >
-                        <i className="ph-bold ph-corners-out text-[11px]" />
-                      </button>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            className="absolute -bottom-1.5 -right-1.5 h-5 w-5 rounded-sm border border-pup-maroon bg-white text-pup-maroon shadow flex items-center justify-center leading-none cursor-se-resize"
+                            onPointerDown={(e) => {
+                              if (!canvasRef.current) return;
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setSelectedCabinetId(cab.id);
+                              dragRef.current = {
+                                pointerId: e.pointerId,
+                                mode: "resize",
+                              };
+                              try {
+                                e.currentTarget.setPointerCapture(e.pointerId);
+                              } catch {
+                                // ignore
+                              }
+                            }}
+                          >
+                            <i className="ph-bold ph-corners-out text-[11px]" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="right">Resize Cabinet</TooltipContent>
+                      </Tooltip>
                     ) : null}
                   </div>
                 );
@@ -830,7 +853,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                         <Button
                           type="button"
                           variant="outline"
-                          className="h-9 font-bold"
+                          className="h-10 font-bold"
                           onClick={addDrawerToSelected}
                         >
                           <i className="ph-bold ph-plus mr-2" />
@@ -839,7 +862,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                         <Button
                           type="button"
                           variant="outline"
-                          className="h-9 font-bold"
+                          className="h-10 font-bold"
                           onClick={removeDrawerFromSelected}
                           disabled={
                             (selectedCabinet.drawerIds || []).length <= 1
@@ -866,7 +889,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                               x,
                             });
                           }}
-                          className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                          className="h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                         />
                       </div>
                       <div>
@@ -883,7 +906,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                               y,
                             });
                           }}
-                          className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                          className="h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                         />
                       </div>
                     </div>
@@ -903,7 +926,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                               selectedCabinet.rect.h,
                             );
                           }}
-                          className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                          className="h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                         />
                       </div>
                       <div>
@@ -920,7 +943,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                               h,
                             );
                           }}
-                          className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                          className="h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                         />
                       </div>
                     </div>

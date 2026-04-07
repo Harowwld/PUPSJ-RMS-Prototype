@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -34,6 +33,15 @@ export default function AccountPage() {
   const [pwConfirm, setPwConfirm] = useState("");
   const [pwLoading, setPwLoading] = useState(false);
   const [pwError, setPwError] = useState("");
+  
+  // Security Form State
+  const [globalQuestions, setGlobalQuestions] = useState([]);
+  const [secQuestion, setSecQuestion] = useState("");
+  const [secAnswer, setSecAnswer] = useState("");
+  const [secLoading, setSecLoading] = useState(false);
+  const [secError, setSecError] = useState("");
+  const [hasSetSecurity, setHasSetSecurity] = useState(false);
+
   const [activeTab, setActiveTab] = useState("profile");
 
   const isAdminRole = (role) => {
@@ -48,9 +56,14 @@ export default function AccountPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await fetch("/api/auth/me");
-        const json = await res.json().catch(() => null);
-        if (!res.ok || !json?.ok) {
+        const [resAuth, resGlobalQs, resUserSecurity] = await Promise.all([
+          fetch("/api/auth/me"),
+          fetch("/api/system/security-questions"),
+          fetch("/api/staff/security")
+        ]);
+
+        const json = await resAuth.json().catch(() => null);
+        if (!resAuth.ok || !json?.ok) {
           router.push("/");
           return;
         }
@@ -59,6 +72,19 @@ export default function AccountPage() {
         setFname(user.fname || "");
         setLname(user.lname || "");
         setUsername(user.email || user.username || "");
+
+        const jsonGlobalQs = await resGlobalQs.json().catch(() => null);
+        if (jsonGlobalQs?.ok && Array.isArray(jsonGlobalQs.data)) {
+          setGlobalQuestions(jsonGlobalQs.data);
+        }
+
+        const jsonUserSecurity = await resUserSecurity.json().catch(() => null);
+        if (jsonUserSecurity?.ok) {
+          setHasSetSecurity(jsonUserSecurity.data.hasSecurityQuestion);
+          if (jsonUserSecurity.data.securityQuestion) {
+            setSecQuestion(jsonUserSecurity.data.securityQuestion);
+          }
+        }
       } catch {
         router.push("/");
       } finally {
@@ -171,6 +197,47 @@ export default function AccountPage() {
       });
     } finally {
       setPwLoading(false);
+    }
+  };
+
+  const submitSecurity = async (e) => {
+    e.preventDefault();
+    if (secLoading) return;
+
+    if (!secQuestion || !secAnswer.trim()) {
+      setSecError("Please select a question and provide an answer.");
+      return;
+    }
+
+    setSecError("");
+    setSecLoading(true);
+
+    try {
+      const res = await fetch("/api/staff/security", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          question: secQuestion,
+          answer: secAnswer.trim(),
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || "Failed to update security question");
+      }
+
+      toast.success("Security Updated", {
+        description: "Your security question and answer are now active.",
+      });
+      setSecAnswer("");
+      setHasSetSecurity(true);
+    } catch (err) {
+      setSecError(err?.message || "Failed to update security question");
+      toast.error("Update Failed", {
+        description: err?.message || "Unable to save your security settings.",
+      });
+    } finally {
+      setSecLoading(false);
     }
   };
 
@@ -402,92 +469,179 @@ export default function AccountPage() {
             ) : null}
 
             {activeTab === "security" ? (
-              <Card className="rounded-brand border-gray-200 shadow-sm overflow-hidden animate-fade-in">
-                <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
-                      <i className="ph-duotone ph-key text-2xl"></i>
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl font-black text-gray-900 tracking-tight">
-                        Security Credentials
-                      </CardTitle>
-                      <CardDescription className="font-medium text-gray-500">
-                        Rotate your password regularly to maintain account
-                        integrity.
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-
-                <CardContent className="p-8">
-                  <form onSubmit={submitPassword} className="space-y-8">
-                    {pwError && (
-                      <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm font-bold rounded-brand flex items-center gap-3">
-                        <i className="ph-bold ph-warning-circle text-xl"></i>
-                        {pwError}
+              <div className="space-y-6">
+                <Card className="rounded-brand border-gray-200 shadow-sm overflow-hidden animate-fade-in">
+                  <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
+                        <i className="ph-duotone ph-key text-2xl"></i>
                       </div>
-                    )}
-
-                    <div className="space-y-2">
-                      <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">
-                        Current Password
-                      </label>
-                      <Input
-                        type="password"
-                        className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
-                        placeholder="••••••••"
-                        value={pwCurrent}
-                        onChange={(e) => setPwCurrent(e.target.value)}
-                        required
-                      />
+                      <div>
+                        <CardTitle className="text-xl font-black text-gray-900 tracking-tight">
+                          Security Credentials
+                        </CardTitle>
+                        <CardDescription className="font-medium text-gray-500">
+                          Rotate your password regularly to maintain account
+                          integrity.
+                        </CardDescription>
+                      </div>
                     </div>
+                  </CardHeader>
 
-                    <div className="space-y-2">
-                      <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">
-                        New Password
-                      </label>
-                      <Input
-                        type="password"
-                        className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
-                        placeholder="Min. 6 alphanumeric characters"
-                        value={pwNext}
-                        onChange={(e) => setPwNext(e.target.value)}
-                        required
-                      />
-                    </div>
+                  <CardContent className="p-8">
+                    <form onSubmit={submitPassword} className="space-y-8">
+                      {pwError && (
+                        <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm font-bold rounded-brand flex items-center gap-3">
+                          <i className="ph-bold ph-warning-circle text-xl"></i>
+                          {pwError}
+                        </div>
+                      )}
 
-                    <div className="space-y-2">
-                      <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">
-                        Confirm New Password
-                      </label>
-                      <Input
-                        type="password"
-                        className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
-                        placeholder="Must match the entry above"
-                        value={pwConfirm}
-                        onChange={(e) => setPwConfirm(e.target.value)}
-                        required
-                      />
-                    </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">
+                          Current Password
+                        </label>
+                        <Input
+                          type="password"
+                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
+                          placeholder="••••••••"
+                          value={pwCurrent}
+                          onChange={(e) => setPwCurrent(e.target.value)}
+                          required
+                        />
+                      </div>
 
-                    <div className="pt-6 border-t border-gray-100 flex justify-end">
-                      <Button
-                        type="submit"
-                        disabled={pwLoading}
-                        className="h-12 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
-                      >
-                        {pwLoading ? (
-                          <i className="ph-bold ph-spinner animate-spin"></i>
-                        ) : (
-                          <i className="ph-bold ph-shield-check"></i>
-                        )}
-                        {pwLoading ? "Enforcing..." : "Rotate Password"}
-                      </Button>
+                      <div className="space-y-2">
+                        <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">
+                          New Password
+                        </label>
+                        <Input
+                          type="password"
+                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
+                          placeholder="Min. 6 alphanumeric characters"
+                          value={pwNext}
+                          onChange={(e) => setPwNext(e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">
+                          Confirm New Password
+                        </label>
+                        <Input
+                          type="password"
+                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
+                          placeholder="Must match the entry above"
+                          value={pwConfirm}
+                          onChange={(e) => setPwConfirm(e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      <div className="pt-6 border-t border-gray-100 flex justify-end">
+                        <Button
+                          type="submit"
+                          disabled={pwLoading}
+                          className="h-12 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+                        >
+                          {pwLoading ? (
+                            <i className="ph-bold ph-spinner animate-spin"></i>
+                          ) : (
+                            <i className="ph-bold ph-shield-check"></i>
+                          )}
+                          {pwLoading ? "Enforcing..." : "Rotate Password"}
+                        </Button>
+                      </div>
+                    </form>
+                  </CardContent>
+                </Card>
+
+                <Card className="rounded-brand border-gray-200 shadow-sm overflow-hidden animate-fade-in">
+                  <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
+                        <i className="ph-duotone ph-lock-key text-2xl"></i>
+                      </div>
+                      <div>
+                        <CardTitle className="text-xl font-black text-gray-900 tracking-tight">
+                          Recovery Question
+                        </CardTitle>
+                        <CardDescription className="font-medium text-gray-500">
+                          Set a security question to recover your account if you forget your password.
+                        </CardDescription>
+                      </div>
                     </div>
-                  </form>
-                </CardContent>
-              </Card>
+                  </CardHeader>
+
+                  <CardContent className="p-8">
+                    {hasSetSecurity ? (
+                       <div className="mb-6 p-4 bg-emerald-50 border border-emerald-100 text-emerald-800 text-sm font-bold rounded-brand flex items-start gap-3">
+                         <i className="ph-fill ph-check-circle text-xl mt-0.5 shrink-0 text-emerald-600"></i>
+                         <div>
+                            <p>You have configured a security question.</p>
+                            <p className="text-xs font-medium text-emerald-700 mt-1">If you need to change it, simply select a new question and answer below.</p>
+                         </div>
+                       </div>
+                    ) : null}
+
+                    <form onSubmit={submitSecurity} className="space-y-8">
+                      {secError && (
+                        <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm font-bold rounded-brand flex items-center gap-3">
+                          <i className="ph-bold ph-warning-circle text-xl"></i>
+                          {secError}
+                        </div>
+                      )}
+
+                      <div className="space-y-2">
+                        <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">
+                          Security Question
+                        </label>
+                        <select
+                          className="w-full h-12 bg-white border border-gray-300 rounded-brand text-sm px-4 focus:outline-none focus:ring-2 focus:ring-pup-maroon font-bold text-gray-900 shadow-sm"
+                          value={secQuestion}
+                          onChange={(e) => setSecQuestion(e.target.value)}
+                          required
+                        >
+                          <option value="" disabled>Select a question...</option>
+                          {globalQuestions.map((q, i) => (
+                            <option key={i} value={q}>{q}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="space-y-2">
+                        <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">
+                          Your Answer
+                        </label>
+                        <Input
+                          type="password"
+                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
+                          placeholder="Your answer"
+                          value={secAnswer}
+                          onChange={(e) => setSecAnswer(e.target.value)}
+                          required
+                        />
+                      </div>
+
+                      <div className="pt-6 border-t border-gray-100 flex justify-end">
+                        <Button
+                          type="submit"
+                          disabled={secLoading || globalQuestions.length === 0}
+                          className="h-12 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+                        >
+                          {secLoading ? (
+                            <i className="ph-bold ph-spinner animate-spin"></i>
+                          ) : (
+                            <i className="ph-bold ph-lock-key"></i>
+                          )}
+                          {secLoading ? "Saving..." : "Save Security Setup"}
+                        </Button>
+                      </div>
+                    </form>
+                  </CardContent>
+                </Card>
+              </div>
             ) : null}
           </div>
         </div>

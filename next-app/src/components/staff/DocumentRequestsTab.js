@@ -278,7 +278,7 @@ export default function DocumentRequestsTab({
                 <div className="relative">
                   <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                   <Input
-                    className="pl-10 h-11 rounded-brand border-gray-300"
+                    className="pl-10 h-10 rounded-brand border-gray-300"
                     placeholder="Student no., name, document type…"
                     value={q}
                     onChange={(e) => {
@@ -293,7 +293,7 @@ export default function DocumentRequestsTab({
                   Status
                 </label>
                 <select
-                  className="h-11 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-800"
+                  className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-800"
                   value={statusFilter}
                   onChange={(e) => {
                     setStatusFilter(e.target.value);
@@ -310,7 +310,7 @@ export default function DocumentRequestsTab({
               </div>
               <Button
                 type="button"
-                className="bg-pup-maroon hover:bg-red-900 font-bold shrink-0 h-11"
+                className="bg-pup-maroon hover:bg-red-900 font-bold shrink-0 h-10"
                 onClick={() => setCreateOpen(true)}
               >
                 <i className="ph-bold ph-plus mr-2"></i>
@@ -553,7 +553,7 @@ export default function DocumentRequestsTab({
                   Student number
                 </label>
                 <Input
-                  className="mt-1.5 h-11 font-mono uppercase bg-white border-gray-300 rounded-brand focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  className="mt-1.5 h-10 font-mono uppercase bg-white border-gray-300 rounded-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                   value={createStudentNo}
                   onChange={(e) => setCreateStudentNo(e.target.value)}
                   placeholder="202X-XXXXX-MN-0"
@@ -565,7 +565,7 @@ export default function DocumentRequestsTab({
                   Document type
                 </label>
                 <select
-                  className="mt-1.5 h-11 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  className="mt-1.5 h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                   value={createDocType}
                   onChange={(e) => setCreateDocType(e.target.value)}
                   required
@@ -594,14 +594,14 @@ export default function DocumentRequestsTab({
               <Button
                 type="button"
                 variant="outline"
-                className="h-11 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+                className="h-10 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
                 onClick={() => setCreateOpen(false)}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="h-11 px-5 bg-pup-maroon text-white font-bold hover:bg-red-900 shadow-sm rounded-brand gap-2 flex items-center"
+                className="h-10 px-5 bg-pup-maroon text-white font-bold hover:bg-red-900 shadow-sm rounded-brand gap-2 flex items-center"
                 disabled={submitting}
               >
                 <i className="ph-bold ph-plus-circle text-lg"></i>
@@ -646,10 +646,10 @@ export default function DocumentRequestsTab({
             </div>
           </div>
           <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-            <Button 
-              type="button" 
-              variant="outline" 
-              className="h-11 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+            <Button
+              type="button"
+              variant="outline"
+              className="h-10 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
               onClick={() => setFileWarningOpen(false)}
             >
               Close
@@ -657,7 +657,7 @@ export default function DocumentRequestsTab({
             {studentForRequest ? (
               <Button
                 type="button"
-                className="h-11 px-5 bg-pup-maroon text-white font-bold hover:bg-red-900 shadow-sm rounded-brand gap-2 flex items-center"
+                className="h-10 px-5 bg-pup-maroon text-white font-bold hover:bg-red-900 shadow-sm rounded-brand gap-2 flex items-center"
                 onClick={() => {
                   setFileWarningOpen(false);
                   onLocateOnMap(studentForRequest);

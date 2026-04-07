@@ -11,7 +11,7 @@ export const runtime = "nodejs";
 
 export async function POST(req) {
   let stagingDir = null;
-  
+
   try {
     console.log("[RESTORE] Starting restore process...");
     const formData = await req.formData();
@@ -33,13 +33,13 @@ export async function POST(req) {
     const isoTimestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const localDir = getLocalDir();
     stagingDir = path.join(localDir, `restore-staging-${timestamp}`);
-    
+
     // Create staging directory
     fs.mkdirSync(stagingDir, { recursive: true });
 
     // Load uploaded zip
     const zip = new AdmZip(buffer);
-    
+
     // Extract everything to staging dir
     zip.extractAllTo(stagingDir, true);
 
@@ -59,7 +59,7 @@ export async function POST(req) {
     const snapshotFilename = `pre-restore-snapshot-${isoTimestamp}.zip`;
     const backupsDir = getBackupsDir();
     const snapshotPath = path.join(backupsDir, snapshotFilename);
-    
+
     const snapshotZip = new AdmZip();
     if (fs.existsSync(currentDbPath)) {
       console.log(`[RESTORE] Adding current DB to snapshot: ${currentDbPath}`);
@@ -69,12 +69,12 @@ export async function POST(req) {
       console.log(`[RESTORE] Adding current uploads to snapshot: ${currentUploadsDir}`);
       snapshotZip.addLocalFolder(currentUploadsDir, "uploads");
     }
-    
+
     const zipBuffer = snapshotZip.toBuffer();
     if (!fs.existsSync(backupsDir)) fs.mkdirSync(backupsDir, { recursive: true });
     fs.writeFileSync(snapshotPath, zipBuffer);
     console.log(`[RESTORE] Snapshot file written to disk: ${snapshotPath} (${zipBuffer.length} bytes)`);
-    
+
     const hashSum = crypto.createHash("sha256");
     hashSum.update(zipBuffer);
     const checksum = hashSum.digest("hex");
@@ -82,11 +82,11 @@ export async function POST(req) {
 
     // --- PHASE 2: OVERWRITE SYSTEM ---
     console.log("[RESTORE] Overwriting system with uploaded backup...");
-    
+
     // Replace DB
     fs.copyFileSync(stagedDbPath, currentDbPath);
     console.log("[RESTORE] db.sqlite overwritten.");
-    
+
     // Force the application to reload the connection to the NEW database
     reloadDb();
 
@@ -108,7 +108,7 @@ export async function POST(req) {
         checksum,
       });
       console.log(`[RESTORE] Snapshot record created in DB: ID=${record?.id}`);
-      
+
       // Final verification of the entire backups table
       const allBackups = await listBackups();
       console.log(`[RESTORE] Total backups now in DB: ${allBackups.length}`);

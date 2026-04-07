@@ -29,7 +29,7 @@ export default function UserGuideModal({ open, onClose }) {
               <h2 className="text-xl font-black text-pup-maroon tracking-tight">User Guide</h2>
               <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mt-1">Documentation</p>
             </div>
-            
+
             <nav className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
               {TABS.map((tab) => (
                 <button

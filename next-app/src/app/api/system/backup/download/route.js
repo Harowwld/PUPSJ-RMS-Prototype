@@ -22,7 +22,7 @@ export async function GET(req) {
     }
 
     const fileBuffer = fs.readFileSync(filePath);
-    
+
     return new NextResponse(fileBuffer, {
       headers: {
         "Content-Type": "application/zip",

@@ -21,7 +21,7 @@ export default function Header({ authUser, onLogout, children }) {
     return normalized === "admin" || normalized === "administrator" || normalized === "superadmin";
   };
 
-  const initials = authUser?.fname && authUser?.lname 
+  const initials = authUser?.fname && authUser?.lname
     ? (authUser.fname[0] + authUser.lname[0]).toUpperCase()
     : "AD";
 
@@ -36,7 +36,7 @@ export default function Header({ authUser, onLogout, children }) {
 
   return (
     <header className="bg-white border-b border-gray-300 flex-none z-20 shadow-sm">
-      <div className="max-w-[1600px] mx-auto px-4 h-16 flex items-center justify-between">
+      <div className="w-full px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <i className="ph-bold ph-bank text-3xl text-pup-maroon"></i>
           <div className="leading-tight">
@@ -92,7 +92,7 @@ export default function Header({ authUser, onLogout, children }) {
               </DropdownMenuGroup>
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   className="cursor-pointer rounded-md text-gray-700 hover:bg-red-50 hover:text-pup-maroon flex items-center gap-2 font-medium"
                   onClick={(e) => {
                     e.preventDefault();
@@ -102,7 +102,7 @@ export default function Header({ authUser, onLogout, children }) {
                 >
                   <i className="ph-bold ph-squares-four"></i> Dashboard
                 </DropdownMenuItem>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   className="cursor-pointer rounded-md text-gray-700 hover:bg-red-50 hover:text-pup-maroon flex items-center gap-2 font-medium"
                   onClick={(e) => {
                     e.preventDefault();
@@ -112,7 +112,7 @@ export default function Header({ authUser, onLogout, children }) {
                   <i className="ph-bold ph-user-gear"></i> Account Settings
                 </DropdownMenuItem>
                 {hasAdminRights && (
-                  <DropdownMenuItem 
+                  <DropdownMenuItem
                     className="cursor-pointer rounded-md text-gray-700 hover:bg-red-50 hover:text-pup-maroon flex items-center gap-2 font-medium"
                     onClick={() => router.push("/account/activity")}
                   >
@@ -124,14 +124,14 @@ export default function Header({ authUser, onLogout, children }) {
               {hasAdminRights && (
                 <DropdownMenuGroup>
                   {isAdminView ? (
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         className="cursor-pointer rounded-md text-gray-700 hover:bg-red-50 hover:text-pup-maroon flex items-center gap-2 font-medium"
                         onClick={() => router.push("/staff")}
                       >
                         <i className="ph-bold ph-swap"></i> Switch to Staff View
                       </DropdownMenuItem>
                     ) : (
-                      <DropdownMenuItem 
+                      <DropdownMenuItem
                         className="cursor-pointer rounded-md text-gray-700 hover:bg-red-50 hover:text-pup-maroon flex items-center gap-2 font-medium"
                         onClick={() => router.push("/admin")}
                       >
@@ -143,7 +143,7 @@ export default function Header({ authUser, onLogout, children }) {
 
               <DropdownMenuSeparator />
               <DropdownMenuGroup>
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={onLogout}
                   className="cursor-pointer rounded-md text-red-700 hover:bg-red-50 flex items-center gap-2 font-bold"
                 >

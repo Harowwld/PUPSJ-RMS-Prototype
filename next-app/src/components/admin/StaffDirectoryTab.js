@@ -134,7 +134,7 @@ export default function StaffDirectoryTab({
                     <Input
                       type="text"
                       placeholder="Query name or ID..."
-                      className="pl-9 h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                      className="pl-9 h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                     />
@@ -144,7 +144,7 @@ export default function StaffDirectoryTab({
                       System Role
                     </label>
                     <select
-                      className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                      className="h-10 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
                       value={roleFilter}
                       onChange={(e) => setRoleFilter(e.target.value)}
                     >
@@ -158,7 +158,7 @@ export default function StaffDirectoryTab({
                       Activity Status
                     </label>
                     <select
-                      className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                      className="h-10 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
                       value={statusFilter}
                       onChange={(e) => setStatusFilter(e.target.value)}
                     >

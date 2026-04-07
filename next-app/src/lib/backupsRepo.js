@@ -87,11 +87,11 @@ export async function executeBackup() {
   const backupsDir = getBackupsDir();
   const backupPath = path.join(backupsDir, backupFilename);
   console.log(`[BACKUP] Creating: ${backupPath}`);
-  
+
   const localDir = getLocalDir();
   const dbPath = path.join(localDir, "db.sqlite");
   const uploadsDir = path.join(localDir, "uploads");
-  
+
   // Create the ZIP archive
   const zip = new AdmZip();
 
@@ -99,12 +99,12 @@ export async function executeBackup() {
   if (fs.existsSync(dbPath)) {
     zip.addLocalFile(dbPath, "", "db.sqlite");
   }
-  
+
   // Add Uploads folder
   if (fs.existsSync(uploadsDir)) {
     zip.addLocalFolder(uploadsDir, "uploads");
   }
-  
+
   // Save the ZIP as a standard, unencrypted archive
   zip.writeZip(backupPath);
 
@@ -119,13 +119,13 @@ export async function executeBackup() {
   hashSum.update(fileBuffer);
   const checksum = hashSum.digest("hex");
   const sizeBytes = fileBuffer.length;
-  
+
   // Record in DB
   const record = await createBackupRecord({
     filename: backupFilename,
     sizeBytes,
     checksum,
   });
-  
+
   return record;
 }

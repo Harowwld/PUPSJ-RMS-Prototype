@@ -111,7 +111,7 @@ body {
 :where(.form-input):focus {
   outline: none;
   border-color: #800000;
-  box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.1);
+  box-shadow: 0 0 0 2px #800000;
 }
 
 :where(.no-glow):focus {
@@ -197,7 +197,7 @@ body {
 :where(.form-select):focus {
   outline: none;
   border-color: #800000;
-  box-shadow: 0 0 0 1px #800000;
+  box-shadow: 0 0 0 2px #800000;
 }
 
 .table-row-hover:hover {

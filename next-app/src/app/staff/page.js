@@ -39,7 +39,7 @@ export default function StaffPage() {
   const router = useRouter();
   const coreDataLoadedRef = useRef(false);
   const docsLoadedRef = useRef(false);
-  const [view, setView] = useState("search");
+  const [view, setView] = useState("requests");
   const [authUser, setAuthUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -837,10 +837,13 @@ export default function StaffPage() {
   ]);
 
   const sidebarItems = [
-    { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
+    { type: "header", label: "Operations" },
+    { key: "requests", label: "Alumni Requests", iconClass: "ph-bold ph-tray-arrow-up" },
     { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
     { key: "documents", label: "Documents", iconClass: "ph-bold ph-file-text" },
-    { key: "requests", label: "Document Requests", iconClass: "ph-bold ph-tray-arrow-up" },
+
+    { type: "header", label: "Records Archive" },
+    { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
   ];
 
   if (loading) {
@@ -862,7 +865,7 @@ export default function StaffPage() {
       <div className="flex-1 flex overflow-hidden w-full">
         <Sidebar items={sidebarItems} activeKey={view} onSelect={setView} />
 
-        <main className="flex-1 overflow-hidden p-4 relative w-full min-w-0 max-w-[1600px] mx-auto">
+        <main className="flex-1 overflow-hidden p-4 relative w-full min-w-0">
         {view === "search" && (
           <RecordsArchiveTab
             quickQuery={quickQuery}

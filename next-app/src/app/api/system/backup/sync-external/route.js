@@ -32,9 +32,9 @@ export async function POST(req) {
 
     const destPath = path.join(externalDir, backup.filename);
     console.log(`[SYNC EXTERNAL] destination path: ${destPath}`);
-    
+
     await new Promise(r => setTimeout(r, 2000));
-    
+
     fs.copyFileSync(sourcePath, destPath);
 
     await updateBackupStatus(id, "status_external", "Success");

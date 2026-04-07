@@ -189,7 +189,7 @@ export default function ScanUploadTab({
                         <td className="p-1.5">{r.student.section}</td>
                         <td className="p-1.5">
                           <select
-                            className="form-select h-9 text-[11px] leading-none px-1 py-0 w-14"
+                            className="form-select h-10 text-[11px] leading-none px-1 py-0 w-14"
                             value={String(r.student.room || "")}
                             onChange={(e) =>
                               setCsvRowField(r.index, "room", parseInt(e.target.value))
@@ -204,7 +204,7 @@ export default function ScanUploadTab({
                         </td>
                         <td className="p-1.5">
                           <select
-                            className="form-select h-9 text-[11px] leading-none px-1 py-0 w-12"
+                            className="form-select h-10 text-[11px] leading-none px-1 py-0 w-12"
                             value={String(r.student.cabinet || "")}
                             onChange={(e) =>
                               setCsvRowField(r.index, "cabinet", e.target.value)
@@ -219,7 +219,7 @@ export default function ScanUploadTab({
                         </td>
                         <td className="p-1.5">
                           <select
-                            className="form-select h-9 text-[11px] leading-none px-1 py-0 w-14"
+                            className="form-select h-10 text-[11px] leading-none px-1 py-0 w-14"
                             value={String(r.student.drawer || "")}
                             onChange={(e) =>
                               setCsvRowField(r.index, "drawer", parseInt(e.target.value))
@@ -701,7 +701,7 @@ export default function ScanUploadTab({
                     ref={csvInputRef}
                     type="file"
                     accept=".csv,text/csv"
-                    className="block w-full text-sm text-gray-600 file:mr-3 file:h-11 file:px-4 file:rounded-brand file:border file:border-gray-300 file:bg-white file:text-gray-700 file:font-bold hover:file:border-pup-maroon"
+                    className="block w-full text-sm text-gray-600 file:mr-3 file:h-10 file:px-4 file:rounded-brand file:border file:border-gray-300 file:bg-white file:text-gray-700 file:font-bold hover:file:border-pup-maroon"
                     onChange={(e) => handleCsvFileSelect(e.target.files?.[0] || null)}
                   />
                 </div>
@@ -810,7 +810,7 @@ export default function ScanUploadTab({
                     <button
                       type="button"
                       onClick={applyCsvBulkLocation}
-                      className="px-4 h-11 rounded-brand bg-pup-maroon text-white font-bold text-sm hover:bg-red-900"
+                      className="px-4 h-10 rounded-brand bg-pup-maroon text-white font-bold text-sm hover:bg-red-900"
                       disabled={Object.values(csvSelected).filter(Boolean).length === 0}
                     >
                       Apply to Selected
@@ -818,7 +818,7 @@ export default function ScanUploadTab({
                     <button
                       type="button"
                       onClick={() => setCsvSelected({})}
-                      className="px-4 h-11 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
+                      className="px-4 h-10 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
                       disabled={Object.values(csvSelected).filter(Boolean).length === 0}
                     >
                       Clear Selection
