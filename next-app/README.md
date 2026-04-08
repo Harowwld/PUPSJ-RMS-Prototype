@@ -34,3 +34,31 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Hot Folder Scanner Ingest
+
+Configure these environment variables in `next-app/.env` or `next-app/.env.local`:
+
+```bash
+HOT_FOLDER_INGEST_TOKEN=replace_with_long_secret
+HOT_FOLDER_API_URL=http://localhost:3000/api/ingest/hot-folder
+HOT_FOLDER_SOURCE_STATION=Registrar-Scanner-01
+HOT_FOLDER_ROOT=/absolute/path/to/hot-folder
+```
+
+`pnpm dev` starts **Next.js** and the **hot-folder watcher** together (watcher waits until port 3000 is open, then loads `.env` via `dotenv`). To run only Next.js: `pnpm dev:next`.
+
+To run the watcher alone (for example against an already-running server):
+
+```bash
+pnpm hot-folder-watcher
+```
+
+Watcher folders:
+
+- `INBOUND`: scanner writes files here.
+- `PROCESSING`: transient while uploading.
+- `DONE`: uploaded successfully (server returned 201).
+- `FAILED`: upload failed; file is preserved for retry.
+
+Allowed scan formats: PDF, JPG/JPEG, PNG, TIFF.

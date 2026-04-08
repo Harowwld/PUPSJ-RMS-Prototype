@@ -3,15 +3,18 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "concurrently -n \"next,hot-folder\" -c \"cyan,magenta\" \"next dev\" \"wait-on tcp:3000 && node scripts/hot-folder-watcher/watch.mjs\"",
+    "dev:next": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "reset-students": "node scripts/reset-students.mjs --confirm"
+    "reset-students": "node scripts/reset-students.mjs --confirm",
+    "hot-folder-watcher": "node scripts/hot-folder-watcher/watch.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.3.0",
     "adm-zip": "^0.5.16",
+    "chokidar": "^4.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "jose": "^5.2.4",
@@ -33,8 +36,11 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "concurrently": "^9.1.2",
+    "dotenv": "^16.4.7",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
-    "tailwindcss": "^4"
+    "tailwindcss": "^4",
+    "wait-on": "^8.0.1"
   }
 }
