@@ -57,14 +57,17 @@ export async function createDocument({
   mimeType,
   sizeBytes,
   buffer,
+  storageFilename: providedStorageFilename,
 }) {
   await ensureReviewColumns();
 
   const ext = path.extname(originalFilename || "").toLowerCase() || ".pdf";
-  const storageFilename = `${Date.now()}-${crypto.randomBytes(8).toString("hex")}${ext}`;
+  const storageFilename =
+    providedStorageFilename || `${Date.now()}-${crypto.randomBytes(8).toString("hex")}${ext}`;
   const absPath = path.join(getUploadsDir(), storageFilename);
-
-  fs.writeFileSync(absPath, buffer);
+  if (buffer) {
+    fs.writeFileSync(absPath, buffer);
+  }
 
   const res = await dbRun(
     `

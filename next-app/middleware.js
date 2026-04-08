@@ -1,8 +1,31 @@
 import { NextResponse } from "next/server";
 import { getSessionCookieName, verifySessionToken } from "./src/lib/jwt";
 
+function constantTimeEqual(a, b) {
+  const sa = String(a || "");
+  const sb = String(b || "");
+  let diff = sa.length ^ sb.length;
+  const max = Math.max(sa.length, sb.length);
+  for (let i = 0; i < max; i += 1) {
+    diff |= (sa.charCodeAt(i) || 0) ^ (sb.charCodeAt(i) || 0);
+  }
+  return diff === 0;
+}
+
 export async function middleware(req) {
   const { pathname } = req.nextUrl;
+  const method = String(req.method || "GET").toUpperCase();
+
+  if (pathname === "/api/ingest/hot-folder" && method === "POST") {
+    const authHeader = req.headers.get("authorization") || "";
+    const match = authHeader.match(/^Bearer\s+(.+)$/i);
+    const token = (match?.[1] || "").trim();
+    const expected = String(process.env.HOT_FOLDER_INGEST_TOKEN || "").trim();
+    if (!expected || !token || !constantTimeEqual(token, expected)) {
+      return NextResponse.json({ ok: false, error: "Invalid ingest token" }, { status: 401 });
+    }
+    return NextResponse.next();
+  }
 
   // Allow auth endpoints without session or with their own checks
   if (

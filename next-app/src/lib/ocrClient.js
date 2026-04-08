@@ -214,6 +214,19 @@ async function getPdfTextFromFirstPage(file, worker) {
   return text;
 }
 
+async function getImageText(file, worker) {
+  const bitmap = await createImageBitmap(file);
+  const canvas = document.createElement("canvas");
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  if (!ctx) throw new Error("Canvas initialization failed");
+  canvas.width = Math.max(1, bitmap.width);
+  canvas.height = Math.max(1, bitmap.height);
+  ctx.drawImage(bitmap, 0, 0);
+  const result = await worker.recognize(canvas);
+  const text = String(result?.data?.text || "");
+  return text;
+}
+
 async function getWorker() {
   if (!workerPromise) {
     workerPromise = (async () => {
@@ -264,10 +277,17 @@ export async function warmupOcrWorker() {
 }
 
 export async function scanPdfForSuggestion({ file, students, docTypes }) {
+  return scanFileForSuggestion({ file, students, docTypes });
+}
+
+export async function scanFileForSuggestion({ file, students, docTypes }) {
   if (!file) throw new Error("Missing file");
   const worker = await getWorker();
-
-  const text = await getPdfTextFromFirstPage(file, worker);
+  const mimeType = String(file?.type || "").toLowerCase();
+  const isPdf = mimeType === "application/pdf" || /\.pdf$/i.test(String(file?.name || ""));
+  const isImage = mimeType.startsWith("image/");
+  if (!isPdf && !isImage) throw new Error("Unsupported file for OCR");
+  const text = isPdf ? await getPdfTextFromFirstPage(file, worker) : await getImageText(file, worker);
   const lines = text
     .split(/\r?\n/)
     .map((line) => normalizeText(line))

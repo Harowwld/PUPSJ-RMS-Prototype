@@ -65,6 +65,47 @@ function ensureDocumentRequestsTable() {
   }
 }
 
+function ensureIngestQueueTable() {
+  if (!db) return;
+  try {
+    const check = db.exec(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='ingest_queue'"
+    );
+    if (check?.[0]?.values?.length > 0) return;
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS ingest_queue (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        original_filename TEXT NOT NULL,
+        storage_filename TEXT NOT NULL,
+        mime_type TEXT NOT NULL,
+        size_bytes INTEGER NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        source_station TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        promoted_document_id INTEGER,
+        last_error TEXT,
+        content_sha256 TEXT,
+        FOREIGN KEY (promoted_document_id) REFERENCES documents(id) ON UPDATE CASCADE ON DELETE SET NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_ingest_queue_status_created_at ON ingest_queue(status, created_at);
+      CREATE INDEX IF NOT EXISTS idx_ingest_queue_sha256 ON ingest_queue(content_sha256);
+    `);
+    try {
+      const ver = db.exec("SELECT value FROM settings WHERE key = 'schema_version'");
+      const v =
+        ver?.[0]?.values?.[0]?.[0] != null
+          ? parseInt(String(ver[0].values[0][0]), 10)
+          : 0;
+      if (!Number.isFinite(v) || v < 8) {
+        db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '8')");
+      }
+    } catch {}
+    persistDb();
+  } catch (e) {
+    console.error("[DB] ensureIngestQueueTable:", e);
+  }
+}
+
 export const DEFAULT_SECURITY_QUESTIONS = [
   "What was the name of your first pet?",
   "What is your mother's maiden name?",
@@ -76,6 +117,7 @@ export const DEFAULT_SECURITY_QUESTIONS = [
 export async function getDb() {
   if (db) {
     ensureDocumentRequestsTable();
+    ensureIngestQueueTable();
     return db;
   }
   if (initializing) return initializing;
@@ -608,6 +650,33 @@ export async function getDb() {
         }
       }
 
+      if (schemaVersion < 8) {
+        try {
+          db.exec(`
+            CREATE TABLE IF NOT EXISTS ingest_queue (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              original_filename TEXT NOT NULL,
+              storage_filename TEXT NOT NULL,
+              mime_type TEXT NOT NULL,
+              size_bytes INTEGER NOT NULL,
+              status TEXT NOT NULL DEFAULT 'pending',
+              source_station TEXT,
+              created_at TEXT NOT NULL DEFAULT (datetime('now')),
+              promoted_document_id INTEGER,
+              last_error TEXT,
+              content_sha256 TEXT,
+              FOREIGN KEY (promoted_document_id) REFERENCES documents(id) ON UPDATE CASCADE ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_ingest_queue_status_created_at ON ingest_queue(status, created_at);
+            CREATE INDEX IF NOT EXISTS idx_ingest_queue_sha256 ON ingest_queue(content_sha256);
+          `);
+          db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '8')");
+          persistDb();
+        } catch (e) {
+          console.error("[DB] ingest_queue migration:", e);
+        }
+      }
+
       // Safety net for environments where schema_version may be out of sync.
       // This ensures review columns exist before any API query references them.
       try {
@@ -655,6 +724,7 @@ export async function getDb() {
       }
 
       ensureDocumentRequestsTable();
+      ensureIngestQueueTable();
 
       initializing = null;
       return db;
