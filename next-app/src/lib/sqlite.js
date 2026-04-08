@@ -65,6 +65,14 @@ function ensureDocumentRequestsTable() {
   }
 }
 
+export const DEFAULT_SECURITY_QUESTIONS = [
+  "What was the name of your first pet?",
+  "What is your mother's maiden name?",
+  "What high school did you attend?",
+  "What is the name of the street you grew up on?",
+  "What was your childhood nickname?",
+];
+
 export async function getDb() {
   if (db) {
     ensureDocumentRequestsTable();
@@ -95,6 +103,8 @@ export async function getDb() {
       }
       global.sqliteDb = db;
       db.exec("PRAGMA foreign_keys = ON");
+
+      // ... rest of schema setup ...
 
       // Initial Schema
       db.exec(`
@@ -560,6 +570,42 @@ export async function getDb() {
           db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '6')");
           persistDb();
         } catch (e) {}
+      }
+
+      if (schemaVersion < 7) {
+        try {
+          db.exec("PRAGMA foreign_keys = OFF");
+          db.exec(`
+            BEGIN;
+            CREATE TABLE staff_new (
+              id TEXT PRIMARY KEY,
+              fname TEXT NOT NULL,
+              lname TEXT NOT NULL,
+              role TEXT NOT NULL,
+              section TEXT NOT NULL,
+              status TEXT NOT NULL DEFAULT 'Active',
+              email TEXT NOT NULL,
+              last_active TEXT,
+              password_hash TEXT,
+              created_at TEXT NOT NULL DEFAULT (datetime('now')),
+              updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+            INSERT INTO staff_new (id, fname, lname, role, section, status, email, last_active, password_hash, created_at, updated_at)
+            SELECT id, fname, lname, role, section, status, email, last_active, password_hash, created_at, updated_at FROM staff;
+            DROP TABLE staff;
+            ALTER TABLE staff_new RENAME TO staff;
+            CREATE INDEX IF NOT EXISTS idx_staff_name ON staff(lname, fname);
+            CREATE INDEX IF NOT EXISTS idx_staff_role ON staff(role);
+            CREATE INDEX IF NOT EXISTS idx_staff_status ON staff(status);
+            INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '7');
+            COMMIT;
+          `);
+          persistDb();
+        } catch (e) {
+          try { db.exec("ROLLBACK"); } catch (_) {}
+        } finally {
+          try { db.exec("PRAGMA foreign_keys = ON"); } catch (_) {}
+        }
       }
 
       // Safety net for environments where schema_version may be out of sync.

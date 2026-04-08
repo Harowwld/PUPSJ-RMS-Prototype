@@ -27,6 +27,7 @@ import EditUserModal from "@/components/admin/EditUserModal";
 import SystemConfigTab from "@/components/admin/SystemConfigTab";
 import DigitalRecordsReviewTab from "@/components/admin/DigitalRecordsReviewTab";
 import SystemAnalyticsTab from "@/components/admin/SystemAnalyticsTab";
+import SLAAnalyticsTab from "@/components/admin/SLAAnalyticsTab";
 import StorageLayoutEditorTab from "@/components/admin/StorageLayoutEditorTab";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -41,6 +42,7 @@ function AdminPageContent() {
     system: false,
     backup: false,
     review: false,
+    request_analytics: false,
     system_data: true,
     create: true,
   });
@@ -52,6 +54,7 @@ function AdminPageContent() {
     system: false,
     backup: false,
     review: false,
+    request_analytics: false,
   });
 
   const [staffData, setStaffData] = useState([]);
@@ -268,6 +271,7 @@ function AdminPageContent() {
       "system_data",
       "review",
       "digitization",
+      "request_analytics",
       "system",
       "backup",
     ]);
@@ -637,6 +641,11 @@ function AdminPageContent() {
       label: "System Analytics",
       iconClass: "ph-bold ph-chart-bar",
     },
+    {
+      key: "request_analytics",
+      label: "Request Analysis",
+      iconClass: "ph-bold ph-trend-up",
+    },
 
     { type: "header", label: "System Configuration" },
     { key: "storage_layout", label: "Storage Layout", iconClass: "ph-bold ph-warehouse" },
@@ -755,6 +764,13 @@ function AdminPageContent() {
 
         {view === "digitization" && (
           <SystemAnalyticsTab
+            showToast={showToast}
+            onLogAction={logAdminAction}
+          />
+        )}
+
+        {view === "request_analytics" && (
+          <SLAAnalyticsTab
             showToast={showToast}
             onLogAction={logAdminAction}
           />

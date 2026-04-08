@@ -6,6 +6,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { Toggle } from "@/components/ui/toggle";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 import { formatPHDateTime } from "@/lib/timeFormat";
 
 import {
@@ -248,17 +256,25 @@ export default function SystemAnalyticsTab({
                 </select>
               </div>
               <div className="flex items-end">
-                <label className="flex items-center gap-2 cursor-pointer select-none h-10 px-1">
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 rounded border-gray-300 text-pup-maroon focus:ring-pup-maroon cursor-pointer"
-                    checked={requireApproved}
-                    onChange={(e) => setRequireApproved(e.target.checked)}
+                <Toggle
+                  variant="outline"
+                  pressed={requireApproved}
+                  onPressedChange={setRequireApproved}
+                  className={cn(
+                    "h-10 px-4 gap-2 rounded-brand border border-gray-300 font-bold text-xs uppercase transition-all select-none w-full sm:w-auto",
+                    "hover:bg-gray-50 hover:text-gray-700",
+                    "data-[state=on]:bg-pup-maroon data-[state=on]:text-white data-[state=on]:border-pup-maroon data-[state=on]:shadow-sm"
+                  )}
+                >
+                  <i
+                    className={cn(
+                      "ph-bold",
+                      requireApproved ? "ph-check-circle" : "ph-circle"
+                    )}
+                    aria-hidden
                   />
-                  <span className="text-sm font-bold text-gray-700">
-                    Approved Docs Only
-                  </span>
-                </label>
+                  Approved Docs Only
+                </Toggle>
               </div>
             </div>
             <div className="flex items-center gap-2 shrink-0">
@@ -284,6 +300,32 @@ export default function SystemAnalyticsTab({
                 <i className="ph-bold ph-download-simple text-sm mr-1.5" aria-hidden />
                 Export CSV
               </Button>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={load}
+                      disabled={loading}
+                      className="h-9 w-9 p-0 text-gray-600 bg-white border border-gray-300 shadow-sm hover:bg-gray-50 transition-all active:scale-95"
+                    >
+                      <i
+                        className={cn(
+                          "ph-bold ph-arrows-clockwise text-sm",
+                          loading && "animate-spin"
+                        )}
+                        aria-hidden
+                      />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="font-bold">Refresh Analytics Data</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           </div>
         </div>
@@ -536,12 +578,7 @@ export default function SystemAnalyticsTab({
                 </p>
               </div>
 
-              <div className="mt-auto pt-12 flex justify-between border-t border-gray-100">
-                <div className="text-left">
-                  <p className="text-[9px] font-bold text-gray-400 uppercase mb-10">Prepared By</p>
-                  <div className="w-48 border-b border-gray-900 mb-1"></div>
-                  <p className="text-[10px] font-bold text-gray-900 uppercase">University Registrar</p>
-                </div>
+              <div className="mt-auto pt-12 flex justify-end border-t border-gray-100">
                 <div className="text-right italic text-[10px] text-gray-400 flex items-end">
                   Page 1 of 2
                 </div>
@@ -594,10 +631,11 @@ export default function SystemAnalyticsTab({
                 </p>
               </div>
 
-              <div className="mt-auto pt-12 flex justify-between">
+              <div className="mt-auto pt-12 flex justify-between border-t border-gray-100">
                 <div className="text-left">
+                  <p className="text-[9px] font-bold text-gray-400 uppercase mb-10">Prepared By</p>
                   <div className="w-48 border-b border-gray-900 mb-1"></div>
-                  <p className="text-[10px] font-bold text-gray-900 uppercase">Records Management Officer</p>
+                  <p className="text-[10px] font-bold text-gray-900 uppercase">Administrative Officer</p>
                 </div>
                 <div className="text-right">
                   <div className="w-48 border-b border-gray-900 mb-1 ml-auto"></div>

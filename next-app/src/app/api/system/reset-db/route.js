@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb } from "../../../../lib/sqlite";
+import { getDb, DEFAULT_SECURITY_QUESTIONS } from "../../../../lib/sqlite";
 import fs from "node:fs";
 import path from "node:path";
 import { buildDefaultStorageLayout } from "../../../../lib/storageLayoutDefaults";
@@ -24,7 +24,9 @@ export async function GET(req) {
       "document_types",
       "courses",
       "sections",
-      "document_requests"
+      "document_requests",
+      "staff_security_answers",
+      "security_questions"
     ];
 
     for (const table of tables) {
@@ -75,6 +77,15 @@ export async function GET(req) {
       `);
     } catch (e) {
       console.error("Failed to seed admin staff account:", e?.message || e);
+    }
+
+    // Seed default security questions
+    try {
+      for (const q of DEFAULT_SECURITY_QUESTIONS) {
+        db.exec(`INSERT INTO security_questions (question) VALUES ('${q.replace(/'/g, "''")}')`);
+      }
+    } catch (e) {
+      console.error("Failed to seed default security questions:", e?.message || e);
     }
 
     // Export and persist the empty database

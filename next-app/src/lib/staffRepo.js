@@ -40,12 +40,6 @@ export async function createStaff({
   email,
   lastActive,
   password,
-  securityQuestionId,
-  securityAnswer1,
-  securityAnswer2,
-  securityAnswer3,
-  securityAnswer4,
-  securityAnswer5,
 }) {
   await dbRun(
     `
@@ -59,14 +53,8 @@ export async function createStaff({
       email,
       last_active,
       password_hash,
-      security_question_id,
-      security_answer_1,
-      security_answer_2,
-      security_answer_3,
-      security_answer_4,
-      security_answer_5,
       updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
   `,
     [
       id,
@@ -78,12 +66,6 @@ export async function createStaff({
       email,
       lastActive || null,
       password ? hashPassword(password) : null,
-      securityQuestionId || null,
-      securityAnswer1 || null,
-      securityAnswer2 || null,
-      securityAnswer3 || null,
-      securityAnswer4 || null,
-      securityAnswer5 || null,
     ]
   );
 
@@ -159,20 +141,12 @@ export async function updateStaff(originalId, patch) {
     email: patch.email ?? existing.email,
     last_active:
       patch.lastActive === undefined ? existing.last_active : patch.lastActive,
-    security_question_id: patch.securityQuestionId ?? existing.security_question_id,
-    security_answer_1: patch.securityAnswer1 ?? existing.security_answer_1,
-    security_answer_2: patch.securityAnswer2 ?? existing.security_answer_2,
-    security_answer_3: patch.securityAnswer3 ?? existing.security_answer_3,
-    security_answer_4: patch.securityAnswer4 ?? existing.security_answer_4,
-    security_answer_5: patch.securityAnswer5 ?? existing.security_answer_5,
   };
 
   await dbRun(
     `
     UPDATE staff
-    SET id = ?, fname = ?, lname = ?, role = ?, section = ?, status = ?, email = ?, last_active = ?, 
-        security_question_id = ?, security_answer_1 = ?, security_answer_2 = ?, security_answer_3 = ?, 
-        security_answer_4 = ?, security_answer_5 = ?, updated_at = datetime('now')
+    SET id = ?, fname = ?, lname = ?, role = ?, section = ?, status = ?, email = ?, last_active = ?, updated_at = datetime('now')
     WHERE id = ?
   `,
     [
@@ -184,12 +158,6 @@ export async function updateStaff(originalId, patch) {
       next.status,
       next.email,
       next.last_active,
-      next.security_question_id,
-      next.security_answer_1,
-      next.security_answer_2,
-      next.security_answer_3,
-      next.security_answer_4,
-      next.security_answer_5,
       originalId,
     ]
   );

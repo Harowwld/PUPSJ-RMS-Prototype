@@ -14,18 +14,17 @@ export async function GET(req) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const res = await dbGet(`
-      SELECT q.question 
-      FROM staff_security_answers ssa
-      JOIN security_questions q ON ssa.question_id = q.id
-      WHERE ssa.staff_id = ?
-    `, [user.id]);
+    const questions = await dbAll("SELECT id, question FROM security_questions ORDER BY id ASC");
+    
+    // Also fetch what they have answered so far, if any
+    const answeredRows = await dbAll("SELECT question_id FROM staff_security_answers WHERE staff_id = ?", [user.id]);
+    const answeredSet = new Set((answeredRows || []).map(r => r.question_id));
     
     return NextResponse.json({ 
       ok: true, 
       data: {
-        hasSecurityQuestion: !!res?.question,
-        securityQuestion: res?.question || null
+        questions: questions || [],
+        answeredIds: Array.from(answeredSet)
       } 
     });
   } catch (error) {
@@ -42,27 +41,29 @@ export async function PUT(req) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const { question, answer } = await req.json();
-    if (!question || !answer) {
-      return NextResponse.json({ ok: false, error: "Question and answer are required" }, { status: 400 });
+    const { answers } = await req.json();
+    if (!answers || !Array.isArray(answers)) {
+      return NextResponse.json({ ok: false, error: "Answers array is required" }, { status: 400 });
     }
 
-    // Find the question ID from the text
-    const qRow = await dbGet("SELECT id FROM security_questions WHERE question = ?", [question]);
-    if (!qRow) {
-        return NextResponse.json({ ok: false, error: "Invalid security question" }, { status: 400 });
-    }
-
-    const answerNormalized = String(answer).trim().toLowerCase();
-    const answerHash = crypto.createHash("sha256").update(answerNormalized).digest("hex");
-
-    // Clear old answers first (since we only support 1 question for now as per choice)
+    // Clear old answers first
     await dbRun("DELETE FROM staff_security_answers WHERE staff_id = ?", [user.id]);
     
-    await dbRun(`
-      INSERT INTO staff_security_answers (staff_id, question_id, answer_hash)
-      VALUES (?, ?, ?)
-    `, [user.id, qRow.id, answerHash]);
+    for (const ans of answers) {
+      if (!ans.questionId || !ans.answer) continue;
+
+      // Verify the question exists
+      const qRow = await dbGet("SELECT id FROM security_questions WHERE id = ?", [ans.questionId]);
+      if (!qRow) continue;
+
+      const answerNormalized = String(ans.answer).trim().toLowerCase();
+      const answerHash = crypto.createHash("sha256").update(answerNormalized).digest("hex");
+
+      await dbRun(`
+        INSERT INTO staff_security_answers (staff_id, question_id, answer_hash)
+        VALUES (?, ?, ?)
+      `, [user.id, qRow.id, answerHash]);
+    }
 
     await writeAuditLog(req, "Updated Security Question", {
       actor: `${user.fname || ""} ${user.lname || ""}`.trim() || user.id,
