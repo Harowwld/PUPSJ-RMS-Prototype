@@ -8,7 +8,10 @@ export const runtime = "nodejs";
 
 export async function GET(req) {
   try {
-    const token = req.cookies.get("session_token")?.value;
+    const token = req.cookies.get("pup_session")?.value;
+    if (!token) {
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
     const user = await verifySessionToken(token);
     if (!user) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
@@ -17,14 +20,23 @@ export async function GET(req) {
     const questions = await dbAll("SELECT id, question FROM security_questions ORDER BY id ASC");
     
     // Also fetch what they have answered so far, if any
-    const answeredRows = await dbAll("SELECT question_id FROM staff_security_answers WHERE staff_id = ?", [user.id]);
+    const uid = user.sub || user.id;
+    const answeredRows = await dbAll("SELECT question_id FROM staff_security_answers WHERE staff_id = ?", [uid]);
     const answeredSet = new Set((answeredRows || []).map(r => r.question_id));
     
+    const hasAllQuestions = questions.length > 0 && answeredSet.size === questions.length;
+
+    const formattedQuestions = (questions || []).map(q => ({
+      ...q,
+      hasAnswer: answeredSet.has(q.id)
+    }));
+
     return NextResponse.json({ 
       ok: true, 
       data: {
-        questions: questions || [],
-        answeredIds: Array.from(answeredSet)
+        questions: formattedQuestions,
+        answeredIds: Array.from(answeredSet),
+        hasAllQuestions
       } 
     });
   } catch (error) {
@@ -35,7 +47,10 @@ export async function GET(req) {
 
 export async function PUT(req) {
   try {
-    const token = req.cookies.get("session_token")?.value;
+    const token = req.cookies.get("pup_session")?.value;
+    if (!token) {
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
     const user = await verifySessionToken(token);
     if (!user) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
@@ -46,8 +61,10 @@ export async function PUT(req) {
       return NextResponse.json({ ok: false, error: "Answers array is required" }, { status: 400 });
     }
 
+    const uid = user.sub || user.id;
+
     // Clear old answers first
-    await dbRun("DELETE FROM staff_security_answers WHERE staff_id = ?", [user.id]);
+    await dbRun("DELETE FROM staff_security_answers WHERE staff_id = ?", [uid]);
     
     for (const ans of answers) {
       if (!ans.questionId || !ans.answer) continue;
@@ -62,11 +79,11 @@ export async function PUT(req) {
       await dbRun(`
         INSERT INTO staff_security_answers (staff_id, question_id, answer_hash)
         VALUES (?, ?, ?)
-      `, [user.id, qRow.id, answerHash]);
+      `, [uid, qRow.id, answerHash]);
     }
 
     await writeAuditLog(req, "Updated Security Question", {
-      actor: `${user.fname || ""} ${user.lname || ""}`.trim() || user.id,
+      actor: `${user.fname || ""} ${user.lname || ""}`.trim() || uid,
       role: user.role
     });
 

@@ -22,7 +22,7 @@ export default function Home() {
   const [forgotIdentifier, setForgotIdentifier] = useState("");
   const [forgotUserId, setForgotUserId] = useState(null);
   const [forgotQuestionId, setForgotQuestionId] = useState(null);
-  const [forgotQuestion, setForgotQuestion] = useState("");
+  const [forgotQuestions, setForgotQuestions] = useState([]);
   const [forgotAnswer, setForgotAnswer] = useState("");
   const [forgotNewPassword, setForgotNewPassword] = useState("");
   const [forgotConfirmPassword, setForgotConfirmPassword] = useState("");
@@ -33,7 +33,8 @@ export default function Home() {
     setForgotStep(1);
     setForgotIdentifier("");
     setForgotUserId(null);
-    setForgotQuestion("");
+    setForgotQuestionId(null);
+    setForgotQuestions([]);
     setForgotAnswer("");
     setForgotNewPassword("");
     setForgotConfirmPassword("");
@@ -59,7 +60,8 @@ export default function Home() {
         throw new Error(json.error || "Failed to identify account.");
       }
       setForgotUserId(json.data.id);
-      setForgotQuestion(json.data.question);
+      setForgotQuestions(json.data.questions);
+      setForgotQuestionId(json.data.questions[0]?.id || null);
       setForgotStep(2);
     } catch (err) {
       setForgotError(err.message);
@@ -90,6 +92,7 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: forgotUserId,
+          questionId: forgotQuestionId,
           answer: forgotAnswer.trim(),
           newPassword: forgotNewPassword
         })
@@ -331,8 +334,16 @@ export default function Home() {
                 )}
 
                 <div className="p-3 bg-gray-50 border border-gray-200 rounded-brand">
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Security Question</p>
-                  <p className="text-sm font-bold text-gray-900">{forgotQuestion}</p>
+                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Select Security Question</p>
+                  <select
+                    className="w-full bg-white border border-gray-300 rounded-brand text-sm px-3 py-2 font-bold text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon"
+                    value={forgotQuestionId || ""}
+                    onChange={(e) => setForgotQuestionId(Number(e.target.value))}
+                  >
+                    {forgotQuestions.map(q => (
+                      <option key={q.id} value={q.id}>{q.question}</option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>

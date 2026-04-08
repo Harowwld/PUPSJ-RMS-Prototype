@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { dbGet } from "@/lib/sqlite";
+import { dbGet, dbAll } from "@/lib/sqlite";
 
 export const runtime = "nodejs";
 
@@ -20,15 +20,15 @@ export async function POST(req) {
       return NextResponse.json({ ok: false, error: "If an account exists, a security question would be displayed." }, { status: 404 });
     }
 
-    const res = await dbGet(`
-      SELECT q.question 
+    const res = await dbAll(`
+      SELECT q.id, q.question 
       FROM staff_security_answers ssa
       JOIN security_questions q ON ssa.question_id = q.id
       WHERE ssa.staff_id = ?
     `, [staff.id]);
 
-    if (!res || !res.question) {
-      return NextResponse.json({ ok: false, error: "This account has not set up a security question. Please contact an administrator." }, { status: 400 });
+    if (!res || res.length === 0) {
+      return NextResponse.json({ ok: false, error: "This account has not set up any security questions." }, { status: 400 });
     }
 
     return NextResponse.json({ 
@@ -36,7 +36,7 @@ export async function POST(req) {
       data: {
         id: staff.id,
         name: `${staff.fname} ${staff.lname}`,
-        question: res.question
+        questions: res
       } 
     });
   } catch (error) {

@@ -24,7 +24,11 @@ export async function GET(req) {
 
 export async function PUT(req) {
   try {
-    const token = req.cookies.get("session_token")?.value;
+    const token = req.cookies.get("pup_session")?.value;
+    if (!token) {
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+    
     const user = await verifySessionToken(token);
     const userRole = String(user?.role || "").toLowerCase();
     if (!user || userRole !== "admin") {

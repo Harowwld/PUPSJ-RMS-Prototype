@@ -372,7 +372,7 @@ export default function DocumentRequestsTab({
                         </td>
                         <td className="p-3">
                           <span
-                            className={`inline-flex text-[11px] font-bold px-2 py-0.5 rounded border ${statusBadgeClass(r.status)}`}
+                            className={`inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full border ${statusBadgeClass(r.status)}`}
                           >
                             {r.status}
                           </span>

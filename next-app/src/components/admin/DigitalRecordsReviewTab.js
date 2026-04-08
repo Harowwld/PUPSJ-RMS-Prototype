@@ -256,7 +256,7 @@ export default function DigitalRecordsReviewTab({
                                   Approve
                                 </Button>
                               )}
-                              {r.approval_status !== "Declined" && (
+                              {r.approval_status !== "Declined" && r.approval_status !== "Approved" && (
                                 <Button
                                   size="sm"
                                   variant="destructive"
