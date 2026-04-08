@@ -312,7 +312,6 @@ export default function StaffPage() {
   };
 
   const academicYearOptions = useMemo(() => {
-    const currentYear = new Date().getFullYear();
     const fromData = Array.from(
       new Set(
         students
@@ -322,8 +321,7 @@ export default function StaffPage() {
           .filter((y) => Number.isFinite(y) && y >= 2000 && y <= 2100),
       ),
     );
-    const fallbackRange = Array.from({ length: 8 }, (_, i) => currentYear - 1 + i);
-    return Array.from(new Set([...fromData, ...fallbackRange])).sort((a, b) => a - b);
+    return fromData.sort((a, b) => a - b);
   }, [students]);
 
   const breadcrumbs = useMemo(() => {

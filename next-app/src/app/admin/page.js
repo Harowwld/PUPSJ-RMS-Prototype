@@ -31,6 +31,9 @@ import SLAAnalyticsTab from "@/components/admin/SLAAnalyticsTab";
 import StorageLayoutEditorTab from "@/components/admin/StorageLayoutEditorTab";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 function AdminPageContent() {
   const router = useRouter();
@@ -874,33 +877,57 @@ function AdminPageContent() {
         preview={previewData}
       />
 
-      {defaultPwOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-          <div className="bg-white rounded-brand shadow-xl max-w-sm w-full overflow-hidden animate-scale-in">
-            <div className="p-6 text-center">
-              <div className="w-16 h-16 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i className="ph-bold ph-key text-3xl"></i>
+      <Dialog open={defaultPwOpen} onOpenChange={setDefaultPwOpen}>
+        <DialogContent className="sm:max-w-2xl max-w-2xl w-full p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
+          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
+                <i className="ph-duotone ph-key text-2xl"></i>
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
-                Default Password
-              </h3>
-              <p className="text-sm text-gray-600 mb-6">
-                Password for <b>{defaultPwUserLabel}</b> is:
-                <br />
-                <span className="text-lg font-mono font-bold text-pup-maroon mt-2 block p-2 bg-gray-50 rounded border border-dashed">
-                  pupstaff
-                </span>
-              </p>
-              <button
-                onClick={() => setDefaultPwOpen(false)}
-                className="w-full bg-pup-maroon text-white py-2.5 rounded-brand font-bold"
-              >
-                Confirm
-              </button>
+              <div className="min-w-0">
+                <DialogTitle className="text-lg font-black tracking-tight text-gray-900 leading-tight">
+                  Staff Account Created
+                </DialogTitle>
+                <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 leading-relaxed">
+                  System account configured successfully. Securely record the following temporary credentials before closing this window.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="p-6 space-y-6">
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                Default Password for <span className="text-pup-maroon font-black">{defaultPwUserLabel}</span>
+              </label>
+              <Input
+                type="text"
+                readOnly
+                className="h-12 font-mono font-bold bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                value="pupstaff"
+              />
             </div>
           </div>
-        </div>
-      )}
+
+          <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setDefaultPwOpen(false)}
+              className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+            >
+              Close
+            </Button>
+            <Button
+              onClick={() => setDefaultPwOpen(false)}
+              className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand"
+            >
+              <i className="ph-bold ph-check"></i>
+              Acknowledge
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
     </div>
   );

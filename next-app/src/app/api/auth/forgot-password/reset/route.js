@@ -7,9 +7,9 @@ export const runtime = "nodejs";
 
 export async function POST(req) {
   try {
-    const { id, answer, newPassword } = await req.json();
+    const { id, questionId, answer, newPassword } = await req.json();
 
-    if (!id || !answer || !newPassword) {
+    if (!id || !questionId || !answer || !newPassword) {
       return NextResponse.json({ ok: false, error: "Missing required fields" }, { status: 400 });
     }
 
@@ -29,8 +29,8 @@ export async function POST(req) {
     const resAnswer = await dbGet(`
       SELECT answer_hash 
       FROM staff_security_answers
-      WHERE staff_id = ?
-    `, [staff.id]);
+      WHERE staff_id = ? AND question_id = ?
+    `, [staff.id, questionId]);
 
     if (!resAnswer || !resAnswer.answer_hash) {
       return NextResponse.json({ ok: false, error: "Security answer not found" }, { status: 400 });

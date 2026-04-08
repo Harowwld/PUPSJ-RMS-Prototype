@@ -22,16 +22,21 @@ export async function POST(req) {
     try {
       const payload = await verifySessionToken(token);
       const userId = payload?.sub;
+      const username = payload?.username;
+
       if (userId && userId !== "admin") {
         await setStaffStatus(userId, "Inactive");
-        await writeAuditLog(req, `User logout: ${userId}`);
+        await writeAuditLog(req, `User logout: ${username || userId}`);
         // Broadcast to admins
         broadcastToAdmins("staffLogout", {
           staffId: userId,
           status: "Inactive",
         });
       } else if (userId === "admin") {
-        await writeAuditLog(req, "User logout: admin", { actor: "admin", role: "Admin" });
+        await writeAuditLog(req, `User logout: ${username || "admin"}`, {
+          actor: username || "admin",
+          role: "Admin",
+        });
         // Broadcast admin logout too
         broadcastToAdmins("staffLogout", {
           staffId: "admin",

@@ -50,8 +50,10 @@ function DialogContent({
   className,
   children,
   showCloseButton = true,
+  hideClose,
   ...props
 }) {
+  const actualShowClose = showCloseButton && !hideClose;
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -63,7 +65,7 @@ function DialogContent({
         )}
         {...props}>
         {children}
-        {showCloseButton && (
+        {actualShowClose && (
           <DialogPrimitive.Close
             data-slot="dialog-close"
             render={

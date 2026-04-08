@@ -25,7 +25,7 @@ function PDFFrame({ docId }) {
       ) : null}
       <iframe
         title="PDF Preview"
-        src={`/api/documents/${docId}#view=FitH`}
+        src={`/api/documents/${docId}#zoom=100`}
         className="absolute inset-0 w-full h-full bg-gray-200"
         style={{ border: "none" }}
         onLoad={() => setFrameReady(true)}

@@ -39,6 +39,18 @@ export default function DocumentsTab({
     setUpdateFile(file);
   };
 
+  const uniqueStudents = Array.from(new Set(docsRows.map(r => r.student_no)));
+  const isSingleStudentView = uniqueStudents.length === 1 && !docsForm.docType.trim() && docsRows.length > 0;
+  
+  let compPercent = 0;
+  let compUploaded = 0;
+  let compTotal = 0;
+  if (isSingleStudentView) {
+    compTotal = docsRows.length;
+    compUploaded = docsRows.filter(r => r.status === "uploaded").length;
+    compPercent = compTotal > 0 ? Math.round((compUploaded / compTotal) * 100) : 0;
+  }
+
   return (
     <div
       id="view-documents"
@@ -145,6 +157,27 @@ export default function DocumentsTab({
             </div>
           ) : (
             <>
+              {isSingleStudentView && (
+                <div className="mb-4 bg-gray-50/80 border border-gray-200 rounded-brand p-5 flex items-center justify-between shadow-xs">
+                  <div>
+                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wide">Archive Completeness • {docsRows[0].student_name || docsRows[0].student_no}</h3>
+                    <p className="text-xs font-medium text-gray-500 mt-1">
+                      {compUploaded} out of {compTotal} required document types uploaded.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className={`text-xl font-black ${compPercent >= 100 ? "text-emerald-600" : compPercent >= 50 ? "text-amber-600" : "text-red-600"}`}>
+                      {compPercent}%
+                    </span>
+                    <div className="w-32 sm:w-48 h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className={`h-full transition-all duration-500 ${compPercent >= 100 ? "bg-emerald-500" : compPercent >= 50 ? "bg-amber-500" : "bg-red-500"}`}
+                        style={{ width: `${compPercent}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
               <div className="flex-1 overflow-y-auto overflow-x-auto border border-gray-200 rounded-brand">
                 <table className="min-w-full text-sm">
                   <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
