@@ -10,7 +10,6 @@ import RecordsArchiveTab from "@/components/staff/RecordsArchiveTab";
 import ScanUploadTab from "@/components/staff/ScanUploadTab";
 import DocumentsTab from "@/components/staff/DocumentsTab";
 import DocumentRequestsTab from "@/components/staff/DocumentRequestsTab";
-import HotFolderInboxTab from "@/components/staff/HotFolderInboxTab";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import OCRPromptModal from "@/components/staff/OCRPromptModal";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -833,7 +832,6 @@ export default function StaffPage() {
     { type: "header", label: "Operations" },
     { key: "requests", label: "Alumni Requests", iconClass: "ph-bold ph-tray-arrow-up" },
     { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
-    { key: "ingest", label: "Scan Inbox", iconClass: "ph-bold ph-inbox" },
     { key: "documents", label: "Documents", iconClass: "ph-bold ph-file-text" },
 
     { type: "header", label: "Records Archive" },
@@ -1103,14 +1101,9 @@ export default function StaffPage() {
             }}
             csvLoading={csvLoading}
             csvResults={csvResults}
-          />
-        )}
-        {view === "ingest" && (
-          <HotFolderInboxTab
             students={students}
-            docTypes={docTypes}
             showToast={showToast}
-            onPromoted={() => {
+            onIngestPromoted={() => {
               fetchAllDocs();
               fetchData();
             }}

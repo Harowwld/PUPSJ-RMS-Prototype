@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import {
   createIngestItem,
+  abandonAllPendingIngest,
   getIngestFilePath,
   listPendingIngest,
   makeIngestStorageFilename,
@@ -69,4 +70,11 @@ export async function GET(req) {
   const includeFailed = String(searchParams.get("includeFailed") || "") === "1";
   const data = await listPendingIngest({ limit, offset, includeFailed });
   return NextResponse.json({ ok: true, data });
+}
+
+export async function DELETE(req) {
+  // Session-protected by middleware (only POST ingest is Bearer).
+  const result = await abandonAllPendingIngest();
+  await writeAuditLog(req, `Cleared scanner inbox (${result.clearedCount} item(s))`);
+  return NextResponse.json({ ok: true, data: result });
 }

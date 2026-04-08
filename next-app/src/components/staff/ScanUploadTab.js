@@ -1,5 +1,17 @@
 "use client";
 
+import Image from "next/image";
+import { useState } from "react";
+import { useHotFolderInbox } from "@/hooks/useHotFolderInbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+
 export default function ScanUploadTab({
   uploadMode,
   uploadStudentIsExisting,
@@ -50,7 +62,11 @@ export default function ScanUploadTab({
   importCsvStudents,
   csvLoading,
   csvResults,
+  students = [],
+  showToast = () => {},
+  onIngestPromoted,
 }) {
+  const [clearInboxOpen, setClearInboxOpen] = useState(false);
   const fe = uploadFieldErrors || {};
   const ring = (key) => (fe[key] ? "ring-2 ring-orange-400 border-orange-400" : "");
 
@@ -100,9 +116,97 @@ export default function ScanUploadTab({
     "!bg-gray-200 !text-gray-500 !border-gray-300 cursor-not-allowed placeholder:!text-gray-400 focus:!border-gray-300 focus:!shadow-none focus:!ring-0";
   const lockedLabel = "text-gray-400";
 
+  const hf = useHotFolderInbox({
+    enabled: uploadMode === "pdf",
+    students,
+    docTypes,
+    showToast,
+    onPromoted: onIngestPromoted,
+  });
+
+  const handlePdfFileSelect = (file) => {
+    if (!file) return;
+    hf.clearIngestSelection();
+    onFileSelect(file);
+  };
+
+  const handleClearPdf = () => {
+    hf.clearIngestSelection();
+    onClearFile();
+  };
+
+  const onPdfDrop = (e) => {
+    e.preventDefault();
+    setDropActive(false);
+    const f = e.dataTransfer.files?.[0];
+    if (!f) return;
+    if (f.type !== "application/pdf" && !String(f.name || "").toLowerCase().endsWith(".pdf")) {
+      return;
+    }
+    handlePdfFileSelect(f);
+  };
+
+  const showHotFolderPromote = uploadMode === "pdf" && hf.selectedRow && !uploadedFile;
+
   return (
-    <div id="view-upload" className="flex flex-col lg:flex-row w-full h-full gap-4 animate-fade-in">
-      <section className="w-full lg:w-1/2 bg-white rounded-brand border border-gray-300 flex flex-col h-full p-8 items-center justify-center shadow-sm relative">
+    <div id="view-upload" className="flex flex-col w-full h-full min-h-0 gap-4 animate-fade-in">
+      <Dialog open={clearInboxOpen} onOpenChange={setClearInboxOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Clear scanner inbox?</DialogTitle>
+            <DialogDescription>
+              This will remove {hf.rows.length} queued item(s) from the scanner inbox.
+              You can’t undo this.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <button
+              type="button"
+              className="h-9 px-3 rounded-brand bg-white border border-gray-300 text-gray-800 font-bold text-xs hover:border-pup-maroon"
+              onClick={() => setClearInboxOpen(false)}
+              disabled={hf.loading}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="h-9 px-3 rounded-brand bg-pup-maroon text-white font-bold text-xs hover:bg-red-900 disabled:opacity-60"
+              onClick={async () => {
+                await hf.clearInbox();
+                setClearInboxOpen(false);
+              }}
+              disabled={hf.loading || hf.rows.length === 0}
+            >
+              Clear inbox
+            </button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <div className="shrink-0 bg-white rounded-brand border border-gray-300 p-4 shadow-sm">
+        <h2 className="text-xl font-bold text-pup-maroon mb-1">Scan & Upload</h2>
+        <p className="text-sm text-gray-600 mb-4">
+          Upload PDFs or promote files from the scanner inbox. Batch-import students from CSV in the second tab.
+        </p>
+        <div className="flex flex-wrap gap-4 sm:gap-6 border-b border-gray-200">
+          <button
+            type="button"
+            className={`tab-btn ${uploadMode === "pdf" ? "active" : ""}`}
+            onClick={() => setUploadMode("pdf")}
+          >
+            PDF upload
+          </button>
+          <button
+            type="button"
+            className={`tab-btn ${uploadMode === "csv" ? "active" : ""}`}
+            onClick={() => setUploadMode("csv")}
+          >
+            Batch (CSV)
+          </button>
+        </div>
+      </div>
+
+      <div className="flex flex-col lg:flex-row flex-1 min-h-0 gap-4">
+      <section className="w-full lg:w-1/2 bg-white rounded-brand border border-gray-300 flex flex-col h-full min-h-0 p-8 items-center justify-center shadow-sm relative">
         {uploadMode === "csv" ? (
           <div className="w-full h-full border border-gray-200 rounded-brand bg-white overflow-hidden flex flex-col">
             <div className="p-4 border-b border-gray-200 bg-gray-50">
@@ -272,15 +376,11 @@ export default function ScanUploadTab({
           </div>
         ) : (
           <div
-            className={`w-full h-full border-2 border-dashed rounded-brand bg-gray-50 p-8 flex flex-col items-center justify-center cursor-pointer transition-all group relative ${
+            className={`w-full h-full min-h-[320px] border-2 border-dashed rounded-brand bg-gray-50 flex flex-col transition-all group relative overflow-hidden ${
               fe.pdfFile
                 ? "border-orange-400 ring-2 ring-orange-400 bg-orange-50/30"
                 : "border-gray-400 hover:border-pup-maroon hover:bg-red-50/50"
             } ${dropActive ? "bg-red-50" : ""}`}
-            onClick={() => {
-              if (uploadedFile) return;
-              if (fileInputRef.current) fileInputRef.current.click();
-            }}
             onDragOver={(e) => {
               e.preventDefault();
               setDropActive(true);
@@ -289,67 +389,135 @@ export default function ScanUploadTab({
               e.preventDefault();
               setDropActive(false);
             }}
-            onDrop={(e) => {
-              e.preventDefault();
-              setDropActive(false);
-              onFileSelect(e.dataTransfer.files[0]);
-            }}
+            onDrop={onPdfDrop}
           >
-            <div className="text-center pointer-events-none">
-              <div className="w-20 h-20 mx-auto rounded-full bg-white border border-gray-300 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-sm">
-                <i className="ph-thin ph-file-pdf text-4xl text-pup-maroon"></i>
-              </div>
-              <h3 className="font-bold text-xl text-gray-800">Drop PDF File Here</h3>
-              <p className="text-sm text-gray-500 mt-2 font-medium">
-                or click to browse local files
-              </p>
-            </div>
-
-            <input
-              ref={fileInputRef}
-              type="file"
-              className="hidden"
-              accept=".pdf"
-              onChange={(e) => onFileSelect(e.target.files[0])}
-            />
-
-            {uploadedFile ? (
-              <div className="absolute inset-0 bg-white z-10 flex flex-col items-center justify-center p-6 rounded-brand">
-                <i className="ph-fill ph-file-pdf text-6xl text-pup-maroon mb-4"></i>
-                <h4 className="font-bold text-gray-900 text-lg text-center break-all mb-1 max-w-sm">
-                  {uploadedFile.name}
-                </h4>
-                <span className="text-sm text-gray-500 mb-6 font-medium">
-                  {(uploadedFile.size / 1024).toFixed(2)} KB
-                </span>
-
-                {uploadMode === "pdf" && ocrLoading ? (
-                  <div className="mb-4 text-sm font-bold text-gray-700">
-                    Scanning PDF (OCR)...
+            {hf.rows.length > 0 ? (
+              <div className="shrink-0 z-10 border-b border-gray-200 bg-white/95 p-3">
+                <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
+                  <div>
+                    <div className="text-xs font-bold uppercase text-gray-600">Scanner inbox</div>
+                    <div className="text-sm font-bold text-gray-900">
+                      {hf.rows.length} waiting · auto-refresh ~15s
+                    </div>
                   </div>
-                ) : null}
-
-                {uploadMode === "pdf" && ocrError ? (
-                  <div className="mb-4 text-sm font-bold text-red-700 text-center max-w-md">
-                    {ocrError}
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      className="px-3 h-8 text-xs font-bold rounded-brand bg-white border border-gray-300 text-gray-800 hover:border-pup-maroon disabled:opacity-60"
+                      disabled={hf.rows.length === 0 || hf.loading}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setClearInboxOpen(true);
+                      }}
+                    >
+                      Clear inbox
+                    </button>
+                    <button
+                      type="button"
+                      className="px-3 h-8 text-xs font-bold border rounded-brand border-gray-300 hover:border-pup-maroon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        hf.refresh();
+                      }}
+                    >
+                      Refresh
+                    </button>
                   </div>
-                ) : null}
-
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onClearFile();
-                  }}
-                  className="px-6 py-2.5 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
-                >
-                  Remove File
-                </button>
+                </div>
+                <div className="max-h-[min(40vh,220px)] overflow-y-auto space-y-1 pr-1">
+                  {hf.rows.map((row) => (
+                    <button
+                      key={row.id}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        hf.openItem(row);
+                      }}
+                      className={`w-full text-left p-2.5 rounded-brand border transition-colors ${
+                        hf.selected === row.id
+                          ? "border-pup-maroon bg-red-50/50"
+                          : "border-transparent bg-gray-50 hover:bg-gray-100"
+                      }`}
+                    >
+                      <div className="text-sm font-bold text-gray-900 truncate">{row.original_filename}</div>
+                      <div className="text-xs font-medium text-gray-600 mt-0.5">
+                        {row.mime_type} · {(Number(row.size_bytes || 0) / 1024).toFixed(1)} KB
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             ) : null}
+
+            <div
+              className="flex-1 flex flex-col items-center justify-center p-6 cursor-pointer relative min-h-[200px]"
+              onClick={() => {
+                if (uploadedFile) return;
+                if (fileInputRef.current) fileInputRef.current.click();
+              }}
+            >
+              <div className="text-center pointer-events-none">
+                <div className="w-20 h-20 mx-auto rounded-full bg-white border border-gray-300 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-sm">
+                  <i className="ph-thin ph-file-pdf text-4xl text-pup-maroon"></i>
+                </div>
+                <h3 className="font-bold text-xl text-gray-800">Drop PDF file here</h3>
+                <p className="text-sm text-gray-500 mt-2 font-medium">
+                  or click to browse local files
+                </p>
+                {hf.rows.length > 0 ? (
+                  <p className="text-xs font-medium text-gray-500 mt-3 max-w-xs mx-auto">
+                    This area still accepts PDF drops and clicks even while the scanner inbox is shown above.
+                  </p>
+                ) : null}
+              </div>
+
+              <input
+                ref={fileInputRef}
+                type="file"
+                className="hidden"
+                accept=".pdf"
+                onChange={(e) => handlePdfFileSelect(e.target.files[0])}
+              />
+
+              {uploadedFile ? (
+                <div className="absolute inset-0 bg-white z-10 flex flex-col items-center justify-center p-6 rounded-brand">
+                  <i className="ph-fill ph-file-pdf text-6xl text-pup-maroon mb-4"></i>
+                  <h4 className="font-bold text-gray-900 text-lg text-center break-all mb-1 max-w-sm">
+                    {uploadedFile.name}
+                  </h4>
+                  <span className="text-sm text-gray-500 mb-6 font-medium">
+                    {(uploadedFile.size / 1024).toFixed(2)} KB
+                  </span>
+
+                  {uploadMode === "pdf" && ocrLoading ? (
+                    <div className="mb-4 text-sm font-bold text-gray-700">
+                      Scanning PDF (OCR)...
+                    </div>
+                  ) : null}
+
+                  {uploadMode === "pdf" && ocrError ? (
+                    <div className="mb-4 text-sm font-bold text-red-700 text-center max-w-md">
+                      {ocrError}
+                    </div>
+                  ) : null}
+
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleClearPdf();
+                    }}
+                    className="px-6 py-2.5 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
+                  >
+                    Remove File
+                  </button>
+                </div>
+              ) : null}
+            </div>
           </div>
         )}
 
-        {ocrLoading && uploadMode === "pdf" ? (
+        {uploadMode === "pdf" && (ocrLoading || hf.ocrLoading) ? (
           <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-brand">
             <div className="w-full max-w-md px-6">
               <div className="text-sm font-bold text-gray-800 mb-4 text-center">
@@ -375,33 +543,96 @@ export default function ScanUploadTab({
         ) : null}
       </section>
 
-      <section className="w-full lg:w-[58%] bg-white rounded-brand border border-gray-300 flex flex-col h-full shadow-sm overflow-hidden">
+      <section className="w-full lg:w-[58%] bg-white rounded-brand border border-gray-300 flex flex-col h-full min-h-0 shadow-sm overflow-hidden">
         <div className="p-6 border-b border-gray-200">
           <h2 className="text-xl font-bold text-pup-maroon mb-1">Tag Document</h2>
           <p className="text-sm text-gray-600">
-            Associate this file with a student record.
+            {uploadMode === "csv"
+              ? "Review CSV rows, bulk-edit locations, then import students."
+              : showHotFolderPromote
+                ? "Promote a scanner inbox file into a student document record."
+                : "Associate this PDF with a student record."}
           </p>
-
-          <div className="flex gap-6 mt-6 border-b border-gray-200">
-            <button
-              className={`tab-btn ${uploadMode === "pdf" ? "active" : ""}`}
-              onClick={() => setUploadMode("pdf")}
-            >
-              PDF upload
-            </button>
-            <button
-              className={`tab-btn ${uploadMode === "csv" ? "active" : ""}`}
-              onClick={() => setUploadMode("csv")}
-            >
-              Batch (CSV)
-            </button>
-          </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50">
 
 
-          {uploadMode === "pdf" ? (
+          {uploadMode === "pdf" && showHotFolderPromote ? (
+            <div className="space-y-5">
+              <div className="rounded-brand border border-amber-200 bg-amber-50/90 px-3 py-2 text-xs font-bold text-amber-900">
+                Scanner inbox item selected — fill in student and document type, or drop a PDF on the left to switch to manual upload.
+              </div>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="border border-gray-200 rounded-brand bg-white min-h-[280px] overflow-hidden">
+                  {hf.previewMime.startsWith("image/") ? (
+                    <div className="relative w-full h-[min(420px,50vh)]">
+                      <Image
+                        src={hf.previewUrl}
+                        alt="Scanner inbox preview"
+                        fill
+                        unoptimized
+                        className="object-contain rounded-brand"
+                      />
+                    </div>
+                  ) : (
+                    <iframe title="scanner-inbox-preview" src={hf.previewUrl} className="w-full h-[min(420px,50vh)] rounded-brand" />
+                  )}
+                </div>
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <span className="text-xs font-bold uppercase text-gray-700">Fields</span>
+                    <div className="flex items-center gap-2">
+                      {hf.ocrLoading ? (
+                        <span className="text-xs font-medium text-gray-600">Running OCR…</span>
+                      ) : null}
+                      <button
+                        type="button"
+                        className="px-3 h-8 text-xs font-bold bg-white border border-gray-300 rounded-brand hover:border-pup-maroon disabled:opacity-60"
+                        onClick={() => hf.runOcrAgain()}
+                        disabled={!hf.selectedRow || hf.ocrLoading}
+                      >
+                        Run OCR again
+                      </button>
+                    </div>
+                  </div>
+                  <label className="block text-xs font-bold uppercase text-gray-700">Student Number</label>
+                  <input
+                    className="form-input"
+                    value={hf.form.studentNo}
+                    onChange={(e) => hf.setForm((p) => ({ ...p, studentNo: e.target.value }))}
+                  />
+                  <label className="block text-xs font-bold uppercase text-gray-700">Student Name (optional)</label>
+                  <input
+                    className="form-input"
+                    value={hf.form.studentName}
+                    onChange={(e) => hf.setForm((p) => ({ ...p, studentName: e.target.value }))}
+                  />
+                  <label className="block text-xs font-bold uppercase text-gray-700">Document Type</label>
+                  <select
+                    className="form-select"
+                    value={hf.form.docType}
+                    onChange={(e) => hf.setForm((p) => ({ ...p, docType: e.target.value }))}
+                  >
+                    <option value="">Select document type...</option>
+                    {docTypes.map((d) => (
+                      <option key={d} value={d}>
+                        {d}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    className="w-full h-10 rounded-brand bg-pup-maroon text-white font-bold hover:bg-red-900 disabled:opacity-60"
+                    onClick={() => hf.promote()}
+                    disabled={!hf.selectedRow || hf.promoting}
+                  >
+                    {hf.promoting ? "Promoting..." : "Promote to Documents"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : uploadMode === "pdf" ? (
             <div className="space-y-5">
               {uploadStudentIsExisting ? (
                 <div className="rounded-brand border border-emerald-200 bg-emerald-50/90 px-3 py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -854,6 +1085,7 @@ export default function ScanUploadTab({
           )}
         </div>
       </section>
+    </div>
     </div>
   );
 }

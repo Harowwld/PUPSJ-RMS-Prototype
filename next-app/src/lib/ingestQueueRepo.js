@@ -90,6 +90,26 @@ export async function markIngestFailed(id, errorMessage) {
   return await getIngestById(id);
 }
 
+export async function abandonAllPendingIngest() {
+  const rows = await dbAll(
+    "SELECT id, storage_filename FROM ingest_queue WHERE status = 'pending' ORDER BY id ASC",
+    []
+  );
+  for (const row of rows) {
+    const absPath = getIngestFilePath(row.storage_filename);
+    try {
+      fs.unlinkSync(absPath);
+    } catch {
+      // ignore missing files
+    }
+  }
+  const res = await dbRun(
+    "UPDATE ingest_queue SET status = 'abandoned', last_error = NULL WHERE status = 'pending'",
+    []
+  );
+  return { clearedCount: rows.length, updatedRows: res.changes || 0 };
+}
+
 export function getIngestFilePath(storageFilename) {
   return path.join(getIngestDir(), String(storageFilename || ""));
 }
