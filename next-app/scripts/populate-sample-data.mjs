@@ -53,22 +53,20 @@ async function main() {
   const force = process.argv.includes("--force");
   const n = await countStudents();
   if (n > 0 && !force) {
-    console.error(
+    throw new Error(
       `[populate-sample-data] Refusing: ${n} student(s) already in the database. ` +
         "Run reset first, or pass --force (not recommended on non-empty DBs).",
     );
-    process.exit(1);
   }
 
   const bootstrapAdmin = await dbGet("SELECT id FROM staff WHERE id = ?", [
     "admin.eli@pup.local",
   ]);
   if (!bootstrapAdmin) {
-    console.error(
+    throw new Error(
       "[populate-sample-data] No default admin (admin.eli@pup.local). " +
         "Run `pnpm reset-db` with the app running, then restart the server, then run this script again.",
     );
-    process.exit(1);
   }
 
   await setStorageLayout(buildDefaultStorageLayout());
@@ -273,11 +271,14 @@ async function main() {
   console.log("[populate-sample-data] Restart the Next.js server if it was running so it reloads the DB file.");
 }
 
-main()
-  .catch((err) => {
-    console.error("[populate-sample-data] Failed:", err?.message || err);
-    process.exit(1);
-  })
-  .finally(() => {
-    reloadDb();
-  });
+let exitCode = 0;
+try {
+  await main();
+} catch (err) {
+  exitCode = 1;
+  console.error("[populate-sample-data] Failed:", err?.message || err);
+} finally {
+  reloadDb();
+}
+
+process.exitCode = exitCode;
