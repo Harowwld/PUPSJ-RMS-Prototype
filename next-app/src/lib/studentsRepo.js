@@ -230,3 +230,45 @@ export async function listStudentLocationUsage() {
     []
   );
 }
+
+export async function reassignStudentsByLocationMappings(mappings = []) {
+  if (!Array.isArray(mappings) || mappings.length === 0) {
+    return { moved: 0, breakdown: [] };
+  }
+  let moved = 0;
+  const breakdown = [];
+  for (const m of mappings) {
+    const fromRoom = Number(m?.from?.room);
+    const fromCabinet = String(m?.from?.cabinet || "").trim();
+    const fromDrawer = Number(m?.from?.drawer);
+    const toRoom = Number(m?.to?.room);
+    const toCabinet = String(m?.to?.cabinet || "").trim();
+    const toDrawer = Number(m?.to?.drawer);
+    if (
+      !Number.isFinite(fromRoom) ||
+      !fromCabinet ||
+      !Number.isFinite(fromDrawer) ||
+      !Number.isFinite(toRoom) ||
+      !toCabinet ||
+      !Number.isFinite(toDrawer)
+    ) {
+      continue;
+    }
+    const res = await dbRun(
+      `
+        UPDATE students
+        SET room = ?, cabinet = ?, drawer = ?
+        WHERE room = ? AND cabinet = ? AND drawer = ?
+      `,
+      [toRoom, toCabinet, toDrawer, fromRoom, fromCabinet, fromDrawer],
+    );
+    const changed = Number(res?.changes || 0);
+    moved += changed;
+    breakdown.push({
+      from: { room: fromRoom, cabinet: fromCabinet, drawer: fromDrawer },
+      to: { room: toRoom, cabinet: toCabinet, drawer: toDrawer },
+      moved: changed,
+    });
+  }
+  return { moved, breakdown };
+}

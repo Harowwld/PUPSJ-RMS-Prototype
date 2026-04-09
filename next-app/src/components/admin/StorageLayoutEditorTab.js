@@ -10,6 +10,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -29,10 +37,23 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [studentRoomUsage, setStudentRoomUsage] = useState(new Map());
+  const [studentDrawerUsage, setStudentDrawerUsage] = useState(new Map());
 
   const [activeRoomId, setActiveRoomId] = useState(null);
   const [selectedCabinetId, setSelectedCabinetId] = useState(null);
   const [selectedTemplateId, setSelectedTemplateId] = useState("grid-4x2");
+  const [templateConflictOpen, setTemplateConflictOpen] = useState(false);
+  const [templateConflictRows, setTemplateConflictRows] = useState([]);
+  const [templateMappingDraft, setTemplateMappingDraft] = useState({});
+  const [templateTargetOptions, setTemplateTargetOptions] = useState([]);
+  const [templateApplyPayload, setTemplateApplyPayload] = useState(null);
+  const [reassignmentMode, setReassignmentMode] = useState("");
+  const [dragSourceKey, setDragSourceKey] = useState("");
+  const [applyPreviewOpen, setApplyPreviewOpen] = useState(false);
+  const [applyPreviewRows, setApplyPreviewRows] = useState([]);
+  const [lastTemplateApplySnapshot, setLastTemplateApplySnapshot] = useState(null);
+  const [applyReportOpen, setApplyReportOpen] = useState(false);
+  const [applyReportRows, setApplyReportRows] = useState([]);
 
   const canvasRef = useRef(null);
   const dragRef = useRef(null);
@@ -100,6 +121,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
         const limit = 200;
         let offset = 0;
         const map = new Map();
+        const drawerMap = new Map();
         while (true) {
           const qs = new URLSearchParams();
           qs.set("limit", String(limit));
@@ -112,12 +134,19 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
             const roomId = Number(s?.room);
             if (!Number.isFinite(roomId)) continue;
             map.set(roomId, (map.get(roomId) || 0) + 1);
+            const cabId = String(s?.cabinet || "").trim();
+            const drawerId = Number(s?.drawer);
+            if (cabId && Number.isFinite(drawerId)) {
+              const key = `${roomId}|${cabId}|${drawerId}`;
+              drawerMap.set(key, (drawerMap.get(key) || 0) + 1);
+            }
           }
           if (rows.length < limit) break;
           offset += limit;
           if (offset > 20000) break;
         }
         setStudentRoomUsage(map);
+        setStudentDrawerUsage(drawerMap);
       } catch {
         // silent; server-side save validation still protects integrity
       }
@@ -259,18 +288,51 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
 
   function applyTemplateToActiveRoom() {
     if (!activeRoom) return;
-    if (activeRoomStudentCount > 0) {
-      showToast?.(
-        {
-          title: "Cannot Apply Template",
-          description: `Room ${activeRoom.id} has ${activeRoomStudentCount} student record(s) still assigned.`,
-        },
-        true,
-      );
-      return;
-    }
     const tpl = ROOM_TEMPLATES.find((t) => t.id === selectedTemplateId);
     if (!tpl) return;
+    const targetLocKeys = new Set();
+    const targetOpts = [];
+    for (const c of tpl.cabinets || []) {
+      for (const d of c.drawerIds || []) {
+        const key = `${activeRoom.id}|${c.id}|${Number(d)}`;
+        targetLocKeys.add(key);
+        targetOpts.push({
+          key,
+          label: `Room ${activeRoom.id} / Cabinet ${c.id} / Drawer ${Number(d)}`,
+        });
+      }
+    }
+    const conflicts = [];
+    for (const c of activeRoom.cabinets || []) {
+      for (const d of c.drawerIds || []) {
+        const sourceKey = `${activeRoom.id}|${c.id}|${Number(d)}`;
+        const usedCount = Number(studentDrawerUsage.get(sourceKey) || 0);
+        if (usedCount <= 0) continue;
+        if (targetLocKeys.has(sourceKey)) continue;
+        conflicts.push({
+          sourceKey,
+          sourceLabel: `Room ${activeRoom.id} / Cabinet ${c.id} / Drawer ${Number(d)}`,
+          count: usedCount,
+        });
+      }
+    }
+    if (conflicts.length > 0) {
+      const nextDraft = {};
+      for (const c of conflicts) {
+        nextDraft[c.sourceKey] = "";
+      }
+      setTemplateConflictRows(conflicts);
+      setTemplateTargetOptions(targetOpts);
+      setTemplateMappingDraft(nextDraft);
+      setTemplateApplyPayload({
+        roomId: activeRoom.id,
+        templateId: tpl.id,
+      });
+      setReassignmentMode("");
+      setDragSourceKey("");
+      setTemplateConflictOpen(true);
+      return;
+    }
     updateRoom(activeRoom.id, (r) => ({
       ...r,
       cabinets: (tpl.cabinets || []).map((c) => ({
@@ -286,6 +348,203 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
       title: "Template Applied",
       description: `"${tpl.name}" has been loaded into the active room.`,
     });
+  }
+
+  function buildTemplateLayoutPreview(baseLayout, roomId, templateId) {
+    const tpl = ROOM_TEMPLATES.find((t) => t.id === templateId);
+    if (!tpl) return baseLayout;
+    return {
+      ...baseLayout,
+      rooms: (baseLayout.rooms || []).map((r) =>
+        r.id !== roomId
+          ? r
+          : {
+              ...r,
+              cabinets: (tpl.cabinets || []).map((c) => ({
+                id: c.id,
+                rect: { ...c.rect },
+                rotation: Number(c.rotation) === 90 ? 90 : 0,
+                drawerIds: [...(c.drawerIds || [1])],
+              })),
+              door: r.door || getDefaultDoor(),
+            },
+      ),
+    };
+  }
+
+  function buildAutoMappings() {
+    const usedTargets = new Set();
+    const next = {};
+    const sortedTargets = [...templateTargetOptions];
+    for (const row of templateConflictRows) {
+      const parsed = String(row.sourceKey || "").split("|");
+      const sourceCab = String(parsed[1] || "").trim();
+      const sourceDrawer = String(parsed[2] || "").trim();
+      const preferred = sortedTargets.find(
+        (t) =>
+          !usedTargets.has(t.key) &&
+          t.key.endsWith(`|${sourceCab}|${sourceDrawer}`),
+      );
+      const fallback =
+        preferred ||
+        sortedTargets.find((t) => !usedTargets.has(t.key)) ||
+        sortedTargets[0];
+      next[row.sourceKey] = fallback?.key || "";
+      if (fallback?.key) usedTargets.add(fallback.key);
+    }
+    return next;
+  }
+
+  function openApplyPreview() {
+    if (!reassignmentMode) {
+      showToast?.(
+        {
+          title: "Choose Reassignment Mode",
+          description: "Select Manual or Auto before continuing.",
+        },
+        true,
+      );
+      return;
+    }
+    if (reassignmentMode === "auto") {
+      const next = buildAutoMappings();
+      setTemplateMappingDraft(next);
+    }
+    const draft =
+      reassignmentMode === "auto" ? buildAutoMappings() : templateMappingDraft;
+    const hasMissing = templateConflictRows.some(
+      (r) => !String(draft[r.sourceKey] || "").trim(),
+    );
+    if (hasMissing) {
+      showToast?.(
+        {
+          title: "Incomplete Mapping",
+          description: "Assign a target drawer for all in-use source drawers.",
+        },
+        true,
+      );
+      return;
+    }
+    const rows = templateConflictRows.map((r) => {
+      const toKey = String(draft[r.sourceKey] || "");
+      const toLabel =
+        templateTargetOptions.find((t) => t.key === toKey)?.label || toKey;
+      return {
+        fromKey: r.sourceKey,
+        fromLabel: r.sourceLabel,
+        count: r.count,
+        toKey,
+        toLabel,
+      };
+    });
+    setApplyPreviewRows(rows);
+    setApplyPreviewOpen(true);
+  }
+
+  async function applyTemplateWithMappings() {
+    if (!layout || !templateApplyPayload?.roomId || !templateApplyPayload?.templateId) {
+      showToast?.(
+        {
+          title: "Apply Failed",
+          description: "Missing template apply context. Try applying the template again.",
+        },
+        true,
+      );
+      return;
+    }
+    const nextLayout = buildTemplateLayoutPreview(
+      layout,
+      templateApplyPayload.roomId,
+      templateApplyPayload.templateId,
+    );
+    const reassignments = applyPreviewRows.map((r) => ({
+      fromKey: r.fromKey,
+      toKey: r.toKey,
+    }));
+    setSaving(true);
+    try {
+      const previousLayoutSnapshot = JSON.parse(JSON.stringify(layout));
+      const res = await fetch("/api/storage-layout", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          layout: nextLayout,
+          reassignments,
+          skipUsageCheck: true,
+        }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || "Template apply failed");
+      }
+      setLayout(json.data);
+      setTemplateConflictOpen(false);
+      setApplyPreviewOpen(false);
+      setTemplateApplyPayload(null);
+      setReassignmentMode("");
+      setDragSourceKey("");
+      const breakdown = Array.isArray(json?.movedBreakdown) ? json.movedBreakdown : [];
+      setApplyReportRows(breakdown);
+      setApplyReportOpen(true);
+      const reverseReassignments = reassignments.map((r) => ({
+        fromKey: r.toKey,
+        toKey: r.fromKey,
+      }));
+      setLastTemplateApplySnapshot({
+        previousLayout: previousLayoutSnapshot,
+        reverseReassignments,
+      });
+      showToast?.({
+        title: "Template Applied",
+        description: `Template applied with reassignment. ${Number(json?.movedCount || 0)} student record(s) moved.`,
+      });
+    } catch (err) {
+      showToast?.(
+        {
+          title: "Apply Failed",
+          description: err?.message || "Unable to apply template with reassignment.",
+        },
+        true,
+      );
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function undoLastTemplateApply() {
+    if (!lastTemplateApplySnapshot?.previousLayout) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/storage-layout", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          layout: lastTemplateApplySnapshot.previousLayout,
+          reassignments: lastTemplateApplySnapshot.reverseReassignments || [],
+          skipUsageCheck: true,
+        }),
+      });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || "Undo failed");
+      }
+      setLayout(json.data);
+      setLastTemplateApplySnapshot(null);
+      showToast?.({
+        title: "Undo Complete",
+        description: `Last template apply was reverted. ${Number(json?.movedCount || 0)} student record(s) moved back.`,
+      });
+    } catch (err) {
+      showToast?.(
+        {
+          title: "Undo Failed",
+          description: err?.message || "Unable to revert last template apply.",
+        },
+        true,
+      );
+    } finally {
+      setSaving(false);
+    }
   }
 
   function addCabinet() {
@@ -520,6 +779,227 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
 
   return (
     <div className="flex flex-col h-full animate-fade-in w-full overflow-hidden">
+      <Dialog open={applyReportOpen} onOpenChange={setApplyReportOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Template Apply Report</DialogTitle>
+            <DialogDescription>
+              Per-drawer reassignment results from the latest template apply.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[55vh] overflow-auto rounded-brand border border-gray-200">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+                <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
+                  <th className="p-3 font-bold">From</th>
+                  <th className="p-3 font-bold">To</th>
+                  <th className="p-3 font-bold">Moved</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {applyReportRows.length === 0 ? (
+                  <tr>
+                    <td className="p-3 text-gray-600" colSpan={3}>
+                      No reassignment details were returned.
+                    </td>
+                  </tr>
+                ) : (
+                  applyReportRows.map((r, idx) => (
+                    <tr key={`${idx}-${r?.from?.room}-${r?.from?.cabinet}-${r?.from?.drawer}`}>
+                      <td className="p-3 text-gray-900">
+                        Room {r?.from?.room} / Cabinet {r?.from?.cabinet} / Drawer {r?.from?.drawer}
+                      </td>
+                      <td className="p-3 text-gray-900">
+                        Room {r?.to?.room} / Cabinet {r?.to?.cabinet} / Drawer {r?.to?.drawer}
+                      </td>
+                      <td className="p-3">
+                        <span className="inline-flex items-center px-2 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold">
+                          {Number(r?.moved || 0)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setApplyReportOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={templateConflictOpen} onOpenChange={setTemplateConflictOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Template Conflict Resolution</DialogTitle>
+            <DialogDescription>
+              This template would remove drawers that still contain student records.
+              Choose reassignment mode first, then map drawers.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="rounded-brand border border-gray-200 p-3 bg-gray-50/60">
+            <div className="text-xs font-bold uppercase text-gray-600 mb-2">Reassignment Mode</div>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant={reassignmentMode === "manual" ? "default" : "outline"}
+                onClick={() => setReassignmentMode("manual")}
+              >
+                Manual (Drag & Drop)
+              </Button>
+              <Button
+                type="button"
+                variant={reassignmentMode === "auto" ? "default" : "outline"}
+                onClick={() => {
+                  setReassignmentMode("auto");
+                  setTemplateMappingDraft(buildAutoMappings());
+                }}
+              >
+                Auto Map
+              </Button>
+            </div>
+          </div>
+          <div className="max-h-[55vh] overflow-auto rounded-brand border border-gray-200">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+                <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
+                  <th className="p-3 font-bold">Current Drawer</th>
+                  <th className="p-3 font-bold">Records</th>
+                  <th className="p-3 font-bold">Move To</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {templateConflictRows.map((row) => (
+                  <tr key={row.sourceKey}>
+                    <td className="p-3 font-medium text-gray-900">{row.sourceLabel}</td>
+                    <td className="p-3">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold">
+                        {row.count}
+                      </span>
+                    </td>
+                    <td className="p-3">
+                      <div
+                        draggable={reassignmentMode === "manual"}
+                        onDragStart={() => setDragSourceKey(row.sourceKey)}
+                        className={`mb-2 px-2 py-1 rounded border text-xs font-bold ${
+                          reassignmentMode === "manual"
+                            ? "bg-white border-gray-300 cursor-grab"
+                            : "bg-gray-100 border-gray-200 text-gray-500"
+                        }`}
+                        title={
+                          reassignmentMode === "manual"
+                            ? "Drag this source to a target option below"
+                            : "Switch to Manual mode to drag"
+                        }
+                      >
+                        Drag source
+                      </div>
+                      <div className="grid grid-cols-1 gap-1 max-h-32 overflow-auto">
+                        {templateTargetOptions.map((opt) => {
+                          const selected =
+                            String(templateMappingDraft[row.sourceKey] || "") ===
+                            opt.key;
+                          return (
+                            <button
+                              key={opt.key}
+                              type="button"
+                              onClick={() =>
+                                setTemplateMappingDraft((prev) => ({
+                                  ...prev,
+                                  [row.sourceKey]: opt.key,
+                                }))
+                              }
+                              onDragOver={(e) => {
+                                if (reassignmentMode !== "manual") return;
+                                e.preventDefault();
+                              }}
+                              onDrop={(e) => {
+                                if (reassignmentMode !== "manual") return;
+                                e.preventDefault();
+                                const src = String(dragSourceKey || "");
+                                if (!src) return;
+                                setTemplateMappingDraft((prev) => ({
+                                  ...prev,
+                                  [src]: opt.key,
+                                }));
+                              }}
+                              className={`text-left text-xs px-2 py-1 rounded border ${
+                                selected
+                                  ? "bg-red-50 border-pup-maroon text-pup-maroon font-bold"
+                                  : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setTemplateConflictOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="button" onClick={openApplyPreview}>
+              Continue
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={applyPreviewOpen} onOpenChange={setApplyPreviewOpen}>
+        <DialogContent className="sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Confirm Reassignment (Before → After)</DialogTitle>
+            <DialogDescription>
+              Review the exact drawer movements before applying template changes.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[55vh] overflow-auto rounded-brand border border-gray-200">
+            <table className="min-w-full text-sm">
+              <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+                <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
+                  <th className="p-3 font-bold">Before</th>
+                  <th className="p-3 font-bold">After</th>
+                  <th className="p-3 font-bold">Records</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {applyPreviewRows.map((r) => (
+                  <tr key={r.fromKey}>
+                    <td className="p-3 text-gray-900">{r.fromLabel}</td>
+                    <td className="p-3 text-gray-900">{r.toLabel}</td>
+                    <td className="p-3">
+                      <span className="inline-flex items-center px-2 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold">
+                        {r.count}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => setApplyPreviewOpen(false)}>
+              Back
+            </Button>
+            <Button type="button" onClick={applyTemplateWithMappings}>
+              Apply Template + Reassign
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       {/* Unified Toolbar */}
       <div className="p-4 bg-gray-50/80 border-b border-gray-200 flex flex-col lg:flex-row gap-6 lg:items-end shrink-0">
         {/* Group 1: Room Selection & Global Room Actions */}
@@ -648,6 +1128,16 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
         >
           <i className="ph-bold ph-floppy-disk text-lg" />
           {saving ? "Saving..." : "Save Layout"}
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          className="h-10 px-5 font-bold"
+          onClick={undoLastTemplateApply}
+          disabled={saving || !lastTemplateApplySnapshot}
+        >
+          <i className="ph-bold ph-arrow-u-up-left mr-2" />
+          Undo Last Apply
         </Button>
       </div>
 
