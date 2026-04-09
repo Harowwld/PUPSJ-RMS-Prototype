@@ -236,9 +236,9 @@ export default function DocumentsTab({
                           key={r.id || idx}
                           className={`hover:bg-gray-50 ${
                             r.status === "uploaded"
-                              ? "bg-green-50/40"
-                              : r.status === "to_review"
+                              ? r.verificationStatus === "unverified"
                                 ? "bg-amber-50/50"
+                                : "bg-green-50/40"
                                 : "bg-red-50/40"
                           }`}
                         >
@@ -255,13 +255,15 @@ export default function DocumentsTab({
                           </td>
                           <td className="p-3">
                             {r.status === "uploaded" ? (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full bg-green-50 text-green-800 border border-green-200 text-xs font-bold">
-                                Uploaded
-                              </span>
-                            ) : r.status === "to_review" ? (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold">
-                                To be reviewed
-                              </span>
+                              r.verificationStatus === "unverified" ? (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold">
+                                  Unverified
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2 py-1 rounded-full bg-green-50 text-green-800 border border-green-200 text-xs font-bold">
+                                  Uploaded
+                                </span>
+                              )
                             ) : (
                               <span className="inline-flex items-center px-2 py-1 rounded-full bg-red-50 text-red-800 border border-red-200 text-xs font-bold">
                                 Missing
@@ -276,10 +278,6 @@ export default function DocumentsTab({
                                   {(r.doc.size_bytes / 1024).toFixed(1)} KB
                                 </div>
                               </>
-                            ) : r.status === "to_review" ? (
-                              <span className="text-xs text-amber-800 font-medium">
-                                Hidden until review approval
-                              </span>
                             ) : (
                               <span className="text-xs text-gray-500 font-medium">
                                 Not uploaded
@@ -329,10 +327,6 @@ export default function DocumentsTab({
                                     Update
                                   </button>
                                 </>
-                              ) : r.status === "to_review" ? (
-                                <span className="text-xs font-medium text-amber-800">
-                                  Waiting for admin review
-                                </span>
                               ) : (
                                 <span className="text-xs font-medium text-gray-400">
                                   No file — use Scan & Upload

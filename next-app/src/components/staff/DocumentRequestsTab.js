@@ -620,10 +620,10 @@ export default function DocumentRequestsTab({
               </div>
               <div className="min-w-0">
                 <DialogTitle className="text-lg font-black tracking-tight text-gray-900">
-                  No approved file in system
+                  No digital file in system
                 </DialogTitle>
                 <DialogDescription className="text-sm font-medium text-gray-600 mt-1">
-                  The requested document is not uploaded yet or is still pending review.
+                  The requested document is not uploaded yet. Proceed with physical verification.
                 </DialogDescription>
               </div>
             </div>

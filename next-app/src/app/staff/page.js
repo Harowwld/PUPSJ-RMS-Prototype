@@ -794,8 +794,7 @@ export default function StaffPage() {
               findMatchingDocument(studentDocs, student.studentNo, type) || null;
 
             const approvalStatus = String(doc?.approval_status || "");
-            const hasApprovedFile = Boolean(doc) && approvalStatus === "Approved";
-            const isPendingReview = Boolean(doc) && approvalStatus === "Pending";
+            const hasFile = Boolean(doc);
 
             // If a document type filter is selected, only show rows with a file
             // (approved or pending review).
@@ -806,12 +805,10 @@ export default function StaffPage() {
               student_no: student.studentNo,
               student_name: student.name,
               doc_type: type,
-              status: hasApprovedFile
-                ? "uploaded"
-                : isPendingReview
-                  ? "to_review"
-                  : "missing",
-              doc: hasApprovedFile ? doc : null,
+              status: hasFile ? "uploaded" : "missing",
+              verificationStatus:
+                approvalStatus === "Approved" ? "verified" : hasFile ? "unverified" : "",
+              doc: hasFile ? doc : null,
               reviewDoc: doc,
             });
           }
