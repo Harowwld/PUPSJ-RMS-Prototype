@@ -9,6 +9,8 @@
     "start": "next start",
     "lint": "eslint",
     "reset-students": "node scripts/reset-students.mjs --confirm",
+    "reset-db": "bash scripts/reset-db.sh",
+    "populate-sample-data": "node scripts/populate-sample-data.mjs",
     "hot-folder-watcher": "node scripts/hot-folder-watcher/watch.mjs"
   },
   "dependencies": {
