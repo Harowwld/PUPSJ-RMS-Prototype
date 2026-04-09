@@ -640,14 +640,22 @@ function AdminPageContent() {
     { type: "header", label: "Operations & Analytics" },
     { key: "review", label: "Digital Records Review", iconClass: "ph-bold ph-seal-check" },
     {
-      key: "digitization",
+      type: "accordion",
+      key: "analytics",
       label: "System Analytics",
-      iconClass: "ph-bold ph-chart-bar",
-    },
-    {
-      key: "request_analytics",
-      label: "Request Analysis",
-      iconClass: "ph-bold ph-trend-up",
+      iconClass: "ph-bold ph-chart-line-up",
+      children: [
+        {
+          key: "digitization",
+          label: "Compliance Analysis",
+          iconClass: "ph-bold ph-chart-bar",
+        },
+        {
+          key: "request_analytics",
+          label: "Request Analysis",
+          iconClass: "ph-bold ph-trend-up",
+        },
+      ]
     },
 
     { type: "header", label: "System Configuration" },
