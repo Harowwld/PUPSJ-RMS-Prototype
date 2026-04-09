@@ -1121,6 +1121,12 @@ export default function StaffPage() {
               fetchAllDocs();
               fetchData();
             }}
+            onSelectExistingStudent={(student) => {
+              applyStudentToPdfForm(student, null);
+              setUploadStudentIsExisting(true);
+              clearAllUploadFieldErrors();
+              setOcrPromptOpen(false);
+            }}
           />
         )}
         {view === "requests" && (

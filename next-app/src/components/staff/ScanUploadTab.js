@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useHotFolderInbox } from "@/hooks/useHotFolderInbox";
 import {
   Dialog,
@@ -65,6 +65,7 @@ export default function ScanUploadTab({
   students = [],
   showToast = () => {},
   onIngestPromoted,
+  onSelectExistingStudent,
 }) {
   const [clearInboxOpen, setClearInboxOpen] = useState(false);
   const fe = uploadFieldErrors || {};
@@ -147,6 +148,28 @@ export default function ScanUploadTab({
   };
 
   const showHotFolderPromote = uploadMode === "pdf" && hf.selectedRow && !uploadedFile;
+  const normalizedTypedName = String(newRec?.name || "")
+    .trim()
+    .toLowerCase();
+  const nameSuggestions = useMemo(() => {
+    if (!normalizedTypedName || normalizedTypedName.length < 2 || lockIdentity) return [];
+    const terms = normalizedTypedName.split(/\s+/).filter(Boolean);
+    const ranked = students
+      .map((s) => {
+        const name = String(s?.name || "");
+        const nameLower = name.toLowerCase();
+        const studentNo = String(s?.studentNo || s?.student_no || "");
+        const allTermsHit = terms.every((t) => nameLower.includes(t));
+        if (!allTermsHit) return null;
+        const startsWith = nameLower.startsWith(normalizedTypedName) ? 1 : 0;
+        return { student: s, score: startsWith };
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 6)
+      .map((x) => x.student);
+    return ranked;
+  }, [students, normalizedTypedName, lockIdentity]);
 
   return (
     <div id="view-upload" className="flex flex-col w-full h-full min-h-0 gap-4 animate-fade-in">
@@ -756,6 +779,29 @@ export default function ScanUploadTab({
                       setNewRec((p) => ({ ...p, name: e.target.value }));
                     }}
                   />
+                  {!lockIdentity && nameSuggestions.length > 0 ? (
+                    <div className="mt-2 rounded-brand border border-gray-200 bg-white overflow-hidden shadow-sm">
+                      {nameSuggestions.map((s) => {
+                        const studentNo = String(s?.studentNo || s?.student_no || "");
+                        const courseCode = String(s?.courseCode || s?.course_code || "");
+                        const yearLevel = String(s?.yearLevel || s?.year_level || "");
+                        return (
+                          <button
+                            key={studentNo}
+                            type="button"
+                            className="w-full text-left px-3 py-2 border-b last:border-b-0 border-gray-100 hover:bg-red-50/50 transition-colors"
+                            onClick={() => onSelectExistingStudent?.(s)}
+                          >
+                            <div className="text-sm font-bold text-gray-900">{s?.name}</div>
+                            <div className="text-xs text-gray-600 font-mono">
+                              {studentNo} {courseCode ? `· ${courseCode}` : ""}{" "}
+                              {yearLevel ? `· Year ${yearLevel}` : ""}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : null}
                 </div>
               </div>
 
