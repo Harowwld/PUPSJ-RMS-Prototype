@@ -3,7 +3,14 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import AdmZip from "adm-zip";
-import { getBackupsDir, getLocalDir, createBackupRecord, listBackups } from "../../../../../lib/backupsRepo";
+import {
+  createBackupRecord,
+  decryptBackupBuffer,
+  encryptBackupBuffer,
+  getBackupsDir,
+  getLocalDir,
+  listBackups,
+} from "../../../../../lib/backupsRepo";
 import { reloadDb } from "../../../../../lib/sqlite";
 import { writeAuditLog } from "../../../../../lib/auditLogRequest";
 
@@ -21,13 +28,10 @@ export async function POST(req) {
       return NextResponse.json({ ok: false, error: "No file uploaded" }, { status: 400 });
     }
 
-    if (!file.name.endsWith('.zip')) {
-      return NextResponse.json({ ok: false, error: "Only .zip files are supported" }, { status: 400 });
-    }
-
     // Convert uploaded file to buffer
     const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    const uploadedBuffer = Buffer.from(arrayBuffer);
+    const zipInputBuffer = decryptBackupBuffer(uploadedBuffer);
 
     const timestamp = Date.now();
     const isoTimestamp = new Date().toISOString().replace(/[:.]/g, "-");
@@ -37,8 +41,8 @@ export async function POST(req) {
     // Create staging directory
     fs.mkdirSync(stagingDir, { recursive: true });
 
-    // Load uploaded zip
-    const zip = new AdmZip(buffer);
+    // Load uploaded zip (plain zip or decrypted zip payload)
+    const zip = new AdmZip(zipInputBuffer);
 
     // Extract everything to staging dir
     zip.extractAllTo(stagingDir, true);
@@ -56,7 +60,7 @@ export async function POST(req) {
 
     // --- PHASE 1: CREATE SNAPSHOT FILE ---
     console.log("[RESTORE] Creating pre-restore snapshot file...");
-    const snapshotFilename = `pre-restore-snapshot-${isoTimestamp}.zip`;
+    const snapshotFilename = `pre-restore-snapshot-${isoTimestamp}.zip.enc`;
     const backupsDir = getBackupsDir();
     const snapshotPath = path.join(backupsDir, snapshotFilename);
 
@@ -71,14 +75,15 @@ export async function POST(req) {
     }
 
     const zipBuffer = snapshotZip.toBuffer();
+    const encryptedSnapshot = encryptBackupBuffer(zipBuffer);
     if (!fs.existsSync(backupsDir)) fs.mkdirSync(backupsDir, { recursive: true });
-    fs.writeFileSync(snapshotPath, zipBuffer);
-    console.log(`[RESTORE] Snapshot file written to disk: ${snapshotPath} (${zipBuffer.length} bytes)`);
+    fs.writeFileSync(snapshotPath, encryptedSnapshot);
+    console.log(`[RESTORE] Snapshot file written to disk: ${snapshotPath} (${encryptedSnapshot.length} bytes)`);
 
     const hashSum = crypto.createHash("sha256");
-    hashSum.update(zipBuffer);
+    hashSum.update(encryptedSnapshot);
     const checksum = hashSum.digest("hex");
-    const sizeBytes = zipBuffer.length;
+    const sizeBytes = encryptedSnapshot.length;
 
     // --- PHASE 2: OVERWRITE SYSTEM ---
     console.log("[RESTORE] Overwriting system with uploaded backup...");

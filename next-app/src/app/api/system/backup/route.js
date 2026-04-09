@@ -19,7 +19,7 @@ export async function GET() {
 }
 
 /**
- * POST: Create a new standard ZIP backup (No Encryption)
+ * POST: Create a new AES-256 encrypted ZIP backup
  */
 export async function POST(req) {
   try {
@@ -27,7 +27,7 @@ export async function POST(req) {
     await writeAuditLog(req, `Created system backup: ${record?.filename || "unknown"}`);
     return NextResponse.json({
       ok: true,
-      message: "Standard backup created successfully",
+      message: "Encrypted backup created successfully",
       data: record
     });
   } catch (error) {

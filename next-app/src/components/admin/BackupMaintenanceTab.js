@@ -161,7 +161,7 @@ export default function BackupMaintenanceTab({
                       ref={restoreFileRef}
                       type="file"
                       className="hidden"
-                      accept=".zip,.sql"
+                      accept=".zip,.enc,.bak,.backup,.pupbak,application/zip,application/octet-stream"
                       onChange={onRestoreFileChange}
                     />
                     <Button

@@ -4,6 +4,11 @@ import fs from "node:fs";
 import crypto from "node:crypto";
 import AdmZip from "adm-zip";
 
+const BACKUP_ENC_MAGIC = Buffer.from("PUPSBK1", "utf8");
+const BACKUP_ENC_ALGO = "aes-256-gcm";
+const BACKUP_ENC_IV_LENGTH = 12;
+const BACKUP_ENC_TAG_LENGTH = 16;
+
 export function getLocalDir() {
   return process.env.LOCAL_DATA_DIR
     ? process.env.LOCAL_DATA_DIR
@@ -83,7 +88,7 @@ export async function deleteBackupRecord(id) {
 
 export async function executeBackup() {
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const backupFilename = `backup-${timestamp}.zip`;
+  const backupFilename = `backup-${timestamp}.zip.enc`;
   const backupsDir = getBackupsDir();
   const backupPath = path.join(backupsDir, backupFilename);
   console.log(`[BACKUP] Creating: ${backupPath}`);
@@ -105,8 +110,10 @@ export async function executeBackup() {
     zip.addLocalFolder(uploadsDir, "uploads");
   }
 
-  // Save the ZIP as a standard, unencrypted archive
-  zip.writeZip(backupPath);
+  // Build ZIP in memory first, then encrypt with AES-256-GCM.
+  const zipBuffer = zip.toBuffer();
+  const encryptedBuffer = encryptBackupBuffer(zipBuffer);
+  fs.writeFileSync(backupPath, encryptedBuffer);
 
   // Verify file was actually created and has size
   if (!fs.existsSync(backupPath) || fs.statSync(backupPath).size === 0) {
@@ -128,4 +135,59 @@ export async function executeBackup() {
   });
 
   return record;
+}
+
+function getBackupEncryptionKey() {
+  const rawSecret =
+    process.env.BACKUP_ENCRYPTION_KEY || process.env.JWT_SECRET || "";
+  const normalized = String(rawSecret).trim();
+  if (!normalized) {
+    throw new Error(
+      "Missing backup encryption secret. Set BACKUP_ENCRYPTION_KEY or JWT_SECRET."
+    );
+  }
+  return crypto.createHash("sha256").update(normalized).digest();
+}
+
+export function isEncryptedBackupBuffer(buffer) {
+  return (
+    Buffer.isBuffer(buffer) &&
+    buffer.length > BACKUP_ENC_MAGIC.length + BACKUP_ENC_IV_LENGTH + BACKUP_ENC_TAG_LENGTH &&
+    buffer.subarray(0, BACKUP_ENC_MAGIC.length).equals(BACKUP_ENC_MAGIC)
+  );
+}
+
+export function encryptBackupBuffer(plainBuffer) {
+  if (!Buffer.isBuffer(plainBuffer)) {
+    throw new Error("Backup encryption input must be a Buffer.");
+  }
+  const key = getBackupEncryptionKey();
+  const iv = crypto.randomBytes(BACKUP_ENC_IV_LENGTH);
+  const cipher = crypto.createCipheriv(BACKUP_ENC_ALGO, key, iv);
+  const encrypted = Buffer.concat([cipher.update(plainBuffer), cipher.final()]);
+  const tag = cipher.getAuthTag();
+  return Buffer.concat([BACKUP_ENC_MAGIC, iv, tag, encrypted]);
+}
+
+export function decryptBackupBuffer(encryptedBuffer) {
+  if (!Buffer.isBuffer(encryptedBuffer)) {
+    throw new Error("Backup decryption input must be a Buffer.");
+  }
+  if (!isEncryptedBackupBuffer(encryptedBuffer)) {
+    return encryptedBuffer;
+  }
+  const key = getBackupEncryptionKey();
+  const offsetIv = BACKUP_ENC_MAGIC.length;
+  const offsetTag = offsetIv + BACKUP_ENC_IV_LENGTH;
+  const offsetCipher = offsetTag + BACKUP_ENC_TAG_LENGTH;
+  const iv = encryptedBuffer.subarray(offsetIv, offsetTag);
+  const tag = encryptedBuffer.subarray(offsetTag, offsetCipher);
+  const ciphertext = encryptedBuffer.subarray(offsetCipher);
+  const decipher = crypto.createDecipheriv(BACKUP_ENC_ALGO, key, iv);
+  decipher.setAuthTag(tag);
+  try {
+    return Buffer.concat([decipher.update(ciphertext), decipher.final()]);
+  } catch {
+    throw new Error("Failed to decrypt backup. Invalid key or corrupted file.");
+  }
 }

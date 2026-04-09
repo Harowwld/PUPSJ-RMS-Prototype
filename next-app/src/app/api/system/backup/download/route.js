@@ -23,10 +23,13 @@ export async function GET(req) {
 
     const fileBuffer = fs.readFileSync(filePath);
 
+    const filename = String(backup.filename || "backup.bin");
+    const isEncrypted = filename.endsWith(".enc");
+
     return new NextResponse(fileBuffer, {
       headers: {
-        "Content-Type": "application/zip",
-        "Content-Disposition": `attachment; filename="${backup.filename}"`,
+        "Content-Type": isEncrypted ? "application/octet-stream" : "application/zip",
+        "Content-Disposition": `attachment; filename="${filename}"`,
       },
     });
   } catch (error) {
