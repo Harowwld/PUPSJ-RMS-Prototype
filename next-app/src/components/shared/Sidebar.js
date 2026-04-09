@@ -56,10 +56,17 @@ export default function Sidebar({ items, activeKey, onSelect }) {
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                 }`}
               >
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <i className={`${item.iconClass} text-lg`}></i> {item.label}
                 </div>
-                <i className={`ph-bold ${isExpanded ? 'ph-caret-up' : 'ph-caret-down'}`}></i>
+                <div className="flex items-center gap-2">
+                  {item.badge > 0 ? (
+                    <span className="h-5 min-w-5 px-1.5 inline-flex items-center justify-center rounded-full bg-pup-maroon text-white text-[11px] font-extrabold">
+                      {item.badge > 99 ? "99+" : item.badge}
+                    </span>
+                  ) : null}
+                  <i className={`ph-bold ${isExpanded ? "ph-caret-up" : "ph-caret-down"}`}></i>
+                </div>
               </button>
               
               {isExpanded && (
@@ -68,13 +75,20 @@ export default function Sidebar({ items, activeKey, onSelect }) {
                     <button
                       key={child.key}
                       onClick={() => onSelect(child.key)}
-                      className={`flex items-center gap-3 px-4 py-2 rounded-brand text-sm font-bold transition-colors whitespace-nowrap ${
+                      className={`flex items-center justify-between gap-3 px-4 py-2 rounded-brand text-sm font-bold transition-colors whitespace-nowrap ${
                         activeKey === child.key
                           ? "bg-red-50 text-pup-maroon"
                           : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                       }`}
                     >
-                      <i className={`${child.iconClass} text-base`}></i> {child.label}
+                      <span className="flex items-center gap-3 min-w-0">
+                        <i className={`${child.iconClass} text-base`}></i> {child.label}
+                      </span>
+                      {child.badge > 0 ? (
+                        <span className="h-5 min-w-5 px-1.5 inline-flex items-center justify-center rounded-full bg-pup-maroon text-white text-[11px] font-extrabold">
+                          {child.badge > 99 ? "99+" : child.badge}
+                        </span>
+                      ) : null}
                     </button>
                   ))}
                 </div>
@@ -87,13 +101,20 @@ export default function Sidebar({ items, activeKey, onSelect }) {
           <button
             key={item.key}
             onClick={() => onSelect(item.key)}
-            className={`flex items-center gap-3 px-4 py-3 rounded-brand text-sm font-bold transition-colors whitespace-nowrap ${
+            className={`flex items-center justify-between gap-3 px-4 py-3 rounded-brand text-sm font-bold transition-colors whitespace-nowrap ${
               activeKey === item.key
                 ? "bg-red-50 text-pup-maroon"
                 : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
             }`}
           >
-            <i className={`${item.iconClass} text-lg`}></i> {item.label}
+            <span className="flex items-center gap-3 min-w-0">
+              <i className={`${item.iconClass} text-lg`}></i> {item.label}
+            </span>
+            {item.badge > 0 ? (
+              <span className="h-5 min-w-5 px-1.5 inline-flex items-center justify-center rounded-full bg-pup-maroon text-white text-[11px] font-extrabold">
+                {item.badge > 99 ? "99+" : item.badge}
+              </span>
+            ) : null}
           </button>
         );
       })}

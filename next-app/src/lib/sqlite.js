@@ -106,6 +106,29 @@ function ensureIngestQueueTable() {
   }
 }
 
+function ensureStaffNotificationStateTable() {
+  if (!db) return;
+  try {
+    const check = db.exec(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='staff_notification_state'"
+    );
+    if (check?.[0]?.values?.length > 0) return;
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS staff_notification_state (
+        staff_id TEXT PRIMARY KEY,
+        last_seen_reviewed_at TEXT,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+        FOREIGN KEY (staff_id) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE CASCADE
+      );
+      CREATE INDEX IF NOT EXISTS idx_staff_notification_state_updated_at
+        ON staff_notification_state(updated_at);
+    `);
+    persistDb();
+  } catch (e) {
+    console.error("[DB] ensureStaffNotificationStateTable:", e);
+  }
+}
+
 export const DEFAULT_SECURITY_QUESTIONS = [
   "What was the name of your first pet?",
   "What is your mother's maiden name?",
@@ -118,6 +141,7 @@ export async function getDb() {
   if (db) {
     ensureDocumentRequestsTable();
     ensureIngestQueueTable();
+    ensureStaffNotificationStateTable();
     return db;
   }
   if (initializing) return initializing;
@@ -725,6 +749,7 @@ export async function getDb() {
 
       ensureDocumentRequestsTable();
       ensureIngestQueueTable();
+      ensureStaffNotificationStateTable();
 
       initializing = null;
       return db;

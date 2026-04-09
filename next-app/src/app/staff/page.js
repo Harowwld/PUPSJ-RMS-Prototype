@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import RecordsArchiveTab from "@/components/staff/RecordsArchiveTab";
 import ScanUploadTab from "@/components/staff/ScanUploadTab";
 import DocumentsTab from "@/components/staff/DocumentsTab";
+import NotificationsTab from "@/components/staff/NotificationsTab";
 import DocumentRequestsTab from "@/components/staff/DocumentRequestsTab";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import OCRPromptModal from "@/components/staff/OCRPromptModal";
@@ -41,6 +42,7 @@ export default function StaffPage() {
   const [view, setView] = useState("requests");
   const [authUser, setAuthUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [notificationsUnread, setNotificationsUnread] = useState(0);
 
   const [students, setStudents] = useState([]);
   const [docTypes, setDocTypes] = useState([]);
@@ -184,6 +186,18 @@ export default function StaffPage() {
     }
   }, []);
 
+  const fetchNotificationsUnread = useCallback(async () => {
+    try {
+      const res = await fetch("/api/notifications?limit=1&offset=0", { cache: "no-store" });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) return;
+      const unread = Number(json?.data?.unreadCount || 0);
+      setNotificationsUnread(unread);
+    } catch {
+      // ignore
+    }
+  }, []);
+
   useEffect(() => {
     (async () => {
       try {
@@ -199,6 +213,7 @@ export default function StaffPage() {
         setTimeout(() => {
           fetchData();
           fetchAllDocs();
+          fetchNotificationsUnread();
           warmupOcrWorker().catch(() => {
             // Keep silent; OCR path will show explicit errors on scan.
           });
@@ -207,12 +222,13 @@ export default function StaffPage() {
         router.push("/");
       }
     })();
-  }, [router, fetchData, fetchAllDocs]);
+  }, [router, fetchData, fetchAllDocs, fetchNotificationsUnread]);
 
   useEffect(() => {
     const onVisible = () => {
       if (document.visibilityState !== "visible") return;
       fetchAllDocs();
+      fetchNotificationsUnread();
     };
     document.addEventListener("visibilitychange", onVisible);
     window.addEventListener("focus", onVisible);
@@ -220,7 +236,7 @@ export default function StaffPage() {
       document.removeEventListener("visibilitychange", onVisible);
       window.removeEventListener("focus", onVisible);
     };
-  }, [fetchAllDocs]);
+  }, [fetchAllDocs, fetchNotificationsUnread]);
 
   useEffect(() => {
     // Load document list lazily when search view is visible.
@@ -833,6 +849,7 @@ export default function StaffPage() {
     { key: "requests", label: "Alumni Requests", iconClass: "ph-bold ph-tray-arrow-up" },
     { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
     { key: "documents", label: "Documents", iconClass: "ph-bold ph-file-text" },
+    { key: "notifications", label: "Notifications", iconClass: "ph-bold ph-bell", badge: notificationsUnread },
 
     { type: "header", label: "Records Archive" },
     { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
@@ -1158,6 +1175,21 @@ export default function StaffPage() {
                 showToast({ title: "Update Failed", description: err.message }, true);
               }
             }}
+            onPreviewDocument={(docType, name, no, id) => {
+              setPreview({
+                docType,
+                studentName: name,
+                studentNo: no,
+                docId: id,
+                refId: `DOC-${Date.now()}`,
+              });
+              setPreviewOpen(true);
+            }}
+          />
+        )}
+        {view === "notifications" && (
+          <NotificationsTab
+            onUnreadChange={(n) => setNotificationsUnread(Number(n || 0))}
             onPreviewDocument={(docType, name, no, id) => {
               setPreview({
                 docType,

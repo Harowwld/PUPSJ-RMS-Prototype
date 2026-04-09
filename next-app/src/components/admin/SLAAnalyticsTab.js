@@ -402,7 +402,7 @@ export default function SLAAnalyticsTab({ showToast, onLogAction }) {
 
                 <h3 className="text-base font-black text-gray-900 uppercase tracking-wider border-b border-gray-200 pb-2">I. Service Efficiency Summary</h3>
                 <p>
-                  This document details the registry's fulfillment efficiency across <strong>{total} total documented requests</strong>. The key performance indicator for public service operations is measured through our Service Level Agreement Turnaround Time.
+                  This document details the registry&apos;s fulfillment efficiency across <strong>{total} total documented requests</strong>. The key performance indicator for public service operations is measured through our Service Level Agreement Turnaround Time.
                 </p>
 
                 <div className="grid grid-cols-2 gap-x-12 gap-y-6 bg-gray-50/50 p-6 rounded-xl border border-gray-100 mt-6">
