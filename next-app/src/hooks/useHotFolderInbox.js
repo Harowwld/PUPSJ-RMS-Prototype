@@ -11,6 +11,7 @@ export function useHotFolderInbox({
   docTypes,
   showToast,
   onPromoted,
+  onOcrResult,
 }) {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -19,11 +20,6 @@ export function useHotFolderInbox({
   const [previewMime, setPreviewMime] = useState("");
   const [ocrLoading, setOcrLoading] = useState(false);
   const [promoting, setPromoting] = useState(false);
-  const [form, setForm] = useState({
-    studentNo: "",
-    studentName: "",
-    docType: "",
-  });
 
   const selectedRow = useMemo(
     () => rows.find((r) => Number(r.id) === Number(selected)) || null,
@@ -53,7 +49,6 @@ export function useHotFolderInbox({
     setSelected(null);
     setPreviewUrl("");
     setPreviewMime("");
-    setForm({ studentNo: "", studentName: "", docType: "" });
   }, []);
 
   const runOcrForRow = async (row, { notifySuccess = false } = {}) => {
@@ -67,11 +62,8 @@ export function useHotFolderInbox({
         type: row.mime_type || blob.type || "application/octet-stream",
       });
       const suggestion = await scanFileForSuggestion({ file, students, docTypes });
-      setForm({
-        studentNo: String(suggestion?.matchedStudent?.studentNo || ""),
-        studentName: String(suggestion?.name || ""),
-        docType: String(suggestion?.docType || ""),
-      });
+      // Forward OCR result to parent so it can populate newRec (the standard form).
+      onOcrResult?.(suggestion);
       if (notifySuccess) {
         showToast({ title: "OCR Complete", description: "Suggestions have been applied." });
       }
@@ -86,11 +78,6 @@ export function useHotFolderInbox({
     setSelected(row.id);
     setPreviewUrl(`/api/ingest/hot-folder/${row.id}/file`);
     setPreviewMime(String(row.mime_type || ""));
-    setForm({
-      studentNo: "",
-      studentName: "",
-      docType: "",
-    });
     await runOcrForRow(row, { notifySuccess: false });
   };
 
@@ -99,9 +86,15 @@ export function useHotFolderInbox({
     await runOcrForRow(selectedRow, { notifySuccess: true });
   };
 
-  const promote = async () => {
+  /**
+   * Promote the selected inbox item using data passed from the parent's newRec.
+   * @param {{ studentNo: string, name: string, docType: string }} data
+   */
+  const promote = async (data) => {
     if (!selectedRow) return;
-    if (!form.studentNo || !form.docType) {
+    const studentNo = String(data?.studentNo || "").trim();
+    const docType = String(data?.docType || "").trim();
+    if (!studentNo || !docType) {
       showToast({ title: "Missing Fields", description: "Student number and document type are required." }, true);
       return;
     }
@@ -111,9 +104,9 @@ export function useHotFolderInbox({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          studentNo: form.studentNo,
-          studentName: form.studentName,
-          docType: form.docType,
+          studentNo,
+          studentName: String(data?.name || "").trim(),
+          docType,
         }),
       });
       const json = await res.json().catch(() => null);
@@ -194,8 +187,6 @@ export function useHotFolderInbox({
     previewMime,
     ocrLoading,
     promoting,
-    form,
-    setForm,
     loadList,
     openItem,
     runOcrAgain,

@@ -31,6 +31,59 @@ function makeUpperSafe(value) {
   return String(value || "").toUpperCase();
 }
 
+/**
+ * Normalize any extracted name into ALL-CAPS "LASTNAME, FIRSTNAME MI." format.
+ * Handles:
+ *  - Already-formatted: "DELA CRUZ, MARIA CLARA" → unchanged
+ *  - First-name-first (PSA, cert):  "LUIS ESPINOSA TORRES" → "TORRES, LUIS ESPINOSA"
+ *  - Title-prefixed (Good Moral): "Ms. MARICAR D. REYES" → "REYES, MARICAR D."
+ *  - Filipino surname particles:  "JUAN DE LA CRUZ" → "DE LA CRUZ, JUAN"
+ */
+const _TITLE_STRIP = /^\b(?:MS|MR|MRS|MISS|DR|ENGR|ATTY|PROF|HON|REV)\.?\s+/i;
+const _PARTICLES = new Set([
+  "DE", "DEL", "DELA", "DA", "DI", "LA", "LAS", "LOS",
+  "SAN", "SANTA", "SANTO", "VON", "VAN",
+]);
+
+export function normalizeExtractedName(raw) {
+  if (!raw) return "";
+  // Strip title prefix and uppercase
+  let s = String(raw).trim().replace(_TITLE_STRIP, "").trim().toUpperCase();
+  // Normalize whitespace
+  s = s.replace(/\s+/g, " ").trim();
+  if (!s) return "";
+
+  // Already in LASTNAME, FIRSTNAME order — just clean and return.
+  if (s.includes(",")) {
+    const commaIdx = s.indexOf(",");
+    const lastName = s.slice(0, commaIdx).trim();
+    const firstName = s.slice(commaIdx + 1).trim();
+    if (lastName && firstName) return `${lastName}, ${firstName}`;
+    return lastName || firstName;
+  }
+
+  // No comma — detect surname (last word, with optional preceding particles).
+  const words = s.split(/\s+/).filter(Boolean);
+  if (words.length === 1) return words[0];
+  if (words.length < 2) return s;
+
+  // Walk backwards to find where the surname starts (last surname particle + last word).
+  let surnameStart = words.length - 1;
+  // Check up to 2 preceding words for known surname particles.
+  if (surnameStart >= 1 && _PARTICLES.has(words[surnameStart - 1])) {
+    surnameStart--;
+    // e.g. "DE LA CRUZ" — also consume an extra preceding particle
+    if (surnameStart >= 1 && _PARTICLES.has(words[surnameStart - 1])) {
+      surnameStart--;
+    }
+  }
+
+  const surname = words.slice(surnameStart).join(" ");
+  const givenNames = words.slice(0, surnameStart).join(" ");
+  if (!givenNames) return surname;
+  return `${surname}, ${givenNames}`;
+}
+
 function detectName(lines) {
   const blacklist = [
     "SECONDARY",
@@ -45,10 +98,42 @@ function detectName(lines) {
     "DEPARTMENT",
     "MINISTRY",
     "OFFICE",
+    "PHILIPPINES",
+    "STATISTICS",
+    "AUTHORITY",
+    "CERTIFICATE",
+    "BIRTH",
+    "ATTENDING",
+    "PHYSICIAN",
+    "INFORMANT",
+    "SIGNATURE",
+    "CIVIL",
+    "CHURCH",
+    "PROVINCE",
+    "MUNICIPALITY",
+    "MOTHER",
+    "FATHER",
+    "CHILD",
   ];
 
   const isBlacklisted = (upper) =>
     blacklist.some((b) => upper.includes(b));
+
+  /**
+   * Strip trailing numbered-field suffixes that PSA/DepEd forms pack on the same line.
+   * e.g. "LUIS ESPINOSA TORRES 2. Sex: MALE" → "LUIS ESPINOSA TORRES"
+   */
+  const stripTrailingFields = (raw) => {
+    return raw
+      // Remove anything after a numbered label like "2." or "2)" mid-string
+      .replace(/\s+\d+[.)][\s\S]*/g, "")
+      // Remove anything after known field keywords: Sex, Date, Birth Order, etc.
+      .replace(
+        /\s+\b(SEX|DATE|DOB|BIRTH\s*ORDER|WEIGHT|PLACE|RELIGION|OCCUPATION|CITIZENSHIP|NATIONALITY|TYPE\s*OF\s*BIRTH|MULTIPLE)\b[\s\S]*/gi,
+        ""
+      )
+      .trim();
+  };
 
   const extractFromSurnameLine = (line) => {
     const raw = String(line || "");
@@ -89,12 +174,19 @@ function detectName(lines) {
 
   const isLikelyName = (candidateUpper, originalLine) => {
     const upper = candidateUpper.trim();
-    if (upper.length < 6 || upper.length > 55) return false;
+    if (upper.length < 4 || upper.length > 60) return false;
     if (/[0-9]/.test(upper)) return false;
     if (isBlacklisted(upper)) return false;
 
-    // Avoid grabbing label text like "NAME" or "STUDENT NAME".
-    if (/\b(STUDENT\s*NAME|NAME)\b/i.test(originalLine)) return false;
+    // Avoid grabbing label text like "NAME" or "STUDENT NAME" alone.
+    if (/^(STUDENT\s*NAME|NAME)$/.test(upper)) return false;
+
+    // Each word must be at least 2 characters (reject "To Li" type garbage)
+    const words = upper.split(/\s+/g).filter(Boolean);
+    if (words.length < 2) return false;
+    if (words.some((w) => w.length < 2 && !/^[A-Z]\.?$/i.test(w))) return false;
+    // No word should be longer than 20 chars (not a realistic name word)
+    if (words.some((w) => w.length > 20)) return false;
 
     const hasComma = upper.includes(",");
     if (hasComma) {
@@ -102,21 +194,107 @@ function detectName(lines) {
       return /^[A-Z .,'-]+,\s*[A-Z .,'-]+$/.test(upper);
     }
 
-    const words = upper
-      .split(/\s+/g)
-      .filter(Boolean);
-
     // Prefer 2+ words (first/last or compound).
     return words.length >= 2;
   };
 
-  // 1) Prefer lines that contain an explicit delimiter after NAME.
+  /**
+   * Extracts name from certification-style sentences.
+   * Handles: "This is to certify that Ms. MARICAR D. REYES (Learner Reference Number: ...)"
+   * Also plain title-prefix in any line: "Ms. MARICAR D. REYES"
+   */
+  const TITLE_PREFIXES = "Ms|Mr|Mrs|Miss|Dr|Engr|Atty|Prof|Hon|Rev";
+  const TITLE_RE = new RegExp(
+    `\\b(?:${TITLE_PREFIXES})\\.?\\s+([A-Z][A-Z][A-Z .'-]*)`,
+    "i"
+  );
+
+  const extractFromCertifyPhrase = (rawText) => {
+    // Priority: "certify/certifies that [Title?] NAME" patterns (certificate documents)
+    const certifyRe = new RegExp(
+      `\\bcertif(?:y|ies|ied)\\s+that\\s+(?:(?:${TITLE_PREFIXES})\\.?\\s+)?([A-Z][A-Z][A-Z .'-]{3,})`,
+      "i"
+    );
+    const mc = rawText.match(certifyRe);
+    if (mc?.[1]) {
+      // Strip trailing parenthetical like "(Learner Reference Number: ...)"
+      const raw = mc[1].replace(/\s*[\(\[].*/, "").trim();
+      const upper = makeUpperSafe(raw);
+      if (upper && isLikelyName(upper, raw)) return raw;
+    }
+    return "";
+  };
+
+  const extractFromTitlePrefix = (line) => {
+    const m = line.match(TITLE_RE);
+    if (!m?.[1]) return "";
+    // Strip anything after parenthetical or comma-separated role
+    const raw = m[1]
+      .replace(/\s*[\(\[].*/, "")    // strip "(LRN: ...)"
+      .replace(/\s*,.*/, "")         // strip ", Guidance Counselor" etc
+      .trim();
+    const upper = makeUpperSafe(raw);
+    if (!upper || !isLikelyName(upper, line)) return "";
+    // Reject signatories that are known to appear at the bottom (Guidance / Principal / President)
+    const lowerLine = line.toLowerCase();
+    if (/(guidance|counselor|principal|registrar|dean|superintendent|president|director|chancellor|chairperson)/i.test(lowerLine)) return "";
+    return raw;
+  };
+
+  // ======= DOCUMENT STRATEGY ROUTER =======
+  const fullText = lines.join(" ");
+  const lowerText = fullText.toLowerCase();
+
+  let category = "UNKNOWN";
+  if (
+    /(diploma|conferred)/i.test(lowerText) ||
+    (/certifies\s+that/i.test(lowerText) && /awarded\s+the\s+degree\s+of/i.test(lowerText))
+  ) {
+    category = "DIPLOMA";
+  } else if (/(certif(?:y|ies|ied)\s+that|certificate of enrollment|good moral|certification)/i.test(lowerText)) {
+    category = "CERTIFICATION";
+  } else if (/(form 137|sf\s?10|permanent record)/i.test(lowerText)) {
+    category = "FORM137";
+  } else if (/(transcript of record|official transcript|transcript of academic)/i.test(lowerText)) {
+    category = "TRANSCRIPT";
+  } else if (/(certificate of live birth|registry no\.?)/i.test(lowerText)) {
+    category = "PSA_BIRTH";
+  }
+
+  // --- STRATEGY 1: DIPLOMA ---
+  if (category === "DIPLOMA") {
+    // Pattern A: Grab the uppercase block immediately following "certifies that"
+    const m = fullText.match(/certifies\s+that\s+([A-Z][A-Z .,'-]{3,})/i);
+    if (m?.[1]) {
+      const candidate = makeUpperSafe(m[1].trim());
+      if (isLikelyName(candidate, fullText)) return candidate;
+    }
+    // Pattern B: The line directly below "certifies that" is almost always the name
+    for (let i = 0; i < lines.length - 1; i++) {
+      if (/certifies\s+that/i.test(lines[i])) {
+        const nextLineRaw = lines[i+1].trim();
+        const nextLine = makeUpperSafe(nextLineRaw);
+        if (isLikelyName(nextLine, nextLineRaw)) return nextLineRaw;
+      }
+    }
+  }
+
+  // --- STRATEGY 2: CERTIFICATION (Enrollment / Good Moral) ---
+  if (category === "CERTIFICATION") {
+    // Uses the certified phrase parser that expects Title format.
+    const certifyCandidate = extractFromCertifyPhrase(fullText);
+    if (certifyCandidate) return certifyCandidate;
+  }
+
+  // --- STRATEGY 3: STRUCTURED FORMS (Form 137, PSA, Transcript, Unknown) ---
+  // Look for label-based patterns: "1. Name: LUIS ESPINOSA TORRES 2. Sex: ..."
+  // Or DepEd Surname field, or any NAME: label.
   for (let i = 0; i < lines.length; i += 1) {
     const originalLine = String(lines[i] || "");
     const line = originalLine.trim();
     const upper = makeUpperSafe(line);
 
-    // Special-case DepEd Form patterns that explicitly carry the name after "Surname".
+    // Special-case DepEd Form 137-A block patterns.
     const surnameCandidate = extractFromSurnameLine(line);
     if (surnameCandidate) return surnameCandidate;
 
@@ -124,15 +302,24 @@ function detectName(lines) {
     if (!/[:\-]/.test(line)) continue;
 
     const parts = line.split(/[:\-]/);
-    const candidate = normalizeText(parts.slice(1).join(" "));
-    const candidateUpper = makeUpperSafe(candidate);
-    if (candidateUpper && isLikelyName(candidateUpper, line)) return candidate;
+    // Strip trailing same-line fields (e.g. "2. Sex: MALE" attached to PSA name line)
+    const rawCandidate = normalizeText(parts.slice(1).join(" "));
+    const cleaned = stripTrailingFields(rawCandidate);
+    const candidateUpper = makeUpperSafe(cleaned);
+    if (candidateUpper && isLikelyName(candidateUpper, line)) return cleaned;
   }
 
-  // 2) Fallback removed to prevent garbage text detection.
+  // --- GENERIC FALLBACK: STANDALONE TITLES ---
+  // Find "Ms. / Mr. / Dr. / Engr." followed by an uppercase name. Skips signatory lines.
+  for (let i = 0; i < lines.length; i += 1) {
+    const line = String(lines[i] || "").trim();
+    const titleCandidate = extractFromTitlePrefix(line);
+    if (titleCandidate) return titleCandidate;
+  }
 
   return "";
 }
+
 
 function normalizeNameForMatch(value) {
   return String(value || "")
@@ -188,6 +375,16 @@ export function findStudentsInText(rawText, students) {
 function detectDocType(rawText, docTypes) {
   const hay = normalizeLoose(rawText);
   if (!hay || !Array.isArray(docTypes)) return "";
+
+  // Special case: Map "Certificate of Live Birth" / "Live Birth" to "Birth Certificate"
+  if (hay.includes("live birth")) {
+    const bcType = docTypes.find(
+      (t) =>
+        normalizeLoose(t) === "birth certificate" ||
+        normalizeLoose(t).includes("birth cert")
+    );
+    if (bcType) return bcType;
+  }
 
   const withScores = docTypes
     .map((type) => {
@@ -335,7 +532,11 @@ export async function scanFileForSuggestion({ file, students, docTypes }) {
   const matchedStudent =
     nameMatchesByName.length === 1 ? nameMatchesByName[0] : null;
 
-  let suggestedName = matchedStudent ? (matchedStudent.name || matchedStudent.Name || name) : name;
+  let suggestedName = matchedStudent
+    // DB match — already stored as LASTNAME, FIRSTNAME; just ensure uppercase.
+    ? String(matchedStudent.name || matchedStudent.Name || name || "").toUpperCase().trim()
+    // Structural OCR raw name — normalize to LASTNAME, FIRSTNAME MI.
+    : normalizeExtractedName(name);
 
   // STRATEGY A: NLP Fallback for new students (Zero dependency/Offline)
   if (!suggestedName) {
@@ -346,8 +547,21 @@ export async function scanFileForSuggestion({ file, students, docTypes }) {
         const doc = nlp(text);
         const people = doc.people().out('array');
         if (people && people.length > 0) {
-          // Use the first valid grammatical person name
-          suggestedName = people[0];
+          // Filter: every person name must be at least 2 words, each word ≥ 2 chars
+          // This prevents fragments like "To Li" from being accepted
+          const validPeople = people.filter((p) => {
+            const words = String(p || "").trim().split(/\s+/).filter(Boolean);
+            if (words.length < 2) return false;
+            // Reject words strictly < 2 chars UNLESS they are a middle initial like "A" or "A."
+            if (words.some((w) => w.length < 2 && !/^[a-zA-Z]\.?$/.test(w))) return false;
+            // Reject if any word starts with punctuation or number
+            if (words.some((w) => /^[^a-zA-Z]/.test(w))) return false;
+            return true;
+          });
+          if (validPeople.length > 0) {
+            // Also normalize the NLP-extracted name.
+            suggestedName = normalizeExtractedName(validPeople[0]);
+          }
         }
       }
     } catch (err) {
