@@ -596,6 +596,7 @@ export default function ScanUploadTab({
                         fill
                         unoptimized
                         className="object-contain rounded-brand"
+                        draggable="false"
                       />
                     </div>
                   ) : (

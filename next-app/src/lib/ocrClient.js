@@ -1,6 +1,22 @@
 let workerPromise = null;
 let langChecked = false;
 
+let nlpPromise = null;
+async function loadNlp() {
+  if (typeof window === "undefined") return null;
+  if (window.nlp) return window.nlp;
+  if (!nlpPromise) {
+    nlpPromise = new Promise((resolve) => {
+      const script = document.createElement("script");
+      script.src = "/compromise.min.js";
+      script.onload = () => resolve(window.nlp);
+      script.onerror = () => resolve(null);
+      document.head.appendChild(script);
+    });
+  }
+  return nlpPromise;
+}
+
 function normalizeText(value) {
   return String(value || "")
     .replace(/\s+/g, " ")
@@ -113,27 +129,7 @@ function detectName(lines) {
     if (candidateUpper && isLikelyName(candidateUpper, line)) return candidate;
   }
 
-  // 2) Fallback: first plausible line that isn't a header.
-  for (const original of lines) {
-    const line = String(original || "").trim();
-    if (!line) continue;
-    const upper = makeUpperSafe(line);
-
-    const surnameCandidate = extractFromSurnameLine(line);
-    if (surnameCandidate) return surnameCandidate;
-
-    if (isBlacklisted(upper)) continue;
-    if (upper.length < 6 || upper.length > 55) continue;
-    if (/[0-9]/.test(upper)) continue;
-
-    // Skip obvious non-name headers (all caps boilerplate).
-    if (upper.includes("PERMANENT") || upper.includes("RECORD")) continue;
-
-    const words = upper.split(/\s+/g).filter(Boolean);
-    if (words.length < 2) continue;
-
-    if (isLikelyName(upper, line)) return normalizeText(line);
-  }
+  // 2) Fallback removed to prevent garbage text detection.
 
   return "";
 }
@@ -159,6 +155,32 @@ export function findStudentsByOcrName(ocrName, students) {
     const n = normalizeNameForMatch(s?.name || s?.Name || "");
     if (!n) continue;
     if (n === o) matches.push(s);
+  }
+  return matches;
+}
+
+function normalizeForFuzzy(str) {
+  return String(str || "")
+    .toUpperCase()
+    .replace(/[ .,'\u2019`-]/g, "")
+    .replace(/[1I]/g, "I")
+    .replace(/[0O]/g, "O")
+    .replace(/[5S]/g, "S")
+    .replace(/[8B]/g, "B");
+}
+
+export function findStudentsInText(rawText, students) {
+  if (!rawText || !Array.isArray(students)) return [];
+  const txt = normalizeForFuzzy(rawText);
+  if (!txt) return [];
+
+  const matches = [];
+  for (const s of students) {
+    const sName = normalizeForFuzzy(s?.name || s?.Name);
+    if (!sName || sName.length < 5) continue;
+    if (txt.includes(sName)) {
+      matches.push(s);
+    }
   }
   return matches;
 }
@@ -299,14 +321,42 @@ export async function scanFileForSuggestion({ file, students, docTypes }) {
   const name = detectName(lines);
   const docType = detectDocType(text, docTypes);
 
-  const nameMatchesByName =
+  let nameMatchesByName =
     name && Array.isArray(students) ? findStudentsByOcrName(name, students) : [];
+
+  // If no name extracted structurally, try reverse raw text fuzzy matching.
+  if (nameMatchesByName.length === 0 && Array.isArray(students)) {
+    const fuzzyMatches = findStudentsInText(text, students);
+    if (fuzzyMatches.length > 0) {
+      nameMatchesByName = fuzzyMatches;
+    }
+  }
 
   const matchedStudent =
     nameMatchesByName.length === 1 ? nameMatchesByName[0] : null;
 
+  let suggestedName = matchedStudent ? (matchedStudent.name || matchedStudent.Name || name) : name;
+
+  // STRATEGY A: NLP Fallback for new students (Zero dependency/Offline)
+  if (!suggestedName) {
+    try {
+      const nlp = await loadNlp();
+      if (nlp) {
+        // Run NLP over raw text to find grammatically viable person names
+        const doc = nlp(text);
+        const people = doc.people().out('array');
+        if (people && people.length > 0) {
+          // Use the first valid grammatical person name
+          suggestedName = people[0];
+        }
+      }
+    } catch (err) {
+      console.warn("NLP extraction failed:", err);
+    }
+  }
+
   return {
-    name,
+    name: suggestedName,
     docType,
     matchedStudent,
     nameMatchesByName,
