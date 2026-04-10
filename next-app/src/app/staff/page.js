@@ -596,12 +596,23 @@ export default function StaffPage() {
         });
         setOcrSuggestion(suggestion);
 
+        /* eslint-disable-next-line no-console */
+        console.log("[OCR handleFileSelect] suggestion:", {
+          name: suggestion.name,
+          docType: suggestion.docType,
+          matchedStudent: suggestion.matchedStudent?.studentNo || null,
+          matchCount: suggestion.nameMatchesByName?.length,
+          docTypesAvailable: docTypes,
+        });
+
         const nameMatches = Array.isArray(suggestion.nameMatchesByName)
           ? suggestion.nameMatchesByName
           : [];
         const ambiguous = nameMatches.length > 1;
 
         if (ambiguous) {
+          /* eslint-disable-next-line no-console */
+          console.log("[OCR] → AMBIGUOUS branch, setting docType:", suggestion.docType);
           setNewRec((p) => ({
             ...p,
             name: String(suggestion.name || p.name || "")
@@ -617,11 +628,15 @@ export default function StaffPage() {
           clearAllUploadFieldErrors();
           setOcrPromptOpen(true);
         } else if (suggestion.matchedStudent) {
+          /* eslint-disable-next-line no-console */
+          console.log("[OCR] → MATCHED STUDENT branch, setting docType:", suggestion.docType);
           applyStudentToPdfForm(suggestion.matchedStudent, suggestion.docType);
           setUploadStudentIsExisting(true);
           clearAllUploadFieldErrors();
           setOcrPromptOpen(false);
         } else {
+          /* eslint-disable-next-line no-console */
+          console.log("[OCR] → NEW STUDENT branch, setting docType:", suggestion.docType);
           setNewRec((p) => ({
             ...p,
             name: String(suggestion.name || p.name || "")
@@ -1121,8 +1136,8 @@ export default function StaffPage() {
               fetchAllDocs();
               fetchData();
             }}
-            onSelectExistingStudent={(student) => {
-              applyStudentToPdfForm(student, null);
+            onSelectExistingStudent={(student, ocrDocType) => {
+              applyStudentToPdfForm(student, ocrDocType || null);
               setUploadStudentIsExisting(true);
               clearAllUploadFieldErrors();
               setOcrPromptOpen(false);

@@ -125,9 +125,13 @@ export default function ScanUploadTab({
     onPromoted: onIngestPromoted,
     onOcrResult: (suggestion) => {
       if (!suggestion) return;
+      // Always set the docType from OCR regardless of student match
+      const ocrDocType = suggestion.docType && String(suggestion.docType).trim()
+        ? String(suggestion.docType).trim()
+        : "";
       if (suggestion.matchedStudent) {
         // Existing student matched — lock the form fields to their record.
-        onSelectExistingStudent?.(suggestion.matchedStudent);
+        onSelectExistingStudent?.(suggestion.matchedStudent, ocrDocType);
       } else {
         // No match — only fill in the name/docType, leave form unlocked for manual entry.
         setNewRec?.((p) => ({
@@ -135,10 +139,7 @@ export default function ScanUploadTab({
           name: suggestion.name
             ? String(suggestion.name).trim().replace(/\s+/g, " ").toUpperCase()
             : p.name,
-          docType:
-            suggestion.docType && String(suggestion.docType).trim()
-              ? String(suggestion.docType).trim()
-              : p.docType,
+          docType: ocrDocType || p.docType,
         }));
       }
     },
