@@ -111,17 +111,14 @@ export default function EditUserModal({
 
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-                Institutional Username / Email <span className="text-pup-maroon">*</span>
+                Institutional Username / Email
               </label>
               <Input
                 type="email"
-                required
-                className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                readOnly
+                className="h-12 bg-gray-50 border border-gray-200 text-gray-500 rounded-brand text-sm cursor-not-allowed focus-visible:outline-none"
                 placeholder="username@pup.edu.ph"
                 value={editForm.email}
-                onChange={(e) =>
-                  setEditForm((f) => ({ ...f, email: e.target.value }))
-                }
               />
             </div>
           </div>

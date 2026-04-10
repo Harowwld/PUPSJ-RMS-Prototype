@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -10,6 +11,9 @@ export default function RegisterAccountTab({
   onResetForm,
   onCreateAccount,
 }) {
+  const [showDefaultPw, setShowDefaultPw] = useState(false);
+  const defaultPassword = process.env.NEXT_PUBLIC_DEFAULT_STAFF_PASSWORD || "pupstaff";
+
   return (
     <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter">
       <div className="flex-1 bg-white rounded-brand border border-gray-200 shadow-sm flex flex-col overflow-hidden">
@@ -17,7 +21,7 @@ export default function RegisterAccountTab({
           <div className="max-w-4xl mx-auto space-y-6">
             {/* Info Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Card className="bg-gradient-to-br from-blue-50 to-white border-blue-200 shadow-sm rounded-brand">
+              <Card className="bg-linear-to-br from-blue-50 to-white border-blue-200 shadow-sm rounded-brand">
                 <CardContent className="p-4 flex items-start gap-4">
                   <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
                     <i className="ph-fill ph-shield-check text-blue-600 text-xl"></i>
@@ -41,7 +45,7 @@ export default function RegisterAccountTab({
                 </CardContent>
               </Card>
 
-              <Card className="bg-gradient-to-br from-amber-50 to-white border-amber-200 shadow-sm rounded-brand">
+              <Card className="bg-linear-to-br from-amber-50 to-white border-amber-200 shadow-sm rounded-brand">
                 <CardContent className="p-4 flex items-start gap-4">
                   <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
                     <i className="ph-fill ph-key text-amber-600 text-xl"></i>
@@ -54,11 +58,19 @@ export default function RegisterAccountTab({
                       <p>
                         New accounts are created with a temporary password.
                       </p>
-                      <p>
+                      <p className="flex items-center gap-1.5">
                         Password:
-                        <strong className="font-mono bg-amber-200/50 px-1.5 py-0.5 rounded mx-1">
-                          pupstaff
+                        <strong className="bg-amber-200/50 px-2 py-0.5 rounded font-mono text-[11px] border border-amber-300/30">
+                          {showDefaultPw ? defaultPassword : "••••••••"}
                         </strong>
+                        <button
+                          type="button"
+                          onClick={() => setShowDefaultPw(!showDefaultPw)}
+                          className="w-6 h-6 inline-flex items-center justify-center rounded-md hover:bg-amber-100 text-amber-800 transition-colors"
+                          title={showDefaultPw ? "Hide password" : "Show password"}
+                        >
+                          <i className={`ph-bold ${showDefaultPw ? "ph-eye-slash" : "ph-eye"} text-xs`}></i>
+                        </button>
                       </p>
                       <p className="font-semibold text-amber-800">
                         Require users to change password on first login.
@@ -71,7 +83,7 @@ export default function RegisterAccountTab({
 
             {/* Registration Form */}
             <Card className="border-gray-200 shadow-sm rounded-2xl overflow-hidden bg-white">
-              <CardHeader className="border-b border-gray-100 bg-gradient-to-r from-red-50/80 via-white to-red-50/60 px-5 py-4">
+              <CardHeader className="border-b border-gray-100 bg-linear-to-r from-red-50/80 via-white to-red-50/60 px-5 py-4">
                 <CardTitle className="text-base font-bold text-gray-900 flex items-center gap-2">
                   <span className="inline-flex items-center gap-2">
                     <i className="ph-duotone ph-user-plus text-pup-maroon text-xl"></i>

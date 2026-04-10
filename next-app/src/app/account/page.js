@@ -444,15 +444,14 @@ export default function AccountPage() {
                         <i className="ph-bold ph-envelope-simple absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
                         <Input
                           type="email"
-                          className="h-12 pl-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
+                          className="h-12 pl-12 bg-gray-50 border-gray-200 rounded-brand font-bold text-gray-500 cursor-not-allowed focus-visible:outline-none"
                           placeholder="professional.email@pup.edu.ph"
                           value={username}
-                          onChange={(e) => setUsername(e.target.value)}
-                          required
+                          readOnly
                         />
                       </div>
                       <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-2 ml-1">
-                        Primary identifier for authentication.
+                        Primary identifier for authentication (Read-Only).
                       </p>
                     </div>
 

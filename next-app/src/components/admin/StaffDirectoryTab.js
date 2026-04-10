@@ -19,6 +19,7 @@ export default function StaffDirectoryTab({
   staffData,
   isLoading = false,
   error = null,
+  currentUserId,
   search,
   setSearch,
   roleFilter,
@@ -239,10 +240,12 @@ export default function StaffDirectoryTab({
                       </td>
                     </tr>
                   ) : (
-                    paginatedStaff.map((s) => (
+                    paginatedStaff.map((s) => {
+                      const isCurrentUser = s.id === currentUserId;
+                      return (
                       <tr
                         key={s.id}
-                        className="hover:bg-gray-50 group cursor-default transition-colors"
+                        className={`hover:bg-gray-50 group transition-colors ${isCurrentUser ? "bg-red-50/20" : ""}`}
                       >
                         <td className="p-3">
                           <div className="flex items-center gap-3 py-1">
@@ -250,8 +253,13 @@ export default function StaffDirectoryTab({
                               {s.fname[0]}
                             </div>
                             <div>
-                              <div className="font-bold text-gray-900 text-sm">
+                              <div className="font-bold text-gray-900 text-sm flex items-center">
                                 {s.fname} {s.lname}
+                                {isCurrentUser && (
+                                  <Badge variant="outline" className="ml-2 bg-pup-maroon/10 text-pup-maroon border-pup-maroon/20 font-black text-[9px] uppercase px-1.5 py-0 leading-tight h-4">
+                                    You
+                                  </Badge>
+                                )}
                               </div>
                               <div className="text-[11px] font-medium text-gray-500">
                                 {s.email}
@@ -302,30 +310,45 @@ export default function StaffDirectoryTab({
                         </td>
                         <td className="p-3 text-right">
                           <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => onEditUser(s.id)}
-                              className="h-8 px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50"
-                              title="Modify Account"
-                            >
-                              <i className="ph-bold ph-pencil-simple mr-1.5"></i>
-                              Edit
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => onDeleteUser(s.id)}
-                              className="h-8 px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
-                              title="Revoke Network Credentials"
-                            >
-                              <i className="ph-bold ph-trash mr-1.5"></i>
-                              Delete
-                            </Button>
+                            {isCurrentUser ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => window.location.href = "/account"}
+                                className="h-8 px-3 font-bold text-xs text-pup-maroon hover:bg-pup-maroon/10 hover:text-pup-darkMaroon"
+                              >
+                                <i className="ph-bold ph-user-circle mr-1.5 min-w-[14px]"></i>
+                                Account
+                              </Button>
+                            ) : (
+                              <>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => onEditUser(s.id)}
+                                  className="h-8 px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50"
+                                  title="Modify Account"
+                                >
+                                  <i className="ph-bold ph-pencil-simple mr-1.5 min-w-[14px]"></i>
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => onDeleteUser(s.id)}
+                                  className="h-8 px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
+                                  title="Revoke Network Credentials"
+                                >
+                                  <i className="ph-bold ph-trash mr-1.5 min-w-[14px]"></i>
+                                  Delete
+                                </Button>
+                              </>
+                            )}
                           </div>
                         </td>
                       </tr>
-                    ))
+                      );
+                    })
                   )}
                 </tbody>
               </table>

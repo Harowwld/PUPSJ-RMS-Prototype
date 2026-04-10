@@ -1110,7 +1110,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
               {/* Orientation marker */}
               <button
                 type="button"
-                className="absolute z-[2] rounded-sm border border-gray-300 bg-white/90 px-2 py-1 text-[10px] font-black tracking-wide text-gray-700 shadow-sm flex items-center"
+                className="absolute z-2 rounded-sm border border-gray-300 bg-white/90 px-2 py-1 text-[10px] font-black tracking-wide text-gray-700 shadow-sm flex items-center"
                 style={{
                   left: `${(activeRoom?.door?.x ?? getDefaultDoor().x) * 100}%`,
                   top: `${(activeRoom?.door?.y ?? getDefaultDoor().y) * 100}%`,

@@ -118,6 +118,7 @@ function AdminPageContent() {
 
   const [defaultPwOpen, setDefaultPwOpen] = useState(false);
   const [defaultPwUserLabel, setDefaultPwUserLabel] = useState("");
+  const [defaultReturnedPw, setDefaultReturnedPw] = useState("");
   const [declinePromptOpen, setDeclinePromptOpen] = useState(false);
   const [declineReason, setDeclineReason] = useState("");
   const [pendingDeclineDocId, setPendingDeclineDocId] = useState(null);
@@ -485,6 +486,7 @@ function AdminPageContent() {
       setDefaultPwUserLabel(
         `${createForm.fname} ${createForm.lname}`.trim() || createForm.id,
       );
+      setDefaultReturnedPw(json.defaultPassword || "pupstaff");
       setDefaultPwOpen(true);
       setCreateForm({
         id: "",
@@ -696,6 +698,7 @@ function AdminPageContent() {
           <StaffDirectoryTab
             staffData={staffData}
             isLoading={viewLoading.directory}
+            currentUserId={authUser?.id}
             search={search}
             setSearch={setSearch}
             roleFilter={roleFilter}
@@ -917,7 +920,7 @@ function AdminPageContent() {
                 type="text"
                 readOnly
                 className="h-12 font-mono font-bold bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                value="pupstaff"
+                value={defaultReturnedPw}
               />
             </div>
           </div>

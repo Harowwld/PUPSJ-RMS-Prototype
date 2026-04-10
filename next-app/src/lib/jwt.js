@@ -1,6 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
 
-const COOKIE_NAME = "pup_session";
+const COOKIE_NAME = process.env.SESSION_COOKIE_NAME || "pup_session";
 
 function getJwtSecret() {
   const secret = process.env.JWT_SECRET;

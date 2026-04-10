@@ -44,13 +44,14 @@ export async function GET(req) {
     // Seed default Admin staff account (bootstrap)
     try {
       const id = "PUPREGISTRAR-001";
-      const fname = "System";
-      const lname = "Administrator";
+      const fname = "Elias";
+      const lname = "Austria";
       const role = "Admin";
       const section = "Administrative";
       const status = "Active";
       const email = "admin.eli@pup.local";
-      const passwordHash = hashPasswordForStorage("pupstaff").replace(/'/g, "''");
+      const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
+      const passwordHash = hashPasswordForStorage(defaultPassword).replace(/'/g, "''");
       const idEsc = id.replace(/'/g, "''");
       const fnameEsc = fname.replace(/'/g, "''");
       const lnameEsc = lname.replace(/'/g, "''");
@@ -102,9 +103,10 @@ export async function GET(req) {
       }
     }
 
+    const defaultPasswordForMessage = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
     return NextResponse.json({
       ok: true,
-      message: "Database wiped and physical uploads cleared successfully. Please RESTART your Next.js server now. The default admin account is: admin.eli@pup.local / pupstaff"
+      message: `Database wiped and physical uploads cleared successfully. Please RESTART your Next.js server now. The default admin account is: admin.eli@pup.local / ${defaultPasswordForMessage}`
     });
   } catch (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });

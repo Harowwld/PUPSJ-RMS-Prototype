@@ -66,7 +66,8 @@ export async function POST(req) {
     );
   }
 
-  const defaultHash = hashPasswordForStorage("pupstaff");
+  const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
+  const defaultHash = hashPasswordForStorage(defaultPassword);
   const mustChangePassword = stored === defaultHash;
 
   const sessionPayload = {

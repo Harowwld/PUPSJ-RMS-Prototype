@@ -339,7 +339,8 @@ export async function getDb() {
 
         // Default Password for Staff
         try {
-          const defaultHash = crypto.createHash("sha256").update("pupstaff").digest("hex");
+          const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
+          const defaultHash = crypto.createHash("sha256").update(defaultPassword).digest("hex");
           db.exec(`UPDATE staff SET password_hash = '${defaultHash}' WHERE password_hash IS NULL OR password_hash = ''`);
         } catch (e) {}
 

@@ -4,7 +4,7 @@ import { writeAuditLog } from "../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
-const DEFAULT_PASSWORD = "pupstaff";
+const DEFAULT_PASSWORD = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
@@ -69,7 +69,7 @@ export async function POST(req) {
     });
     await writeAuditLog(req, `Created staff account: ${id}`);
 
-    return NextResponse.json({ ok: true, data: row }, { status: 201 });
+    return NextResponse.json({ ok: true, data: row, defaultPassword: password === DEFAULT_PASSWORD ? DEFAULT_PASSWORD : null }, { status: 201 });
   } catch (e) {
     const msg = String(e?.message || "");
     if (msg.includes("UNIQUE") || msg.includes("PRIMARY")) {
