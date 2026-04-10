@@ -16,6 +16,7 @@ import OCRPromptModal from "@/components/staff/OCRPromptModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { scanFileForSuggestion, warmupOcrWorker } from "@/lib/ocrClient";
 import { findMatchingDocument } from "@/lib/docAvailability";
+import { imageToPdf, needsConversion } from "@/lib/imageToPdf";
 
 function normalizeStudentRow(row) {
   if (!row || typeof row !== "object") return row;
@@ -663,14 +664,26 @@ export default function StaffPage() {
     }
   };
 
-  const processSubmission = async () => {
+  const processSubmission = async ({ onSuccess } = {}) => {
     if (!uploadedFile) {
       setUploadFieldErrors({ pdfFile: true });
-      showToast({ title: "No File Selected", description: "Attach a PDF document before submitting." }, true);
+      showToast({ title: "No File Selected", description: "Attach a document before submitting." }, true);
       return;
     }
+
+    // Convert image files to PDF before uploading (API only accepts PDFs)
+    let fileToUpload = uploadedFile;
+    if (needsConversion(uploadedFile)) {
+      try {
+        fileToUpload = await imageToPdf(uploadedFile);
+      } catch (convErr) {
+        showToast({ title: "Conversion Failed", description: "Could not convert image to PDF. Try uploading a PDF directly." }, true);
+        return;
+      }
+    }
+
     const payload = new FormData();
-    payload.append("file", uploadedFile);
+    payload.append("file", fileToUpload);
     if (uploadMode !== "pdf") {
       showToast({ title: "Wrong Mode", description: "Switch to the PDF upload tab to submit a document." }, true);
       return;
@@ -753,8 +766,23 @@ export default function StaffPage() {
       }
       setUploadedFile(null);
       setUploadFieldErrors({});
+      setUploadStudentIsExisting(false);
+      setNewRec({
+        studentNo: "",
+        name: "",
+        course: "",
+        year: "",
+        sectionPart: "",
+        room: "",
+        cabinet: "",
+        drawer: "",
+        docType: "",
+      });
       fetchData();
       fetchAllDocs();
+      if (typeof onSuccess === "function") {
+        onSuccess();
+      }
     } catch (err) {
       showToast({ title: "Upload Failed", description: err.message }, true);
     }

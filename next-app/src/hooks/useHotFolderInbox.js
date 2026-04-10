@@ -19,7 +19,6 @@ export function useHotFolderInbox({
   const [previewUrl, setPreviewUrl] = useState("");
   const [previewMime, setPreviewMime] = useState("");
   const [ocrLoading, setOcrLoading] = useState(false);
-  const [promoting, setPromoting] = useState(false);
 
   const selectedRow = useMemo(
     () => rows.find((r) => Number(r.id) === Number(selected)) || null,
@@ -52,7 +51,7 @@ export function useHotFolderInbox({
   }, []);
 
   const runOcrForRow = async (row, { notifySuccess = false } = {}) => {
-    if (!row) return;
+    if (!row) return null;
     setOcrLoading(true);
     try {
       const blobRes = await fetch(`/api/ingest/hot-folder/${row.id}/file`);
@@ -67,59 +66,49 @@ export function useHotFolderInbox({
       if (notifySuccess) {
         showToast({ title: "OCR Complete", description: "Suggestions have been applied." });
       }
+      // Return the file so callers can use it as the uploaded file
+      return file;
     } catch (e) {
       showToast({ title: "OCR Failed", description: e.message || "Unable to scan file." }, true);
+      return null;
     } finally {
       setOcrLoading(false);
     }
   };
 
+  /**
+   * Open an inbox item: set preview, run OCR, and return the file blob
+   * so the parent can set it as the uploaded file for direct submission.
+   */
   const openItem = async (row) => {
     setSelected(row.id);
     setPreviewUrl(`/api/ingest/hot-folder/${row.id}/file`);
     setPreviewMime(String(row.mime_type || ""));
-    await runOcrForRow(row, { notifySuccess: false });
+    const file = await runOcrForRow(row, { notifySuccess: false });
+    return file; // caller uses this to set uploadedFile
   };
 
   const runOcrAgain = async () => {
-    if (!selectedRow) return;
-    await runOcrForRow(selectedRow, { notifySuccess: true });
+    if (!selectedRow) return null;
+    return await runOcrForRow(selectedRow, { notifySuccess: true });
   };
 
   /**
-   * Promote the selected inbox item using data passed from the parent's newRec.
-   * @param {{ studentNo: string, name: string, docType: string }} data
+   * Remove the selected inbox item after a successful upload.
+   * This replaces the old "promote" flow — now we just clean up
+   * the ingest queue entry since the file has been uploaded normally.
    */
-  const promote = async (data) => {
-    if (!selectedRow) return;
-    const studentNo = String(data?.studentNo || "").trim();
-    const docType = String(data?.docType || "").trim();
-    if (!studentNo || !docType) {
-      showToast({ title: "Missing Fields", description: "Student number and document type are required." }, true);
-      return;
-    }
-    setPromoting(true);
+  const removeIngestItem = async (id) => {
+    const itemId = id ?? selected;
+    if (!itemId) return;
     try {
-      const res = await fetch(`/api/ingest/hot-folder/${selectedRow.id}/promote`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          studentNo,
-          studentName: String(data?.name || "").trim(),
-          docType,
-        }),
-      });
-      const json = await res.json().catch(() => null);
-      if (!res.ok || !json?.ok) throw new Error(json?.error || "Promotion failed");
-      showToast({ title: "Promoted", description: "Ingest item promoted to document." });
-      clearIngestSelection();
-      await loadList({ showLoading: false });
-      onPromoted?.();
-    } catch (e) {
-      showToast({ title: "Promotion Failed", description: e.message || "Unable to promote ingest item." }, true);
-    } finally {
-      setPromoting(false);
+      await fetch(`/api/ingest/hot-folder/${itemId}`, { method: "DELETE" });
+    } catch {
+      // Best-effort cleanup — suppress errors
     }
+    clearIngestSelection();
+    await loadList({ showLoading: false });
+    onPromoted?.();
   };
 
   useEffect(() => {
@@ -186,11 +175,10 @@ export function useHotFolderInbox({
     previewUrl,
     previewMime,
     ocrLoading,
-    promoting,
     loadList,
     openItem,
     runOcrAgain,
-    promote,
+    removeIngestItem,
     clearIngestSelection,
     refresh,
     clearInbox,

@@ -169,7 +169,6 @@ export default function ScanUploadTab({
     handlePdfFileSelect(f);
   };
 
-  const showHotFolderPromote = uploadMode === "pdf" && hf.selectedRow && !uploadedFile;
   const normalizedTypedName = String(newRec?.name || "")
     .trim()
     .toLowerCase();
@@ -230,7 +229,7 @@ export default function ScanUploadTab({
       <div className="shrink-0 bg-white rounded-brand border border-gray-300 p-4 shadow-sm">
         <h2 className="text-xl font-bold text-pup-maroon mb-1">Scan & Upload</h2>
         <p className="text-sm text-gray-600 mb-4">
-          Upload PDFs or promote files from the scanner inbox. Batch-import students from CSV in the second tab.
+          Upload PDFs, images, or files from the scanner inbox. Batch-import students from CSV in the second tab.
         </p>
         <div className="flex flex-wrap gap-4 sm:gap-6 border-b border-gray-200">
           <button
@@ -476,7 +475,10 @@ export default function ScanUploadTab({
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        hf.openItem(row);
+                        // Fetch the file blob and set it as the uploaded file for direct submission
+                        hf.openItem(row).then((file) => {
+                          if (file) onFileSelect(file);
+                        });
                       }}
                       className={`w-full text-left p-2.5 rounded-brand border transition-colors ${
                         hf.selected === row.id
@@ -649,9 +651,9 @@ export default function ScanUploadTab({
           <p className="text-sm text-gray-600">
             {uploadMode === "csv"
               ? "Review CSV rows, bulk-edit locations, then import students."
-              : showHotFolderPromote
-                ? "Promote a scanner inbox file into a student document record."
-                : "Associate this PDF with a student record."}
+              : uploadedFile
+                ? "Review OCR-suggested values and fill in missing fields."
+                : "Drop or select a file on the left, then fill in the form here."}
           </p>
         </div>
 
@@ -954,25 +956,13 @@ export default function ScanUploadTab({
                 </select>
               </div>
 
-              {showHotFolderPromote ? (
-                <button
-                  type="button"
-                  onClick={() => hf.promote(newRec)}
-                  disabled={!hf.selectedRow || hf.promoting}
-                  className="w-full bg-pup-maroon text-white py-3 rounded-brand font-bold text-sm hover:bg-red-900 transition-all shadow-sm flex items-center justify-center gap-2 disabled:opacity-60"
-                >
-                  <i className="ph-bold ph-tray-arrow-up" />
-                  {hf.promoting ? "Promoting…" : "Promote to Documents"}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={processSubmission}
-                  className="w-full bg-pup-maroon text-white py-3 rounded-brand font-bold text-sm hover:bg-red-900 transition-all shadow-sm flex items-center justify-center gap-2"
-                >
-                  <i className="ph-bold ph-upload-simple" /> Submit Upload
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => processSubmission({ onSuccess: () => hf.removeIngestItem() })}
+                className="w-full bg-pup-maroon text-white py-3 rounded-brand font-bold text-sm hover:bg-red-900 transition-all shadow-sm flex items-center justify-center gap-2"
+              >
+                <i className="ph-bold ph-upload-simple" /> Submit Upload
+              </button>
 
               {uploadError ? (
                 <div className="mt-3 p-3 rounded-brand border border-red-200 bg-red-50 text-red-800 text-sm font-bold">
