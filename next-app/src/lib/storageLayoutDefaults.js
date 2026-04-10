@@ -8,7 +8,6 @@
  */
 
 export const ROOM_TEMPLATES = [
-  { id: "empty", name: "Empty room", cabinets: [] },
   { id: "grid-4x2", name: "Grid 4x2 (A-H)", cabinets: buildGridCabinets() },
   { id: "grid-3x2", name: "Grid 3x2 (A-F)", cabinets: buildGridCabinets({ cols: 3, rows: 2, cabinetIds: ["A", "B", "C", "D", "E", "F"] }) },
 ];

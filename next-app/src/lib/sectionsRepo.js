@@ -36,15 +36,21 @@ export async function createSection(nameRaw, courseCodeRaw) {
   const courseCode = String(courseCodeRaw || "").trim().toUpperCase();
 
   if (!name) throw new Error("Missing section name");
-  if (!courseCode) throw new Error("Missing course code");
+  const safeCode = courseCode || "UNKN";
 
-  const course = await dbGet("SELECT code FROM courses WHERE code = ?", [courseCode]);
-  if (!course) throw new Error("Course not found");
+  const course = await dbGet("SELECT code FROM courses WHERE code = ?", [safeCode]);
+  if (!course) {
+    if (safeCode === "UNKN") {
+       await dbRun("INSERT OR IGNORE INTO courses (code, name) VALUES ('UNKN', 'Unknown')");
+    } else {
+       throw new Error(`Course ${safeCode} not found`);
+    }
+  }
 
-  const existing = await dbGet("SELECT id FROM sections WHERE name = ?", [name]);
-  if (existing) throw new Error("Section name already exists");
+  const existing = await dbGet("SELECT id FROM sections WHERE name = ? AND COALESCE(course_code, 'UNKN') = ?", [name, safeCode]);
+  if (existing) throw new Error("Section name already exists for this degree program");
 
-  const res = await dbRun("INSERT INTO sections (name, course_code) VALUES (?, ?)", [name, courseCode]);
+  const res = await dbRun("INSERT INTO sections (name, course_code) VALUES (?, ?)", [name, safeCode]);
 
   return await dbGet(
     `SELECT s.*, c.name as course_name
@@ -61,15 +67,15 @@ export async function updateSection(id, nameRaw, courseCodeRaw) {
   const courseCode = String(courseCodeRaw || "").trim().toUpperCase();
 
   if (!name) throw new Error("Missing section name");
-  if (!courseCode) throw new Error("Missing course code");
+  const safeCode = courseCode || "UNKN";
 
-  const course = await dbGet("SELECT code FROM courses WHERE code = ?", [courseCode]);
-  if (!course) throw new Error("Course not found");
+  const course = await dbGet("SELECT code FROM courses WHERE code = ?", [safeCode]);
+  if (!course) throw new Error(`Course ${safeCode} not found`);
 
-  const existing = await dbGet("SELECT id FROM sections WHERE name = ? AND id != ?", [name, id]);
-  if (existing) throw new Error("Section name already exists");
+  const existing = await dbGet("SELECT id FROM sections WHERE name = ? AND COALESCE(course_code, 'UNKN') = ? AND id != ?", [name, safeCode, id]);
+  if (existing) throw new Error("Section name already exists for this degree program");
 
-  await dbRun("UPDATE sections SET name = ?, course_code = ? WHERE id = ?", [name, courseCode, id]);
+  await dbRun("UPDATE sections SET name = ?, course_code = ? WHERE id = ?", [name, safeCode, id]);
 
   return await dbGet(
     `SELECT s.*, c.name as course_name

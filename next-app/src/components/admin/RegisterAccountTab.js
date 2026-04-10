@@ -113,8 +113,8 @@ export default function RegisterAccountTab({
                         <option value="" disabled>
                           Select Authorized Role...
                         </option>
-                        <option value="Admin">System Administrator</option>
-                        <option value="Staff">Records Staff</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Staff">Staff</option>
                       </select>
                     </div>
                   </div>

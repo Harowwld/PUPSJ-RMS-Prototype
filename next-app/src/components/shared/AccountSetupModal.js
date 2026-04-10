@@ -91,7 +91,7 @@ export default function AccountSetupModal({ authUser }) {
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to change password");
 
       toast.success("Password Updated", { description: "Your new credentials are now active." });
-      
+
       if (needsSecurity) {
         setStep(2);
         fetchQuestions();
@@ -154,7 +154,7 @@ export default function AccountSetupModal({ authUser }) {
             <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest px-1">Account Setup</h3>
             <p className="text-[11px] text-gray-400 font-medium px-1 mt-0.5 leading-tight">Complete these steps to access your dashboard securely.</p>
           </div>
-          
+
           <div className={`px-4 py-3 rounded-brand flex flex-col gap-1 transition-all ${step === 1 ? 'bg-white shadow-sm border border-gray-200 scale-100 opacity-100' : 'opacity-40 grayscale scale-95'}`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -274,7 +274,7 @@ export default function AccountSetupModal({ authUser }) {
                           {q.question} <span className="text-pup-maroon">*</span>
                         </label>
                         <Input
-                          type="password"
+                          type="text"
                           placeholder="Enter your answer"
                           className="w-full h-11 bg-gray-50 border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon font-bold text-gray-900"
                           value={answers[q.id] || ""}

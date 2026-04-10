@@ -3,6 +3,7 @@ import {
   getStaffByUsername,
   hashPasswordForStorage,
   touchStaffLastActiveById,
+  getStaffDisplayName,
 } from "../../../../lib/staffRepo";
 import { getSessionCookieName, signSessionToken } from "../../../../lib/jwt";
 import { createSession } from "../../../../lib/sessionStore";
@@ -78,7 +79,7 @@ export async function POST(req) {
   const token = await signSessionToken(sessionPayload);
   createSession(token, touched.id, touched.role || "Staff", touched.email);
   await writeAuditLog(req, `User login: ${touched.email || touched.id}`, {
-    actor: touched.email || touched.id,
+    actor: getStaffDisplayName(touched),
     role: touched.role || "Staff",
   });
   // Broadcast to admins

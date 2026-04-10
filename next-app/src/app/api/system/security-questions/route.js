@@ -50,7 +50,6 @@ export async function PUT(req) {
     }
 
     await writeAuditLog(req, "Updated Global Security Questions", {
-      actor: `${user.fname || ""} ${user.lname || ""}`.trim() || user.id,
       role: user.role
     });
 

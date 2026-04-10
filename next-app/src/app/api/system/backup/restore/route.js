@@ -122,6 +122,22 @@ export async function POST(req) {
           console.log(`[RESTORE] VERIFIED: Snapshot ${snapshotFilename} exists in DB.`);
         }
       });
+
+      // Cleanup orphaned files in the backups folder that are not in the restored DB
+      const validFilenames = new Set(allBackups.map(b => b.filename));
+      const filesOnDisk = fs.readdirSync(backupsDir);
+      
+      filesOnDisk.forEach(file => {
+        if (!validFilenames.has(file)) {
+          const filePath = path.join(backupsDir, file);
+          console.log(`[RESTORE] Deleting orphaned backup file: ${file}`);
+          try {
+            fs.unlinkSync(filePath);
+          } catch (delErr) {
+            console.error(`[RESTORE] Failed to delete orphaned file ${file}:`, delErr);
+          }
+        }
+      });
     } catch (dbErr) {
       console.error("[RESTORE] Failed to record snapshot in DB:", dbErr);
       // We don't throw here because the restore itself was successful

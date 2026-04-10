@@ -83,7 +83,6 @@ export async function PUT(req) {
     }
 
     await writeAuditLog(req, "Updated Security Question", {
-      actor: `${user.fname || ""} ${user.lname || ""}`.trim() || uid,
       role: user.role
     });
 

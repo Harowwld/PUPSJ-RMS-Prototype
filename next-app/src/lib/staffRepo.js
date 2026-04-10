@@ -165,6 +165,16 @@ export async function updateStaff(originalId, patch) {
   return await getStaffById(next.id);
 }
 
+export async function deleteStaff(id) {
+  const existing = await getStaffById(id);
+  if (!existing) return null;
+  await dbRun(
+    `DELETE FROM staff WHERE id = ?`,
+    [id]
+  );
+  return true;
+}
+
 export async function touchStaffLastActiveById(id) {
   const existing = await getStaffById(id);
   if (!existing) return null;
@@ -187,6 +197,12 @@ export async function setStaffStatus(id, status) {
     [status, id]
   );
   return await getStaffById(id);
+}
+
+export function getStaffDisplayName(staff) {
+  if (!staff) return "System";
+  const fullName = `${staff.fname || ""} ${staff.lname || ""}`.trim();
+  return fullName || staff.email || staff.id;
 }
 
 export async function hasAllSecurityAnswers(id) {

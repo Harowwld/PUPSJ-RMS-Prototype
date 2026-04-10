@@ -72,8 +72,21 @@ export async function GET(_req) {
 
 export async function PUT(req) {
   try {
-    const staff = await getSessionStaff();
-    if (!staff || !isAdminRole(staff.role)) {
+    const cookieName = getSessionCookieName();
+    const store = await cookies();
+    const token = store.get(cookieName)?.value || "";
+    if (!token) {
+      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const payload = await verifySessionToken(token);
+    const userId = String(payload?.sub || "").trim();
+    
+    // Attempt database lookup for fresh role info, but fallback to token payload for resilience
+    const staff = userId ? await getStaffById(userId) : null;
+    const effectiveRole = staff?.role || payload?.role || "";
+
+    if (!isAdminRole(effectiveRole)) {
       return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
     }
 

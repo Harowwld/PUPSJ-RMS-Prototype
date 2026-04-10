@@ -138,12 +138,28 @@ export const DEFAULT_SECURITY_QUESTIONS = [
 ];
 
 export async function getDb() {
-  if (db) {
-    ensureDocumentRequestsTable();
-    ensureIngestQueueTable();
-    ensureStaffNotificationStateTable();
-    return db;
+  let currentDb = global.sqliteDb || db;
+
+  if (currentDb) {
+    try {
+      // Verify database liveness. If another Next.js context closed it, this will throw.
+      currentDb.prepare("SELECT 1").free();
+      
+      db = currentDb;
+      ensureDocumentRequestsTable();
+      ensureIngestQueueTable();
+      ensureStaffNotificationStateTable();
+      return currentDb;
+    } catch (e) {
+      // Database was closed externally
+      console.log("[DB] Cached database was closed externally. Re-initializing...");
+      db = null;
+      global.sqliteDb = null;
+      currentDb = null;
+      initializing = null;
+    }
   }
+
   if (initializing) return initializing;
 
   initializing = (async () => {
@@ -209,9 +225,10 @@ export async function getDb() {
 
         CREATE TABLE IF NOT EXISTS sections (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
-          name TEXT NOT NULL UNIQUE,
+          name TEXT NOT NULL,
           course_code TEXT,
           created_at TEXT NOT NULL DEFAULT (datetime('now')),
+          UNIQUE(name, course_code),
           FOREIGN KEY (course_code) REFERENCES courses(code) ON UPDATE CASCADE ON DELETE SET NULL
         );
 
@@ -227,7 +244,7 @@ export async function getDb() {
           status TEXT NOT NULL DEFAULT 'Active',
           created_at TEXT NOT NULL DEFAULT (datetime('now')),
           FOREIGN KEY (course_code) REFERENCES courses(code) ON UPDATE CASCADE ON DELETE RESTRICT,
-          FOREIGN KEY (section) REFERENCES sections(name) ON UPDATE CASCADE ON DELETE RESTRICT
+          FOREIGN KEY (section, course_code) REFERENCES sections(name, course_code) ON UPDATE CASCADE ON DELETE RESTRICT
         );
 
         CREATE TABLE IF NOT EXISTS staff (
@@ -701,6 +718,67 @@ export async function getDb() {
         }
       }
 
+      if (schemaVersion < 9) {
+        try {
+          db.exec("PRAGMA foreign_keys = OFF");
+          db.exec(`
+            BEGIN;
+
+            CREATE TABLE sections_new (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              name TEXT NOT NULL,
+              course_code TEXT,
+              created_at TEXT NOT NULL DEFAULT (datetime('now')),
+              UNIQUE(name, course_code),
+              FOREIGN KEY (course_code) REFERENCES courses(code) ON UPDATE CASCADE ON DELETE SET NULL
+            );
+
+            INSERT INTO sections_new (id, name, course_code, created_at)
+            SELECT id, name, COALESCE(course_code, 'UNKN'), created_at FROM sections;
+
+            DROP TABLE sections;
+            ALTER TABLE sections_new RENAME TO sections;
+            CREATE INDEX IF NOT EXISTS idx_sections_course_code ON sections(course_code);
+
+            CREATE TABLE students_new (
+              student_no TEXT PRIMARY KEY,
+              name TEXT NOT NULL,
+              course_code TEXT NOT NULL,
+              year_level INTEGER NOT NULL,
+              section TEXT NOT NULL,
+              room INTEGER NOT NULL,
+              cabinet TEXT NOT NULL,
+              drawer INTEGER NOT NULL,
+              status TEXT NOT NULL DEFAULT 'Active',
+              created_at TEXT NOT NULL DEFAULT (datetime('now')),
+              FOREIGN KEY (course_code) REFERENCES courses(code) ON UPDATE CASCADE ON DELETE RESTRICT,
+              FOREIGN KEY (section, course_code) REFERENCES sections(name, course_code) ON UPDATE CASCADE ON DELETE RESTRICT
+            );
+
+            INSERT INTO students_new (
+              student_no, name, course_code, year_level, section, room, cabinet, drawer, status, created_at
+            )
+            SELECT
+              student_no, name, course_code, year_level, section, room, cabinet, drawer, status, created_at
+            FROM students;
+
+            DROP TABLE students;
+            ALTER TABLE students_new RENAME TO students;
+            CREATE INDEX IF NOT EXISTS idx_students_course_year_section ON students(course_code, year_level, section);
+            CREATE INDEX IF NOT EXISTS idx_students_name ON students(name);
+
+            INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '9');
+            COMMIT;
+          `);
+          persistDb();
+        } catch (e) {
+          try { db.exec("ROLLBACK"); } catch (_) {}
+          console.error("[DB] schema_version 9 migration:", e);
+        } finally {
+          try { db.exec("PRAGMA foreign_keys = ON"); } catch (_) {}
+        }
+      }
+
       // Safety net for environments where schema_version may be out of sync.
       // This ensures review columns exist before any API query references them.
       try {
@@ -832,6 +910,7 @@ export function reloadDb() {
     }
   }
   db = null;
+  global.sqliteDb = null;
   initializing = null;
   console.log("[DB] In-memory database cache cleared for reload.");
 }

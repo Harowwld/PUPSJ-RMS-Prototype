@@ -1,8 +1,25 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { deleteStaff, getStaffById, updateStaff } from "../../../../lib/staffRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
+import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 
 export const runtime = "nodejs";
+
+async function getCurrentUserId() {
+  try {
+    const cookieName = getSessionCookieName();
+    const cookieStore = cookies();
+    const store = (cookieStore instanceof Promise) ? await cookieStore : cookieStore;
+    const token = store.get(cookieName)?.value || "";
+    if (!token) return null;
+    const payload = await verifySessionToken(token);
+    return payload.sub || null;
+  } catch (err) {
+    return null;
+  }
+}
+
 
 export async function PATCH(req, ctx) {
   const params = await ctx.params;
@@ -36,6 +53,18 @@ export async function PATCH(req, ctx) {
   };
 
   try {
+    const currentUserId = await getCurrentUserId();
+    
+    if (currentUserId === id && patch.role !== undefined) {
+      const existing = await getStaffById(id);
+      if (existing && existing.role !== patch.role) {
+        return NextResponse.json(
+          { ok: false, error: "You cannot change your own role." },
+          { status: 403 }
+        );
+      }
+    }
+
     const row = await updateStaff(id, patch);
     if (!row) {
       return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
@@ -67,6 +96,14 @@ export async function DELETE(_req, ctx) {
     return NextResponse.json(
       { ok: false, error: `Invalid id: ${raw}` },
       { status: 400 }
+    );
+  }
+
+  const currentUserId = await getCurrentUserId();
+  if (currentUserId === id) {
+    return NextResponse.json(
+      { ok: false, error: "You cannot delete your own account." },
+      { status: 403 }
     );
   }
 

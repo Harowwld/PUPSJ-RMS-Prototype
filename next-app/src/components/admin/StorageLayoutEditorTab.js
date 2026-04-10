@@ -51,7 +51,6 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
   const [dragSourceKey, setDragSourceKey] = useState("");
   const [applyPreviewOpen, setApplyPreviewOpen] = useState(false);
   const [applyPreviewRows, setApplyPreviewRows] = useState([]);
-  const [lastTemplateApplySnapshot, setLastTemplateApplySnapshot] = useState(null);
   const [applyReportOpen, setApplyReportOpen] = useState(false);
   const [applyReportRows, setApplyReportRows] = useState([]);
 
@@ -486,14 +485,6 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
       const breakdown = Array.isArray(json?.movedBreakdown) ? json.movedBreakdown : [];
       setApplyReportRows(breakdown);
       setApplyReportOpen(true);
-      const reverseReassignments = reassignments.map((r) => ({
-        fromKey: r.toKey,
-        toKey: r.fromKey,
-      }));
-      setLastTemplateApplySnapshot({
-        previousLayout: previousLayoutSnapshot,
-        reverseReassignments,
-      });
       showToast?.({
         title: "Template Applied",
         description: `Template applied with reassignment. ${Number(json?.movedCount || 0)} student record(s) moved.`,
@@ -503,42 +494,6 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
         {
           title: "Apply Failed",
           description: err?.message || "Unable to apply template with reassignment.",
-        },
-        true,
-      );
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function undoLastTemplateApply() {
-    if (!lastTemplateApplySnapshot?.previousLayout) return;
-    setSaving(true);
-    try {
-      const res = await fetch("/api/storage-layout", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          layout: lastTemplateApplySnapshot.previousLayout,
-          reassignments: lastTemplateApplySnapshot.reverseReassignments || [],
-          skipUsageCheck: true,
-        }),
-      });
-      const json = await res.json().catch(() => null);
-      if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Undo failed");
-      }
-      setLayout(json.data);
-      setLastTemplateApplySnapshot(null);
-      showToast?.({
-        title: "Undo Complete",
-        description: `Last template apply was reverted. ${Number(json?.movedCount || 0)} student record(s) moved back.`,
-      });
-    } catch (err) {
-      showToast?.(
-        {
-          title: "Undo Failed",
-          description: err?.message || "Unable to revert last template apply.",
         },
         true,
       );
@@ -1129,16 +1084,6 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
           <i className="ph-bold ph-floppy-disk text-lg" />
           {saving ? "Saving..." : "Save Layout"}
         </Button>
-        <Button
-          type="button"
-          variant="outline"
-          className="h-10 px-5 font-bold"
-          onClick={undoLastTemplateApply}
-          disabled={saving || !lastTemplateApplySnapshot}
-        >
-          <i className="ph-bold ph-arrow-u-up-left mr-2" />
-          Undo Last Apply
-        </Button>
       </div>
 
       <div className="flex-1 overflow-auto min-h-0 bg-white relative">
@@ -1370,8 +1315,11 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                           X
                         </label>
                         <Input
-                          value={Number(selectedCabinet.rect.x).toFixed(3)}
+                          type="number"
+                          step="0.001"
+                          value={selectedCabinet.rect.x}
                           onChange={(e) => {
+                            if (e.target.value === "") return;
                             const x = Number(e.target.value);
                             if (!Number.isFinite(x)) return;
                             updateSelectedRectFromNormalized({
@@ -1387,8 +1335,11 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                           Y
                         </label>
                         <Input
-                          value={Number(selectedCabinet.rect.y).toFixed(3)}
+                          type="number"
+                          step="0.001"
+                          value={selectedCabinet.rect.y}
                           onChange={(e) => {
+                            if (e.target.value === "") return;
                             const y = Number(e.target.value);
                             if (!Number.isFinite(y)) return;
                             updateSelectedRectFromNormalized({
@@ -1407,8 +1358,11 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                           W
                         </label>
                         <Input
-                          value={Number(selectedCabinet.rect.w).toFixed(3)}
+                          type="number"
+                          step="0.001"
+                          value={selectedCabinet.rect.w}
                           onChange={(e) => {
+                            if (e.target.value === "") return;
                             const w = Number(e.target.value);
                             if (!Number.isFinite(w)) return;
                             updateSelectedSizeNormalized(
@@ -1424,8 +1378,11 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                           H
                         </label>
                         <Input
-                          value={Number(selectedCabinet.rect.h).toFixed(3)}
+                          type="number"
+                          step="0.001"
+                          value={selectedCabinet.rect.h}
                           onChange={(e) => {
+                            if (e.target.value === "") return;
                             const h = Number(e.target.value);
                             if (!Number.isFinite(h)) return;
                             updateSelectedSizeNormalized(

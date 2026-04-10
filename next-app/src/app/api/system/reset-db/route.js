@@ -38,12 +38,12 @@ export async function GET(req) {
       }
     }
 
-    // Set schema version back to 1
-    db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '1')");
+    // Set schema version back to current (8) so migrations don't re-run and cause double seeding
+    db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '8')");
 
     // Seed default Admin staff account (bootstrap)
     try {
-      const id = "admin.eli@pup.local";
+      const id = "PUPREGISTRAR-001";
       const fname = "System";
       const lname = "Administrator";
       const role = "Admin";

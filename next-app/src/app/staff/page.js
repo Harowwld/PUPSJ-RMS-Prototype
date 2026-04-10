@@ -126,15 +126,20 @@ export default function StaffPage() {
     refId: "",
   });
 
-  const showToast = useCallback((msg, isError = false) => {
+  const showToast = useCallback((msg, typeOrIsError = false) => {
     const isRich = msg && typeof msg === "object" && msg.title;
     const title = isRich ? msg.title : String(msg || "");
     const opts = isRich && msg.description ? { description: msg.description } : {};
-    if (isError) {
+    
+    if (typeOrIsError === true || typeOrIsError === "error") {
       toast.error(title, opts);
-    } else {
-      toast.success(title, opts);
+      return;
     }
+    if (typeOrIsError === "warning") {
+      toast.warning(title, opts);
+      return;
+    }
+    toast.success(title, opts);
   }, []);
 
   const fetchData = useCallback(async () => {

@@ -33,7 +33,7 @@ export default function AccountPage() {
   const [pwConfirm, setPwConfirm] = useState("");
   const [pwLoading, setPwLoading] = useState(false);
   const [pwError, setPwError] = useState("");
-  
+
   // Security Form State
   const [globalQuestions, setGlobalQuestions] = useState([]);
   const [secAnswers, setSecAnswers] = useState({});
@@ -228,7 +228,7 @@ export default function AccountPage() {
         description: "Your security answers have been saved.",
       });
       setSecAnswers({});
-      
+
       // Re-fetch to update hasAnswer statuses
       const resUserSecurity = await fetch("/api/staff/security");
       const jsonUserSecurity = await resUserSecurity.json().catch(() => null);
@@ -615,7 +615,7 @@ export default function AccountPage() {
                                 )}
                               </label>
                               <Input
-                                type="password"
+                                type="text"
                                 className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
                                 placeholder={q.hasAnswer ? "Answer securely saved. Type to overwrite." : "Your answer"}
                                 value={secAnswers[q.id] || ""}

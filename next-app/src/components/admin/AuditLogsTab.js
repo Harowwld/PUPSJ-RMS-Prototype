@@ -191,7 +191,7 @@ export default function AuditLogsTab({
                           <td className="p-3 font-mono text-[11px] text-gray-500 whitespace-nowrap">
                             {log.time}
                           </td>
-                          <td className="p-3 font-bold text-gray-900 text-sm whitespace-nowrap capitalize">
+                          <td className="p-3 font-bold text-gray-900 text-sm whitespace-nowrap">
                             {log.user}
                           </td>
                           <td className="p-3">

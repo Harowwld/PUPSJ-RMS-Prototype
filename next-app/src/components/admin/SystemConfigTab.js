@@ -350,55 +350,48 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
           );
         }
 
-        let successCount = 0;
-        let failCount = 0;
-
+        const bulkRows = [];
         for (let i = 1; i < lines.length; i++) {
           const cols = lines[i].split(",").map((c) => c.trim());
           const category = cols[catIdx]?.toLowerCase();
           const name = cols[nameIdx];
           const code = codeIdx !== -1 ? cols[codeIdx] : "";
-
-          try {
-            let res;
-            if (category === "documenttype" || category === "document type") {
-              res = await fetch("/api/doc-types?admin=true", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name }),
-              });
-            } else if (category === "course") {
-              if (!code) throw new Error("Course requires a code identifier");
-              res = await fetch("/api/courses", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ code, name }),
-              });
-            } else if (category === "section") {
-              if (!code)
-                throw new Error("Section requires a valid Degree Program code");
-              res = await fetch("/api/sections", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, courseCode: code }),
-              });
-            } else {
-              continue;
-            }
-
-            if (res.ok) {
-              successCount++;
-            } else {
-              failCount++;
-            }
-          } catch (err) {
-            failCount++;
-          }
+          if (category && name) bulkRows.push({ category, name, code });
         }
 
-        showToast(
-          { title: "Bulk Import Complete", description: `${successCount} records processed, ${failCount} failed.` },
-        );
+        let successCount = 0;
+        let failCount = 0;
+        
+        try {
+          const res = await fetch("/api/system/bulk-import", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ rows: bulkRows }),
+          });
+          const json = await res.json();
+          if (!res.ok || !json.ok) throw new Error(json.error || "Batch import failed");
+          
+          successCount = json.data.successCount;
+          failCount = json.data.failCount;
+        } catch (err) {
+          throw new Error("Failed to process bulk import: " + err.message);
+        }
+
+        if (failCount > 0 && successCount === 0) {
+          showToast(
+            { title: "Import Failed", description: `All ${failCount} records failed. Please check your data format.` },
+            "error"
+          );
+        } else if (failCount > 0) {
+          showToast(
+            { title: "Import Partially Failed", description: `${successCount} records processed, ${failCount} failed.` },
+            "warning"
+          );
+        } else {
+          showToast(
+            { title: "Bulk Import Complete", description: `${successCount} records processed successfully.` }
+          );
+        }
         fetchData();
       } catch (err) {
         showToast({ title: "Import Failed", description: err.message }, true);

@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { createAuditLog } from "./auditLogsRepo";
 import { getSessionCookieName, verifySessionToken } from "./jwt";
-import { getStaffById } from "./staffRepo";
+import { getStaffById, getStaffDisplayName } from "./staffRepo";
 
 function extractIp(req) {
   const forwarded = req?.headers?.get?.("x-forwarded-for") || "";
@@ -20,17 +20,9 @@ async function resolveActor() {
     if (!id) return { actor: "System", role: "System" };
 
     const staff = await getStaffById(id);
-    if (staff) {
-      const fullName = `${staff.fname || ""} ${staff.lname || ""}`.trim();
-      return {
-        actor: fullName || staff.id || id,
-        role: staff.role || "Staff",
-      };
-    }
-
     return {
-      actor: String(payload?.username || id),
-      role: String(payload?.role || "Staff"),
+      actor: getStaffDisplayName(staff) || id,
+      role: staff?.role || String(payload?.role || "Staff"),
     };
   } catch {
     return { actor: "System", role: "System" };

@@ -149,8 +149,8 @@ export default function StaffDirectoryTab({
                       onChange={(e) => setRoleFilter(e.target.value)}
                     >
                       <option value="All">All Roles</option>
-                      <option value="Admin">Administrator</option>
-                      <option value="Staff">Records Staff</option>
+                      <option value="Admin">Admin</option>
+                      <option value="Staff">Staff</option>
                     </select>
                   </div>
                   <div>
@@ -163,7 +163,7 @@ export default function StaffDirectoryTab({
                       onChange={(e) => setStatusFilter(e.target.value)}
                     >
                       <option value="All">All Statuses</option>
-                      <option value="Active">Online Active</option>
+                      <option value="Active">Online</option>
                       <option value="Inactive">Offline</option>
                     </select>
                   </div>
