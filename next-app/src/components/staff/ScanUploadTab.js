@@ -123,6 +123,26 @@ export default function ScanUploadTab({
     docTypes,
     showToast,
     onPromoted: onIngestPromoted,
+    onOcrResult: (suggestion) => {
+      if (!suggestion) return;
+      // Always set the docType from OCR regardless of student match
+      const ocrDocType = suggestion.docType && String(suggestion.docType).trim()
+        ? String(suggestion.docType).trim()
+        : "";
+      if (suggestion.matchedStudent) {
+        // Existing student matched — lock the form fields to their record.
+        onSelectExistingStudent?.(suggestion.matchedStudent, ocrDocType);
+      } else {
+        // No match — only fill in the name/docType, leave form unlocked for manual entry.
+        setNewRec?.((p) => ({
+          ...p,
+          name: suggestion.name
+            ? String(suggestion.name).trim().replace(/\s+/g, " ").toUpperCase()
+            : p.name,
+          docType: ocrDocType || p.docType,
+        }));
+      }
+    },
   });
 
   const handlePdfFileSelect = (file) => {
@@ -141,13 +161,14 @@ export default function ScanUploadTab({
     setDropActive(false);
     const f = e.dataTransfer.files?.[0];
     if (!f) return;
-    if (f.type !== "application/pdf" && !String(f.name || "").toLowerCase().endsWith(".pdf")) {
+    const isPdf = f.type === "application/pdf" || String(f.name || "").toLowerCase().endsWith(".pdf");
+    const isImg = String(f.type || "").startsWith("image/");
+    if (!isPdf && !isImg) {
       return;
     }
     handlePdfFileSelect(f);
   };
 
-  const showHotFolderPromote = uploadMode === "pdf" && hf.selectedRow && !uploadedFile;
   const normalizedTypedName = String(newRec?.name || "")
     .trim()
     .toLowerCase();
@@ -208,7 +229,7 @@ export default function ScanUploadTab({
       <div className="shrink-0 bg-white rounded-brand border border-gray-300 p-4 shadow-sm">
         <h2 className="text-xl font-bold text-pup-maroon mb-1">Scan & Upload</h2>
         <p className="text-sm text-gray-600 mb-4">
-          Upload PDFs or promote files from the scanner inbox. Batch-import students from CSV in the second tab.
+          Upload PDFs, images, or files from the scanner inbox. Batch-import students from CSV in the second tab.
         </p>
         <div className="flex flex-wrap gap-4 sm:gap-6 border-b border-gray-200">
           <button
@@ -454,7 +475,10 @@ export default function ScanUploadTab({
                       type="button"
                       onClick={(e) => {
                         e.stopPropagation();
-                        hf.openItem(row);
+                        // Fetch the file blob and set it as the uploaded file for direct submission
+                        hf.openItem(row).then((file) => {
+                          if (file) onFileSelect(file);
+                        });
                       }}
                       className={`w-full text-left p-2.5 rounded-brand border transition-colors ${
                         hf.selected === row.id
@@ -483,13 +507,13 @@ export default function ScanUploadTab({
                 <div className="w-20 h-20 mx-auto rounded-full bg-white border border-gray-300 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform shadow-sm">
                   <i className="ph-thin ph-file-pdf text-4xl text-pup-maroon"></i>
                 </div>
-                <h3 className="font-bold text-xl text-gray-800">Drop PDF file here</h3>
+                <h3 className="font-bold text-xl text-gray-800">Drop Document or Image here</h3>
                 <p className="text-sm text-gray-500 mt-2 font-medium">
-                  or click to browse local files
+                  or click to browse local files (PDF, JPG, PNG)
                 </p>
                 {hf.rows.length > 0 ? (
                   <p className="text-xs font-medium text-gray-500 mt-3 max-w-xs mx-auto">
-                    This area still accepts PDF drops and clicks even while the scanner inbox is shown above.
+                    This area still accepts manual drops and clicks even while the scanner inbox is shown above.
                   </p>
                 ) : null}
               </div>
@@ -498,13 +522,17 @@ export default function ScanUploadTab({
                 ref={fileInputRef}
                 type="file"
                 className="hidden"
-                accept=".pdf"
+                accept=".pdf,image/*"
                 onChange={(e) => handlePdfFileSelect(e.target.files[0])}
               />
 
               {uploadedFile ? (
                 <div className="absolute inset-0 bg-white z-10 flex flex-col items-center justify-center p-6 rounded-brand">
-                  <i className="ph-fill ph-file-pdf text-6xl text-pup-maroon mb-4"></i>
+                  {String(uploadedFile?.type || "").startsWith("image/") ? (
+                    <i className="ph-fill ph-file-image text-6xl text-pup-maroon mb-4"></i>
+                  ) : (
+                    <i className="ph-fill ph-file-pdf text-6xl text-pup-maroon mb-4"></i>
+                  )}
                   <h4 className="font-bold text-gray-900 text-lg text-center break-all mb-1 max-w-sm">
                     {uploadedFile.name}
                   </h4>
@@ -540,7 +568,58 @@ export default function ScanUploadTab({
           </div>
         )}
 
-        {uploadMode === "pdf" && (ocrLoading || hf.ocrLoading) ? (
+          {/* When a hot-folder item is selected, show the file preview overlaying the drop zone */}
+          {uploadMode === "pdf" && hf.selectedRow ? (
+            <div className="absolute inset-0 z-10 bg-white rounded-brand flex flex-col overflow-hidden">
+              <div className="shrink-0 flex items-center justify-between gap-2 px-4 py-2.5 border-b border-gray-200 bg-gray-50">
+                <div className="min-w-0">
+                  <div className="text-xs font-bold uppercase text-gray-500">Scanner inbox preview</div>
+                  <div className="text-sm font-bold text-gray-900 truncate">{hf.selectedRow.original_filename}</div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  {hf.ocrLoading ? (
+                    <span className="text-xs font-medium text-gray-600">Running OCR…</span>
+                  ) : null}
+                  <button
+                    type="button"
+                    className="px-3 h-8 text-xs font-bold bg-white border border-gray-300 rounded-brand hover:border-pup-maroon disabled:opacity-60"
+                    onClick={() => hf.runOcrAgain()}
+                    disabled={hf.ocrLoading}
+                  >
+                    Re-scan
+                  </button>
+                  <button
+                    type="button"
+                    className="px-3 h-8 text-xs font-bold bg-white border border-gray-300 rounded-brand hover:border-pup-maroon"
+                    onClick={() => hf.clearIngestSelection()}
+                  >
+                    ✕ Close
+                  </button>
+                </div>
+              </div>
+              <div className="flex-1 min-h-0 overflow-hidden">
+                {hf.previewMime.startsWith("image/") ? (
+                  <div className="relative w-full h-full">
+                    <Image
+                      src={hf.previewUrl}
+                      alt="Scanner inbox preview"
+                      fill
+                      unoptimized
+                      className="object-contain"
+                      draggable="false"
+                    />
+                  </div>
+                ) : (
+                  <iframe
+                    title="scanner-inbox-preview"
+                    src={hf.previewUrl}
+                    className="w-full h-full"
+                  />
+                )}
+              </div>
+            </div>
+          ) : null}
+          {uploadMode === "pdf" && (ocrLoading || hf.ocrLoading) ? (
           <div className="absolute inset-0 z-20 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center rounded-brand">
             <div className="w-full max-w-md px-6">
               <div className="text-sm font-bold text-gray-800 mb-4 text-center">
@@ -572,90 +651,16 @@ export default function ScanUploadTab({
           <p className="text-sm text-gray-600">
             {uploadMode === "csv"
               ? "Review CSV rows, bulk-edit locations, then import students."
-              : showHotFolderPromote
-                ? "Promote a scanner inbox file into a student document record."
-                : "Associate this PDF with a student record."}
+              : uploadedFile
+                ? "Review OCR-suggested values and fill in missing fields."
+                : "Drop or select a file on the left, then fill in the form here."}
           </p>
         </div>
 
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50/50">
 
 
-          {uploadMode === "pdf" && showHotFolderPromote ? (
-            <div className="space-y-5">
-              <div className="rounded-brand border border-amber-200 bg-amber-50/90 px-3 py-2 text-xs font-bold text-amber-900">
-                Scanner inbox item selected — fill in student and document type, or drop a PDF on the left to switch to manual upload.
-              </div>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div className="border border-gray-200 rounded-brand bg-white min-h-[280px] overflow-hidden">
-                  {hf.previewMime.startsWith("image/") ? (
-                    <div className="relative w-full h-[min(420px,50vh)]">
-                      <Image
-                        src={hf.previewUrl}
-                        alt="Scanner inbox preview"
-                        fill
-                        unoptimized
-                        className="object-contain rounded-brand"
-                      />
-                    </div>
-                  ) : (
-                    <iframe title="scanner-inbox-preview" src={hf.previewUrl} className="w-full h-[min(420px,50vh)] rounded-brand" />
-                  )}
-                </div>
-                <div className="space-y-3">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="text-xs font-bold uppercase text-gray-700">Fields</span>
-                    <div className="flex items-center gap-2">
-                      {hf.ocrLoading ? (
-                        <span className="text-xs font-medium text-gray-600">Running OCR…</span>
-                      ) : null}
-                      <button
-                        type="button"
-                        className="px-3 h-8 text-xs font-bold bg-white border border-gray-300 rounded-brand hover:border-pup-maroon disabled:opacity-60"
-                        onClick={() => hf.runOcrAgain()}
-                        disabled={!hf.selectedRow || hf.ocrLoading}
-                      >
-                        Run OCR again
-                      </button>
-                    </div>
-                  </div>
-                  <label className="block text-xs font-bold uppercase text-gray-700">Student Number</label>
-                  <input
-                    className="form-input"
-                    value={hf.form.studentNo}
-                    onChange={(e) => hf.setForm((p) => ({ ...p, studentNo: e.target.value }))}
-                  />
-                  <label className="block text-xs font-bold uppercase text-gray-700">Student Name (optional)</label>
-                  <input
-                    className="form-input"
-                    value={hf.form.studentName}
-                    onChange={(e) => hf.setForm((p) => ({ ...p, studentName: e.target.value }))}
-                  />
-                  <label className="block text-xs font-bold uppercase text-gray-700">Document Type</label>
-                  <select
-                    className="form-select"
-                    value={hf.form.docType}
-                    onChange={(e) => hf.setForm((p) => ({ ...p, docType: e.target.value }))}
-                  >
-                    <option value="">Select document type...</option>
-                    {docTypes.map((d) => (
-                      <option key={d} value={d}>
-                        {d}
-                      </option>
-                    ))}
-                  </select>
-                  <button
-                    type="button"
-                    className="w-full h-10 rounded-brand bg-pup-maroon text-white font-bold hover:bg-red-900 disabled:opacity-60"
-                    onClick={() => hf.promote()}
-                    disabled={!hf.selectedRow || hf.promoting}
-                  >
-                    {hf.promoting ? "Promoting..." : "Promote to Documents"}
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : uploadMode === "pdf" ? (
+          {uploadMode === "pdf" ? (
             <div className="space-y-5">
               {uploadStudentIsExisting ? (
                 <div className="rounded-brand border border-emerald-200 bg-emerald-50/90 px-3 py-2.5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
@@ -683,7 +688,6 @@ export default function ScanUploadTab({
                 </div>
               )}
 
-            <div className="space-y-5">
               <div className="grid grid-cols-2 gap-5">
                 <div>
                   <label
@@ -954,10 +958,10 @@ export default function ScanUploadTab({
 
               <button
                 type="button"
-                onClick={processSubmission}
+                onClick={() => processSubmission({ onSuccess: () => hf.removeIngestItem() })}
                 className="w-full bg-pup-maroon text-white py-3 rounded-brand font-bold text-sm hover:bg-red-900 transition-all shadow-sm flex items-center justify-center gap-2"
               >
-                <i className="ph-bold ph-upload-simple"></i> Submit Upload
+                <i className="ph-bold ph-upload-simple" /> Submit Upload
               </button>
 
               {uploadError ? (
@@ -965,7 +969,6 @@ export default function ScanUploadTab({
                   {uploadError}
                 </div>
               ) : null}
-            </div>
             </div>
           ) : (
             <div className="space-y-5">

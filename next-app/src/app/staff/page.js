@@ -16,6 +16,7 @@ import OCRPromptModal from "@/components/staff/OCRPromptModal";
 import { Skeleton } from "@/components/ui/skeleton";
 import { scanFileForSuggestion, warmupOcrWorker } from "@/lib/ocrClient";
 import { findMatchingDocument } from "@/lib/docAvailability";
+import { imageToPdf, needsConversion } from "@/lib/imageToPdf";
 
 function normalizeStudentRow(row) {
   if (!row || typeof row !== "object") return row;
@@ -601,12 +602,23 @@ export default function StaffPage() {
         });
         setOcrSuggestion(suggestion);
 
+        /* eslint-disable-next-line no-console */
+        console.log("[OCR handleFileSelect] suggestion:", {
+          name: suggestion.name,
+          docType: suggestion.docType,
+          matchedStudent: suggestion.matchedStudent?.studentNo || null,
+          matchCount: suggestion.nameMatchesByName?.length,
+          docTypesAvailable: docTypes,
+        });
+
         const nameMatches = Array.isArray(suggestion.nameMatchesByName)
           ? suggestion.nameMatchesByName
           : [];
         const ambiguous = nameMatches.length > 1;
 
         if (ambiguous) {
+          /* eslint-disable-next-line no-console */
+          console.log("[OCR] → AMBIGUOUS branch, setting docType:", suggestion.docType);
           setNewRec((p) => ({
             ...p,
             name: String(suggestion.name || p.name || "")
@@ -622,11 +634,15 @@ export default function StaffPage() {
           clearAllUploadFieldErrors();
           setOcrPromptOpen(true);
         } else if (suggestion.matchedStudent) {
+          /* eslint-disable-next-line no-console */
+          console.log("[OCR] → MATCHED STUDENT branch, setting docType:", suggestion.docType);
           applyStudentToPdfForm(suggestion.matchedStudent, suggestion.docType);
           setUploadStudentIsExisting(true);
           clearAllUploadFieldErrors();
           setOcrPromptOpen(false);
         } else {
+          /* eslint-disable-next-line no-console */
+          console.log("[OCR] → NEW STUDENT branch, setting docType:", suggestion.docType);
           setNewRec((p) => ({
             ...p,
             name: String(suggestion.name || p.name || "")
@@ -653,14 +669,26 @@ export default function StaffPage() {
     }
   };
 
-  const processSubmission = async () => {
+  const processSubmission = async ({ onSuccess } = {}) => {
     if (!uploadedFile) {
       setUploadFieldErrors({ pdfFile: true });
-      showToast({ title: "No File Selected", description: "Attach a PDF document before submitting." }, true);
+      showToast({ title: "No File Selected", description: "Attach a document before submitting." }, true);
       return;
     }
+
+    // Convert image files to PDF before uploading (API only accepts PDFs)
+    let fileToUpload = uploadedFile;
+    if (needsConversion(uploadedFile)) {
+      try {
+        fileToUpload = await imageToPdf(uploadedFile);
+      } catch (convErr) {
+        showToast({ title: "Conversion Failed", description: "Could not convert image to PDF. Try uploading a PDF directly." }, true);
+        return;
+      }
+    }
+
     const payload = new FormData();
-    payload.append("file", uploadedFile);
+    payload.append("file", fileToUpload);
     if (uploadMode !== "pdf") {
       showToast({ title: "Wrong Mode", description: "Switch to the PDF upload tab to submit a document." }, true);
       return;
@@ -743,8 +771,23 @@ export default function StaffPage() {
       }
       setUploadedFile(null);
       setUploadFieldErrors({});
+      setUploadStudentIsExisting(false);
+      setNewRec({
+        studentNo: "",
+        name: "",
+        course: "",
+        year: "",
+        sectionPart: "",
+        room: "",
+        cabinet: "",
+        drawer: "",
+        docType: "",
+      });
       fetchData();
       fetchAllDocs();
+      if (typeof onSuccess === "function") {
+        onSuccess();
+      }
     } catch (err) {
       showToast({ title: "Upload Failed", description: err.message }, true);
     }
@@ -1126,8 +1169,8 @@ export default function StaffPage() {
               fetchAllDocs();
               fetchData();
             }}
-            onSelectExistingStudent={(student) => {
-              applyStudentToPdfForm(student, null);
+            onSelectExistingStudent={(student, ocrDocType) => {
+              applyStudentToPdfForm(student, ocrDocType || null);
               setUploadStudentIsExisting(true);
               clearAllUploadFieldErrors();
               setOcrPromptOpen(false);
