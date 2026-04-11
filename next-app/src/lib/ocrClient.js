@@ -377,50 +377,29 @@ function detectName(lines) {
       // Same-line value after colon / dash
       const colonM = line.match(/\bNAME\b[^:–-]*[:–-]\s*(.*)/i);
       if (colonM?.[1]) {
-        // Strip everything from the next label or first digit onward
-        let c = norm(colonM[1]);
-        // Remove trailing labels like "STUDENT NUMBER:", "DATE OF BIRTH:", etc.
-        c = c.replace(/\s+(STUDENT\s*(NUMBER|NO)|DATE|SEX|LRN|LEARNER|DEGREE|COURSE)\b.*/i, "").trim();
-        // Remove anything from the first digit onward (student no, dates, etc.)
-        c = c.replace(/\s+\d[\s\S]*$/, "").trim();
-        c = stripTrailing(c);
+        const c = stripTrailing(norm(colonM[1]));
         if (c && isPlausibleName(c)) return c;
       }
-      // Value on the NEXT line (common in scanned forms where label and value are on separate lines)
+      // Value on the NEXT line (common in scanned forms)
       if (i + 1 < lines.length) {
-        let next = norm(lines[i + 1]);
-        // Strip from the first digit sequence onward (student no, dates, etc.)
-        next = next.replace(/\s+\d[\s\S]*$/, "").trim();
-        // Also strip leading non-alpha garbage from OCR
-        next = next.replace(/^[^A-Za-z]+/, "").trim();
-        next = stripTrailing(next);
+        const next = stripTrailing(norm(lines[i + 1]));
         if (next && isPlausibleName(next) && !/^(NAME|STUDENT)/i.test(next)) return next;
       }
     }
   }
 
   // ── Strategy 4: first stand-alone Title-prefix line that isn't a signatory ──
-  // Also check ±2 surrounding lines for signatory indicators
-  const SIGNATORY_RE = /\b(guidance|counselor|principal|registrar|dean|president|director|chairperson|signed|signature)\b/i;
-  for (let i = 0; i < lines.length; i++) {
-    const t = lines[i].trim();
+  for (const line of lines) {
+    const t = line.trim();
     const m = t.match(
       /\b(?:Ms|Mr|Mrs|Miss|Dr|Engr|Atty|Prof|Hon|Rev)\.?\s+([A-Z][A-Z][A-Z .,''-]*)/i
     );
     if (m?.[1]) {
       const raw = m[1].replace(/\s*[(\[].*/, "").replace(/\s*,.*/, "").trim();
-      // Strip trailing non-name tokens (like "SN", "STF", short codes)
-      const cleaned = raw.replace(/\s+[A-Z]{1,3}$/, "").trim();
-      const candidate = cleaned || raw;
-      if (!isPlausibleName(candidate)) continue;
-      // Check the same line AND surrounding ±2 lines for signatory keywords
-      const context = [];
-      for (let j = Math.max(0, i - 2); j <= Math.min(lines.length - 1, i + 2); j++) {
-        context.push(lines[j]);
-      }
-      const contextText = context.join(" ");
-      if (SIGNATORY_RE.test(contextText)) continue;
-      return candidate;
+      if (!isPlausibleName(raw)) continue;
+      // skip signatories
+      if (/(guidance|counselor|principal|registrar|dean|president|director|chairperson)/i.test(t)) continue;
+      return raw;
     }
   }
 
