@@ -272,9 +272,25 @@ export default function DocumentRequestsTab({
           <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0">
             <div className="p-4 bg-gray-50/50 border-b border-gray-200 flex flex-col lg:flex-row gap-3 lg:items-end">
               <div className="flex-1 min-w-0">
-                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                  Search
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-gray-700 uppercase">
+                    Search
+                  </label>
+                  {(q !== "" || statusFilter !== "") && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setQ("");
+                        setStatusFilter("");
+                        setPage(1);
+                      }}
+                      className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
+                    >
+                      Clear All
+                    </Button>
+                  )}
+                </div>
                 <div className="relative">
                   <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                   <Input

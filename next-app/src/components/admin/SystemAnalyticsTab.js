@@ -223,9 +223,24 @@ export default function SystemAnalyticsTab({
           <div className="flex flex-col lg:flex-row lg:items-end gap-4 justify-between">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 flex-1">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                  Student Status
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-gray-700 uppercase">
+                    Student Status
+                  </label>
+                  {(statusFilter !== "Active" || courseFilter !== "") && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setStatusFilter("Active");
+                        setCourseFilter("");
+                      }}
+                      className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
+                    >
+                      Clear All
+                    </Button>
+                  )}
+                </div>
                 <select
                   className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
                   value={statusFilter}

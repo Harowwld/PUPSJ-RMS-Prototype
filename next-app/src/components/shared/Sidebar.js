@@ -65,21 +65,28 @@ export default function Sidebar({ items, activeKey, onSelect }) {
                       {item.badge > 99 ? "99+" : item.badge}
                     </span>
                   ) : null}
-                  <i className={`ph-bold ${isExpanded ? "ph-caret-up" : "ph-caret-down"}`}></i>
+                  <i className={`ph-bold ph-caret-down transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`}></i>
                 </div>
               </button>
               
-              {isExpanded && (
-                <div className="flex flex-col pl-4 gap-1 border-l-2 border-gray-100 ml-6 mt-1">
-                  {item.children.map(child => (
+              <div
+                className={`overflow-hidden transition-all duration-[450ms] ease-out ${
+                  isExpanded ? 'max-h-[500px] opacity-100 mt-1' : 'max-h-0 opacity-0 mt-0'
+                }`}
+              >
+                <div className="flex flex-col pl-4 gap-1 border-l-2 border-gray-100 ml-6">
+                  {item.children.map((child, childIdx) => (
                     <button
                       key={child.key}
                       onClick={() => onSelect(child.key)}
-                      className={`flex items-center justify-between gap-3 px-4 py-2 rounded-brand text-sm font-bold transition-colors whitespace-nowrap ${
+                      className={`flex items-center justify-between gap-3 px-4 py-2 rounded-brand text-sm font-bold transition-all duration-300 whitespace-nowrap ${
                         activeKey === child.key
                           ? "bg-red-50 text-pup-maroon"
                           : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                       }`}
+                      style={{
+                        transitionDelay: isExpanded ? `${childIdx * 50}ms` : '0ms',
+                      }}
                     >
                       <span className="flex items-center gap-3 min-w-0">
                         <i className={`${child.iconClass} text-base`}></i> {child.label}
@@ -92,7 +99,7 @@ export default function Sidebar({ items, activeKey, onSelect }) {
                     </button>
                   ))}
                 </div>
-              )}
+              </div>
             </div>
           );
         }

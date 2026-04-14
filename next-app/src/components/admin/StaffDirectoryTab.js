@@ -126,9 +126,25 @@ export default function StaffDirectoryTab({
 
             <div className="bg-white rounded-brand border border-gray-200 shadow-sm flex-1 flex flex-col overflow-hidden">
               <div className="p-5 border-b border-gray-100 bg-gray-50/50">
-                <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wide mb-4 flex items-center gap-2">
-                  <i className="ph-bold ph-funnel"></i> Directory Filters
-                </h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wide flex items-center gap-2">
+                    <i className="ph-bold ph-funnel"></i> Directory Filters
+                  </h3>
+                  {(search !== "" || roleFilter !== "All" || statusFilter !== "All") && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSearch("");
+                        setRoleFilter("All");
+                        setStatusFilter("All");
+                      }}
+                      className="h-7 px-2 text-[10px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
+                    >
+                      Clear All
+                    </Button>
+                  )}
+                </div>
                 <div className="space-y-4">
                   <div className="relative group">
                     <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-pup-maroon transition-colors"></i>
@@ -164,8 +180,8 @@ export default function StaffDirectoryTab({
                       onChange={(e) => setStatusFilter(e.target.value)}
                     >
                       <option value="All">All Statuses</option>
-                      <option value="Active">Online</option>
-                      <option value="Inactive">Offline</option>
+                      <option value="Active">Active</option>
+                      <option value="Inactive">Inactive</option>
                     </select>
                   </div>
                 </div>
@@ -176,12 +192,15 @@ export default function StaffDirectoryTab({
                   Recent Network Check-ins
                 </h4>
                 <div className="space-y-3">
-                  {recentLogins.map((s) => (
+                  {recentLogins.map((s, idx) => (
                     <div
                       key={s.id}
-                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors cursor-pointer group border border-transparent hover:border-gray-100"
+                      className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-all cursor-pointer group border border-transparent hover:border-gray-100 animate-in zoom-in-95 duration-300 fill-mode-forwards"
+                      style={{
+                        animationDelay: `${idx * 80}ms`,
+                      }}
                     >
-                      <div className="w-8 h-8 rounded-full bg-red-50 text-pup-maroon flex items-center justify-center text-xs font-bold border border-red-100 shrink-0">
+                      <div className="w-8 h-8 rounded-full bg-red-50 text-pup-maroon flex items-center justify-center text-xs font-bold border border-red-100 shrink-0 transition-transform duration-300 group-hover:scale-110">
                         {s.fname[0]}
                         {s.lname[0]}
                       </div>

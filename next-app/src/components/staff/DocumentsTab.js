@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -60,9 +61,31 @@ export default function DocumentsTab({
         <div className="p-4 bg-gray-50/50 flex-none border-b border-gray-200">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
             <div className="lg:col-span-1">
-              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                Student No
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-gray-700 uppercase">
+                  Student No
+                </label>
+                {(docsForm.studentNo !== "" ||
+                  docsForm.studentName !== "" ||
+                  docsForm.docType !== "") && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const cleared = {
+                        studentNo: "",
+                        studentName: "",
+                        docType: "",
+                      };
+                      setDocsForm(cleared);
+                      refreshDocuments(cleared);
+                    }}
+                    className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
+                  >
+                    Clear All
+                  </Button>
+                )}
+              </div>
               <input
                 className="w-full h-10 font-mono bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={docsForm.studentNo}

@@ -80,9 +80,24 @@ export default function DigitalRecordsReviewTab({
         <div className="p-4 bg-gray-50/50 flex-none border-b border-gray-200">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
             <div className="lg:col-span-1">
-              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                Search Records
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-gray-700 uppercase">
+                  Search Records
+                </label>
+                {(searchQuery !== "" || statusFilter !== "All") && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setStatusFilter("All");
+                    }}
+                    className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
+                  >
+                    Clear All
+                  </Button>
+                )}
+              </div>
               <div className="relative">
                 <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                 <Input
