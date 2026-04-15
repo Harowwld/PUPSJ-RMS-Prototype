@@ -472,7 +472,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
               </div>
               <Button
                 onClick={() => setIsAddDocTypeOpen(true)}
-                className="bg-pup-maroon text-white h-10 px-5 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors w-full md:w-auto"
+                className="bg-pup-maroon text-white px-5 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors w-full md:w-auto"
               >
                 <i className="ph-bold ph-plus"></i> Add Document Type
               </Button>
@@ -505,7 +505,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                               setEditDocType({ id: dt.id, name: dt.name });
                               setIsEditDocTypeOpen(true);
                             }}
-                            className="h-8 px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50"
+                            className="px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50"
                           >
                             <i className="ph-bold ph-pencil-simple mr-1.5"></i>
                             Edit
@@ -522,7 +522,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                             });
                             setConfirmOpen(true);
                           }}
-                          className="h-8 px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
+                          className="px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
                         >
                           <i className="ph-bold ph-trash mr-1.5"></i>
                           Delete
@@ -568,7 +568,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
               </div>
               <Button
                 onClick={() => setIsAddCourseOpen(true)}
-                className="bg-pup-maroon text-white h-10 px-5 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors w-full lg:w-auto"
+                className="bg-pup-maroon text-white px-5 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors w-full lg:w-auto"
               >
                 <i className="ph-bold ph-plus"></i> Add Degree Program
               </Button>
@@ -607,7 +607,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                               setEditCourse({ id: c.id, code: c.code, name: c.name });
                               setIsEditCourseOpen(true);
                             }}
-                            className="h-8 px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50"
+                            className="px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50"
                           >
                             <i className="ph-bold ph-pencil-simple mr-1.5"></i>
                             Edit
@@ -624,7 +624,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                             });
                             setConfirmOpen(true);
                           }}
-                          className="h-8 px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
+                          className="px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
                         >
                           <i className="ph-bold ph-trash mr-1.5"></i>
                           Delete
@@ -686,7 +686,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                     setSecCourseCode(selectedCourseFilter);
                     setIsAddSectionOpen(true);
                   }}
-                  className="bg-pup-maroon text-white h-10 px-5 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors w-full sm:w-auto shrink-0"
+                  className="bg-pup-maroon text-white px-5 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors w-full sm:w-auto shrink-0"
                 >
                   <i className="ph-bold ph-plus"></i> Add Course Block
                 </Button>
@@ -736,7 +736,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                                 });
                                 setIsEditSectionOpen(true);
                               }}
-                              className="h-8 px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50"
+                              className="px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50"
                             >
                               <i className="ph-bold ph-pencil-simple mr-1.5"></i>
                               Edit
@@ -753,7 +753,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                               });
                               setConfirmOpen(true);
                             }}
-                            className="h-8 px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
+                            className="px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
                           >
                             <i className="ph-bold ph-trash mr-1.5"></i>
                             Delete
@@ -827,7 +827,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                         <a
                           href="data:text/csv;charset=utf-8,Category,Name,Code%0ADocumentType,Birth Certificate,%0ACourse,Bachelor of Science in IT,BSIT%0ASection,Block 1,BSIT"
                           download="taxonomy-import-template.csv"
-                          className="inline-flex items-center h-9 px-3 rounded-brand border border-gray-300 bg-white text-xs font-bold text-gray-700 hover:text-pup-maroon hover:border-pup-maroon"
+                          className="inline-flex items-center h-10 px-3 rounded-brand border border-gray-300 bg-white text-xs font-bold text-gray-700 hover:text-pup-maroon hover:border-pup-maroon"
                         >
                           <i className="ph-bold ph-file-csv mr-1.5"></i>
                           Download Template
@@ -835,7 +835,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                         <button
                           type="button"
                           onClick={handleCopySample}
-                          className="inline-flex items-center h-9 px-3 rounded-brand border border-gray-300 bg-white text-xs font-bold text-gray-700 hover:text-pup-maroon hover:border-pup-maroon"
+                          className="inline-flex items-center h-10 px-3 rounded-brand border border-gray-300 bg-white text-xs font-bold text-gray-700 hover:text-pup-maroon hover:border-pup-maroon"
                         >
                           <i className="ph-bold ph-copy mr-1.5"></i>
                           Copy Sample
@@ -933,7 +933,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                           <Input
                             type="text"
                             placeholder="e.g. What is your mother's maiden name?"
-                            className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                            className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                             value={q}
                             onChange={(e) => {
                               const updated = [...securityQuestions];
@@ -948,7 +948,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                       <Button
                         type="submit"
                         disabled={securitySaving}
-                        className="bg-pup-maroon text-white h-10 px-6 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors"
+                        className="bg-pup-maroon text-white px-6 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors"
                       >
                         <i className="ph-bold ph-floppy-disk"></i> {securitySaving ? "Saving..." : "Save Questions"}
                       </Button>
@@ -978,7 +978,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
               </label>
               <Input
                 type="text"
-                className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                 value={editDocType.name}
                 onChange={(e) =>
                   setEditDocType((prev) => ({ ...prev, name: e.target.value }))
@@ -987,10 +987,10 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
               />
             </div>
             <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setIsEditDocTypeOpen(false)} className="h-10 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand">
+              <Button type="button" variant="outline" onClick={() => setIsEditDocTypeOpen(false)} className="px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand">
                 Cancel
               </Button>
-              <Button type="submit" className="h-10 px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand">
+              <Button type="submit" className="px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand">
                 Save Changes
               </Button>
             </div>
@@ -1016,7 +1016,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                 </label>
                 <Input
                   type="text"
-                  className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                   value={editCourse.code}
                   onChange={(e) =>
                     setEditCourse((prev) => ({ ...prev, code: e.target.value }))
@@ -1030,7 +1030,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                 </label>
                 <Input
                   type="text"
-                  className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                   value={editCourse.name}
                   onChange={(e) =>
                     setEditCourse((prev) => ({ ...prev, name: e.target.value }))
@@ -1040,10 +1040,10 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
               </div>
             </div>
             <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setIsEditCourseOpen(false)} className="h-10 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand">
+              <Button type="button" variant="outline" onClick={() => setIsEditCourseOpen(false)} className="px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand">
                 Cancel
               </Button>
-              <Button type="submit" className="h-10 px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand">
+              <Button type="submit" className="px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand">
                 Save Changes
               </Button>
             </div>
@@ -1091,7 +1091,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                 </label>
                 <Input
                   type="text"
-                  className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                   value={editSection.name}
                   onChange={(e) =>
                     setEditSection((prev) => ({ ...prev, name: e.target.value }))
@@ -1101,10 +1101,10 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
               </div>
             </div>
             <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setIsEditSectionOpen(false)} className="h-10 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand">
+              <Button type="button" variant="outline" onClick={() => setIsEditSectionOpen(false)} className="px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand">
                 Cancel
               </Button>
-              <Button type="submit" className="h-10 px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand">
+              <Button type="submit" className="px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand">
                 Save Changes
               </Button>
             </div>
@@ -1153,7 +1153,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
               <Input
                 type="text"
                 placeholder="E.g. Birth Certificate, Transcript of Records"
-                className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                 value={dtName}
                 onChange={(e) => setDtName(e.target.value)}
                 autoFocus
@@ -1165,13 +1165,13 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                 type="button"
                 variant="outline"
                 onClick={() => setIsAddDocTypeOpen(false)}
-                className="h-10 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+                className="px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="h-10 px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
+                className="px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
               >
                 Save Document Type
               </Button>
@@ -1206,7 +1206,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                 <Input
                   type="text"
                   placeholder="E.g. BSIT, BSCS, BSBA"
-                  className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                   value={cCode}
                   onChange={(e) => setCCode(e.target.value)}
                   autoFocus
@@ -1220,7 +1220,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                 <Input
                   type="text"
                   placeholder="E.g. Bachelor of Science in Information Technology"
-                  className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                   value={cName}
                   onChange={(e) => setCName(e.target.value)}
                   required
@@ -1232,13 +1232,13 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                 type="button"
                 variant="outline"
                 onClick={() => setIsAddCourseOpen(false)}
-                className="h-10 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+                className="px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="h-10 px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
+                className="px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
               >
                 Save Program
               </Button>
@@ -1293,7 +1293,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                 <Input
                   type="text"
                   placeholder="E.g. Block 1, Section A, Group 2024"
-                  className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                   value={secName}
                   onChange={(e) => setSecName(e.target.value)}
                   required
@@ -1305,13 +1305,13 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
                 type="button"
                 variant="outline"
                 onClick={() => setIsAddSectionOpen(false)}
-                className="h-10 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+                className="px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="h-10 px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
+                className="px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
               >
                 Save Block
               </Button>

@@ -305,7 +305,7 @@ export default function AccountPage() {
               const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
               router.push(path);
             }}
-            className="h-11 px-6 font-black uppercase tracking-widest text-xs border-gray-300 hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-sm flex items-center gap-2 shrink-0 rounded-brand"
+            className="px-6 font-black uppercase tracking-widest text-xs border-gray-300 hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-sm flex items-center gap-2 shrink-0 rounded-brand"
           >
             <i className="ph-bold ph-arrow-left"></i>
             Return to Dashboard
@@ -414,8 +414,7 @@ export default function AccountPage() {
                         </label>
                         <Input
                           type="text"
-                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
-                          placeholder="Your given name"
+                          className="bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"                          placeholder="Your given name"
                           value={fname}
                           onChange={(e) => setFname(e.target.value)}
                           required
@@ -427,8 +426,7 @@ export default function AccountPage() {
                         </label>
                         <Input
                           type="text"
-                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
-                          placeholder="Your family name"
+                          className="bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"                          placeholder="Your family name"
                           value={lname}
                           onChange={(e) => setLname(e.target.value)}
                           required
@@ -444,7 +442,7 @@ export default function AccountPage() {
                         <i className="ph-bold ph-envelope-simple absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
                         <Input
                           type="email"
-                          className="h-12 pl-12 bg-gray-50 border-gray-200 rounded-brand font-bold text-gray-500 cursor-not-allowed focus-visible:outline-none"
+                          className="h-11 pl-12 bg-gray-50 border-gray-200 rounded-brand font-bold text-gray-500 cursor-not-allowed focus-visible:outline-none"
                           placeholder="professional.email@pup.edu.ph"
                           value={username}
                           readOnly
@@ -459,7 +457,7 @@ export default function AccountPage() {
                       <Button
                         type="submit"
                         disabled={profileLoading}
-                        className="h-12 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+                        className="h-11 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
                       >
                         {profileLoading ? (
                           <i className="ph-bold ph-spinner animate-spin"></i>
@@ -509,7 +507,7 @@ export default function AccountPage() {
                         </label>
                         <Input
                           type="password"
-                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
+                          className="h-11 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
                           placeholder="••••••••"
                           value={pwCurrent}
                           onChange={(e) => setPwCurrent(e.target.value)}
@@ -523,7 +521,7 @@ export default function AccountPage() {
                         </label>
                         <Input
                           type="password"
-                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
+                          className="h-11 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
                           placeholder="Min. 6 alphanumeric characters"
                           value={pwNext}
                           onChange={(e) => setPwNext(e.target.value)}
@@ -537,7 +535,7 @@ export default function AccountPage() {
                         </label>
                         <Input
                           type="password"
-                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
+                          className="h-11 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
                           placeholder="Must match the entry above"
                           value={pwConfirm}
                           onChange={(e) => setPwConfirm(e.target.value)}
@@ -549,7 +547,7 @@ export default function AccountPage() {
                         <Button
                           type="submit"
                           disabled={pwLoading}
-                          className="h-12 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+                          className="h-11 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
                         >
                           {pwLoading ? (
                             <i className="ph-bold ph-spinner animate-spin"></i>
@@ -615,8 +613,7 @@ export default function AccountPage() {
                               </label>
                               <Input
                                 type="text"
-                                className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
-                                placeholder={q.hasAnswer ? "Answer securely saved. Type to overwrite." : "Your answer"}
+                                className="bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"                                placeholder={q.hasAnswer ? "Answer securely saved. Type to overwrite." : "Your answer"}
                                 value={secAnswers[q.id] || ""}
                                 onChange={(e) => setSecAnswers({ ...secAnswers, [q.id]: e.target.value })}
                               />
@@ -629,7 +626,7 @@ export default function AccountPage() {
                         <Button
                           type="submit"
                           disabled={secLoading || globalQuestions.length === 0}
-                          className="h-12 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+                          className="h-11 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
                         >
                           {secLoading ? (
                             <i className="ph-bold ph-spinner animate-spin"></i>

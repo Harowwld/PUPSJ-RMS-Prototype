@@ -3,14 +3,9 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 import { useHotFolderInbox } from "@/hooks/useHotFolderInbox";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 export default function ScanUploadTab({
   uploadMode,
@@ -206,7 +201,7 @@ export default function ScanUploadTab({
           <DialogFooter>
             <button
               type="button"
-              className="h-9 px-3 rounded-brand bg-white border border-gray-300 text-gray-800 font-bold text-xs hover:border-pup-maroon"
+              className="h-10 px-4 rounded-brand bg-white border border-gray-300 text-gray-800 font-bold text-xs hover:border-pup-maroon"
               onClick={() => setClearInboxOpen(false)}
               disabled={hf.loading}
             >
@@ -214,7 +209,7 @@ export default function ScanUploadTab({
             </button>
             <button
               type="button"
-              className="h-9 px-3 rounded-brand bg-pup-maroon text-white font-bold text-xs hover:bg-red-900 disabled:opacity-60"
+              className="h-10 px-4 rounded-brand bg-pup-maroon text-white font-bold text-xs hover:bg-red-900 disabled:opacity-60"
               onClick={async () => {
                 await hf.clearInbox();
                 setClearInboxOpen(false);
@@ -558,7 +553,7 @@ export default function ScanUploadTab({
                       e.stopPropagation();
                       handleClearPdf();
                     }}
-                    className="px-6 py-2.5 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
+                    className="px-6 h-10 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
                   >
                     Remove File
                   </button>
@@ -699,7 +694,7 @@ export default function ScanUploadTab({
                   </label>
                   <input
                     type="text"
-                    className={`form-input font-mono ${ring("studentNo")} ${
+                    className={`form-input h-11 font-mono ${ring("studentNo")} ${
                       lockIdentity ? lockedField : ""
                     }`}
                     placeholder="202X-XXXXX-MN-0"
@@ -774,7 +769,7 @@ export default function ScanUploadTab({
                   </label>
                   <input
                     type="text"
-                    className={`form-input ${ring("name")} ${lockIdentity ? lockedField : ""}`}
+                    className={`form-input h-11 ${ring("name")} ${lockIdentity ? lockedField : ""}`}
                     placeholder="Last Name, First Name"
                     value={newRec.name}
                     disabled={lockIdentity}
@@ -818,7 +813,7 @@ export default function ScanUploadTab({
                   Course / Program
                 </label>
                 <select
-                  className={`form-select ${ring("course")} ${lockIdentity ? lockedField : ""}`}
+                  className={`form-select h-11 ${ring("course")} ${lockIdentity ? lockedField : ""}`}
                   value={newRec.course}
                   disabled={lockIdentity}
                   onChange={(e) => {
@@ -849,7 +844,7 @@ export default function ScanUploadTab({
                     Section
                   </label>
                   <select
-                    className={`form-select ${ring("sectionPart")} ${lockIdentity ? lockedField : ""}`}
+                    className={`form-select h-11 ${ring("sectionPart")} ${lockIdentity ? lockedField : ""}`}
                     value={newRec.sectionPart}
                     onChange={(e) => {
                       clearUploadFieldError?.("sectionPart");
@@ -877,7 +872,7 @@ export default function ScanUploadTab({
                     Room
                   </label>
                   <select
-                    className={`form-select ${ring("room")}`}
+                    className={`form-select h-11 ${ring("room")}`}
                     value={String(newRec.room || "")}
                     onChange={(e) => {
                       clearUploadFieldError?.("room");
@@ -898,7 +893,7 @@ export default function ScanUploadTab({
                     Cabinet
                   </label>
                   <select
-                    className={`form-select ${ring("cabinet")}`}
+                    className={`form-select h-11 ${ring("cabinet")}`}
                     value={newRec.cabinet}
                     onChange={(e) => {
                       clearUploadFieldError?.("cabinet");
@@ -918,7 +913,7 @@ export default function ScanUploadTab({
                     Drawer
                   </label>
                   <select
-                    className={`form-select ${ring("drawer")}`}
+                    className={`form-select h-11 ${ring("drawer")}`}
                     value={String(newRec.drawer || "")}
                     onChange={(e) => {
                       clearUploadFieldError?.("drawer");
@@ -940,7 +935,7 @@ export default function ScanUploadTab({
                   Document Type
                 </label>
                 <select
-                  className={`form-select ${ring("docType")}`}
+                  className={`form-select h-11 ${ring("docType")}`}
                   value={newRec.docType}
                   onChange={(e) => {
                     clearUploadFieldError?.("docType");
@@ -959,7 +954,7 @@ export default function ScanUploadTab({
               <button
                 type="button"
                 onClick={() => processSubmission({ onSuccess: () => hf.removeIngestItem() })}
-                className="w-full bg-pup-maroon text-white py-3 rounded-brand font-bold text-sm hover:bg-red-900 transition-all shadow-sm flex items-center justify-center gap-2"
+                className="w-full bg-pup-maroon text-white h-11 rounded-brand font-bold text-sm hover:bg-red-900 transition-all shadow-sm flex items-center justify-center gap-2"
               >
                 <i className="ph-bold ph-upload-simple" /> Submit Upload
               </button>
@@ -981,7 +976,7 @@ export default function ScanUploadTab({
                     ref={csvInputRef}
                     type="file"
                     accept=".csv,text/csv"
-                    className="block w-full text-sm text-gray-600 file:mr-3 file:h-10 file:px-4 file:rounded-brand file:border file:border-gray-300 file:bg-white file:text-gray-700 file:font-bold hover:file:border-pup-maroon"
+                    className="block w-full text-sm text-gray-600 file:mr-3 file:h-11 file:px-4 file:rounded-brand file:border file:border-gray-300 file:bg-white file:text-gray-700 file:font-bold hover:file:border-pup-maroon"
                     onChange={(e) => handleCsvFileSelect(e.target.files?.[0] || null)}
                   />
                 </div>
@@ -1010,7 +1005,7 @@ export default function ScanUploadTab({
                         Bulk Room
                       </label>
                       <select
-                        className="form-select"
+                        className="form-select h-11"
                         value={csvBulkRoom}
                         onChange={(e) => setCsvBulkRoom(e.target.value)}
                       >
@@ -1028,7 +1023,7 @@ export default function ScanUploadTab({
                         Bulk Cabinet
                       </label>
                       <select
-                        className="form-select"
+                        className="form-select h-11"
                         value={csvBulkCabinet}
                         onChange={(e) => setCsvBulkCabinet(e.target.value)}
                       >
@@ -1057,7 +1052,7 @@ export default function ScanUploadTab({
                         Bulk Drawer
                       </label>
                       <select
-                        className="form-select"
+                        className="form-select h-11"
                         value={csvBulkDrawer}
                         onChange={(e) => setCsvBulkDrawer(e.target.value)}
                       >
@@ -1090,7 +1085,7 @@ export default function ScanUploadTab({
                     <button
                       type="button"
                       onClick={applyCsvBulkLocation}
-                      className="px-4 h-10 rounded-brand bg-pup-maroon text-white font-bold text-sm hover:bg-red-900"
+                      className="px-4 h-11 rounded-brand bg-pup-maroon text-white font-bold text-sm hover:bg-red-900"
                       disabled={Object.values(csvSelected).filter(Boolean).length === 0}
                     >
                       Apply to Selected
@@ -1098,7 +1093,7 @@ export default function ScanUploadTab({
                     <button
                       type="button"
                       onClick={() => setCsvSelected({})}
-                      className="px-4 h-10 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
+                      className="px-4 h-11 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
                       disabled={Object.values(csvSelected).filter(Boolean).length === 0}
                     >
                       Clear Selection
@@ -1111,7 +1106,7 @@ export default function ScanUploadTab({
                 type="button"
                 onClick={importCsvStudents}
                 disabled={csvLoading}
-                className={`w-full bg-pup-maroon text-white py-3 rounded-brand font-bold text-sm hover:bg-red-900 transition-all shadow-sm flex items-center justify-center gap-2 ${
+                className={`w-full bg-pup-maroon text-white h-11 rounded-brand font-bold text-sm hover:bg-red-900 transition-all shadow-sm flex items-center justify-center gap-2 ${
                   csvLoading ? "opacity-75 cursor-not-allowed" : ""
                 }`}
               >

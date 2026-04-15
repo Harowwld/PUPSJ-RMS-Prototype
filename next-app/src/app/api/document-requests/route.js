@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { getSessionCookieName, verifySessionToken } from "../../../lib/jwt";
 import { getStaffById } from "../../../lib/staffRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
+import { isAdminRole } from "../../../lib/roleUtils";
 import {
   listDocumentRequests,
   countDocumentRequests,
@@ -30,13 +31,15 @@ async function getSessionStaff() {
   }
 }
 
-function isActiveStaff(staff) {
-  return staff && String(staff.status || "").toLowerCase() === "active";
+function isActiveStaffOrAdmin(staff) {
+  if (!staff) return false;
+  if (isAdminRole(staff.role)) return true;
+  return String(staff.status || "").toLowerCase() === "active";
 }
 
 export async function GET(req) {
   const staff = await getSessionStaff();
-  if (!staff || !isActiveStaff(staff)) {
+  if (!staff || !isActiveStaffOrAdmin(staff)) {
     return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 
@@ -67,7 +70,7 @@ export async function GET(req) {
 
 export async function POST(req) {
   const staff = await getSessionStaff();
-  if (!staff || !isActiveStaff(staff)) {
+  if (!staff || !isActiveStaffOrAdmin(staff)) {
     return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
   }
 

@@ -60,7 +60,7 @@ export default function PromptModal({
           ) : (
             <Input
               type="text"
-              className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+              className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
               value={value}
               onChange={(e) => onChange(e.target.value)}
               placeholder={placeholder}

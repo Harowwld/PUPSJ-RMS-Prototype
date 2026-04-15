@@ -133,13 +133,13 @@ export default function StaffDirectoryTab({
                   {(search !== "" || roleFilter !== "All" || statusFilter !== "All") && (
                     <Button
                       variant="ghost"
-                      size="sm"
+                      size="xs"
                       onClick={() => {
                         setSearch("");
                         setRoleFilter("All");
                         setStatusFilter("All");
                       }}
-                      className="h-7 px-2 text-[10px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
+                      className="px-2 font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
                     >
                       Clear All
                     </Button>
@@ -151,7 +151,7 @@ export default function StaffDirectoryTab({
                     <Input
                       type="text"
                       placeholder="Query name or ID..."
-                      className="pl-9 h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                      className="pl-9 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
                     />
@@ -334,7 +334,7 @@ export default function StaffDirectoryTab({
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => window.location.href = "/account"}
-                                className="h-8 px-3 font-bold text-xs text-pup-maroon hover:bg-pup-maroon/10 hover:text-pup-darkMaroon"
+                                className="px-3 font-bold text-xs text-pup-maroon hover:bg-pup-maroon/10 hover:text-pup-darkMaroon"
                               >
                                 <i className="ph-bold ph-user-circle mr-1.5 min-w-[14px]"></i>
                                 Account
@@ -345,7 +345,7 @@ export default function StaffDirectoryTab({
                                   variant="outline"
                                   size="sm"
                                   onClick={() => onEditUser(s.id)}
-                                  className="h-8 px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50"
+                                  className="px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50"
                                   title="Modify Account"
                                 >
                                   <i className="ph-bold ph-pencil-simple mr-1.5 min-w-[14px]"></i>
@@ -355,7 +355,7 @@ export default function StaffDirectoryTab({
                                   variant="outline"
                                   size="sm"
                                   onClick={() => onDeleteUser(s.id)}
-                                  className="h-8 px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
+                                  className="px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
                                   title="Revoke Network Credentials"
                                 >
                                   <i className="ph-bold ph-trash mr-1.5 min-w-[14px]"></i>
@@ -408,7 +408,7 @@ export default function StaffDirectoryTab({
                     size="sm"
                     disabled={displayPage <= 1}
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    className="h-8 text-xs font-bold text-gray-600"
+                    className="text-xs font-bold text-gray-600"
                   >
                     <i className="ph-bold ph-caret-left"></i> Previous
                   </Button>
@@ -420,7 +420,7 @@ export default function StaffDirectoryTab({
                     size="sm"
                     disabled={displayPage >= totalPages}
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    className="h-8 text-xs font-bold text-gray-600"
+                    className="text-xs font-bold text-gray-600"
                   >
                     Next <i className="ph-bold ph-caret-right"></i>
                   </Button>

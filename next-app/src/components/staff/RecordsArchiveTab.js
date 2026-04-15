@@ -276,7 +276,7 @@ export default function RecordsArchiveTab({
             <Input
               type="text"
               placeholder="Search ID or Name..."
-              className="w-full pl-10 pr-10 h-10 bg-white border border-gray-300 rounded-brand text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon transition-all placeholder-gray-500 text-gray-900"
+              className="w-full pl-10 pr-10 bg-white border border-gray-300 rounded-brand text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon transition-all placeholder-gray-500 text-gray-900"
               value={quickQuery}
               onChange={(e) => setQuickQuery(e.target.value)}
             />
@@ -353,7 +353,7 @@ export default function RecordsArchiveTab({
                 variant="ghost"
                 size="icon"
                 onClick={() => onBreadcrumbClick({ level: "years" })}
-                className="text-gray-500 hover:text-pup-maroon hover:bg-transparent transition-colors h-8 w-8"
+                className="text-gray-500 hover:text-pup-maroon hover:bg-transparent transition-colors w-8"
                 title="Home"
               >
                 <i className="ph-bold ph-house text-lg"></i>
@@ -386,10 +386,10 @@ export default function RecordsArchiveTab({
 
             {currentLevel === "students" && (
               <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-brand">
-                <Button variant="ghost" size="sm" className={`h-7 px-2 text-xs font-bold ${listType === 'card' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'}`} onClick={() => setListType('card')}>
+                <Button variant="ghost" size="sm" className={`px-2 text-xs font-bold ${listType === 'card' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'}`} onClick={() => setListType('card')}>
                   <i className="ph-bold ph-squares-four" /> Card
                 </Button>
-                <Button variant="ghost" size="sm" className={`h-7 px-2 text-xs font-bold ${listType === 'table' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'}`} onClick={() => setListType('table')}>
+                <Button variant="ghost" size="sm" className={`px-2 text-xs font-bold ${listType === 'table' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'}`} onClick={() => setListType('table')}>
                   <i className="ph-bold ph-list-dashes" /> Table
                 </Button>
               </div>
@@ -412,7 +412,7 @@ export default function RecordsArchiveTab({
                 <Button
                   type="button"
                   onClick={() => onSwitchView("upload")}
-                  className="mt-6 bg-pup-maroon text-white px-5 py-5 rounded-brand font-bold text-sm hover:bg-red-900 transition-colors flex items-center gap-2"
+                  className="mt-6 bg-pup-maroon text-white px-5 h-10 rounded-brand font-bold text-sm hover:bg-red-900 transition-colors flex items-center gap-2"
                 >
                   <i className="ph-bold ph-upload-simple"></i> Go to Register / Upload
                 </Button>
@@ -425,7 +425,7 @@ export default function RecordsArchiveTab({
                     className={`folder-card bg-white p-5 rounded-brand flex flex-col items-center justify-center text-center gap-2 h-36 ${
                       it.disabled
                         ? "opacity-50 cursor-not-allowed"
-                        : "cursor-pointer"
+                        : "cursor-not-allowed"
                     }`}
                     onClick={it.onClick}
                   >
@@ -518,7 +518,7 @@ export default function RecordsArchiveTab({
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" className="text-gray-400 group-hover:text-pup-maroon uppercase font-bold text-[10px] tracking-wider h-7">
+                          <Button variant="ghost" size="sm" className="text-gray-400 group-hover:text-pup-maroon uppercase font-bold text-[10px] tracking-wider">
                             Locate
                           </Button>
                         </TableCell>
@@ -542,7 +542,7 @@ export default function RecordsArchiveTab({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-8 text-xs font-bold border-gray-300"
+                  className="text-xs font-bold border-gray-300"
                   onClick={() => setStorageFullscreen(false)}
                   title="Exit full screen (Esc)"
                 >
@@ -567,7 +567,7 @@ export default function RecordsArchiveTab({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-8 text-xs font-bold border-gray-300"
+                  className="text-xs font-bold border-gray-300"
                   onClick={() => setStorageFullscreen(true)}
                   title="Full screen map & documents"
                 >

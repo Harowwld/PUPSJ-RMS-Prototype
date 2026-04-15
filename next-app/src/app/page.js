@@ -7,8 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 
-const adminUsernames = ["admin", "admin", "registrar", "head_registrar"];
-
 export default function Home() {
   const router = useRouter();
   const [username, setUsername] = useState("");
@@ -183,11 +181,11 @@ export default function Home() {
                 Username
               </label>
               <div className="relative">
-                <i className="ph-bold ph-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"></i>
-                <input
+                <i className="ph-bold ph-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none z-10"></i>
+                <Input
                   type="text"
                   id="username"
-                  className="form-input has-left-icon"
+                  className="pl-10 bg-white border border-pup-border rounded-brand text-sm focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                   placeholder="Enter your ID (e.g., admin)"
                   required
                   autoFocus
@@ -207,11 +205,11 @@ export default function Home() {
                 </label>
               </div>
               <div className="relative">
-                <i className="ph-bold ph-lock-key absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none"></i>
-                <input
+                <i className="ph-bold ph-lock-key absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none z-10"></i>
+                <Input
                   type="password"
                   id="password"
-                  className="form-input has-left-icon"
+                  className="pl-10 bg-white border border-pup-border rounded-brand text-sm focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                   placeholder="••••••••"
                   required
                   value={password}
@@ -235,10 +233,10 @@ export default function Home() {
               </div>
             ) : null}
 
-            <button
+            <Button
               type="submit"
               disabled={isLoading}
-              className={`w-full bg-pup-maroon text-white py-3 rounded-brand font-bold text-sm hover:bg-red-900 transition-all shadow-sm flex items-center justify-center gap-2 group mt-2 ${
+              className={`w-full bg-pup-maroon text-white font-bold text-sm hover:bg-red-900 transition-all shadow-sm flex items-center justify-center gap-2 group mt-2 ${
                 isLoading ? "opacity-75 cursor-not-allowed" : ""
               }`}
             >
@@ -253,7 +251,7 @@ export default function Home() {
                   <i className="ph-bold ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
                 </>
               )}
-            </button>
+            </Button>
           </form>
         </div>
 
@@ -299,7 +297,7 @@ export default function Home() {
                 <Input
                   type="text"
                   placeholder="e.g. admin or professional.email@pup.edu.ph"
-                  className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                   value={forgotIdentifier}
                   onChange={(e) => setForgotIdentifier(e.target.value)}
                   autoFocus
@@ -311,14 +309,14 @@ export default function Home() {
                   type="button"
                   variant="outline"
                   onClick={() => setIsForgotOpen(false)}
-                  className="h-10 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+                  className="px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
                 >
                   Cancel
                 </Button>
                 <Button
                   type="submit"
                   disabled={forgotLoading}
-                  className="h-10 px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
+                  className="px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
                 >
                   {forgotLoading ? "Locating..." : "Next Step"}
                 </Button>
@@ -336,7 +334,7 @@ export default function Home() {
                 <div className="p-3 bg-gray-50 border border-gray-200 rounded-brand">
                   <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Select Security Question</p>
                   <select
-                    className="w-full bg-white border border-gray-300 rounded-brand text-sm px-3 py-2 font-bold text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon"
+                    className="form-select h-11 w-full bg-white border border-gray-300 rounded-brand text-sm px-3 py-2 font-bold text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon"
                     value={forgotQuestionId || ""}
                     onChange={(e) => setForgotQuestionId(Number(e.target.value))}
                   >
@@ -353,7 +351,7 @@ export default function Home() {
                   <Input
                     type="password"
                     placeholder="Answer"
-                    className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                    className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                     value={forgotAnswer}
                     onChange={(e) => setForgotAnswer(e.target.value)}
                     autoFocus
@@ -368,7 +366,7 @@ export default function Home() {
                   <Input
                     type="password"
                     placeholder="Min. 6 alphanumeric characters"
-                    className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                    className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                     value={forgotNewPassword}
                     onChange={(e) => setForgotNewPassword(e.target.value)}
                     required
@@ -382,7 +380,7 @@ export default function Home() {
                   <Input
                     type="password"
                     placeholder="Must match the entry above"
-                    className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                    className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                     value={forgotConfirmPassword}
                     onChange={(e) => setForgotConfirmPassword(e.target.value)}
                     required
@@ -394,14 +392,14 @@ export default function Home() {
                   type="button"
                   variant="outline"
                   onClick={() => setForgotStep(1)}
-                  className="h-10 px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+                  className="px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
                 >
                   Back
                 </Button>
                 <Button
                   type="submit"
                   disabled={forgotLoading}
-                  className="h-10 px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
+                  className="px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
                 >
                   {forgotLoading ? "Resetting..." : "Reset Password"}
                 </Button>

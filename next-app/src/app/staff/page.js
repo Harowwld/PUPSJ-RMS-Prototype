@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Sidebar from "@/components/shared/Sidebar";
@@ -36,11 +36,18 @@ function getStudentNoYear(studentNo) {
   return year;
 }
 
-export default function StaffPage() {
+function StaffPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const coreDataLoadedRef = useRef(false);
   const docsLoadedRef = useRef(false);
-  const [view, setView] = useState("requests");
+
+  const validViews = ["requests", "upload", "documents", "notifications", "search"];
+  const initialView = validViews.includes(searchParams?.get("view"))
+    ? searchParams.get("view")
+    : "requests";
+
+  const [view, setView] = useState(initialView);
   const [authUser, setAuthUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notificationsUnread, setNotificationsUnread] = useState(0);
@@ -1274,5 +1281,23 @@ export default function StaffPage() {
         }}
       />
     </div>
+  );
+}
+
+export default function StaffPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4">
+          <Skeleton className="h-16 w-full rounded-brand shrink-0" />
+          <div className="flex-1 flex gap-4">
+            <Skeleton className="w-[30%] h-full rounded-brand" />
+            <Skeleton className="w-[70%] h-full rounded-brand" />
+          </div>
+        </div>
+      }
+    >
+      <StaffPageContent />
+    </Suspense>
   );
 }

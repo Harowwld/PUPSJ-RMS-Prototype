@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -80,14 +81,14 @@ export default function DocumentsTab({
                       setDocsForm(cleared);
                       refreshDocuments(cleared);
                     }}
-                    className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
+                    className="px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
                   >
                     Clear All
                   </Button>
                 )}
               </div>
-              <input
-                className="w-full h-10 font-mono bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+              <Input
+                className="font-mono bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={docsForm.studentNo}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -106,8 +107,8 @@ export default function DocumentsTab({
               <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
                 Student Name
               </label>
-              <input
-                className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+              <Input
+                className="bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={docsForm.studentName}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -314,9 +315,9 @@ export default function DocumentsTab({
                             <div className="flex justify-end flex-wrap gap-2">
                               {r.doc ? (
                                 <>
-                                  <button
-                                    type="button"
-                                    className="px-3 h-10 inline-flex items-center rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-xs hover:border-pup-maroon"
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     onClick={() =>
                                       onPreviewDocument?.(
                                         r.doc_type,
@@ -325,11 +326,12 @@ export default function DocumentsTab({
                                         r.doc.id,
                                       )
                                     }
+                                    className="px-3 font-bold text-xs border-gray-300 text-gray-700 hover:border-pup-maroon"
                                   >
                                     View
-                                  </button>
-                                  <button
-                                    type="button"
+                                  </Button>
+                                  <Button
+                                    size="sm"
                                     onClick={async () => {
                                       if (!r.doc?.id) return;
                                       setUpdateTargetId(r.doc.id);
@@ -345,10 +347,10 @@ export default function DocumentsTab({
                                       setUpdateFile(null);
                                       setUpdatePromptOpen(true);
                                     }}
-                                    className="px-3 h-10 rounded-brand bg-pup-maroon text-white font-bold text-xs hover:bg-red-900"
+                                    className="px-3 bg-pup-maroon text-white font-bold text-xs hover:bg-red-900"
                                   >
                                     Update
-                                  </button>
+                                  </Button>
                                 </>
                               ) : (
                                 <span className="text-xs font-medium text-gray-400">
@@ -460,8 +462,8 @@ export default function DocumentsTab({
               <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
                 Student Number
               </label>
-              <input
-                className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+              <Input
+                className="bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={updateStudentNo}
                 onChange={(e) => setUpdateStudentNo(e.target.value)}
               />
@@ -470,8 +472,8 @@ export default function DocumentsTab({
               <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
                 Student Name
               </label>
-              <input
-                className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+              <Input
+                className="bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={updateStudentName}
                 onChange={(e) => setUpdateStudentName(e.target.value)}
               />
@@ -495,18 +497,19 @@ export default function DocumentsTab({
           </div>
 
           <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => {
                 setUpdatePromptOpen(false);
                 setUpdateTargetId(null);
                 setUpdateFile(null);
               }}
-              className="px-4 h-10 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
+              className="px-4 font-bold text-sm border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="button"
               onClick={async () => {
                 if (!updateTargetId) return;
@@ -526,10 +529,10 @@ export default function DocumentsTab({
                 }
               }}
               disabled={updateSaving}
-              className="px-4 h-10 rounded-brand bg-pup-maroon text-white font-bold text-sm hover:bg-red-900 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="px-4 bg-pup-maroon text-white font-bold text-sm hover:bg-red-900 disabled:opacity-60 disabled:cursor-not-allowed rounded-brand"
             >
               {updateSaving ? "Saving..." : "Save Changes"}
-            </button>
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
