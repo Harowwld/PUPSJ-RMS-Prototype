@@ -3,6 +3,7 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import AdmZip from "adm-zip";
+import { cookies } from "next/headers";
 import {
   createBackupRecord,
   decryptBackupBuffer,
@@ -13,10 +14,31 @@ import {
 } from "../../../../../lib/backupsRepo";
 import { reloadDb } from "../../../../../lib/sqlite";
 import { writeAuditLog } from "../../../../../lib/auditLogRequest";
+import { getSessionCookieName, verifySessionToken } from "../../../../../lib/jwt";
+import { requireTOTP, extractTOTPToken } from "../../../../../lib/totpMiddleware";
 
 export const runtime = "nodejs";
 
 export async function POST(req) {
+  const store = await cookies();
+  const token = store.get(getSessionCookieName())?.value || "";
+  let userId = null;
+  if (token) {
+    try {
+      const payload = await verifySessionToken(token);
+      userId = payload?.sub;
+    } catch {}
+  }
+
+  const totpToken = extractTOTPToken(req.headers);
+  const totpResult = await requireTOTP(userId, totpToken);
+  if (!totpResult.valid) {
+    return NextResponse.json(
+      { ok: false, error: "TOTP verification required: " + totpResult.error, requiresTOTP: true },
+      { status: 403 }
+    );
+  }
+
   let stagingDir = null;
 
   try {

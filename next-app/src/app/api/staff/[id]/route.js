@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { deleteStaff, getStaffById, updateStaff } from "../../../../lib/staffRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
+import { requireTOTP, extractTOTPToken } from "../../../../lib/totpMiddleware";
 
 export const runtime = "nodejs";
 
@@ -52,6 +53,19 @@ export async function PATCH(req, ctx) {
       body.lastActive === undefined ? undefined : String(body.lastActive).trim(),
   };
 
+  const needsTOTP = patch.role !== undefined;
+  if (needsTOTP) {
+    const currentUserId = await getCurrentUserId();
+    const totpToken = extractTOTPToken(req.headers);
+    const totpResult = await requireTOTP(currentUserId, totpToken);
+    if (!totpResult.valid) {
+      return NextResponse.json(
+        { ok: false, error: "TOTP verification required: " + totpResult.error, requiresTOTP: true },
+        { status: 403 }
+      );
+    }
+  }
+
   try {
     const currentUserId = await getCurrentUserId();
     
@@ -88,7 +102,7 @@ export async function PATCH(req, ctx) {
   }
 }
 
-export async function DELETE(_req, ctx) {
+export async function DELETE(req, ctx) {
   const params = await ctx.params;
   const raw = params.id;
   const id = String(raw || "").trim();
@@ -100,6 +114,15 @@ export async function DELETE(_req, ctx) {
   }
 
   const currentUserId = await getCurrentUserId();
+  const totpToken = extractTOTPToken(req.headers);
+  const totpResult = await requireTOTP(currentUserId, totpToken);
+  if (!totpResult.valid) {
+    return NextResponse.json(
+      { ok: false, error: "TOTP verification required: " + totpResult.error, requiresTOTP: true },
+      { status: 403 }
+    );
+  }
+
   if (currentUserId === id) {
     return NextResponse.json(
       { ok: false, error: "You cannot delete your own account." },

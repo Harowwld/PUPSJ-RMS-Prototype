@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createStaff, listStaff } from "../../../lib/staffRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
+import { requireTOTP, extractTOTPToken } from "../../../lib/totpMiddleware";
+import { verifySessionToken, getSessionCookieName } from "../../../lib/jwt";
+import { cookies } from "next/headers";
 
 export const runtime = "nodejs";
 
@@ -26,6 +29,26 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
+  const cookieStore = await cookies();
+  const store = cookieStore instanceof Promise ? await cookieStore : cookieStore;
+  const token = store.get(getSessionCookieName())?.value || "";
+  let userId = null;
+  if (token) {
+    try {
+      const payload = await verifySessionToken(token);
+      userId = payload?.sub;
+    } catch {}
+  }
+
+  const totpToken = extractTOTPToken(req.headers);
+  const totpResult = await requireTOTP(userId, totpToken);
+  if (!totpResult.valid) {
+    return NextResponse.json(
+      { ok: false, error: "TOTP verification required: " + totpResult.error, requiresTOTP: true },
+      { status: 403 }
+    );
+  }
+
   const body = await req.json().catch(() => null);
   if (!body || typeof body !== "object") {
     return NextResponse.json(
