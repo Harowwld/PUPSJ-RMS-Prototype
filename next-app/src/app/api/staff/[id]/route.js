@@ -134,7 +134,7 @@ export async function DELETE(req, ctx) {
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
-  await writeAuditLog(_req, `Deleted staff account: ${id}`);
+  await writeAuditLog(req, `Deleted staff account: ${id}`);
 
   return NextResponse.json({ ok: true, data: row });
 }

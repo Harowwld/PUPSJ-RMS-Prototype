@@ -16,7 +16,7 @@ export async function requireTOTP(userId, token) {
   }
 
   if (!staff.totp_enabled || !staff.totp_secret) {
-    return { valid: false, error: "TOTP not configured" };
+    return { valid: true, error: null };
   }
 
   const decrypted = decryptSecret(staff.totp_secret);

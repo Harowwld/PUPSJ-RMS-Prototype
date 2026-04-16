@@ -54,15 +54,33 @@ export function verifyTOTP(token, secret) {
   const tokenStr = token.trim();
   if (tokenStr.length !== 6) return false;
   
+  // Debug: show secret and expected values
+  console.log("[TOTP DEBUG] Secret (base32):", secret);
+  console.log("[TOTP DEBUG] Input token:", tokenStr);
+  
+  const now = Math.floor(Date.now() / 1000);
+  const epoch = 30;
+  const currentWindow = Math.floor(now / epoch);
+  
+  // Generate expected tokens for each window using time offset
+  const expectedCurrent = speakeasy.totp({ secret, encoding: "base32", time: now });
+  const expectedPrev = speakeasy.totp({ secret, encoding: "base32", time: now - epoch });
+  const expectedNext = speakeasy.totp({ secret, encoding: "base32", time: now + epoch });
+  console.log("[TOTP DEBUG] Expected tokens:", { prev: expectedPrev, current: expectedCurrent, next: expectedNext });
+  console.log("[TOTP DEBUG] Current window:", currentWindow, "epoch:", epoch, "time:", new Date().toISOString());
+  
   // Use speakeasy to verify - it handles time drift automatically
-  const verified = speakeasy.totp({
+  // speakeasy returns the expected token (string) on failure, true on success
+  const verified = speakeasy.totp.verify({
     secret: secret,
     encoding: "base32",
     token: tokenStr,
     window: 1,
   });
   
-  return verified;
+  const isValid = verified === true;
+  console.log("[TOTP DEBUG] Verification result:", verified, "-> isValid:", isValid);
+  return isValid;
 }
 
 export function isValidToken(token) {

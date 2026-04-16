@@ -18,6 +18,7 @@ import Sidebar from "@/components/shared/Sidebar";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import PromptModal from "@/components/shared/PromptModal";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
+import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal";
 
 import StaffDirectoryTab from "@/components/admin/StaffDirectoryTab";
 import RegisterAccountTab from "@/components/admin/RegisterAccountTab";
@@ -114,6 +115,11 @@ function AdminPageContent() {
   const [restoreFile, setRestoreFile] = useState(null);
   const [restoreLoading, setRestoreLoading] = useState(false);
 
+  const [totpModalOpen, setTotpModalOpen] = useState(false);
+  const [totpModalLoading, setTotpModalLoading] = useState(false);
+  const [totpPendingAction, setTotpPendingAction] = useState(null);
+  const [totpActionLabel, setTotpActionLabel] = useState("Confirm");
+
   const [authUser, setAuthUser] = useState(null);
 
   const [defaultPwOpen, setDefaultPwOpen] = useState(false);
@@ -151,6 +157,29 @@ function AdminPageContent() {
     }
     toast.success(title, opts);
   }, []);
+
+  const executeWithTOTP = useCallback(async (action, actionLabel, hasToken = false) => {
+    setTotpActionLabel(actionLabel);
+    setTotpPendingAction(() => action);
+    setTotpModalOpen(true);
+  }, []);
+
+  const handleTOTPConfirm = useCallback(async (token) => {
+    if (!totpPendingAction) return;
+    setTotpModalLoading(true);
+    try {
+      await totpPendingAction(token);
+      setTotpModalOpen(false);
+    } catch (err) {
+      const msg = err?.message || "Action failed";
+      const clean = msg.includes("TOTP verification required: ")
+        ? msg.replace("TOTP verification required: ", "")
+        : msg;
+      throw new Error(clean);
+    } finally {
+      setTotpModalLoading(false);
+    }
+  }, [totpPendingAction]);
 
   const refreshStaff = useCallback(async () => {
     setViewLoading((prev) => ({ ...prev, directory: true }));
@@ -468,16 +497,32 @@ function AdminPageContent() {
     router.push("/");
   };
 
-  const handleCreate = async (e) => {
+  const handleCreate = async (e, totpToken = null) => {
     e.preventDefault();
     const section = createForm.role === "Admin" ? "Administrative" : "Records";
+    const headers = { "Content-Type": "application/json" };
+    if (totpToken) {
+      headers["x-totp-token"] = totpToken;
+    }
     try {
       const res = await fetch("/api/staff", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ ...createForm, section }),
       });
       const json = await res.json();
+      
+      if (res.status === 403) {
+        if (json?.requiresTOTP) {
+          if (totpToken) {
+            throw new Error(json.error || "Invalid verification code");
+          }
+          await executeWithTOTP((token) => handleCreate(e, token), "Create Staff", true);
+          return;
+        }
+        throw new Error(json?.error || "Access denied");
+      }
+      
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to create staff");
 
@@ -498,20 +543,37 @@ function AdminPageContent() {
       });
       switchView("directory");
     } catch (err) {
+      if (totpToken) throw err;
       showToast({ title: "Creation Failed", description: err.message }, true);
     }
   };
 
-  const handleEditSubmit = async (e) => {
+  const handleEditSubmit = async (e, totpToken = null) => {
     e.preventDefault();
     const section = editForm.role === "Admin" ? "Administrative" : "Records";
+    const headers = { "Content-Type": "application/json" };
+    if (totpToken) {
+      headers["x-totp-token"] = totpToken;
+    }
     try {
       const res = await fetch(`/api/staff/${editOriginalId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ ...editForm, section }),
       });
       const json = await res.json();
+      
+      if (res.status === 403) {
+        if (json?.requiresTOTP) {
+          if (totpToken) {
+            throw new Error(json.error || "Invalid verification code");
+          }
+          await executeWithTOTP((token) => handleEditSubmit(e, token), "Update Staff", true);
+          return;
+        }
+        throw new Error(json?.error || "Access denied");
+      }
+      
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to update staff");
 
@@ -521,35 +583,71 @@ function AdminPageContent() {
       showToast({ title: "Account Updated", description: "Staff profile changes have been saved." });
       setEditOpen(false);
     } catch (err) {
+      if (totpToken) throw err;
       showToast({ title: "Update Failed", description: err.message }, true);
     }
   };
 
-  const confirmDelete = async () => {
+  const confirmDelete = async (totpToken = null) => {
     if (!deleteTarget || deleteLoading) return;
     setDeleteLoading(true);
+    const headers = {};
+    if (totpToken) {
+      headers["x-totp-token"] = totpToken;
+    }
     try {
       const res = await fetch(`/api/staff/${deleteTarget.id}`, {
         method: "DELETE",
+        headers,
       });
       const json = await res.json();
+      
+      if (res.status === 403) {
+        if (json?.requiresTOTP) {
+          if (totpToken) {
+            setDeleteLoading(false);
+            throw new Error(json.error || "Invalid verification code");
+          }
+          setDeleteLoading(false);
+          await executeWithTOTP((token) => confirmDelete(token), "Delete Staff", true);
+          return;
+        }
+        throw new Error(json?.error || "Access denied");
+      }
+      
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to delete staff");
       setStaffData((prev) => prev.filter((s) => s.id !== deleteTarget.id));
       showToast({ title: "Account Removed", description: "The staff account has been permanently deleted." });
       setDeleteOpen(false);
     } catch (err) {
+      if (totpToken) throw err;
       showToast({ title: "Deletion Failed", description: err.message }, true);
     } finally {
       setDeleteLoading(false);
     }
   };
 
-  const simulateBackup = async () => {
+  const simulateBackup = async (totpToken = null) => {
+    const headers = {};
+    if (totpToken) {
+      headers["x-totp-token"] = totpToken;
+    }
     await toast.promise(
       (async () => {
-      const res = await fetch("/api/system/backup", { method: "POST" });
+      const res = await fetch("/api/system/backup", { method: "POST", headers });
       const json = await res.json();
+      
+      if (res.status === 403) {
+        if (json?.requiresTOTP) {
+          if (totpToken) {
+            throw new Error(json.error || "Invalid verification code");
+          }
+          throw { requiresTOTP: true };
+        }
+        throw new Error(json?.error || "Access denied");
+      }
+      
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to create backup");
 
@@ -565,7 +663,14 @@ function AdminPageContent() {
       {
         loading: "Creating full system backup…",
         success: (filename) => ({ title: "Backup Complete", description: `Package ready: ${filename}` }),
-        error: (err) => ({ title: "Backup Failed", description: err?.message || "Unable to create system backup." }),
+        error: (err) => {
+          if (err?.requiresTOTP) {
+            executeWithTOTP((token) => simulateBackup(token), "Create Backup", true);
+            return { title: "Verification Required", description: "Please verify your identity" };
+          }
+          if (totpToken) throw err;
+          return { title: "Backup Failed", description: err?.message || "Unable to create system backup." };
+        },
       }
     );
   };
@@ -607,22 +712,42 @@ function AdminPageContent() {
     }
   };
 
-  const confirmRestore = async () => {
+  const confirmRestore = async (totpToken = null) => {
     if (!restoreFile || restoreLoading) return;
     setRestoreLoading(true);
     const formData = new FormData();
     formData.append("file", restoreFile);
+    const headers = {};
+    if (totpToken) {
+      headers["x-totp-token"] = totpToken;
+    }
     try {
       const res = await fetch("/api/system/backup/restore", {
         method: "POST",
+        headers,
         body: formData,
       });
       const json = await res.json();
+      
+      if (res.status === 403) {
+        if (json?.requiresTOTP) {
+          if (totpToken) {
+            setRestoreLoading(false);
+            throw new Error(json.error || "Invalid verification code");
+          }
+          setRestoreLoading(false);
+          await executeWithTOTP((token) => confirmRestore(token), "Restore System", true);
+          return;
+        }
+        throw new Error(json?.error || "Access denied");
+      }
+      
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to restore system");
       showToast({ title: "System Restored", description: "Database restored from backup. Reloading in 3s…" });
       setTimeout(() => location.reload(), 3000);
     } catch (err) {
+      if (totpToken) throw err;
       showToast({ title: "Restore Failed", description: err.message }, true);
       setRestoreLoading(false);
     }
@@ -761,6 +886,7 @@ function AdminPageContent() {
           <SystemConfigTab
             showToast={showToast}
             logAdminAction={logAdminAction}
+            onVerifyTOTP={(action) => executeWithTOTP(action, "Save Security Questions", true)}
           />
         )}
 
@@ -944,6 +1070,14 @@ function AdminPageContent() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <TOTPChallengeModal
+        open={totpModalOpen}
+        onOpenChange={setTotpModalOpen}
+        onConfirm={handleTOTPConfirm}
+        actionLabel={totpActionLabel}
+        isLoading={totpModalLoading}
+      />
 
     </div>
   );

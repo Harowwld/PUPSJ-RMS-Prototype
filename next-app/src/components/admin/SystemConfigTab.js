@@ -18,7 +18,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-export default function SystemConfigTab({ showToast, logAdminAction, error = null }) {
+export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOTP, error = null }) {
   const [docTypes, setDocTypes] = useState([]);
   const [courses, setCourses] = useState([]);
   const [sections, setSections] = useState([]);
@@ -279,20 +279,39 @@ export default function SystemConfigTab({ showToast, logAdminAction, error = nul
     }
   };
 
-  const saveSecurityQuestions = async (e) => {
+  const saveSecurityQuestions = async (e, totpToken = null) => {
     e.preventDefault();
     setSecuritySaving(true);
+    const headers = { "Content-Type": "application/json" };
+    if (totpToken) {
+      headers["x-totp-token"] = totpToken;
+    }
     try {
       const res = await fetch("/api/system/security-questions", {
         method: "PUT",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ questions: securityQuestions }),
       });
       const json = await res.json();
+      
+      if (res.status === 403) {
+        if (json?.requiresTOTP && onVerifyTOTP) {
+          if (totpToken) {
+            setSecuritySaving(false);
+            throw new Error(json.error || "Invalid verification code");
+          }
+          setSecuritySaving(false);
+          await onVerifyTOTP((token) => saveSecurityQuestions(e, token));
+          return;
+        }
+        throw new Error(json?.error || "Access denied");
+      }
+      
       if (!res.ok || !json.ok) throw new Error(json.error || "Failed");
       showToast({ title: "Security Settings Updated", description: "Global security questions have been saved successfully." });
       fetchData();
     } catch (err) {
+      if (totpToken) { setSecuritySaving(false); throw err; }
       showToast({ title: "Update Failed", description: err.message }, true);
     }
     setSecuritySaving(false);

@@ -87,7 +87,10 @@ async function handleSetup(req, user, body) {
   }
 
   const { secret, otpauthUrl } = generateTOTPSecret(staff.email);
+  console.log("[TOTP Setup] Generated secret:", secret);
+  console.log("[TOTP Setup] OTPAuth URL:", otpauthUrl);
   const encrypted = encryptSecret(secret);
+  console.log("[TOTP Setup] Encrypted secret:", encrypted);
   const qrDataUrl = await generateQRCode(otpauthUrl);
 
   await dbRun(
@@ -106,6 +109,7 @@ async function handleSetup(req, user, body) {
 
 async function handleVerify(req, user, body) {
   const { token } = body;
+  console.log("[TOTP Verify] User:", user.userId, "Token received:", token);
   if (!isValidToken(token)) {
     return NextResponse.json({ ok: false, error: "Invalid token format" }, { status: 400 });
   }
@@ -116,11 +120,13 @@ async function handleVerify(req, user, body) {
   }
 
   const decrypted = decryptSecret(staff.totp_secret);
+  console.log("[TOTP Verify] Decrypted secret:", decrypted ? "OK" : "FAILED");
   if (!decrypted) {
     return NextResponse.json({ ok: false, error: "Failed to decrypt TOTP secret" }, { status: 500 });
   }
 
   const isValid = verifyTOTP(token, decrypted);
+  console.log("[TOTP Verify] Result:", isValid);
   if (!isValid) {
     return NextResponse.json({ ok: false, error: "Invalid verification code" }, { status: 401 });
   }
@@ -140,6 +146,7 @@ async function handleVerify(req, user, body) {
 
 async function handleDisable(req, user, body) {
   const { token } = body;
+  console.log("[TOTP Disable] User:", user.userId, "Token received:", token);
   if (!isValidToken(token)) {
     return NextResponse.json({ ok: false, error: "Invalid token format" }, { status: 400 });
   }
@@ -150,11 +157,13 @@ async function handleDisable(req, user, body) {
   }
 
   const decrypted = decryptSecret(staff.totp_secret);
+  console.log("[TOTP Disable] Decrypted secret:", decrypted ? "OK" : "FAILED");
   if (!decrypted) {
     return NextResponse.json({ ok: false, error: "Failed to decrypt TOTP secret" }, { status: 500 });
   }
 
   const isValid = verifyTOTP(token, decrypted);
+  console.log("[TOTP Disable] Result:", isValid);
   if (!isValid) {
     return NextResponse.json({ ok: false, error: "Invalid verification code" }, { status: 401 });
   }
@@ -174,6 +183,7 @@ async function handleDisable(req, user, body) {
 
 async function handleValidate(req, user, body) {
   const { token } = body;
+  console.log("[TOTP Validate] User:", user.userId, "Token received:", token);
   if (!isValidToken(token)) {
     return NextResponse.json({ ok: false, error: "Invalid token format" }, { status: 400 });
   }
@@ -184,10 +194,12 @@ async function handleValidate(req, user, body) {
   }
 
   const decrypted = decryptSecret(staff.totp_secret);
+  console.log("[TOTP Validate] Decrypted secret:", decrypted ? "OK" : "FAILED");
   if (!decrypted) {
     return NextResponse.json({ ok: false, error: "Failed to decrypt TOTP secret" }, { status: 500 });
   }
 
   const isValid = verifyTOTP(token, decrypted);
+  console.log("[TOTP Validate] Result:", isValid);
   return NextResponse.json({ ok: isValid, data: { valid: isValid } });
 }
