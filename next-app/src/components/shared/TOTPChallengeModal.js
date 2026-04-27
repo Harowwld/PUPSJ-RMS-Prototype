@@ -26,6 +26,7 @@ export function TOTPChallengeModal({
   const [error, setError] = useState("");
 
   useEffect(() => {
+    console.log("[TOTP MODAL] open changed to:", open);
     if (!open) {
       setToken("");
       setError("");
@@ -34,14 +35,18 @@ export function TOTPChallengeModal({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log("[TOTP MODAL] handleSubmit called, token:", token);
     if (!token || token.length !== 6) {
+      console.log("[TOTP MODAL] Invalid token length");
       setError("Please enter a 6-digit code");
       return;
     }
-    setError("");
+    console.log("[TOTP MODAL] Calling onConfirm...");
     try {
       await onConfirm(token);
+      console.log("[TOTP MODAL] onConfirm succeeded");
     } catch (err) {
+      console.log("[TOTP MODAL] onConfirm error:", err.message);
       const msg = err?.message || "Invalid verification code";
       setError(msg);
       toast.error("Verification Failed", { description: msg });
@@ -49,7 +54,10 @@ export function TOTPChallengeModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(isOpen) => {
+      console.log("[TOTP MODAL] onOpenChange called, isOpen:", isOpen);
+      onOpenChange(isOpen);
+    }}>
       <DialogContent className="sm:max-w-md rounded-brand">
         <DialogHeader>
           <DialogTitle className="text-xl font-black text-gray-900 flex items-center gap-2">

@@ -35,6 +35,7 @@ export async function GET(req) {
         lname: staff?.lname || "",
         mustChangePassword: Boolean(payload.mustChangePassword),
         mustSetSecurityQuestions: !hasSecurity,
+        totp_enabled: Boolean(staff?.totp_enabled),
         last_active: payload.last_active || null,
       },
     });

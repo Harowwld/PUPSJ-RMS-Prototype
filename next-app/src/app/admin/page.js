@@ -117,8 +117,9 @@ function AdminPageContent() {
 
   const [totpModalOpen, setTotpModalOpen] = useState(false);
   const [totpModalLoading, setTotpModalLoading] = useState(false);
-  const [totpPendingAction, setTotpPendingAction] = useState(null);
+  const totpPendingActionRef = useRef(null);
   const [totpActionLabel, setTotpActionLabel] = useState("Confirm");
+  const [totpModalDescription, setTotpModalDescription] = useState("Enter the 6-digit code from your authenticator app to confirm this action.");
 
   const [authUser, setAuthUser] = useState(null);
 
@@ -160,26 +161,34 @@ function AdminPageContent() {
 
   const executeWithTOTP = useCallback(async (action, actionLabel, hasToken = false) => {
     setTotpActionLabel(actionLabel);
-    setTotpPendingAction(() => action);
+    totpPendingActionRef.current = action;
     setTotpModalOpen(true);
   }, []);
 
   const handleTOTPConfirm = useCallback(async (token) => {
-    if (!totpPendingAction) return;
+    console.log("[DELETE FLOW] handleTOTPConfirm called with token:", token);
+    if (!totpPendingActionRef.current) {
+      console.log("[DELETE FLOW] handleTOTPConfirm: no pending action");
+      return;
+    }
+    console.log("[DELETE FLOW] handleTOTPConfirm: setting loading true");
     setTotpModalLoading(true);
     try {
-      await totpPendingAction(token);
+      console.log("[DELETE FLOW] handleTOTPConfirm: calling pending action");
+      await totpPendingActionRef.current(token);
+      console.log("[DELETE FLOW] handleTOTPConfirm: success, calling setTotpModalOpen(false)");
       setTotpModalOpen(false);
     } catch (err) {
+      console.log("[DELETE FLOW] handleTOTPConfirm: error:", err.message);
       const msg = err?.message || "Action failed";
       const clean = msg.includes("TOTP verification required: ")
         ? msg.replace("TOTP verification required: ", "")
         : msg;
-      throw new Error(clean);
-    } finally {
+      console.log("[DELETE FLOW] handleTOTPConfirm: setting loading false, throwing error");
       setTotpModalLoading(false);
+      throw new Error(clean);
     }
-  }, [totpPendingAction]);
+  }, []);
 
   const refreshStaff = useCallback(async () => {
     setViewLoading((prev) => ({ ...prev, directory: true }));
@@ -588,42 +597,58 @@ function AdminPageContent() {
     }
   };
 
-  const confirmDelete = async (totpToken = null) => {
-    if (!deleteTarget || deleteLoading) return;
+  const confirmDelete = async (totpToken = null, targetId = null, targetName = null) => {
+    const id = targetId || deleteTarget?.id;
+    const name = targetName || deleteTarget?.fname;
+    console.log("[DELETE FLOW] confirmDelete called, token:", totpToken, "targetId:", id, "targetName:", name);
+    if (!id || deleteLoading) {
+      console.log("[DELETE FLOW] confirmDelete early return - no target or loading");
+      return;
+    }
+    console.log("[DELETE FLOW] confirmDelete: setting deleteLoading true");
     setDeleteLoading(true);
     const headers = {};
     if (totpToken) {
       headers["x-totp-token"] = totpToken;
     }
     try {
-      const res = await fetch(`/api/staff/${deleteTarget.id}`, {
+      console.log("[DELETE FLOW] confirmDelete: calling DELETE API for:", id);
+      const res = await fetch(`/api/staff/${id}`, {
         method: "DELETE",
         headers,
       });
       const json = await res.json();
+      console.log("[DELETE FLOW] confirmDelete response:", res.status, json);
       
       if (res.status === 403) {
         if (json?.requiresTOTP) {
           if (totpToken) {
+            console.log("[DELETE FLOW] confirmDelete: TOTP invalid, throwing error");
             setDeleteLoading(false);
             throw new Error(json.error || "Invalid verification code");
           }
+          console.log("[DELETE FLOW] confirmDelete: TOTP required, opening modal");
           setDeleteLoading(false);
-          await executeWithTOTP((token) => confirmDelete(token), "Delete Staff", true);
+          await executeWithTOTP((token) => confirmDelete(token, id, name), "Delete Staff", true);
           return;
         }
         throw new Error(json?.error || "Access denied");
       }
       
-      if (!res.ok || !json?.ok)
+      if (!res.ok || !json?.ok) {
+        console.log("[DELETE FLOW] confirmDelete: API error, throwing");
         throw new Error(json?.error || "Failed to delete staff");
-      setStaffData((prev) => prev.filter((s) => s.id !== deleteTarget.id));
+      }
+      console.log("[DELETE FLOW] confirmDelete: success, updating staffData");
+      setStaffData((prev) => prev.filter((s) => s.id !== id));
       showToast({ title: "Account Removed", description: "The staff account has been permanently deleted." });
       setDeleteOpen(false);
     } catch (err) {
+      console.log("[DELETE FLOW] confirmDelete catch error:", err.message);
       if (totpToken) throw err;
       showToast({ title: "Deletion Failed", description: err.message }, true);
     } finally {
+      console.log("[DELETE FLOW] confirmDelete: finally, setting deleteLoading false");
       setDeleteLoading(false);
     }
   };
@@ -838,8 +863,29 @@ function AdminPageContent() {
               setEditOpen(true);
             }}
             onDeleteUser={(id) => {
+              console.log("[DELETE FLOW] Step 1: onDeleteUser called, id:", id);
+              console.log("[DELETE FLOW] Step 2: authUser.totp_enabled:", authUser?.totp_enabled);
               const u = staffData.find((s) => s.id === id);
-              if (u) {
+              if (!u) {
+                console.log("[DELETE FLOW] Step 3: User not found in staffData");
+                return;
+              }
+              console.log("[DELETE FLOW] Step 4: Found user:", u.fname, u.id);
+              if (authUser?.totp_enabled) {
+                console.log("[DELETE FLOW] Step 5: TOTP enabled, opening TOTP modal");
+                setDeleteTarget(u);
+                setTotpActionLabel("Delete Account");
+                setTotpModalDescription(`Enter your authenticator code to permanently delete ${u.fname}'s account.`);
+                const targetId = u.id;
+                const targetName = u.fname;
+                totpPendingActionRef.current = async (token) => {
+                  console.log("[DELETE FLOW] Step 6: TOTP action called with token:", token, "targetId:", targetId);
+                  await confirmDelete(token, targetId, targetName);
+                };
+                setTotpModalOpen(true);
+                console.log("[DELETE FLOW] Step 7: TOTP modal opened");
+              } else {
+                console.log("[DELETE FLOW] Step 5: TOTP not enabled, opening confirm modal");
                 setDeleteTarget(u);
                 setDeleteOpen(true);
               }
@@ -1076,6 +1122,7 @@ function AdminPageContent() {
         onOpenChange={setTotpModalOpen}
         onConfirm={handleTOTPConfirm}
         actionLabel={totpActionLabel}
+        description={totpModalDescription}
         isLoading={totpModalLoading}
       />
 
