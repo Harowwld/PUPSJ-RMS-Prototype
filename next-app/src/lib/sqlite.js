@@ -804,6 +804,66 @@ export async function getDb() {
         }
       }
 
+      // Migration to version 11: Add rate limiting tables
+      if (schemaVersion < 11) {
+        try {
+          db.exec(`
+            CREATE TABLE IF NOT EXISTS rate_limits (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              endpoint_type TEXT NOT NULL,
+              identifier TEXT NOT NULL,
+              window_seconds INTEGER NOT NULL,
+              max_requests INTEGER NOT NULL,
+              created_at TEXT NOT NULL DEFAULT (datetime('now')),
+              updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+              UNIQUE(endpoint_type, identifier)
+            );
+
+            CREATE TABLE IF NOT EXISTS rate_limit_hits (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              endpoint_type TEXT NOT NULL,
+              identifier TEXT NOT NULL,
+              ip_address TEXT,
+              user_id TEXT,
+              created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
+            CREATE TABLE IF NOT EXISTS rate_limit_violations (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              endpoint_type TEXT NOT NULL,
+              identifier TEXT NOT NULL,
+              ip_address TEXT,
+              user_id TEXT,
+              violation_count INTEGER NOT NULL DEFAULT 1,
+              lockout_until TEXT,
+              created_at TEXT NOT NULL DEFAULT (datetime('now')),
+              updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_rate_limits_endpoint_type ON rate_limits(endpoint_type);
+            CREATE INDEX IF NOT EXISTS idx_rate_limit_hits_endpoint_identifier_created ON rate_limit_hits(endpoint_type, identifier, created_at);
+            CREATE INDEX IF NOT EXISTS idx_rate_limit_hits_created_at ON rate_limit_hits(created_at);
+            CREATE INDEX IF NOT EXISTS idx_rate_limit_violations_endpoint_identifier ON rate_limit_violations(endpoint_type, identifier);
+            CREATE INDEX IF NOT EXISTS idx_rate_limit_violations_lockout_until ON rate_limit_violations(lockout_until);
+          `);
+
+          // Insert default rate limit configurations
+          db.exec(`
+            INSERT OR IGNORE INTO rate_limits (endpoint_type, identifier, window_seconds, max_requests) VALUES
+            ('auth_login', 'default', 900, 5),           -- 5 login attempts per 15 minutes
+            ('auth_forgot_password', 'default', 3600, 3), -- 3 password reset attempts per hour
+            ('api_general', 'default', 60, 100),          -- 100 API requests per minute
+            ('api_sensitive', 'default', 60, 20),        -- 20 sensitive operations per minute
+            ('file_upload', 'default', 60, 10);           -- 10 file uploads per minute
+          `);
+
+          db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '11')");
+          persistDb();
+        } catch (e) {
+          console.error("[DB] schema_version 11 migration (rate limiting):", e);
+        }
+      }
+
       // Safety net for environments where schema_version may be out of sync.
       // This ensures review columns exist before any API query references them.
       try {
