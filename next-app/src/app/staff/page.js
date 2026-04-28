@@ -6,6 +6,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Sidebar from "@/components/shared/Sidebar";
 import { toast } from "sonner";
+import { StaffGuard } from "@/components/shared/AuthGuard";
 import RecordsArchiveTab from "@/components/staff/RecordsArchiveTab";
 import ScanUploadTab from "@/components/staff/ScanUploadTab";
 import DocumentsTab from "@/components/staff/DocumentsTab";
@@ -36,7 +37,7 @@ function getStudentNoYear(studentNo) {
   return year;
 }
 
-export default function StaffPage() {
+function StaffPageContent() {
   const router = useRouter();
   const coreDataLoadedRef = useRef(false);
   const docsLoadedRef = useRef(false);
@@ -1274,5 +1275,13 @@ export default function StaffPage() {
         }}
       />
     </div>
+  );
+}
+
+export default function StaffPage() {
+  return (
+    <StaffGuard>
+      <StaffPageContent />
+    </StaffGuard>
   );
 }

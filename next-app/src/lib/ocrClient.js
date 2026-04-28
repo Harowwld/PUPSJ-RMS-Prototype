@@ -303,7 +303,7 @@ const BLACKLIST = new Set([
   "PHILIPPINES", "STATISTICS", "AUTHORITY", "CERTIFICATE", "BIRTH",
   "ATTENDING", "PHYSICIAN", "INFORMANT", "SIGNATURE", "CIVIL", "CHURCH",
   "PROVINCE", "MUNICIPALITY", "MOTHER", "FATHER", "CHILD", "SCHOOL",
-  "EDUCATION", "UNIVERSITY", "POLYTECHNIC",
+  "EDUCATION", "UNIVERSITY", "POLYTECHNIC", "SN",
 ]);
 
 function isPlausibleName(s) {
@@ -356,23 +356,27 @@ function detectName(lines) {
     }
   }
 
-  // ── Strategy 3: line-by-line label scan ──
+  // ── Strategy 3: line-by-line label scan (highest priority for forms) ──
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
     const upper = up(line);
 
-    // 3a — DepEd surname field
-    {
-      const m = upper.match(
-        /\b(?:SURNAME|SUMAME|SURNAMF|SURNANE)\b[\s:_-]*([A-Z][A-Z '.–-]{4,}?)(?=\bDATE\s+OF\s+BIRTH\b|\bSEX\b|$)/
-      );
-      if (m?.[1]) {
-        const c = norm(m[1]);
+    // 3a — "STUDENT NAME:" label (highest priority)
+    if (/\bSTUDENT\s+NAME\b/i.test(upper)) {
+      // Same-line value after colon
+      const colonM = line.match(/\bSTUDENT\s+NAME\b[^:–-]*[:–-]\s*(.*)/i);
+      if (colonM?.[1]) {
+        const c = stripTrailing(norm(colonM[1]));
         if (c && isPlausibleName(c)) return c;
+      }
+      // Value on the NEXT line (common in TORs)
+      if (i + 1 < lines.length) {
+        const next = stripTrailing(norm(lines[i + 1]));
+        if (next && isPlausibleName(next) && !/^(NAME|STUDENT|NUMBER|DATE)/i.test(next)) return next;
       }
     }
 
-    // 3b — "NAME:" / "STUDENT NAME:" / "NAME OF STUDENT:" label
+    // 3b — "NAME:" / "NAME OF STUDENT:" label
     if (/\bNAME\b/i.test(upper)) {
       // Same-line value after colon / dash
       const colonM = line.match(/\bNAME\b[^:–-]*[:–-]\s*(.*)/i);
@@ -384,6 +388,17 @@ function detectName(lines) {
       if (i + 1 < lines.length) {
         const next = stripTrailing(norm(lines[i + 1]));
         if (next && isPlausibleName(next) && !/^(NAME|STUDENT)/i.test(next)) return next;
+      }
+    }
+
+    // 3c — DepEd surname field
+    {
+      const m = upper.match(
+        /\b(?:SURNAME|SUMAME|SURNAMF|SURNANE)\b[\s:_-]*([A-Z][A-Z '.–-]{4,}?)(?=\bDATE\s+OF\s+BIRTH\b|\bSEX\b|$)/
+      );
+      if (m?.[1]) {
+        const c = norm(m[1]);
+        if (c && isPlausibleName(c)) return c;
       }
     }
   }
@@ -423,7 +438,13 @@ const PARTICLES = new Set([
 
 export function normalizeExtractedName(raw) {
   if (!raw) return "";
-  let s = up(raw).replace(TITLE_PREFIX_RE, "").replace(/\s+/g, " ").trim();
+  let s = up(raw)
+    .replace(TITLE_PREFIX_RE, "")
+    .replace(/[\]\[{}|\\<>]/g, "") // Remove bracket-like garbage from OCR
+    .replace(/\.{2,}/g, ".") // Collapse multiple dots
+    .replace(/\s+/g, " ")
+    .trim();
+  s = s.replace(/[.,]+$/g, "").trim(); // Trim trailing punctuation
   if (!s) return "";
 
   // Already "LAST, FIRST"

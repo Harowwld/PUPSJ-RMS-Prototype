@@ -19,6 +19,7 @@ import ConfirmModal from "@/components/shared/ConfirmModal";
 import PromptModal from "@/components/shared/PromptModal";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal";
+import { AdminGuard } from "@/components/shared/AuthGuard";
 
 import StaffDirectoryTab from "@/components/admin/StaffDirectoryTab";
 import RegisterAccountTab from "@/components/admin/RegisterAccountTab";
@@ -1132,18 +1133,20 @@ function AdminPageContent() {
 
 export default function AdminPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4">
-          <Skeleton className="h-16 w-full rounded-brand shrink-0" />
-          <div className="flex-1 flex gap-4">
-            <Skeleton className="w-[30%] h-full rounded-brand" />
-            <Skeleton className="w-[70%] h-full rounded-brand" />
+    <AdminGuard>
+      <Suspense
+        fallback={
+          <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4">
+            <Skeleton className="h-16 w-full rounded-brand shrink-0" />
+            <div className="flex-1 flex gap-4">
+              <Skeleton className="w-[30%] h-full rounded-brand" />
+              <Skeleton className="w-[70%] h-full rounded-brand" />
+            </div>
           </div>
-        </div>
-      }
-    >
-      <AdminPageContent />
-    </Suspense>
+        }
+      >
+        <AdminPageContent />
+      </Suspense>
+    </AdminGuard>
   );
 }

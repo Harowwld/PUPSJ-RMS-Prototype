@@ -1,35 +1,14 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-
-import { getSessionCookieName, verifySessionToken } from "../../../lib/jwt";
-import { getStaffById } from "../../../lib/staffRepo";
+import { requireAdmin, requireStaff, createAuthErrorResponse } from "../../../lib/authHelpers";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
 import {
   listStudentLocationUsage,
   reassignStudentsByLocationMappings,
 } from "../../../lib/studentsRepo";
-
 import { getStorageLayout, setStorageLayout } from "../../../lib/storageLayoutRepo";
 
 export const runtime = "nodejs";
 
-async function getSessionStaff() {
-  const cookieName = getSessionCookieName();
-  const store = await cookies();
-  const token = store.get(cookieName)?.value || "";
-  if (!token) return null;
-
-  const payload = await verifySessionToken(token);
-  const userId = String(payload?.sub || "").trim();
-  if (!userId) return null;
-
-  return await getStaffById(userId);
-}
-
-function isAdminRole(roleRaw) {
-  const role = String(roleRaw || "").toLowerCase();
-  return ["admin", "administrator", "superadmin"].includes(role);
-}
 
 function buildLayoutLocationSet(layout) {
   const set = new Set();
@@ -58,7 +37,12 @@ function parseLocationKey(key) {
   return { room, cabinet, drawer };
 }
 
-export async function GET(_req) {
+export async function GET(req) {
+  const { user, error } = await requireStaff(req);
+  if (error || !user) {
+    return createAuthErrorResponse(error || "Authentication required", 401);
+  }
+
   try {
     const layout = await getStorageLayout();
     return NextResponse.json({ ok: true, data: layout });
@@ -71,24 +55,12 @@ export async function GET(_req) {
 }
 
 export async function PUT(req) {
+  const { user, error } = await requireAdmin(req);
+  if (error || !user) {
+    return createAuthErrorResponse(error || "Admin access required", 403);
+  }
+
   try {
-    const cookieName = getSessionCookieName();
-    const store = await cookies();
-    const token = store.get(cookieName)?.value || "";
-    if (!token) {
-      return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
-    }
-
-    const payload = await verifySessionToken(token);
-    const userId = String(payload?.sub || "").trim();
-    
-    // Attempt database lookup for fresh role info, but fallback to token payload for resilience
-    const staff = userId ? await getStaffById(userId) : null;
-    const effectiveRole = staff?.role || payload?.role || "";
-
-    if (!isAdminRole(effectiveRole)) {
-      return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
-    }
 
     const body = await req.json().catch(() => null);
     if (!body || typeof body !== "object") {

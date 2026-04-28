@@ -5,10 +5,16 @@ import {
 } from "../../../lib/documentsRepo";
 import { createStudent } from "../../../lib/studentsRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
+import { requireStaff, createAuthErrorResponse } from "../../../lib/authHelpers";
 
 export const runtime = "nodejs";
 
 export async function GET(req) {
+  const { user, error } = await requireStaff(req);
+  if (error || !user) {
+    return createAuthErrorResponse(error || "Authentication required", 401);
+  }
+
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q") || "";
   const studentNo = searchParams.get("studentNo") || "";
@@ -35,6 +41,11 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
+  const { user, error } = await requireStaff(req);
+  if (error || !user) {
+    return createAuthErrorResponse(error || "Authentication required", 401);
+  }
+
   const form = await req.formData();
   const file = form.get("file");
 
