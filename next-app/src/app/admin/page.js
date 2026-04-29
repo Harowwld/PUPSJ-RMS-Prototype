@@ -177,7 +177,8 @@ function AdminPageContent() {
     try {
       console.log("[DELETE FLOW] handleTOTPConfirm: calling pending action");
       await totpPendingActionRef.current(token);
-      console.log("[DELETE FLOW] handleTOTPConfirm: success, calling setTotpModalOpen(false)");
+      console.log("[DELETE FLOW] handleTOTPConfirm: success, setting loading false and closing modal");
+      setTotpModalLoading(false);
       setTotpModalOpen(false);
     } catch (err) {
       console.log("[DELETE FLOW] handleTOTPConfirm: error:", err.message);
