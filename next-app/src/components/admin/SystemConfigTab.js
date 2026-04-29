@@ -35,9 +35,10 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 
-  // Document Types State
-export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOTP, error = null }) {
+export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOTP, error: errorProp = null }) {
   const [activeSubTab, setActiveSubTab] = useState("document-types");
+
+  // Document Types State
   const [docTypes, setDocTypes] = useState([]);
   const [isAddDocTypeOpen, setIsAddDocTypeOpen] = useState(false);
   const [newDocTypeName, setNewDocTypeName] = useState("");
@@ -137,7 +138,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       setNewDocTypeName("");
       setIsAddDocTypeOpen(false);
       showToast({ title: "Success", description: "Document type added." });
-      onLogAction?.(`Created document type configuration: ${json.data.name || json.data}`);
+      logAdminAction?.(`Created document type configuration: ${json.data.name || json.data}`);
       loadAll();
     } catch (err) {
       showToast({ title: "Error", description: err.message }, true);
@@ -157,7 +158,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       if (!res.ok || !json.ok) throw new Error(json.error || "Update failed");
       setIsEditDocTypeOpen(false);
       showToast({ title: "Success", description: "Document type updated." });
-      onLogAction?.(`Modified document type: ${json.data.name || json.data}`);
+      logAdminAction?.(`Modified document type: ${json.data.name || json.data}`);
       loadAll();
     } catch (err) {
       showToast({ title: "Error", description: err.message }, true);
@@ -171,7 +172,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       if (!res.ok || !json.ok) throw new Error(json.error || "Delete failed");
       setConfirmOpen(false);
       showToast({ title: "Success", description: "Document type deleted." });
-      onLogAction?.(`Deleted document type: ${name}`);
+      logAdminAction?.(`Deleted document type: ${name}`);
       loadAll();
     } catch (err) {
       showToast({ title: "Error", description: err.message }, true);
@@ -197,7 +198,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       setNewCourseName("");
       setIsAddCourseOpen(false);
       showToast({ title: "Success", description: "Degree program added." });
-      onLogAction?.(`Created academic program entry: ${json.data.code}`);
+      logAdminAction?.(`Created academic program entry: ${json.data.code}`);
       loadAll();
     } catch (err) {
       showToast({ title: "Error", description: err.message }, true);
@@ -220,7 +221,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       if (!res.ok || !json.ok) throw new Error(json.error || "Update failed");
       setIsEditCourseOpen(false);
       showToast({ title: "Success", description: "Degree program updated." });
-      onLogAction?.(`Modified academic program: ${json.data.code}`);
+      logAdminAction?.(`Modified academic program: ${json.data.code}`);
       loadAll();
     } catch (err) {
       showToast({ title: "Error", description: err.message }, true);
@@ -234,7 +235,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       if (!res.ok || !json.ok) throw new Error(json.error || "Delete failed");
       setConfirmOpen(false);
       showToast({ title: "Success", description: "Degree program deleted." });
-      onLogAction?.(`Deleted academic program: ${code}`);
+      logAdminAction?.(`Deleted academic program: ${code}`);
       loadAll();
     } catch (err) {
       showToast({ title: "Error", description: err.message }, true);
@@ -260,7 +261,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       setSecCourseCode("");
       setIsAddSectionOpen(false);
       showToast({ title: "Success", description: "Section block created." });
-      onLogAction?.(`Created section block: ${json.data.name}`);
+      logAdminAction?.(`Created section block: ${json.data.name}`);
       loadAll();
     } catch (err) {
       showToast({ title: "Error", description: err.message }, true);
@@ -283,7 +284,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       if (!res.ok || !json.ok) throw new Error(json.error || "Update failed");
       setIsEditSectionOpen(false);
       showToast({ title: "Success", description: "Section block updated." });
-      onLogAction?.(`Modified section block: ${json.data.name}`);
+      logAdminAction?.(`Modified section block: ${json.data.name}`);
       loadAll();
     } catch (err) {
       showToast({ title: "Error", description: err.message }, true);
@@ -297,47 +298,48 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       if (!res.ok || !json.ok) throw new Error(json.error || "Delete failed");
       setConfirmOpen(false);
       showToast({ title: "Success", description: "Section block deleted." });
-      onLogAction?.(`Deleted section block: ${name}`);
+      logAdminAction?.(`Deleted section block: ${name}`);
       loadAll();
     } catch (err) {
       showToast({ title: "Error", description: err.message }, true);
-  
-  const saveSecurityQuestions = async (e, totpToken = null) => {
-    e.preventDefault();
+    }
+  }
+
+  const handleSaveSecurityQuestions = async (e, totpToken = null) => {
+    if (e) e.preventDefault();
     setSecuritySaving(true);
     const headers = { "Content-Type": "application/json" };
     if (totpToken) {
       headers["x-totp-token"] = totpToken;
     }
     try {
+      const filtered = securityQuestions.filter(q => q.trim() !== "");
       const res = await fetch("/api/system/security-questions", {
         method: "PUT",
         headers,
-        body: JSON.stringify({ questions: securityQuestions }),
+        body: JSON.stringify({ questions: filtered }),
       });
       const json = await res.json();
       
-      if (res.status === 403) {
-        if (json?.requiresTOTP && onVerifyTOTP) {
-          if (totpToken) {
-            setSecuritySaving(false);
-            throw new Error(json.error || "Invalid verification code");
-          }
-          setSecuritySaving(false);
-          await onVerifyTOTP((token) => saveSecurityQuestions(e, token));
-          return;
+      if (res.status === 403 && json?.requiresTOTP && onVerifyTOTP) {
+        if (totpToken) {
+          throw new Error(json.error || "Invalid verification code");
         }
-        throw new Error(json?.error || "Access denied");
+        await onVerifyTOTP((token) => handleSaveSecurityQuestions(null, token));
+        return;
       }
       
-      if (!res.ok || !json.ok) throw new Error(json.error || "Failed");
-      showToast({ title: "Security Settings Updated", description: "Global security questions have been saved successfully." });
-      fetchData();
+      if (!res.ok || !json.ok) throw new Error(json.error || "Failed to save questions");
+      showToast({ title: "Success", description: "Global security questions updated." });
+      logAdminAction?.(`Modified global security questions configuration`);
+      loadAll();
     } catch (err) {
-      if (totpToken) { setSecuritySaving(false); throw err; }
-      showToast({ title: "Update Failed", description: err.message }, true);
+      if (totpToken) throw err;
+      showToast({ title: "Error", description: err.message }, true);
+    } finally {
+      setSecuritySaving(false);
     }
-  }
+  };
 
   // --- ACTIONS: Bulk Import ---
   async function handleCsvImport(e) {
@@ -386,7 +388,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
         title: "Import Successful",
         description: `Processed ${json.data?.successCount || 0} taxonomy records (${json.data?.failCount || 0} failed).`,
       });
-      onLogAction?.(`Bulk imported ${json.data?.successCount || 0} taxonomy records via CSV`);
+      logAdminAction?.(`Bulk imported ${json.data?.successCount || 0} taxonomy records via CSV`);
       loadAll();
     } catch (err) {
       showToast({ title: "Import Error", description: err.message }, true);
@@ -402,29 +404,6 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
     showToast({ title: "Copied", description: "CSV sample copied to clipboard." });
   }
 
-  // --- ACTIONS: Security Questions ---
-  async function saveSecurityQuestions(e) {
-    e.preventDefault();
-    setSecuritySaving(true);
-    try {
-      const filtered = securityQuestions.filter(q => q.trim() !== "");
-      const res = await fetch("/api/system/security-questions", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ questions: filtered }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || "Save failed");
-      showToast({ title: "Questions Saved", description: "Global security questions updated." });
-      onLogAction?.(`Modified global security questions configuration`);
-      loadAll();
-    } catch (err) {
-      showToast({ title: "Error", description: err.message }, true);
-    } finally {
-      setSecuritySaving(false);
-    }
-  }
-
   if (loading && !docTypes.length) {
     return (
       <div className="space-y-4">
@@ -434,7 +413,9 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
     );
   }
 
-  if (error) {
+  const activeError = errorProp || error;
+
+  if (activeError) {
     return (
       <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter min-h-0">
         <Card className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col min-h-0">
@@ -444,9 +425,9 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                 <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
                   <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
                 </EmptyMedia>
-                <EmptyTitle className="text-lg font-bold text-gray-900">Could not load report</EmptyTitle>
+                <EmptyTitle className="text-lg font-bold text-gray-900">Could not load configuration</EmptyTitle>
                 <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                  {error}
+                  {activeError}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
@@ -1024,7 +1005,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                       </div>
                     </div>
                     <Button
-                      onClick={saveSecurityQuestions}
+                      onClick={handleSaveSecurityQuestions}
                       disabled={securitySaving}
                       className="bg-pup-maroon text-white h-10 px-6 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors w-full sm:w-auto"
                     >

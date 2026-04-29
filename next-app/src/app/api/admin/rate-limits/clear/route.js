@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { clearRateLimitViolation } from "../../../../lib/rateLimitRepo";
-import { verifySessionToken } from "../../../../lib/jwt";
-import { writeAuditLog } from "../../../../lib/auditLogRequest";
+import { clearRateLimitViolation } from "@/lib/rateLimitRepo";
+import { verifySessionToken } from "@/lib/jwt";
+import { writeAuditLog } from "@/lib/auditLogRequest";
 
 export const runtime = "nodejs";
 

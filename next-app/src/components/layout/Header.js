@@ -19,13 +19,53 @@ export default function Header({ authUser, onLogout, children }) {
   const router = useRouter();
   const pathname = usePathname();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [preferredView, setPreferredView] = useState(null);
+
+  useEffect(() => {
+    // Only admins have a choice of view
+    if (isAdminRole(authUser?.role)) {
+      const stored = localStorage.getItem("pup_admin_view_pref");
+      if (stored) {
+        setPreferredView(stored);
+      } else {
+        // Default to admin if we're on an admin page, or staff otherwise
+        const initial = pathname?.startsWith("/admin") ? "admin" : "staff";
+
+        setPreferredView(initial);
+      }
+    }
+  }, [authUser?.role, pathname]);
 
   const initials = authUser?.fname && authUser?.lname
     ? (authUser.fname[0] + authUser.lname[0]).toUpperCase()
     : "AD";
 
-  const isAdminView = pathname?.startsWith("/admin");
+  // If we're on /admin or /staff, that IS our current view.
+  // If we're on /account, we use the preferredView state.
+  const activeView = (pathname?.startsWith("/admin"))
+    ? "admin"
+    : (pathname?.startsWith("/staff"))
+      ? "staff"
+      : (preferredView || (isAdminRole(authUser?.role) ? "admin" : "staff"));
+
+  const isAdminView = activeView === "admin";
   const hasAdminRights = isAdminRole(authUser?.role);
+
+  const handleViewSwitch = (viewKey) => {
+    if (hasAdminRights) {
+      localStorage.setItem("pup_admin_view_pref", viewKey);
+      setPreferredView(viewKey);
+    }
+    router.push(viewKey === "admin" ? "/admin" : "/staff");
+  };
+
+  const handleMainDashboardClick = () => {
+    if (hasAdminRights) {
+      router.push(activeView === "admin" ? "/admin" : "/staff");
+    } else {
+      router.push("/staff");
+    }
+  };
 
   useEffect(() => {
     // Warm common dashboard routes for faster view switching.
@@ -92,33 +132,31 @@ export default function Header({ authUser, onLogout, children }) {
                   </div>
                 </div>
               </DropdownMenuGroup>
-              
+
               <DropdownMenuSeparator className="opacity-50" />
-              
+
               <DropdownMenuGroup className="p-1">
                 <DropdownMenuItem
                   className="cursor-pointer rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-3 font-bold py-2.5 px-3 transition-colors"
-                  onClick={() => router.push(isAdminRole(authUser?.role) ? "/admin" : "/staff")}
+                  onClick={handleMainDashboardClick}
                 >
-                  <i className="ph-bold ph-house-line text-lg text-gray-400"></i> 
+                  <i className="ph-bold ph-house-line text-lg text-gray-400"></i>
                   <span className="text-sm">Main Dashboard</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="cursor-pointer rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-3 font-bold py-2.5 px-3 transition-colors"
                   onClick={() => router.push("/account")}
                 >
-                  <i className="ph-bold ph-user-circle-gear text-lg text-gray-400"></i> 
+                  <i className="ph-bold ph-user-circle-gear text-lg text-gray-400"></i>
                   <span className="text-sm">Account Settings</span>
                 </DropdownMenuItem>
-                {hasAdminRights && (
-                  <DropdownMenuItem
-                    className="cursor-pointer rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-3 font-bold py-2.5 px-3 transition-colors"
-                    onClick={() => router.push("/account/activity")}
-                  >
-                    <i className="ph-bold ph-clock-counter-clockwise text-lg text-gray-400"></i> 
-                    <span className="text-sm">Audit My Activity</span>
-                  </DropdownMenuItem>
-                )}
+                <DropdownMenuItem
+                  className="cursor-pointer rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-3 font-bold py-2.5 px-3 transition-colors"
+                  onClick={() => router.push("/account/activity")}
+                >
+                  <i className="ph-bold ph-clock-counter-clockwise text-lg text-gray-400"></i>
+                  <span className="text-sm">Audit My Activity</span>
+                </DropdownMenuItem>
               </DropdownMenuGroup>
 
               {hasAdminRights && (
@@ -130,10 +168,10 @@ export default function Header({ authUser, onLogout, children }) {
                     </p>
                     <div className="grid grid-cols-2 gap-2 bg-gray-100/80 p-1.5 rounded-xl border border-gray-200/50">
                       <DropdownMenuItem
-                        onClick={() => router.push("/admin")}
+                        onClick={() => handleViewSwitch("admin")}
                         className={`flex flex-col items-center justify-center gap-1.5 py-3 rounded-lg transition-all cursor-pointer outline-none ${
-                          isAdminView 
-                            ? "bg-white text-pup-maroon shadow-md border border-red-100 ring-1 ring-red-100/20" 
+                          isAdminView
+                            ? "bg-white text-pup-maroon shadow-md border border-red-100 ring-1 ring-red-100/20"
                             : "text-gray-400 hover:bg-white/50 hover:text-gray-600"
                         }`}
                       >
@@ -141,10 +179,10 @@ export default function Header({ authUser, onLogout, children }) {
                         <span className="text-[10px] font-black uppercase tracking-wider">Admin</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => router.push("/staff")}
+                        onClick={() => handleViewSwitch("staff")}
                         className={`flex flex-col items-center justify-center gap-1.5 py-3 rounded-lg transition-all cursor-pointer outline-none ${
-                          !isAdminView 
-                            ? "bg-white text-pup-maroon shadow-md border border-red-100 ring-1 ring-red-100/20" 
+                          !isAdminView
+                            ? "bg-white text-pup-maroon shadow-md border border-red-100 ring-1 ring-red-100/20"
                             : "text-gray-400 hover:bg-white/50 hover:text-gray-600"
                         }`}
                       >

@@ -365,7 +365,7 @@ export default function DocumentRequestsTab({
                       }}
                       className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
                     >
-                      Clear All
+                      CLEAR ALL
                     </Button>
                   )}
                 </div>
@@ -408,7 +408,7 @@ export default function DocumentRequestsTab({
                 onClick={() => setCreateOpen(true)}
               >
                 <i className="ph-bold ph-plus mr-1.5"></i>
-                New Request
+                NEW REQUEST
               </Button>
             </div>
             <div className="p-6 flex-1 flex flex-col min-h-0">
@@ -499,7 +499,7 @@ export default function DocumentRequestsTab({
                     className="h-8 text-xs font-bold text-gray-600"
                   >
                     <i className="ph-bold ph-caret-left text-[10px] mr-1"></i>
-                    Previous
+                    PREVIOUS
                   </Button>
                   <div className="px-3 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-md h-8 flex items-center justify-center min-w-12 shadow-sm">
                     {page} / {totalPages}
@@ -512,7 +512,7 @@ export default function DocumentRequestsTab({
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     className="h-8 text-xs font-bold text-gray-600"
                   >
-                    Next
+                    NEXT
                     <i className="ph-bold ph-caret-right text-[10px] ml-1"></i>
                   </Button>
                 </div>
@@ -534,7 +534,7 @@ export default function DocumentRequestsTab({
                     onClick={handleResetEdits}
                     disabled={saving}
                   >
-                    Reset
+                    RESET
                   </Button>
                   <Button
                     variant="default"
@@ -543,7 +543,7 @@ export default function DocumentRequestsTab({
                     onClick={handleManualSave}
                     disabled={saving}
                   >
-                    {saving ? "Saving..." : "Save Changes"}
+                    {saving ? "SAVING..." : "SAVE CHANGES"}
                   </Button>
                 </div>
               )}
@@ -613,7 +613,7 @@ export default function DocumentRequestsTab({
                       }}
                     >
                       <i className="ph-bold ph-map-pin mr-2"></i>
-                      Locate on storage map
+                      LOCATE ON STORAGE MAP
                     </Button>
                   </div>
 
@@ -718,7 +718,7 @@ export default function DocumentRequestsTab({
                 className="px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
                 onClick={() => setCreateOpen(false)}
               >
-                Cancel
+                CANCEL
               </Button>
               <Button
                 type="submit"
@@ -726,7 +726,7 @@ export default function DocumentRequestsTab({
                 disabled={submitting}
               >
                 <i className="ph-bold ph-plus-circle text-lg"></i>
-                {submitting ? "Saving…" : "Create Request"}
+                {submitting ? "SAVING…" : "CREATE REQUEST"}
               </Button>
             </div>
           </form>
@@ -781,7 +781,7 @@ export default function DocumentRequestsTab({
               className="px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
               onClick={() => setFileWarningOpen(false)}
             >
-              Close
+              CLOSE
             </Button>
             {studentForRequest ? (
               <Button
@@ -793,7 +793,7 @@ export default function DocumentRequestsTab({
                 }}
               >
                 <i className="ph-bold ph-map-pin text-lg"></i>
-                Check storage map anyway
+                CHECK STORAGE MAP ANYWAY
               </Button>
             ) : null}
           </div>

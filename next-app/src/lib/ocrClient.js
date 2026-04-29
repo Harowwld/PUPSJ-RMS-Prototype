@@ -285,7 +285,7 @@ function detectDocType(rawText, docTypes) {
     }
   }
 
-  /* eslint-disable-next-line no-console */
+   
   console.log("[OCR] docType →", bestType, { cluster: bestCluster?.id, clScore: bestClusterScore, dtScore: bestScore });
   return bestType;
 }
@@ -539,7 +539,7 @@ export async function scanFileForSuggestion({ file, students, docTypes }) {
   // ── Extract raw text ──
   const rawText = isPdf ? await ocrFromPdf(file, worker) : await ocrFromImage(file, worker);
 
-  /* eslint-disable-next-line no-console */
+   
   console.log("=== OCR RAW TEXT ===\n" + rawText + "\n====================");
 
   const lines = rawText
@@ -588,7 +588,7 @@ export async function scanFileForSuggestion({ file, students, docTypes }) {
         if (valid.length > 0) suggestedName = normalizeExtractedName(valid[0]);
       }
     } catch (e) {
-      /* eslint-disable-next-line no-console */
+       
       console.warn("[OCR] NLP fallback failed:", e);
     }
   }
