@@ -17,8 +17,17 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import RoomMap2D from "@/components/staff/RoomMap2D";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyContent,
+  EmptyMedia,
+} from "@/components/ui/empty";
 
 export default function RecordsArchiveTab({
+  loading,
   quickQuery,
   setQuickQuery,
   isQuickSearching,
@@ -57,6 +66,95 @@ export default function RecordsArchiveTab({
       document.body.style.overflow = prev;
     };
   }, [storageFullscreen]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col lg:flex-row w-full h-full gap-4 animate-fade-in">
+        <div className="flex flex-col lg:flex-row flex-1 gap-4 items-stretch overflow-hidden">
+          {/* Sidebar Skeleton */}
+          <section className="w-full lg:w-1/4 bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm flex-shrink-0 h-full overflow-hidden">
+            <div className="p-4 border-b border-gray-200 bg-gray-50">
+              <Skeleton className="h-10 w-full rounded-brand" />
+            </div>
+            <div className="flex-1 p-2 space-y-1 overflow-hidden">
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                <div key={i} className="p-3 border-b border-gray-100 flex items-center justify-between">
+                  <div className="space-y-2">
+                    <Skeleton className="h-4 w-32" />
+                    <Skeleton className="h-3 w-20 font-mono" />
+                  </div>
+                  <Skeleton className="h-4 w-4" />
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Main Content Skeleton */}
+          <section className="w-full lg:w-3/4 flex flex-col gap-4 lg:h-full overflow-hidden min-h-0">
+            {/* Explorer Skeleton */}
+            <div className="h-[60%] min-h-[250px] bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm relative overflow-hidden">
+              <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-white">
+                <div className="flex items-center gap-2">
+                  <Skeleton className="h-8 w-8 rounded-brand" />
+                  <Skeleton className="h-4 w-4" />
+                  <Skeleton className="h-5 w-48" />
+                </div>
+                <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-brand">
+                  <Skeleton className="h-7 w-16 rounded-brand" />
+                  <Skeleton className="h-7 w-16 rounded-brand" />
+                </div>
+              </div>
+              <div className="p-6 bg-gray-50 flex-1 overflow-hidden">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
+                    <div key={i} className="bg-white p-5 rounded-brand border border-gray-200 flex flex-col items-center justify-center gap-2 h-36 shadow-sm">
+                      <Skeleton className="h-10 w-10 rounded-full" />
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-3 w-16" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Storage Area Skeleton */}
+            <div className="h-[44%] min-h-[280px] bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm overflow-hidden">
+              <div className="p-3 border-b border-gray-200 flex justify-between items-center bg-white">
+                <Skeleton className="h-5 w-32" />
+                <div className="flex items-center gap-3">
+                  <Skeleton className="h-8 w-24 rounded-brand" />
+                  <div className="flex gap-2">
+                    <Skeleton className="h-3 w-12" />
+                    <Skeleton className="h-3 w-12" />
+                  </div>
+                </div>
+              </div>
+              <div className="flex-1 flex overflow-hidden">
+                <div className="w-2/3 bg-gray-100 p-6 flex items-center justify-center border-r border-gray-200">
+                  <Skeleton className="w-full h-full rounded-brand opacity-50" />
+                </div>
+                <div className="w-1/3 p-6 flex flex-col gap-6">
+                  <div className="space-y-3">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-8 w-full rounded-brand" />
+                    <Skeleton className="h-4 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                  <div className="space-y-2 pt-4 border-t border-gray-100">
+                    <Skeleton className="h-3 w-32" />
+                    <div className="space-y-2 mt-2">
+                      <Skeleton className="h-10 w-full rounded-brand" />
+                      <Skeleton className="h-10 w-full rounded-brand" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+    );
+  }
 
   const legend = (
     <div className="hidden sm:flex gap-4 text-xs font-medium text-gray-600">
@@ -187,14 +285,17 @@ export default function RecordsArchiveTab({
         <div className={rightClass}>
           <div className={rightInnerClass}>
             {!activeStudent ? (
-              <div className="h-full flex flex-col items-center justify-center text-center text-gray-400">
-                <i className="ph-duotone ph-mouse-left-click text-5xl mb-3"></i>
-                <span className="text-sm font-medium">
-                  Select a student to view
-                  <br />
-                  location & documents
-                </span>
-              </div>
+              <Empty className="h-full flex flex-col items-center justify-center text-center text-gray-500 border-0">
+                <EmptyHeader className="flex flex-col items-center gap-0">
+                  <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                    <i className="ph-duotone ph-mouse-left-click text-3xl text-pup-maroon"></i>
+                  </EmptyMedia>
+                  <EmptyTitle className="text-lg font-bold text-gray-900">Select a student</EmptyTitle>
+                  <EmptyDescription className="text-sm font-medium text-gray-600 mt-1">
+                    Select a student from the list to view their location and documents.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             ) : (
               <div className="h-full flex flex-col min-h-0">
                 <div className="mb-4 flex-shrink-0">
@@ -219,16 +320,18 @@ export default function RecordsArchiveTab({
                   </div>
                   <ul className={ulClass}>
                     {activeStudentDocs.length === 0 ? (
-                      <li className="h-full flex flex-col items-center justify-center text-center text-gray-500 py-8">
-                        <div className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-3 shadow-sm">
-                          <i className="ph-duotone ph-files text-2xl text-pup-maroon"></i>
-                        </div>
-                        <div className="text-sm font-bold text-gray-900">
-                          No documents found
-                        </div>
-                        <div className="text-xs font-medium text-gray-600 mt-1 max-w-[200px]">
-                          This student has no scanned documents on file.
-                        </div>
+                      <li className="h-full py-8">
+                        <Empty className="flex flex-col items-center justify-center text-center text-gray-500 border-0">
+                          <EmptyHeader className="flex flex-col items-center gap-0">
+                            <EmptyMedia className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-3 shadow-sm">
+                              <i className="ph-duotone ph-files text-2xl text-pup-maroon"></i>
+                            </EmptyMedia>
+                            <EmptyTitle className="text-sm font-bold text-gray-900">No documents found</EmptyTitle>
+                            <EmptyDescription className="text-xs font-medium text-gray-600 mt-1 max-w-[200px]">
+                              This student has no scanned documents on file.
+                            </EmptyDescription>
+                          </EmptyHeader>
+                        </Empty>
                       </li>
                     ) : (
                       activeStudentDocs.map((doc) => (
@@ -276,23 +379,39 @@ export default function RecordsArchiveTab({
             <Input
               type="text"
               placeholder="Search ID or Name..."
-              className="w-full pl-10 pr-3 h-10 bg-white border border-gray-300 rounded-brand text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon transition-all placeholder-gray-500 text-gray-900"
+              className="h-10 w-full pl-10 pr-10 bg-white border border-gray-300 rounded-brand text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon transition-all placeholder-gray-500 text-gray-900"
               value={quickQuery}
               onChange={(e) => setQuickQuery(e.target.value)}
             />
+            {quickQuery !== "" && (
+              <button
+                type="button"
+                onClick={() => setQuickQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon transition-colors"
+              >
+                <i className="ph-bold ph-x-circle text-lg"></i>
+              </button>
+            )}
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {quickQuery.trim().length < 2 ? (
-            <div className="text-center py-10 text-gray-500 flex flex-col items-center opacity-80">
-              <i className="ph-bold ph-magnifying-glass text-3xl mb-2"></i>
-              <span className="text-sm font-medium">Search for direct access</span>
-            </div>
+            <Empty className="text-center py-10 flex flex-col items-center border-0 mt-32">
+              <EmptyHeader className="flex flex-col items-center gap-0">
+                <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                  <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon"></i>
+                </EmptyMedia>
+                <EmptyTitle className="text-lg font-bold text-gray-900">Search Records</EmptyTitle>
+                <EmptyDescription className="text-sm font-medium text-gray-600 mt-1">
+                  Enter a student name or ID to quickly locate their records.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : isQuickSearching ? (
             <div className="p-4">
               <div className="space-y-3">
-                {Array.from({ length: 6 }).map((_, idx) => (
+                {Array.from({ length: 8 }).map((_, idx) => (
                   <div key={idx} className="p-3 border-b border-gray-200 flex items-center gap-3">
                     <div className="flex-1 space-y-2">
                       <Skeleton className="h-4 w-40" />
@@ -304,16 +423,17 @@ export default function RecordsArchiveTab({
               </div>
             </div>
           ) : quickResults.length === 0 ? (
-            <div className="flex flex-col items-center justify-center text-center text-gray-500 py-8">
-              <div className="w-12 h-12 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-3 shadow-sm">
-                <i className="ph-duotone ph-magnifying-glass text-2xl text-pup-maroon"></i>
-              </div>
-              <div className="text-sm font-bold text-gray-900">
-                No records found
-              </div>
-              <div className="text-xs font-medium text-gray-600 mt-1 max-w-[200px]">
-                We couldn&apos;t find any students matching your search.
-              </div>            </div>
+            <Empty className="flex flex-col items-center justify-center text-center text-gray-500 py-8 border-0 mt-32">
+              <EmptyHeader className="flex flex-col items-center gap-0">
+                <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                  <i className="ph-duotone ph-list-magnifying-glass text-3xl text-pup-maroon"></i>
+                </EmptyMedia>
+                <EmptyTitle className="text-lg font-bold text-gray-900">No records found</EmptyTitle>
+                <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-[200px]">
+                  We couldn&apos;t find any students matching your search query.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             quickResults.map((s) => (
               <div
@@ -344,7 +464,7 @@ export default function RecordsArchiveTab({
                 variant="ghost"
                 size="icon"
                 onClick={() => onBreadcrumbClick({ level: "years" })}
-                className="text-gray-500 hover:text-pup-maroon hover:bg-transparent transition-colors h-8 w-8"
+                className="text-gray-500 hover:text-pup-maroon hover:bg-transparent transition-colors w-8"
                 title="Home"
               >
                 <i className="ph-bold ph-house text-lg"></i>
@@ -377,11 +497,11 @@ export default function RecordsArchiveTab({
 
             {currentLevel === "students" && (
               <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-brand">
-                <Button variant="ghost" size="sm" className={`h-7 px-2 text-xs font-bold ${listType === 'card' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'}`} onClick={() => setListType('card')}>
-                  <i className="ph-bold ph-squares-four" /> Card
+                <Button variant="ghost" size="sm" className={`px-2 text-xs font-bold ${listType === 'card' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'}`} onClick={() => setListType('card')}>
+                  <i className="ph-bold ph-squares-four" /> CARD
                 </Button>
-                <Button variant="ghost" size="sm" className={`h-7 px-2 text-xs font-bold ${listType === 'table' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'}`} onClick={() => setListType('table')}>
-                  <i className="ph-bold ph-list-dashes" /> Table
+                <Button variant="ghost" size="sm" className={`px-2 text-xs font-bold ${listType === 'table' ? 'bg-white shadow-sm text-gray-900' : 'text-gray-500 hover:text-gray-900'}`} onClick={() => setListType('table')}>
+                  <i className="ph-bold ph-list-dashes" /> TABLE
                 </Button>
               </div>
             )}
@@ -389,25 +509,27 @@ export default function RecordsArchiveTab({
 
           <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
             {students.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center text-gray-500 py-12">
-                <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                  <i className="ph-duotone ph-users-three text-3xl text-pup-maroon"></i>
-                </div>
-                <div className="text-lg font-bold text-gray-900">
-                  No student records yet
-                </div>
-                <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                  Register your first student record in the Upload tab. After that,
-                  you can browse, search, and locate drawers here.
-                </div>
-                <Button
-                  type="button"
-                  onClick={() => onSwitchView("upload")}
-                  className="mt-6 bg-pup-maroon text-white px-5 py-5 rounded-brand font-bold text-sm hover:bg-red-900 transition-colors flex items-center gap-2"
-                >
-                  <i className="ph-bold ph-upload-simple"></i> Go to Register / Upload
-                </Button>
-              </div>
+              <Empty className="h-full flex flex-col items-center justify-center text-center text-gray-500 border-0">
+                <EmptyHeader className="flex flex-col items-center gap-0">
+                  <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                    <i className="ph-duotone ph-users-three text-3xl text-pup-maroon"></i>
+                  </EmptyMedia>
+                  <EmptyTitle className="text-lg font-bold text-gray-900">No student records yet</EmptyTitle>
+                  <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                    Register your first student record in the Upload tab. After that,
+                    you can browse, search, and locate drawers here.
+                  </EmptyDescription>
+                </EmptyHeader>
+                <EmptyContent>
+                  <Button
+                    type="button"
+                    onClick={() => onSwitchView("upload")}
+                    className="mt-4 bg-pup-maroon text-white px-5 h-10 rounded-brand font-bold text-sm hover:bg-red-900 transition-colors flex items-center gap-2 shadow-sm"
+                  >
+                    <i className="ph-bold ph-upload-simple"></i> GO TO REGISTER / UPLOAD
+                  </Button>
+                </EmptyContent>
+              </Empty>
             ) : currentLevel !== "students" ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 animate-fade-in">
                 {explorerItems.map((it, index) => (
@@ -416,7 +538,7 @@ export default function RecordsArchiveTab({
                     className={`folder-card bg-white p-5 rounded-brand flex flex-col items-center justify-center text-center gap-2 h-36 ${
                       it.disabled
                         ? "opacity-50 cursor-not-allowed"
-                        : "cursor-pointer"
+                        : "cursor-not-allowed"
                     }`}
                     onClick={it.onClick}
                   >
@@ -431,92 +553,113 @@ export default function RecordsArchiveTab({
                 ))}
               </div>
             ) : explorerItems.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-center text-gray-500 py-12">
-                <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                  <i className="ph-duotone ph-drawers text-3xl text-pup-maroon"></i>
-                </div>
-                <div className="text-lg font-bold text-gray-900">
-                  No students in this year
-                </div>
-                <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                  There are no student records filed under this year yet.
-                </div>
-              </div>
+              <Empty className="h-full flex flex-col items-center justify-center text-center text-gray-500 border-0">
+                <EmptyHeader className="flex flex-col items-center gap-0">
+                  <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                    <i className="ph-duotone ph-drawers text-3xl text-pup-maroon"></i>
+                  </EmptyMedia>
+                  <EmptyTitle className="text-lg font-bold text-gray-900">No students in this year</EmptyTitle>
+                  <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                    There are no student records filed under this year yet.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
             ) : listType === "card" ? (
-              <div className="flex flex-col gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 animate-fade-in">
                 {explorerItems.map((row, index) => (
                   <div
                     key={index}
-                    className="group flex items-center justify-between p-4 bg-white border border-gray-300 rounded-brand hover:border-pup-maroon cursor-pointer transition-all shadow-sm"
+                    className="group relative flex flex-col p-5 bg-white border border-gray-300 rounded-brand hover:border-pup-maroon hover:shadow-md cursor-pointer transition-all shadow-sm"
                     onClick={() => onLocateStudent(row.student)}
                   >
-                    <div className="flex items-center gap-4">
-                      <Avatar className="w-10 h-10 border border-gray-200">
-                        <AvatarFallback className="bg-gray-100 text-gray-600 group-hover:text-pup-maroon font-bold transition-colors">
-                          <i className="ph-bold ph-user text-xl"></i>
+                    <div className="flex items-start gap-4 mb-4">
+                      <Avatar className="w-12 h-12 border border-gray-100 shadow-sm shrink-0">
+                        <AvatarFallback className="bg-gray-50 text-gray-400 group-hover:text-pup-maroon font-bold transition-colors">
+                          <i className="ph-bold ph-user text-2xl"></i>
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <h4 className="font-bold text-base text-gray-900">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-bold text-gray-900 group-hover:text-pup-maroon transition-colors truncate leading-tight text-base">
                           {row.student.name}
                         </h4>
-                        <div className="flex gap-2 items-center mt-1">
-                          <Badge variant="outline" className="font-mono text-xs text-gray-600 rounded">
+                        <div className="flex items-center gap-2 mt-1.5">
+                          <Badge variant="outline" className="font-mono text-[10px] font-bold text-gray-600 border-gray-200 px-1.5 py-0 rounded">
                             {row.student.studentNo}
                           </Badge>
                         </div>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <Button variant="ghost" size="sm" className="text-xs uppercase font-bold tracking-wide text-gray-400 group-hover:text-pup-maroon hover:bg-transparent px-0">
-                        View Location
-                      </Button>
+                    
+                    <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-6 h-6 rounded bg-gray-50 flex items-center justify-center text-gray-400 group-hover:text-pup-maroon group-hover:bg-red-50 transition-colors">
+                          <i className="ph-duotone ph-map-pin text-sm"></i>
+                        </div>
+                        <span className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                          R-{row.student.room} • C-{row.student.cabinet}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="secondary" className="bg-gray-100 text-gray-700 border-transparent text-[10px] font-black uppercase tracking-tighter px-2">
+                          D-{row.student.drawer}
+                        </Badge>
+                        <i className="ph-bold ph-caret-right text-gray-300 group-hover:text-pup-maroon group-hover:translate-x-0.5 transition-all"></i>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="bg-white border text-left border-gray-200 rounded-brand overflow-hidden shadow-sm">
-                <Table>
-                  <TableHeader className="bg-gray-50">
-                    <TableRow>
-                      <TableHead className="w-[80px]">Profile</TableHead>
-                      <TableHead>Student No.</TableHead>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead className="text-right">Action</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
+              <div className="flex-1 overflow-auto rounded-brand border border-gray-200 bg-white">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+                    <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
+                      <th className="p-3 font-bold w-[80px] text-center">Profile</th>
+                      <th className="p-3 font-bold w-48">Student No.</th>
+                      <th className="p-3 font-bold">Name</th>
+                      <th className="p-3 font-bold w-56">Location</th>
+                      <th className="p-3 font-bold text-right w-32">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
                     {explorerItems.map((row) => (
-                      <TableRow
+                      <tr
                         key={row.key}
-                        className="cursor-pointer hover:bg-red-50/30 group transition-colors"
+                        className="hover:bg-gray-50 group cursor-pointer transition-colors"
                         onClick={() => onLocateStudent(row.student)}
                       >
-                        <TableCell>
-                          <Avatar className="w-8 h-8 mx-auto">
+                        <td className="p-3">
+                          <Avatar className="w-8 h-8 mx-auto border border-gray-200">
                             <AvatarFallback className="bg-gray-100 text-gray-500 text-xs font-bold group-hover:text-pup-maroon transition-colors">
                               <i className="ph-bold ph-user text-sm"></i>
                             </AvatarFallback>
                           </Avatar>
-                        </TableCell>
-                        <TableCell className="font-mono text-xs text-gray-600 font-medium">{row.student.studentNo}</TableCell>
-                        <TableCell className="font-bold text-gray-900 group-hover:text-pup-maroon transition-colors">{row.student.name}</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className="bg-gray-100 text-gray-600 font-medium shadow-none">
+                        </td>
+                        <td className="p-3 font-mono text-xs text-gray-600 font-medium">
+                          {row.student.studentNo}
+                        </td>
+                        <td className="p-3 font-bold text-gray-900 group-hover:text-pup-maroon transition-colors">
+                          {row.student.name}
+                        </td>
+                        <td className="p-3">
+                          <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200 font-bold uppercase text-[10px] tracking-wider px-2 py-0.5">
                             CAB-{row.student.cabinet} • D-{row.student.drawer}
                           </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" className="text-gray-400 group-hover:text-pup-maroon uppercase font-bold text-[10px] tracking-wider h-7">
-                            Locate
+                        </td>
+                        <td className="p-3 text-right">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="h-8 px-3 font-bold text-[10px] tracking-widest border-gray-300 text-gray-600 hover:text-pup-maroon hover:border-pup-maroon hover:bg-red-50 transition-all rounded-brand shadow-sm"
+                          >
+                            <i className="ph-bold ph-magnifying-glass-plus mr-1.5 text-xs"></i>
+                            LOCATE
                           </Button>
-                        </TableCell>
-                      </TableRow>
+                        </td>
+                      </tr>
                     ))}
-                  </TableBody>
-                </Table>
+                  </tbody>
+                </table>
               </div>
             )}
           </div>
@@ -533,12 +676,12 @@ export default function RecordsArchiveTab({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-8 text-xs font-bold border-gray-300"
+                  className="text-xs font-bold border-gray-300"
                   onClick={() => setStorageFullscreen(false)}
                   title="Exit full screen (Esc)"
                 >
                   <i className="ph-bold ph-corners-in mr-1.5"></i>
-                  Exit full screen
+                  EXIT FULL SCREEN
                 </Button>
                 {legend}
               </div>
@@ -558,12 +701,12 @@ export default function RecordsArchiveTab({
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="h-8 text-xs font-bold border-gray-300"
+                  className="text-xs font-bold border-gray-300"
                   onClick={() => setStorageFullscreen(true)}
                   title="Full screen map & documents"
                 >
                   <i className="ph-bold ph-corners-out mr-1.5"></i>
-                  Full screen
+                  FULL SCREEN
                 </Button>
                 {legend}
               </div>

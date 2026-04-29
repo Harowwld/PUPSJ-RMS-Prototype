@@ -7,6 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPHDateTimeParts } from "@/lib/timeFormat";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyMedia,
+} from "@/components/ui/empty";
 
 export default function DigitalRecordsReviewTab({
   records,
@@ -76,13 +83,28 @@ export default function DigitalRecordsReviewTab({
   return (
     <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter">
       <Card className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col">
-        {/* Header with filters - integrated like DocumentsTab */}
+        {/* Reverted Header with filters */}
         <div className="p-4 bg-gray-50/50 flex-none border-b border-gray-200">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
             <div className="lg:col-span-1">
-              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                Search Records
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-gray-700 uppercase">
+                  Search Records
+                </label>
+                {(searchQuery !== "" || statusFilter !== "All") && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setStatusFilter("All");
+                    }}
+                    className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon rounded-brand"
+                  >
+                    CLEAR ALL
+                  </Button>
+                )}
+              </div>
               <div className="relative">
                 <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                 <Input
@@ -132,37 +154,50 @@ export default function DigitalRecordsReviewTab({
           </div>
         </div>
 
-        {/* Table content */}
-        <CardContent className="p-6 flex-1 flex flex-col min-h-0">
+        {/* Table content - Modern Notification Style kept */}
+        <CardContent className="p-6 flex-1 flex flex-col min-h-0 bg-white">
           {isLoading ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <Skeleton key={i} className="h-20 rounded-brand" />
-                ))}
+            <div className="flex-1 flex flex-col space-y-4">
+              <div className="flex-1 border border-gray-200 rounded-brand overflow-hidden flex flex-col bg-white">
+                <Skeleton className="h-12 w-full rounded-none" />
+                <div className="divide-y divide-gray-100 flex-1">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="p-4 flex items-center justify-between">
+                      <div className="flex-1 grid grid-cols-5 gap-4">
+                        <Skeleton className="h-4 w-32" />
+                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-4 w-40" />
+                        <Skeleton className="h-6 w-20 rounded-full" />
+                        <Skeleton className="h-4 w-24" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
-              <Skeleton className="h-4 w-full max-w-md rounded-brand" />
-              <Skeleton className="h-32 rounded-brand" />
             </div>
           ) : error ? (
-            <div className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500">
-              <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
-              </div>
-              <p className="text-lg font-bold text-gray-900">Could not load report</p>
-              <p className="text-sm font-medium text-gray-600 mt-1 max-w-md">{error}</p>
-            </div>
+            <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+              <EmptyHeader className="flex flex-col items-center gap-0">
+                <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
+                </EmptyMedia>
+                <EmptyTitle className="text-lg font-bold text-gray-900">Could not load report</EmptyTitle>
+                <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                  {error}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <>
-              <div className={`flex-1 overflow-auto rounded-brand ${filteredRecords.length === 0 ? '' : 'border border-gray-200'}`}>
+              <div className="flex-1 overflow-y-auto overflow-x-auto border border-gray-200 rounded-brand bg-white shadow-xs">
                 <table className="min-w-full text-sm">
                   <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
                     <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
-                      <th className="p-3 font-bold">Student Info</th>
+                      <th className="p-3 font-bold">Student Identity</th>
                       <th className="p-3 font-bold">Document Type</th>
-                      <th className="p-3 font-bold">Filename</th>
-                      <th className="p-3 font-bold">Status</th>
-                      <th className="p-3 font-bold">Uploaded</th>
+                      <th className="p-3 font-bold">Original File</th>
+                      <th className="p-3 font-bold">Review Status</th>
+                      <th className="p-3 font-bold">Date Uploaded</th>
                       <th className="p-3 font-bold text-right">Actions</th>
                     </tr>
                   </thead>
@@ -170,68 +205,67 @@ export default function DigitalRecordsReviewTab({
                     {filteredRecords.length === 0 ? (
                       <tr className="border-0 hover:bg-transparent">
                         <td colSpan={6} className="p-0 border-0">
-                          <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
-                            <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                              <i className="ph-duotone ph-stack text-3xl text-pup-maroon"></i>
-                            </div>
-                            <div className="text-lg font-bold text-gray-900">
-                              No records found
-                            </div>
-                            <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                              {searchQuery
-                                ? "No records match your search criteria. Try adjusting your filters."
-                                : "We couldn't find any digital records matching your current filter criteria."}
-                            </div>
-                          </div>
+                          <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+                            <EmptyHeader className="flex flex-col items-center gap-0">
+                              <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                                <i className="ph-duotone ph-stack text-3xl text-pup-maroon"></i>
+                              </EmptyMedia>
+                              <EmptyTitle className="text-lg font-bold text-gray-900">No records found</EmptyTitle>
+                              <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                                {searchQuery
+                                  ? "No records match your search criteria. Try adjusting your filters."
+                                  : "We couldn't find any digital records matching your current filter criteria."}
+                              </EmptyDescription>
+                            </EmptyHeader>
+                          </Empty>
                         </td>
                       </tr>
                     ) : (
-                      paginatedRecords.map((r) => (
+                      paginatedRecords.map((r) => {
+                        const uploaded = formatPHDateTimeParts(r.created_at);
+                        return (
                         <tr key={r.id} className="hover:bg-gray-50 transition-colors">
                           <td className="p-3">
-                            <div className="flex flex-col">
-                              <span className="font-bold text-gray-900">
+                            <div className="flex flex-col py-1">
+                              <span className="font-bold text-gray-900 text-sm">
                                 {r.student_name || "Unknown Student"}
                               </span>
-                              <span className="font-mono text-xs text-gray-500">
+                              <span className="font-mono text-[11px] text-gray-500 mt-0.5">
                                 {r.student_no}
                               </span>
                             </div>
                           </td>
                           <td className="p-3">
-                            <span className="text-sm font-medium text-gray-700">
+                            <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-red-50 text-pup-maroon border border-red-100 text-[11px] font-bold">
                               {r.doc_type}
                             </span>
                           </td>
                           <td className="p-3">
-                            <span className="text-sm text-gray-600 font-mono truncate max-w-[200px] block">
+                            <span className="text-xs font-medium text-gray-600 font-mono truncate max-w-[180px] block" title={r.original_filename}>
                               {r.original_filename}
                             </span>
                           </td>
                           <td className="p-3">
                             <Badge
                               variant="outline"
-                              className={`${getStatusBadge(r.approval_status)} font-bold text-xs px-3 py-1 rounded-full border`}
+                              className={`${getStatusBadge(r.approval_status)} font-black uppercase text-[10px] px-2.5 py-1 rounded-full border shadow-xs flex w-max items-center gap-1.5`}
                             >
-                              <i className={`ph-fill ${getStatusIcon(r.approval_status)} mr-1.5`}></i>
+                              <i className={`ph-fill ${getStatusIcon(r.approval_status)}`}></i>
                               {r.approval_status || "Pending"}
                             </Badge>
                           </td>
-                          <td className="p-3">
-                            {(() => {
-                              const t = formatPHDateTimeParts(r.created_at);
-                              return (
-                                <div className="font-mono text-[11px] text-gray-500 whitespace-nowrap">
-                                  <div>{t.date}</div>
-                                  {t.time ? <div>{t.time}</div> : null}
-                                </div>
-                              );
-                            })()}
+                          <td className="p-3 text-gray-600 font-medium">
+                            <div className="font-mono text-[11px]">
+                              {uploaded.date}
+                            </div>
+                            <div className="text-[10px] opacity-70">
+                              {uploaded.time}
+                            </div>
                           </td>
-                          <td className="p-3">
-                            <div className="flex justify-end gap-2">
+                          <td className="p-3 text-right">
+                            <div className="flex items-center justify-end gap-2">
                               {r.approval_status === "Declined" ? (
-                                <span className="px-3 h-9 inline-flex items-center rounded-brand border border-gray-200 text-gray-400 font-bold text-xs bg-gray-50">
+                                <span className="px-3 h-9 inline-flex items-center rounded-brand border border-gray-200 text-gray-400 font-bold text-[10px] uppercase tracking-wide bg-gray-50">
                                   <i className="ph-bold ph-file-x mr-1.5"></i>
                                   File Removed
                                 </span>
@@ -240,37 +274,38 @@ export default function DigitalRecordsReviewTab({
                                   variant="outline"
                                   size="sm"
                                   onClick={() => handlePreview(r)}
-                                  className="h-9 px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50 hover:border-pup-maroon rounded-brand"
+                                  className="h-9 px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50 hover:border-pup-maroon rounded-brand transition-all shadow-sm"
                                 >
                                   <i className="ph-bold ph-eye mr-1.5"></i>
-                                  View
+                                  VIEW
                                 </Button>
                               )}
-                              {r.approval_status !== "Declined" && r.approval_status !== "Approved" && (
-                                <Button
-                                  size="sm"
-                                  onClick={() => onApprove(r.id)}
-                                  className="h-9 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded-brand"
-                                >
-                                  <i className="ph-bold ph-check mr-1.5"></i>
-                                  Approve
-                                </Button>
-                              )}
-                              {r.approval_status !== "Declined" && r.approval_status !== "Approved" && (
-                                <Button
-                                  size="sm"
-                                  variant="destructive"
-                                  onClick={() => onDecline(r.id)}
-                                  className="h-9 font-bold text-xs rounded-brand bg-red-600 hover:bg-red-700 text-white"
-                                >
-                                  <i className="ph-bold ph-x mr-1.5"></i>
-                                  Decline
-                                </Button>
+                              {r.approval_status === "Pending" && (
+                                <>
+                                  <Button
+                                    size="sm"
+                                    onClick={() => onApprove(r.id)}
+                                    className="h-9 px-3 bg-green-600 hover:bg-green-700 text-white font-bold text-xs rounded-brand shadow-sm"
+                                  >
+                                    <i className="ph-bold ph-check mr-1.5"></i>
+                                    APPROVE
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="destructive"
+                                    onClick={() => onDecline(r.id)}
+                                    className="h-9 px-3 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-brand shadow-sm"
+                                  >
+                                    <i className="ph-bold ph-x mr-1.5"></i>
+                                    DECLINE
+                                  </Button>
+                                </>
                               )}
                             </div>
                           </td>
                         </tr>
-                      ))
+                        );
+                      })
                     )}
                   </tbody>
                 </table>
@@ -295,11 +330,11 @@ export default function DigitalRecordsReviewTab({
                       size="sm"
                       disabled={displayPage <= 1}
                       onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      className="h-8 text-xs font-bold text-gray-600"
+                      className="h-8 text-xs font-bold text-gray-600 h-8 rounded-brand"
                     >
-                      <i className="ph-bold ph-caret-left"></i> Previous
+                      <i className="ph-bold ph-caret-left mr-1"></i> PREVIOUS
                     </Button>
-                    <div className="px-3 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-md h-8 flex items-center justify-center min-w-12 shadow-sm">
+                    <div className="px-3 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-brand h-8 flex items-center justify-center min-w-12 shadow-sm">
                       {displayPage} / {totalPages}
                     </div>
                     <Button
@@ -307,9 +342,9 @@ export default function DigitalRecordsReviewTab({
                       size="sm"
                       disabled={displayPage >= totalPages}
                       onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                      className="h-8 text-xs font-bold text-gray-600"
+                      className="h-8 text-xs font-bold text-gray-600 h-8 rounded-brand"
                     >
-                      Next <i className="ph-bold ph-caret-right"></i>
+                      NEXT <i className="ph-bold ph-caret-right ml-1"></i>
                     </Button>
                   </div>
                 )}

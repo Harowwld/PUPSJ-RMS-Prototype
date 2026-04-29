@@ -63,9 +63,6 @@ export async function PUT(req) {
 
     const uid = user.sub || user.id;
 
-    // Clear old answers first
-    await dbRun("DELETE FROM staff_security_answers WHERE staff_id = ?", [uid]);
-    
     for (const ans of answers) {
       if (!ans.questionId || !ans.answer) continue;
 
@@ -76,9 +73,10 @@ export async function PUT(req) {
       const answerNormalized = String(ans.answer).trim().toLowerCase();
       const answerHash = crypto.createHash("sha256").update(answerNormalized).digest("hex");
 
+      // Use INSERT OR REPLACE since PRIMARY KEY is (staff_id, question_id)
       await dbRun(`
-        INSERT INTO staff_security_answers (staff_id, question_id, answer_hash)
-        VALUES (?, ?, ?)
+        INSERT OR REPLACE INTO staff_security_answers (staff_id, question_id, answer_hash, updated_at)
+        VALUES (?, ?, ?, datetime('now'))
       `, [uid, qRow.id, answerHash]);
     }
 

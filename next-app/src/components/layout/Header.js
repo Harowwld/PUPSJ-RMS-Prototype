@@ -13,21 +13,59 @@ import {
   DropdownMenuGroup,
 } from "@/components/ui/dropdown-menu";
 import AccountSetupModal from "@/components/shared/AccountSetupModal";
+import { isAdminRole, getRoleLabel } from "@/lib/roleUtils";
 
 export default function Header({ authUser, onLogout, children }) {
   const router = useRouter();
   const pathname = usePathname();
-  const isAdminRole = (role) => {
-    const normalized = String(role || "").toLowerCase();
-    return normalized === "admin" || normalized === "administrator" || normalized === "superadmin";
-  };
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [preferredView, setPreferredView] = useState(null);
+
+  useEffect(() => {
+    // Only admins have a choice of view
+    if (isAdminRole(authUser?.role)) {
+      const stored = localStorage.getItem("pup_admin_view_pref");
+      if (stored) {
+        setPreferredView(stored);
+      } else {
+        // Default to admin if we're on an admin page, or staff otherwise
+        const initial = pathname?.startsWith("/admin") ? "admin" : "staff";
+
+        setPreferredView(initial);
+      }
+    }
+  }, [authUser?.role, pathname]);
 
   const initials = authUser?.fname && authUser?.lname
     ? (authUser.fname[0] + authUser.lname[0]).toUpperCase()
     : "AD";
 
-  const isAdminView = pathname?.startsWith("/admin");
+  // If we're on /admin or /staff, that IS our current view.
+  // If we're on /account, we use the preferredView state.
+  const activeView = (pathname?.startsWith("/admin"))
+    ? "admin"
+    : (pathname?.startsWith("/staff"))
+      ? "staff"
+      : (preferredView || (isAdminRole(authUser?.role) ? "admin" : "staff"));
+
+  const isAdminView = activeView === "admin";
   const hasAdminRights = isAdminRole(authUser?.role);
+
+  const handleViewSwitch = (viewKey) => {
+    if (hasAdminRights) {
+      localStorage.setItem("pup_admin_view_pref", viewKey);
+      setPreferredView(viewKey);
+    }
+    router.push(viewKey === "admin" ? "/admin" : "/staff");
+  };
+
+  const handleMainDashboardClick = () => {
+    if (hasAdminRights) {
+      router.push(activeView === "admin" ? "/admin" : "/staff");
+    } else {
+      router.push("/staff");
+    }
+  };
 
   useEffect(() => {
     // Warm common dashboard routes for faster view switching.
@@ -56,7 +94,7 @@ export default function Header({ authUser, onLogout, children }) {
         </div>
 
         <div className="ml-4">
-          <DropdownMenu>
+          <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger className="group flex items-center gap-3 rounded-brand border border-gray-200 bg-white/90 px-3 py-1.5 shadow-xs transition-all hover:border-pup-maroon/40 hover:bg-red-50/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pup-maroon">
               <div className="h-9 w-9 shrink-0 rounded-brand bg-gray-100 flex items-center justify-center text-xs font-semibold text-gray-700">
                 {initials}
@@ -69,87 +107,101 @@ export default function Header({ authUser, onLogout, children }) {
                   {authUser?.role || "User"}
                 </p>
               </div>
-              <i className="ph-bold ph-caret-down text-gray-400 text-xs transition-transform group-data-[state=open]:rotate-180 hidden sm:block"></i>
+              <i className={`ph-bold ph-caret-down text-gray-400 text-xs transition-transform duration-300 hidden sm:block ${menuOpen ? "rotate-180" : ""}`}></i>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-72 rounded-2xl border border-gray-200 shadow-xl p-2 bg-white/95 backdrop-blur">
+            <DropdownMenuContent align="end" className="w-80 rounded-2xl border border-gray-200 shadow-2xl p-2 bg-white/98 backdrop-blur-md">
               <DropdownMenuGroup>
-                <DropdownMenuLabel className="rounded-xl p-3 bg-gray-50/90">
+                <div className="rounded-xl p-3 bg-gray-50/80 border border-gray-100 mb-1">
                   <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 shrink-0 rounded-brand bg-gray-100 flex items-center justify-center text-sm font-semibold text-gray-700">
+                    <div className="h-12 w-12 shrink-0 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-base font-bold text-pup-maroon shadow-sm">
                       {initials}
                     </div>
                     <div className="min-w-0">
-                      <p className="text-sm font-bold text-gray-900 truncate">
+                      <p className="text-sm font-black text-gray-900 truncate tracking-tight">
                         {authUser?.fname} {authUser?.lname}
                       </p>
-                      <p className="text-xs text-pup-maroon font-medium truncate">
-                        {authUser?.role || "User"}
-                      </p>
-                      <p className="text-xs text-gray-500 truncate">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold text-pup-maroon bg-red-50 px-1.5 py-0.5 rounded border border-red-100 uppercase tracking-wider">
+                          {authUser?.role || "User"}
+                        </span>
+                      </div>
+                      <p className="text-xs text-gray-500 truncate mt-0.5 font-medium">
                         {authUser?.email || authUser?.username}
                       </p>
                     </div>
                   </div>
-                </DropdownMenuLabel>
+                </div>
               </DropdownMenuGroup>
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
+
+              <DropdownMenuSeparator className="opacity-50" />
+
+              <DropdownMenuGroup className="p-1">
                 <DropdownMenuItem
-                  className="cursor-pointer rounded-md text-gray-700 hover:bg-red-50 hover:text-pup-maroon flex items-center gap-2 font-medium"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
-                    router.push(path);
-                  }}
+                  className="cursor-pointer rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-3 font-bold py-2.5 px-3 transition-colors"
+                  onClick={handleMainDashboardClick}
                 >
-                  <i className="ph-bold ph-squares-four"></i> Dashboard
+                  <i className="ph-bold ph-house-line text-lg text-gray-400"></i>
+                  <span className="text-sm">Main Dashboard</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  className="cursor-pointer rounded-md text-gray-700 hover:bg-red-50 hover:text-pup-maroon flex items-center gap-2 font-medium"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    router.push("/account");
-                  }}
+                  className="cursor-pointer rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-3 font-bold py-2.5 px-3 transition-colors"
+                  onClick={() => router.push("/account")}
                 >
-                  <i className="ph-bold ph-user-gear"></i> Account Settings
+                  <i className="ph-bold ph-user-circle-gear text-lg text-gray-400"></i>
+                  <span className="text-sm">Account Settings</span>
                 </DropdownMenuItem>
-                {hasAdminRights && (
-                  <DropdownMenuItem
-                    className="cursor-pointer rounded-md text-gray-700 hover:bg-red-50 hover:text-pup-maroon flex items-center gap-2 font-medium"
-                    onClick={() => router.push("/account/activity")}
-                  >
-                    <i className="ph-bold ph-clock-counter-clockwise"></i> My Activity
-                  </DropdownMenuItem>
-                )}
+                <DropdownMenuItem
+                  className="cursor-pointer rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-3 font-bold py-2.5 px-3 transition-colors"
+                  onClick={() => router.push("/account/activity")}
+                >
+                  <i className="ph-bold ph-clock-counter-clockwise text-lg text-gray-400"></i>
+                  <span className="text-sm">Audit My Activity</span>
+                </DropdownMenuItem>
               </DropdownMenuGroup>
-              <DropdownMenuSeparator />
+
               {hasAdminRights && (
-                <DropdownMenuGroup>
-                  {isAdminView ? (
+                <>
+                  <DropdownMenuSeparator className="opacity-50" />
+                  <div className="px-2 py-3">
+                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] px-2 mb-3">
+                      Interface View Mode
+                    </p>
+                    <div className="grid grid-cols-2 gap-2 bg-gray-100/80 p-1.5 rounded-xl border border-gray-200/50">
                       <DropdownMenuItem
-                        className="cursor-pointer rounded-md text-gray-700 hover:bg-red-50 hover:text-pup-maroon flex items-center gap-2 font-medium"
-                        onClick={() => router.push("/staff")}
+                        onClick={() => handleViewSwitch("admin")}
+                        className={`flex flex-col items-center justify-center gap-1.5 py-3 rounded-lg transition-all cursor-pointer outline-none ${
+                          isAdminView
+                            ? "bg-white text-pup-maroon shadow-md border border-red-100 ring-1 ring-red-100/20"
+                            : "text-gray-400 hover:bg-white/50 hover:text-gray-600"
+                        }`}
                       >
-                        <i className="ph-bold ph-swap"></i> Switch to Staff View
+                        <i className={`ph-bold ph-shield-check text-xl ${isAdminView ? "text-pup-maroon" : ""}`}></i>
+                        <span className="text-[10px] font-black uppercase tracking-wider">Admin</span>
                       </DropdownMenuItem>
-                    ) : (
                       <DropdownMenuItem
-                        className="cursor-pointer rounded-md text-gray-700 hover:bg-red-50 hover:text-pup-maroon flex items-center gap-2 font-medium"
-                        onClick={() => router.push("/admin")}
+                        onClick={() => handleViewSwitch("staff")}
+                        className={`flex flex-col items-center justify-center gap-1.5 py-3 rounded-lg transition-all cursor-pointer outline-none ${
+                          !isAdminView
+                            ? "bg-white text-pup-maroon shadow-md border border-red-100 ring-1 ring-red-100/20"
+                            : "text-gray-400 hover:bg-white/50 hover:text-gray-600"
+                        }`}
                       >
-                        <i className="ph-bold ph-swap"></i> Switch to Admin View
+                        <i className={`ph-bold ph-users-three text-xl ${!isAdminView ? "text-pup-maroon" : ""}`}></i>
+                        <span className="text-[10px] font-black uppercase tracking-wider">Staff</span>
                       </DropdownMenuItem>
-                    )}
-                  </DropdownMenuGroup>
+                    </div>
+                  </div>
+                </>
               )}
 
-              <DropdownMenuSeparator />
-              <DropdownMenuGroup>
+              <DropdownMenuSeparator className="opacity-50" />
+              <DropdownMenuGroup className="p-1">
                 <DropdownMenuItem
                   onClick={onLogout}
-                  className="cursor-pointer rounded-md text-red-700 hover:bg-red-50 flex items-center gap-2 font-bold"
+                  className="cursor-pointer rounded-lg text-red-600 hover:bg-red-50 flex items-center gap-3 font-black py-2.5 px-3 transition-all"
                 >
-                  <i className="ph-bold ph-sign-out"></i> Sign Out
+                  <i className="ph-bold ph-power text-lg"></i>
+                  <span className="text-sm">Sign Out System</span>
                 </DropdownMenuItem>
               </DropdownMenuGroup>
             </DropdownMenuContent>

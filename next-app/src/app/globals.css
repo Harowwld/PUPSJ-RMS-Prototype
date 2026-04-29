@@ -95,7 +95,8 @@ body {
 
 :where(.form-input) {
   width: 100%;
-  padding: 0.75rem;
+  height: 2.5rem;
+  padding: 0 0.75rem;
   background-color: #fff;
   border: 1px solid #d1d5db;
   border-radius: var(--radius-brand);
@@ -111,7 +112,7 @@ body {
 :where(.form-input):focus {
   outline: none;
   border-color: #800000;
-  box-shadow: 0 0 0 2px #800000;
+  box-shadow: 0 0 0 2px rgba(128, 0, 0, 0.2);
 }
 
 :where(.no-glow):focus {
@@ -185,7 +186,8 @@ body {
 
 :where(.form-select) {
   width: 100%;
-  padding: 0.6rem;
+  height: 2.5rem;
+  padding: 0 0.75rem;
   background-color: #fff;
   border: 1px solid #d1d5db;
   border-radius: var(--radius-brand);
@@ -197,7 +199,7 @@ body {
 :where(.form-select):focus {
   outline: none;
   border-color: #800000;
-  box-shadow: 0 0 0 2px #800000;
+  box-shadow: 0 0 0 2px rgba(128, 0, 0, 0.2);
 }
 
 .table-row-hover:hover {

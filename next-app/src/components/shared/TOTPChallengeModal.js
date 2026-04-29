@@ -29,6 +29,7 @@ export function TOTPChallengeModal({
     console.log("[TOTP MODAL] open changed to:", open);
     if (!open) {
       setToken("");
+
       setError("");
     }
   }, [open]);
@@ -49,79 +50,88 @@ export function TOTPChallengeModal({
       console.log("[TOTP MODAL] onConfirm error:", err.message);
       const msg = err?.message || "Invalid verification code";
       setError(msg);
-      toast.error("Verification Failed", { description: msg });
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => {
-      console.log("[TOTP MODAL] onOpenChange called, isOpen:", isOpen);
-      onOpenChange(isOpen);
+      if (!isOpen) onOpenChange(false);
     }}>
-      <DialogContent className="sm:max-w-md rounded-brand">
-        <DialogHeader>
-          <DialogTitle className="text-xl font-black text-gray-900 flex items-center gap-2">
-            <i className="ph-bold ph-shield-check text-pup-maroon text-2xl"></i>
-            {title}
-          </DialogTitle>
-          <DialogDescription className="text-sm text-gray-600 font-medium">
-            {description}
-          </DialogDescription>
+      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
+        <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50 text-left">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
+              <i className="ph-duotone ph-shield-check text-2xl"></i>
+            </div>
+            <div className="min-w-0">
+              <DialogTitle className="text-lg font-black tracking-tight text-gray-900 leading-tight">
+                {title}
+              </DialogTitle>
+              <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 leading-relaxed">
+                {description}
+              </DialogDescription>
+            </div>
+          </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
-          {error && (
-            <div className="p-3 bg-red-50 border border-red-100 text-red-700 text-sm font-bold rounded-brand flex items-center gap-2">
-              <i className="ph-bold ph-warning-circle"></i>
-              {error}
-            </div>
-          )}
+        <form onSubmit={handleSubmit}>
+          <div className="p-6 space-y-4">
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-100 text-red-700 text-sm font-bold rounded-brand flex items-center gap-2 animate-in fade-in slide-in-from-top-1">
+                <i className="ph-bold ph-warning-circle text-lg"></i>
+                {error}
+              </div>
+            )}
 
-          <div className="space-y-2">
-            <Input
-              type="text"
-              maxLength={6}
-              className="h-14 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900 text-center tracking-widest text-2xl"
-              placeholder="000000"
-              value={token}
-              onChange={(e) => setToken(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              autoFocus
-              inputMode="numeric"
-              pattern="[0-9]*"
-            />
-            <p className="text-xs text-gray-500 text-center">
-              Enter the 6-digit code from your authenticator app
-            </p>
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">
+                Security Verification Code
+              </label>
+              <Input
+                type="text"
+                maxLength={6}
+                className="h-14 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-black text-gray-900 text-center tracking-[0.5em] text-2xl shadow-sm"
+                placeholder="000000"
+                value={token}
+                onChange={(e) => setToken(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                autoFocus
+                inputMode="numeric"
+                pattern="[0-9]*"
+              />
+              <p className="text-[11px] text-gray-500 font-medium text-center italic">
+                Verify identity via your linked authenticator app
+              </p>
+            </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="h-11 font-black uppercase tracking-widest rounded-brand"
+              className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand uppercase tracking-wider"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isLoading || token.length !== 6}
-              className="h-11 px-6 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+              className="h-11 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
             >
               {isLoading ? (
                 <>
-                  <i className="ph-bold ph-spinner animate-spin"></i>
+                  <i className="ph-bold ph-spinner animate-spin text-lg"></i>
                   Verifying...
                 </>
               ) : (
                 <>
-                  <i className="ph-bold ph-check"></i>
+                  <i className="ph-bold ph-check text-lg"></i>
                   {actionLabel}
                 </>
               )}
             </Button>
-          </DialogFooter>
+          </div>
         </form>
       </DialogContent>
     </Dialog>

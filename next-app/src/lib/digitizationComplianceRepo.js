@@ -54,6 +54,7 @@ export async function getDigitizationComplianceSummary({
     SELECT
       s.student_no,
       s.course_code,
+      s.year_level,
       (
         SELECT COUNT(DISTINCT d.doc_type)
         FROM documents d
@@ -74,6 +75,7 @@ export async function getDigitizationComplianceSummary({
   let totalExpectedDocsCount = totalStudents * expectedCountPerStudent;
 
   const courseStats = {};
+  const yearStats = {};
 
   students.forEach((s) => {
     const actual = Number(s.actual_count) || 0;
@@ -94,6 +96,12 @@ export async function getDigitizationComplianceSummary({
     if (isFullyDigitized) courseStats[cc].fullyDigitized++;
     courseStats[cc].completeness += completeness;
     courseStats[cc].digitizedDocs += actual;
+
+    const yr = Number(s.year_level) || 0;
+    if (yr) {
+      if (!yearStats[yr]) yearStats[yr] = 0;
+      yearStats[yr]++;
+    }
   });
 
   const avgCompleteness = totalStudents > 0 ? roundPercent(totalCompletenessRatio / totalStudents) : null;
@@ -106,6 +114,11 @@ export async function getDigitizationComplianceSummary({
     percent: roundPercent(stats.completeness / stats.total),
     fullyDigitizedRate: roundPercent(stats.fullyDigitized / stats.total)
   })).sort((a, b) => a.courseCode.localeCompare(b.courseCode));
+
+  const byYear = Object.entries(yearStats).map(([year, count]) => ({
+    year: Number(year),
+    count
+  })).sort((a, b) => b.year - a.year);
 
   const generatedAt = new Date().toISOString();
 
@@ -120,6 +133,7 @@ export async function getDigitizationComplianceSummary({
       totalExpectedDocsCount,
     },
     byCourse,
+    byYear,
     meta: {
       studentStatus: String(studentStatus || "").trim() || "Active",
       courseCode: String(courseCode || "").trim() || null,

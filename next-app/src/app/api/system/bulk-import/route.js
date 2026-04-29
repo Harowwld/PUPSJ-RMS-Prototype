@@ -21,22 +21,24 @@ export async function POST(req) {
 
   for (const row of rows) {
     const { category, name, code } = row;
+    const cat = String(category || "").toLowerCase().trim();
     try {
-      if (category === "documenttype" || category === "document type") {
+      if (cat === "documenttype" || cat === "document type") {
         if (!name) throw new Error("Missing name");
         await createDocTypeFull(name);
         successCount++;
-      } else if (category === "course") {
+      } else if (cat === "course") {
         if (!code || !name) throw new Error("Course requires code and name");
         await createCourse(code, name);
         successCount++;
-      } else if (category === "section") {
+      } else if (cat === "section") {
         if (!name) throw new Error("Missing name");
         const safeCode = code ? code : "UNKN";
         await createSection(name, safeCode);
         successCount++;
       } else {
-        // Unknown category or empty row
+        // Unknown category - count as failure
+        failCount++;
         continue;
       }
     } catch (e) {

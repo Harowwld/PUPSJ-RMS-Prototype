@@ -15,6 +15,13 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { formatPHDateTime } from "@/lib/timeFormat";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyMedia,
+} from "@/components/ui/empty";
 
 import {
   Dialog,
@@ -190,19 +197,24 @@ export default function SystemAnalyticsTab({
 
   return (
     <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter min-h-0">
-      <style dangerouslySetInnerHTML={{ __html: `
+      <style dangerouslySetInnerHTML={{
+        __html: `
         @media print {
+          @page { size: A4; margin: 0; }
           body * { visibility: hidden; }
           .printable-report, .printable-report * { visibility: visible; }
           .printable-report {
             position: absolute !important;
             left: 0 !important;
             top: 0 !important;
-            width: 100% !important;
-            height: auto !important;
-            padding: 40px !important;
+            width: 210mm !important;
+            height: 297mm !important;
+            margin: 0 !important;
+            padding: 25mm !important;
             background: white !important;
             z-index: 9999 !important;
+            box-shadow: none !important;
+            page-break-after: always;
           }
           .no-print { display: none !important; }
           .rounded-brand, .rounded-xl { border-radius: 0 !important; }
@@ -223,9 +235,24 @@ export default function SystemAnalyticsTab({
           <div className="flex flex-col lg:flex-row lg:items-end gap-4 justify-between">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 flex-1">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                  Student Status
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-gray-700 uppercase">
+                    Student Status
+                  </label>
+                  {(statusFilter !== "Active" || courseFilter !== "") && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setStatusFilter("Active");
+                        setCourseFilter("");
+                      }}
+                      className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
+                    >
+                      CLEAR ALL
+                    </Button>
+                  )}
+                </div>
                 <select
                   className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
                   value={statusFilter}
@@ -287,7 +314,7 @@ export default function SystemAnalyticsTab({
                 className="h-9 px-6 font-bold text-sm bg-pup-maroon text-white border border-pup-maroon shadow-sm hover:bg-red-900 disabled:opacity-60"
               >
                 <i className="ph-bold ph-file-pdf text-sm mr-1.5" aria-hidden />
-                Generate Report
+                GENERATE REPORT
               </Button>
               <Button
                 type="button"
@@ -298,7 +325,7 @@ export default function SystemAnalyticsTab({
                 className="h-9 px-4 font-bold text-sm text-gray-600 bg-white border border-gray-300 shadow-sm hover:bg-gray-50"
               >
                 <i className="ph-bold ph-download-simple text-sm mr-1.5" aria-hidden />
-                Export CSV
+                EXPORT CSV
               </Button>
 
               <TooltipProvider>
@@ -354,54 +381,72 @@ export default function SystemAnalyticsTab({
               <Button variant="outline" size="sm" className="mt-6 font-bold" onClick={load}>Try Again</Button>
             </div>
           ) : !data ? (
-             <div className="h-full flex items-center justify-center">
-                <Skeleton className="h-64 w-full rounded-brand" />
-             </div>
+            <div className="h-full flex items-center justify-center">
+              <Skeleton className="h-64 w-full rounded-brand" />
+            </div>
           ) : (
             <>
+              {/* Stats Cards - PUP Maroon Theme */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <div className="rounded-brand border border-gray-200 bg-white p-4 shadow-xs">
-                  <div className="text-[10px] font-bold uppercase text-gray-400 tracking-widest mb-1">
+
+                {/* Total Students — Accent Card */}
+                <div className="relative rounded-xl p-4 overflow-hidden border border-[#5c1520] bg-[#7a1e28]">
+                  <i className="ph-duotone ph-users-three absolute -right-3 -bottom-3 text-[60px] opacity-20 text-white rotate-12 pointer-events-none" />
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#f7c9ce] mb-2">
                     Total Students
                   </div>
-                  <div className="text-2xl font-bold text-gray-900">
+                  <div className="text-2xl font-bold text-white leading-none">
                     {summary?.totalStudents?.toLocaleString?.() ?? summary?.totalStudents}
                   </div>
                 </div>
-                <div className="rounded-brand border border-gray-200 bg-white p-4 shadow-xs">
-                  <div className="text-[10px] font-bold uppercase text-gray-400 tracking-widest mb-1">
+
+                {/* Fully Digitized */}
+                <div className="relative rounded-xl p-4 overflow-hidden border border-[#7a1e28]/15 bg-[#fdf6f6]">
+                  <i className="ph-duotone ph-check-square-offset absolute -right-3 -bottom-3 text-[60px] opacity-10 text-[#7a1e28] rotate-12 pointer-events-none" />
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#9e5a62] mb-2">
                     Fully Digitized
                   </div>
-                  <div className="text-2xl font-bold text-emerald-600">
-                    {summary?.digitizedStudents?.toLocaleString?.() ??
-                      summary?.digitizedStudents}
+                  <div className="text-2xl font-bold text-[#7a1e28] leading-none">
+                    {summary?.digitizedStudents?.toLocaleString?.() ?? summary?.digitizedStudents}
                   </div>
-                  <div className="text-[10px] font-medium text-gray-400 mt-1">
+                  <div className="text-[11px] text-[#b07078] mt-1">
                     100% complete records
                   </div>
                 </div>
-                <div className="rounded-brand border border-gray-200 bg-white p-4 shadow-xs">
-                  <div className="text-[10px] font-bold uppercase text-gray-400 tracking-widest mb-1">
+
+                {/* Avg. Completeness */}
+                <div className="relative rounded-xl p-4 overflow-hidden border border-[#7a1e28]/15 bg-[#fdf6f6]">
+                  <i className="ph-duotone ph-chart-pie absolute -right-3 -bottom-3 text-[60px] opacity-10 text-[#7a1e28] rotate-12 pointer-events-none" />
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#9e5a62] mb-2">
                     Avg. Completeness
                   </div>
-                  <div className="text-2xl font-bold text-pup-maroon">
+                  <div className="text-2xl font-bold text-[#7a1e28] leading-none">
                     {summary?.percentDigitized != null ? `${summary.percentDigitized}%` : "0%"}
                   </div>
-                  <div className="text-[10px] font-medium text-gray-400 mt-1">
+                  <div className="text-[11px] text-[#b07078] mt-1">
                     Overall record health
                   </div>
                 </div>
-                <div className="rounded-brand border border-gray-200 bg-white p-4 shadow-xs flex flex-col justify-between">
-                  <div className="text-[10px] font-bold uppercase text-gray-400 tracking-widest mb-1">
+
+                {/* Archive Health */}
+                <div className="relative rounded-xl p-4 overflow-hidden border border-[#7a1e28]/15 bg-[#fdf6f6]">
+                  <i className="ph-duotone ph-shield-check absolute -right-3 -bottom-3 text-[60px] opacity-10 text-[#7a1e28] rotate-12 pointer-events-none" />
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#9e5a62] mb-2">
                     Archive Health
                   </div>
                   <div className="mt-1">
                     {summary?.percentDigitized >= 95 ? (
-                      <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold uppercase text-[10px] tracking-wider px-2 py-1">Excellent</Badge>
+                      <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-[#e1f5ee] text-[#085041] border border-[#9fe1cb]">
+                        Excellent
+                      </span>
                     ) : summary?.percentDigitized >= 80 ? (
-                      <Badge className="bg-blue-50 text-blue-700 border border-blue-200 font-bold uppercase text-[10px] tracking-wider px-2 py-1">Healthy</Badge>
+                      <span className="inline-block text-[10px] font-medium uppercase tracking-wider px-2 py-1 rounded-md bg-[#e6f1fb] text-[#0c447c] border border-[#b5d4f4]">
+                        Healthy
+                      </span>
                     ) : (
-                      <Badge className="bg-amber-50 text-amber-700 border border-amber-200 font-bold uppercase text-[10px] tracking-wider px-2 py-1">Action Needed</Badge>
+                      <span className="inline-block text-[10px] font-medium uppercase tracking-wider px-2 py-1 rounded-md bg-[#faeeda] text-[#633806] border border-[#fac775]">
+                        Action Needed
+                      </span>
                     )}
                   </div>
                 </div>
@@ -480,17 +525,29 @@ export default function SystemAnalyticsTab({
                   </div>
                 </div>
               ) : String(courseFilter || "").trim() ? (
-                <div className="p-8 text-center bg-gray-50 rounded-brand border border-dashed border-gray-300">
-                  <p className="text-sm text-gray-500 font-medium">Per-course breakdown is hidden while a specific course is selected.</p>
-                </div>
+                <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border border-gray-200 rounded-brand bg-gray-50/50 shadow-sm">
+                  <EmptyHeader className="flex flex-col items-center gap-0">
+                    <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                      <i className="ph-bold ph-eye-slash text-3xl text-gray-400" />
+                    </EmptyMedia>
+                    <EmptyTitle className="text-lg font-bold text-gray-900">Breakdown hidden</EmptyTitle>
+                    <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-sm px-4">
+                      Per-course breakdown is hidden while a specific course is selected.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               ) : (
-                <div className="h-[200px] flex flex-col items-center justify-center text-center text-gray-500 border border-gray-200 rounded-brand bg-white shadow-xs">
-                  <div className="w-14 h-14 rounded-full bg-gray-50 border border-gray-200 flex items-center justify-center mb-3 shadow-xs">
-                    <i className="ph-duotone ph-chart-bar text-2xl text-pup-maroon" />
-                  </div>
-                  <p className="text-sm font-bold text-gray-900">Analytics unavailable</p>
-                  <p className="text-xs font-medium text-gray-600 mt-1 max-w-sm px-4">Add students with course codes to see a detailed program breakdown.</p>
-                </div>
+                <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border border-gray-200 rounded-brand bg-white shadow-sm">
+                  <EmptyHeader className="flex flex-col items-center gap-0">
+                    <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                      <i className="ph-duotone ph-chart-bar text-3xl text-pup-maroon" />
+                    </EmptyMedia>
+                    <EmptyTitle className="text-lg font-bold text-gray-900">Analytics unavailable</EmptyTitle>
+                    <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-sm px-4">
+                      Add students with course codes to see a detailed program breakdown.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               )}
             </>
           )}
@@ -500,81 +557,75 @@ export default function SystemAnalyticsTab({
       {/* Report Preview Modal */}
       <Dialog open={reportOpen} onOpenChange={reportOpen ? () => setReportOpen(false) : undefined}>
         <DialogContent className="w-[96vw] max-w-[96vw] xl:max-w-[1200px] h-[90vh] p-0 flex flex-col overflow-hidden bg-gray-100 border border-gray-200 shadow-2xl rounded-brand">
-          <DialogHeader className="p-5 border-b border-gray-100 bg-white shrink-0">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
+          <DialogHeader className="bg-gray-50/50 border-b border-gray-100 p-6 shrink-0">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
                 <i className="ph-duotone ph-file-text text-2xl"></i>
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg font-black tracking-tight text-gray-900 text-left">
+                <DialogTitle className="text-xl font-black text-gray-900 tracking-tight leading-none text-left">
                   Formal Compliance Report
                 </DialogTitle>
-                <p className="text-sm font-medium mt-1 text-gray-600 text-left">
+                <p className="text-sm font-medium text-gray-500 mt-1.5 text-left">
                   This document is formatted for formal accreditation submission. Review the narrative summary and statistical data below.
                 </p>
               </div>
             </div>
           </DialogHeader>
 
-          <div className="flex-1 overflow-auto p-10 flex flex-col items-center gap-8 scroll-smooth">
+          <div className="flex-1 overflow-auto p-10 flex flex-col items-center gap-10 scroll-smooth bg-gray-200/50">
             {/* PAGE 1: EXECUTIVE SUMMARY */}
-            <div className="printable-report w-[210mm] min-h-[297mm] bg-white shadow-2xl p-[25mm] flex flex-col box-border">
-              <div className="text-center border-b-2 border-pup-maroon pb-6 mb-10">
-                <h1 className="text-2xl font-black text-pup-maroon uppercase tracking-tight">Polytechnic University of the Philippines</h1>
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mt-1">Office of the University Registrar • San Juan Branch</p>
+            <div className="printable-report w-[210mm] min-h-[297mm] bg-white shadow-2xl p-[25mm] flex flex-col box-border shrink-0">
+              <div className="flex flex-col items-center text-center border-b-2 border-pup-maroon pb-6 mb-10">
+                <img src="/assets/pup-logo.webp" alt="PUP Logo" className="w-20 h-20 mb-4" />
+                <h1 className="text-2xl font-black text-pup-maroon uppercase tracking-tight leading-tight">Polytechnic University of the Philippines - San Juan City Campus</h1>
+                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mt-1">Admission and Registration Office</p>
                 <h2 className="text-xl font-bold text-gray-800 uppercase tracking-widest mt-6">Digitization Compliance Report</h2>
-                <p className="text-sm text-gray-500 mt-2 font-medium italic">Document ID: PUP-RMS-ANL-{new Date().getFullYear()}-{Math.floor(Math.random() * 10000)}</p>
+                <p className="text-sm text-gray-500 mt-2 font-medium italic">Document ID: PUP-RKS-ANL-{new Date().getFullYear()}-{Math.floor(Math.random() * 10000)}</p>
               </div>
 
               <div className="space-y-6 text-gray-800 leading-relaxed text-sm">
-                <div className="flex justify-between items-start mb-8 bg-gray-50 p-4 border border-gray-100 rounded-lg">
+                <div className="mb-8 bg-gray-50 p-4 border border-gray-100 rounded-lg">
                   <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase">Report Date</p>
-                    <p className="font-bold">{reportDate}</p>
-                  </div>
-                  <div className="space-y-1 text-right">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase">Archive Status</p>
-                    <p className="font-black text-pup-maroon text-lg uppercase">{summary?.percentDigitized >= 80 ? 'Compliant' : 'Under Review'}</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date</p>
+                    <p className="font-black text-gray-700">{reportDate}</p>
                   </div>
                 </div>
 
                 <h3 className="text-base font-black text-gray-900 uppercase tracking-wider border-b border-gray-200 pb-2">I. Executive Summary</h3>
                 <p>
-                  This document serves as the official compliance assessment regarding the digitization of student records at the Polytechnic University of the Philippines, San Juan Branch. 
-                  As of the current reporting period, the University has identified a total population of <strong>{summary?.totalStudents?.toLocaleString()}</strong> students categorized under the <strong>{statusFilter}</strong> status.
+                  This document serves as the official compliance assessment regarding the digitization of student records at the Polytechnic University of the Philippines - San Juan City Campus.
                 </p>
-                <p>
-                  The primary objective of this audit is to measure the completeness of the digital archives against the mandatory document set defined by university policy and accreditation requirements. 
-                  The current system configuration requires a total of <strong>{meta?.definitions?.configuredDocTypes?.length || 0} unique document types</strong> per student record to achieve 100% digitization status.
-                </p>
-
-                <h3 className="text-base font-black text-gray-900 uppercase tracking-wider border-b border-gray-200 pb-2 mt-8">II. Compliance Metrics</h3>
-                <div className="grid grid-cols-2 gap-x-12 gap-y-6 bg-gray-50/50 p-6 rounded-xl border border-gray-100">
-                  <div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Overall Record Health</p>
-                    <p className="text-2xl font-black text-gray-900">{summary?.percentDigitized}%</p>
-                    <p className="text-[11px] text-gray-500 mt-1">Average completeness ratio across all selected records.</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Full Digitization Rate</p>
-                    <p className="text-2xl font-black text-emerald-600">{summary?.fullyDigitizedRate}%</p>
-                    <p className="text-[11px] text-gray-500 mt-1">Percentage of students with 100% completed archives.</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Actual Document Volume</p>
-                    <p className="text-lg font-bold text-gray-800">{summary?.totalDigitizedDocsCount?.toLocaleString()}</p>
-                    <p className="text-[11px] text-gray-500">Total verified digital files currently in system.</p>
-                  </div>
-                  <div>
-                    <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">Target Document Volume</p>
-                    <p className="text-lg font-bold text-gray-800">{summary?.totalExpectedDocsCount?.toLocaleString()}</p>
-                    <p className="text-[11px] text-gray-500">Total files required for absolute digitization.</p>
+                
+                <div className="bg-gray-50 border border-gray-100 p-6 rounded-lg space-y-4">
+                  <p className="text-sm font-medium text-gray-700">
+                    As of the current reporting period, the student population is distributed across the following academic batches:
+                  </p>
+                  
+                  <div className="w-full">
+                    <div className="flex justify-between text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">
+                      <span>Academic Year / Batch</span>
+                      <span>Total Student Count</span>
+                    </div>
+                    <div className="space-y-2">
+                      {(data?.byYear || []).map(y => (
+                        <div key={y.year} className="flex items-end gap-2 text-xs px-1">
+                          <span className="font-bold text-gray-700 whitespace-nowrap">Batch {y.year}</span>
+                          <div className="flex-1 border-b border-dotted border-gray-300 mb-1"></div>
+                          <span className="font-mono text-pup-maroon font-black whitespace-nowrap">{y.count} Students</span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                <p className="mt-6 italic text-gray-500 text-xs">
-                  Note: The Archive Health is currently rated as <strong>{summary?.percentDigitized >= 95 ? 'Excellent' : summary?.percentDigitized >= 80 ? 'Healthy' : 'Action Required'}</strong>. 
-                  Continuous digitization efforts are recommended to maintain institutional standards and ensure seamless administrative operations.
+                <p>
+                  The primary objective of this audit is to measure the completeness of the digital archives against the mandatory document set defined by university policy and accreditation requirements.
+                  The current system configuration requires a total of <strong>{meta?.definitions?.configuredDocTypes?.length || 0} unique document types</strong> per student record.
+                </p>
+                <p>
+                  Based on the comprehensive audit performed by the Records Keeping System (RKS), the total percentage of digitized records currently stands at <strong>{summary?.percentDigitized}%</strong>.
+                  This represents a verified volume of <strong>{summary?.totalDigitizedDocsCount?.toLocaleString()}</strong> digital files out of the <strong>{summary?.totalExpectedDocsCount?.toLocaleString()}</strong> documents required for full compliance.
                 </p>
               </div>
 
@@ -585,12 +636,12 @@ export default function SystemAnalyticsTab({
               </div>
             </div>
 
-            {/* PAGE 2: STATISTICAL BREAKDOWN */}
-            <div className="printable-report w-[210mm] min-h-[297mm] bg-white shadow-2xl p-[25mm] flex flex-col box-border">
+            {/* PAGE 2: STATISTICAL BREAKDOWN & SIGNATURES */}
+            <div className="printable-report w-[210mm] min-h-[297mm] bg-white shadow-2xl p-[25mm] flex flex-col box-border shrink-0">
               <div className="space-y-6 text-gray-800 leading-relaxed text-sm">
-                <h3 className="text-base font-black text-gray-900 uppercase tracking-wider border-b border-gray-200 pb-2">III. Program-Specific Breakdown</h3>
+                <h3 className="text-base font-black text-gray-900 uppercase tracking-wider border-b border-gray-200 pb-2">II. Program-Specific Breakdown</h3>
                 <p>
-                  The following table provides a detailed analysis of digitization progress categorized by Academic Program. 
+                  The following table provides a detailed analysis of digitization progress categorized by Academic Program.
                   This breakdown identifies areas of high performance and highlights programs that may require additional resources to meet compliance targets.
                 </p>
 
@@ -624,26 +675,45 @@ export default function SystemAnalyticsTab({
                   </table>
                 </div>
 
-                <h3 className="text-base font-black text-gray-900 uppercase tracking-wider border-b border-gray-200 pb-2 mt-12">IV. Certification Statement</h3>
+                <h3 className="text-base font-black text-gray-900 uppercase tracking-wider border-b border-gray-200 pb-2 mt-12">III. Certification Statement</h3>
                 <p>
-                  We hereby certify that the data presented in this report is an accurate representation of the digital archives maintained by the Polytechnic University of the Philippines. 
-                  The metrics have been generated through the PUP Records Management System (RMS) audit engine, reflecting real-time synchronization with the physical student folders.
+                  We hereby certify that the data presented in this report is an accurate representation of the digital archives maintained by the Polytechnic University of the Philippines - San Juan City Campus.
+                  The metrics have been generated through the Records Keeping System (RKS) audit engine, reflecting real-time synchronization with the physical student folders.
                 </p>
               </div>
 
-              <div className="mt-auto pt-12 flex justify-between border-t border-gray-100">
-                <div className="text-left">
-                  <p className="text-[9px] font-bold text-gray-400 uppercase mb-10">Prepared By</p>
-                  <div className="w-48 border-b border-gray-900 mb-1"></div>
-                  <p className="text-[10px] font-bold text-gray-900 uppercase">Administrative Officer</p>
+              <div className="mt-auto pt-12 flex flex-col gap-10 border-t border-gray-100">
+                <div className="grid grid-cols-2 gap-10">
+                  <div className="flex flex-col gap-1">
+                    <p className="text-[9px] font-bold text-gray-400 uppercase">Prepared By</p>
+                    <div className="mt-6">
+                      <div className="w-full border-b border-gray-900"></div>
+                      <p className="text-[10px] font-bold text-gray-900 uppercase mt-1">Administrative Staff</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <p className="text-[9px] font-bold text-gray-400 uppercase">Checked By</p>
+                    <div className="mt-6">
+                      <div className="w-full border-b border-gray-900"></div>
+                      <p className="text-[10px] font-bold text-gray-900 uppercase mt-1">Campus Registrar</p>
+                    </div>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="w-48 border-b border-gray-900 mb-1 ml-auto"></div>
-                  <p className="text-[10px] font-bold text-gray-900 uppercase">Accreditation Panel Chair</p>
+
+                <div className="flex flex-col gap-1">
+                  <p className="text-[9px] font-bold text-gray-400 uppercase">Noted By</p>
+                  <div className="mt-6">
+                    <div className="w-64 border-b border-gray-900"></div>
+                    <p className="text-[10px] font-bold text-gray-900 uppercase mt-1">Campus Director</p>
+                  </div>
                 </div>
-              </div>
-              <div className="mt-8 text-center text-[10px] text-gray-400">
-                End of Report • Page 2 of 2
+
+                <div className="flex justify-end pt-4">
+                  <div className="text-right italic text-[10px] text-gray-400">
+                    Page 2 of 2
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -654,13 +724,13 @@ export default function SystemAnalyticsTab({
               onClick={() => setReportOpen(false)}
               className="h-11 px-6 text-sm font-bold text-gray-600 border-gray-300 hover:bg-gray-50"
             >
-              Close Preview
+              CLOSE PREVIEW
             </Button>
             <Button
               onClick={handlePrint}
               className="h-11 px-8 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 flex items-center gap-2"
             >
-              <i className="ph-bold ph-printer text-lg"></i> Finalize and Print Report
+              <i className="ph-bold ph-printer text-lg"></i> FINALIZE AND PRINT REPORT
             </Button>
           </div>
         </DialogContent>

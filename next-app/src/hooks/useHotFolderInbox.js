@@ -50,7 +50,7 @@ export function useHotFolderInbox({
     setPreviewMime("");
   }, []);
 
-  const runOcrForRow = async (row, { notifySuccess = false } = {}) => {
+  const runOcrForRow = async (row, { successTitle = "", successDesc = "" } = {}) => {
     if (!row) return null;
     setOcrLoading(true);
     try {
@@ -63,16 +63,17 @@ export function useHotFolderInbox({
       const suggestion = await scanFileForSuggestion({ file, students, docTypes });
       // Forward OCR result to parent so it can populate newRec (the standard form).
       onOcrResult?.(suggestion);
-      if (notifySuccess) {
-        showToast({ title: "OCR Complete", description: "Suggestions have been applied." });
+      
+      setOcrLoading(false);
+      if (successTitle) {
+        showToast({ title: successTitle, description: successDesc || "Suggestions have been applied." });
       }
       // Return the file so callers can use it as the uploaded file
       return file;
     } catch (e) {
+      setOcrLoading(false);
       showToast({ title: "OCR Failed", description: e.message || "Unable to scan file." }, true);
       return null;
-    } finally {
-      setOcrLoading(false);
     }
   };
 
@@ -84,13 +85,19 @@ export function useHotFolderInbox({
     setSelected(row.id);
     setPreviewUrl(`/api/ingest/hot-folder/${row.id}/file`);
     setPreviewMime(String(row.mime_type || ""));
-    const file = await runOcrForRow(row, { notifySuccess: false });
+    const file = await runOcrForRow(row, { 
+      successTitle: "Data Extracted", 
+      successDesc: "Form fields have been auto-filled from the document." 
+    });
     return file; // caller uses this to set uploadedFile
   };
 
   const runOcrAgain = async () => {
     if (!selectedRow) return null;
-    return await runOcrForRow(selectedRow, { notifySuccess: true });
+    return await runOcrForRow(selectedRow, { 
+      successTitle: "Re-scan Complete", 
+      successDesc: "Document was re-analyzed and suggestions updated." 
+    });
   };
 
   /**

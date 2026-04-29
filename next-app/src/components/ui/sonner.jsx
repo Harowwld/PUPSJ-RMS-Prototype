@@ -38,7 +38,7 @@ const Toaster = ({
       }
       toastOptions={{
         classNames: {
-          toast: "cn-toast",
+          toast: "cn-toast animate-in slide-in-from-right-full duration-400",
         },
       }}
       {...props} />

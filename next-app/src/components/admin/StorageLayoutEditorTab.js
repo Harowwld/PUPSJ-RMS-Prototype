@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
   Card,
   CardContent,
@@ -26,6 +27,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { ROOM_TEMPLATES, getDefaultDoor } from "@/lib/storageLayoutDefaults";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyMedia,
+} from "@/components/ui/empty";
 
 function clamp(n, min, max) {
   if (!Number.isFinite(n)) return min;
@@ -726,9 +734,17 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
 
   if (!layout) {
     return (
-      <div className="flex items-center justify-center h-[400px] text-gray-500 font-semibold">
-        No storage layout available
-      </div>
+      <Empty className="flex items-center justify-center h-[400px] text-gray-500 font-semibold border-0">
+        <EmptyHeader className="flex flex-col items-center gap-0">
+          <EmptyMedia className="mb-4">
+            <i className="ph-duotone ph-layout text-3xl text-pup-maroon" />
+          </EmptyMedia>
+          <EmptyTitle className="text-lg font-bold">No storage layout available</EmptyTitle>
+          <EmptyDescription className="text-sm font-medium">
+            The system storage configuration could not be retrieved.
+          </EmptyDescription>
+        </EmptyHeader>
+      </Empty>
     );
   }
 
@@ -780,7 +796,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setApplyReportOpen(false)}>
-              Close
+              CLOSE
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -803,7 +819,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                 variant={reassignmentMode === "manual" ? "default" : "outline"}
                 onClick={() => setReassignmentMode("manual")}
               >
-                Manual (Drag & Drop)
+                MANUAL (DRAG & DROP)
               </Button>
               <Button
                 type="button"
@@ -813,7 +829,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                   setTemplateMappingDraft(buildAutoMappings());
                 }}
               >
-                Auto Map
+                AUTO MAP
               </Button>
             </div>
           </div>
@@ -904,7 +920,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
               variant="outline"
               onClick={() => setTemplateConflictOpen(false)}
             >
-              Cancel
+              CANCEL
             </Button>
             <Button type="button" onClick={openApplyPreview}>
               Continue
@@ -947,10 +963,10 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => setApplyPreviewOpen(false)}>
-              Back
+              BACK
             </Button>
             <Button type="button" onClick={applyTemplateWithMappings}>
-              Apply Template + Reassign
+              APPLY TEMPLATE + REASSIGN
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -977,15 +993,15 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                 </option>
               ))}
             </select>
-            <div className="flex items-center gap-1 bg-white p-1 border border-gray-300 rounded-brand shadow-sm">
+            <ButtonGroup className="h-10 shadow-sm">
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="outline"
                     size="icon"
                     onClick={addRoom}
-                    className="h-10 w-10 text-pup-maroon hover:bg-red-50 rounded-sm"
+                    className="h-10 w-10 text-pup-maroon hover:bg-red-50"
                   >
                     <i className="ph-bold ph-plus" />
                   </Button>
@@ -997,10 +1013,10 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                 <TooltipTrigger asChild>
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="outline"
                     size="icon"
                     onClick={removeActiveRoom}
-                    className="h-10 w-10 text-gray-600 hover:bg-gray-100 hover:text-red-600 rounded-sm"
+                    className="h-10 w-10 text-gray-600 hover:bg-gray-100 hover:text-red-600"
                     disabled={!activeRoom || activeRoomStudentCount > 0}
                   >
                     <i className="ph-bold ph-trash" />
@@ -1013,10 +1029,10 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                 <TooltipTrigger asChild>
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="outline"
                     size="icon"
                     onClick={resetActiveRoomCabinets}
-                    className="h-10 w-10 text-gray-600 hover:bg-gray-100 hover:text-amber-600 rounded-sm"
+                    className="h-10 w-10 text-gray-600 hover:bg-gray-100 hover:text-amber-600"
                     disabled={
                       !activeRoom ||
                       !(activeRoom.cabinets?.length > 0) ||
@@ -1028,7 +1044,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                 </TooltipTrigger>
                 <TooltipContent side="bottom">Clear Room Layout</TooltipContent>
               </Tooltip>
-            </div>
+            </ButtonGroup>
           </div>
         </div>
 
@@ -1045,16 +1061,17 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
               className="h-10 px-4 font-bold border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 rounded-brand"
               disabled={!activeRoom}
             >
-              <i className="ph-bold ph-plus-square mr-2 text-pup-maroon" /> Add
-              Cabinet
+              <i className="ph-bold ph-plus-square mr-2 text-pup-maroon" /> ADD
+              CABINET
             </Button>
 
-            <div className="flex items-center shadow-sm rounded-brand overflow-hidden border border-gray-300">
+            <ButtonGroup className="h-10 shadow-sm">
               <select
-                className="h-10 bg-white px-3 text-sm font-bold text-gray-700 focus:outline-none border-r border-gray-300 cursor-pointer"
+                className="h-full bg-white px-3 text-sm font-bold text-gray-700 focus:outline-none border border-gray-300 cursor-pointer rounded-none"
                 value={selectedTemplateId}
                 onChange={(e) => setSelectedTemplateId(e.target.value)}
                 disabled={!activeRoom}
+                data-slot="select"
               >
                 {ROOM_TEMPLATES.map((tpl) => (
                   <option key={tpl.id} value={tpl.id}>
@@ -1064,14 +1081,14 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
               </select>
               <Button
                 type="button"
-                variant="ghost"
+                variant="outline"
                 onClick={applyTemplateToActiveRoom}
-                className="h-10 px-4 font-black text-xs uppercase tracking-wider bg-gray-50 hover:bg-pup-maroon hover:text-white transition-colors border-0 rounded-none"
+                className="h-full px-4 font-black text-xs uppercase tracking-wider bg-gray-50 hover:bg-pup-maroon hover:text-white transition-colors"
                 disabled={!activeRoom}
               >
-                Apply
+                APPLY
               </Button>
-            </div>
+            </ButtonGroup>
           </div>
         </div>
 
@@ -1082,7 +1099,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
           className="bg-pup-maroon text-white h-10 px-8 font-black uppercase tracking-widest shadow-lg hover:bg-red-900 transition-all flex items-center gap-2 rounded-brand"
         >
           <i className="ph-bold ph-floppy-disk text-lg" />
-          {saving ? "Saving..." : "Save Layout"}
+          {saving ? "SAVING..." : "SAVE LAYOUT"}
         </Button>
       </div>
 
@@ -1107,16 +1124,14 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                 }}
               />
 
-              {/* Orientation marker */}
-              <button
-                type="button"
-                className="absolute z-2 rounded-sm border border-gray-300 bg-white/90 px-2 py-1 text-[10px] font-black tracking-wide text-gray-700 shadow-sm flex items-center"
+              {/* Orientation marker (Door Symbol) */}
+              <div
+                className="absolute z-2 cursor-move group"
                 style={{
                   left: `${(activeRoom?.door?.x ?? getDefaultDoor().x) * 100}%`,
                   top: `${(activeRoom?.door?.y ?? getDefaultDoor().y) * 100}%`,
                   transform: "translate(-50%, -50%)",
                 }}
-                title="Drag to move door marker"
                 onPointerDown={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -1131,9 +1146,18 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                   }
                 }}
               >
-                <i className="ph-bold ph-door mr-1 text-pup-maroon"></i>
-                DOOR
-              </button>
+                <div className="relative w-10 h-10 flex items-center justify-center">
+                  {/* Floor plan door quadrant symbol */}
+                  <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gray-400 rounded-full group-hover:bg-gray-600 transition-colors" />
+                  <div className="absolute bottom-0 left-0 w-[2px] h-full bg-pup-maroon rounded-full group-hover:w-[3px] transition-all" />
+                  <div className="absolute inset-0 border-t-2 border-r-2 border-pup-maroon/20 rounded-tr-full group-hover:border-pup-maroon/40 transition-colors" />
+
+                  {/* Subtle Label */}
+                  <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg z-10">
+                    Entrance / Door
+                  </div>
+                </div>
+              </div>
 
               {activeRoom?.cabinets?.map((cab) => {
                 const isSelected = cab.id === selectedCabinetId;
@@ -1236,22 +1260,37 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
 
           <div className="lg:col-span-1">
             <Card className="border border-gray-200 shadow-sm rounded-brand overflow-hidden">
-              <CardHeader className="p-4 border-b border-gray-200 bg-gray-50">
-                <CardTitle className="text-gray-900 text-sm font-extrabold">
-                  Cabinet Details
-                </CardTitle>
-                <CardDescription className="text-gray-500 text-xs font-medium mt-0.5">
-                  {selectedCabinet
-                    ? `CAB-${selectedCabinet.id}`
-                    : "Select a cabinet on the map"}
-                </CardDescription>
+              <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
+                    <i className="ph-duotone ph-archive text-2xl"></i>
+                  </div>
+                  <div>
+                    <CardTitle className="text-xl font-black text-gray-900 tracking-tight leading-none">
+                      Cabinet Details
+                    </CardTitle>
+                    <CardDescription className="text-sm font-medium text-gray-500 mt-1.5">
+                      {selectedCabinet
+                        ? `CAB-${selectedCabinet.id}`
+                        : "Select a cabinet on the map"}
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
 
               <CardContent className="p-4">
                 {!selectedCabinet ? (
-                  <div className="text-gray-500 text-sm font-semibold">
-                    No cabinet selected
-                  </div>
+                  <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+                    <EmptyHeader className="flex flex-col items-center gap-0">
+                      <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                        <i className="ph-duotone ph-mouse-left-click text-3xl text-pup-maroon"></i>
+                      </EmptyMedia>
+                      <EmptyTitle className="text-lg font-bold text-gray-900">No cabinet selected</EmptyTitle>
+                      <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-[200px]">
+                        Select a cabinet on the map to edit its properties.
+                      </EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
                 ) : (
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 gap-2">
@@ -1262,7 +1301,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                         className="h-10 font-bold"
                       >
                         <i className="ph-bold ph-arrow-clockwise mr-2" />
-                        Rotate
+                        ROTATE
                       </Button>
                       <Button
                         type="button"
@@ -1271,7 +1310,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                         className="h-10 font-bold"
                       >
                         <i className="ph-bold ph-trash mr-2" />
-                        Remove
+                        REMOVE
                       </Button>
                     </div>
 
@@ -1292,7 +1331,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                           onClick={addDrawerToSelected}
                         >
                           <i className="ph-bold ph-plus mr-2" />
-                          Add drawer
+                          ADD DRAWER
                         </Button>
                         <Button
                           type="button"
@@ -1304,7 +1343,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                           }
                         >
                           <i className="ph-bold ph-minus mr-2" />
-                          Remove drawer
+                          REMOVE DRAWER
                         </Button>
                       </div>
                     </div>
