@@ -32,7 +32,7 @@ export function decryptSecret(encrypted) {
   }
 }
 
-export function generateTOTPSecret(email, issuer = "PUPSJ RMS") {
+export function generateTOTPSecret(email, issuer = "PUPSJ Records Keeping System") {
   const secret = speakeasy.generateSecret({
     name: `${issuer} (${email})`,
     length: 32,

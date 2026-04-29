@@ -145,7 +145,7 @@ function StaffPageContent() {
     const isRich = msg && typeof msg === "object" && msg.title;
     const title = isRich ? msg.title : String(msg || "");
     const opts = isRich && msg.description ? { description: msg.description } : {};
-    
+
     if (typeOrIsError === true || typeOrIsError === "error") {
       toast.error(title, opts);
       return;
@@ -616,7 +616,7 @@ function StaffPageContent() {
         });
         setOcrSuggestion(suggestion);
 
-        /* eslint-disable-next-line no-console */
+
         console.log("[OCR handleFileSelect] suggestion:", {
           name: suggestion.name,
           docType: suggestion.docType,
@@ -631,7 +631,7 @@ function StaffPageContent() {
         const ambiguous = nameMatches.length > 1;
 
         if (ambiguous) {
-          /* eslint-disable-next-line no-console */
+
           console.log("[OCR] → AMBIGUOUS branch, setting docType:", suggestion.docType);
           setNewRec((p) => ({
             ...p,
@@ -648,14 +648,14 @@ function StaffPageContent() {
           clearAllUploadFieldErrors();
           setOcrPromptOpen(true);
         } else if (suggestion.matchedStudent) {
-          /* eslint-disable-next-line no-console */
+
           console.log("[OCR] → MATCHED STUDENT branch, setting docType:", suggestion.docType);
           applyStudentToPdfForm(suggestion.matchedStudent, suggestion.docType);
           setUploadStudentIsExisting(true);
           clearAllUploadFieldErrors();
           setOcrPromptOpen(false);
         } else {
-          /* eslint-disable-next-line no-console */
+
           console.log("[OCR] → NEW STUDENT branch, setting docType:", suggestion.docType);
           setNewRec((p) => ({
             ...p,
@@ -691,6 +691,38 @@ function StaffPageContent() {
       return;
     }
 
+    if (uploadMode !== "pdf") {
+      showToast({ title: "Wrong Mode", description: "Switch to the PDF upload tab to submit a document." }, true);
+      return;
+    }
+
+    // Validation first to ensure we have meaningful metadata for renaming
+    const err = {};
+    if (uploadStudentIsExisting) {
+      if (!String(newRec.studentNo || "").trim()) err.studentNo = true;
+      if (!newRec.docType) err.docType = true;
+    } else {
+      if (!String(newRec.studentNo || "").trim()) err.studentNo = true;
+      if (!String(newRec.name || "").trim()) err.name = true;
+      if (!newRec.course) err.course = true;
+      if (!newRec.year) err.year = true;
+      if (!newRec.sectionPart) err.sectionPart = true;
+      if (!newRec.room) err.room = true;
+      if (!newRec.cabinet) err.cabinet = true;
+      if (!newRec.drawer) err.drawer = true;
+      if (!newRec.docType) err.docType = true;
+    }
+
+    if (Object.keys(err).length) {
+      setUploadFieldErrors(err);
+      showToast({ 
+        title: uploadStudentIsExisting ? "Missing Fields" : "Incomplete Form", 
+        description: uploadStudentIsExisting ? "Provide the student number and document type." : "All student detail fields are required." 
+      }, true);
+      return;
+    }
+    setUploadFieldErrors({});
+
     // Convert image files to PDF before uploading (API only accepts PDFs)
     let fileToUpload = uploadedFile;
     if (needsConversion(uploadedFile)) {
@@ -702,41 +734,29 @@ function StaffPageContent() {
       }
     }
 
+    // RENAME FILE for meaningful identification: [STUDENT_NO]_[DOC_TYPE].[EXT]
+    try {
+      const studentNo = String(newRec.studentNo || "").trim().toUpperCase();
+      const docType = String(newRec.docType || "").trim();
+      const cleanStudentNo = studentNo.replace(/[^a-zA-Z0-9-]/g, "_");
+      const cleanDocType = docType.replace(/[^a-zA-Z0-9-]/g, "_");
+      const extension = (fileToUpload.name || "file.pdf").split(".").pop().toLowerCase();
+      const newFileName = `${cleanStudentNo}_${cleanDocType}.${extension}`;
+      
+      // Use the File constructor to create a renamed blob
+      fileToUpload = new File([fileToUpload], newFileName, { type: fileToUpload.type });
+    } catch (e) {
+      console.error("[Rename Error]", e);
+      // Fallback to original file if renaming fails for some reason
+    }
+
     const payload = new FormData();
     payload.append("file", fileToUpload);
-    if (uploadMode !== "pdf") {
-      showToast({ title: "Wrong Mode", description: "Switch to the PDF upload tab to submit a document." }, true);
-      return;
-    }
+
     if (uploadStudentIsExisting) {
-      const err = {};
-      if (!String(newRec.studentNo || "").trim()) err.studentNo = true;
-      if (!newRec.docType) err.docType = true;
-      if (Object.keys(err).length) {
-        setUploadFieldErrors(err);
-        showToast({ title: "Missing Fields", description: "Provide the student number and document type." }, true);
-        return;
-      }
-      setUploadFieldErrors({});
       payload.append("studentNo", String(newRec.studentNo).trim());
       payload.append("docType", newRec.docType);
     } else {
-      const err = {};
-      if (!String(newRec.studentNo || "").trim()) err.studentNo = true;
-      if (!String(newRec.name || "").trim()) err.name = true;
-      if (!newRec.course) err.course = true;
-      if (!newRec.year) err.year = true;
-      if (!newRec.sectionPart) err.sectionPart = true;
-      if (!newRec.room) err.room = true;
-      if (!newRec.cabinet) err.cabinet = true;
-      if (!newRec.drawer) err.drawer = true;
-      if (!newRec.docType) err.docType = true;
-      if (Object.keys(err).length) {
-        setUploadFieldErrors(err);
-        showToast({ title: "Incomplete Form", description: "All student detail fields are required." }, true);
-        return;
-      }
-      setUploadFieldErrors({});
       payload.append("studentNo", newRec.studentNo);
       payload.append("studentName", newRec.name);
       payload.append("courseCode", newRec.course);
@@ -902,8 +922,8 @@ function StaffPageContent() {
     docsForm.studentName,
     docsForm.docType,
     refreshDocuments,
-  ]);
-
+    docsForm,
+    ]);
   const sidebarItems = [
     { type: "header", label: "Operations" },
     { key: "requests", label: "Alumni Requests", iconClass: "ph-bold ph-tray-arrow-up" },
@@ -1233,10 +1253,24 @@ function StaffPageContent() {
                   let r;
                   if (data?.file) {
                     const form = new FormData();
-                    form.set("studentNo", String(data.studentNo || "").trim());
+                    const sn = String(data.studentNo || "").trim();
+                    const dt = String(data.docType || "").trim();
+                    form.set("studentNo", sn);
                     form.set("studentName", String(data.studentName || "").trim());
-                    form.set("docType", String(data.docType || "").trim());
-                    form.set("file", data.file);
+                    form.set("docType", dt);
+
+                    let fileToUpload = data.file;
+                    try {
+                      const cleanSN = sn.toUpperCase().replace(/[^a-zA-Z0-9-]/g, "_") || "UNKNOWN";
+                      const cleanDT = dt.replace(/[^a-zA-Z0-9-]/g, "_") || "DOC";
+                      const ext = (fileToUpload.name || "file.pdf").split(".").pop().toLowerCase();
+                      const newName = `${cleanSN}_${cleanDT}.${ext}`;
+                      fileToUpload = new File([fileToUpload], newName, { type: fileToUpload.type });
+                    } catch (e) {
+                      console.error("[UpdateDoc Rename Error]", e);
+                    }
+
+                    form.set("file", fileToUpload);
                     r = await fetch(`/api/documents/${id}`, {
                       method: "PATCH",
                       body: form,

@@ -1,64 +1,85 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# PUPSJ Records Keeping System (RKS) Prototype
 
-## Getting Started
+A modern, secure, and highly visual Records Keeping System built for institutional document tracking, digitization compliance, and physical storage mapping.
 
-First, run the development server:
+## 🚀 Key Features
 
+### 🏢 Physical Storage & Mapping
+- **2D Room Map:** Interactive visualization of physical storage locations (Cabinets/Drawers).
+- **Physical-Digital Synchronization:** Track exactly where a physical folder is located while viewing its digital counterpart.
+- **Drawer Utilization:** Real-time analytics on storage density and availability.
+
+### 🔐 Advanced Security Protocol
+- **Dual-Layer Authentication:** Multi-factor authentication via TOTP (Time-based One-Time Password).
+- **Self-Service Recovery:** Secure account recovery through configurable security questions.
+- **Audit Compliance:** Comprehensive logging of every administrative and staff action with IP and role tracking.
+
+### 📂 Records & Requests
+- **Digital Records Review:** Streamlined workflow for approving or declining digitized student records.
+- **Document Request Tracking:** Manage student/alumnus requests from "Pending" to "Done".
+- **Intelligent Ingest:** Hot-folder watcher for automatic scanning integration with automated OCR support.
+
+### 📊 Analytics & Maintenance
+- **SLA Analytics:** Monitor processing times and operational efficiency.
+- **Digitization Compliance:** Track percentage of physical records converted to digital formats.
+- **Volume Backups:** Integrated AES-256 encrypted system backups with support for external drive synchronization.
+
+---
+
+## 🛠️ Technical Stack
+
+- **Framework:** Next.js 14+ (App Router)
+- **Database:** SQLite (Local-first, highly portable)
+- **Icons:** Phosphor Icons (Duotone/Bold theme)
+- **Real-time:** Socket.io for live staff activity tracking
+- **Styling:** Tailwind CSS with custom brand primitives
+
+---
+
+## 🏁 Getting Started
+
+### 1. Installation
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+```
+
+### 2. Environment Configuration
+Create a `.env.local` in the `next-app` directory:
+```bash
+JWT_SECRET=your_super_secret_jwt_key
+TOTP_SECRET_KEY=your_encryption_key_for_totp_secrets
+HOT_FOLDER_ROOT=C:/Users/YourUser/Scans/HotFolder
+```
+
+### 3. Database Initialization
+Seed the prototype with sample courses and student data:
+```bash
+pnpm db:reset
+```
+
+### 4. Run Development Environment
+```bash
 pnpm dev
-# or
-bun dev
 ```
+This command concurrently starts the **Next.js server** and the **Hot Folder Watcher**.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## 📁 Project Structure
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `/src/app/admin`: Administrative dashboard (User management, system config, analytics).
+- `/src/app/staff`: Staff portal (Records upload, document requests, room mapping).
+- `/src/components/shared`: Reusable institutional UI components (TOTP challenges, Modals).
+- `/src/lib`: Core logic including repository patterns, encryption, and JWT handling.
+- `/scripts/hot-folder-watcher`: Background service monitoring `INBOUND` directories for new scans.
 
-## Learn More
+## 📠 Hot Folder Scanner Ingest
 
-To learn more about Next.js, take a look at the following resources:
+The system monitors a designated root folder with the following lifecycle:
+1. **INBOUND**: Scanner writes new PDF/Image files here.
+2. **PROCESSING**: Files are locked while being uploaded to the RKS.
+3. **DONE**: Files successfully moved here after database registration.
+4. **FAILED**: Preserved for manual retry if network or validation fails.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-
-## Hot Folder Scanner Ingest
-
-Configure these environment variables in `next-app/.env` or `next-app/.env.local`:
-
-```bash
-HOT_FOLDER_INGEST_TOKEN=replace_with_long_secret
-HOT_FOLDER_API_URL=http://localhost:3000/api/ingest/hot-folder
-HOT_FOLDER_SOURCE_STATION=Registrar-Scanner-01
-HOT_FOLDER_ROOT=/absolute/path/to/hot-folder
-```
-
-`pnpm dev` starts **Next.js** and the **hot-folder watcher** together (watcher waits until port 3000 is open, then loads `.env` via `dotenv`). To run only Next.js: `pnpm dev:next`.
-
-To run the watcher alone (for example against an already-running server):
-
-```bash
-pnpm hot-folder-watcher
-```
-
-Watcher folders:
-
-- `INBOUND`: scanner writes files here.
-- `PROCESSING`: transient while uploading.
-- `DONE`: uploaded successfully (server returned 201).
-- `FAILED`: upload failed; file is preserved for retry.
-
-Allowed scan formats: PDF, JPG/JPEG, PNG, TIFF.
+---
+*Developed for the PUP San Juan Campus Records Office.*

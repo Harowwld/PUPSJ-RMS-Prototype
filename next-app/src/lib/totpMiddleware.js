@@ -6,17 +6,23 @@ export async function requireTOTP(userId, token) {
     return { valid: false, error: "User ID required" };
   }
 
-  if (!token || !isValidToken(token)) {
-    return { valid: false, error: "Invalid token format" };
-  }
-
   const staff = await getStaffById(userId);
   if (!staff) {
     return { valid: false, error: "User not found" };
   }
 
+  // If TOTP is NOT enabled, we don't need a token.
   if (!staff.totp_enabled || !staff.totp_secret) {
     return { valid: true, error: null };
+  }
+
+  // TOTP is enabled, so we REQUIRE a valid token.
+  if (!token) {
+    return { valid: false, error: "Verification code required" };
+  }
+
+  if (!isValidToken(token)) {
+    return { valid: false, error: "Invalid verification code format" };
   }
 
   const decrypted = decryptSecret(staff.totp_secret);

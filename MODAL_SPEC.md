@@ -1,6 +1,6 @@
 # Standard Modal System Specification
 
-This document defines the consistent design patterns for all modals in the PUPSJ RMS Prototype.
+This document defines the consistent design patterns for all modals in the PUPSJ Records Keeping System Prototype.
 
 ---
 
@@ -286,5 +286,5 @@ All modals use the shadcn/ui `Dialog` component with this consistent structure:
 
 ---
 
-*Last updated: Comprehensive modal styling specifications for consistent UI across the PUPSJ RMS Prototype.*
+*Last updated: Comprehensive modal styling specifications for consistent UI across the PUPSJ Records Keeping System Prototype.*
 

@@ -84,7 +84,7 @@ export default function UserGuideModal({ open, onClose }) {
                     <div>
                       <h4 className="font-black text-blue-900 text-sm uppercase tracking-wide">Notice</h4>
                       <p className="text-sm text-blue-800 font-medium leading-relaxed mt-1">
-                        This guide covers the digital mechanics of the RMS Prototype. For institutional policies, refer to the official PUP Records Management Manual.
+                        This guide covers the digital mechanics of the Records Keeping System Prototype. For institutional policies, refer to the official PUP Records Management Manual.
                       </p>
                     </div>
                   </div>

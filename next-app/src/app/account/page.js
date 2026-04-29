@@ -47,6 +47,7 @@ function AccountPageContent() {
   const [secLoading, setSecLoading] = useState(false);
   const [secError, setSecError] = useState("");
   const [hasSetSecurity, setHasSetSecurity] = useState(false);
+  const [editingSecQuestions, setEditingSecQuestions] = useState({});
 
   // TOTP Form State
   const [totpEnabled, setTotpEnabled] = useState(false);
@@ -250,6 +251,7 @@ function AccountPageContent() {
         description: "Your security answers have been saved.",
       });
       setSecAnswers({});
+      setEditingSecQuestions({});
 
       // Re-fetch to update hasAnswer statuses
       const resUserSecurity = await fetch("/api/staff/security");
@@ -718,24 +720,58 @@ function AccountPageContent() {
                         <div className="text-sm text-gray-500 font-medium">No global security questions have been configured yet.</div>
                       ) : (
                         <div className="space-y-5">
-                          {globalQuestions.map((q) => (
-                            <div key={q.id} className="space-y-2">
-                              <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1 flex items-center gap-2">
-                                {q.question}
-                                {q.hasAnswer && (
-                                  <span className="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded-full inline-flex items-center gap-1">
-                                    <i className="ph-bold ph-check"></i> Answered
-                                  </span>
+                          {globalQuestions.map((q) => {
+                            const isEditing = !!editingSecQuestions[q.id];
+                            const showInput = !q.hasAnswer || isEditing;
+
+                            return (
+                              <div key={q.id} className="space-y-2">
+                                <div className="flex items-center justify-between ml-1">
+                                  <label className="text-xs font-black text-gray-700 uppercase tracking-widest flex items-center gap-2">
+                                    {q.question}
+                                    {q.hasAnswer && !isEditing && (
+                                      <span className="bg-emerald-100 text-emerald-700 text-[10px] px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                        <i className="ph-bold ph-check"></i> Answered
+                                      </span>
+                                    )}
+                                  </label>
+                                  {q.hasAnswer && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setEditingSecQuestions(prev => ({ ...prev, [q.id]: !isEditing }));
+                                        if (isEditing) {
+                                          setSecAnswers(prev => {
+                                            const n = { ...prev };
+                                            delete n[q.id];
+                                            return n;
+                                          });
+                                        }
+                                      }}
+                                      className="text-[10px] font-black uppercase tracking-widest text-pup-maroon hover:underline"
+                                    >
+                                      {isEditing ? "Cancel" : "Change Answer"}
+                                    </button>
+                                  )}
+                                </div>
+
+                                {showInput ? (
+                                  <Input
+                                    type="text"
+                                    className="bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900 animate-in fade-in slide-in-from-top-1 duration-200"
+                                    placeholder="Your answer"
+                                    value={secAnswers[q.id] || ""}
+                                    onChange={(e) => setSecAnswers({ ...secAnswers, [q.id]: e.target.value })}
+                                    autoFocus={isEditing}
+                                  />
+                                ) : (
+                                  <div className="h-11 flex items-center px-4 bg-gray-50 border border-gray-200 rounded-brand text-sm font-bold text-gray-400 italic">
+                                    Answer securely saved.
+                                  </div>
                                 )}
-                              </label>
-                              <Input
-                                type="text"
-                                className="bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"                                placeholder={q.hasAnswer ? "Answer securely saved. Type to overwrite." : "Your answer"}
-                                value={secAnswers[q.id] || ""}
-                                onChange={(e) => setSecAnswers({ ...secAnswers, [q.id]: e.target.value })}
-                              />
-                            </div>
-                          ))}
+                              </div>
+                            );
+                          })}
                         </div>
                       )}
 
@@ -781,9 +817,10 @@ function AccountPageContent() {
                           <i className="ph-fill ph-check-circle text-xl mt-0.5 shrink-0 text-emerald-600"></i>
                           <div>
                             <p>Two-factor authentication is enabled.</p>
-                            <p className="text-xs font-medium text-emerald-700 mt-1">You'll need to enter a code from your authenticator app for sensitive actions.</p>
+                            <p className="text-xs font-medium text-emerald-700 mt-1">You&apos;ll need to enter a code from your authenticator app for sensitive actions.</p>
                           </div>
                         </div>
+
                         <div className="space-y-2">
                           <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">
                             Enter TOTP Code to Disable
@@ -791,46 +828,53 @@ function AccountPageContent() {
                           <Input
                             type="text"
                             maxLength={6}
-                            className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900 text-center tracking-widest text-lg"
+                            className="h-11 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900 text-center tracking-widest text-lg"
                             placeholder="000000"
                             value={totpToken}
                             onChange={(e) => setTotpToken(e.target.value.replace(/\D/g, "").slice(0, 6))}
                           />
                         </div>
+
                         {totpError && (
                           <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm font-bold rounded-brand flex items-center gap-3">
                             <i className="ph-bold ph-warning-circle text-xl"></i>
                             {totpError}
                           </div>
                         )}
-                        <Button
-                          onClick={disableTOTP}
-                          disabled={totpLoading || totpToken.length !== 6}
-                          className="h-12 px-8 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
-                        >
-                          {totpLoading ? (
-                            <i className="ph-bold ph-spinner animate-spin"></i>
-                          ) : (
-                            <i className="ph-bold ph-prohibit"></i>
-                          )}
-                          Disable TOTP
-                        </Button>
+
+                        <div className="pt-6 border-t border-gray-100 flex justify-end">
+                          <Button
+                            onClick={disableTOTP}
+                            disabled={totpLoading || totpToken.length !== 6}
+                            className="h-11 px-8 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+                          >
+                            {totpLoading ? (
+                              <i className="ph-bold ph-spinner animate-spin"></i>
+                            ) : (
+                              <i className="ph-bold ph-prohibit"></i>
+                            )}
+                            Disable TOTP
+                          </Button>
+                        </div>
                       </div>
                     ) : totpStep === "setup" && totpSetupData ? (
                       <div className="space-y-6">
-                        <div className="flex flex-col items-center text-center">
-                          <p className="text-sm font-medium text-gray-600 mb-4">
+                        <div className="flex flex-col items-center text-center p-6 bg-gray-50 rounded-brand border border-gray-100">
+                          <p className="text-sm font-bold text-gray-600 mb-4 max-w-sm">
                             Scan this QR code with your authenticator app (Google Authenticator, Microsoft Authenticator, Authy, etc.)
                           </p>
-                          <img
-                            src={totpSetupData.qrCode}
-                            alt="TOTP QR Code"
-                            className="w-48 h-48 border border-gray-200 rounded-brand p-2 bg-white"
-                          />
-                          <p className="text-xs text-gray-500 mt-4 font-mono">
+                          <div className="bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
+                            <img
+                              src={totpSetupData.qrCode}
+                              alt="TOTP QR Code"
+                              className="w-48 h-48"
+                            />
+                          </div>
+                          <p className="text-[10px] text-gray-500 mt-4 font-black uppercase tracking-widest bg-white px-3 py-1 rounded-full border border-gray-200 shadow-sm">
                             Secret: {totpSetupData.secret}
                           </p>
                         </div>
+
                         <div className="space-y-2">
                           <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">
                             Enter Verification Code
@@ -838,37 +882,39 @@ function AccountPageContent() {
                           <Input
                             type="text"
                             maxLength={6}
-                            className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900 text-center tracking-widest text-lg"
+                            className="h-11 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900 text-center tracking-widest text-lg"
                             placeholder="000000"
                             value={totpToken}
                             onChange={(e) => setTotpToken(e.target.value.replace(/\D/g, "").slice(0, 6))}
                             autoFocus
                           />
                         </div>
+
                         {totpError && (
                           <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm font-bold rounded-brand flex items-center gap-3">
                             <i className="ph-bold ph-warning-circle text-xl"></i>
                             {totpError}
                           </div>
                         )}
-                        <div className="flex gap-3">
+
+                        <div className="pt-6 border-t border-gray-100 flex justify-end gap-3">
                           <Button
                             onClick={cancelTOTPSetup}
                             disabled={totpLoading}
                             variant="outline"
-                            className="h-12 px-6 font-black uppercase tracking-widest flex items-center gap-2 rounded-brand"
+                            className="h-11 px-6 font-black uppercase tracking-widest flex items-center gap-2 rounded-brand"
                           >
                             Cancel
                           </Button>
                           <Button
                             onClick={verifyTOTP}
                             disabled={totpLoading || totpToken.length !== 6}
-                            className="h-12 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand flex-1"
+                            className="h-11 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
                           >
                             {totpLoading ? (
                               <i className="ph-bold ph-spinner animate-spin"></i>
                             ) : (
-                              <i className="ph-bold ph-check"></i>
+                              <i className="ph-bold ph-lock-key"></i>
                             )}
                             Verify & Enable
                           </Button>
@@ -883,18 +929,21 @@ function AccountPageContent() {
                             <p className="text-xs font-medium text-gray-600 mt-1">Enable TOTP to add extra protection for sensitive admin actions.</p>
                           </div>
                         </div>
-                        <Button
-                          onClick={startTOTPSetup}
-                          disabled={totpLoading}
-                          className="h-12 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
-                        >
-                          {totpLoading ? (
-                            <i className="ph-bold ph-spinner animate-spin"></i>
-                          ) : (
-                            <i className="ph-bold ph-shield-plus"></i>
-                          )}
-                          Enable TOTP
-                        </Button>
+
+                        <div className="pt-6 border-t border-gray-100 flex justify-end">
+                          <Button
+                            onClick={startTOTPSetup}
+                            disabled={totpLoading}
+                            className="h-11 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+                          >
+                            {totpLoading ? (
+                              <i className="ph-bold ph-spinner animate-spin"></i>
+                            ) : (
+                              <i className="ph-bold ph-lock-key"></i>
+                            )}
+                            Enable TOTP
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </CardContent>
