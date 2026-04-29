@@ -29,6 +29,12 @@ import DigitalRecordsReviewTab from "@/components/admin/DigitalRecordsReviewTab"
 import SystemAnalyticsTab from "@/components/admin/SystemAnalyticsTab";
 import SLAAnalyticsTab from "@/components/admin/SLAAnalyticsTab";
 import StorageLayoutEditorTab from "@/components/admin/StorageLayoutEditorTab";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/components/ui/tabs";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -696,144 +702,149 @@ function AdminPageContent() {
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50 font-inter">
       <Header authUser={authUser} onLogout={handleLogout} />
 
-      <div className="flex-1 flex overflow-hidden w-full">
+      <Tabs
+        value={sidebarActiveKey}
+        onValueChange={handleSidebarSelect}
+        orientation="vertical"
+        className="flex-1 flex overflow-hidden w-full gap-0"
+      >
         <Sidebar items={sidebarItems} activeKey={sidebarActiveKey} onSelect={handleSidebarSelect} />
 
         <main className="flex-1 overflow-hidden p-4 relative w-full min-w-0">
-        {view === "directory" && (
-          <StaffDirectoryTab
-            staffData={staffData}
-            isLoading={viewLoading.directory}
-            currentUserId={authUser?.id}
-            search={search}
-            setSearch={setSearch}
-            roleFilter={roleFilter}
-            setRoleFilter={setRoleFilter}
-            statusFilter={statusFilter}
-            setStatusFilter={setStatusFilter}
-            onEditUser={(id) => {
-              const u = staffData.find((s) => s.id === id);
-              if (!u) return;
-              setEditOriginalId(u.id);
-              setEditForm({ ...u });
-              setEditOpen(true);
-            }}
-            onDeleteUser={(id) => {
-              const u = staffData.find((s) => s.id === id);
-              if (u) {
-                setDeleteTarget(u);
-                setDeleteOpen(true);
+          <TabsContent value="directory" className="h-full m-0 border-0 focus-visible:ring-0">
+            <StaffDirectoryTab
+              staffData={staffData}
+              isLoading={viewLoading.directory}
+              currentUserId={authUser?.id}
+              search={search}
+              setSearch={setSearch}
+              roleFilter={roleFilter}
+              setRoleFilter={setRoleFilter}
+              statusFilter={statusFilter}
+              setStatusFilter={setStatusFilter}
+              onEditUser={(id) => {
+                const u = staffData.find((s) => s.id === id);
+                if (!u) return;
+                setEditOriginalId(u.id);
+                setEditForm({ ...u });
+                setEditOpen(true);
+              }}
+              onDeleteUser={(id) => {
+                const u = staffData.find((s) => s.id === id);
+                if (u) {
+                  setDeleteTarget(u);
+                  setDeleteOpen(true);
+                }
+              }}
+              onExportData={exportData}
+              onSwitchView={switchView}
+            />
+          </TabsContent>
+
+          <TabsContent value="create" className="h-full m-0 border-0 focus-visible:ring-0">
+            <RegisterAccountTab
+              createForm={createForm}
+              setCreateForm={setCreateForm}
+              onResetForm={() =>
+                setCreateForm({
+                  id: "",
+                  role: "",
+                  fname: "",
+                  lname: "",
+                  email: "",
+                  status: "Active",
+                })
               }
-            }}
-            onExportData={exportData}
-            onSwitchView={switchView}
-          />
-        )}
+              onCreateAccount={handleCreate}
+              onSwitchView={switchView}
+            />
+          </TabsContent>
 
-        {view === "create" && (
-          <RegisterAccountTab
-            createForm={createForm}
-            setCreateForm={setCreateForm}
-            onResetForm={() =>
-              setCreateForm({
-                id: "",
-                role: "",
-                fname: "",
-                lname: "",
-                email: "",
-                status: "Active",
-              })
-            }
-            onCreateAccount={handleCreate}
-            onSwitchView={switchView}
-          />
-        )}
+          <TabsContent value="logs" className="h-full m-0 border-0 focus-visible:ring-0">
+            <AuditLogsTab
+              displayLogs={auditLogs}
+              isLoading={viewLoading.logs}
+              logPage={logPage}
+              setLogPage={setLogPage}
+              logTotal={logTotal}
+              logsPerPage={logsPerPage}
+              setLogsPerPage={setLogsPerPage}
+              logSearch={logSearch}
+              setLogSearch={setLogSearch}
+            />
+          </TabsContent>
 
-        {view === "logs" && (
-          <AuditLogsTab
-            displayLogs={auditLogs}
-            isLoading={viewLoading.logs}
-            logPage={logPage}
-            setLogPage={setLogPage}
-            logTotal={logTotal}
-            logsPerPage={logsPerPage}
-            setLogsPerPage={setLogsPerPage}
-            logSearch={logSearch}
-            setLogSearch={setLogSearch}
-          />
-        )}
+          <TabsContent value="system_data" className="h-full m-0 border-0 focus-visible:ring-0">
+            <SystemConfigTab
+              showToast={showToast}
+              onLogAction={logAdminAction}
+            />
+          </TabsContent>
 
-        {view === "system_data" && (
-          <SystemConfigTab
-            showToast={showToast}
-            logAdminAction={logAdminAction}
-          />
-        )}
+          <TabsContent value="storage_layout" className="h-full m-0 border-0 focus-visible:ring-0">
+            <StorageLayoutEditorTab showToast={showToast} />
+          </TabsContent>
 
-        {view === "storage_layout" && (
-          <StorageLayoutEditorTab showToast={showToast} />
-        )}
+          <TabsContent value="review" className="h-full m-0 border-0 focus-visible:ring-0">
+            <DigitalRecordsReviewTab
+              records={reviewRecords}
+              isLoading={viewLoading.review}
+              statusFilter={reviewStatusFilter}
+              setStatusFilter={setReviewStatusFilter}
+              onRefresh={refreshReviewRecords}
+              onApprove={(id) => reviewDocumentStatus(id, "Approved")}
+              onDecline={openDeclinePrompt}
+              onPreviewDocument={handlePreviewDocument}
+            />
+          </TabsContent>
 
-        {view === "review" && (
-          <DigitalRecordsReviewTab
-            records={reviewRecords}
-            isLoading={viewLoading.review}
-            statusFilter={reviewStatusFilter}
-            setStatusFilter={setReviewStatusFilter}
-            onRefresh={refreshReviewRecords}
-            onApprove={(id) => reviewDocumentStatus(id, "Approved")}
-            onDecline={openDeclinePrompt}
-            onPreviewDocument={handlePreviewDocument}
-          />
-        )}
+          <TabsContent value="digitization" className="h-full m-0 border-0 focus-visible:ring-0">
+            <SystemAnalyticsTab
+              showToast={showToast}
+              onLogAction={logAdminAction}
+            />
+          </TabsContent>
 
-        {view === "digitization" && (
-          <SystemAnalyticsTab
-            showToast={showToast}
-            onLogAction={logAdminAction}
-          />
-        )}
+          <TabsContent value="request_analytics" className="h-full m-0 border-0 focus-visible:ring-0">
+            <SLAAnalyticsTab
+              showToast={showToast}
+              onLogAction={logAdminAction}
+            />
+          </TabsContent>
 
-        {view === "request_analytics" && (
-          <SLAAnalyticsTab
-            showToast={showToast}
-            onLogAction={logAdminAction}
-          />
-        )}
-
-        {(view === "system" || view === "backup") && (
-          <BackupMaintenanceTab
-            systemHealth={systemHealth}
-            backups={backups}
-            isLoading={viewLoading.system || viewLoading.backup}
-            onSimulateBackup={simulateBackup}
-            onSyncExternal={syncExternal}
-            onDownloadBackup={(b) => {
-              const link = document.createElement("a");
-              link.href = `/api/system/backup/download?id=${b.id}`;
-              link.download = b.filename;
-              link.click();
-            }}
-            onDeleteBackup={(id) => {
-              const b = backups.find((x) => x.id === id);
-              if (b) {
-                setBackupDeleteTarget(b);
-                setBackupDeleteOpen(true);
-              }
-            }}
-            onRestoreFileChange={(e) => {
-              const f = e.target.files?.[0];
-              if (f) {
-                setRestoreFile(f);
-                setRestoreConfirmOpen(true);
-                e.target.value = "";
-              }
-            }}
-            showToast={showToast}
-          />
-        )}
+          <TabsContent value="system" className="h-full m-0 border-0 focus-visible:ring-0">
+            <BackupMaintenanceTab
+              systemHealth={systemHealth}
+              backups={backups}
+              isLoading={viewLoading.system || viewLoading.backup}
+              onSimulateBackup={simulateBackup}
+              onSyncExternal={syncExternal}
+              onDownloadBackup={(b) => {
+                const link = document.createElement("a");
+                link.href = `/api/system/backup/download?id=${b.id}`;
+                link.download = b.filename;
+                link.click();
+              }}
+              onDeleteBackup={(id) => {
+                const b = backups.find((x) => x.id === id);
+                if (b) {
+                  setBackupDeleteTarget(b);
+                  setBackupDeleteOpen(true);
+                }
+              }}
+              onRestoreFileChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) {
+                  setRestoreFile(f);
+                  setRestoreConfirmOpen(true);
+                  e.target.value = "";
+                }
+              }}
+              showToast={showToast}
+            />
+          </TabsContent>
         </main>
-      </div>
+      </Tabs>
 
       <Footer />
 

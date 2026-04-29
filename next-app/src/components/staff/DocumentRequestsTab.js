@@ -14,21 +14,27 @@ import {
 } from "@/components/ui/dialog";
 import { getDocAvailabilityForType } from "@/lib/docAvailability";
 import { formatPHDateTime } from "@/lib/timeFormat";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyMedia,
+} from "@/components/ui/empty";
 
 const STATUS_OPTIONS = [
   "Pending",
-  "InProgress",
   "Ready",
-  "Completed",
+  "Done",
   "Cancelled",
 ];
 
 function statusBadgeClass(status) {
-  const s = String(status || "");
-  if (s === "Completed") return "bg-emerald-50 text-emerald-800 border-emerald-200";
-  if (s === "Cancelled") return "bg-gray-100 text-gray-600 border-gray-200";
-  if (s === "Ready") return "bg-sky-50 text-sky-800 border-sky-200";
-  if (s === "InProgress") return "bg-amber-50 text-amber-900 border-amber-200";
+  const s = String(status || "").toUpperCase();
+  if (s === "DONE" || s === "COMPLETED") return "bg-emerald-50 text-emerald-800 border-emerald-200";
+  if (s === "CANCELLED") return "bg-gray-100 text-gray-600 border-gray-200";
+  if (s === "READY") return "bg-sky-50 text-sky-800 border-sky-200";
+  if (s === "PROCESSING" || s === "INPROGRESS") return "bg-amber-50 text-amber-900 border-amber-200";
   return "bg-red-50 text-pup-maroon border-red-100";
 }
 
@@ -60,6 +66,10 @@ export default function DocumentRequestsTab({
   const [detailLoading, setDetailLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [fileWarningOpen, setFileWarningOpen] = useState(false);
+
+  // local edit state for the detail side-panel
+  const [editStatus, setEditStatus] = useState("");
+  const [editNotes, setEditNotes] = useState("");
 
   const debouncedPageResetSkip = useRef(true);
   const autoLinkAttempted = useRef(new Set());
@@ -138,6 +148,8 @@ export default function DocumentRequestsTab({
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Not found");
       setDetail(json.data);
+      setEditStatus(json.data.status || "Pending");
+      setEditNotes(json.data.notes || "");
     } catch (e) {
       showToast({ title: "Load Failed", description: e?.message || "Unable to load request details." }, true);
       setSelectedId(null);
@@ -183,6 +195,8 @@ export default function DocumentRequestsTab({
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Update failed");
       setDetail(json.data);
+      setEditStatus(json.data.status || "Pending");
+      setEditNotes(json.data.notes || "");
       if (!silent) {
         showToast({ title: "Request Updated", description: "Status and notes have been saved." });
       }
@@ -196,6 +210,23 @@ export default function DocumentRequestsTab({
       setSaving(false);
     }
   };
+
+  const handleManualSave = () => {
+    patchDetail({ status: editStatus, notes: editNotes || null });
+  };
+
+  const handleResetEdits = () => {
+    if (!detail) return;
+    setEditStatus(detail.status || "Pending");
+    setEditNotes(detail.notes || "");
+  };
+
+  const hasEdits = useMemo(() => {
+    if (!detail) return false;
+    // Normalized comparison
+    const norm = (s) => (s || "").trim();
+    return norm(editStatus) !== norm(detail.status) || norm(editNotes) !== norm(detail.notes);
+  }, [detail, editStatus, editNotes]);
 
   useEffect(() => {
     if (!detail?.id || detail.linked_document_id) return;
@@ -240,31 +271,78 @@ export default function DocumentRequestsTab({
   const totalPages = Math.max(1, Math.ceil(total / perPage));
 
   return (
-    <div className="flex flex-col h-full min-h-0 gap-4 animate-fade-in">
+    <div className="flex flex-col h-full min-h-0 gap-4 animate-fade-in font-inter">
       {loading ? (
-        <Card className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col">
-          <CardContent className="p-6 flex-1 flex flex-col min-h-0">
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <Skeleton key={i} className="h-20 rounded-brand" />
-                ))}
+        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
+          <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0">
+            <div className="p-4 bg-gray-50/50 border-b border-gray-200 flex flex-col lg:flex-row gap-3 lg:items-end">
+              <div className="flex-1 space-y-2">
+                <Skeleton className="h-3 w-12" />
+                <Skeleton className="h-10 w-full rounded-brand" />
               </div>
-              <Skeleton className="h-4 w-full max-w-md rounded-brand" />
-              <Skeleton className="h-32 rounded-brand" />
+              <div className="w-full sm:w-48 space-y-2">
+                <Skeleton className="h-3 w-12" />
+                <Skeleton className="h-10 w-full rounded-brand" />
+              </div>
+              <Skeleton className="h-10 w-32 rounded-brand" />
             </div>
-          </CardContent>
-        </Card>
+            <div className="p-6 flex-1 flex flex-col space-y-4">
+              <div className="border border-gray-100 rounded-brand overflow-hidden">
+                <Skeleton className="h-10 w-full rounded-none" />
+                <div className="divide-y divide-gray-100">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="p-4 flex items-center justify-between">
+                      <div className="space-y-2 flex-1">
+                        <Skeleton className="h-4 w-1/4" />
+                        <Skeleton className="h-3 w-1/3" />
+                      </div>
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0">
+            <div className="p-4 border-b border-gray-100 bg-gray-50/80">
+              <Skeleton className="h-3 w-24" />
+            </div>
+            <div className="p-6 space-y-6">
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-5 w-3/4" />
+                <Skeleton className="h-3 w-1/2" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-5 w-1/2" />
+              </div>
+              <Skeleton className="h-32 w-full rounded-brand" />
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-10 w-full rounded-brand" />
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-20 w-full rounded-brand" />
+              </div>
+            </div>
+          </div>
+        </div>
       ) : error ? (
-        <Card className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col">
+        <Card className="flex-1 bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col">
           <CardContent className="p-6 flex-1 flex flex-col min-h-0">
-            <div className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500">
-              <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
-              </div>
-              <p className="text-lg font-bold text-gray-900">Could not load report</p>
-              <p className="text-sm font-medium text-gray-600 mt-1 max-w-md">{error}</p>
-            </div>
+            <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+              <EmptyHeader className="flex flex-col items-center gap-0">
+                <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
+                </EmptyMedia>
+                <EmptyTitle className="text-lg font-bold text-gray-900">Could not load report</EmptyTitle>
+                <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                  {error}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           </CardContent>
         </Card>
       ) : (
@@ -285,7 +363,7 @@ export default function DocumentRequestsTab({
                         setStatusFilter("");
                         setPage(1);
                       }}
-                      className="px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
+                      className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
                     >
                       Clear All
                     </Button>
@@ -294,7 +372,7 @@ export default function DocumentRequestsTab({
                 <div className="relative">
                   <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                   <Input
-                    className="pl-10 rounded-brand border-gray-300"
+                    className="h-10 pl-10 rounded-brand border-gray-300 bg-white text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon transition-colors"
                     placeholder="Student no., name, document type…"
                     value={q}
                     onChange={(e) => {
@@ -309,7 +387,7 @@ export default function DocumentRequestsTab({
                   Status
                 </label>
                 <select
-                  className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-800"
+                  className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                   value={statusFilter}
                   onChange={(e) => {
                     setStatusFilter(e.target.value);
@@ -329,85 +407,87 @@ export default function DocumentRequestsTab({
                 className="bg-pup-maroon hover:bg-red-900 font-bold shrink-0"
                 onClick={() => setCreateOpen(true)}
               >
-                <i className="ph-bold ph-plus mr-2"></i>
-                New request
+                <i className="ph-bold ph-plus mr-1.5"></i>
+                New Request
               </Button>
             </div>
-            <div className="flex-1 overflow-auto">
-              <table className="min-w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                  <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
-                    <th className="p-3 font-bold w-16">ID</th>
-                    <th className="p-3 font-bold">Student</th>
-                    <th className="p-3 font-bold">Document</th>
-                    <th className="p-3 font-bold">Status</th>
-                    <th className="p-3 font-bold text-right">Created</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-100">
-                  {rows.length === 0 ? (
-                    <tr className="border-0 hover:bg-transparent">
-                      <td colSpan={5} className="p-0 border-0">
-                        <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
-                          <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                            <i className="ph-duotone ph-tray text-3xl text-pup-maroon"></i>
-                          </div>
-                          <div className="text-lg font-bold text-gray-900">
-                            No document requests yet
-                          </div>
-                          <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                            Create a request when an alumnus asks for a record.
-                            Track status and use the storage map to pull the
-                            physical drawer.
-                          </div>
-                        </div>
-                      </td>
+            <div className="p-6 flex-1 flex flex-col min-h-0">
+              <div className="flex-1 overflow-y-auto overflow-x-auto border border-gray-200 rounded-brand">
+                <table className="min-w-full text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+                    <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
+                      <th className="p-3 font-bold w-16">ID</th>
+                      <th className="p-3 font-bold">Student</th>
+                      <th className="p-3 font-bold">Document</th>
+                      <th className="p-3 font-bold">Status</th>
+                      <th className="p-3 font-bold text-right">Created</th>
                     </tr>
-                  ) : (
-                    rows.map((r) => (
-                      <tr
-                        key={r.id}
-                        className={`cursor-pointer hover:bg-red-50/40 transition-colors ${
-                          selectedId === r.id ? "bg-red-50/60" : ""
-                        }`}
-                        onClick={() => openDetail(r.id)}
-                      >
-                        <td className="p-3 font-mono text-xs text-gray-500">
-                          #{r.id}
-                        </td>
-                        <td className="p-3">
-                          <div className="font-bold text-gray-900">
-                            {r.student_name || "—"}
-                          </div>
-                          <div className="font-mono text-[11px] text-gray-500">
-                            {r.student_no}
-                          </div>
-                        </td>
-                        <td className="p-3 font-medium text-gray-800">
-                          {r.doc_type}
-                        </td>
-                        <td className="p-3">
-                          <span
-                            className={`inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full border ${statusBadgeClass(r.status)}`}
-                          >
-                            {r.status}
-                          </span>
-                        </td>
-                        <td className="p-3 text-right text-[11px] font-mono text-gray-500 whitespace-nowrap">
-                          {formatPHDateTime(r.created_at)}
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {rows.length === 0 ? (
+                      <tr className="border-0 hover:bg-transparent">
+                        <td colSpan={5} className="p-0 border-0">
+                          <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+                            <EmptyHeader className="flex flex-col items-center gap-0">
+                              <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                                <i className="ph-duotone ph-tray text-3xl text-pup-maroon"></i>
+                              </EmptyMedia>
+                              <EmptyTitle className="text-lg font-bold text-gray-900">No document requests yet</EmptyTitle>
+                              <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                                Create a request when an alumnus asks for a record.
+                                Track status and use the storage map to pull the
+                                physical drawer.
+                              </EmptyDescription>
+                            </EmptyHeader>
+                          </Empty>
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      rows.map((r) => (
+                        <tr
+                          key={r.id}
+                          className={`cursor-pointer hover:bg-gray-50 transition-colors ${
+                            selectedId === r.id ? "bg-red-50/60" : ""
+                          }`}
+                          onClick={() => openDetail(r.id)}
+                        >
+                          <td className="p-3 font-mono text-xs text-gray-500">
+                            #{r.id}
+                          </td>
+                          <td className="p-3">
+                            <div className="font-bold text-gray-900">
+                              {r.student_name || "—"}
+                            </div>
+                            <div className="font-mono text-[11px] text-gray-500">
+                              {r.student_no}
+                            </div>
+                          </td>
+                          <td className="p-3 font-medium text-gray-800">
+                            {r.doc_type}
+                          </td>
+                          <td className="p-3">
+                            <span
+                              className={`inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full border ${statusBadgeClass(r.status)}`}
+                            >
+                              {r.status}
+                            </span>
+                          </td>
+                          <td className="p-3 text-right text-[11px] font-mono text-gray-500 whitespace-nowrap">
+                            {formatPHDateTime(r.created_at)}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
             {total > 0 ? (
-              <div className="p-3 border-t border-gray-100 bg-gray-50 flex items-center justify-between text-xs font-medium text-gray-600">
+              <div className="p-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between text-xs font-medium text-gray-600">
                 <span>
                   Showing {(page - 1) * perPage + 1}-{Math.min(page * perPage, total)} of{" "}
                   <strong className="text-gray-900">{total.toLocaleString()}</strong>{" "}
-                  audit log entries
+                  document requests
                 </span>
                 <div className="flex items-center gap-2">
                   <Button
@@ -416,21 +496,21 @@ export default function DocumentRequestsTab({
                     size="sm"
                     disabled={page <= 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="text-xs font-bold text-gray-600"
+                    className="h-8 text-xs font-bold text-gray-600"
                   >
                     <i className="ph-bold ph-caret-left text-[10px] mr-1"></i>
                     Previous
                   </Button>
-                  <span className="text-xs font-bold text-gray-600 px-2">
+                  <div className="px-3 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-md h-8 flex items-center justify-center min-w-12 shadow-sm">
                     {page} / {totalPages}
-                  </span>
+                  </div>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     disabled={page >= totalPages}
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    className="text-xs font-bold text-gray-600"
+                    className="h-8 text-xs font-bold text-gray-600"
                   >
                     Next
                     <i className="ph-bold ph-caret-right text-[10px] ml-1"></i>
@@ -441,16 +521,46 @@ export default function DocumentRequestsTab({
           </div>
 
           <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0">
-            <div className="p-4 border-b border-gray-100 bg-gray-50/80">
+            <div className="p-4 border-b border-gray-100 bg-gray-50/80 flex items-center justify-between">
               <div className="text-xs font-bold uppercase tracking-wider text-gray-500">
                 Request detail
               </div>
-            </div>
-            <div className="p-4 flex-1 overflow-auto">
-              {!selectedId && (
-                <div className="text-sm text-gray-500 font-medium text-center py-12">
-                  Select a request to see details and storage location.
+              {hasEdits && (
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-[10px] font-black text-gray-500 hover:text-gray-700 uppercase"
+                    onClick={handleResetEdits}
+                    disabled={saving}
+                  >
+                    Reset
+                  </Button>
+                  <Button
+                    variant="default"
+                    size="sm"
+                    className="h-7 px-3 text-[10px] font-black bg-pup-maroon hover:bg-red-900 text-white uppercase shadow-sm"
+                    onClick={handleManualSave}
+                    disabled={saving}
+                  >
+                    {saving ? "Saving..." : "Save Changes"}
+                  </Button>
                 </div>
+              )}
+            </div>
+            <div className="p-4 flex-1 overflow-auto flex flex-col">
+              {!selectedId && (
+                <Empty className="flex-1 flex flex-col items-center justify-center text-center text-gray-500 border-0">
+                  <EmptyHeader className="flex flex-col items-center gap-0">
+                    <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                      <i className="ph-duotone ph-file-text text-3xl text-pup-maroon"></i>
+                    </EmptyMedia>
+                    <EmptyTitle className="text-lg font-bold text-gray-900">No Request Selected</EmptyTitle>
+                    <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-[240px]">
+                      Select a request from the list to see its details, notes, and physical storage location.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               )}
               {selectedId && detailLoading && (
                 <div className="space-y-3">
@@ -491,7 +601,7 @@ export default function DocumentRequestsTab({
                     )}
                     <Button
                       type="button"
-                      className="mt-3 w-full bg-pup-maroon hover:bg-red-900 font-bold"
+                      className="mt-3 w-full bg-pup-maroon hover:bg-red-900 font-bold text-xs"
                       disabled={!studentForRequest}
                       onClick={() => {
                         if (!studentForRequest) return;
@@ -512,10 +622,10 @@ export default function DocumentRequestsTab({
                       Status
                     </label>
                     <select
-                      className="mt-1 h-10 w-full rounded-brand border border-gray-300 bg-white text-sm font-semibold"
-                      value={detail.status}
+                      className="mt-1 h-10 w-full rounded-brand border border-gray-300 bg-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-pup-maroon"
+                      value={editStatus}
                       disabled={saving}
-                      onChange={(e) => patchDetail({ status: e.target.value })}
+                      onChange={(e) => setEditStatus(e.target.value)}
                     >
                       {STATUS_OPTIONS.map((s) => (
                         <option key={s} value={s}>
@@ -530,14 +640,9 @@ export default function DocumentRequestsTab({
                       Notes
                     </label>
                     <textarea
-                      className="mt-1 w-full min-h-[72px] rounded-brand border border-gray-300 p-2 text-sm"
-                      defaultValue={detail.notes || ""}
-                      key={detail.id + (detail.updated_at || "")}
-                      onBlur={(e) => {
-                        const v = e.target.value.trim();
-                        if (v === (detail.notes || "").trim()) return;
-                        patchDetail({ notes: v || null });
-                      }}
+                      className="mt-1 w-full min-h-[72px] rounded-brand border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-pup-maroon"
+                      value={editNotes}
+                      onChange={(e) => setEditNotes(e.target.value)}
                     />
                   </div>
                 </div>
@@ -621,7 +726,7 @@ export default function DocumentRequestsTab({
                 disabled={submitting}
               >
                 <i className="ph-bold ph-plus-circle text-lg"></i>
-                {submitting ? "Saving…" : "Create request"}
+                {submitting ? "Saving…" : "Create Request"}
               </Button>
             </div>
           </form>
@@ -655,9 +760,17 @@ export default function DocumentRequestsTab({
                   {studentForRequest.drawer}
                 </div>
               ) : (
-                <div className="rounded-brand border border-red-200 bg-red-50 px-4 py-3 text-red-800 font-medium">
-                  No mapped storage location found for this student record.
-                </div>
+                <Empty className="py-6 border-red-200 bg-red-50 text-red-800">
+                  <EmptyHeader>
+                    <EmptyMedia>
+                      <i className="ph-bold ph-warning-circle text-2xl text-red-600"></i>
+                    </EmptyMedia>
+                    <EmptyTitle className="text-sm">No mapped storage location</EmptyTitle>
+                    <EmptyDescription className="text-red-700/70 text-xs">
+                      This student record has no physical drawer assignment.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               )}
             </div>
           </div>

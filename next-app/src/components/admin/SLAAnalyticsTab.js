@@ -1,10 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { formatPHDateTime } from "@/lib/timeFormat";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyMedia,
+} from "@/components/ui/empty";
 import {
   Dialog,
   DialogContent,
@@ -159,10 +166,19 @@ export default function SLAAnalyticsTab({ showToast, onLogAction }) {
       `}} />
 
       <Card className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col min-h-0">
-        <div className="p-4 bg-gray-50/50 flex-none border-b border-gray-200 flex justify-between items-center">
-          <div>
-            <h2 className="text-lg font-bold text-gray-900">Document Request SLA Analytics</h2>
-            <p className="text-xs font-medium text-gray-500">Service level agreements and turnaround metrics for alumni requests.</p>
+        <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
+              <i className="ph-duotone ph-chart-line-up text-2xl"></i>
+            </div>
+            <div>
+              <CardTitle className="text-xl font-black text-gray-900 tracking-tight leading-none">
+                Document Request SLA Analytics
+              </CardTitle>
+              <CardDescription className="text-sm font-medium text-gray-500 mt-1.5">
+                Service level agreements and turnaround metrics for alumni requests.
+              </CardDescription>
+            </div>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <Button
@@ -174,7 +190,7 @@ export default function SLAAnalyticsTab({ showToast, onLogAction }) {
               className="h-9 px-6 font-bold text-sm bg-pup-maroon text-white border border-pup-maroon shadow-sm hover:bg-red-900 disabled:opacity-60"
             >
               <i className="ph-bold ph-file-pdf text-sm mr-1.5" aria-hidden />
-              Generate Report
+              GENERATE REPORT
             </Button>
             <Button
               type="button"
@@ -185,7 +201,7 @@ export default function SLAAnalyticsTab({ showToast, onLogAction }) {
               className="h-9 px-4 font-bold text-sm text-gray-600 bg-white border border-gray-300 shadow-sm hover:bg-gray-50"
             >
               <i className="ph-bold ph-download-simple text-sm mr-1.5" aria-hidden />
-              Export CSV
+              EXPORT CSV
             </Button>
 
             <TooltipProvider>
@@ -214,7 +230,7 @@ export default function SLAAnalyticsTab({ showToast, onLogAction }) {
               </Tooltip>
             </TooltipProvider>
           </div>
-        </div>
+        </CardHeader>
 
         <CardContent className="flex-1 overflow-auto p-6 bg-white">
           {loading ? (
@@ -227,43 +243,59 @@ export default function SLAAnalyticsTab({ showToast, onLogAction }) {
               <Skeleton className="h-72 w-full rounded-brand" />
             </div>
           ) : error ? (
-            <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
-              <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
-              </div>
-              <p className="text-lg font-bold text-gray-900">Could not load SLA analytics</p>
-              <p className="text-sm font-medium text-gray-600 mt-1 max-w-md">{error}</p>
-            </div>
+            <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border border-gray-200 rounded-brand bg-white shadow-sm">
+              <EmptyHeader className="flex flex-col items-center gap-0">
+                <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
+                </EmptyMedia>
+                <EmptyTitle className="text-lg font-bold text-gray-900">Could not load SLA analytics</EmptyTitle>
+                <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                  {error}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <div className="space-y-6">
               {/* KPIs */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="rounded-brand border border-gray-200 bg-white p-5 shadow-xs flex flex-col justify-center">
-                  <div className="text-[10px] font-bold uppercase text-gray-400 tracking-widest mb-1 flex items-center gap-1.5">
-                    <i className="ph-bold ph-envelope-open" /> Total Lifetime Requests
+                {/* Total Lifetime Requests — Accent Card */}
+                <div className="relative rounded-xl p-5 overflow-hidden border border-[#5c1520] bg-[#7a1e28] shadow-sm group transition-all">
+                  <i className="ph-duotone ph-envelope-open absolute -right-3 -bottom-3 text-[60px] opacity-20 text-white rotate-12 pointer-events-none" />
+                  <div className="relative z-10">
+                    <div className="text-[10px] font-bold uppercase text-[#f7c9ce] tracking-widest mb-1 flex items-center gap-1.5">
+                      <i className="ph-bold ph-envelope-open" /> Total Lifetime Requests
+                    </div>
+                    <div className="text-3xl font-black text-white">{total?.toLocaleString() ?? total}</div>
                   </div>
-                  <div className="text-3xl font-black text-gray-900">{total}</div>
                 </div>
 
-                <div className="rounded-brand border border-gray-200 bg-white p-5 shadow-xs flex flex-col justify-center">
-                  <div className="text-[10px] font-bold uppercase text-gray-400 tracking-widest mb-1 flex items-center gap-1.5">
-                    <i className="ph-bold ph-clock-countdown" /> Avg Turnaround (SLA)
+                {/* Avg Turnaround (SLA) — Light Card */}
+                <div className="relative rounded-xl p-5 overflow-hidden border border-[#7a1e28]/15 bg-[#fdf6f6] shadow-sm group transition-all">
+                  <i className="ph-duotone ph-clock-countdown absolute -right-3 -bottom-3 text-[60px] opacity-10 text-[#7a1e28] rotate-12 pointer-events-none" />
+                  <div className="relative z-10">
+                    <div className="text-[10px] font-bold uppercase text-[#9e5a62] tracking-widest mb-1 flex items-center gap-1.5">
+                      <i className="ph-bold ph-clock-countdown" /> Avg Turnaround (SLA)
+                    </div>
+                    <div className="text-3xl font-black text-[#7a1e28]">
+                      {slaHours != null ? `${slaHours.toFixed(1)} hrs` : "N/A"}
+                    </div>
+                    <div className="text-[10px] font-medium text-[#b07078] mt-1">From Pending to Completed</div>
                   </div>
-                  <div className="text-3xl font-black text-pup-maroon">
-                    {slaHours != null ? `${slaHours.toFixed(1)} hrs` : "N/A"}
-                  </div>
-                  <div className="text-[10px] font-medium text-gray-400 mt-1">From Pending to Completed</div>
                 </div>
 
-                <div className="rounded-brand border border-gray-200 bg-white p-5 shadow-xs flex flex-col justify-center">
-                  <div className="text-[10px] font-bold uppercase text-gray-400 tracking-widest mb-1 flex items-center gap-1.5">
-                    <i className="ph-bold ph-check-circle" /> Overall Completion Rate
-                  </div>
-                  <div className="flex items-end gap-3">
-                    <div className="text-3xl font-black text-emerald-600">{completionRate}%</div>
-                  </div>
-                  <div className="w-full h-1.5 rounded-full bg-gray-100 overflow-hidden mt-2">
-                    <div className="h-full bg-emerald-500" style={{ width: `${completionRate}%` }} />
+                {/* Overall Completion Rate — Light Card */}
+                <div className="relative rounded-xl p-5 overflow-hidden border border-[#7a1e28]/15 bg-[#fdf6f6] shadow-sm group transition-all">
+                  <i className="ph-duotone ph-check-circle absolute -right-3 -bottom-3 text-[60px] opacity-10 text-[#7a1e28] rotate-12 pointer-events-none" />
+                  <div className="relative z-10">
+                    <div className="text-[10px] font-bold uppercase text-[#9e5a62] tracking-widest mb-1 flex items-center gap-1.5">
+                      <i className="ph-bold ph-check-circle" /> Overall Completion Rate
+                    </div>
+                    <div className="flex items-end gap-3">
+                      <div className="text-3xl font-black text-emerald-600">{completionRate}%</div>
+                    </div>
+                    <div className="w-full h-1.5 rounded-full bg-gray-200 overflow-hidden mt-2">
+                      <div className="h-full bg-emerald-500" style={{ width: `${completionRate}%` }} />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -291,7 +323,17 @@ export default function SLAAnalyticsTab({ showToast, onLogAction }) {
                         </BarChart>
                       </ResponsiveContainer>
                     ) : (
-                      <div className="h-full flex items-center justify-center text-gray-400 text-sm">No trend data available</div>
+                      <Empty className="h-full flex flex-col items-center justify-center text-center text-gray-400 border-0">
+                        <EmptyHeader className="flex flex-col items-center gap-0">
+                          <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                            <i className="ph-bold ph-chart-bar text-2xl text-pup-maroon"></i>
+                          </EmptyMedia>
+                          <EmptyTitle className="text-lg font-bold text-gray-900">No trend data available</EmptyTitle>
+                          <EmptyDescription className="text-sm font-medium text-gray-600 mt-1">
+                            Once requests are processed over time, volume trends will appear here.
+                          </EmptyDescription>
+                        </EmptyHeader>
+                      </Empty>
                     )}
                   </div>
                 </div>
@@ -322,7 +364,17 @@ export default function SLAAnalyticsTab({ showToast, onLogAction }) {
                           </PieChart>
                         </ResponsiveContainer>
                       ) : (
-                        <div className="h-full flex items-center justify-center text-gray-400 text-sm">No data</div>
+                        <Empty className="h-full flex flex-col items-center justify-center text-center text-gray-400 border-0">
+                          <EmptyHeader className="flex flex-col items-center gap-0">
+                            <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                              <i className="ph-bold ph-chart-pie-slice text-2xl text-pup-maroon"></i>
+                            </EmptyMedia>
+                            <EmptyTitle className="text-lg font-bold text-gray-900">No status data</EmptyTitle>
+                            <EmptyDescription className="text-sm font-medium text-gray-600 mt-1">
+                              Status breakdown requires active request data.
+                            </EmptyDescription>
+                          </EmptyHeader>
+                        </Empty>
                       )}
                     </div>
                     <div className="grid grid-cols-2 gap-2 mt-2">
@@ -348,7 +400,17 @@ export default function SLAAnalyticsTab({ showToast, onLogAction }) {
                           <span className="text-xs font-bold text-pup-maroon bg-red-50 py-0.5 px-2 rounded-full border border-red-100">{dt.count} req</span>
                         </div>
                       )) : (
-                        <div className="text-sm text-gray-400">No requests recorded yet.</div>
+                        <Empty className="flex flex-col items-center justify-center text-center text-gray-400 border-0 py-8">
+                          <EmptyHeader className="flex flex-col items-center gap-0">
+                            <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                              <i className="ph-bold ph-file-text text-2xl text-pup-maroon"></i>
+                            </EmptyMedia>
+                            <EmptyTitle className="text-lg font-bold text-gray-900">No requests recorded yet</EmptyTitle>
+                            <EmptyDescription className="text-sm font-medium text-gray-600 mt-1">
+                              Data will populate as document requests are created.
+                            </EmptyDescription>
+                          </EmptyHeader>
+                        </Empty>
                       )}
                     </div>
                   </div>
@@ -497,13 +559,13 @@ export default function SLAAnalyticsTab({ showToast, onLogAction }) {
               onClick={() => setReportOpen(false)}
               className="h-11 px-6 text-sm font-bold text-gray-600 border-gray-300 hover:bg-gray-50"
             >
-              Close Preview
+              CLOSE PREVIEW
             </Button>
             <Button
               onClick={handlePrint}
               className="h-11 px-8 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 flex items-center gap-2"
             >
-              <i className="ph-bold ph-printer text-lg"></i> Finalize and Print Report
+              <i className="ph-bold ph-printer text-lg"></i> FINALIZE AND PRINT REPORT
             </Button>
           </div>
         </DialogContent>

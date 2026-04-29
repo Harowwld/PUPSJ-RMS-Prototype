@@ -12,6 +12,13 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPHDateTime } from "@/lib/timeFormat";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyMedia,
+} from "@/components/ui/empty";
 
 export default function BackupMaintenanceTab({
   systemHealth,
@@ -52,13 +59,17 @@ export default function BackupMaintenanceTab({
       ) : error ? (
         <Card className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col">
           <CardContent className="p-6 flex-1 flex flex-col min-h-0">
-            <div className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500">
-              <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
-              </div>
-              <p className="text-lg font-bold text-gray-900">Could not load report</p>
-              <p className="text-sm font-medium text-gray-600 mt-1 max-w-md">{error}</p>
-            </div>
+            <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+              <EmptyHeader className="flex flex-col items-center gap-0">
+                <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
+                </EmptyMedia>
+                <EmptyTitle className="text-lg font-bold text-gray-900">Could not load report</EmptyTitle>
+                <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                  {error}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           </CardContent>
         </Card>
       ) : (
@@ -149,8 +160,8 @@ export default function BackupMaintenanceTab({
                     onClick={onSimulateBackup}
                     className="w-full bg-pup-maroon text-white h-10 rounded-brand text-xs font-bold hover:bg-red-900 transition-colors flex items-center justify-center gap-2 shadow-sm mb-5"
                   >
-                    <i className="ph-bold ph-download-simple text-sm"></i> Extract
-                    .ZIP Package
+                    <i className="ph-bold ph-download-simple text-sm"></i> EXTRACT
+                    .ZIP PACKAGE
                   </Button>
 
                   <div className="border-t border-dashed border-gray-200 pt-5">
@@ -171,8 +182,8 @@ export default function BackupMaintenanceTab({
                       }
                       className="w-full h-10 bg-white border-gray-300 text-gray-600 rounded-brand text-xs font-bold hover:bg-gray-50 hover:text-pup-maroon transition-colors flex items-center justify-center gap-2 shadow-sm"
                     >
-                      <i className="ph-bold ph-upload-simple text-sm"></i> Upload
-                      System Image
+                      <i className="ph-bold ph-upload-simple text-sm"></i> UPLOAD
+                      SYSTEM IMAGE
                     </Button>
                   </div>
                   <div className="mt-5 text-[10px] text-gray-400 text-center uppercase tracking-wider font-bold">
@@ -187,159 +198,166 @@ export default function BackupMaintenanceTab({
           </section>
 
           {/* RIGHT COLUMN: History Table */}
-          <section className="w-full lg:w-[70%] bg-white rounded-brand border border-gray-200 shadow-sm flex flex-col h-full overflow-hidden">
-            <div className="p-4 border-b border-gray-100 bg-gray-50/50 flex flex-none justify-between items-center">
-              <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-full bg-white text-gray-600 flex items-center justify-center shrink-0 border border-gray-200 shadow-sm">
-                  <i className="ph-duotone ph-clock-counter-clockwise text-lg text-pup-maroon"></i>
+          <Card className="w-full lg:w-[70%] bg-white rounded-brand border border-gray-200 shadow-sm flex flex-col h-full overflow-hidden">
+            <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
+                  <i className="ph-duotone ph-clock-counter-clockwise text-2xl"></i>
                 </div>
-                <h3 className="font-bold text-xs text-gray-900 tracking-wider uppercase">
-                  Encrypted Backup History
-                </h3>
+                <div>
+                  <CardTitle className="text-xl font-black text-gray-900 tracking-tight">
+                    Encrypted Backup History
+                  </CardTitle>
+                  <CardDescription className="font-medium text-gray-500">
+                    Browse and manage institutional record snapshots and system image backups.
+                  </CardDescription>
+                </div>
               </div>
-            </div>
+            </CardHeader>
 
-            <div className="flex-1 overflow-auto">
-              <table className="min-w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                  <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
-                    <th className="p-3 font-bold w-48">Filename</th>
-                    <th className="p-3 font-bold w-40">Created At</th>
-                    <th className="p-3 font-bold w-24">Size</th>
-                    <th className="p-3 font-bold">Status</th>
-                    <th className="p-3 font-bold text-right w-24">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {backups.length === 0 ? (
-                    <tr className="border-0 hover:bg-transparent">
-                      <td colSpan={5} className="p-0 border-0">
-                        <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
-                          <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                            <i className="ph-duotone ph-archive text-3xl text-pup-maroon"></i>
-                          </div>
-                          <div className="text-lg font-bold text-gray-900">
-                            No system backups yet
-                          </div>
-                          <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                            There are currently no system backups available.
-                          </div>
-                        </div>
-                      </td>
+            <CardContent className="p-6 flex-1 flex flex-col min-h-0 bg-white">
+              <div className={`flex-1 overflow-auto rounded-brand ${backups.length === 0 ? "" : "border border-gray-200"}`}>
+                <table className="min-w-full text-sm">
+                  <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+                    <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
+                      <th className="p-3 font-bold w-48">Filename</th>
+                      <th className="p-3 font-bold w-40">Created At</th>
+                      <th className="p-3 font-bold w-24">Size</th>
+                      <th className="p-3 font-bold">Status</th>
+                      <th className="p-3 font-bold text-right w-24">Actions</th>
                     </tr>
-                  ) : (
-                    backups.map((b) => (
-                      <tr
-                        key={b.id}
-                        className="hover:bg-gray-50 group cursor-default transition-colors"
-                      >
-                        <td
-                          className="p-3 font-mono text-xs text-pup-maroon font-bold max-w-[200px]"
-                          title={b.filename}
-                        >
-                          <span className="truncate block w-full">
-                            {b.filename}
-                          </span>
-                        </td>
-                        <td className="p-3 text-[11px] font-medium text-gray-600 whitespace-nowrap">
-                          {formatPHDateTime(b.created_at)}
-                        </td>
-                        <td className="p-3 text-xs font-bold text-gray-700">
-                          {(b.size_bytes / (1024 * 1024)).toFixed(2)} MB
-                        </td>
-                        <td className="p-3">
-                          <div className="flex flex-col gap-1.5 min-w-[140px]">
-                            <div className="flex items-center justify-between gap-3 bg-gray-50 px-2 py-1 rounded border border-gray-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
-                              <div className="flex items-center gap-1.5">
-                                <span
-                                  className={`w-1.5 h-1.5 rounded-full ${
-                                    b.status_local === "Success"
-                                      ? "bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)] animate-pulse"
-                                      : "bg-gray-300"
-                                  }`}
-                                ></span>
-                                <span className="text-[9px] uppercase font-bold text-gray-500 tracking-wider">
-                                  NODE 1: Local
-                                </span>
-                              </div>
-                              <i
-                                className={`ph-bold ${
-                                  b.status_local === "Success"
-                                    ? "ph-check-circle text-green-600"
-                                    : "ph-circle text-gray-300"
-                                } text-[10px]`}
-                              ></i>
-                            </div>
-
-                            <div className="flex items-center justify-between gap-3 bg-gray-50 px-2 py-1 rounded border border-gray-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
-                              <div className="flex items-center gap-1.5">
-                                <span
-                                  className={`w-1.5 h-1.5 rounded-full ${
-                                    b.status_external === "Success"
-                                      ? "bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.5)] animate-pulse"
-                                      : "bg-gray-300"
-                                  }`}
-                                ></span>
-                                <span className="text-[9px] uppercase font-bold text-gray-500 tracking-wider">
-                                  NODE 2: External
-                                </span>
-                              </div>
-                              {b.status_external !== "Success" ? (
-                                <button
-                                  onClick={() => onSyncExternal(b.id)}
-                                  className="text-[9px] font-bold text-pup-maroon hover:underline flex items-center gap-1"
-                                >
-                                  <i className="ph-bold ph-arrows-merge"></i> SYNC
-                                </button>
-                              ) : (
-                                <i className="ph-bold ph-check-circle text-blue-600 text-[10px]"></i>
-                              )}
-                            </div>
-
-                            <div className="flex items-center justify-between gap-3 bg-gray-50 px-2 py-1 rounded border border-gray-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] opacity-70">
-                              <div className="flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
-                                <span className="text-[9px] uppercase font-bold text-gray-500 tracking-wider">
-                                  NODE 3: Offsite
-                              </span>
-                              </div>
-                              <span className="text-[9px] font-bold text-gray-400">
-                                Not configured
-                              </span>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="p-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => onDownloadBackup(b)}
-                              className="h-8 px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50"
-                              title="Extract ZIP Package"
-                            >
-                              <i className="ph-bold ph-file-zip mr-1.5"></i>
-                              Download
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => onDeleteBackup(b.id)}
-                              className="h-8 px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
-                              title="Destroy Volume"
-                            >
-                              <i className="ph-bold ph-trash mr-1.5"></i>
-                              Delete
-                            </Button>
-                          </div>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {backups.length === 0 ? (
+                      <tr className="border-0 hover:bg-transparent">
+                        <td colSpan={5} className="p-0 border-0">
+                          <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+                            <EmptyHeader className="flex flex-col items-center gap-0">
+                              <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                                <i className="ph-duotone ph-archive text-3xl text-pup-maroon"></i>
+                              </EmptyMedia>
+                              <EmptyTitle className="text-lg font-bold text-gray-900">No system backups yet</EmptyTitle>
+                              <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                                There are currently no system backups available.
+                              </EmptyDescription>
+                            </EmptyHeader>
+                          </Empty>
                         </td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </section>
+                    ) : (
+                      backups.map((b) => (
+                        <tr
+                          key={b.id}
+                          className="hover:bg-gray-50 group cursor-default transition-colors"
+                        >
+                          <td
+                            className="p-3 font-mono text-xs text-pup-maroon font-bold max-w-[200px]"
+                            title={b.filename}
+                          >
+                            <span className="truncate block w-full">
+                              {b.filename}
+                            </span>
+                          </td>
+                          <td className="p-3 text-[11px] font-medium text-gray-600 whitespace-nowrap">
+                            {formatPHDateTime(b.created_at)}
+                          </td>
+                          <td className="p-3 text-xs font-bold text-gray-700">
+                            {(b.size_bytes / (1024 * 1024)).toFixed(2)} MB
+                          </td>
+                          <td className="p-3">
+                            <div className="flex flex-col gap-1.5 min-w-[140px]">
+                              <div className="flex items-center justify-between gap-3 bg-gray-50 px-2 py-1 rounded border border-gray-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
+                                <div className="flex items-center gap-1.5">
+                                  <span
+                                    className={`w-1.5 h-1.5 rounded-full ${
+                                      b.status_local === "Success"
+                                        ? "bg-green-500 shadow-[0_0_5px_rgba(34,197,94,0.5)] animate-pulse"
+                                        : "bg-gray-300"
+                                    }`}
+                                  ></span>
+                                  <span className="text-[9px] uppercase font-bold text-gray-500 tracking-wider">
+                                    NODE 1: Local
+                                  </span>
+                                </div>
+                                <i
+                                  className={`ph-bold ${
+                                    b.status_local === "Success"
+                                      ? "ph-check-circle text-green-600"
+                                      : "ph-circle text-gray-300"
+                                  } text-[10px]`}
+                                ></i>
+                              </div>
+
+                              <div className="flex items-center justify-between gap-3 bg-gray-50 px-2 py-1 rounded border border-gray-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)]">
+                                <div className="flex items-center gap-1.5">
+                                  <span
+                                    className={`w-1.5 h-1.5 rounded-full ${
+                                      b.status_external === "Success"
+                                        ? "bg-blue-500 shadow-[0_0_5px_rgba(59,130,246,0.5)] animate-pulse"
+                                        : "bg-gray-300"
+                                    }`}
+                                  ></span>
+                                  <span className="text-[9px] uppercase font-bold text-gray-500 tracking-wider">
+                                    NODE 2: External
+                                  </span>
+                                </div>
+                                {b.status_external !== "Success" ? (
+                                  <button
+                                    onClick={() => onSyncExternal(b.id)}
+                                    className="text-[9px] font-bold text-pup-maroon hover:underline flex items-center gap-1"
+                                  >
+                                    <i className="ph-bold ph-arrows-merge"></i> SYNC
+                                  </button>
+                                ) : (
+                                  <i className="ph-bold ph-check-circle text-blue-600 text-[10px]"></i>
+                                )}
+                              </div>
+
+                              <div className="flex items-center justify-between gap-3 bg-gray-50 px-2 py-1 rounded border border-gray-200 shadow-[inset_0_1px_2px_rgba(0,0,0,0.02)] opacity-70">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
+                                  <span className="text-[9px] uppercase font-bold text-gray-500 tracking-wider">
+                                    NODE 3: Offsite
+                                </span>
+                                </div>
+                                <span className="text-[9px] font-bold text-gray-400">
+                                  Not configured
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-3 text-right">
+                            <div className="flex items-center justify-end gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onDownloadBackup(b)}
+                                className="h-8 px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50"
+                                title="Extract ZIP Package"
+                              >
+                                <i className="ph-bold ph-file-zip mr-1.5"></i>
+                                DOWNLOAD
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onDeleteBackup(b.id)}
+                                className="h-8 px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
+                                title="Destroy Volume"
+                              >
+                                <i className="ph-bold ph-trash mr-1.5"></i>
+                                DELETE
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ) )
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>

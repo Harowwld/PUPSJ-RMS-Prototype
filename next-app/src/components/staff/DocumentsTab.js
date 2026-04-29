@@ -13,6 +13,13 @@ import {
 import { CardContent } from "../ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPHDateTime } from "@/lib/timeFormat";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyMedia,
+} from "@/components/ui/empty";
 
 export default function DocumentsTab({
   docsForm,
@@ -81,14 +88,14 @@ export default function DocumentsTab({
                       setDocsForm(cleared);
                       refreshDocuments(cleared);
                     }}
-                    className="px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
+                    className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
                   >
-                    Clear All
+                    CLEAR ALL
                   </Button>
                 )}
               </div>
               <Input
-                className="font-mono bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+                className="h-10 font-mono bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={docsForm.studentNo}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -108,7 +115,7 @@ export default function DocumentsTab({
                 Student Name
               </label>
               <Input
-                className="bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+                className="h-10 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={docsForm.studentName}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -158,27 +165,63 @@ export default function DocumentsTab({
 
         <CardContent className="p-6 flex-1 flex flex-col min-h-0">
           {docsLoading ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <Skeleton key={i} className="h-20 rounded-brand" />
-                ))}
+            <div className="flex-1 flex flex-col space-y-4">
+              <div className="bg-gray-50/80 border border-gray-200 rounded-brand p-5 flex items-center justify-between shadow-xs">
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-48" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-6 w-12" />
+                  <Skeleton className="h-2.5 w-32 sm:w-48 rounded-full" />
+                </div>
               </div>
-              <Skeleton className="h-4 w-full max-w-md rounded-brand" />
-              <Skeleton className="h-32 rounded-brand" />
+              
+              <div className="flex-1 border border-gray-200 rounded-brand overflow-hidden flex flex-col">
+                <Skeleton className="h-10 w-full rounded-none" />
+                <div className="divide-y divide-gray-100 flex-1">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="p-4 flex items-center justify-between">
+                      <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-4">
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-3 w-32" />
+                        </div>
+                        <div className="hidden lg:block space-y-2">
+                          <Skeleton className="h-4 w-20" />
+                        </div>
+                        <div className="hidden lg:block">
+                          <Skeleton className="h-6 w-20 rounded-full" />
+                        </div>
+                        <div className="hidden lg:block space-y-2">
+                          <Skeleton className="h-3 w-24" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                        <div className="hidden lg:block space-y-2">
+                          <Skeleton className="h-4 w-24" />
+                        </div>
+                      </div>
+                      <div className="flex gap-2 ml-4">
+                        <Skeleton className="h-9 w-16 rounded-brand" />
+                        <Skeleton className="h-9 w-16 rounded-brand" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           ) : docsError ? (
-            <div className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500">
-              <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
-              </div>
-              <p className="text-lg font-bold text-gray-900">
-                Could not load report
-              </p>
-              <p className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                {docsError}
-              </p>
-            </div>
+            <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+              <EmptyHeader className="flex flex-col items-center gap-0">
+                <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
+                </EmptyMedia>
+                <EmptyTitle className="text-lg font-bold text-gray-900">Could not load report</EmptyTitle>
+                <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                  {docsError}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <>
               {isSingleStudentView && (
@@ -223,35 +266,35 @@ export default function DocumentsTab({
                     ) ? (
                       <tr className="border-0 hover:bg-transparent">
                         <td colSpan={7} className="p-0 border-0">
-                          <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
-                            <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                              <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon"></i>
-                            </div>
-                            <div className="text-lg font-bold text-gray-900">
-                              Search Documents
-                            </div>
-                            <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                              Enter a student number, name, or select a document
-                              type to find related records.
-                            </div>
-                          </div>
+                          <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+                            <EmptyHeader className="flex flex-col items-center gap-0">
+                              <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                                <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon"></i>
+                              </EmptyMedia>
+                              <EmptyTitle className="text-lg font-bold text-gray-900">Search Documents</EmptyTitle>
+                              <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                                Enter a student number, name, or select a document
+                                type to find related records.
+                              </EmptyDescription>
+                            </EmptyHeader>
+                          </Empty>
                         </td>
                       </tr>
                     ) : docsRows.length === 0 ? (
                       <tr className="border-0 hover:bg-transparent">
                         <td colSpan={7} className="p-0 border-0">
-                          <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
-                            <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                              <i className="ph-duotone ph-warning-circle text-3xl text-red-600"></i>
-                            </div>
-                            <div className="text-lg font-bold text-gray-900">
-                              No Results Found
-                            </div>
-                            <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                              We couldn&apos;t find any documents matching your
-                              search criteria.
-                            </div>
-                          </div>
+                          <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+                            <EmptyHeader className="flex flex-col items-center gap-0">
+                              <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                                <i className="ph-duotone ph-warning-circle text-3xl text-red-600"></i>
+                              </EmptyMedia>
+                              <EmptyTitle className="text-lg font-bold text-gray-900">No Results Found</EmptyTitle>
+                              <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                                We couldn&apos;t find any documents matching your
+                                search criteria.
+                              </EmptyDescription>
+                            </EmptyHeader>
+                          </Empty>
                         </td>
                       </tr>
                     ) : (
@@ -328,7 +371,7 @@ export default function DocumentsTab({
                                     }
                                     className="px-3 font-bold text-xs border-gray-300 text-gray-700 hover:border-pup-maroon"
                                   >
-                                    View
+                                    VIEW
                                   </Button>
                                   <Button
                                     size="sm"
@@ -349,7 +392,7 @@ export default function DocumentsTab({
                                     }}
                                     className="px-3 bg-pup-maroon text-white font-bold text-xs hover:bg-red-900"
                                   >
-                                    Update
+                                    UPDATE
                                   </Button>
                                 </>
                               ) : (
@@ -507,7 +550,7 @@ export default function DocumentsTab({
               }}
               className="px-4 font-bold text-sm border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
             >
-              Cancel
+              CANCEL
             </Button>
             <Button
               type="button"
@@ -531,7 +574,7 @@ export default function DocumentsTab({
               disabled={updateSaving}
               className="px-4 bg-pup-maroon text-white font-bold text-sm hover:bg-red-900 disabled:opacity-60 disabled:cursor-not-allowed rounded-brand"
             >
-              {updateSaving ? "Saving..." : "Save Changes"}
+              {updateSaving ? "SAVING..." : "SAVE CHANGES"}
             </Button>
           </div>
         </DialogContent>

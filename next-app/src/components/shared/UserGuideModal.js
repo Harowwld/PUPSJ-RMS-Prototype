@@ -9,6 +9,12 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/components/ui/tabs";
 
 const TABS = [
   { id: "general", label: "General", icon: "ph-bold ph-info" },
@@ -22,7 +28,13 @@ export default function UserGuideModal({ open, onClose }) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-5xl md:max-w-6xl w-[95vw] p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl flex flex-col max-h-[90vh] rounded-brand">
-        <div className="flex flex-col h-full overflow-hidden lg:flex-row">
+        <Tabs
+          defaultValue="general"
+          value={activeTab}
+          onValueChange={setActiveTab}
+          orientation="vertical"
+          className="flex flex-col h-full overflow-hidden lg:flex-row"
+        >
           {/* Sidebar Navigation */}
           <aside className="w-full lg:w-64 bg-gray-50 border-b lg:border-b-0 lg:border-r border-gray-200 p-4 shrink-0">
             <div className="mb-6 px-2 hidden lg:block">
@@ -30,22 +42,18 @@ export default function UserGuideModal({ open, onClose }) {
               <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mt-1">Documentation</p>
             </div>
 
-            <nav className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
+            <TabsList className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 h-auto bg-transparent rounded-none">
               {TABS.map((tab) => (
-                <button
+                <TabsTrigger
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-brand text-sm font-bold transition-all whitespace-nowrap lg:whitespace-normal ${
-                    activeTab === tab.id
-                      ? "bg-pup-maroon text-white shadow-md shadow-red-900/20"
-                      : "text-gray-600 hover:bg-red-50 hover:text-pup-maroon"
-                  }`}
+                  value={tab.id}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-brand text-sm font-bold transition-all whitespace-nowrap lg:whitespace-normal data-active:bg-pup-maroon data-active:text-white data-active:shadow-md data-active:shadow-red-900/20 text-gray-600 hover:bg-red-50 hover:text-pup-maroon border-0 justify-start w-full`}
                 >
                   <i className={`${tab.icon} text-lg`}></i>
                   {tab.label}
-                </button>
+                </TabsTrigger>
               ))}
-            </nav>
+            </TabsList>
           </aside>
 
           {/* Main Content Area */}
@@ -68,8 +76,8 @@ export default function UserGuideModal({ open, onClose }) {
               </div>
             </DialogHeader>
 
-            <div className="flex-1 overflow-y-auto p-8 bg-white font-inter">
-              {activeTab === "general" && (
+            <div className="flex-1 overflow-y-auto bg-white font-inter">
+              <TabsContent value="general" className="p-8 m-0 border-0 focus-visible:ring-0">
                 <div className="animate-fade-in space-y-8">
                   <div className="bg-blue-50 border border-blue-100 rounded-brand p-4 flex gap-4">
                     <i className="ph-fill ph-info text-blue-500 text-2xl shrink-0"></i>
@@ -103,9 +111,9 @@ export default function UserGuideModal({ open, onClose }) {
                     </div>
                   </section>
                 </div>
-              )}
+              </TabsContent>
 
-              {activeTab === "staff" && (
+              <TabsContent value="staff" className="p-8 m-0 border-0 focus-visible:ring-0">
                 <div className="animate-fade-in space-y-8">
                   <section className="space-y-4">
                     <h3 className="text-lg font-black text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-2">
@@ -165,9 +173,9 @@ export default function UserGuideModal({ open, onClose }) {
                     </div>
                   </section>
                 </div>
-              )}
+              </TabsContent>
 
-              {activeTab === "admin" && (
+              <TabsContent value="admin" className="p-8 m-0 border-0 focus-visible:ring-0">
                 <div className="animate-fade-in space-y-8">
                   <section className="space-y-4">
                     <h3 className="text-lg font-black text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-2">
@@ -208,7 +216,7 @@ export default function UserGuideModal({ open, onClose }) {
                     </div>
                   </section>
                 </div>
-              )}
+              </TabsContent>
             </div>
 
             <div className="p-4 bg-gray-50 border-t border-gray-100 flex justify-end shrink-0 gap-3">
@@ -227,7 +235,7 @@ export default function UserGuideModal({ open, onClose }) {
               </Button>
             </div>
           </div>
-        </div>
+        </Tabs>
       </DialogContent>
     </Dialog>
   );

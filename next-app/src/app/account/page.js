@@ -8,6 +8,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/components/ui/tabs";
+import {
   Card,
   CardContent,
   CardHeader,
@@ -312,7 +318,13 @@ export default function AccountPage() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
+        <Tabs
+          defaultValue="profile"
+          value={activeTab}
+          onValueChange={setActiveTab}
+          orientation="vertical"
+          className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start"
+        >
           {/* Sidebar Navigation */}
           <aside className="space-y-6 shrink-0">
             <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden">
@@ -330,40 +342,30 @@ export default function AccountPage() {
                 </div>
               </div>
 
-              <nav className="p-2 flex flex-col gap-1">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("profile")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-brand text-sm font-bold transition-all ${
-                    activeTab === "profile"
-                      ? "bg-pup-maroon text-white shadow-md shadow-red-900/10"
-                      : "text-gray-600 hover:bg-red-50 hover:text-pup-maroon"
-                  }`}
+              <TabsList variant="ghost" className="p-2 w-full bg-transparent border-0">
+                <TabsTrigger
+                  value="profile"
+                  className="flex items-center gap-3 px-4 py-3 rounded-brand text-sm font-bold transition-all data-active:bg-red-50 data-active:text-pup-maroon text-gray-600 hover:bg-gray-100 hover:text-gray-900 border-0"
                 >
                   <i className="ph-bold ph-user-circle text-lg"></i>
                   Profile Details
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("security")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-brand text-sm font-bold transition-all ${
-                    activeTab === "security"
-                      ? "bg-pup-maroon text-white shadow-md shadow-red-900/10"
-                      : "text-gray-600 hover:bg-red-50 hover:text-pup-maroon"
-                  }`}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="security"
+                  className="flex items-center gap-3 px-4 py-3 rounded-brand text-sm font-bold transition-all data-active:bg-red-50 data-active:text-pup-maroon text-gray-600 hover:bg-gray-100 hover:text-gray-900 border-0"
                 >
                   <i className="ph-bold ph-shield-check text-lg"></i>
                   Security
-                </button>
+                </TabsTrigger>
                 <button
                   type="button"
                   onClick={() => router.push("/account/activity")}
-                  className="flex items-center gap-3 px-4 py-3 rounded-brand text-sm font-bold transition-all text-gray-600 hover:bg-red-50 hover:text-pup-maroon"
+                  className="flex items-center gap-3 px-4 py-3 rounded-brand text-sm font-bold transition-all text-gray-600 hover:bg-gray-100 hover:text-gray-900 text-left w-full"
                 >
                   <i className="ph-bold ph-clock-counter-clockwise text-lg"></i>
                   Audit Activity
                 </button>
-              </nav>
+              </TabsList>
             </div>
 
             <div className="bg-amber-50 border border-amber-200 rounded-brand p-4">
@@ -380,7 +382,7 @@ export default function AccountPage() {
 
           {/* Content Area */}
           <div className="min-w-0">
-            {activeTab === "profile" ? (
+            <TabsContent value="profile" className="m-0 border-0 focus-visible:ring-0">
               <Card className="rounded-brand border-gray-200 shadow-sm overflow-hidden animate-fade-in">
                 <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
                   <div className="flex items-center gap-4">
@@ -470,9 +472,9 @@ export default function AccountPage() {
                   </form>
                 </CardContent>
               </Card>
-            ) : null}
+            </TabsContent>
 
-            {activeTab === "security" ? (
+            <TabsContent value="security" className="m-0 border-0 focus-visible:ring-0">
               <div className="space-y-6">
                 <Card className="rounded-brand border-gray-200 shadow-sm overflow-hidden animate-fade-in">
                   <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
@@ -640,9 +642,9 @@ export default function AccountPage() {
                   </CardContent>
                 </Card>
               </div>
-            ) : null}
+            </TabsContent>
           </div>
-        </div>
+        </Tabs>
       </main>
     </div>
   );

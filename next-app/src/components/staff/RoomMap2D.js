@@ -28,17 +28,26 @@ export default function RoomMap2D({
         }}
       />
 
-      {/* Orientation marker for staff navigation */}
+      {/* Orientation marker (Door Symbol) for staff navigation */}
       <div
-        className="absolute z-[2] rounded-sm border border-gray-300 bg-white/90 px-2 py-1 text-[10px] font-black tracking-wide text-gray-700 shadow-sm"
+        className="absolute z-[2] group"
         style={{
           left: `${(roomDoor?.x ?? 0.05) * 100}%`,
           top: `${(roomDoor?.y ?? 0.96) * 100}%`,
           transform: "translate(-50%, -50%)",
         }}
       >
-        <i className="ph-bold ph-door mr-1 text-pup-maroon"></i>
-        DOOR
+        <div className="relative w-10 h-10 flex items-center justify-center">
+          {/* Floor plan door quadrant symbol */}
+          <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gray-400 rounded-full group-hover:bg-gray-600 transition-colors" />
+          <div className="absolute bottom-0 left-0 w-[2px] h-full bg-pup-maroon rounded-full transition-all" />
+          <div className="absolute inset-0 border-t-2 border-r-2 border-pup-maroon/20 rounded-tr-full group-hover:border-pup-maroon/40 transition-colors" />
+          
+          {/* Subtle Label */}
+          <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg z-10">
+            Entrance / Door
+          </div>
+        </div>
       </div>
 
       {cabinetRects.map((c) => {
