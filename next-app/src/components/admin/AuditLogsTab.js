@@ -6,6 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyMedia,
+} from "@/components/ui/empty";
 
 export default function AuditLogsTab({
   displayLogs,
@@ -74,9 +81,21 @@ export default function AuditLogsTab({
         <div className="p-4 bg-gray-50/50 flex-none border-b border-gray-200">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-end">
             <div className="lg:col-span-1">
-              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                Search Audit Logs
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-gray-700 uppercase">
+                  Search Audit Logs
+                </label>
+                {searchQuery !== "" && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSearchQuery("")}
+                    className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
+                  >
+                    CLEAR ALL
+                  </Button>
+                )}
+              </div>
               <div className="relative">
                 <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                 <Input
@@ -116,7 +135,7 @@ export default function AuditLogsTab({
                   className="h-9 px-4 min-w-32 font-bold text-sm bg-pup-maroon text-white hover:bg-red-900 border border-pup-maroon shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <i className="ph-bold ph-download-simple text-sm mr-1.5"></i>
-                  Export CSV
+                  EXPORT CSV
                 </Button>
               </div>
             </div>
@@ -136,13 +155,17 @@ export default function AuditLogsTab({
               <Skeleton className="h-32 rounded-brand" />
             </div>
           ) : error ? (
-            <div className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500">
-              <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
-              </div>
-              <p className="text-lg font-bold text-gray-900">Could not load report</p>
-              <p className="text-sm font-medium text-gray-600 mt-1 max-w-md">{error}</p>
-            </div>
+            <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+              <EmptyHeader className="flex flex-col items-center gap-0">
+                <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
+                </EmptyMedia>
+                <EmptyTitle className="text-lg font-bold text-gray-900">Could not load report</EmptyTitle>
+                <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                  {error}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <>
               <div className={`flex-1 overflow-auto rounded-brand ${displayLogs.length === 0 ? '' : 'border border-gray-200'}`}>
@@ -160,17 +183,17 @@ export default function AuditLogsTab({
                   {displayLogs.length === 0 ? (
                     <tr className="border-0 hover:bg-transparent">
                       <td colSpan={5} className="p-0 border-0">
-                        <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
-                          <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                            <i className="ph-duotone ph-list-magnifying-glass text-3xl text-pup-maroon"></i>
-                          </div>
-                          <div className="text-lg font-bold text-gray-900">
-                            No audit logs yet
-                          </div>
-                          <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                            We couldn&apos;t find any audit logs matching your search criteria.
-                          </div>
-                        </div>
+                        <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+                          <EmptyHeader className="flex flex-col items-center gap-0">
+                            <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                              <i className="ph-duotone ph-list-magnifying-glass text-3xl text-pup-maroon"></i>
+                            </EmptyMedia>
+                            <EmptyTitle className="text-lg font-bold text-gray-900">No audit logs yet</EmptyTitle>
+                            <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                              We couldn&apos;t find any audit logs matching your search criteria.
+                            </EmptyDescription>
+                          </EmptyHeader>
+                        </Empty>
                       </td>
                     </tr>
                   ) : (
@@ -262,7 +285,7 @@ export default function AuditLogsTab({
                     onClick={() => setLogPage((p) => p - 1)}
                     className="h-8 text-xs font-bold text-gray-600"
                   >
-                    <i className="ph-bold ph-caret-left"></i> Previous
+                    <i className="ph-bold ph-caret-left"></i> PREVIOUS
                   </Button>
                   <div className="px-3 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-md h-8 flex items-center justify-center min-w-12 shadow-sm">
                     {logPage} / {Math.max(1, Math.ceil(logTotal / itemsPerPage))}
@@ -274,7 +297,7 @@ export default function AuditLogsTab({
                     onClick={() => setLogPage((p) => p + 1)}
                     className="h-8 text-xs font-bold text-gray-600"
                   >
-                    Next <i className="ph-bold ph-caret-right"></i>
+                    NEXT <i className="ph-bold ph-caret-right"></i>
                   </Button>
                 </div>
               </div>

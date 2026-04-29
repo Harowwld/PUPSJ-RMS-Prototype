@@ -1,6 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +13,13 @@ import {
 import { CardContent } from "../ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPHDateTime } from "@/lib/timeFormat";
+import {
+  Empty,
+  EmptyHeader,
+  EmptyTitle,
+  EmptyDescription,
+  EmptyMedia,
+} from "@/components/ui/empty";
 
 export default function DocumentsTab({
   docsForm,
@@ -60,11 +69,33 @@ export default function DocumentsTab({
         <div className="p-4 bg-gray-50/50 flex-none border-b border-gray-200">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
             <div className="lg:col-span-1">
-              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                Student No
-              </label>
-              <input
-                className="w-full h-10 font-mono bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-gray-700 uppercase">
+                  Student No
+                </label>
+                {(docsForm.studentNo !== "" ||
+                  docsForm.studentName !== "" ||
+                  docsForm.docType !== "") && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      const cleared = {
+                        studentNo: "",
+                        studentName: "",
+                        docType: "",
+                      };
+                      setDocsForm(cleared);
+                      refreshDocuments(cleared);
+                    }}
+                    className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
+                  >
+                    CLEAR ALL
+                  </Button>
+                )}
+              </div>
+              <Input
+                className="h-10 font-mono bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={docsForm.studentNo}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -83,8 +114,8 @@ export default function DocumentsTab({
               <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
                 Student Name
               </label>
-              <input
-                className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+              <Input
+                className="h-10 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={docsForm.studentName}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -134,27 +165,63 @@ export default function DocumentsTab({
 
         <CardContent className="p-6 flex-1 flex flex-col min-h-0">
           {docsLoading ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <Skeleton key={i} className="h-20 rounded-brand" />
-                ))}
+            <div className="flex-1 flex flex-col space-y-4">
+              <div className="bg-gray-50/80 border border-gray-200 rounded-brand p-5 flex items-center justify-between shadow-xs">
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-48" />
+                  <Skeleton className="h-3 w-32" />
+                </div>
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-6 w-12" />
+                  <Skeleton className="h-2.5 w-32 sm:w-48 rounded-full" />
+                </div>
               </div>
-              <Skeleton className="h-4 w-full max-w-md rounded-brand" />
-              <Skeleton className="h-32 rounded-brand" />
+              
+              <div className="flex-1 border border-gray-200 rounded-brand overflow-hidden flex flex-col">
+                <Skeleton className="h-10 w-full rounded-none" />
+                <div className="divide-y divide-gray-100 flex-1">
+                  {[1, 2, 3, 4, 5, 6].map((i) => (
+                    <div key={i} className="p-4 flex items-center justify-between">
+                      <div className="flex-1 grid grid-cols-1 lg:grid-cols-5 gap-4">
+                        <div className="space-y-2">
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-3 w-32" />
+                        </div>
+                        <div className="hidden lg:block space-y-2">
+                          <Skeleton className="h-4 w-20" />
+                        </div>
+                        <div className="hidden lg:block">
+                          <Skeleton className="h-6 w-20 rounded-full" />
+                        </div>
+                        <div className="hidden lg:block space-y-2">
+                          <Skeleton className="h-3 w-24" />
+                          <Skeleton className="h-3 w-16" />
+                        </div>
+                        <div className="hidden lg:block space-y-2">
+                          <Skeleton className="h-4 w-24" />
+                        </div>
+                      </div>
+                      <div className="flex gap-2 ml-4">
+                        <Skeleton className="h-9 w-16 rounded-brand" />
+                        <Skeleton className="h-9 w-16 rounded-brand" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           ) : docsError ? (
-            <div className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500">
-              <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
-              </div>
-              <p className="text-lg font-bold text-gray-900">
-                Could not load report
-              </p>
-              <p className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                {docsError}
-              </p>
-            </div>
+            <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+              <EmptyHeader className="flex flex-col items-center gap-0">
+                <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
+                </EmptyMedia>
+                <EmptyTitle className="text-lg font-bold text-gray-900">Could not load report</EmptyTitle>
+                <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                  {docsError}
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
           ) : (
             <>
               {isSingleStudentView && (
@@ -199,35 +266,35 @@ export default function DocumentsTab({
                     ) ? (
                       <tr className="border-0 hover:bg-transparent">
                         <td colSpan={7} className="p-0 border-0">
-                          <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
-                            <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                              <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon"></i>
-                            </div>
-                            <div className="text-lg font-bold text-gray-900">
-                              Search Documents
-                            </div>
-                            <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                              Enter a student number, name, or select a document
-                              type to find related records.
-                            </div>
-                          </div>
+                          <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+                            <EmptyHeader className="flex flex-col items-center gap-0">
+                              <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                                <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon"></i>
+                              </EmptyMedia>
+                              <EmptyTitle className="text-lg font-bold text-gray-900">Search Documents</EmptyTitle>
+                              <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                                Enter a student number, name, or select a document
+                                type to find related records.
+                              </EmptyDescription>
+                            </EmptyHeader>
+                          </Empty>
                         </td>
                       </tr>
                     ) : docsRows.length === 0 ? (
                       <tr className="border-0 hover:bg-transparent">
                         <td colSpan={7} className="p-0 border-0">
-                          <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
-                            <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                              <i className="ph-duotone ph-warning-circle text-3xl text-red-600"></i>
-                            </div>
-                            <div className="text-lg font-bold text-gray-900">
-                              No Results Found
-                            </div>
-                            <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                              We couldn&apos;t find any documents matching your
-                              search criteria.
-                            </div>
-                          </div>
+                          <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+                            <EmptyHeader className="flex flex-col items-center gap-0">
+                              <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                                <i className="ph-duotone ph-warning-circle text-3xl text-red-600"></i>
+                              </EmptyMedia>
+                              <EmptyTitle className="text-lg font-bold text-gray-900">No Results Found</EmptyTitle>
+                              <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                                We couldn&apos;t find any documents matching your
+                                search criteria.
+                              </EmptyDescription>
+                            </EmptyHeader>
+                          </Empty>
                         </td>
                       </tr>
                     ) : (
@@ -291,9 +358,9 @@ export default function DocumentsTab({
                             <div className="flex justify-end flex-wrap gap-2">
                               {r.doc ? (
                                 <>
-                                  <button
-                                    type="button"
-                                    className="px-3 h-10 inline-flex items-center rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-xs hover:border-pup-maroon"
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
                                     onClick={() =>
                                       onPreviewDocument?.(
                                         r.doc_type,
@@ -302,11 +369,12 @@ export default function DocumentsTab({
                                         r.doc.id,
                                       )
                                     }
+                                    className="px-3 font-bold text-xs border-gray-300 text-gray-700 hover:border-pup-maroon"
                                   >
-                                    View
-                                  </button>
-                                  <button
-                                    type="button"
+                                    VIEW
+                                  </Button>
+                                  <Button
+                                    size="sm"
                                     onClick={async () => {
                                       if (!r.doc?.id) return;
                                       setUpdateTargetId(r.doc.id);
@@ -322,10 +390,10 @@ export default function DocumentsTab({
                                       setUpdateFile(null);
                                       setUpdatePromptOpen(true);
                                     }}
-                                    className="px-3 h-10 rounded-brand bg-pup-maroon text-white font-bold text-xs hover:bg-red-900"
+                                    className="px-3 bg-pup-maroon text-white font-bold text-xs hover:bg-red-900"
                                   >
-                                    Update
-                                  </button>
+                                    UPDATE
+                                  </Button>
                                 </>
                               ) : (
                                 <span className="text-xs font-medium text-gray-400">
@@ -437,8 +505,8 @@ export default function DocumentsTab({
               <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
                 Student Number
               </label>
-              <input
-                className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+              <Input
+                className="bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={updateStudentNo}
                 onChange={(e) => setUpdateStudentNo(e.target.value)}
               />
@@ -447,8 +515,8 @@ export default function DocumentsTab({
               <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
                 Student Name
               </label>
-              <input
-                className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+              <Input
+                className="bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
                 value={updateStudentName}
                 onChange={(e) => setUpdateStudentName(e.target.value)}
               />
@@ -472,18 +540,19 @@ export default function DocumentsTab({
           </div>
 
           <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={() => {
                 setUpdatePromptOpen(false);
                 setUpdateTargetId(null);
                 setUpdateFile(null);
               }}
-              className="px-4 h-10 rounded-brand bg-white border border-gray-300 text-gray-700 font-bold text-sm hover:border-pup-maroon"
+              className="px-4 font-bold text-sm border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
             >
-              Cancel
-            </button>
-            <button
+              CANCEL
+            </Button>
+            <Button
               type="button"
               onClick={async () => {
                 if (!updateTargetId) return;
@@ -503,10 +572,10 @@ export default function DocumentsTab({
                 }
               }}
               disabled={updateSaving}
-              className="px-4 h-10 rounded-brand bg-pup-maroon text-white font-bold text-sm hover:bg-red-900 disabled:opacity-60 disabled:cursor-not-allowed"
+              className="px-4 bg-pup-maroon text-white font-bold text-sm hover:bg-red-900 disabled:opacity-60 disabled:cursor-not-allowed rounded-brand"
             >
-              {updateSaving ? "Saving..." : "Save Changes"}
-            </button>
+              {updateSaving ? "SAVING..." : "SAVE CHANGES"}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>

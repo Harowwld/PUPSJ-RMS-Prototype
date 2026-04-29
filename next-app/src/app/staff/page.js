@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Sidebar from "@/components/shared/Sidebar";
@@ -14,6 +14,12 @@ import NotificationsTab from "@/components/staff/NotificationsTab";
 import DocumentRequestsTab from "@/components/staff/DocumentRequestsTab";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import OCRPromptModal from "@/components/staff/OCRPromptModal";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
 import { scanFileForSuggestion, warmupOcrWorker } from "@/lib/ocrClient";
 import { findMatchingDocument } from "@/lib/docAvailability";
@@ -39,9 +45,16 @@ function getStudentNoYear(studentNo) {
 
 function StaffPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const coreDataLoadedRef = useRef(false);
   const docsLoadedRef = useRef(false);
-  const [view, setView] = useState("requests");
+
+  const validViews = ["requests", "upload", "documents", "notifications", "search"];
+  const initialView = validViews.includes(searchParams?.get("view"))
+    ? searchParams.get("view")
+    : "requests";
+
+  const [view, setView] = useState(initialView);
   const [authUser, setAuthUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notificationsUnread, setNotificationsUnread] = useState(0);
@@ -587,13 +600,13 @@ function StaffPageContent() {
     }));
   }, []);
 
-  const handleFileSelect = async (file) => {
+  const handleFileSelect = async (file, skipOcr = false) => {
     if (!file) return;
     setUploadedFile(file);
     clearUploadFieldError("pdfFile");
     setOcrError("");
     setOcrSuggestion(null);
-    if (uploadMode === "pdf") {
+    if (uploadMode === "pdf" && !skipOcr) {
       setOcrLoading(true);
       try {
         const suggestion = await scanFileForSuggestion({
@@ -660,6 +673,7 @@ function StaffPageContent() {
           setOcrPromptOpen(false);
         }
       } catch (err) {
+        setOcrLoading(false);
         const message =
           err?.message || "Automatic detection failed. Please fill manually.";
         setOcrError(message);
@@ -917,345 +931,364 @@ function StaffPageContent() {
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50 font-inter">
       <Header authUser={authUser} onLogout={handleLogout} />
 
-      <div className="flex-1 flex overflow-hidden w-full">
+      <Tabs
+        value={view}
+        onValueChange={setView}
+        orientation="vertical"
+        className="flex-1 flex overflow-hidden w-full gap-0"
+      >
         <Sidebar items={sidebarItems} activeKey={view} onSelect={setView} />
 
         <main className="flex-1 overflow-hidden p-4 relative w-full min-w-0">
-        {view === "search" && (
-          <RecordsArchiveTab
-            quickQuery={quickQuery}
-            setQuickQuery={setQuickQuery}
-            isQuickSearching={isQuickSearching}
-            quickResults={quickResults}
-            onLocateStudent={locateStudent}
-            breadcrumbs={breadcrumbs}
-            currentLevel={currentLevel}
-            onBreadcrumbClick={(b) => {
-              if (b.level === "years") {
-                setCurrentLevel("years");
-                setSelectedYear(null);
-                setActiveStudent(null);
-                setCurrentLocatorLevel("rooms");
-              } else if (b.level === "students") {
-                setCurrentLevel("students");
+          <TabsContent value="search" className="h-full m-0 border-0 focus-visible:ring-0">
+            <RecordsArchiveTab
+              loading={!storageLayout}
+              quickQuery={quickQuery}
+              setQuickQuery={setQuickQuery}
+              isQuickSearching={isQuickSearching}
+              quickResults={quickResults}
+              onLocateStudent={locateStudent}
+              breadcrumbs={breadcrumbs}
+              currentLevel={currentLevel}
+              onBreadcrumbClick={(b) => {
+                if (b.level === "years") {
+                  setCurrentLevel("years");
+                  setSelectedYear(null);
+                  setActiveStudent(null);
+                  setCurrentLocatorLevel("rooms");
+                } else if (b.level === "students") {
+                  setCurrentLevel("students");
+                }
+              }}
+              students={students}
+              explorerItems={explorerItems}
+              onSwitchView={setView}
+              locatorModel={locatorModel}
+              selectedRoom={selectedRoom}
+              setSelectedRoom={setSelectedRoom}
+              setSelectedCabinet={setSelectedCabinet}
+              setCurrentLocatorLevel={setCurrentLocatorLevel}
+              selectedCabinet={selectedCabinet}
+              currentLocatorLevel={currentLocatorLevel}
+              activeStudent={activeStudent}
+              activeStudentDocs={activeStudentDocs}
+              onPreviewDocument={(docType, name, no, id) => {
+                setPreview({
+                  docType,
+                  studentName: name,
+                  studentNo: no,
+                  docId: id,
+                  refId: `DOC-${Date.now()}`,
+                });
+                setPreviewOpen(true);
+              }}
+            />
+          </TabsContent>
+
+          <TabsContent value="upload" className="h-full m-0 border-0 focus-visible:ring-0">
+            <ScanUploadTab
+              loading={!storageLayout || docTypes.length === 0}
+              uploadMode={uploadMode}
+              uploadStudentIsExisting={uploadStudentIsExisting}
+              setUploadStudentIsExisting={setUploadStudentIsExisting}
+              setUploadMode={(m) => {
+                setUploadMode(m);
+                setUploadError("");
+                setCsvError("");
+              }}
+              dropActive={dropActive}
+              setDropActive={setDropActive}
+              uploadedFile={uploadedFile}
+              fileInputRef={fileInputRef}
+              onFileSelect={handleFileSelect}
+              onClearFile={() => {
+                setUploadedFile(null);
+                setOcrSuggestion(null);
+                setUploadStudentIsExisting(false);
+                setUploadFieldErrors({});
+              }}
+              ocrLoading={ocrLoading}
+              ocrError={ocrError}
+              csvFile={csvFile}
+              csvRows={csvRows}
+              csvSelected={csvSelected}
+              toggleCsvSelectAll={(c) => {
+                const n = {};
+                if (c) csvRows.forEach((r) => (n[r.index] = true));
+                setCsvSelected(n);
+              }}
+              toggleCsvRowSelected={(i) =>
+                setCsvSelected((p) => ({ ...p, [i]: !p[i] }))
               }
-            }}
-            students={students}
-            explorerItems={explorerItems}
-            onSwitchView={setView}
-            locatorModel={locatorModel}
-            selectedRoom={selectedRoom}
-            setSelectedRoom={setSelectedRoom}
-            setSelectedCabinet={setSelectedCabinet}
-            setCurrentLocatorLevel={setCurrentLocatorLevel}
-            selectedCabinet={selectedCabinet}
-            currentLocatorLevel={currentLocatorLevel}
-            activeStudent={activeStudent}
-            activeStudentDocs={activeStudentDocs}
-            onPreviewDocument={(docType, name, no, id) => {
-              setPreview({
-                docType,
-                studentName: name,
-                studentNo: no,
-                docId: id,
-                refId: `DOC-${Date.now()}`,
-              });
-              setPreviewOpen(true);
-            }}
-          />
-        )}
-        {view === "upload" && (
-          <ScanUploadTab
-            uploadMode={uploadMode}
-            uploadStudentIsExisting={uploadStudentIsExisting}
-            setUploadStudentIsExisting={setUploadStudentIsExisting}
-            setUploadMode={(m) => {
-              setUploadMode(m);
-              setUploadError("");
-              setCsvError("");
-            }}
-            dropActive={dropActive}
-            setDropActive={setDropActive}
-            uploadedFile={uploadedFile}
-            fileInputRef={fileInputRef}
-            onFileSelect={handleFileSelect}
-            onClearFile={() => {
-              setUploadedFile(null);
-              setOcrSuggestion(null);
-              setUploadStudentIsExisting(false);
-              setUploadFieldErrors({});
-            }}
-            ocrLoading={ocrLoading}
-            ocrError={ocrError}
-            csvFile={csvFile}
-            csvRows={csvRows}
-            csvSelected={csvSelected}
-            toggleCsvSelectAll={(c) => {
-              const n = {};
-              if (c) csvRows.forEach((r) => (n[r.index] = true));
-              setCsvSelected(n);
-            }}
-            toggleCsvRowSelected={(i) =>
-              setCsvSelected((p) => ({ ...p, [i]: !p[i] }))
-            }
-            setCsvRowField={(i, f, v) => {
-              const n = [...csvRows];
-              const r = n.find((x) => x.index === i);
-              if (r) r.student[f] = v;
-              setCsvRows(n);
-            }}
-            courses={courses}
-            docTypes={docTypes}
-            processSubmission={processSubmission}
-            uploadFieldErrors={uploadFieldErrors}
-            clearUploadFieldError={clearUploadFieldError}
-            clearAllUploadFieldErrors={clearAllUploadFieldErrors}
-            uploadError={uploadError}
-            newRec={newRec}
-            setNewRec={setNewRec}
-            newRecStudentNoHint={newRecStudentNoHint}
-            setNewRecStudentNoTouched={setNewRecStudentNoTouched}
-            applyStudentNoMask={applyStudentNoMask}
-            newStudentNoInputRef={newStudentNoInputRef}
-            sysSections={availableSectionsForNewRecord}
-            storageLayout={storageLayout}
-            csvInputRef={csvInputRef}
-            handleCsvFileSelect={(f) => {
-              if (!f) return;
-              setCsvFile(f);
-              setCsvError("");
-              setCsvLoading(true);
-              const r = new FileReader();
-              r.onload = (e) => {
-                const lines = e.target.result.split(/\r?\n/);
-                const headers = lines[0]
-                  .split(",")
-                  .map((h) => h.trim().toLowerCase().replace(/\s+/g, ""));
-                const rows = lines
-                  .slice(1)
-                  .filter((l) => l.trim())
-                  .map((l, i) => {
-                    const vals = l.split(",");
-                    const row = {};
-                    headers.forEach((h, idx) => (row[h] = vals[idx]?.trim()));
-                    return {
-                      index: i + 1,
-                      student: {
-                        studentNo: row.studentno || row.student_no || "",
-                        name: row.name || "",
-                        courseCode: (row.coursecode || row.course || "").toUpperCase(),
-                        yearLevel:
-                          parseInt(row.academicyear || row.yearlevel || row.year) || 1,
-                        section: row.section,
-                        room: parseInt(row.room) || 1,
-                        cabinet: row.cabinet || "A",
-                        drawer: parseInt(row.drawer) || 1,
-                      },
-                      error: "",
-                    };
-                  });
-                setCsvRows(rows);
-                const defaultSelection = {};
-                rows.forEach((row) => {
-                  defaultSelection[row.index] = true;
-                });
-                setCsvSelected(defaultSelection);
-                setCsvLoading(false);
-              };
-              r.readAsText(f);
-            }}
-            csvDropActive={csvDropActive}
-            setCsvDropActive={setCsvDropActive}
-            csvError={csvError}
-            csvBulkRoom={csvBulkRoom}
-            setCsvBulkRoom={setCsvBulkRoom}
-            csvBulkCabinet={csvBulkCabinet}
-            setCsvBulkCabinet={setCsvBulkCabinet}
-            csvBulkDrawer={csvBulkDrawer}
-            setCsvBulkDrawer={setCsvBulkDrawer}
-            applyCsvBulkLocation={() => {
-              const n = [...csvRows];
-              n.forEach((r) => {
-                if (csvSelected[r.index]) {
-                  if (csvBulkRoom) r.student.room = parseInt(csvBulkRoom);
-                  if (csvBulkCabinet) r.student.cabinet = csvBulkCabinet;
-                  if (csvBulkDrawer) r.student.drawer = parseInt(csvBulkDrawer);
-                }
-              });
-              setCsvRows(n);
-            }}
-            setCsvSelected={setCsvSelected}
-            importCsvStudents={async () => {
-              const targets = csvRows.filter((r) => csvSelected[r.index]);
-              if (targets.length === 0) {
-                setCsvError("No selected rows to import. Select at least one row.");
-                showToast({ title: "No Rows Selected", description: "Select at least one row from the CSV to import." }, true);
-                return;
-              }
-              setCsvLoading(true);
-              try {
-                const rs = await fetch("/api/students/batch", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    rows: targets.map((t) => t.student),
-                  }),
-                });
-                const json = await rs.json().catch(() => null);
-                if (!rs.ok || !json?.ok || !Array.isArray(json?.data)) {
-                  throw new Error(json?.error || "Batch import failed");
-                }
-
-                const res = json.data;
-                setCsvResults(res);
-
-                const byIndex = new Map(
-                  res.map((item, idx) => [targets[idx]?.index, item])
-                );
-                const nextRows = csvRows.map((row) => {
-                  const result = byIndex.get(row.index);
-                  if (!result) return row;
-                  return {
-                    ...row,
-                    error: result.ok ? "" : String(result.error || "Import failed"),
-                  };
-                });
-                setCsvRows(nextRows);
-
-                const createdRows = res
-                  .filter((r) => r.ok && r.data)
-                  .map((r) => normalizeStudentRow(r.data));
-                if (createdRows.length > 0) {
-                  setStudents((prev) => {
-                    const map = new Map(prev.map((s) => [s.studentNo, s]));
-                    createdRows.forEach((row) => {
-                      const key = row.studentNo;
-                      map.set(key, row);
-                    });
-                    return Array.from(map.values());
-                  });
-                }
-
-                const successCount = res.filter((r) => r.ok).length;
-                const failCount = res.length - successCount;
-                if (failCount > 0) {
-                  showToast(
-                    { title: "Batch Import Partial", description: `${successCount} succeeded, ${failCount} failed out of ${res.length} records.` },
-                    true
-                  );
-                } else {
-                  showToast({ title: "Batch Import Complete", description: `${res.length} student records have been processed.` });
-                  // Clear CSV preview after fully successful import.
+              setCsvRowField={(i, f, v) => {
+                const n = [...csvRows];
+                const r = n.find((x) => x.index === i);
+                if (r) r.student[f] = v;
+                setCsvRows(n);
+              }}
+              courses={courses}
+              docTypes={docTypes}
+              processSubmission={processSubmission}
+              uploadFieldErrors={uploadFieldErrors}
+              clearUploadFieldError={clearUploadFieldError}
+              clearAllUploadFieldErrors={clearAllUploadFieldErrors}
+              uploadError={uploadError}
+              newRec={newRec}
+              setNewRec={setNewRec}
+              newRecStudentNoHint={newRecStudentNoHint}
+              setNewRecStudentNoTouched={setNewRecStudentNoTouched}
+              applyStudentNoMask={applyStudentNoMask}
+              newStudentNoInputRef={newStudentNoInputRef}
+              sysSections={availableSectionsForNewRecord}
+              storageLayout={storageLayout}
+              csvInputRef={csvInputRef}
+              handleCsvFileSelect={(f) => {
+                if (!f) {
                   setCsvFile(null);
                   setCsvRows([]);
                   setCsvResults([]);
+                  setCsvError("");
+                  setCsvSelected({});
+                  if (csvInputRef.current) csvInputRef.current.value = "";
+                  return;
                 }
-
+                setCsvFile(f);
                 setCsvError("");
-                setCsvSelected({});
-                // Keep data in sync in background even after optimistic in-memory update.
-                fetchData();
-              } catch (err) {
-                setCsvError(err?.message || "Batch import failed");
-                showToast({ title: "Import Failed", description: err?.message || "Batch import encountered an error." }, true);
-              } finally {
-                setCsvLoading(false);
-              }
-            }}
-            csvLoading={csvLoading}
-            csvResults={csvResults}
-            students={students}
-            showToast={showToast}
-            onIngestPromoted={() => {
-              fetchAllDocs();
-              fetchData();
-            }}
-            onSelectExistingStudent={(student, ocrDocType) => {
-              applyStudentToPdfForm(student, ocrDocType || null);
-              setUploadStudentIsExisting(true);
-              clearAllUploadFieldErrors();
-              setOcrPromptOpen(false);
-            }}
-          />
-        )}
-        {view === "requests" && (
-          <DocumentRequestsTab
-            students={students}
-            docTypes={docTypes}
-            staffDocs={staffDocs}
-            onLocateOnMap={goToStorageMapFromRequest}
-            showToast={showToast}
-          />
-        )}
-        {view === "documents" && (
-          <DocumentsTab
-            docsForm={docsForm}
-            setDocsForm={setDocsForm}
-            refreshDocuments={refreshDocuments}
-            docTypes={docTypes}
-            docsLoading={docsLoading}
-            docsError={docsError}
-            docsRows={docsRows}
-            updateDoc={async (id, data) => {
-              try {
-                let r;
-                if (data?.file) {
-                  const form = new FormData();
-                  form.set("studentNo", String(data.studentNo || "").trim());
-                  form.set("studentName", String(data.studentName || "").trim());
-                  form.set("docType", String(data.docType || "").trim());
-                  form.set("file", data.file);
-                  r = await fetch(`/api/documents/${id}`, {
-                    method: "PATCH",
-                    body: form,
+                setCsvLoading(true);
+                const r = new FileReader();
+                r.onload = (e) => {
+                  const lines = e.target.result.split(/\r?\n/);
+                  const headers = lines[0]
+                    .split(",")
+                    .map((h) => h.trim().toLowerCase().replace(/\s+/g, ""));
+                  const rows = lines
+                    .slice(1)
+                    .filter((l) => l.trim())
+                    .map((l, i) => {
+                      const vals = l.split(",");
+                      const row = {};
+                      headers.forEach((h, idx) => (row[h] = vals[idx]?.trim()));
+                      return {
+                        index: i + 1,
+                        student: {
+                          studentNo: row.studentno || row.student_no || "",
+                          name: row.name || "",
+                          courseCode: (row.coursecode || row.course || "").toUpperCase(),
+                          yearLevel:
+                            parseInt(row.academicyear || row.yearlevel || row.year) || 1,
+                          section: row.section,
+                          room: parseInt(row.room) || 1,
+                          cabinet: row.cabinet || "A",
+                          drawer: parseInt(row.drawer) || 1,
+                        },
+                        error: "",
+                      };
+                    });
+                  setCsvRows(rows);
+                  const defaultSelection = {};
+                  rows.forEach((row) => {
+                    defaultSelection[row.index] = true;
                   });
-                } else {
-                  r = await fetch(`/api/documents/${id}`, {
-                    method: "PATCH",
+                  setCsvSelected(defaultSelection);
+                  setCsvLoading(false);
+                };
+                r.readAsText(f);
+              }}
+              csvDropActive={csvDropActive}
+              setCsvDropActive={setCsvDropActive}
+              csvError={csvError}
+              csvBulkRoom={csvBulkRoom}
+              setCsvBulkRoom={setCsvBulkRoom}
+              csvBulkCabinet={csvBulkCabinet}
+              setCsvBulkCabinet={setCsvBulkCabinet}
+              csvBulkDrawer={csvBulkDrawer}
+              setCsvBulkDrawer={setCsvBulkDrawer}
+              applyCsvBulkLocation={() => {
+                const n = [...csvRows];
+                n.forEach((r) => {
+                  if (csvSelected[r.index]) {
+                    if (csvBulkRoom) r.student.room = parseInt(csvBulkRoom);
+                    if (csvBulkCabinet) r.student.cabinet = csvBulkCabinet;
+                    if (csvBulkDrawer) r.student.drawer = parseInt(csvBulkDrawer);
+                  }
+                });
+                setCsvRows(n);
+              }}
+              setCsvSelected={setCsvSelected}
+              importCsvStudents={async () => {
+                const targets = csvRows.filter((r) => csvSelected[r.index]);
+                if (targets.length === 0) {
+                  setCsvError("No selected rows to import. Select at least one row.");
+                  showToast({ title: "No Rows Selected", description: "Select at least one row from the CSV to import." }, true);
+                  return;
+                }
+                setCsvLoading(true);
+                try {
+                  const rs = await fetch("/api/students/batch", {
+                    method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify(data),
+                    body: JSON.stringify({
+                      rows: targets.map((t) => t.student),
+                    }),
                   });
+                  const json = await rs.json().catch(() => null);
+                  if (!rs.ok || !json?.ok || !Array.isArray(json?.data)) {
+                    throw new Error(json?.error || "Batch import failed");
+                  }
+
+                  const res = json.data;
+                  setCsvResults(res);
+
+                  const byIndex = new Map(
+                    res.map((item, idx) => [targets[idx]?.index, item])
+                  );
+                  const nextRows = csvRows.map((row) => {
+                    const result = byIndex.get(row.index);
+                    if (!result) return row;
+                    return {
+                      ...row,
+                      error: result.ok ? "" : String(result.error || "Import failed"),
+                    };
+                  });
+                  setCsvRows(nextRows);
+
+                  const createdRows = res
+                    .filter((r) => r.ok && r.data)
+                    .map((r) => normalizeStudentRow(r.data));
+                  if (createdRows.length > 0) {
+                    setStudents((prev) => {
+                      const map = new Map(prev.map((s) => [s.studentNo, s]));
+                      createdRows.forEach((row) => {
+                        const key = row.studentNo;
+                        map.set(key, row);
+                      });
+                      return Array.from(map.values());
+                    });
+                  }
+
+                  const successCount = res.filter((r) => r.ok).length;
+                  const failCount = res.length - successCount;
+                  if (failCount > 0) {
+                    showToast(
+                      { title: "Batch Import Partial", description: `${successCount} succeeded, ${failCount} failed out of ${res.length} records.` },
+                      true
+                    );
+                  } else {
+                    showToast({ title: "Batch Import Complete", description: `${res.length} student records have been processed.` });
+                    // Clear CSV preview after fully successful import.
+                    setCsvFile(null);
+                    setCsvRows([]);
+                    setCsvResults([]);
+                  }
+
+                  setCsvError("");
+                  setCsvSelected({});
+                  // Keep data in sync in background even after optimistic in-memory update.
+                  fetchData();
+                } catch (err) {
+                  setCsvError(err?.message || "Batch import failed");
+                  showToast({ title: "Import Failed", description: err?.message || "Batch import encountered an error." }, true);
+                } finally {
+                  setCsvLoading(false);
                 }
-                const payload = await r.json().catch(() => null);
-                if (!r.ok || !payload?.ok) {
-                  throw new Error(payload?.error || "Update failed");
-                }
-                showToast({ title: "Document Updated", description: "Changes to the document have been saved." });
-                refreshDocuments(docsForm);
+              }}
+              csvLoading={csvLoading}
+              csvResults={csvResults}
+              students={students}
+              showToast={showToast}
+              onIngestPromoted={() => {
                 fetchAllDocs();
-              } catch (err) {
-                showToast({ title: "Update Failed", description: err.message }, true);
-              }
-            }}
-            onPreviewDocument={(docType, name, no, id) => {
-              setPreview({
-                docType,
-                studentName: name,
-                studentNo: no,
-                docId: id,
-                refId: `DOC-${Date.now()}`,
-              });
-              setPreviewOpen(true);
-            }}
-          />
-        )}
-        {view === "notifications" && (
-          <NotificationsTab
-            onUnreadChange={(n) => setNotificationsUnread(Number(n || 0))}
-            onPreviewDocument={(docType, name, no, id) => {
-              setPreview({
-                docType,
-                studentName: name,
-                studentNo: no,
-                docId: id,
-                refId: `DOC-${Date.now()}`,
-              });
-              setPreviewOpen(true);
-            }}
-          />
-        )}
+                fetchData();
+              }}
+              onSelectExistingStudent={(student, ocrDocType) => {
+                applyStudentToPdfForm(student, ocrDocType || null);
+                setUploadStudentIsExisting(true);
+                clearAllUploadFieldErrors();
+                setOcrPromptOpen(false);
+              }}
+            />
+          </TabsContent>
+
+          <TabsContent value="requests" className="h-full m-0 border-0 focus-visible:ring-0">
+            <DocumentRequestsTab
+              students={students}
+              docTypes={docTypes}
+              staffDocs={staffDocs}
+              onLocateOnMap={goToStorageMapFromRequest}
+              showToast={showToast}
+            />
+          </TabsContent>
+
+          <TabsContent value="documents" className="h-full m-0 border-0 focus-visible:ring-0">
+            <DocumentsTab
+              docsForm={docsForm}
+              setDocsForm={setDocsForm}
+              refreshDocuments={refreshDocuments}
+              docTypes={docTypes}
+              docsLoading={docsLoading}
+              docsError={docsError}
+              docsRows={docsRows}
+              updateDoc={async (id, data) => {
+                try {
+                  let r;
+                  if (data?.file) {
+                    const form = new FormData();
+                    form.set("studentNo", String(data.studentNo || "").trim());
+                    form.set("studentName", String(data.studentName || "").trim());
+                    form.set("docType", String(data.docType || "").trim());
+                    form.set("file", data.file);
+                    r = await fetch(`/api/documents/${id}`, {
+                      method: "PATCH",
+                      body: form,
+                    });
+                  } else {
+                    r = await fetch(`/api/documents/${id}`, {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(data),
+                    });
+                  }
+                  const payload = await r.json().catch(() => null);
+                  if (!r.ok || !payload?.ok) {
+                    throw new Error(payload?.error || "Update failed");
+                  }
+                  showToast({ title: "Document Updated", description: "Changes to the document have been saved." });
+                  refreshDocuments(docsForm);
+                  fetchAllDocs();
+                } catch (err) {
+                  showToast({ title: "Update Failed", description: err.message }, true);
+                }
+              }}
+              onPreviewDocument={(docType, name, no, id) => {
+                setPreview({
+                  docType,
+                  studentName: name,
+                  studentNo: no,
+                  docId: id,
+                  refId: `DOC-${Date.now()}`,
+                });
+                setPreviewOpen(true);
+              }}
+            />
+          </TabsContent>
+
+          <TabsContent value="notifications" className="h-full m-0 border-0 focus-visible:ring-0">
+            <NotificationsTab
+              onUnreadChange={(n) => setNotificationsUnread(Number(n || 0))}
+              onPreviewDocument={(docType, name, no, id) => {
+                setPreview({
+                  docType,
+                  studentName: name,
+                  studentNo: no,
+                  docId: id,
+                  refId: `DOC-${Date.now()}`,
+                });
+                setPreviewOpen(true);
+              }}
+            />
+          </TabsContent>
         </main>
-      </div>
+      </Tabs>
 
       <Footer />
       <PDFPreviewModal
@@ -1281,7 +1314,19 @@ function StaffPageContent() {
 export default function StaffPage() {
   return (
     <StaffGuard>
-      <StaffPageContent />
+      <Suspense
+        fallback={
+          <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4">
+            <Skeleton className="h-16 w-full rounded-brand shrink-0" />
+            <div className="flex-1 flex gap-4">
+              <Skeleton className="w-[30%] h-full rounded-brand" />
+              <Skeleton className="w-[70%] h-full rounded-brand" />
+            </div>
+          </div>
+        }
+      >
+        <StaffPageContent />
+      </Suspense>
     </StaffGuard>
   );
 }

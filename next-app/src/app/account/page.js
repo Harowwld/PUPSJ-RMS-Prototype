@@ -9,6 +9,12 @@ import { AuthGuard } from "@/components/shared/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/components/ui/tabs";
+import {
   Card,
   CardContent,
   CardHeader,
@@ -420,14 +426,20 @@ function AccountPageContent() {
               const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
               router.push(path);
             }}
-            className="h-11 px-6 font-black uppercase tracking-widest text-xs border-gray-300 hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-sm flex items-center gap-2 shrink-0 rounded-brand"
+            className="px-6 font-black uppercase tracking-widest text-xs border-gray-300 hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-sm flex items-center gap-2 shrink-0 rounded-brand"
           >
             <i className="ph-bold ph-arrow-left"></i>
             Return to Dashboard
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start">
+        <Tabs
+          defaultValue="profile"
+          value={activeTab}
+          onValueChange={setActiveTab}
+          orientation="vertical"
+          className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start"
+        >
           {/* Sidebar Navigation */}
           <aside className="space-y-6 shrink-0">
             <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden">
@@ -445,40 +457,30 @@ function AccountPageContent() {
                 </div>
               </div>
 
-              <nav className="p-2 flex flex-col gap-1">
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("profile")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-brand text-sm font-bold transition-all ${
-                    activeTab === "profile"
-                      ? "bg-pup-maroon text-white shadow-md shadow-red-900/10"
-                      : "text-gray-600 hover:bg-red-50 hover:text-pup-maroon"
-                  }`}
+              <TabsList variant="ghost" className="p-2 w-full bg-transparent border-0">
+                <TabsTrigger
+                  value="profile"
+                  className="flex items-center gap-3 px-4 py-3 rounded-brand text-sm font-bold transition-all data-active:bg-red-50 data-active:text-pup-maroon text-gray-600 hover:bg-gray-100 hover:text-gray-900 border-0"
                 >
                   <i className="ph-bold ph-user-circle text-lg"></i>
                   Profile Details
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setActiveTab("security")}
-                  className={`flex items-center gap-3 px-4 py-3 rounded-brand text-sm font-bold transition-all ${
-                    activeTab === "security"
-                      ? "bg-pup-maroon text-white shadow-md shadow-red-900/10"
-                      : "text-gray-600 hover:bg-red-50 hover:text-pup-maroon"
-                  }`}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="security"
+                  className="flex items-center gap-3 px-4 py-3 rounded-brand text-sm font-bold transition-all data-active:bg-red-50 data-active:text-pup-maroon text-gray-600 hover:bg-gray-100 hover:text-gray-900 border-0"
                 >
                   <i className="ph-bold ph-shield-check text-lg"></i>
                   Security
-                </button>
+                </TabsTrigger>
                 <button
                   type="button"
                   onClick={() => router.push("/account/activity")}
-                  className="flex items-center gap-3 px-4 py-3 rounded-brand text-sm font-bold transition-all text-gray-600 hover:bg-red-50 hover:text-pup-maroon"
+                  className="flex items-center gap-3 px-4 py-3 rounded-brand text-sm font-bold transition-all text-gray-600 hover:bg-gray-100 hover:text-gray-900 text-left w-full"
                 >
                   <i className="ph-bold ph-clock-counter-clockwise text-lg"></i>
                   Audit Activity
                 </button>
-              </nav>
+              </TabsList>
             </div>
 
             <div className="bg-amber-50 border border-amber-200 rounded-brand p-4">
@@ -495,7 +497,7 @@ function AccountPageContent() {
 
           {/* Content Area */}
           <div className="min-w-0">
-            {activeTab === "profile" ? (
+            <TabsContent value="profile" className="m-0 border-0 focus-visible:ring-0">
               <Card className="rounded-brand border-gray-200 shadow-sm overflow-hidden animate-fade-in">
                 <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
                   <div className="flex items-center gap-4">
@@ -529,8 +531,7 @@ function AccountPageContent() {
                         </label>
                         <Input
                           type="text"
-                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
-                          placeholder="Your given name"
+                          className="bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"                          placeholder="Your given name"
                           value={fname}
                           onChange={(e) => setFname(e.target.value)}
                           required
@@ -542,8 +543,7 @@ function AccountPageContent() {
                         </label>
                         <Input
                           type="text"
-                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
-                          placeholder="Your family name"
+                          className="bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"                          placeholder="Your family name"
                           value={lname}
                           onChange={(e) => setLname(e.target.value)}
                           required
@@ -559,7 +559,7 @@ function AccountPageContent() {
                         <i className="ph-bold ph-envelope-simple absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></i>
                         <Input
                           type="email"
-                          className="h-12 pl-12 bg-gray-50 border-gray-200 rounded-brand font-bold text-gray-500 cursor-not-allowed focus-visible:outline-none"
+                          className="h-11 pl-12 bg-gray-50 border-gray-200 rounded-brand font-bold text-gray-500 cursor-not-allowed focus-visible:outline-none"
                           placeholder="professional.email@pup.edu.ph"
                           value={username}
                           readOnly
@@ -574,7 +574,7 @@ function AccountPageContent() {
                       <Button
                         type="submit"
                         disabled={profileLoading}
-                        className="h-12 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+                        className="h-11 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
                       >
                         {profileLoading ? (
                           <i className="ph-bold ph-spinner animate-spin"></i>
@@ -587,9 +587,9 @@ function AccountPageContent() {
                   </form>
                 </CardContent>
               </Card>
-            ) : null}
+            </TabsContent>
 
-            {activeTab === "security" ? (
+            <TabsContent value="security" className="m-0 border-0 focus-visible:ring-0">
               <div className="space-y-6">
                 <Card className="rounded-brand border-gray-200 shadow-sm overflow-hidden animate-fade-in">
                   <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
@@ -624,7 +624,7 @@ function AccountPageContent() {
                         </label>
                         <Input
                           type="password"
-                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
+                          className="h-11 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
                           placeholder="••••••••"
                           value={pwCurrent}
                           onChange={(e) => setPwCurrent(e.target.value)}
@@ -638,7 +638,7 @@ function AccountPageContent() {
                         </label>
                         <Input
                           type="password"
-                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
+                          className="h-11 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
                           placeholder="Min. 6 alphanumeric characters"
                           value={pwNext}
                           onChange={(e) => setPwNext(e.target.value)}
@@ -652,7 +652,7 @@ function AccountPageContent() {
                         </label>
                         <Input
                           type="password"
-                          className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
+                          className="h-11 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
                           placeholder="Must match the entry above"
                           value={pwConfirm}
                           onChange={(e) => setPwConfirm(e.target.value)}
@@ -664,7 +664,7 @@ function AccountPageContent() {
                         <Button
                           type="submit"
                           disabled={pwLoading}
-                          className="h-12 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+                          className="h-11 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
                         >
                           {pwLoading ? (
                             <i className="ph-bold ph-spinner animate-spin"></i>
@@ -730,8 +730,7 @@ function AccountPageContent() {
                               </label>
                               <Input
                                 type="text"
-                                className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"
-                                placeholder={q.hasAnswer ? "Answer securely saved. Type to overwrite." : "Your answer"}
+                                className="bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900"                                placeholder={q.hasAnswer ? "Answer securely saved. Type to overwrite." : "Your answer"}
                                 value={secAnswers[q.id] || ""}
                                 onChange={(e) => setSecAnswers({ ...secAnswers, [q.id]: e.target.value })}
                               />
@@ -744,7 +743,7 @@ function AccountPageContent() {
                         <Button
                           type="submit"
                           disabled={secLoading || globalQuestions.length === 0}
-                          className="h-12 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+                          className="h-11 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
                         >
                           {secLoading ? (
                             <i className="ph-bold ph-spinner animate-spin"></i>
@@ -901,9 +900,9 @@ function AccountPageContent() {
                   </CardContent>
                 </Card>
               </div>
-            ) : null}
+            </TabsContent>
           </div>
-        </div>
+        </Tabs>
       </main>
     </div>
   );

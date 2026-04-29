@@ -18,12 +18,13 @@ async function ensureCourseSectionMapping(courseCodeRaw, sectionRaw) {
     throw new Error(`Invalid courseCode: ${courseCode}`);
   }
 
+  // Look up section by BOTH name AND course_code to avoid cross-course confusion
   const sectionRow = await dbGet(
-    "SELECT id, course_code FROM sections WHERE name = ?",
-    [section]
+    "SELECT id, course_code FROM sections WHERE name = ? AND COALESCE(course_code, '') = ?",
+    [section, courseCode]
   );
   if (!sectionRow) {
-    throw new Error(`Invalid section: ${section}`);
+    throw new Error(`Section ${section} is not defined for course ${courseCode}`);
   }
 
   const linkedCourse = String(sectionRow.course_code || "").trim().toUpperCase();

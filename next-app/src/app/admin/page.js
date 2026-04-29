@@ -31,11 +31,16 @@ import DigitalRecordsReviewTab from "@/components/admin/DigitalRecordsReviewTab"
 import SystemAnalyticsTab from "@/components/admin/SystemAnalyticsTab";
 import SLAAnalyticsTab from "@/components/admin/SLAAnalyticsTab";
 import StorageLayoutEditorTab from "@/components/admin/StorageLayoutEditorTab";
+import {
+  Tabs,
+  TabsList,
+  TabsTrigger,
+  TabsContent,
+} from "@/components/ui/tabs";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import DefaultPasswordModal from "@/components/shared/DefaultPasswordModal";
 
 function AdminPageContent() {
   const router = useRouter();
@@ -407,6 +412,13 @@ function AdminPageContent() {
       }, 0);
     }
   }, [refreshAuditLogs, refreshBackups, refreshStaff, refreshReviewRecords]);
+
+  const handleSidebarSelect = useCallback(
+    (key) => {
+      switchView(key);
+    },
+    [switchView]
+  );
 
   const reviewDocumentStatus = useCallback(
     async (id, approvalStatus, reviewNote = "") => {
@@ -841,8 +853,13 @@ function AdminPageContent() {
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50 font-inter">
       <Header authUser={authUser} onLogout={handleLogout} />
 
-      <div className="flex-1 flex overflow-hidden w-full">
-        <Sidebar items={sidebarItems} activeKey={sidebarActiveKey} onSelect={switchView} />
+      <Tabs
+        value={sidebarActiveKey}
+        onValueChange={handleSidebarSelect}
+        orientation="vertical"
+        className="flex-1 flex overflow-hidden w-full gap-0"
+      >
+        <Sidebar items={sidebarItems} activeKey={sidebarActiveKey} onSelect={handleSidebarSelect} />
 
         <main className="flex-1 overflow-hidden p-4 relative w-full min-w-0">
         {view === "directory" && (
@@ -995,12 +1012,96 @@ function AdminPageContent() {
                 setRestoreConfirmOpen(true);
                 e.target.value = "";
               }
-            }}
-            showToast={showToast}
-          />
-        )}
+              onCreateAccount={handleCreate}
+              onSwitchView={switchView}
+            />
+          </TabsContent>
+
+          <TabsContent value="logs" className="h-full m-0 border-0 focus-visible:ring-0">
+            <AuditLogsTab
+              displayLogs={auditLogs}
+              isLoading={viewLoading.logs}
+              logPage={logPage}
+              setLogPage={setLogPage}
+              logTotal={logTotal}
+              logsPerPage={logsPerPage}
+              setLogsPerPage={setLogsPerPage}
+              logSearch={logSearch}
+              setLogSearch={setLogSearch}
+            />
+          </TabsContent>
+
+          <TabsContent value="system_data" className="h-full m-0 border-0 focus-visible:ring-0">
+            <SystemConfigTab
+              showToast={showToast}
+              onLogAction={logAdminAction}
+            />
+          </TabsContent>
+
+          <TabsContent value="storage_layout" className="h-full m-0 border-0 focus-visible:ring-0">
+            <StorageLayoutEditorTab showToast={showToast} />
+          </TabsContent>
+
+          <TabsContent value="review" className="h-full m-0 border-0 focus-visible:ring-0">
+            <DigitalRecordsReviewTab
+              records={reviewRecords}
+              isLoading={viewLoading.review}
+              statusFilter={reviewStatusFilter}
+              setStatusFilter={setReviewStatusFilter}
+              onRefresh={refreshReviewRecords}
+              onApprove={(id) => reviewDocumentStatus(id, "Approved")}
+              onDecline={openDeclinePrompt}
+              onPreviewDocument={handlePreviewDocument}
+            />
+          </TabsContent>
+
+          <TabsContent value="digitization" className="h-full m-0 border-0 focus-visible:ring-0">
+            <SystemAnalyticsTab
+              showToast={showToast}
+              onLogAction={logAdminAction}
+            />
+          </TabsContent>
+
+          <TabsContent value="request_analytics" className="h-full m-0 border-0 focus-visible:ring-0">
+            <SLAAnalyticsTab
+              showToast={showToast}
+              onLogAction={logAdminAction}
+            />
+          </TabsContent>
+
+          <TabsContent value="system" className="h-full m-0 border-0 focus-visible:ring-0">
+            <BackupMaintenanceTab
+              systemHealth={systemHealth}
+              backups={backups}
+              isLoading={viewLoading.system || viewLoading.backup}
+              onSimulateBackup={simulateBackup}
+              onSyncExternal={syncExternal}
+              onDownloadBackup={(b) => {
+                const link = document.createElement("a");
+                link.href = `/api/system/backup/download?id=${b.id}`;
+                link.download = b.filename;
+                link.click();
+              }}
+              onDeleteBackup={(id) => {
+                const b = backups.find((x) => x.id === id);
+                if (b) {
+                  setBackupDeleteTarget(b);
+                  setBackupDeleteOpen(true);
+                }
+              }}
+              onRestoreFileChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) {
+                  setRestoreFile(f);
+                  setRestoreConfirmOpen(true);
+                  e.target.value = "";
+                }
+              }}
+              showToast={showToast}
+            />
+          </TabsContent>
         </main>
-      </div>
+      </Tabs>
 
       <Footer />
 
@@ -1066,57 +1167,12 @@ function AdminPageContent() {
         preview={previewData}
       />
 
-      <Dialog open={defaultPwOpen} onOpenChange={setDefaultPwOpen}>
-        <DialogContent className="sm:max-w-2xl max-w-2xl w-full p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
-          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
-                <i className="ph-duotone ph-key text-2xl"></i>
-              </div>
-              <div className="min-w-0">
-                <DialogTitle className="text-lg font-black tracking-tight text-gray-900 leading-tight">
-                  Staff Account Created
-                </DialogTitle>
-                <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 leading-relaxed">
-                  System account configured successfully. Securely record the following temporary credentials before closing this window.
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-
-          <div className="p-6 space-y-6">
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-                Default Password for <span className="text-pup-maroon font-black">{defaultPwUserLabel}</span>
-              </label>
-              <Input
-                type="text"
-                readOnly
-                className="h-12 font-mono font-bold bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                value={defaultReturnedPw}
-              />
-            </div>
-          </div>
-
-          <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setDefaultPwOpen(false)}
-              className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
-            >
-              Close
-            </Button>
-            <Button
-              onClick={() => setDefaultPwOpen(false)}
-              className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand"
-            >
-              <i className="ph-bold ph-check"></i>
-              Acknowledge
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <DefaultPasswordModal
+        open={defaultPwOpen}
+        onClose={() => setDefaultPwOpen(false)}
+        userName={defaultPwUserLabel}
+        password={defaultReturnedPw}
+      />
 
       <TOTPChallengeModal
         open={totpModalOpen}

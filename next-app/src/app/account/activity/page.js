@@ -122,15 +122,30 @@ export default function AccountActivityPage() {
           <div className="p-4 bg-gray-50/50 border-b border-gray-200">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-end">
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                  Search Activity
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-xs font-bold text-gray-700 uppercase">
+                    Search Activity
+                  </label>
+                  {search !== "" && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setSearch("");
+                        setPage(1);
+                      }}
+                      className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
+                    >
+                      Clear All
+                    </Button>
+                  )}
+                </div>
                 <div className="relative">
                   <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                   <Input
                     type="text"
                     placeholder="Search actions..."
-                    className="pl-10 h-12 w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                    className="pl-10 h-10 w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon transition-colors"
                     value={search}
                     onChange={(e) => {
                       setSearch(e.target.value);
@@ -146,7 +161,7 @@ export default function AccountActivityPage() {
                     Items
                   </label>
                   <select
-                    className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                    className="h-10 w-full rounded-brand border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
                     value={perPage}
                     onChange={(e) => {
                       setPerPage(Number(e.target.value));

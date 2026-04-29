@@ -1,0 +1,65 @@
+Category,Name,Code
+DocumentType,CAEPUP Application Form,
+DocumentType,SAR Form,
+DocumentType,Health and Information Sheet,
+DocumentType,Undertaking and Waiver of Right,
+DocumentType,CTC Grade 10 Report Card,
+DocumentType,CTC Grade 11 Report Card,
+DocumentType,Grade 12 Report Card,
+DocumentType,Certification of Graduation,
+DocumentType,Certificate of Good Moral Character,
+DocumentType,PSA Birth Certificate,
+Course,Bachelor of Science in Business Administration major in Financial Management,BSBA-FM
+Course,Bachelor of Science in Entrepreneurship,BSENT
+Course,Bachelor of Science in Information Technology,BSIT
+Course,Bachelor of Science in Psychology,BSPsych
+Course,Bachelor in Secondary Education major in English,BSEDUC
+Course,Diploma in Information Technology,DIT
+Section,1-1,BSBA-FM
+Section,1-2,BSBA-FM
+Section,2-1,BSBA-FM
+Section,2-2,BSBA-FM
+Section,3-1,BSBA-FM
+Section,3-2,BSBA-FM
+Section,4-1,BSBA-FM
+Section,4-2,BSBA-FM
+Section,1-1,BSENT
+Section,1-2,BSENT
+Section,2-1,BSENT
+Section,2-2,BSENT
+Section,3-1,BSENT
+Section,3-2,BSENT
+Section,4-1,BSENT
+Section,4-2,BSENT
+Section,1-1,BSIT
+Section,1-2,BSIT
+Section,2-1,BSIT
+Section,2-2,BSIT
+Section,3-1,BSIT
+Section,3-2,BSIT
+Section,4-1,BSIT
+Section,4-2,BSIT
+Section,1-1,BSPsych
+Section,1-2,BSPsych
+Section,2-1,BSPsych
+Section,2-2,BSPsych
+Section,3-1,BSPsych
+Section,3-2,BSPsych
+Section,4-1,BSPsych
+Section,4-2,BSPsych
+Section,1-1,BSEDUC
+Section,1-2,BSEDUC
+Section,2-1,BSEDUC
+Section,2-2,BSEDUC
+Section,3-1,BSEDUC
+Section,3-2,BSEDUC
+Section,4-1,BSEDUC
+Section,4-2,BSEDUC
+Section,1-1,DIT
+Section,1-2,DIT
+Section,2-1,DIT
+Section,2-2,DIT
+Section,3-1,DIT
+Section,3-2,DIT
+Section,4-1,DIT
+Section,4-2,DIT
