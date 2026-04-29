@@ -6,6 +6,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Sidebar from "@/components/shared/Sidebar";
 import { toast } from "sonner";
+import { StaffGuard } from "@/components/shared/AuthGuard";
 import RecordsArchiveTab from "@/components/staff/RecordsArchiveTab";
 import ScanUploadTab from "@/components/staff/ScanUploadTab";
 import DocumentsTab from "@/components/staff/DocumentsTab";
@@ -1312,18 +1313,20 @@ function StaffPageContent() {
 
 export default function StaffPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4">
-          <Skeleton className="h-16 w-full rounded-brand shrink-0" />
-          <div className="flex-1 flex gap-4">
-            <Skeleton className="w-[30%] h-full rounded-brand" />
-            <Skeleton className="w-[70%] h-full rounded-brand" />
+    <StaffGuard>
+      <Suspense
+        fallback={
+          <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4">
+            <Skeleton className="h-16 w-full rounded-brand shrink-0" />
+            <div className="flex-1 flex gap-4">
+              <Skeleton className="w-[30%] h-full rounded-brand" />
+              <Skeleton className="w-[70%] h-full rounded-brand" />
+            </div>
           </div>
-        </div>
-      }
-    >
-      <StaffPageContent />
-    </Suspense>
+        }
+      >
+        <StaffPageContent />
+      </Suspense>
+    </StaffGuard>
   );
 }

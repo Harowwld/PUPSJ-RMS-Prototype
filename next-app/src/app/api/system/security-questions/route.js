@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { dbAll, dbRun } from "@/lib/sqlite";
 import { writeAuditLog } from "@/lib/auditLogRequest";
-import { verifySessionToken } from "@/lib/jwt";
+import { verifySessionToken, getSessionCookieName } from "@/lib/jwt";
+import { requireTOTP, extractTOTPToken } from "@/lib/totpMiddleware";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -24,7 +26,8 @@ export async function GET(req) {
 
 export async function PUT(req) {
   try {
-    const token = req.cookies.get("pup_session")?.value;
+    const store = await cookies();
+    const token = store.get(getSessionCookieName())?.value;
     if (!token) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
@@ -33,6 +36,15 @@ export async function PUT(req) {
     const userRole = String(user?.role || "").toLowerCase();
     if (!user || userRole !== "admin") {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+    }
+
+    const totpToken = extractTOTPToken(req.headers);
+    const totpResult = await requireTOTP(user.sub, totpToken);
+    if (!totpResult.valid) {
+      return NextResponse.json(
+        { ok: false, error: "TOTP verification required: " + totpResult.error, requiresTOTP: true },
+        { status: 403 }
+      );
     }
 
     const { questions } = await req.json();

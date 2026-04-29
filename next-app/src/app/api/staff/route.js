@@ -1,12 +1,19 @@
 import { NextResponse } from "next/server";
 import { createStaff, listStaff } from "../../../lib/staffRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
+import { requireTOTP, extractTOTPToken } from "../../../lib/totpMiddleware";
+import { requireAdmin, requireStaff, createAuthErrorResponse } from "../../../lib/authHelpers";
 
 export const runtime = "nodejs";
 
 const DEFAULT_PASSWORD = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
 
 export async function GET(req) {
+  const { user, error } = await requireAdmin(req);
+  if (error || !user) {
+    return createAuthErrorResponse(error || "Admin access required", 403);
+  }
+
   const { searchParams } = new URL(req.url);
   const q = searchParams.get("q") || "";
   const role = searchParams.get("role") || "";
@@ -26,6 +33,20 @@ export async function GET(req) {
 }
 
 export async function POST(req) {
+  const { user, error } = await requireAdmin(req);
+  if (error || !user) {
+    return createAuthErrorResponse(error || "Admin access required", 403);
+  }
+
+  const totpToken = extractTOTPToken(req.headers);
+  const totpResult = await requireTOTP(user.id, totpToken);
+  if (!totpResult.valid) {
+    return NextResponse.json(
+      { ok: false, error: "TOTP verification required: " + totpResult.error, requiresTOTP: true },
+      { status: 403 }
+    );
+  }
+
   const body = await req.json().catch(() => null);
   if (!body || typeof body !== "object") {
     return NextResponse.json(

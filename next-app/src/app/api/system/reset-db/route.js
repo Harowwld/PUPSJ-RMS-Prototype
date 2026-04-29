@@ -1,13 +1,35 @@
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { getDb, DEFAULT_SECURITY_QUESTIONS } from "../../../../lib/sqlite";
 import fs from "node:fs";
 import path from "node:path";
 import { buildDefaultStorageLayout } from "../../../../lib/storageLayoutDefaults";
 import { hashPasswordForStorage } from "../../../../lib/staffRepo";
+import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
+import { requireTOTP, extractTOTPToken } from "../../../../lib/totpMiddleware";
 
 export const runtime = "nodejs";
 
 export async function GET(req) {
+  const store = await cookies();
+  const token = store.get(getSessionCookieName())?.value || "";
+  let userId = null;
+  if (token) {
+    try {
+      const payload = await verifySessionToken(token);
+      userId = payload?.sub;
+    } catch {}
+  }
+
+  const totpToken = extractTOTPToken(req.headers);
+  const totpResult = await requireTOTP(userId, totpToken);
+  if (!totpResult.valid) {
+    return NextResponse.json(
+      { ok: false, error: "TOTP verification required: " + totpResult.error, requiresTOTP: true },
+      { status: 403 }
+    );
+  }
+
   try {
     const db = await getDb();
 

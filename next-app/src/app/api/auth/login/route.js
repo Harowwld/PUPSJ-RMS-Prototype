@@ -9,10 +9,41 @@ import { getSessionCookieName, signSessionToken } from "../../../../lib/jwt";
 import { createSession } from "../../../../lib/sessionStore";
 import { broadcastToAdmins } from "../../../../pages/api/socket";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
+import { checkAuthLoginRateLimit } from "../../../../lib/rateLimiter";
 
 export const runtime = "nodejs";
 
 export async function POST(req) {
+  // Get client IP for rate limiting
+  const forwardedFor = req.headers.get('x-forwarded-for');
+  const realIP = req.headers.get('x-real-ip');
+  const ipAddress = forwardedFor ? forwardedFor.split(',')[0].trim() : 
+                    realIP ? realIP.trim() : 
+                    req.ip || 'unknown';
+
+  // Check rate limit
+  const rateLimitResult = await checkAuthLoginRateLimit(ipAddress);
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json(
+      { 
+        ok: false, 
+        error: rateLimitResult.reason === 'locked_out' 
+          ? `Account temporarily locked due to too many failed attempts. Please try again later.`
+          : 'Too many login attempts. Please try again later.',
+        retryAfter: rateLimitResult.resetTime ? Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000) : undefined
+      },
+      { 
+        status: 429,
+        headers: rateLimitResult.resetTime ? {
+          'Retry-After': Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
+          'X-RateLimit-Limit': rateLimitResult.limit,
+          'X-RateLimit-Remaining': Math.max(0, rateLimitResult.remaining || 0),
+          'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString()
+        } : {}
+      }
+    );
+  }
+
   const body = await req.json().catch(() => null);
   if (!body || typeof body !== "object") {
     return NextResponse.json(

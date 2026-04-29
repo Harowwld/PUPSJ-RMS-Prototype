@@ -256,6 +256,8 @@ export async function getDb() {
           status TEXT NOT NULL DEFAULT 'Active',
           email TEXT NOT NULL,
           last_active TEXT,
+          totp_secret TEXT,
+          totp_enabled INTEGER NOT NULL DEFAULT 0,
           created_at TEXT NOT NULL DEFAULT (datetime('now')),
           updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
@@ -671,11 +673,13 @@ export async function getDb() {
               email TEXT NOT NULL,
               last_active TEXT,
               password_hash TEXT,
+              totp_secret TEXT,
+              totp_enabled INTEGER NOT NULL DEFAULT 0,
               created_at TEXT NOT NULL DEFAULT (datetime('now')),
               updated_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
-            INSERT INTO staff_new (id, fname, lname, role, section, status, email, last_active, password_hash, created_at, updated_at)
-            SELECT id, fname, lname, role, section, status, email, last_active, password_hash, created_at, updated_at FROM staff;
+            INSERT INTO staff_new (id, fname, lname, role, section, status, email, last_active, password_hash, totp_secret, totp_enabled, created_at, updated_at)
+            SELECT id, fname, lname, role, section, status, email, last_active, password_hash, NULL, 0, created_at, updated_at FROM staff;
             DROP TABLE staff;
             ALTER TABLE staff_new RENAME TO staff;
             CREATE INDEX IF NOT EXISTS idx_staff_name ON staff(lname, fname);
@@ -777,6 +781,86 @@ export async function getDb() {
           console.error("[DB] schema_version 9 migration:", e);
         } finally {
           try { db.exec("PRAGMA foreign_keys = ON"); } catch (_) {}
+        }
+      }
+
+      // Migration to version 10: Add TOTP columns to staff table
+      if (schemaVersion < 10) {
+        try {
+          const pragma = db.exec("PRAGMA table_info(staff)");
+          const cols = new Set(
+            (pragma?.[0]?.values || []).map((r) => String(r?.[1] || ""))
+          );
+          if (!cols.has("totp_secret")) {
+            db.exec("ALTER TABLE staff ADD COLUMN totp_secret TEXT");
+          }
+          if (!cols.has("totp_enabled")) {
+            db.exec("ALTER TABLE staff ADD COLUMN totp_enabled INTEGER NOT NULL DEFAULT 0");
+          }
+          db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '10')");
+          persistDb();
+        } catch (e) {
+          console.error("[DB] schema_version 10 migration (TOTP):", e);
+        }
+      }
+
+      // Migration to version 11: Add rate limiting tables
+      if (schemaVersion < 11) {
+        try {
+          db.exec(`
+            CREATE TABLE IF NOT EXISTS rate_limits (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              endpoint_type TEXT NOT NULL,
+              identifier TEXT NOT NULL,
+              window_seconds INTEGER NOT NULL,
+              max_requests INTEGER NOT NULL,
+              created_at TEXT NOT NULL DEFAULT (datetime('now')),
+              updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+              UNIQUE(endpoint_type, identifier)
+            );
+
+            CREATE TABLE IF NOT EXISTS rate_limit_hits (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              endpoint_type TEXT NOT NULL,
+              identifier TEXT NOT NULL,
+              ip_address TEXT,
+              user_id TEXT,
+              created_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
+            CREATE TABLE IF NOT EXISTS rate_limit_violations (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              endpoint_type TEXT NOT NULL,
+              identifier TEXT NOT NULL,
+              ip_address TEXT,
+              user_id TEXT,
+              violation_count INTEGER NOT NULL DEFAULT 1,
+              lockout_until TEXT,
+              created_at TEXT NOT NULL DEFAULT (datetime('now')),
+              updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_rate_limits_endpoint_type ON rate_limits(endpoint_type);
+            CREATE INDEX IF NOT EXISTS idx_rate_limit_hits_endpoint_identifier_created ON rate_limit_hits(endpoint_type, identifier, created_at);
+            CREATE INDEX IF NOT EXISTS idx_rate_limit_hits_created_at ON rate_limit_hits(created_at);
+            CREATE INDEX IF NOT EXISTS idx_rate_limit_violations_endpoint_identifier ON rate_limit_violations(endpoint_type, identifier);
+            CREATE INDEX IF NOT EXISTS idx_rate_limit_violations_lockout_until ON rate_limit_violations(lockout_until);
+          `);
+
+          // Insert default rate limit configurations
+          db.exec(`
+            INSERT OR IGNORE INTO rate_limits (endpoint_type, identifier, window_seconds, max_requests) VALUES
+            ('auth_login', 'default', 900, 5),           -- 5 login attempts per 15 minutes
+            ('auth_forgot_password', 'default', 3600, 3), -- 3 password reset attempts per hour
+            ('api_general', 'default', 60, 100),          -- 100 API requests per minute
+            ('api_sensitive', 'default', 60, 20),        -- 20 sensitive operations per minute
+            ('file_upload', 'default', 60, 10);           -- 10 file uploads per minute
+          `);
+
+          db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '11')");
+          persistDb();
+        } catch (e) {
+          console.error("[DB] schema_version 11 migration (rate limiting):", e);
         }
       }
 

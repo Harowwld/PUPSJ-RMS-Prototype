@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/layout/Header";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AuthGuard } from "@/components/shared/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,7 +22,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 
-export default function AccountPage() {
+function AccountPageContent() {
   const router = useRouter();
   const [authUser, setAuthUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -46,6 +47,14 @@ export default function AccountPage() {
   const [secLoading, setSecLoading] = useState(false);
   const [secError, setSecError] = useState("");
   const [hasSetSecurity, setHasSetSecurity] = useState(false);
+
+  // TOTP Form State
+  const [totpEnabled, setTotpEnabled] = useState(false);
+  const [totpSetupData, setTotpSetupData] = useState(null);
+  const [totpToken, setTotpToken] = useState("");
+  const [totpLoading, setTotpLoading] = useState(false);
+  const [totpError, setTotpError] = useState("");
+  const [totpStep, setTotpStep] = useState("idle");
 
   const [activeTab, setActiveTab] = useState("profile");
 
@@ -83,6 +92,13 @@ export default function AccountPage() {
           if (Array.isArray(jsonUserSecurity.data.questions)) {
             setGlobalQuestions(jsonUserSecurity.data.questions);
           }
+        }
+
+        // Fetch TOTP status
+        const resTOTP = await fetch("/api/auth/totp");
+        const jsonTOTP = await resTOTP.json().catch(() => null);
+        if (jsonTOTP?.ok && jsonTOTP.data) {
+          setTotpEnabled(jsonTOTP.data.enabled);
         }
       } catch {
         router.push("/");
@@ -252,6 +268,105 @@ export default function AccountPage() {
     } finally {
       setSecLoading(false);
     }
+  };
+
+  const startTOTPSetup = async () => {
+    setTotpLoading(true);
+    setTotpError("");
+    try {
+      const res = await fetch("/api/auth/totp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "setup" }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || "Failed to start TOTP setup");
+      }
+      setTotpSetupData(json.data);
+      setTotpStep("setup");
+    } catch (err) {
+      setTotpError(err?.message || "Failed to start TOTP setup");
+      toast.error("TOTP Setup Failed", {
+        description: err?.message || "Unable to initialize TOTP.",
+      });
+    } finally {
+      setTotpLoading(false);
+    }
+  };
+
+  const verifyTOTP = async (e) => {
+    e.preventDefault();
+    if (!totpToken || totpToken.length !== 6) {
+      setTotpError("Please enter a 6-digit code");
+      return;
+    }
+    setTotpLoading(true);
+    setTotpError("");
+    try {
+      const res = await fetch("/api/auth/totp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "verify", token: totpToken }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || "Invalid verification code");
+      }
+      setTotpEnabled(true);
+      setTotpStep("idle");
+      setTotpSetupData(null);
+      setTotpToken("");
+      toast.success("TOTP Enabled", {
+        description: "Two-factor authentication is now enabled.",
+      });
+    } catch (err) {
+      setTotpError(err?.message || "Invalid verification code");
+      toast.error("Verification Failed", {
+        description: err?.message || "The code you entered is invalid.",
+      });
+    } finally {
+      setTotpLoading(false);
+    }
+  };
+
+  const disableTOTP = async () => {
+    if (!totpToken || totpToken.length !== 6) {
+      setTotpError("Please enter your current TOTP code to disable");
+      return;
+    }
+    setTotpLoading(true);
+    setTotpError("");
+    try {
+      const res = await fetch("/api/auth/totp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "disable", token: totpToken }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || "Invalid verification code");
+      }
+      setTotpEnabled(false);
+      setTotpToken("");
+      toast.success("TOTP Disabled", {
+        description: "Two-factor authentication has been disabled.",
+      });
+    } catch (err) {
+      setTotpError(err?.message || "Invalid verification code");
+      toast.error("Disable Failed", {
+        description: err?.message || "Unable to disable TOTP.",
+      });
+    } finally {
+      setTotpLoading(false);
+    }
+  };
+
+  const cancelTOTPSetup = () => {
+    setTotpStep("idle");
+    setTotpSetupData(null);
+    setTotpToken("");
+    setTotpError("");
   };
 
   if (loading) {
@@ -641,11 +756,162 @@ export default function AccountPage() {
                     </form>
                   </CardContent>
                 </Card>
+
+                <Card className="rounded-brand border-gray-200 shadow-sm overflow-hidden animate-fade-in">
+                  <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
+                        <i className="ph-duotone ph-mobile text-2xl"></i>
+                      </div>
+                      <div>
+                        <CardTitle className="text-xl font-black text-gray-900 tracking-tight">
+                          Two-Factor Authentication
+                        </CardTitle>
+                        <CardDescription className="font-medium text-gray-500">
+                          Add an extra layer of security to your account.
+                        </CardDescription>
+                      </div>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="p-8">
+                    {totpEnabled ? (
+                      <div className="space-y-6">
+                        <div className="p-4 bg-emerald-50 border border-emerald-100 text-emerald-800 text-sm font-bold rounded-brand flex items-start gap-3">
+                          <i className="ph-fill ph-check-circle text-xl mt-0.5 shrink-0 text-emerald-600"></i>
+                          <div>
+                            <p>Two-factor authentication is enabled.</p>
+                            <p className="text-xs font-medium text-emerald-700 mt-1">You'll need to enter a code from your authenticator app for sensitive actions.</p>
+                          </div>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">
+                            Enter TOTP Code to Disable
+                          </label>
+                          <Input
+                            type="text"
+                            maxLength={6}
+                            className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900 text-center tracking-widest text-lg"
+                            placeholder="000000"
+                            value={totpToken}
+                            onChange={(e) => setTotpToken(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                          />
+                        </div>
+                        {totpError && (
+                          <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm font-bold rounded-brand flex items-center gap-3">
+                            <i className="ph-bold ph-warning-circle text-xl"></i>
+                            {totpError}
+                          </div>
+                        )}
+                        <Button
+                          onClick={disableTOTP}
+                          disabled={totpLoading || totpToken.length !== 6}
+                          className="h-12 px-8 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+                        >
+                          {totpLoading ? (
+                            <i className="ph-bold ph-spinner animate-spin"></i>
+                          ) : (
+                            <i className="ph-bold ph-prohibit"></i>
+                          )}
+                          Disable TOTP
+                        </Button>
+                      </div>
+                    ) : totpStep === "setup" && totpSetupData ? (
+                      <div className="space-y-6">
+                        <div className="flex flex-col items-center text-center">
+                          <p className="text-sm font-medium text-gray-600 mb-4">
+                            Scan this QR code with your authenticator app (Google Authenticator, Microsoft Authenticator, Authy, etc.)
+                          </p>
+                          <img
+                            src={totpSetupData.qrCode}
+                            alt="TOTP QR Code"
+                            className="w-48 h-48 border border-gray-200 rounded-brand p-2 bg-white"
+                          />
+                          <p className="text-xs text-gray-500 mt-4 font-mono">
+                            Secret: {totpSetupData.secret}
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          <label className="text-xs font-black text-gray-700 uppercase tracking-widest ml-1">
+                            Enter Verification Code
+                          </label>
+                          <Input
+                            type="text"
+                            maxLength={6}
+                            className="h-12 bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900 text-center tracking-widest text-lg"
+                            placeholder="000000"
+                            value={totpToken}
+                            onChange={(e) => setTotpToken(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                            autoFocus
+                          />
+                        </div>
+                        {totpError && (
+                          <div className="p-4 bg-red-50 border border-red-100 text-red-700 text-sm font-bold rounded-brand flex items-center gap-3">
+                            <i className="ph-bold ph-warning-circle text-xl"></i>
+                            {totpError}
+                          </div>
+                        )}
+                        <div className="flex gap-3">
+                          <Button
+                            onClick={cancelTOTPSetup}
+                            disabled={totpLoading}
+                            variant="outline"
+                            className="h-12 px-6 font-black uppercase tracking-widest flex items-center gap-2 rounded-brand"
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            onClick={verifyTOTP}
+                            disabled={totpLoading || totpToken.length !== 6}
+                            className="h-12 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand flex-1"
+                          >
+                            {totpLoading ? (
+                              <i className="ph-bold ph-spinner animate-spin"></i>
+                            ) : (
+                              <i className="ph-bold ph-check"></i>
+                            )}
+                            Verify & Enable
+                          </Button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-6">
+                        <div className="p-4 bg-gray-50 border border-gray-200 text-gray-700 text-sm font-bold rounded-brand flex items-start gap-3">
+                          <i className="ph-bold ph-info text-xl mt-0.5 shrink-0 text-gray-500"></i>
+                          <div>
+                            <p>Two-factor authentication is not enabled.</p>
+                            <p className="text-xs font-medium text-gray-600 mt-1">Enable TOTP to add extra protection for sensitive admin actions.</p>
+                          </div>
+                        </div>
+                        <Button
+                          onClick={startTOTPSetup}
+                          disabled={totpLoading}
+                          className="h-12 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+                        >
+                          {totpLoading ? (
+                            <i className="ph-bold ph-spinner animate-spin"></i>
+                          ) : (
+                            <i className="ph-bold ph-shield-plus"></i>
+                          )}
+                          Enable TOTP
+                        </Button>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
               </div>
             </TabsContent>
           </div>
         </Tabs>
       </main>
     </div>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <AuthGuard>
+      <AccountPageContent />
+    </AuthGuard>
   );
 }

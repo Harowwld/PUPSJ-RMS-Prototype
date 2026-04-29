@@ -18,6 +18,8 @@ import Sidebar from "@/components/shared/Sidebar";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import PromptModal from "@/components/shared/PromptModal";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
+import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal";
+import { AdminGuard } from "@/components/shared/AuthGuard";
 
 import StaffDirectoryTab from "@/components/admin/StaffDirectoryTab";
 import RegisterAccountTab from "@/components/admin/RegisterAccountTab";
@@ -119,6 +121,12 @@ function AdminPageContent() {
   const [restoreFile, setRestoreFile] = useState(null);
   const [restoreLoading, setRestoreLoading] = useState(false);
 
+  const [totpModalOpen, setTotpModalOpen] = useState(false);
+  const [totpModalLoading, setTotpModalLoading] = useState(false);
+  const totpPendingActionRef = useRef(null);
+  const [totpActionLabel, setTotpActionLabel] = useState("Confirm");
+  const [totpModalDescription, setTotpModalDescription] = useState("Enter the 6-digit code from your authenticator app to confirm this action.");
+
   const [authUser, setAuthUser] = useState(null);
 
   const [defaultPwOpen, setDefaultPwOpen] = useState(false);
@@ -155,6 +163,37 @@ function AdminPageContent() {
       return;
     }
     toast.success(title, opts);
+  }, []);
+
+  const executeWithTOTP = useCallback(async (action, actionLabel, hasToken = false) => {
+    setTotpActionLabel(actionLabel);
+    totpPendingActionRef.current = action;
+    setTotpModalOpen(true);
+  }, []);
+
+  const handleTOTPConfirm = useCallback(async (token) => {
+    console.log("[DELETE FLOW] handleTOTPConfirm called with token:", token);
+    if (!totpPendingActionRef.current) {
+      console.log("[DELETE FLOW] handleTOTPConfirm: no pending action");
+      return;
+    }
+    console.log("[DELETE FLOW] handleTOTPConfirm: setting loading true");
+    setTotpModalLoading(true);
+    try {
+      console.log("[DELETE FLOW] handleTOTPConfirm: calling pending action");
+      await totpPendingActionRef.current(token);
+      console.log("[DELETE FLOW] handleTOTPConfirm: success, calling setTotpModalOpen(false)");
+      setTotpModalOpen(false);
+    } catch (err) {
+      console.log("[DELETE FLOW] handleTOTPConfirm: error:", err.message);
+      const msg = err?.message || "Action failed";
+      const clean = msg.includes("TOTP verification required: ")
+        ? msg.replace("TOTP verification required: ", "")
+        : msg;
+      console.log("[DELETE FLOW] handleTOTPConfirm: setting loading false, throwing error");
+      setTotpModalLoading(false);
+      throw new Error(clean);
+    }
   }, []);
 
   const refreshStaff = useCallback(async () => {
@@ -480,16 +519,32 @@ function AdminPageContent() {
     router.push("/");
   };
 
-  const handleCreate = async (e) => {
+  const handleCreate = async (e, totpToken = null) => {
     e.preventDefault();
     const section = createForm.role === "Admin" ? "Administrative" : "Records";
+    const headers = { "Content-Type": "application/json" };
+    if (totpToken) {
+      headers["x-totp-token"] = totpToken;
+    }
     try {
       const res = await fetch("/api/staff", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ ...createForm, section }),
       });
       const json = await res.json();
+      
+      if (res.status === 403) {
+        if (json?.requiresTOTP) {
+          if (totpToken) {
+            throw new Error(json.error || "Invalid verification code");
+          }
+          await executeWithTOTP((token) => handleCreate(e, token), "Create Staff", true);
+          return;
+        }
+        throw new Error(json?.error || "Access denied");
+      }
+      
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to create staff");
 
@@ -510,20 +565,37 @@ function AdminPageContent() {
       });
       switchView("directory");
     } catch (err) {
+      if (totpToken) throw err;
       showToast({ title: "Creation Failed", description: err.message }, true);
     }
   };
 
-  const handleEditSubmit = async (e) => {
+  const handleEditSubmit = async (e, totpToken = null) => {
     e.preventDefault();
     const section = editForm.role === "Admin" ? "Administrative" : "Records";
+    const headers = { "Content-Type": "application/json" };
+    if (totpToken) {
+      headers["x-totp-token"] = totpToken;
+    }
     try {
       const res = await fetch(`/api/staff/${editOriginalId}`, {
         method: "PATCH",
-        headers: { "Content-Type": "application/json" },
+        headers,
         body: JSON.stringify({ ...editForm, section }),
       });
       const json = await res.json();
+      
+      if (res.status === 403) {
+        if (json?.requiresTOTP) {
+          if (totpToken) {
+            throw new Error(json.error || "Invalid verification code");
+          }
+          await executeWithTOTP((token) => handleEditSubmit(e, token), "Update Staff", true);
+          return;
+        }
+        throw new Error(json?.error || "Access denied");
+      }
+      
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to update staff");
 
@@ -533,35 +605,87 @@ function AdminPageContent() {
       showToast({ title: "Account Updated", description: "Staff profile changes have been saved." });
       setEditOpen(false);
     } catch (err) {
+      if (totpToken) throw err;
       showToast({ title: "Update Failed", description: err.message }, true);
     }
   };
 
-  const confirmDelete = async () => {
-    if (!deleteTarget || deleteLoading) return;
+  const confirmDelete = async (totpToken = null, targetId = null, targetName = null) => {
+    const id = targetId || deleteTarget?.id;
+    const name = targetName || deleteTarget?.fname;
+    console.log("[DELETE FLOW] confirmDelete called, token:", totpToken, "targetId:", id, "targetName:", name);
+    if (!id || deleteLoading) {
+      console.log("[DELETE FLOW] confirmDelete early return - no target or loading");
+      return;
+    }
+    console.log("[DELETE FLOW] confirmDelete: setting deleteLoading true");
     setDeleteLoading(true);
+    const headers = {};
+    if (totpToken) {
+      headers["x-totp-token"] = totpToken;
+    }
     try {
-      const res = await fetch(`/api/staff/${deleteTarget.id}`, {
+      console.log("[DELETE FLOW] confirmDelete: calling DELETE API for:", id);
+      const res = await fetch(`/api/staff/${id}`, {
         method: "DELETE",
+        headers,
       });
       const json = await res.json();
-      if (!res.ok || !json?.ok)
+      console.log("[DELETE FLOW] confirmDelete response:", res.status, json);
+      
+      if (res.status === 403) {
+        if (json?.requiresTOTP) {
+          if (totpToken) {
+            console.log("[DELETE FLOW] confirmDelete: TOTP invalid, throwing error");
+            setDeleteLoading(false);
+            throw new Error(json.error || "Invalid verification code");
+          }
+          console.log("[DELETE FLOW] confirmDelete: TOTP required, opening modal");
+          setDeleteLoading(false);
+          await executeWithTOTP((token) => confirmDelete(token, id, name), "Delete Staff", true);
+          return;
+        }
+        throw new Error(json?.error || "Access denied");
+      }
+      
+      if (!res.ok || !json?.ok) {
+        console.log("[DELETE FLOW] confirmDelete: API error, throwing");
         throw new Error(json?.error || "Failed to delete staff");
-      setStaffData((prev) => prev.filter((s) => s.id !== deleteTarget.id));
+      }
+      console.log("[DELETE FLOW] confirmDelete: success, updating staffData");
+      setStaffData((prev) => prev.filter((s) => s.id !== id));
       showToast({ title: "Account Removed", description: "The staff account has been permanently deleted." });
       setDeleteOpen(false);
     } catch (err) {
+      console.log("[DELETE FLOW] confirmDelete catch error:", err.message);
+      if (totpToken) throw err;
       showToast({ title: "Deletion Failed", description: err.message }, true);
     } finally {
+      console.log("[DELETE FLOW] confirmDelete: finally, setting deleteLoading false");
       setDeleteLoading(false);
     }
   };
 
-  const simulateBackup = async () => {
+  const simulateBackup = async (totpToken = null) => {
+    const headers = {};
+    if (totpToken) {
+      headers["x-totp-token"] = totpToken;
+    }
     await toast.promise(
       (async () => {
-      const res = await fetch("/api/system/backup", { method: "POST" });
+      const res = await fetch("/api/system/backup", { method: "POST", headers });
       const json = await res.json();
+      
+      if (res.status === 403) {
+        if (json?.requiresTOTP) {
+          if (totpToken) {
+            throw new Error(json.error || "Invalid verification code");
+          }
+          throw { requiresTOTP: true };
+        }
+        throw new Error(json?.error || "Access denied");
+      }
+      
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to create backup");
 
@@ -577,7 +701,14 @@ function AdminPageContent() {
       {
         loading: "Creating full system backup…",
         success: (filename) => ({ title: "Backup Complete", description: `Package ready: ${filename}` }),
-        error: (err) => ({ title: "Backup Failed", description: err?.message || "Unable to create system backup." }),
+        error: (err) => {
+          if (err?.requiresTOTP) {
+            executeWithTOTP((token) => simulateBackup(token), "Create Backup", true);
+            return { title: "Verification Required", description: "Please verify your identity" };
+          }
+          if (totpToken) throw err;
+          return { title: "Backup Failed", description: err?.message || "Unable to create system backup." };
+        },
       }
     );
   };
@@ -619,22 +750,42 @@ function AdminPageContent() {
     }
   };
 
-  const confirmRestore = async () => {
+  const confirmRestore = async (totpToken = null) => {
     if (!restoreFile || restoreLoading) return;
     setRestoreLoading(true);
     const formData = new FormData();
     formData.append("file", restoreFile);
+    const headers = {};
+    if (totpToken) {
+      headers["x-totp-token"] = totpToken;
+    }
     try {
       const res = await fetch("/api/system/backup/restore", {
         method: "POST",
+        headers,
         body: formData,
       });
       const json = await res.json();
+      
+      if (res.status === 403) {
+        if (json?.requiresTOTP) {
+          if (totpToken) {
+            setRestoreLoading(false);
+            throw new Error(json.error || "Invalid verification code");
+          }
+          setRestoreLoading(false);
+          await executeWithTOTP((token) => confirmRestore(token), "Restore System", true);
+          return;
+        }
+        throw new Error(json?.error || "Access denied");
+      }
+      
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to restore system");
       showToast({ title: "System Restored", description: "Database restored from backup. Reloading in 3s…" });
       setTimeout(() => location.reload(), 3000);
     } catch (err) {
+      if (totpToken) throw err;
       showToast({ title: "Restore Failed", description: err.message }, true);
       setRestoreLoading(false);
     }
@@ -711,49 +862,155 @@ function AdminPageContent() {
         <Sidebar items={sidebarItems} activeKey={sidebarActiveKey} onSelect={handleSidebarSelect} />
 
         <main className="flex-1 overflow-hidden p-4 relative w-full min-w-0">
-          <TabsContent value="directory" className="h-full m-0 border-0 focus-visible:ring-0">
-            <StaffDirectoryTab
-              staffData={staffData}
-              isLoading={viewLoading.directory}
-              currentUserId={authUser?.id}
-              search={search}
-              setSearch={setSearch}
-              roleFilter={roleFilter}
-              setRoleFilter={setRoleFilter}
-              statusFilter={statusFilter}
-              setStatusFilter={setStatusFilter}
-              onEditUser={(id) => {
-                const u = staffData.find((s) => s.id === id);
-                if (!u) return;
-                setEditOriginalId(u.id);
-                setEditForm({ ...u });
-                setEditOpen(true);
-              }}
-              onDeleteUser={(id) => {
-                const u = staffData.find((s) => s.id === id);
-                if (u) {
-                  setDeleteTarget(u);
-                  setDeleteOpen(true);
-                }
-              }}
-              onExportData={exportData}
-              onSwitchView={switchView}
-            />
-          </TabsContent>
+        {view === "directory" && (
+          <StaffDirectoryTab
+            staffData={staffData}
+            isLoading={viewLoading.directory}
+            currentUserId={authUser?.id}
+            search={search}
+            setSearch={setSearch}
+            roleFilter={roleFilter}
+            setRoleFilter={setRoleFilter}
+            statusFilter={statusFilter}
+            setStatusFilter={setStatusFilter}
+            onEditUser={(id) => {
+              const u = staffData.find((s) => s.id === id);
+              if (!u) return;
+              setEditOriginalId(u.id);
+              setEditForm({ ...u });
+              setEditOpen(true);
+            }}
+            onDeleteUser={(id) => {
+              console.log("[DELETE FLOW] Step 1: onDeleteUser called, id:", id);
+              console.log("[DELETE FLOW] Step 2: authUser.totp_enabled:", authUser?.totp_enabled);
+              const u = staffData.find((s) => s.id === id);
+              if (!u) {
+                console.log("[DELETE FLOW] Step 3: User not found in staffData");
+                return;
+              }
+              console.log("[DELETE FLOW] Step 4: Found user:", u.fname, u.id);
+              if (authUser?.totp_enabled) {
+                console.log("[DELETE FLOW] Step 5: TOTP enabled, opening TOTP modal");
+                setDeleteTarget(u);
+                setTotpActionLabel("Delete Account");
+                setTotpModalDescription(`Enter your authenticator code to permanently delete ${u.fname}'s account.`);
+                const targetId = u.id;
+                const targetName = u.fname;
+                totpPendingActionRef.current = async (token) => {
+                  console.log("[DELETE FLOW] Step 6: TOTP action called with token:", token, "targetId:", targetId);
+                  await confirmDelete(token, targetId, targetName);
+                };
+                setTotpModalOpen(true);
+                console.log("[DELETE FLOW] Step 7: TOTP modal opened");
+              } else {
+                console.log("[DELETE FLOW] Step 5: TOTP not enabled, opening confirm modal");
+                setDeleteTarget(u);
+                setDeleteOpen(true);
+              }
+            }}
+            onExportData={exportData}
+            onSwitchView={switchView}
+          />
+        )}
 
-          <TabsContent value="create" className="h-full m-0 border-0 focus-visible:ring-0">
-            <RegisterAccountTab
-              createForm={createForm}
-              setCreateForm={setCreateForm}
-              onResetForm={() =>
-                setCreateForm({
-                  id: "",
-                  role: "",
-                  fname: "",
-                  lname: "",
-                  email: "",
-                  status: "Active",
-                })
+        {view === "create" && (
+          <RegisterAccountTab
+            createForm={createForm}
+            setCreateForm={setCreateForm}
+            onResetForm={() =>
+              setCreateForm({
+                id: "",
+                role: "",
+                fname: "",
+                lname: "",
+                email: "",
+                status: "Active",
+              })
+            }
+            onCreateAccount={handleCreate}
+            onSwitchView={switchView}
+          />
+        )}
+
+        {view === "logs" && (
+          <AuditLogsTab
+            displayLogs={auditLogs}
+            isLoading={viewLoading.logs}
+            logPage={logPage}
+            setLogPage={setLogPage}
+            logTotal={logTotal}
+            logsPerPage={logsPerPage}
+            setLogsPerPage={setLogsPerPage}
+            logSearch={logSearch}
+            setLogSearch={setLogSearch}
+          />
+        )}
+
+        {view === "system_data" && (
+          <SystemConfigTab
+            showToast={showToast}
+            logAdminAction={logAdminAction}
+            onVerifyTOTP={(action) => executeWithTOTP(action, "Save Security Questions", true)}
+          />
+        )}
+
+        {view === "storage_layout" && (
+          <StorageLayoutEditorTab showToast={showToast} />
+        )}
+
+        {view === "review" && (
+          <DigitalRecordsReviewTab
+            records={reviewRecords}
+            isLoading={viewLoading.review}
+            statusFilter={reviewStatusFilter}
+            setStatusFilter={setReviewStatusFilter}
+            onRefresh={refreshReviewRecords}
+            onApprove={(id) => reviewDocumentStatus(id, "Approved")}
+            onDecline={openDeclinePrompt}
+            onPreviewDocument={handlePreviewDocument}
+          />
+        )}
+
+        {view === "digitization" && (
+          <SystemAnalyticsTab
+            showToast={showToast}
+            onLogAction={logAdminAction}
+          />
+        )}
+
+        {view === "request_analytics" && (
+          <SLAAnalyticsTab
+            showToast={showToast}
+            onLogAction={logAdminAction}
+          />
+        )}
+
+        {(view === "system" || view === "backup") && (
+          <BackupMaintenanceTab
+            systemHealth={systemHealth}
+            backups={backups}
+            isLoading={viewLoading.system || viewLoading.backup}
+            onSimulateBackup={simulateBackup}
+            onSyncExternal={syncExternal}
+            onDownloadBackup={(b) => {
+              const link = document.createElement("a");
+              link.href = `/api/system/backup/download?id=${b.id}`;
+              link.download = b.filename;
+              link.click();
+            }}
+            onDeleteBackup={(id) => {
+              const b = backups.find((x) => x.id === id);
+              if (b) {
+                setBackupDeleteTarget(b);
+                setBackupDeleteOpen(true);
+              }
+            }}
+            onRestoreFileChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) {
+                setRestoreFile(f);
+                setRestoreConfirmOpen(true);
+                e.target.value = "";
               }
               onCreateAccount={handleCreate}
               onSwitchView={switchView}
@@ -917,24 +1174,35 @@ function AdminPageContent() {
         password={defaultReturnedPw}
       />
 
+      <TOTPChallengeModal
+        open={totpModalOpen}
+        onOpenChange={setTotpModalOpen}
+        onConfirm={handleTOTPConfirm}
+        actionLabel={totpActionLabel}
+        description={totpModalDescription}
+        isLoading={totpModalLoading}
+      />
+
     </div>
   );
 }
 
 export default function AdminPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4">
-          <Skeleton className="h-16 w-full rounded-brand shrink-0" />
-          <div className="flex-1 flex gap-4">
-            <Skeleton className="w-[30%] h-full rounded-brand" />
-            <Skeleton className="w-[70%] h-full rounded-brand" />
+    <AdminGuard>
+      <Suspense
+        fallback={
+          <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4">
+            <Skeleton className="h-16 w-full rounded-brand shrink-0" />
+            <div className="flex-1 flex gap-4">
+              <Skeleton className="w-[30%] h-full rounded-brand" />
+              <Skeleton className="w-[70%] h-full rounded-brand" />
+            </div>
           </div>
-        </div>
-      }
-    >
-      <AdminPageContent />
-    </Suspense>
+        }
+      >
+        <AdminPageContent />
+      </Suspense>
+    </AdminGuard>
   );
 }
