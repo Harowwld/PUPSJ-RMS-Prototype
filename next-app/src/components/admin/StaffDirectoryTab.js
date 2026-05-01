@@ -34,6 +34,7 @@ export default function StaffDirectoryTab({
   statusFilter,
   setStatusFilter,
   onEditUser,
+  onRestoreUser,
   onDeleteUser,
   onExportData,
   onSwitchView,
@@ -280,8 +281,9 @@ export default function StaffDirectoryTab({
                       onChange={(e) => setStatusFilter(e.target.value)}
                     >
                       <option value="All">All Statuses</option>
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
+                      <option value="Active">Active (Online)</option>
+                      <option value="Inactive">Inactive (Offline)</option>
+                      <option value="Archived">Archived</option>
                     </select>
                   </div>
                 </div>
@@ -434,7 +436,7 @@ export default function StaffDirectoryTab({
                                 variant="outline"
                                 className="bg-gray-50 text-gray-500 border-gray-200 font-bold uppercase text-[10px] px-2 py-1 rounded-full shadow-xs"
                               >
-                                {s.status}
+                                {s.status === "Inactive" ? "Archived" : s.status}
                               </Badge>
                             )}
                           </td>
@@ -472,16 +474,29 @@ export default function StaffDirectoryTab({
                                     <i className="ph-bold ph-pencil-simple mr-1.5"></i>
                                     EDIT
                                   </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => onDeleteUser(s.id)}
-                                    className="h-9 px-3 font-bold text-xs border-red-200 text-red-700 hover:text-red-800 hover:bg-red-50 hover:border-red-300 rounded-brand transition-all shadow-sm"
-                                    title="Revoke Network Credentials"
-                                  >
-                                    <i className="ph-bold ph-trash mr-1.5"></i>
-                                    DELETE
-                                  </Button>
+                                  {s.status === "Archived" ? (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => onRestoreUser(s.id)}
+                                      className="h-9 px-3 font-bold text-xs border-green-200 text-green-700 hover:text-green-800 hover:bg-green-50 hover:border-green-300 rounded-brand transition-all shadow-sm"
+                                      title="Restore Account Access"
+                                    >
+                                      <i className="ph-bold ph-arrow-counter-clockwise mr-1.5"></i>
+                                      RESTORE
+                                    </Button>
+                                  ) : (
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => onDeleteUser(s.id)}
+                                      className="h-9 px-3 font-bold text-xs border-red-200 text-red-700 hover:text-red-800 hover:bg-red-50 hover:border-red-300 rounded-brand transition-all shadow-sm"
+                                      title="Archive Personnel Account"
+                                    >
+                                      <i className="ph-bold ph-archive mr-1.5"></i>
+                                      ARCHIVE
+                                    </Button>
+                                  )}
                                 </>
                               )}
                             </div>

@@ -122,6 +122,8 @@ export async function listStudents({
   courseCode,
   yearLevel,
   section,
+  status = "Active",
+  includeArchived = false,
   limit = 200,
   offset = 0,
 } = {}) {
@@ -141,6 +143,11 @@ export async function listStudents({
   if (section) {
     filters.push("section = ?");
     params.push(section);
+  }
+
+  if (!includeArchived) {
+    filters.push("status = ?");
+    params.push(status);
   }
 
   if (q) {
@@ -211,6 +218,20 @@ export async function updateStudent(studentNo, patch) {
   );
 
   return await getStudentByStudentNo(studentNo);
+}
+
+export async function archiveStudent(studentNo) {
+  const existing = await getStudentByStudentNo(studentNo);
+  if (!existing) return null;
+  await dbRun("UPDATE students SET status = 'Archived' WHERE student_no = ?", [studentNo]);
+  return { ...existing, status: "Archived" };
+}
+
+export async function restoreStudent(studentNo) {
+  const existing = await getStudentByStudentNo(studentNo);
+  if (!existing) return null;
+  await dbRun("UPDATE students SET status = 'Active' WHERE student_no = ?", [studentNo]);
+  return { ...existing, status: "Active" };
 }
 
 export async function deleteStudent(studentNo) {

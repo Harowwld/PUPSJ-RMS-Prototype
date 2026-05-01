@@ -27,11 +27,18 @@ import { imageToPdf, needsConversion } from "@/lib/imageToPdf";
 
 function normalizeStudentRow(row) {
   if (!row || typeof row !== "object") return row;
+  const roomRaw = row.room ?? "";
+  const cabRaw = row.cabinet ?? "";
+  const drawerRaw = row.drawer ?? "";
+
   return {
     ...row,
     studentNo: row.studentNo ?? row.student_no ?? "",
     courseCode: row.courseCode ?? row.course_code ?? "",
     yearLevel: row.yearLevel ?? row.year_level ?? null,
+    room: Number.isFinite(Number(roomRaw)) ? Number(roomRaw) : String(roomRaw).trim(),
+    cabinet: String(cabRaw).trim(),
+    drawer: Number.isFinite(Number(drawerRaw)) ? Number(drawerRaw) : String(drawerRaw).trim(),
   };
 }
 
@@ -60,6 +67,7 @@ function StaffPageContent() {
   const [notificationsUnread, setNotificationsUnread] = useState(0);
 
   const [students, setStudents] = useState([]);
+  const [archivedStudents, setArchivedStudents] = useState([]);
   const [docTypes, setDocTypes] = useState([]);
   const [courses, setCourses] = useState([]);
   const [sections, setSections] = useState([]);
@@ -159,21 +167,32 @@ function StaffPageContent() {
 
   const fetchData = useCallback(async () => {
     try {
-      const [sRes, dRes, cRes, secRes, layoutRes] = await Promise.all([
+      const [sRes, aRes, dRes, cRes, secRes, layoutRes] = await Promise.all([
         fetch("/api/students"),
+        fetch("/api/students?includeArchived=true"),
         fetch("/api/doc-types"),
         fetch("/api/courses"),
         fetch("/api/sections"),
         fetch("/api/storage-layout"),
       ]);
-      const [sData, dData, cData, secData, layoutData] = await Promise.all([
+      const [sData, aData, dData, cData, secData, layoutData] = await Promise.all([
         sRes.json(),
+        aRes.json(),
         dRes.json(),
         cRes.json(),
         secRes.json(),
         layoutRes.json(),
       ]);
+      
       setStudents((Array.isArray(sData.data) ? sData.data : []).map(normalizeStudentRow));
+      
+      const allFetched = Array.isArray(aData.data) ? aData.data : [];
+      setArchivedStudents(
+        allFetched
+          .filter(s => s.status === "Archived")
+          .map(normalizeStudentRow)
+      );
+
       setDocTypes(dData.data || []);
       setCourses(cData.data || []);
       setSections(secData.data || []);
@@ -348,9 +367,10 @@ function StaffPageContent() {
   };
 
   const academicYearOptions = useMemo(() => {
+    const combined = [...students, ...archivedStudents];
     const fromData = Array.from(
       new Set(
-        students
+        combined
           .map((s) => getStudentFolderYear(s))
           .filter((y) => y != null)
           .map((y) => Number(y))
@@ -358,7 +378,7 @@ function StaffPageContent() {
       ),
     );
     return fromData.sort((a, b) => a - b);
-  }, [students]);
+  }, [students, archivedStudents]);
 
   const breadcrumbs = useMemo(() => {
     const list = [{ level: "years", label: "Years" }];
@@ -371,16 +391,20 @@ function StaffPageContent() {
   const explorerItems = useMemo(() => {
     if (currentLevel === "years") {
       const years = [...academicYearOptions].sort((a, b) => b - a);
-      return years.map((y) => ({
-        key: String(y),
-        title: `Year ${y}`,
-        subtitle: `${students.filter((s) => getStudentFolderYear(s) === y).length} Students`,
-        icon: "ph-calendar-blank",
-        onClick: () => {
-          setSelectedYear(y);
-          setCurrentLevel("students");
-        },
-      }));
+      return years.map((y) => {
+        const activeCount = students.filter((s) => getStudentFolderYear(s) === y).length;
+        const archCount = archivedStudents.filter((s) => getStudentFolderYear(s) === y).length;
+        return {
+          key: String(y),
+          title: `Year ${y}`,
+          subtitle: `${activeCount} Active · ${archCount} Archived`,
+          icon: "ph-calendar-blank",
+          onClick: () => {
+            setSelectedYear(y);
+            setCurrentLevel("students");
+          },
+        };
+      });
     }
     if (currentLevel === "students") {
       return students
@@ -388,7 +412,7 @@ function StaffPageContent() {
         .map((s) => ({ key: s.studentNo, student: s }));
     }
     return [];
-  }, [currentLevel, students, selectedYear, academicYearOptions]);
+  }, [currentLevel, students, archivedStudents, selectedYear, academicYearOptions]);
 
   const locatorModel = useMemo(() => {
     if (!storageLayout?.rooms?.length) return { kind: "none" };
@@ -846,59 +870,64 @@ function StaffPageContent() {
         const matchingStudents = students.filter((s) => {
           const studentNo = String(s.studentNo || "").toLowerCase();
           const studentName = String(s.name || "").toLowerCase();
-
-          // Student No field: direct filter on ID
           const matchIdField = trimmedNo ? studentNo.includes(trimmedNo) : true;
-
-          // Student Name field: acts as a flexible search across BOTH name and ID
           const matchNameField = trimmedName
             ? studentName.includes(trimmedName) || studentNo.includes(trimmedName)
             : true;
-
           return matchIdField && matchNameField;
         });
 
-        if (matchingStudents.length === 0 || docTypes.length === 0) {
+        if (matchingStudents.length === 0) {
           setDocsRows([]);
           return;
         }
 
         const rows = [];
-
         for (const student of matchingStudents) {
           const studentDocs = staffDocs.filter(
             (d) => String(d.student_no || "") === String(student.studentNo || "")
           );
 
+          // 1. Show all ACTUAL documents the student has
+          const seenTypes = new Set();
+          for (const doc of studentDocs) {
+            if (selectedType && selectedType !== doc.doc_type) continue;
+            
+            seenTypes.add(doc.doc_type);
+            rows.push({
+              id: doc.id,
+              student_no: student.studentNo,
+              student_name: student.name,
+              doc_type: doc.doc_type,
+              status: "uploaded",
+              verificationStatus:
+                doc.approval_status === "Approved" ? "verified" : "unverified",
+              doc: doc,
+              reviewDoc: doc,
+            });
+          }
+
+          // 2. For missing documents, only show ACTIVE docTypes as placeholders
           for (const type of docTypes) {
+            if (seenTypes.has(type)) continue; // Already added as "uploaded"
             if (selectedType && selectedType !== type) continue;
 
-            const doc =
-              findMatchingDocument(studentDocs, student.studentNo, type) || null;
-
-            const approvalStatus = String(doc?.approval_status || "");
-            const hasFile = Boolean(doc);
-
-            // If a document type filter is selected, only show rows with a file
-            // (approved or pending review).
-            if (selectedType && !doc) continue;
-
             rows.push({
-              id: doc?.id ?? `${student.studentNo}-${type}`,
+              id: `missing-${student.studentNo}-${type}`,
               student_no: student.studentNo,
               student_name: student.name,
               doc_type: type,
-              status: hasFile ? "uploaded" : "missing",
-              verificationStatus:
-                approvalStatus === "Approved" ? "verified" : hasFile ? "unverified" : "",
-              doc: hasFile ? doc : null,
-              reviewDoc: doc,
+              status: "missing",
+              verificationStatus: "",
+              doc: null,
+              reviewDoc: null,
             });
           }
         }
 
         setDocsRows(rows);
-      } catch {
+      } catch (err) {
+        console.error("[refreshDocuments] error:", err);
         setDocsError("Failed to load documents");
       } finally {
         setDocsLoading(false);
@@ -981,6 +1010,7 @@ function StaffPageContent() {
                 }
               }}
               students={students}
+              archivedStudents={archivedStudents}
               explorerItems={explorerItems}
               onSwitchView={setView}
               locatorModel={locatorModel}
@@ -1001,6 +1031,23 @@ function StaffPageContent() {
                   refId: `DOC-${Date.now()}`,
                 });
                 setPreviewOpen(true);
+              }}
+              onRestoreStudent={async (studentNo) => {
+                try {
+                  const res = await fetch(`/api/students/${encodeURIComponent(studentNo)}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ status: "Active" }),
+                  });
+                  const json = await res.json().catch(() => null);
+                  if (!res.ok || !json?.ok) {
+                    throw new Error(json?.error || "Failed to restore student record");
+                  }
+                  showToast({ title: "Record Restored", description: `Student ${studentNo} is now active.` });
+                  fetchData();
+                } catch (err) {
+                  showToast({ title: "Restore Failed", description: err.message }, true);
+                }
               }}
             />
           </TabsContent>
@@ -1245,6 +1292,8 @@ function StaffPageContent() {
               setDocsForm={setDocsForm}
               refreshDocuments={refreshDocuments}
               docTypes={docTypes}
+              courses={courses}
+              storageLayout={storageLayout}
               docsLoading={docsLoading}
               docsError={docsError}
               docsRows={docsRows}
@@ -1293,6 +1342,54 @@ function StaffPageContent() {
                   showToast({ title: "Update Failed", description: err.message }, true);
                 }
               }}
+              onUpdateStudent={async (studentNo, data) => {
+                try {
+                  const res = await fetch(`/api/students/${encodeURIComponent(studentNo)}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(data),
+                  });
+                  const json = await res.json().catch(() => null);
+                  if (!res.ok || !json?.ok) {
+                    throw new Error(json?.error || "Failed to update student profile");
+                  }
+                  showToast({ title: "Profile Updated", description: `Student ${studentNo} has been updated.` });
+                  fetchData();
+                  // Re-run the current search to update names/codes in the table
+                  refreshDocuments(docsForm);
+                } catch (err) {
+                  showToast({ title: "Update Failed", description: err.message }, true);
+                }
+              }}
+              onArchiveStudent={async (studentNo) => {
+                try {
+                  const res = await fetch(`/api/students/${encodeURIComponent(studentNo)}`, {
+                    method: "DELETE",
+                  });
+                  const json = await res.json().catch(() => null);
+                  if (!res.ok || !json?.ok) {
+                    throw new Error(json?.error || "Failed to archive student record");
+                  }
+                  showToast({ title: "Record Archived", description: `Student ${studentNo} and their documents are now hidden.` });
+                  // Clear search to hide the archived student
+                  const cleared = { studentNo: "", studentName: "", docType: "" };
+                  setDocsForm(cleared);
+                  refreshDocuments(cleared);
+                  fetchData();
+                } catch (err) {
+                  showToast({ title: "Archive Failed", description: err.message }, true);
+                }
+              }}
+              currentStudent={(() => {
+                const uniqueNo = Array.from(new Set(docsRows.map(r => r.student_no)));
+                const targetNo = uniqueNo.length === 1 ? uniqueNo[0] : docsForm.studentNo;
+                if (!targetNo) return null;
+                return (
+                  students.find(s => s.studentNo === targetNo) || 
+                  archivedStudents.find(s => s.studentNo === targetNo) ||
+                  null
+                );
+              })()}
               onPreviewDocument={(docType, name, no, id) => {
                 setPreview({
                   docType,

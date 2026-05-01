@@ -40,6 +40,14 @@ export default function ConfirmModal({
       confirmVariant: "secondary",
       buttonIcon: "ph-bold ph-warning",
     },
+    success: {
+      icon: "ph-duotone ph-arrow-counter-clockwise",
+      iconWrap: "bg-green-50 border-green-100 text-green-600 shadow-sm",
+      title: "text-gray-900",
+      description: "text-gray-600",
+      confirmVariant: "default",
+      buttonIcon: "ph-bold ph-check",
+    },
     default: {
       icon: "ph-duotone ph-info",
       iconWrap: "bg-blue-50 border-blue-100 text-blue-600 shadow-sm",
@@ -88,7 +96,8 @@ export default function ConfirmModal({
             disabled={isLoading}
             className={cn(
               "h-11 px-6 text-sm font-bold shadow-sm rounded-brand gap-2 flex items-center",
-              v.confirmVariant === "default" && "bg-pup-maroon hover:bg-red-900 text-white",
+              variant === "success" && "bg-green-600 hover:bg-green-700 text-white",
+              (v.confirmVariant === "default" && variant !== "success") && "bg-pup-maroon hover:bg-red-900 text-white",
               v.confirmVariant === "destructive" && "bg-red-600 hover:bg-red-700 text-white"
             )}
           >

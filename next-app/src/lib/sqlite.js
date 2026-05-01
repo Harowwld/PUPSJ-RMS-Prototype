@@ -864,6 +864,44 @@ export async function getDb() {
         }
       }
 
+      // Migration to version 12: Add status column to taxonomy tables for archiving support
+      if (schemaVersion < 12) {
+        try {
+          db.exec("PRAGMA foreign_keys = OFF");
+          db.exec("BEGIN");
+          
+          // Add status to courses
+          const coursesPragma = db.exec("PRAGMA table_info(courses)");
+          const coursesCols = new Set((coursesPragma?.[0]?.values || []).map(r => String(r?.[1] || "")));
+          if (!coursesCols.has("status")) {
+            db.exec("ALTER TABLE courses ADD COLUMN status TEXT NOT NULL DEFAULT 'Active'");
+          }
+
+          // Add status to sections
+          const sectionsPragma = db.exec("PRAGMA table_info(sections)");
+          const sectionsCols = new Set((sectionsPragma?.[0]?.values || []).map(r => String(r?.[1] || "")));
+          if (!sectionsCols.has("status")) {
+            db.exec("ALTER TABLE sections ADD COLUMN status TEXT NOT NULL DEFAULT 'Active'");
+          }
+
+          // Add status to document_types
+          const docTypesPragma = db.exec("PRAGMA table_info(document_types)");
+          const docTypesCols = new Set((docTypesPragma?.[0]?.values || []).map(r => String(r?.[1] || "")));
+          if (!docTypesCols.has("status")) {
+            db.exec("ALTER TABLE document_types ADD COLUMN status TEXT NOT NULL DEFAULT 'Active'");
+          }
+
+          db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '12')");
+          db.exec("COMMIT");
+          persistDb();
+        } catch (e) {
+          try { db.exec("ROLLBACK"); } catch (_) {}
+          console.error("[DB] schema_version 12 migration (taxonomy status):", e);
+        } finally {
+          try { db.exec("PRAGMA foreign_keys = ON"); } catch (_) {}
+        }
+      }
+
       // Safety net for environments where schema_version may be out of sync.
       // This ensures review columns exist before any API query references them.
       try {
@@ -898,10 +936,39 @@ export async function getDb() {
         if (!cols.has("course_code")) {
           db.exec("ALTER TABLE sections ADD COLUMN course_code TEXT");
         }
+        if (!cols.has("status")) {
+          db.exec("ALTER TABLE sections ADD COLUMN status TEXT NOT NULL DEFAULT 'Active'");
+        }
         db.exec("CREATE INDEX IF NOT EXISTS idx_sections_course_code ON sections(course_code)");
         persistDb();
       } catch (e) {
         // ignore sections safety-net errors
+      }
+
+      try {
+        const pragma = db.exec("PRAGMA table_info(courses)");
+        const cols = new Set(
+          (pragma?.[0]?.values || []).map((r) => String(r?.[1] || ""))
+        );
+        if (!cols.has("status")) {
+          db.exec("ALTER TABLE courses ADD COLUMN status TEXT NOT NULL DEFAULT 'Active'");
+        }
+        persistDb();
+      } catch (e) {
+        // ignore courses safety-net errors
+      }
+
+      try {
+        const pragma = db.exec("PRAGMA table_info(document_types)");
+        const cols = new Set(
+          (pragma?.[0]?.values || []).map((r) => String(r?.[1] || ""))
+        );
+        if (!cols.has("status")) {
+          db.exec("ALTER TABLE document_types ADD COLUMN status TEXT NOT NULL DEFAULT 'Active'");
+        }
+        persistDb();
+      } catch (e) {
+        // ignore doc_types safety-net errors
       }
 
       try {

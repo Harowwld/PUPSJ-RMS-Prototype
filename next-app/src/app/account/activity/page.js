@@ -124,7 +124,7 @@ export default function AccountActivityPage() {
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="block text-xs font-bold text-gray-700 uppercase">
-                    Search Activity
+                    Search Activity Logs
                   </label>
                   {search !== "" && (
                     <Button
@@ -136,7 +136,7 @@ export default function AccountActivityPage() {
                       }}
                       className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
                     >
-                      Clear All
+                      CLEAR ALL
                     </Button>
                   )}
                 </div>
@@ -144,7 +144,7 @@ export default function AccountActivityPage() {
                   <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                   <Input
                     type="text"
-                    placeholder="Search actions..."
+                    placeholder="Search by action or IP address..."
                     className="pl-10 h-10 w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon transition-colors"
                     value={search}
                     onChange={(e) => {
@@ -158,7 +158,7 @@ export default function AccountActivityPage() {
               <div className="flex gap-2 items-end justify-end">
                 <div className="w-40">
                   <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                    Items
+                    Items Per Page
                   </label>
                   <select
                     className="h-10 w-full rounded-brand border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
@@ -184,7 +184,7 @@ export default function AccountActivityPage() {
                   <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
                     <th className="p-3 font-bold w-52">Date & Time</th>
                     <th className="p-3 font-bold">Action</th>
-                    <th className="p-3 font-bold text-right w-40">IP</th>
+                    <th className="p-3 font-bold text-right w-40">IP Address</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
@@ -219,19 +219,38 @@ export default function AccountActivityPage() {
                       </td>
                     </tr>
                   ) : (
-                    displayRows.map((r) => (
-                      <tr key={r.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="p-3 font-mono text-[11px] text-gray-500 whitespace-nowrap">
-                          {formatPHDateTime(r.created_at)}
-                        </td>
-                        <td className="p-3 text-xs font-medium text-gray-700">
-                          {r.action}
-                        </td>
-                        <td className="p-3 text-right font-mono text-[11px] text-gray-400">
-                          {r.ip || "—"}
-                        </td>
-                      </tr>
-                    ))
+                    displayRows.map((r) => {
+                      const isDestructive =
+                        r.action.toLowerCase().includes("delete") ||
+                        r.action.toLowerCase().includes("remove");
+                      const isAuth =
+                        r.action.toLowerCase().includes("login") ||
+                        r.action.toLowerCase().includes("logout");
+
+                      return (
+                        <tr key={r.id} className="hover:bg-gray-50 transition-colors">
+                          <td className="p-3 font-mono text-[11px] text-gray-500 whitespace-nowrap">
+                            {formatPHDateTime(r.created_at)}
+                          </td>
+                          <td className="p-3 text-xs font-medium text-gray-700">
+                            {isDestructive ? (
+                              <span className="text-red-600 font-bold">
+                                {r.action}
+                              </span>
+                            ) : isAuth ? (
+                              <span className="text-blue-600 font-semibold">
+                                {r.action}
+                              </span>
+                            ) : (
+                              <span>{r.action}</span>
+                            )}
+                          </td>
+                          <td className="p-3 text-right font-mono text-[11px] text-gray-400">
+                            {r.ip || "—"}
+                          </td>
+                        </tr>
+                      );
+                    })
                   )}
                 </tbody>
               </table>
@@ -253,7 +272,7 @@ export default function AccountActivityPage() {
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     className="h-8 text-xs font-bold text-gray-600"
                   >
-                    <i className="ph-bold ph-caret-left"></i> Previous
+                    <i className="ph-bold ph-caret-left"></i> PREVIOUS
                   </Button>
                   <div className="px-3 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-md h-8 flex items-center justify-center min-w-12 shadow-sm">
                     {displayPage} / {totalPages}
@@ -265,7 +284,7 @@ export default function AccountActivityPage() {
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     className="h-8 text-xs font-bold text-gray-600"
                   >
-                    Next <i className="ph-bold ph-caret-right"></i>
+                    NEXT <i className="ph-bold ph-caret-right"></i>
                   </Button>
                 </div>
               </div>

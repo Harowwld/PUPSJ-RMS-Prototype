@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatPHDateTime } from "@/lib/timeFormat";
 import {
   Empty,
   EmptyHeader,
@@ -28,6 +29,7 @@ export default function AuditLogsTab({
 }) {
   const [searchQuery, setSearchQuery] = useState("");
   const [itemsPerPage, setItemsPerPage] = useState(logsPerPage || 10);
+  const [isExporting, setIsExporting] = useState(false);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
@@ -45,33 +47,47 @@ export default function AuditLogsTab({
   const startItem = (logPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(logPage * itemsPerPage, logTotal);
 
-  const handleDownloadCSV = () => {
-    if (displayLogs.length === 0) return;
+  const handleDownloadCSV = async () => {
+    if (logTotal === 0 || isExporting) return;
+    setIsExporting(true);
 
-    const headers = ["Date & Time", "User", "Role", "Action", "IP Address"];
-    const rows = displayLogs.map((log) => [
-      log.time,
-      log.user,
-      log.role,
-      log.action,
-      log.ip,
-    ]);
+    try {
+      // Fetch entire filtered history (large limit)
+      const res = await fetch(`/api/audit-logs?limit=50000&search=${encodeURIComponent(logSearch)}`);
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.error || "Export failed");
 
-    const csvContent = [
-      headers.join(","),
-      ...rows.map((row) =>
-        row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
-      ),
-    ].join("\n");
+      const allLogs = Array.isArray(json.data) ? json.data : [];
+      const headers = ["Date & Time", "User", "Role", "Action", "IP Address"];
+      
+      const rows = allLogs.map((log) => [
+        formatPHDateTime(log.created_at),
+        log.actor,
+        log.role,
+        log.action,
+        log.ip || "—",
+      ]);
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", `audit-logs-${new Date().toISOString().split("T")[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((row) =>
+          row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+        ),
+      ].join("\n");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", `audit-logs-full-${new Date().toISOString().split("T")[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("[Export Error]", err);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -89,7 +105,10 @@ export default function AuditLogsTab({
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setSearchQuery("")}
+                    onClick={() => {
+                      setSearchQuery("");
+                      setLogSearch("");
+                    }}
                     className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
                   >
                     CLEAR ALL
@@ -131,11 +150,11 @@ export default function AuditLogsTab({
                   variant="default"
                   size="sm"
                   onClick={handleDownloadCSV}
-                  disabled={displayLogs.length === 0}
-                  className="h-9 px-4 min-w-32 font-bold text-sm bg-pup-maroon text-white hover:bg-red-900 border border-pup-maroon shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                  disabled={logTotal === 0 || isExporting}
+                  className="h-9 px-4 min-w-32 font-bold text-sm bg-pup-maroon text-white hover:bg-red-900 border border-pup-maroon shadow-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center gap-2"
                 >
-                  <i className="ph-bold ph-download-simple text-sm mr-1.5"></i>
-                  EXPORT CSV
+                  <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-download-simple"} text-sm`}></i>
+                  {isExporting ? "EXPORTING..." : "EXPORT CSV"}
                 </Button>
               </div>
             </div>
@@ -198,10 +217,11 @@ export default function AuditLogsTab({
                     </tr>
                   ) : (
                     displayLogs.map((log, idx) => {
-                      // Determine badge type based on action severity (mock logic)
-                      const isDestructive =
+                      // Determine badge type based on action severity
+                      const isArchival =
                         log.action.toLowerCase().includes("delete") ||
-                        log.action.toLowerCase().includes("remove");
+                        log.action.toLowerCase().includes("remove") ||
+                        log.action.toLowerCase().includes("archive");
                       const isAuth =
                         log.action.toLowerCase().includes("login") ||
                         log.action.toLowerCase().includes("logout");
@@ -243,7 +263,7 @@ export default function AuditLogsTab({
                             )}
                           </td>
                           <td className="p-3 text-xs font-medium text-gray-700">
-                            {isDestructive ? (
+                            {isArchival ? (
                               <span className="text-red-600 font-bold">
                                 {log.action}
                               </span>

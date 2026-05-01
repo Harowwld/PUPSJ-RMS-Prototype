@@ -165,7 +165,33 @@ export async function updateStaff(originalId, patch) {
   return await getStaffById(next.id);
 }
 
+export async function archiveStaff(id) {
+  const existing = await getStaffById(id);
+  if (!existing) return null;
+  await dbRun(
+    `UPDATE staff SET status = 'Archived', updated_at = datetime('now') WHERE id = ?`,
+    [id]
+  );
+  return await getStaffById(id);
+}
+
+export async function restoreStaff(id) {
+  const existing = await getStaffById(id);
+  if (!existing) return null;
+  await dbRun(
+    `UPDATE staff SET status = 'Inactive', updated_at = datetime('now') WHERE id = ?`,
+    [id]
+  );
+  return await getStaffById(id);
+}
+
 export async function deleteStaff(id) {
+  // We prefer archiving (soft-delete) to preserve audit trails, 
+  // but we keep this method name for compatibility with existing code.
+  return await archiveStaff(id);
+}
+
+export async function hardDeleteStaff(id) {
   const existing = await getStaffById(id);
   if (!existing) return null;
   await dbRun(

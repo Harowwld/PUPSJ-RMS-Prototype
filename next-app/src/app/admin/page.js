@@ -599,6 +599,25 @@ function AdminPageContent() {
     }
   };
 
+  const handleRestoreUser = async (id) => {
+    const u = staffData.find((s) => s.id === id);
+    const name = u ? `${u.fname} ${u.lname}` : id;
+    try {
+      const res = await fetch(`/api/staff/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "Active" }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to restore account");
+      
+      setStaffData((prev) => prev.map((s) => (s.id === id ? json.data : s)));
+      showToast({ title: "Account Restored", description: `${name}'s access has been reactivated.` });
+    } catch (err) {
+      showToast({ title: "Restore Failed", description: err.message }, true);
+    }
+  };
+
   const confirmDelete = async (totpToken = null, targetId = null, targetName = null) => {
     const id = targetId || deleteTarget?.id;
     const name = targetName || deleteTarget?.fname;
@@ -642,8 +661,8 @@ function AdminPageContent() {
         throw new Error(json?.error || "Failed to delete staff");
       }
       console.log("[DELETE FLOW] confirmDelete: success, updating staffData");
-      setStaffData((prev) => prev.filter((s) => s.id !== id));
-      showToast({ title: "Account Removed", description: "The staff account has been permanently deleted." });
+      setStaffData((prev) => prev.map((s) => (s.id === id ? json.data : s)));
+      showToast({ title: "Account Archived", description: `${name}'s account has been archived.` });
       setDeleteOpen(false);
     } catch (err) {
       console.log("[DELETE FLOW] confirmDelete catch error:", err.message);
@@ -820,7 +839,7 @@ function AdminPageContent() {
     { type: "header", label: "System Configuration" },
     { key: "storage_layout", label: "Storage Layout", iconClass: "ph-bold ph-warehouse" },
     { key: "system_data", label: "System Data", iconClass: "ph-bold ph-gear" },
-    { key: "system", label: "Backup & Maintenance", iconClass: "ph-bold ph-database" },
+    { key: "system", label: "Backup", iconClass: "ph-bold ph-database" },
     { key: "logs", label: "Audit Logs", iconClass: "ph-bold ph-scroll" },
   ];
 
@@ -864,6 +883,7 @@ function AdminPageContent() {
               setEditForm({ ...u });
               setEditOpen(true);
             }}
+            onRestoreUser={handleRestoreUser}
             onDeleteUser={(id) => {
               console.log("[DELETE FLOW] Step 1: onDeleteUser called, id:", id);
               console.log("[DELETE FLOW] Step 2: authUser.totp_enabled:", authUser?.totp_enabled);

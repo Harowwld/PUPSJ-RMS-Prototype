@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { listSections, createSection, updateSection, deleteSection } from "../../../lib/sectionsRepo";
+import { listSections, createSection, updateSection, archiveSection } from "../../../lib/sectionsRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
 
 export const dynamic = "force-dynamic";
@@ -8,7 +8,8 @@ export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
     const courseCode = String(searchParams.get("courseCode") || "").trim().toUpperCase();
-    const sections = await listSections();
+    const includeArchived = searchParams.get("includeArchived") === "true";
+    const sections = await listSections({ includeArchived });
     const scoped = courseCode
       ? sections.filter((s) => String(s.course_code || "").toUpperCase() === courseCode)
       : sections;
@@ -51,7 +52,7 @@ export async function PUT(req) {
     if (!id) throw new Error("Missing section ID");
 
     const body = await req.json().catch(() => ({}));
-    const { name, courseCode } = body;
+    const { name, courseCode, status } = body;
 
     if (!name || !courseCode) {
       return NextResponse.json(
@@ -60,8 +61,13 @@ export async function PUT(req) {
       );
     }
 
-    const updated = await updateSection(id, name, courseCode);
-    await writeAuditLog(req, `Updated section: ${name} (${courseCode})`);
+    const updated = await updateSection(id, name, courseCode, status);
+    // Log specifically if we're toggling status
+    if (status) {
+       await writeAuditLog(req, `${status === "Active" ? "Restored" : "Archived"} course block: ${updated.name}`);
+    } else {
+       await writeAuditLog(req, `Updated course block: ${updated.name}`);
+    }
     return NextResponse.json({ ok: true, data: updated });
   } catch (error) {
     return NextResponse.json(
@@ -75,6 +81,7 @@ export async function DELETE(req) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
+    const restore = searchParams.get("restore") === "true";
 
     if (!id) {
       return NextResponse.json(
@@ -83,8 +90,17 @@ export async function DELETE(req) {
       );
     }
 
-    await deleteSection(id);
-    await writeAuditLog(req, `Deleted section ID: ${id}`);
+    const sections = await listSections({ includeArchived: true });
+    const target = sections.find(s => String(s.id) === String(id));
+
+    if (restore) {
+      const { restoreSection } = await import("../../../lib/sectionsRepo");
+      await restoreSection(id);
+      await writeAuditLog(req, `Restored course block: ${target?.name || id}`);
+    } else {
+      await archiveSection(id);
+      await writeAuditLog(req, `Archived course block: ${target?.name || id}`);
+    }
     return NextResponse.json({ ok: true });
   } catch (error) {
     return NextResponse.json(

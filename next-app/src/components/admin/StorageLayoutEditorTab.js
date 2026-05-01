@@ -1315,35 +1315,40 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                     </div>
 
                     <div>
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="text-xs font-bold text-gray-700 uppercase tracking-wide">
-                          Drawer count
-                        </div>
-                        <div className="text-sm font-black text-gray-900">
-                          {selectedCabinet.drawerIds.length}
-                        </div>
+                      <div className="text-xs font-bold text-gray-700 uppercase tracking-wide mb-2">
+                        Drawer count
                       </div>
-                      <div className="grid grid-cols-2 gap-2 mt-3">
+                      <div className="flex items-center justify-between p-1 bg-gray-50 border border-gray-200 rounded-xl">
                         <Button
                           type="button"
-                          variant="outline"
-                          className="h-10 font-bold"
-                          onClick={addDrawerToSelected}
-                        >
-                          <i className="ph-bold ph-plus mr-2" />
-                          ADD DRAWER
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          className="h-10 font-bold"
+                          variant="ghost"
+                          size="icon"
+                          className="h-10 w-10 rounded-lg hover:bg-white hover:shadow-sm transition-all"
                           onClick={removeDrawerFromSelected}
                           disabled={
                             (selectedCabinet.drawerIds || []).length <= 1
                           }
                         >
-                          <i className="ph-bold ph-minus mr-2" />
-                          REMOVE DRAWER
+                          <i className="ph-bold ph-minus" />
+                        </Button>
+
+                        <div className="flex-1 text-center">
+                          <span className="text-lg font-black text-gray-900">
+                            {(selectedCabinet.drawerIds || []).length}
+                          </span>
+                          <span className="ml-2 text-xs font-bold text-gray-500 uppercase tracking-tight">
+                            Drawers
+                          </span>
+                        </div>
+
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-10 w-10 rounded-lg hover:bg-white hover:shadow-sm transition-all"
+                          onClick={addDrawerToSelected}
+                        >
+                          <i className="ph-bold ph-plus" />
                         </Button>
                       </div>
                     </div>

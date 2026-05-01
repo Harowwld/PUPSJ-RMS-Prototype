@@ -10,6 +10,7 @@ export async function GET(req) {
   const courseCode = searchParams.get("courseCode") || "";
   const yearLevel = searchParams.get("yearLevel") || "";
   const section = searchParams.get("section") || "";
+  const includeArchived = searchParams.get("includeArchived") === "true";
   const limit = searchParams.get("limit") || "200";
   const offset = searchParams.get("offset") || "0";
 
@@ -18,6 +19,7 @@ export async function GET(req) {
     courseCode: courseCode || undefined,
     yearLevel: yearLevel || undefined,
     section: section || undefined,
+    includeArchived,
     limit,
     offset,
   });

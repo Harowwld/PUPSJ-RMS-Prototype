@@ -20,17 +20,23 @@ import {
   EmptyDescription,
   EmptyMedia,
 } from "@/components/ui/empty";
+import ConfirmModal from "@/components/shared/ConfirmModal";
 
 export default function DocumentsTab({
   docsForm,
   setDocsForm,
   refreshDocuments,
   docTypes,
+  courses,
+  storageLayout,
   docsLoading,
   docsError,
   docsRows,
   updateDoc,
   onPreviewDocument,
+  onUpdateStudent,
+  onArchiveStudent,
+  currentStudent,
 }) {
   const [updatePromptOpen, setUpdatePromptOpen] = useState(false);
   const [updateTargetId, setUpdateTargetId] = useState(null);
@@ -41,6 +47,54 @@ export default function DocumentsTab({
   const [isDragActive, setIsDragActive] = useState(false);
   const [updateSaving, setUpdateSaving] = useState(false);
   const fileRef = useRef(null);
+
+  // Student Edit State
+  const [editStudentOpen, setEditStudentOpen] = useState(false);
+  const [editStudentSaving, setEditStudentSaving] = useState(false);
+  const [editStudentForm, setEditStudentForm] = useState({
+    name: "",
+    courseCode: "",
+    section: "",
+    room: "",
+    cabinet: "",
+    drawer: "",
+  });
+
+  // Archive Student Confirmation
+  const [confirmArchiveOpen, setConfirmArchiveOpen] = useState(false);
+
+  // Storage Layout Helpers (Mirrors ScanUploadTab logic)
+  const roomOptions = storageLayout?.rooms?.map((r) => r.id) || [];
+  const coerceRoomId = (v) => {
+    if (typeof v === "number") return v;
+    const n = parseInt(String(v), 10);
+    return Number.isFinite(n) ? n : null;
+  };
+  const getRoomDef = (roomIdRaw) => {
+    const roomId = coerceRoomId(roomIdRaw);
+    if (roomId == null) return null;
+    return storageLayout?.rooms?.find((r) => r.id === roomId) || null;
+  };
+  const getCabinetsForRoom = (roomIdRaw) => getRoomDef(roomIdRaw)?.cabinets || [];
+  const getDrawerIdsFor = (roomIdRaw, cabinetIdRaw) => {
+    const roomDef = getRoomDef(roomIdRaw);
+    const cabId = String(cabinetIdRaw ?? "").trim();
+    if (!roomDef || !cabId) return [];
+    const cab = roomDef.cabinets.find((c) => c.id === cabId);
+    return cab?.drawerIds || [];
+  };
+  const mergeSelectedCabinetId = (roomIdRaw, cabIdRaw) => {
+    const cabId = String(cabIdRaw || "").trim();
+    const ids = getCabinetsForRoom(roomIdRaw).map((c) => c.id);
+    if (cabId && !ids.includes(cabId)) return [cabId, ...ids];
+    return ids;
+  };
+  const mergeSelectedDrawerId = (roomIdRaw, cabIdRaw, drawerRaw) => {
+    const ids = getDrawerIdsFor(roomIdRaw, cabIdRaw);
+    const selected = parseInt(String(drawerRaw || ""), 10);
+    if (Number.isFinite(selected) && !ids.includes(selected)) return [selected, ...ids];
+    return ids;
+  };
 
   const handlePickedFile = (file) => {
     if (!file) return;
@@ -60,10 +114,23 @@ export default function DocumentsTab({
     compPercent = compTotal > 0 ? Math.round((compUploaded / compTotal) * 100) : 0;
   }
 
+  const openEditStudent = () => {
+    if (!currentStudent) return;
+    setEditStudentForm({
+      name: currentStudent.name || "",
+      courseCode: currentStudent.courseCode || currentStudent.course_code || "",
+      section: currentStudent.section || "",
+      room: currentStudent.room || "",
+      cabinet: currentStudent.cabinet || "",
+      drawer: currentStudent.drawer || "",
+    });
+    setEditStudentOpen(true);
+  };
+
   return (
     <div
       id="view-documents"
-      className="flex flex-col lg:flex-row w-full h-full gap-4 animate-fade-in"
+      className="flex flex-col lg:flex-row w-full h-full gap-4 animate-fade-in font-inter"
     >
       <section className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col">
         <div className="p-4 bg-gray-50/50 flex-none border-b border-gray-200">
@@ -232,16 +299,25 @@ export default function DocumentsTab({
                       {compUploaded} out of {compTotal} required document types uploaded.
                     </p>
                   </div>
-                  <div className="flex items-center gap-4">
-                    <span className={`text-xl font-black ${compPercent >= 100 ? "text-emerald-600" : compPercent >= 50 ? "text-amber-600" : "text-red-600"}`}>
-                      {compPercent}%
-                    </span>
-                    <div className="w-32 sm:w-48 h-2.5 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
-                        className={`h-full transition-all duration-500 ${compPercent >= 100 ? "bg-emerald-500" : compPercent >= 50 ? "bg-amber-500" : "bg-red-500"}`}
-                        style={{ width: `${compPercent}%` }}
-                      />
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-4">
+                      <span className={`text-xl font-black ${compPercent >= 100 ? "text-emerald-600" : compPercent >= 50 ? "text-amber-600" : "text-red-600"}`}>
+                        {compPercent}%
+                      </span>
+                      <div className="w-32 sm:w-48 h-2.5 bg-gray-200 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full transition-all duration-500 ${compPercent >= 100 ? "bg-emerald-500" : compPercent >= 50 ? "bg-amber-500" : "bg-red-500"}`}
+                          style={{ width: `${compPercent}%` }}
+                        />
+                      </div>
                     </div>
+                    <Button
+                      onClick={openEditStudent}
+                      className="bg-white border border-gray-300 text-gray-700 hover:text-pup-maroon hover:border-pup-maroon font-bold text-xs px-4 h-9 shadow-sm"
+                    >
+                      <i className="ph-bold ph-user-circle-gear mr-2 text-sm"></i>
+                      MANAGE PROFILE
+                    </Button>
                   </div>
                 </div>
               )}
@@ -337,16 +413,18 @@ export default function DocumentsTab({
                               </span>
                             )}
                           </td>
-                          <td className="p-3 text-gray-700">
+                          <td className="p-3 text-gray-700 max-w-[180px]">
                             {r.doc ? (
                               <>
-                                {r.doc.original_filename}
+                                <div className="truncate font-medium text-gray-900" title={r.doc.original_filename}>
+                                  {r.doc.original_filename}
+                                </div>
                                 <div className="text-xs text-gray-500 font-mono">
                                   {(r.doc.size_bytes / 1024).toFixed(1)} KB
                                 </div>
                               </>
                             ) : (
-                              <span className="text-xs text-gray-500 font-medium">
+                              <span className="text-xs font-medium text-gray-400">
                                 Not uploaded
                               </span>
                             )}
@@ -354,8 +432,8 @@ export default function DocumentsTab({
                           <td className="p-3 text-gray-600 font-medium">
                             {formatPHDateTime(r.reviewDoc?.created_at)}
                           </td>
-                          <td className="p-3">
-                            <div className="flex justify-end flex-wrap gap-2">
+                          <td className="p-3 whitespace-nowrap text-right">
+                            <div className="flex justify-end gap-2">
                               {r.doc ? (
                                 <>
                                   <Button
@@ -369,8 +447,9 @@ export default function DocumentsTab({
                                         r.doc.id,
                                       )
                                     }
-                                    className="px-3 font-bold text-xs border-gray-300 text-gray-700 hover:border-pup-maroon"
+                                    className="px-3 font-bold text-xs border-gray-300 text-gray-700 hover:border-pup-maroon transition-all"
                                   >
+                                    <i className="ph-bold ph-eye mr-1.5"></i>
                                     VIEW
                                   </Button>
                                   <Button
@@ -390,8 +469,9 @@ export default function DocumentsTab({
                                       setUpdateFile(null);
                                       setUpdatePromptOpen(true);
                                     }}
-                                    className="px-3 bg-pup-maroon text-white font-bold text-xs hover:bg-red-900"
+                                    className="px-3 bg-pup-maroon text-white font-bold text-xs hover:bg-red-900 transition-all"
                                   >
+                                    <i className="ph-bold ph-pencil-simple-line mr-1.5"></i>
                                     UPDATE
                                   </Button>
                                 </>
@@ -422,12 +502,15 @@ export default function DocumentsTab({
           )}
         </CardContent>
       </section>
+
+      {/* DOCUMENT UPDATE MODAL */}
       <Dialog
         open={updatePromptOpen}
         onOpenChange={(isOpen) => {
           if (!isOpen) {
             setUpdatePromptOpen(false);
             setUpdateTargetId(null);
+            setUpdateFile(null);
           }
         }}
       >
@@ -438,21 +521,31 @@ export default function DocumentsTab({
                 <i className="ph-duotone ph-pencil-line text-2xl"></i>
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg font-black tracking-tight text-gray-900">
+                <DialogTitle className="text-lg font-black tracking-tight text-gray-900 leading-tight">
                   Update Document File
                 </DialogTitle>
-                <DialogDescription className="text-sm font-medium mt-1 text-gray-600">
-                  Replace the PDF with a clearer copy, then update metadata if
-                  needed.
+                <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 leading-relaxed">
+                  Replace the PDF with a clearer scan for this record.
                 </DialogDescription>
               </div>
             </div>
           </DialogHeader>
 
-          <div className="p-6 space-y-4">
+          <div className="p-6 space-y-5">
             <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
-                Replacement PDF
+              <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
+                Target Student
+              </label>
+              <Input
+                disabled
+                className="bg-gray-100 font-mono text-gray-500 border-gray-200 cursor-not-allowed h-11"
+                value={updateStudentNo}
+              />
+            </div>
+            
+            <div>
+              <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
+                Replacement PDF <span className="text-pup-maroon">*</span>
               </label>
               <button
                 type="button"
@@ -479,16 +572,15 @@ export default function DocumentsTab({
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-bold text-gray-900">
-                      Drag and drop a PDF here, or click to browse
+                      Click to browse or drop replacement
                     </p>
                     <p className="mt-1 text-xs font-medium text-gray-600">
-                      Use a cleaner scan so staff can view and print a better
-                      copy.
+                      New scan will overwrite the existing file for {updateDocType}.
                     </p>
-                    <p className="mt-2 text-xs font-mono text-gray-700 truncate">
+                    <p className="mt-2 text-xs font-mono text-pup-maroon font-bold truncate">
                       {updateFile
                         ? updateFile.name
-                        : "No replacement file selected"}
+                        : "No replacement selected"}
                     </p>
                   </div>
                 </div>
@@ -501,45 +593,9 @@ export default function DocumentsTab({
                 onChange={(e) => handlePickedFile(e.target.files?.[0] || null)}
               />
             </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
-                Student Number
-              </label>
-              <Input
-                className="bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
-                value={updateStudentNo}
-                onChange={(e) => setUpdateStudentNo(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
-                Student Name
-              </label>
-              <Input
-                className="bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
-                value={updateStudentName}
-                onChange={(e) => setUpdateStudentName(e.target.value)}
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase">
-                Document Type
-              </label>
-              <select
-                className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors font-semibold"
-                value={updateDocType}
-                onChange={(e) => setUpdateDocType(e.target.value)}
-              >
-                {docTypes.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </div>
           </div>
 
-          <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+          <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
             <Button
               type="button"
               variant="outline"
@@ -548,7 +604,7 @@ export default function DocumentsTab({
                 setUpdateTargetId(null);
                 setUpdateFile(null);
               }}
-              className="px-4 font-bold text-sm border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+              className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
             >
               CANCEL
             </Button>
@@ -571,14 +627,193 @@ export default function DocumentsTab({
                   setUpdateSaving(false);
                 }
               }}
-              disabled={updateSaving}
-              className="px-4 bg-pup-maroon text-white font-bold text-sm hover:bg-red-900 disabled:opacity-60 disabled:cursor-not-allowed rounded-brand"
+              disabled={updateSaving || !updateFile}
+              className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand"
             >
+              <i className="ph-bold ph-check text-lg"></i>
               {updateSaving ? "SAVING..." : "SAVE CHANGES"}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* STUDENT PROFILE EDIT MODAL */}
+      <Dialog open={editStudentOpen} onOpenChange={setEditStudentOpen}>
+        <DialogContent className="sm:max-w-2xl p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
+          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+            <div className="flex items-start gap-4">
+              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
+                <i className="ph-duotone ph-user-circle-gear text-2xl"></i>
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-lg font-black tracking-tight text-gray-900 leading-tight">
+                  Manage Student Profile
+                </DialogTitle>
+                <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 leading-relaxed">
+                  Update student metadata and physical storage location records.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100 pb-1">Identification</h4>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Student Number</label>
+                <Input disabled value={currentStudent?.studentNo} className="bg-gray-100 font-mono text-gray-500 border-gray-200 cursor-not-allowed" />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Full Name <span className="text-pup-maroon">*</span></label>
+                <Input 
+                  value={editStudentForm.name} 
+                  onChange={e => setEditStudentForm(p => ({ ...p, name: e.target.value.toUpperCase() }))}
+                  placeholder="LAST NAME, FIRST NAME"
+                  className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Degree Program <span className="text-pup-maroon">*</span></label>
+                <select
+                  className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                  value={editStudentForm.courseCode}
+                  onChange={e => setEditStudentForm(p => ({ ...p, courseCode: e.target.value }))}
+                  required
+                >
+                  <option value="" disabled>Select Program...</option>
+                  {courses.map(c => <option key={c.code} value={c.code}>{c.code} - {c.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Section <span className="text-pup-maroon">*</span></label>
+                <Input 
+                  value={editStudentForm.section} 
+                  onChange={e => setEditStudentForm(p => ({ ...p, section: e.target.value }))}
+                  className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  required
+                />
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100 pb-1">Physical Location</h4>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Room Number <span className="text-pup-maroon">*</span></label>
+                <select
+                  className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                  value={String(editStudentForm.room || "")}
+                  onChange={(e) => {
+                    const nextRoom = e.target.value ? parseInt(e.target.value, 10) : "";
+                    setEditStudentForm((p) => ({ ...p, room: nextRoom, cabinet: "", drawer: "" }));
+                  }}
+                  required
+                >
+                  <option value="" disabled>Select Room...</option>
+                  {roomOptions.map((r) => (
+                    <option key={r} value={r}>Room {r}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Cabinet ID <span className="text-pup-maroon">*</span></label>
+                <select
+                  className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                  value={editStudentForm.cabinet}
+                  onChange={(e) => setEditStudentForm((p) => ({ ...p, cabinet: e.target.value, drawer: "" }))}
+                  disabled={!editStudentForm.room}
+                  required
+                >
+                  <option value="" disabled>Select Cabinet...</option>
+                  {mergeSelectedCabinetId(editStudentForm.room, editStudentForm.cabinet).map((c) => (
+                    <option key={c} value={c}>Cabinet {c}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Drawer Number <span className="text-pup-maroon">*</span></label>
+                <select
+                  className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                  value={String(editStudentForm.drawer || "")}
+                  onChange={(e) => setEditStudentForm((p) => ({ ...p, drawer: e.target.value }))}
+                  disabled={!editStudentForm.cabinet}
+                  required
+                >
+                  <option value="" disabled>Select Drawer...</option>
+                  {mergeSelectedDrawerId(editStudentForm.room, editStudentForm.cabinet, editStudentForm.drawer).map((d) => (
+                    <option key={d} value={d}>Drawer {d}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="pt-4">
+                <div className="bg-red-50 border border-red-100 rounded-xl p-4">
+                  <div className="flex gap-3">
+                    <i className="ph-duotone ph-warning-circle text-xl text-red-600 shrink-0"></i>
+                    <div>
+                      <p className="text-xs font-bold text-red-900 uppercase tracking-tight">Archive Record</p>
+                      <p className="text-[11px] text-red-700 mt-1 leading-relaxed">
+                        Soft-deleting this student will hide their profile and all documents from active search results.
+                      </p>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setConfirmArchiveOpen(true)}
+                        className="mt-3 w-full bg-white border border-red-200 text-red-600 hover:bg-red-50 text-[10px] font-black h-9 shadow-xs rounded-brand"
+                      >
+                        <i className="ph-bold ph-archive mr-2"></i>
+                        ARCHIVE STUDENT RECORD
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setEditStudentOpen(false)}
+              className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+            >
+              CANCEL
+            </Button>
+            <Button
+              type="button"
+              onClick={async () => {
+                setEditStudentSaving(true);
+                try {
+                  await onUpdateStudent(currentStudent.studentNo, editStudentForm);
+                  setEditStudentOpen(false);
+                } finally {
+                  setEditStudentSaving(false);
+                }
+              }}
+              disabled={editStudentSaving}
+              className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand"
+            >
+              <i className="ph-bold ph-check text-lg"></i>
+              {editStudentSaving ? "SAVING..." : "SAVE PROFILE"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmModal
+        open={confirmArchiveOpen}
+        onCancel={() => setConfirmArchiveOpen(false)}
+        title="Archive Student Record"
+        message={`Are you sure you want to archive student ${currentStudent?.studentNo}? This will hide all their documents from the system.`}
+        confirmLabel="Archive"
+        variant="danger"
+        onConfirm={async () => {
+          setConfirmArchiveOpen(false);
+          setEditStudentOpen(false);
+          await onArchiveStudent(currentStudent.studentNo);
+        }}
+      />
     </div>
   );
 }

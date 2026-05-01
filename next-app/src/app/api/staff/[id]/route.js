@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { deleteStaff, getStaffById, updateStaff } from "../../../../lib/staffRepo";
+import { archiveStaff, restoreStaff, getStaffById, updateStaff } from "../../../../lib/staffRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { requireTOTP, extractTOTPToken } from "../../../../lib/totpMiddleware";
@@ -18,6 +18,15 @@ async function getCurrentUserId() {
     return payload.sub || null;
   } catch (err) {
     return null;
+  }
+}
+
+async function getStaffDisplayNameById(id) {
+  try {
+    const s = await getStaffById(id);
+    return s ? `${s.fname} ${s.lname}` : id;
+  } catch {
+    return id;
   }
 }
 
@@ -39,6 +48,21 @@ export async function PATCH(req, ctx) {
       { ok: false, error: "Invalid JSON body" },
       { status: 400 }
     );
+  }
+
+  const name = await getStaffDisplayNameById(id);
+
+  // Handle explicit status toggle (archiving/restoring)
+  if (body.status === "Active") {
+    const row = await restoreStaff(id);
+    if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+    await writeAuditLog(req, `Restored staff account: ${name}`);
+    return NextResponse.json({ ok: true, data: row });
+  } else if (body.status === "Inactive") {
+    const row = await archiveStaff(id);
+    if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+    await writeAuditLog(req, `Archived staff account: ${name}`);
+    return NextResponse.json({ ok: true, data: row });
   }
 
   const patch = {
@@ -83,7 +107,7 @@ export async function PATCH(req, ctx) {
     if (!row) {
       return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
     }
-    await writeAuditLog(req, `Updated staff account: ${id}`);
+    await writeAuditLog(req, `Updated staff account: ${name}`);
 
     return NextResponse.json({ ok: true, data: row });
   } catch (e) {
@@ -113,6 +137,7 @@ export async function DELETE(req, ctx) {
     );
   }
 
+  const name = await getStaffDisplayNameById(id);
   const currentUserId = await getCurrentUserId();
   const totpToken = extractTOTPToken(req.headers);
   const totpResult = await requireTOTP(currentUserId, totpToken);
@@ -125,16 +150,16 @@ export async function DELETE(req, ctx) {
 
   if (currentUserId === id) {
     return NextResponse.json(
-      { ok: false, error: "You cannot delete your own account." },
+      { ok: false, error: "You cannot archive your own account." },
       { status: 403 }
     );
   }
 
-  const row = await deleteStaff(id);
+  const row = await archiveStaff(id);
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
-  await writeAuditLog(req, `Deleted staff account: ${id}`);
+  await writeAuditLog(req, `Archived staff account: ${name}`);
 
   return NextResponse.json({ ok: true, data: row });
 }

@@ -75,6 +75,17 @@ export async function POST(req) {
     return NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 });
   }
 
+  if (staff.status === "Archived") {
+    await writeAuditLog(req, `Login attempt failed: archived account (${username})`, {
+      actor: username,
+      role: "Guest",
+    });
+    return NextResponse.json(
+      { ok: false, error: "This account has been archived. Please contact an administrator." },
+      { status: 403 }
+    );
+  }
+
   const stored = staff.password_hash;
   if (!stored) {
     return NextResponse.json({ ok: false, error: "Account has no password" }, { status: 401 });

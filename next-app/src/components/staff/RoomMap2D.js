@@ -7,6 +7,7 @@ export default function RoomMap2D({
   selectedCabinetId,
   drawerSlots,
   onCabinetClick,
+  onDrawerClick,
 }) {
   const cabinetRects = cabinets || [];
 
@@ -67,10 +68,9 @@ export default function RoomMap2D({
               top: `${rect.y * 100}%`,
               width: `${rect.w * 100}%`,
               height: `${rect.h * 100}%`,
-              cursor: kind === "cabinets" ? "pointer" : "default",
+              cursor: "pointer",
             }}
             onClick={() => {
-              if (kind !== "cabinets") return;
               onCabinetClick?.(c.cab);
             }}
           >
@@ -100,9 +100,13 @@ export default function RoomMap2D({
                     return (
                       <div
                         key={d.drawer}
-                        className={`drawer-box flex min-h-0 flex-1 rounded-brand items-center justify-center transition-all border locator-tile ${drawerClass} ${
+                        className={`drawer-box flex min-h-0 flex-1 rounded-brand items-center justify-center transition-all border cursor-pointer locator-tile ${drawerClass} ${
                           d.isTarget ? "drawer-located" : ""
                         }`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDrawerClick?.(d.drawer);
+                        }}
                       >
                         <span
                           className={`text-[10px] font-bold ${

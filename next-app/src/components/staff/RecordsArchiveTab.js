@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Toggle } from "@/components/ui/toggle";
 import RoomMap2D from "@/components/staff/RoomMap2D";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -25,6 +25,7 @@ import {
   EmptyContent,
   EmptyMedia,
 } from "@/components/ui/empty";
+import ConfirmModal from "@/components/shared/ConfirmModal";
 
 export default function RecordsArchiveTab({
   loading,
@@ -37,6 +38,7 @@ export default function RecordsArchiveTab({
   currentLevel,
   onBreadcrumbClick,
   students,
+  archivedStudents,
   explorerItems,
   onSwitchView,
   locatorModel,
@@ -49,9 +51,25 @@ export default function RecordsArchiveTab({
   activeStudent,
   activeStudentDocs,
   onPreviewDocument,
+  onRestoreStudent,
 }) {
   const [listType, setListType] = useState("card");
   const [storageFullscreen, setStorageFullscreen] = useState(false);
+  const [showArchived, setShowArchived] = useState(false);
+
+  // Restore Modal State
+  const [restoreStudentOpen, setRestoreStudentOpen] = useState(false);
+  const [restoreTarget, setRestoreTarget] = useState(null);
+
+  // Scroll to storage layout when a student is located
+  useEffect(() => {
+    if (activeStudent) {
+      const el = document.getElementById("storage-layout-section");
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }
+  }, [activeStudent]);
 
   useEffect(() => {
     if (!storageFullscreen) return;
@@ -67,94 +85,33 @@ export default function RecordsArchiveTab({
     };
   }, [storageFullscreen]);
 
-  if (loading) {
-    return (
-      <div className="flex flex-col lg:flex-row w-full h-full gap-4 animate-fade-in">
-        <div className="flex flex-col lg:flex-row flex-1 gap-4 items-stretch overflow-hidden">
-          {/* Sidebar Skeleton */}
-          <section className="w-full lg:w-1/4 bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm flex-shrink-0 h-full overflow-hidden">
-            <div className="p-4 border-b border-gray-200 bg-gray-50">
-              <Skeleton className="h-10 w-full rounded-brand" />
-            </div>
-            <div className="flex-1 p-2 space-y-1 overflow-hidden">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <div key={i} className="p-3 border-b border-gray-100 flex items-center justify-between">
-                  <div className="space-y-2">
-                    <Skeleton className="h-4 w-32" />
-                    <Skeleton className="h-3 w-20 font-mono" />
-                  </div>
-                  <Skeleton className="h-4 w-4" />
-                </div>
-              ))}
-            </div>
-          </section>
+  // Derived filtered results
+  const filteredQuickResults = useMemo(() => {
+    if (showArchived) {
+      const q = quickQuery.toLowerCase();
+      return archivedStudents.filter(s => 
+        s.studentNo.toLowerCase().includes(q) || 
+        s.name.toLowerCase().includes(q)
+      ).slice(0, 10);
+    }
+    return quickResults;
+  }, [showArchived, quickResults, archivedStudents, quickQuery]);
 
-          {/* Main Content Skeleton */}
-          <section className="w-full lg:w-3/4 flex flex-col gap-4 lg:h-full overflow-hidden min-h-0">
-            {/* Explorer Skeleton */}
-            <div className="h-[60%] min-h-[250px] bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm relative overflow-hidden">
-              <div className="p-4 border-b border-gray-200 flex items-center justify-between bg-white">
-                <div className="flex items-center gap-2">
-                  <Skeleton className="h-8 w-8 rounded-brand" />
-                  <Skeleton className="h-4 w-4" />
-                  <Skeleton className="h-5 w-48" />
-                </div>
-                <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-brand">
-                  <Skeleton className="h-7 w-16 rounded-brand" />
-                  <Skeleton className="h-7 w-16 rounded-brand" />
-                </div>
-              </div>
-              <div className="p-6 bg-gray-50 flex-1 overflow-hidden">
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((i) => (
-                    <div key={i} className="bg-white p-5 rounded-brand border border-gray-200 flex flex-col items-center justify-center gap-2 h-36 shadow-sm">
-                      <Skeleton className="h-10 w-10 rounded-full" />
-                      <Skeleton className="h-4 w-20" />
-                      <Skeleton className="h-3 w-16" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            {/* Storage Area Skeleton */}
-            <div className="h-[44%] min-h-[280px] bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm overflow-hidden">
-              <div className="p-3 border-b border-gray-200 flex justify-between items-center bg-white">
-                <Skeleton className="h-5 w-32" />
-                <div className="flex items-center gap-3">
-                  <Skeleton className="h-8 w-24 rounded-brand" />
-                  <div className="flex gap-2">
-                    <Skeleton className="h-3 w-12" />
-                    <Skeleton className="h-3 w-12" />
-                  </div>
-                </div>
-              </div>
-              <div className="flex-1 flex overflow-hidden">
-                <div className="w-2/3 bg-gray-100 p-6 flex items-center justify-center border-r border-gray-200">
-                  <Skeleton className="w-full h-full rounded-brand opacity-50" />
-                </div>
-                <div className="w-1/3 p-6 flex flex-col gap-6">
-                  <div className="space-y-3">
-                    <Skeleton className="h-3 w-24" />
-                    <Skeleton className="h-8 w-full rounded-brand" />
-                    <Skeleton className="h-4 w-3/4" />
-                    <Skeleton className="h-3 w-1/2" />
-                  </div>
-                  <div className="space-y-2 pt-4 border-t border-gray-100">
-                    <Skeleton className="h-3 w-32" />
-                    <div className="space-y-2 mt-2">
-                      <Skeleton className="h-10 w-full rounded-brand" />
-                      <Skeleton className="h-10 w-full rounded-brand" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-        </div>
-      </div>
-    );
-  }
+  const filteredExplorerItems = useMemo(() => {
+    if (currentLevel !== "students") return explorerItems;
+    
+    if (showArchived) {
+       const year = breadcrumbs.find(b => b.level === "students")?.label.split(" ")[1];
+       if (!year) return [];
+       return archivedStudents
+         .filter(s => {
+           const snYear = String(s.studentNo || "").split("-")[0];
+           return snYear === year;
+         })
+         .map(s => ({ key: s.studentNo, student: s }));
+    }
+    return explorerItems;
+  }, [showArchived, explorerItems, archivedStudents, currentLevel, breadcrumbs]);
 
   const legend = (
     <div className="hidden sm:flex gap-4 text-xs font-medium text-gray-600">
@@ -209,7 +166,7 @@ export default function RecordsArchiveTab({
                   {locatorModel.rooms.map((r) => (
                     <div
                       key={r.room}
-                      className={`locator-tile p-6 rounded-brand flex flex-col items-center justify-center ${
+                      className={`locator-tile p-6 rounded-brand flex flex-col items-center justify-center cursor-pointer ${
                         r.isTarget ? "room-located" : ""
                       }`}
                       onClick={() => {
@@ -254,6 +211,10 @@ export default function RecordsArchiveTab({
                       setSelectedCabinet(cabId);
                       setCurrentLocatorLevel("drawers");
                     }}
+                    onDrawerClick={(drawerId) => {
+                      // Optional: Highlight drawer students in the future
+                      console.log("Selected drawer:", drawerId);
+                    }}
                   />
                 </div>
               </>
@@ -275,6 +236,10 @@ export default function RecordsArchiveTab({
                     roomDoor={locatorModel.roomDoor}
                     selectedCabinetId={selectedCabinet}
                     drawerSlots={locatorModel.drawers}
+                    onCabinetClick={(cabId) => {
+                      setSelectedCabinet(cabId);
+                      setCurrentLocatorLevel("drawers");
+                    }}
                   />
                 </div>
               </>
@@ -309,8 +274,11 @@ export default function RecordsArchiveTab({
                   <div className="text-base font-bold text-gray-900 truncate mt-1">
                     {activeStudent.name}
                   </div>
-                  <div className="text-sm text-gray-600 font-mono font-medium">
+                  <div className="text-sm text-gray-600 font-mono font-medium flex items-center gap-2">
                     {activeStudent.studentNo}
+                    {activeStudent.status === "Archived" && (
+                      <Badge className="bg-red-50 text-red-700 border-red-200 text-[9px] font-black h-4 px-1">ARCHIVED</Badge>
+                    )}
                   </div>
                 </div>
 
@@ -370,15 +338,28 @@ export default function RecordsArchiveTab({
   }
 
   return (
-        <div id="view-search" className="flex flex-col lg:flex-row w-full h-full gap-4 animate-fade-in">
+    <div id="view-search" className="flex flex-col lg:flex-row w-full h-full gap-4 animate-fade-in font-inter">
       <div className="flex flex-col lg:flex-row flex-1 gap-4 items-stretch overflow-hidden">
         <section className="w-full lg:w-1/4 bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm flex-shrink-0 h-full overflow-hidden">
-        <div className="p-4 border-b border-gray-200 bg-gray-50">
+        <div className="p-4 border-b border-gray-200 bg-gray-50 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Global Search</span>
+            <Toggle
+              pressed={showArchived}
+              onPressedChange={setShowArchived}
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 font-black text-[9px] uppercase border-gray-300 data-[state=on]:bg-red-600 data-[state=on]:text-white data-[state=on]:border-red-600 transition-all gap-1.5"
+            >
+              <i className={`ph-bold text-xs ${showArchived ? "ph-archive" : "ph-archive-box"}`}></i>
+              {showArchived ? "ARCHIVED VIEW" : "ACTIVE VIEW"}
+            </Toggle>
+          </div>
           <div className="relative group">
             <i className="ph-bold ph-magnifying-glass absolute left-3 top-3 text-gray-500 group-focus-within:text-pup-maroon"></i>
             <Input
               type="text"
-              placeholder="Search ID or Name..."
+              placeholder={showArchived ? "Search Archived ID..." : "Search ID or Name..."}
               className="h-10 w-full pl-10 pr-10 bg-white border border-gray-300 rounded-brand text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon transition-all placeholder-gray-500 text-gray-900"
               value={quickQuery}
               onChange={(e) => setQuickQuery(e.target.value)}
@@ -396,7 +377,7 @@ export default function RecordsArchiveTab({
         </div>
 
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
-          {quickQuery.trim().length < 2 ? (
+          {quickQuery.trim().length < 2 && !showArchived ? (
             <Empty className="text-center py-10 flex flex-col items-center border-0 mt-32">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
@@ -422,20 +403,22 @@ export default function RecordsArchiveTab({
                 ))}
               </div>
             </div>
-          ) : quickResults.length === 0 ? (
+          ) : filteredQuickResults.length === 0 ? (
             <Empty className="flex flex-col items-center justify-center text-center text-gray-500 py-8 border-0 mt-32">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                  <i className="ph-duotone ph-list-magnifying-glass text-3xl text-pup-maroon"></i>
+                  <i className={`ph-duotone ${showArchived ? 'ph-archive' : 'ph-list-magnifying-glass'} text-3xl text-pup-maroon`}></i>
                 </EmptyMedia>
-                <EmptyTitle className="text-lg font-bold text-gray-900">No records found</EmptyTitle>
+                <EmptyTitle className="text-lg font-bold text-gray-900">{showArchived ? 'No archived records' : 'No records found'}</EmptyTitle>
                 <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-[200px]">
-                  We couldn&apos;t find any students matching your search query.
+                  {showArchived 
+                    ? "There are no archived students matching your search." 
+                    : "We couldn't find any students matching your search query."}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
           ) : (
-            quickResults.map((s) => (
+            filteredQuickResults.map((s) => (
               <div
                 key={s.studentNo}
                 className="p-3 border-b border-gray-200 cursor-pointer hover:bg-gray-100 transition-colors flex justify-between items-center group"
@@ -491,6 +474,16 @@ export default function RecordsArchiveTab({
                       </BreadcrumbItem>
                     </div>
                   ))}
+                  {showArchived && (
+                    <div className="flex items-center gap-2">
+                      <BreadcrumbSeparator>
+                        <i className="ph-bold ph-caret-right text-sm text-gray-400"></i>
+                      </BreadcrumbSeparator>
+                      <BreadcrumbItem>
+                        <Badge className="bg-red-50 text-red-700 border-red-100 font-black text-[10px]">ARCHIVE VIEW</Badge>
+                      </BreadcrumbItem>
+                    </div>
+                  )}
                 </BreadcrumbList>
               </Breadcrumb>
             </div>
@@ -508,7 +501,7 @@ export default function RecordsArchiveTab({
           </div>
 
           <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
-            {students.length === 0 ? (
+            {students.length === 0 && !showArchived ? (
               <Empty className="h-full flex flex-col items-center justify-center text-center text-gray-500 border-0">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
@@ -532,13 +525,13 @@ export default function RecordsArchiveTab({
               </Empty>
             ) : currentLevel !== "students" ? (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 animate-fade-in">
-                {explorerItems.map((it, index) => (
+                {filteredExplorerItems.map((it, index) => (
                   <Card
                     key={index}
                     className={`folder-card bg-white p-5 rounded-brand flex flex-col items-center justify-center text-center gap-2 h-36 ${
                       it.disabled
                         ? "opacity-50 cursor-not-allowed"
-                        : "cursor-not-allowed"
+                        : "cursor-pointer"
                     }`}
                     onClick={it.onClick}
                   >
@@ -552,29 +545,33 @@ export default function RecordsArchiveTab({
                   </Card>
                 ))}
               </div>
-            ) : explorerItems.length === 0 ? (
+            ) : filteredExplorerItems.length === 0 ? (
               <Empty className="h-full flex flex-col items-center justify-center text-center text-gray-500 border-0">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                    <i className="ph-duotone ph-drawers text-3xl text-pup-maroon"></i>
+                    <i className={`ph-duotone ${showArchived ? 'ph-archive' : 'ph-drawers'} text-3xl text-pup-maroon`}></i>
                   </EmptyMedia>
-                  <EmptyTitle className="text-lg font-bold text-gray-900">No students in this year</EmptyTitle>
+                  <EmptyTitle className="text-lg font-bold text-gray-900">
+                    {showArchived ? "No archived students" : "No students in this year"}
+                  </EmptyTitle>
                   <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                    There are no student records filed under this year yet.
+                    {showArchived 
+                      ? "There are currently no archived records found for this academic period."
+                      : "There are no student records filed under this year yet."}
                   </EmptyDescription>
                 </EmptyHeader>
               </Empty>
             ) : listType === "card" ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 animate-fade-in">
-                {explorerItems.map((row, index) => (
+                {filteredExplorerItems.map((row, index) => (
                   <div
                     key={index}
-                    className="group relative flex flex-col p-5 bg-white border border-gray-300 rounded-brand hover:border-pup-maroon hover:shadow-md cursor-pointer transition-all shadow-sm"
+                    className={`group relative flex flex-col p-5 bg-white border border-gray-300 rounded-brand hover:border-pup-maroon hover:shadow-md cursor-pointer transition-all shadow-sm ${showArchived ? 'opacity-90' : ''}`}
                     onClick={() => onLocateStudent(row.student)}
                   >
                     <div className="flex items-start gap-4 mb-4">
                       <Avatar className="w-12 h-12 border border-gray-100 shadow-sm shrink-0">
-                        <AvatarFallback className="bg-gray-50 text-gray-400 group-hover:text-pup-maroon font-bold transition-colors">
+                        <AvatarFallback className={`bg-gray-50 text-gray-400 group-hover:text-pup-maroon font-bold transition-colors ${showArchived ? 'text-red-400' : ''}`}>
                           <i className="ph-bold ph-user text-2xl"></i>
                         </AvatarFallback>
                       </Avatar>
@@ -586,10 +583,11 @@ export default function RecordsArchiveTab({
                           <Badge variant="outline" className="font-mono text-[10px] font-bold text-gray-600 border-gray-200 px-1.5 py-0 rounded">
                             {row.student.studentNo}
                           </Badge>
+                          {showArchived && <Badge className="bg-red-50 text-red-700 border-red-100 text-[9px] font-black h-4 px-1">ARCHIVED</Badge>}
                         </div>
                       </div>
                     </div>
-                    
+
                     <div className="mt-auto pt-4 border-t border-gray-100 flex items-center justify-between">
                       <div className="flex items-center gap-1.5">
                         <div className="w-6 h-6 rounded bg-gray-50 flex items-center justify-center text-gray-400 group-hover:text-pup-maroon group-hover:bg-red-50 transition-colors">
@@ -600,10 +598,28 @@ export default function RecordsArchiveTab({
                         </span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <Badge variant="secondary" className="bg-gray-100 text-gray-700 border-transparent text-[10px] font-black uppercase tracking-tighter px-2">
-                          D-{row.student.drawer}
-                        </Badge>
-                        <i className="ph-bold ph-caret-right text-gray-300 group-hover:text-pup-maroon group-hover:translate-x-0.5 transition-all"></i>
+                        {showArchived ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRestoreTarget(row.student);
+                              setRestoreStudentOpen(true);
+                            }}
+                            className="h-8 px-2.5 font-bold text-[9px] border-green-200 text-green-700 hover:bg-green-50 rounded-brand shadow-xs"
+                          >
+                            <i className="ph-bold ph-arrow-counter-clockwise mr-1"></i>
+                            RESTORE
+                          </Button>
+                        ) : (
+                          <>
+                            <Badge variant="secondary" className="bg-gray-100 text-gray-700 border-transparent text-[10px] font-black uppercase tracking-tighter px-2">
+                              D-{row.student.drawer}
+                            </Badge>
+                            <i className="ph-bold ph-caret-right text-gray-300 group-hover:text-pup-maroon group-hover:translate-x-0.5 transition-all"></i>
+                          </>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -622,7 +638,7 @@ export default function RecordsArchiveTab({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {explorerItems.map((row) => (
+                    {filteredExplorerItems.map((row) => (
                       <tr
                         key={row.key}
                         className="hover:bg-gray-50 group cursor-pointer transition-colors"
@@ -639,7 +655,10 @@ export default function RecordsArchiveTab({
                           {row.student.studentNo}
                         </td>
                         <td className="p-3 font-bold text-gray-900 group-hover:text-pup-maroon transition-colors">
-                          {row.student.name}
+                          <div className="flex items-center gap-2">
+                            {row.student.name}
+                            {showArchived && <Badge className="bg-red-50 text-red-700 border-red-100 text-[8px] font-black h-3.5 px-1">ARCHIVED</Badge>}
+                          </div>
                         </td>
                         <td className="p-3">
                           <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200 font-bold uppercase text-[10px] tracking-wider px-2 py-0.5">
@@ -647,14 +666,30 @@ export default function RecordsArchiveTab({
                           </Badge>
                         </td>
                         <td className="p-3 text-right">
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="h-8 px-3 font-bold text-[10px] tracking-widest border-gray-300 text-gray-600 hover:text-pup-maroon hover:border-pup-maroon hover:bg-red-50 transition-all rounded-brand shadow-sm"
-                          >
-                            <i className="ph-bold ph-magnifying-glass-plus mr-1.5 text-xs"></i>
-                            LOCATE
-                          </Button>
+                          {showArchived ? (
+                             <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setRestoreTarget(row.student);
+                                setRestoreStudentOpen(true);
+                              }}
+                              className="h-8 px-3 font-bold text-[9px] border-green-200 text-green-700 hover:bg-green-50 rounded-brand shadow-xs"
+                            >
+                              <i className="ph-bold ph-arrow-counter-clockwise mr-1.5"></i>
+                              RESTORE
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 px-3 font-bold text-[10px] tracking-widest border-gray-300 text-gray-600 hover:text-pup-maroon hover:border-pup-maroon hover:bg-red-50 transition-all rounded-brand shadow-sm"
+                            >
+                              <i className="ph-bold ph-magnifying-glass-plus mr-1.5 text-xs"></i>
+                              LOCATE
+                            </Button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -691,7 +726,7 @@ export default function RecordsArchiveTab({
             </div>
           </div>
         ) : (
-          <div className="h-[44%] min-h-[280px] bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm relative min-h-0">
+          <div id="storage-layout-section" className="h-[44%] min-h-[280px] bg-white rounded-brand border border-gray-300 flex flex-col shadow-sm relative min-h-0 scroll-mt-6">
             <div className="p-3 border-b border-gray-200 flex justify-between items-center bg-white rounded-t-brand">
               <h3 className="font-bold text-pup-maroon text-sm flex items-center gap-2">
                 <i className="ph-fill ph-drawers text-lg"></i> Storage Layout
@@ -716,6 +751,25 @@ export default function RecordsArchiveTab({
         )}
       </section>
       </div>
+
+      <ConfirmModal
+        open={restoreStudentOpen}
+        onCancel={() => {
+          setRestoreStudentOpen(false);
+          setRestoreTarget(null);
+        }}
+        title="Restore Student Record"
+        message={`Restore record for ${restoreTarget?.name} (${restoreTarget?.studentNo})? This will make the student active and visible in all modules again.`}
+        confirmLabel="RESTORE RECORD"
+        variant="success"
+        onConfirm={async () => {
+          if (restoreTarget) {
+            await onRestoreStudent(restoreTarget.studentNo);
+          }
+          setRestoreStudentOpen(false);
+          setRestoreTarget(null);
+        }}
+      />
     </div>
   );
 }

@@ -74,6 +74,20 @@ export default function DocumentRequestsTab({
   const debouncedPageResetSkip = useRef(true);
   const autoLinkAttempted = useRef(new Set());
 
+  const studentSuggestions = useMemo(() => {
+    const val = createStudentNo.trim().toLowerCase();
+    if (val.length < 2) return [];
+    return students
+      .filter((s) => {
+        const sn = String(s.studentNo || "").toLowerCase();
+        const nm = String(s.name || "").toLowerCase();
+        // Don't show if it's already an exact match
+        if (sn === val) return false;
+        return sn.includes(val) || nm.includes(val);
+      })
+      .slice(0, 4);
+  }, [createStudentNo, students]);
+
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(q.trim()), 350);
     return () => clearTimeout(t);
@@ -669,7 +683,7 @@ export default function DocumentRequestsTab({
           </DialogHeader>
           <form onSubmit={handleCreate}>
             <div className="p-6 space-y-4">
-              <div>
+              <div className="relative">
                 <label className="text-xs font-bold text-gray-700 uppercase">
                   Student number
                 </label>
@@ -680,6 +694,30 @@ export default function DocumentRequestsTab({
                   placeholder="202X-XXXXX-MN-0"
                   required
                 />
+                {studentSuggestions.length > 0 && (
+                  <div className="absolute z-50 left-0 right-0 mt-1 rounded-brand border border-gray-200 bg-white overflow-hidden shadow-lg animate-in fade-in slide-in-from-top-1 duration-200">
+                    {studentSuggestions.map((s) => {
+                      const sn = String(s?.studentNo || s?.student_no || "");
+                      return (
+                        <button
+                          key={sn}
+                          type="button"
+                          className="w-full text-left px-3 py-2 border-b last:border-b-0 border-gray-100 hover:bg-red-50/50 transition-colors group"
+                          onClick={() => {
+                            setCreateStudentNo(sn);
+                          }}
+                        >
+                          <div className="text-sm font-bold text-gray-900 group-hover:text-pup-maroon transition-colors">
+                            {s?.name}
+                          </div>
+                          <div className="text-[10px] text-gray-500 font-mono">
+                            {sn}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
               <div>
                 <label className="text-xs font-bold text-gray-700 uppercase">

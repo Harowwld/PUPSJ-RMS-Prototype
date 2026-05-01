@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Toggle } from "@/components/ui/toggle";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import {
   Tabs,
@@ -37,6 +38,7 @@ import {
 
 export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOTP, error: errorProp = null }) {
   const [activeSubTab, setActiveSubTab] = useState("document-types");
+  const [showArchived, setShowArchived] = useState(false);
 
   // Document Types State
   const [docTypes, setDocTypes] = useState([]);
@@ -81,21 +83,24 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
     title: "",
     message: "",
     confirmLabel: "",
+    variant: "danger",
     onConfirm: () => {},
   });
 
   useEffect(() => {
     loadAll();
-  }, []);
+  }, [showArchived]);
 
   async function loadAll() {
     setLoading(true);
     setError(null);
     try {
+      const q = showArchived ? "includeArchived=true" : "";
+      
       const [rDoc, rCourse, rSec, rSecQ] = await Promise.all([
-        fetch("/api/doc-types?admin=true"),
-        fetch("/api/courses"),
-        fetch("/api/sections"),
+        fetch(`/api/doc-types?admin=true${q ? "&" + q : ""}`),
+        fetch(`/api/courses${q ? "?" + q : ""}`),
+        fetch(`/api/sections${q ? "?" + q : ""}`),
         fetch("/api/system/security-questions")
       ]);
 
@@ -138,7 +143,6 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       setNewDocTypeName("");
       setIsAddDocTypeOpen(false);
       showToast({ title: "Success", description: "Document type added." });
-      logAdminAction?.(`Created document type configuration: ${json.data.name || json.data}`);
       loadAll();
     } catch (err) {
       showToast({ title: "Error", description: err.message }, true);
@@ -149,7 +153,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
     e.preventDefault();
     if (!editDocType.name.trim()) return;
     try {
-      const res = await fetch(`/api/doc-types/${editDocType.id}`, {
+      const res = await fetch(`/api/doc-types?id=${editDocType.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: editDocType.name.trim() }),
@@ -158,7 +162,6 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       if (!res.ok || !json.ok) throw new Error(json.error || "Update failed");
       setIsEditDocTypeOpen(false);
       showToast({ title: "Success", description: "Document type updated." });
-      logAdminAction?.(`Modified document type: ${json.data.name || json.data}`);
       loadAll();
     } catch (err) {
       showToast({ title: "Error", description: err.message }, true);
@@ -167,12 +170,28 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
 
   async function delDocType(id, name) {
     try {
-      const res = await fetch(`/api/doc-types/${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/doc-types?id=${id}`, { method: "DELETE" });
       const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || "Delete failed");
+      if (!res.ok || !json.ok) throw new Error(json.error || "Archive failed");
       setConfirmOpen(false);
-      showToast({ title: "Success", description: "Document type deleted." });
-      logAdminAction?.(`Deleted document type: ${name}`);
+      showToast({ title: "Success", description: "Document type archived." });
+      loadAll();
+    } catch (err) {
+      showToast({ title: "Error", description: err.message }, true);
+    }
+  }
+
+  async function resDocType(id, name) {
+    try {
+      const res = await fetch(`/api/doc-types?id=${id}`, { 
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "Active" })
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.error || "Restore failed");
+      setConfirmOpen(false);
+      showToast({ title: "Success", description: "Document type restored." });
       loadAll();
     } catch (err) {
       showToast({ title: "Error", description: err.message }, true);
@@ -198,7 +217,6 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       setNewCourseName("");
       setIsAddCourseOpen(false);
       showToast({ title: "Success", description: "Degree program added." });
-      logAdminAction?.(`Created academic program entry: ${json.data.code}`);
       loadAll();
     } catch (err) {
       showToast({ title: "Error", description: err.message }, true);
@@ -221,7 +239,6 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       if (!res.ok || !json.ok) throw new Error(json.error || "Update failed");
       setIsEditCourseOpen(false);
       showToast({ title: "Success", description: "Degree program updated." });
-      logAdminAction?.(`Modified academic program: ${json.data.code}`);
       loadAll();
     } catch (err) {
       showToast({ title: "Error", description: err.message }, true);
@@ -232,10 +249,22 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
     try {
       const res = await fetch(`/api/courses?id=${id}`, { method: "DELETE" });
       const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || "Delete failed");
+      if (!res.ok || !json.ok) throw new Error(json.error || "Archive failed");
       setConfirmOpen(false);
-      showToast({ title: "Success", description: "Degree program deleted." });
-      logAdminAction?.(`Deleted academic program: ${code}`);
+      showToast({ title: "Success", description: "Degree program archived." });
+      loadAll();
+    } catch (err) {
+      showToast({ title: "Error", description: err.message }, true);
+    }
+  }
+
+  async function resCourse(id, code) {
+    try {
+      const res = await fetch(`/api/courses?id=${id}&restore=true`, { method: "DELETE" });
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.error || "Restore failed");
+      setConfirmOpen(false);
+      showToast({ title: "Success", description: "Degree program restored." });
       loadAll();
     } catch (err) {
       showToast({ title: "Error", description: err.message }, true);
@@ -261,7 +290,6 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       setSecCourseCode("");
       setIsAddSectionOpen(false);
       showToast({ title: "Success", description: "Section block created." });
-      logAdminAction?.(`Created section block: ${json.data.name}`);
       loadAll();
     } catch (err) {
       showToast({ title: "Error", description: err.message }, true);
@@ -284,7 +312,6 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       if (!res.ok || !json.ok) throw new Error(json.error || "Update failed");
       setIsEditSectionOpen(false);
       showToast({ title: "Success", description: "Section block updated." });
-      logAdminAction?.(`Modified section block: ${json.data.name}`);
       loadAll();
     } catch (err) {
       showToast({ title: "Error", description: err.message }, true);
@@ -295,10 +322,22 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
     try {
       const res = await fetch(`/api/sections?id=${id}`, { method: "DELETE" });
       const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || "Delete failed");
+      if (!res.ok || !json.ok) throw new Error(json.error || "Archive failed");
       setConfirmOpen(false);
-      showToast({ title: "Success", description: "Section block deleted." });
-      logAdminAction?.(`Deleted section block: ${name}`);
+      showToast({ title: "Success", description: "Section block archived." });
+      loadAll();
+    } catch (err) {
+      showToast({ title: "Error", description: err.message }, true);
+    }
+  }
+
+  async function resSection(id, name) {
+    try {
+      const res = await fetch(`/api/sections?id=${id}&restore=true`, { method: "DELETE" });
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.error || "Restore failed");
+      setConfirmOpen(false);
+      showToast({ title: "Success", description: "Section block restored." });
       loadAll();
     } catch (err) {
       showToast({ title: "Error", description: err.message }, true);
@@ -331,7 +370,6 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       
       if (!res.ok || !json.ok) throw new Error(json.error || "Failed to save questions");
       showToast({ title: "Success", description: "Global security questions updated." });
-      logAdminAction?.(`Modified global security questions configuration`);
       loadAll();
     } catch (err) {
       if (totpToken) throw err;
@@ -388,7 +426,6 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
         title: "Import Successful",
         description: `Processed ${json.data?.successCount || 0} taxonomy records (${json.data?.failCount || 0} failed).`,
       });
-      logAdminAction?.(`Bulk imported ${json.data?.successCount || 0} taxonomy records via CSV`);
       loadAll();
     } catch (err) {
       showToast({ title: "Import Error", description: err.message }, true);
@@ -437,6 +474,19 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
     );
   }
 
+  const archivedToggle = (
+    <Toggle
+      pressed={showArchived}
+      onPressedChange={setShowArchived}
+      variant="outline"
+      size="sm"
+      className="ml-auto h-8 px-3 font-black text-[10px] uppercase border-gray-300 data-[state=on]:bg-red-600 data-[state=on]:text-white data-[state=on]:border-red-600 transition-all gap-1.5 shadow-sm"
+    >
+      <i className={`ph-bold text-xs ${showArchived ? "ph-archive" : "ph-archive-box"}`}></i>
+      {showArchived ? "ARCHIVED VIEW" : "ACTIVE VIEW"}
+    </Toggle>
+  );
+
   return (
     <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter min-h-0">
       <Tabs
@@ -446,7 +496,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
         orientation="horizontal"
         className="flex-1 min-h-0 flex flex-col"
       >
-        <div className="shrink-0 flex items-center">
+        <div className="shrink-0 flex items-center gap-4">
           <div className="inline-flex p-1 bg-gray-100/80 rounded-brand border border-gray-200/50 backdrop-blur-sm h-auto">
             <button
               type="button"
@@ -509,6 +559,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
               <span>SECURITY</span>
             </button>
           </div>
+          {activeSubTab !== "bulk-import" && activeSubTab !== "security-questions" && archivedToggle}
         </div>
 
         <Card className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm flex flex-col p-0 min-h-[500px] relative mt-4">
@@ -520,11 +571,18 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                     <i className="ph-duotone ph-files text-2xl"></i>
                   </div>
                   <div>
-                    <CardTitle className="text-xl font-black text-gray-900 tracking-tight leading-none">
-                      Document Types
+                    <CardTitle className="text-xl font-black text-gray-900 tracking-tight leading-none flex items-center gap-2">
+                      {activeSubTab === "document-types" ? "Document Types" : activeSubTab === "degree-programs" ? "Degree Programs" : "Course Blocks"}
+                      {showArchived && (
+                        <Badge className="bg-red-50 text-red-700 border-red-100 font-black text-[10px]">ARCHIVE VIEW</Badge>
+                      )}
                     </CardTitle>
                     <CardDescription className="text-sm font-medium text-gray-500 mt-1.5">
-                      Manage formal document categories and digitization requirements.
+                      {activeSubTab === "document-types" 
+                        ? "Manage formal document categories and digitization requirements." 
+                        : activeSubTab === "degree-programs"
+                        ? "Manage available university course paths and academic designations."
+                        : "Construct logical section blocks and identifiers for student routing."}
                     </CardDescription>
                   </div>
                 </div>
@@ -540,6 +598,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                   <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
                     <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
                       <th className="p-3 font-bold px-6">Document Name</th>
+                      <th className="p-3 font-bold px-6 w-32">Status</th>
                       <th className="p-3 font-bold text-right px-6 w-48">
                         Actions
                       </th>
@@ -549,16 +608,28 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                     {docTypes.map((dt) => (
                       <tr
                         key={dt.id}
-                        className="hover:bg-gray-50 transition-colors group cursor-default"
+                        className={`hover:bg-gray-50 transition-colors group cursor-default ${dt.status === "Archived" ? "opacity-75" : ""}`}
                       >
                         <td className="p-3 px-6 font-bold text-gray-800">
                           {dt.name}
+                        </td>
+                        <td className="p-3 px-6">
+                           {dt.status === "Archived" ? (
+                             <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 font-bold uppercase text-[9px] tracking-wider px-2 py-0.5">
+                               ARCHIVED
+                             </Badge>
+                           ) : (
+                             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 font-bold uppercase text-[9px] tracking-wider px-2 py-0.5">
+                               ACTIVE
+                             </Badge>
+                           )}
                         </td>
                         <td className="p-3 px-6 text-right">
                           <div className="inline-flex items-center justify-end gap-2">
                             <Button
                               variant="outline"
                               size="sm"
+                              disabled={dt.status === "Archived"}
                               onClick={() => {
                                 setEditDocType({ id: dt.id, name: dt.name });
                                 setIsEditDocTypeOpen(true);
@@ -568,39 +639,62 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                               <i className="ph-bold ph-pencil-simple mr-1.5"></i>
                               EDIT
                             </Button>
-                            <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setConfirmPayload({
-                                title: "Delete Document Type",
-                                message: `Delete document type "${dt.name}"?`,
-                                confirmLabel: "Delete",
-                                onConfirm: () => delDocType(dt.id, dt.name),
-                              });
-                              setConfirmOpen(true);
-                            }}
-                            className="px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
-                          >
-                            <i className="ph-bold ph-trash mr-1.5"></i>
-                            DELETE
-                          </Button>
+                            {dt.status === "Archived" ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setConfirmPayload({
+                                    title: "Restore Document Type",
+                                    message: `Restore document type "${dt.name}"? It will be visible for new records again.`,
+                                    confirmLabel: "Restore",
+                                    variant: "success",
+                                    onConfirm: () => resDocType(dt.id, dt.name),
+                                  });
+                                  setConfirmOpen(true);
+                                }}
+                                className="px-3 font-bold text-xs border-green-300 text-green-700 hover:text-green-800 hover:bg-green-50"
+                              >
+                                <i className="ph-bold ph-arrow-counter-clockwise mr-1.5"></i>
+                                RESTORE
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setConfirmPayload({
+                                    title: "Archive Document Type",
+                                    message: `Archive document type "${dt.name}"? This will hide it from new registrations but preserve history.`,
+                                    confirmLabel: "Archive",
+                                    variant: "danger",
+                                    onConfirm: () => delDocType(dt.id, dt.name),
+                                  });
+                                  setConfirmOpen(true);
+                                }}
+                                className="px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
+                              >
+                                <i className="ph-bold ph-archive mr-1.5"></i>
+                                ARCHIVE
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </tr>
                     ))}
                     {docTypes.length === 0 && (
                       <tr className="border-0 hover:bg-transparent">
-                        <td colSpan={2} className="p-0 border-0">
+                        <td colSpan={3} className="p-0 border-0">
                           <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
                             <EmptyHeader className="flex flex-col items-center gap-0">
                               <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
                                 <i className="ph-duotone ph-files text-3xl text-pup-maroon"></i>
                               </EmptyMedia>
-                              <EmptyTitle className="text-lg font-bold text-gray-900">No document types yet</EmptyTitle>
+                              <EmptyTitle className="text-lg font-bold text-gray-900">No document types found</EmptyTitle>
                               <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                                Use the form above to add a new document
-                                configuration to the system framework.
+                                {showArchived 
+                                  ? "There are no archived document types in the system."
+                                  : "Use the form above to add a new document configuration to the system framework."}
                               </EmptyDescription>
                             </EmptyHeader>
                           </Empty>
@@ -621,8 +715,11 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                     <i className="ph-duotone ph-books text-2xl"></i>
                   </div>
                   <div>
-                    <CardTitle className="text-xl font-black text-gray-900 tracking-tight leading-none">
+                    <CardTitle className="text-xl font-black text-gray-900 tracking-tight leading-none flex items-center gap-2">
                       Degree Programs
+                      {showArchived && (
+                        <Badge className="bg-red-50 text-red-700 border-red-100 font-black text-[10px]">ARCHIVE VIEW</Badge>
+                      )}
                     </CardTitle>
                     <CardDescription className="text-sm font-medium text-gray-500 mt-1.5">
                       Manage available university course paths and academic designations.
@@ -644,6 +741,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                         Course Code
                       </th>
                       <th className="p-3 font-bold px-6">Full Designation</th>
+                      <th className="p-3 font-bold px-6 w-32">Status</th>
                       <th className="p-3 font-bold text-right px-6 w-56">
                         Actions
                       </th>
@@ -653,7 +751,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                     {courses.map((c) => (
                       <tr
                         key={c.id}
-                        className="hover:bg-gray-50 transition-colors group cursor-default"
+                        className={`hover:bg-gray-50 transition-colors group cursor-default ${c.status === "Archived" ? "opacity-75" : ""}`}
                       >
                         <td className="p-3 px-6 font-black text-gray-900">
                           {c.code}
@@ -661,11 +759,23 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                         <td className="p-3 px-6 font-bold text-gray-600">
                           {c.name}
                         </td>
+                        <td className="p-3 px-6">
+                           {c.status === "Archived" ? (
+                             <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 font-bold uppercase text-[9px] tracking-wider px-2 py-0.5">
+                               ARCHIVED
+                             </Badge>
+                           ) : (
+                             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 font-bold uppercase text-[9px] tracking-wider px-2 py-0.5">
+                               ACTIVE
+                             </Badge>
+                           )}
+                        </td>
                         <td className="p-3 px-6 text-right">
                           <div className="inline-flex items-center justify-end gap-2">
                             <Button
                               variant="outline"
                               size="sm"
+                              disabled={c.status === "Archived"}
                               onClick={() => {
                                 setEditCourse({ id: c.id, code: c.code, name: c.name });
                                 setIsEditCourseOpen(true);
@@ -675,39 +785,62 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                               <i className="ph-bold ph-pencil-simple mr-1.5"></i>
                               EDIT
                             </Button>
-                            <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setConfirmPayload({
-                                title: "Delete Degree Program",
-                                message: `Delete degree program "${c.code}"?`,
-                                confirmLabel: "Delete",
-                                onConfirm: () => delCourse(c.id, c.code),
-                              });
-                              setConfirmOpen(true);
-                            }}
-                            className="px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
-                          >
-                            <i className="ph-bold ph-trash mr-1.5"></i>
-                            DELETE
-                          </Button>
+                            {c.status === "Archived" ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setConfirmPayload({
+                                    title: "Restore Degree Program",
+                                    message: `Restore program "${c.code}"? It will be visible for new records again.`,
+                                    confirmLabel: "Restore",
+                                    variant: "success",
+                                    onConfirm: () => resCourse(c.id, c.code),
+                                  });
+                                  setConfirmOpen(true);
+                                }}
+                                className="px-3 font-bold text-xs border-green-300 text-green-700 hover:text-green-800 hover:bg-green-50"
+                              >
+                                <i className="ph-bold ph-arrow-counter-clockwise mr-1.5"></i>
+                                RESTORE
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setConfirmPayload({
+                                    title: "Archive Degree Program",
+                                    message: `Archive degree program "${c.code}"? This will hide it from new registrations but preserve history.`,
+                                    confirmLabel: "Archive",
+                                    variant: "danger",
+                                    onConfirm: () => delCourse(c.id, c.code),
+                                  });
+                                  setConfirmOpen(true);
+                                }}
+                                className="px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
+                              >
+                                <i className="ph-bold ph-archive mr-1.5"></i>
+                                ARCHIVE
+                              </Button>
+                            )}
                           </div>
                         </td>
                       </tr>
                     ))}
                     {courses.length === 0 && (
                       <tr className="border-0 hover:bg-transparent">
-                        <td colSpan={3} className="p-0 border-0">
+                        <td colSpan={4} className="p-0 border-0">
                           <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
                             <EmptyHeader className="flex flex-col items-center gap-0">
                               <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
                                 <i className="ph-duotone ph-books text-3xl text-pup-maroon"></i>
                               </EmptyMedia>
-                              <EmptyTitle className="text-lg font-bold text-gray-900">No degree programs yet</EmptyTitle>
+                              <EmptyTitle className="text-lg font-bold text-gray-900">No degree programs found</EmptyTitle>
                               <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                                Use the form above to deploy a new university course
-                                path.
+                                {showArchived 
+                                  ? "There are no archived degree programs in the system."
+                                  : "Use the form above to deploy a new university course path."}
                               </EmptyDescription>
                             </EmptyHeader>
                           </Empty>
@@ -728,8 +861,11 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                     <i className="ph-duotone ph-list-numbers text-2xl"></i>
                   </div>
                   <div>
-                    <CardTitle className="text-xl font-black text-gray-900 tracking-tight leading-none">
+                    <CardTitle className="text-xl font-black text-gray-900 tracking-tight leading-none flex items-center gap-2">
                       Course Blocks
+                      {showArchived && (
+                        <Badge className="bg-red-50 text-red-700 border-red-100 font-black text-[10px]">ARCHIVE VIEW</Badge>
+                      )}
                     </CardTitle>
                     <CardDescription className="text-sm font-medium text-gray-500 mt-1.5">
                       Construct logical section blocks and identifiers for student routing.
@@ -787,6 +923,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                         Degree Program
                       </th>
                       <th className="p-3 font-bold px-6">Block Identifier</th>
+                      <th className="p-3 font-bold px-6 w-32">Status</th>
                       <th className="p-3 font-bold text-right px-6 w-56">
                         Actions
                       </th>
@@ -802,7 +939,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                       .map((sec) => (
                         <tr
                           key={sec.id}
-                          className="hover:bg-gray-50 transition-colors group cursor-default"
+                          className={`hover:bg-gray-50 transition-colors group cursor-default ${sec.status === "Archived" ? "opacity-75" : ""}`}
                         >
                           <td className="p-3 px-6 text-pup-maroon font-black bg-gray-50/30">
                             {sec.course_code ? `${sec.course_code}` : "—"}
@@ -810,11 +947,23 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                           <td className="p-3 px-6 font-bold text-gray-800">
                             {sec.name}
                           </td>
+                          <td className="p-3 px-6">
+                             {sec.status === "Archived" ? (
+                               <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 font-bold uppercase text-[9px] tracking-wider px-2 py-0.5">
+                                 ARCHIVED
+                               </Badge>
+                             ) : (
+                               <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 font-bold uppercase text-[9px] tracking-wider px-2 py-0.5">
+                                 ACTIVE
+                               </Badge>
+                             )}
+                          </td>
                           <td className="p-3 px-6 text-right">
                             <div className="inline-flex items-center justify-end gap-2">
                               <Button
                                 variant="outline"
                                 size="sm"
+                                disabled={sec.status === "Archived"}
                                 onClick={() => {
                                   setEditSection({
                                     id: sec.id,
@@ -828,23 +977,45 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                                 <i className="ph-bold ph-pencil-simple mr-1.5"></i>
                                 EDIT
                               </Button>
-                              <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setConfirmPayload({
-                                  title: "Delete Section Block",
-                                  message: `Delete section block "${sec.name}"?`,
-                                  confirmLabel: "Delete",
-                                  onConfirm: () => delSection(sec.id, sec.name),
-                                });
-                                setConfirmOpen(true);
-                              }}
-                              className="px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
-                            >
-                              <i className="ph-bold ph-trash mr-1.5"></i>
-                              DELETE
-                            </Button>
+                              {sec.status === "Archived" ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setConfirmPayload({
+                                      title: "Restore Section Block",
+                                      message: `Restore block "${sec.name}"? It will be visible for new records again.`,
+                                      confirmLabel: "Restore",
+                                      variant: "success",
+                                      onConfirm: () => resSection(sec.id, sec.name),
+                                    });
+                                    setConfirmOpen(true);
+                                  }}
+                                  className="px-3 font-bold text-xs border-green-300 text-green-700 hover:text-green-800 hover:bg-green-50"
+                                >
+                                  <i className="ph-bold ph-arrow-counter-clockwise mr-1.5"></i>
+                                  RESTORE
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setConfirmPayload({
+                                      title: "Archive Section Block",
+                                      message: `Archive section block "${sec.name}"? This will hide it from new registrations but preserve history.`,
+                                      confirmLabel: "Archive",
+                                      variant: "danger",
+                                      onConfirm: () => delSection(sec.id, sec.name),
+                                    });
+                                    setConfirmOpen(true);
+                                  }}
+                                  className="px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
+                                >
+                                  <i className="ph-bold ph-archive mr-1.5"></i>
+                                  ARCHIVE
+                                </Button>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -855,7 +1026,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                         sec.course_code === selectedCourseFilter,
                     ).length === 0 && (
                       <tr className="border-0 hover:bg-transparent">
-                        <td colSpan={3} className="p-0 border-0">
+                        <td colSpan={4} className="p-0 border-0">
                           <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
                             <EmptyHeader className="flex flex-col items-center gap-0">
                               <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
@@ -863,12 +1034,13 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                               </EmptyMedia>
                               <EmptyTitle className="text-lg font-bold text-gray-900">
                                 {selectedCourseFilter
-                                  ? `No sections mapped to ${selectedCourseFilter}`
-                                  : "No sections yet"}
+                                  ? `No sections found for ${selectedCourseFilter}`
+                                  : "No sections found"}
                               </EmptyTitle>
                               <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                                Use the form above to construct student routing
-                                blocks.
+                                {showArchived
+                                  ? "There are no archived sections matching your criteria."
+                                  : "Use the form above to construct student routing blocks."}
                               </EmptyDescription>
                             </EmptyHeader>
                           </Empty>
@@ -1409,6 +1581,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
         title={confirmPayload.title}
         message={confirmPayload.message}
         confirmLabel={confirmPayload.confirmLabel}
+        variant={confirmPayload.variant}
         onConfirm={confirmPayload.onConfirm}
       />
     </div>

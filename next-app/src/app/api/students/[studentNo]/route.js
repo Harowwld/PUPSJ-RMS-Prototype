@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import {
-  deleteStudent,
+  archiveStudent,
+  restoreStudent,
   getStudentByStudentNo,
   updateStudent,
 } from "../../../../lib/studentsRepo";
@@ -8,7 +9,7 @@ import { writeAuditLog } from "../../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
-export async function GET(_req, ctx) {
+export async function GET(req, ctx) {
   const params = await ctx.params;
   const studentNo = decodeURIComponent(params.studentNo || "");
   if (!studentNo) {
@@ -22,7 +23,6 @@ export async function GET(_req, ctx) {
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
-  await writeAuditLog(req, `Updated student: ${studentNo}`);
 
   return NextResponse.json({ ok: true, data: row });
 }
@@ -45,6 +45,19 @@ export async function PATCH(req, ctx) {
     );
   }
 
+  // Handle explicit status toggle (archiving/restoring)
+  if (body.status === "Active") {
+    const row = await restoreStudent(studentNo);
+    if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+    await writeAuditLog(req, `Restored student: ${studentNo}`);
+    return NextResponse.json({ ok: true, data: row });
+  } else if (body.status === "Archived") {
+    const row = await archiveStudent(studentNo);
+    if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+    await writeAuditLog(req, `Archived student: ${studentNo}`);
+    return NextResponse.json({ ok: true, data: row });
+  }
+
   const row = await updateStudent(studentNo, {
     name: body.name === undefined ? undefined : String(body.name).trim(),
     courseCode:
@@ -60,11 +73,12 @@ export async function PATCH(req, ctx) {
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
+  await writeAuditLog(req, `Updated student: ${studentNo}`);
 
   return NextResponse.json({ ok: true, data: row });
 }
 
-export async function DELETE(_req, ctx) {
+export async function DELETE(req, ctx) {
   const params = await ctx.params;
   const studentNo = decodeURIComponent(params.studentNo || "");
   if (!studentNo) {
@@ -74,11 +88,11 @@ export async function DELETE(_req, ctx) {
     );
   }
 
-  const row = await deleteStudent(studentNo);
+  const row = await archiveStudent(studentNo);
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
-  await writeAuditLog(_req, `Deleted student: ${studentNo}`);
+  await writeAuditLog(req, `Archived student: ${studentNo}`);
 
   return NextResponse.json({ ok: true, data: row });
 }

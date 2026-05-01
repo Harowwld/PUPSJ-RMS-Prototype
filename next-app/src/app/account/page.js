@@ -797,7 +797,7 @@ function AccountPageContent() {
                   <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
-                        <i className="ph-duotone ph-mobile text-2xl"></i>
+                        <i className="ph-duotone ph-device-mobile text-2xl"></i>
                       </div>
                       <div>
                         <CardTitle className="text-xl font-black text-gray-900 tracking-tight">
