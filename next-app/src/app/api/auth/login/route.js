@@ -56,9 +56,11 @@ export async function POST(req) {
   const password = String(body.password || "");
 
   if (!username || !password) {
-    await writeAuditLog(req, "Login attempt failed: missing credentials", {
-      actor: username || "Unknown",
+    await writeAuditLog(req, "Login Attempt", { 
+      details: "authentication failure: missing credentials in request payload", 
+      actor: username || "Guest",
       role: "Guest",
+      severity: "WARNING"
     });
     return NextResponse.json(
       { ok: false, error: "Missing credentials" },
@@ -68,17 +70,21 @@ export async function POST(req) {
 
   const staff = await getStaffByUsername(username);
   if (!staff) {
-    await writeAuditLog(req, `Login attempt failed: unknown user (${username})`, {
+    await writeAuditLog(req, `Login Attempt`, { 
+      details: `authentication failure: identifier '${username}' not recognized by the system repository`, 
       actor: username,
       role: "Guest",
+      severity: "WARNING"
     });
     return NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 });
   }
 
   if (staff.status === "Archived") {
-    await writeAuditLog(req, `Login attempt failed: archived account (${username})`, {
+    await writeAuditLog(req, `Login Attempt`, { 
+      details: `authentication failure: attempt to access personnel account '${username}' which is currently archived and disabled`, 
       actor: username,
       role: "Guest",
+      severity: "CRITICAL"
     });
     return NextResponse.json(
       { ok: false, error: "This account has been archived. Please contact an administrator." },
@@ -93,9 +99,11 @@ export async function POST(req) {
 
   const hashed = hashPasswordForStorage(password);
   if (hashed !== stored) {
-    await writeAuditLog(req, `Login attempt failed: invalid password (${username})`, {
+    await writeAuditLog(req, `Login Attempt`, { 
+      details: `authentication failure: invalid credentials provided for recognized account '${username}'`, 
       actor: username,
       role: "Guest",
+      severity: "WARNING"
     });
     return NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 });
   }
@@ -121,9 +129,12 @@ export async function POST(req) {
   };
   const token = await signSessionToken(sessionPayload);
   createSession(token, touched.id, touched.role || "Staff", touched.email);
-  await writeAuditLog(req, `User login: ${touched.email || touched.id}`, {
+  await writeAuditLog(req, `User Login`, { 
+    details: `personnel '${getStaffDisplayName(touched)}' successfully authenticated into the system repository`, 
     actor: getStaffDisplayName(touched),
     role: touched.role || "Staff",
+    entity_type: "User",
+    entity_id: touched.id
   });
   // Broadcast to admins
   broadcastToAdmins("staffLogin", {

@@ -48,7 +48,11 @@ export async function POST(req) {
     };
 
     const updated = await updateStaff(userId, updatePatch);
-    await writeAuditLog(req, `Updated profile for account: ${userId}`);
+    await writeAuditLog(req, `Update Profile`, { 
+      details: `personnel successfully modified personal profile and contact identity (Account: ${updated.fname} ${updated.lname})`,
+      entity_type: "User",
+      entity_id: userId
+    });
 
     return NextResponse.json({
       ok: true,

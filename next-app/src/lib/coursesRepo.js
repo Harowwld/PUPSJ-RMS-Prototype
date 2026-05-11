@@ -46,6 +46,10 @@ export async function updateCourse(id, codeRaw, nameRaw, status = "Active") {
 }
 
 export async function archiveCourse(id) {
+  const course = await dbGet("SELECT code FROM courses WHERE id = ?", [id]);
+  if (course?.code) {
+    await dbRun("UPDATE sections SET status = 'Archived' WHERE course_code = ? AND status = 'Active'", [course.code]);
+  }
   await dbRun("UPDATE courses SET status = 'Archived' WHERE id = ?", [id]);
   return true;
 }

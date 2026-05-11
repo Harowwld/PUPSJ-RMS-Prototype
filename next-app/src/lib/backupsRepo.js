@@ -3,6 +3,7 @@ import path from "node:path";
 import fs from "node:fs";
 import crypto from "node:crypto";
 import AdmZip from "adm-zip";
+import { broadcastToAdmins } from "../pages/api/socket";
 
 const BACKUP_ENC_MAGIC = Buffer.from("PUPSBK1", "utf8");
 const BACKUP_ENC_ALGO = "aes-256-gcm";
@@ -25,9 +26,22 @@ export function getBackupsDir() {
 
 export function getExternalBackupsDir() {
   const explicit = process.env.EXTERNAL_BACKUP_PATH;
-  const dir = explicit
-    ? explicit
-    : path.join(getLocalDir(), "external_media");
+  let dir = path.join(getLocalDir(), "external_media");
+
+  if (explicit) {
+    try {
+      // Check if the drive root exists (e.g. E:\)
+      const root = path.parse(explicit).root;
+      if (fs.existsSync(root)) {
+        dir = explicit;
+      } else {
+        console.warn(`[BACKUP] External path '${explicit}' is unreachable (drive not found). Falling back to local external_media.`);
+      }
+    } catch (e) {
+      console.warn(`[BACKUP] Error checking external path '${explicit}':`, e.message);
+    }
+  }
+
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
@@ -86,9 +100,64 @@ export async function deleteBackupRecord(id) {
   return result.changes;
 }
 
+export async function syncBackupExternally(id) {
+  try {
+    console.log(`[SYNC DEBUG] Starting background sync for ID: ${id}`);
+    
+    // Give the database a moment to fully settle the initial record
+    await new Promise(r => setTimeout(r, 1000));
+
+    const backup = await getBackupById(id);
+    if (!backup) {
+      console.error(`[SYNC DEBUG] CRITICAL: Backup record ${id} not found in DB.`);
+      throw new Error("Backup record not found");
+    }
+
+    const backupsDir = getBackupsDir();
+    const sourcePath = path.join(backupsDir, backup.filename);
+    console.log(`[SYNC DEBUG] Source path: ${sourcePath}`);
+
+    if (!fs.existsSync(sourcePath)) {
+      console.error(`[SYNC DEBUG] CRITICAL: Source file missing on disk: ${sourcePath}`);
+      throw new Error(`Source file not found at: ${sourcePath}`);
+    }
+
+    const externalDir = getExternalBackupsDir();
+    const destPath = path.join(externalDir, backup.filename);
+    console.log(`[SYNC DEBUG] Destination path: ${destPath}`);
+
+    console.log(`[SYNC DEBUG] Transferring ${backup.filename} to external drive...`);
+    
+    // Physical copy
+    fs.copyFileSync(sourcePath, destPath);
+    console.log(`[SYNC DEBUG] Physical copy complete.`);
+
+    // Update DB status
+    await updateBackupStatus(id, "status_external", "Success");
+    console.log(`[SYNC DEBUG] Database updated to 'Success' for ID: ${id}`);
+    
+    // Notify frontend via WebSocket
+    broadcastToAdmins("backupSyncComplete", { id, status: "Success" });
+    
+    return { ok: true, path: destPath };
+  } catch (error) {
+    console.error(`[SYNC DEBUG] ERROR for backup ${id}:`, error.message);
+    try {
+      await updateBackupStatus(id, "status_external", "Failed");
+      broadcastToAdmins("backupSyncComplete", { id, status: "Failed", error: error.message });
+    } catch (dbErr) {
+      console.error(`[SYNC DEBUG] Failed to record failure status in DB:`, dbErr.message);
+    }
+    throw error;
+  }
+}
+
 export async function executeBackup() {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-  const backupFilename = `backup-${timestamp}.zip.enc`;
+  const timestamp = new Date();
+  const dateStr = timestamp.toISOString().split("T")[0]; // YYYY-MM-DD
+  const timeStr = timestamp.toTimeString().split(" ")[0].replace(/:/g, "").slice(0, 4); // HHMM
+  const backupFilename = `PUP-RECORDS-BACKUP-${dateStr}-${timeStr}.zip.enc`;
+  
   const backupsDir = getBackupsDir();
   const backupPath = path.join(backupsDir, backupFilename);
   console.log(`[BACKUP] Creating: ${backupPath}`);

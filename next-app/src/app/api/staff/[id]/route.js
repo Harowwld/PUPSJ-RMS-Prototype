@@ -56,12 +56,21 @@ export async function PATCH(req, ctx) {
   if (body.status === "Active") {
     const row = await restoreStaff(id);
     if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
-    await writeAuditLog(req, `Restored staff account: ${name}`);
+    await writeAuditLog(req, `Restore Account`, { 
+      details: `restored system access permissions for personnel account '${name}' (ID: ${id})`,
+      entity_type: "User",
+      entity_id: id
+    });
     return NextResponse.json({ ok: true, data: row });
   } else if (body.status === "Inactive") {
     const row = await archiveStaff(id);
     if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
-    await writeAuditLog(req, `Archived staff account: ${name}`);
+    await writeAuditLog(req, `Archive Account`, { 
+      details: `archived personnel profile for '${name}' (ID: ${id}) and suspended all associated credentials`,
+      severity: "WARNING",
+      entity_type: "User",
+      entity_id: id
+    });
     return NextResponse.json({ ok: true, data: row });
   }
 
@@ -107,7 +116,11 @@ export async function PATCH(req, ctx) {
     if (!row) {
       return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
     }
-    await writeAuditLog(req, `Updated staff account: ${name}`);
+    await writeAuditLog(req, `Update Account`, { 
+      details: `modified profile configuration and registry metadata for personnel '${name}' (ID: ${id})`,
+      entity_type: "User",
+      entity_id: id
+    });
 
     return NextResponse.json({ ok: true, data: row });
   } catch (e) {
@@ -159,7 +172,12 @@ export async function DELETE(req, ctx) {
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
-  await writeAuditLog(req, `Archived staff account: ${name}`);
+  await writeAuditLog(req, `Archive Account`, { 
+    details: `archived personnel profile for '${name}' (ID: ${id}) via administrative DELETE protocol`,
+    severity: "WARNING",
+    entity_type: "User",
+    entity_id: id
+  });
 
   return NextResponse.json({ ok: true, data: row });
 }

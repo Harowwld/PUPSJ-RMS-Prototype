@@ -1,31 +1,16 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
 import { createAuditLog, listAuditLogs, countAuditLogs } from "../../../lib/auditLogsRepo";
-import { getSessionCookieName, verifySessionToken } from "../../../lib/jwt";
-import { getStaffById } from "../../../lib/staffRepo";
+import { getSessionActorName } from "../../../lib/authHelpers";
 
 export const runtime = "nodejs";
-
-async function getSessionActorName() {
-  const store = await cookies();
-  const token = store.get(getSessionCookieName())?.value || "";
-  if (!token) return "";
-  try {
-    const payload = await verifySessionToken(token);
-    const id = String(payload?.sub || "").trim();
-    if (!id) return "";
-    const staff = await getStaffById(id);
-    return `${staff?.fname || ""} ${staff?.lname || ""}`.trim();
-  } catch {
-    return "";
-  }
-}
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const limit = parseInt(searchParams.get("limit") || "200");
   const offset = parseInt(searchParams.get("offset") || "0");
   const search = searchParams.get("search") || "";
+  const role = searchParams.get("role") || "";
+  const severity = searchParams.get("severity") || "";
   const mine = searchParams.get("mine") === "1";
   const actorExact = mine ? await getSessionActorName() : "";
 
@@ -34,8 +19,8 @@ export async function GET(req) {
   }
 
   const [rows, total] = await Promise.all([
-    listAuditLogs({ limit, offset, search, actorExact }),
-    countAuditLogs(search, actorExact),
+    listAuditLogs({ limit, offset, search, actorExact, role, severity }),
+    countAuditLogs({ search, actorExact, role, severity }),
   ]);
 
   return NextResponse.json({ ok: true, data: rows, total });
@@ -50,10 +35,18 @@ export async function POST(req) {
     );
   }
 
+  const userAgent = req.headers.get("user-agent") || "";
+  const forwardedFor = req.headers.get("x-forwarded-for");
+  const remoteIp = forwardedFor ? forwardedFor.split(",")[0].trim() : "localhost";
+
   const actor = String(body.actor || "").trim();
   const role = String(body.role || "").trim();
   const action = String(body.action || "").trim();
-  const ip = body.ip === undefined ? undefined : String(body.ip).trim();
+  const details = String(body.details || "").trim();
+  const severity = String(body.severity || "INFO").trim();
+  const entityType = String(body.entity_type || "").trim();
+  const entityId = String(body.entity_id || "").trim();
+  const ip = body.ip || remoteIp;
 
   if (!actor || !role || !action) {
     return NextResponse.json(
@@ -62,6 +55,17 @@ export async function POST(req) {
     );
   }
 
-  await createAuditLog({ actor, role, action, ip });
+  await createAuditLog({
+    actor,
+    role,
+    action,
+    details,
+    severity,
+    user_agent: body.user_agent || userAgent,
+    entity_type: entityType,
+    entity_id: entityId,
+    ip
+  });
+
   return NextResponse.json({ ok: true }, { status: 201 });
 }

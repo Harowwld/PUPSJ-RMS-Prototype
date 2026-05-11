@@ -8,15 +8,21 @@ import {
   deleteBackupRecord,
 } from "../../../../../lib/backupsRepo";
 import { writeAuditLog } from "../../../../../lib/auditLogRequest";
+import { requireAdmin, createAuthErrorResponse } from "../../../../../lib/authHelpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function DELETE(req, { params }) {
   try {
+    const { user, error } = await requireAdmin(req);
+    if (error || !user) {
+      return createAuthErrorResponse(error || "Admin access required", 403);
+    }
+
     const { id: idStr } = await params;
     const id = Number(idStr);
-    console.log(`[DELETE BACKUP] Attempting to delete backup with ID: ${id} (Original: ${idStr})`);
+    console.log(`[DELETE BACKUP] Attempting to delete backup with ID: ${id} by user ${user.id}`);
 
     if (isNaN(id)) return NextResponse.json({ ok: false, error: "Invalid ID" }, { status: 400 });
 
@@ -35,17 +41,13 @@ export async function DELETE(req, { params }) {
     if (fs.existsSync(filePath)) {
       console.log(`[DELETE BACKUP] File exists. Attempting to unlink: ${filePath}`);
       fs.unlinkSync(filePath);
-      console.log(`[DELETE BACKUP] Successfully unlinked file: ${filePath}`);
+      console.log(`[DELETE BACKUP] Successfully unlinked local file: ${filePath}`);
     } else {
-      console.log(`[DELETE BACKUP] File NOT FOUND on disk at: ${filePath}`);
+      console.log(`[DELETE BACKUP] Local file NOT FOUND on disk at: ${filePath}`);
     }
 
-    const externalDir = getExternalBackupsDir();
-    const externalPath = path.resolve(externalDir, backup.filename);
-    if (fs.existsSync(externalPath)) {
-      console.log(`[DELETE BACKUP] Found synced file on external media, deleting: ${externalPath}`);
-      fs.unlinkSync(externalPath);
-    }
+    // NOTE: External backups are intentionally left untouched (Immutable Archive approach).
+    // The web application does not have the authority to delete synced files from the external drive.
 
     // Delete record from database
     console.log(`[DELETE BACKUP] Deleting record from database for ID: ${id}`);
@@ -55,7 +57,7 @@ export async function DELETE(req, { params }) {
     if (changes === 0) {
       throw new Error("Record was not removed from database");
     }
-    await writeAuditLog(req, `Deleted backup: ${backup.filename} (id ${id})`);
+    await writeAuditLog(req, `Deleted local backup`, { details: `${backup.filename} (id ${id})` });
 
     return NextResponse.json({
       ok: true,

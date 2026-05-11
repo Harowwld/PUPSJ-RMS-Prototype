@@ -67,7 +67,11 @@ export default function SLAAnalyticsTab({ showToast, onLogAction }) {
   }, []);
 
   const handleRefresh = () => {
-    onLogAction?.("Refreshed Document SLA Analytics");
+    onLogAction?.({
+      action: "Refresh Analytics",
+      details: "refreshed Service Level Agreement fulfillment metrics and turnaround time datasets",
+      entityType: "Analytics"
+    });
     loadData();
   };
 
@@ -89,7 +93,7 @@ export default function SLAAnalyticsTab({ showToast, onLogAction }) {
 
   const handlePrint = () => {
     window.print();
-    onLogAction?.("Generated service analytics report (Print/PDF)");
+    onLogAction?.("Generate Report", "Generated service analytics report (Print/PDF)");
   };
 
   const downloadCsv = () => {
@@ -132,7 +136,11 @@ export default function SLAAnalyticsTab({ showToast, onLogAction }) {
     link.download = `sla-analytics-${new Date().toISOString().split("T")[0]}.csv`;
     link.click();
     URL.revokeObjectURL(url);
-    onLogAction?.("Exported SLA compliance report (CSV)");
+    onLogAction?.({
+      action: "Export CSV",
+      details: "exported comprehensive SLA compliance dataset to local CSV storage volume",
+      entityType: "Report"
+    });
   };
 
   const reportDate = formatPHDateTime(new Date().toISOString());
@@ -271,6 +279,7 @@ export default function SLAAnalyticsTab({ showToast, onLogAction }) {
                       <i className="ph-bold ph-envelope-open" /> Total Lifetime Requests
                     </div>
                     <div className="text-3xl font-black text-white">{total?.toLocaleString() ?? total}</div>
+                    <div className="text-[10px] font-medium text-[#f7c9ce]/80 mt-1">Total requests desde inception</div>
                   </div>
                 </div>
 
@@ -298,6 +307,7 @@ export default function SLAAnalyticsTab({ showToast, onLogAction }) {
                     <div className="flex items-end gap-3">
                       <div className="text-3xl font-black text-emerald-600">{completionRate}%</div>
                     </div>
+                    <div className="text-[10px] font-medium text-[#b07078] mt-1">Percentage of fulfilled requests</div>
                     <div className="w-full h-1.5 rounded-full bg-gray-200 overflow-hidden mt-2">
                       <div className="h-full bg-emerald-500" style={{ width: `${completionRate}%` }} />
                     </div>

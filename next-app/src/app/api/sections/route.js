@@ -35,7 +35,11 @@ export async function POST(req) {
     }
 
     const newSection = await createSection(name, courseCode);
-    await writeAuditLog(req, `Created section: ${name} (${courseCode})`);
+    await writeAuditLog(req, `Create Course Block`, { 
+      details: `created new course section block '${name}' assigned to academic program '${courseCode}'`,
+      entity_type: "Section",
+      entity_id: newSection.id
+    });
     return NextResponse.json({ ok: true, data: newSection });
   } catch (error) {
     return NextResponse.json(
@@ -64,9 +68,18 @@ export async function PUT(req) {
     const updated = await updateSection(id, name, courseCode, status);
     // Log specifically if we're toggling status
     if (status) {
-       await writeAuditLog(req, `${status === "Active" ? "Restored" : "Archived"} course block: ${updated.name}`);
+       await writeAuditLog(req, `${status === "Active" ? "Restore" : "Archive"} Course Block`, { 
+         details: `${status === "Active" ? "restored" : "archived"} section block identifier '${name}' (Program: ${courseCode})`,
+         severity: status === "Archived" ? "WARNING" : "INFO",
+         entity_type: "Section",
+         entity_id: id
+       });
     } else {
-       await writeAuditLog(req, `Updated course block: ${updated.name}`);
+       await writeAuditLog(req, `Update Course Block`, { 
+         details: `updated configuration for course section block '${name}' (Program: ${courseCode})`,
+         entity_type: "Section",
+         entity_id: id
+       });
     }
     return NextResponse.json({ ok: true, data: updated });
   } catch (error) {
@@ -96,10 +109,19 @@ export async function DELETE(req) {
     if (restore) {
       const { restoreSection } = await import("../../../lib/sectionsRepo");
       await restoreSection(id);
-      await writeAuditLog(req, `Restored course block: ${target?.name || id}`);
+      await writeAuditLog(req, `Restore Course Block`, { 
+        details: `restored section block '${target?.name || id}' from system archive`,
+        entity_type: "Section",
+        entity_id: id
+      });
     } else {
       await archiveSection(id);
-      await writeAuditLog(req, `Archived course block: ${target?.name || id}`);
+      await writeAuditLog(req, `Archive Course Block`, { 
+        details: `archived section block '${target?.name || id}' and disabled associated student routing`,
+        severity: "WARNING",
+        entity_type: "Section",
+        entity_id: id
+      });
     }
     return NextResponse.json({ ok: true });
   } catch (error) {

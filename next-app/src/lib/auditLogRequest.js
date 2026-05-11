@@ -32,10 +32,17 @@ async function resolveActor() {
 export async function writeAuditLog(req, action, overrides = {}) {
   try {
     const base = await resolveActor();
+    const userAgent = req?.headers?.get?.("user-agent") || "";
+
     await createAuditLog({
       actor: overrides.actor || base.actor,
       role: overrides.role || base.role,
       action: String(action || "").trim(),
+      details: overrides.details || "",
+      severity: overrides.severity || "INFO",
+      user_agent: userAgent,
+      entity_type: overrides.entity_type || "",
+      entity_id: overrides.entity_id || "",
       ip: overrides.ip || extractIp(req),
     });
   } catch (err) {

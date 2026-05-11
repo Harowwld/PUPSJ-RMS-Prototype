@@ -268,6 +268,11 @@ export async function getDb() {
           actor TEXT NOT NULL,
           role TEXT NOT NULL,
           action TEXT NOT NULL,
+          details TEXT,
+          severity TEXT NOT NULL DEFAULT 'INFO',
+          user_agent TEXT,
+          entity_type TEXT,
+          entity_id TEXT,
           ip TEXT
         );
 
@@ -292,6 +297,7 @@ export async function getDb() {
         CREATE TABLE IF NOT EXISTS security_questions (
           id INTEGER PRIMARY KEY AUTOINCREMENT,
           question TEXT NOT NULL,
+          is_required INTEGER NOT NULL DEFAULT 0,
           created_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
 
@@ -631,6 +637,7 @@ export async function getDb() {
             CREATE TABLE IF NOT EXISTS security_questions (
               id INTEGER PRIMARY KEY AUTOINCREMENT,
               question TEXT NOT NULL,
+              is_required INTEGER NOT NULL DEFAULT 0,
               created_at TEXT NOT NULL DEFAULT (datetime('now'))
             );
             CREATE TABLE IF NOT EXISTS staff_security_answers (
@@ -650,9 +657,10 @@ export async function getDb() {
             "What is the name of the street you grew up on?",
             "What was your childhood nickname?"
           ];
-          for (const q of defaultQs) {
-            db.exec(`INSERT OR IGNORE INTO security_questions (question) VALUES ('${q.replace(/'/g, "''")}')`);
-          }
+          defaultQs.forEach((q, i) => {
+            const isRequired = i < 2 ? 1 : 0;
+            db.exec(`INSERT OR IGNORE INTO security_questions (question, is_required) VALUES ('${q.replace(/'/g, "''")}', ${isRequired})`);
+          });
           db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '6')");
           persistDb();
         } catch (e) {}
@@ -969,6 +977,82 @@ export async function getDb() {
         persistDb();
       } catch (e) {
         // ignore doc_types safety-net errors
+      }
+
+      // Migration to version 13: Add details column to audit_logs
+      if (schemaVersion < 13) {
+        try {
+          const pragma = db.exec("PRAGMA table_info(audit_logs)");
+          const cols = new Set(
+            (pragma?.[0]?.values || []).map((r) => String(r?.[1] || ""))
+          );
+          if (!cols.has("details")) {
+            db.exec("ALTER TABLE audit_logs ADD COLUMN details TEXT");
+          }
+          db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '13')");
+          persistDb();
+        } catch (e) {
+          console.error("[DB] schema_version 13 migration (audit_logs details):", e);
+        }
+      }
+
+      // Migration to version 14: Add is_required column to security_questions
+      if (schemaVersion < 14) {
+        try {
+          const pragma = db.exec("PRAGMA table_info(security_questions)");
+          const cols = new Set(
+            (pragma?.[0]?.values || []).map((r) => String(r?.[1] || ""))
+          );
+          if (!cols.has("is_required")) {
+            db.exec("ALTER TABLE security_questions ADD COLUMN is_required INTEGER NOT NULL DEFAULT 0");
+          }
+          
+          // Set first two questions as required by default
+          const rows = db.exec("SELECT id FROM security_questions ORDER BY id ASC LIMIT 2");
+          if (rows && rows.length > 0 && rows[0].values) {
+            for (const r of rows[0].values) {
+              db.exec(`UPDATE security_questions SET is_required = 1 WHERE id = ${r[0]}`);
+            }
+          }
+
+          db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '14')");
+          persistDb();
+        } catch (e) {
+          console.error("[DB] schema_version 14 migration (security_questions is_required):", e);
+        }
+      }
+
+      // Migration to version 15: Enhance audit_logs with severity, user_agent, entity info
+      if (schemaVersion < 15) {
+        try {
+          db.exec("PRAGMA foreign_keys = OFF");
+          db.exec("BEGIN");
+          
+          const pragma = db.exec("PRAGMA table_info(audit_logs)");
+          const cols = new Set((pragma?.[0]?.values || []).map(r => String(r?.[1] || "")));
+          
+          if (!cols.has("severity")) {
+            db.exec("ALTER TABLE audit_logs ADD COLUMN severity TEXT NOT NULL DEFAULT 'INFO'");
+          }
+          if (!cols.has("user_agent")) {
+            db.exec("ALTER TABLE audit_logs ADD COLUMN user_agent TEXT");
+          }
+          if (!cols.has("entity_type")) {
+            db.exec("ALTER TABLE audit_logs ADD COLUMN entity_type TEXT");
+          }
+          if (!cols.has("entity_id")) {
+            db.exec("ALTER TABLE audit_logs ADD COLUMN entity_id TEXT");
+          }
+
+          db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '15')");
+          db.exec("COMMIT");
+          persistDb();
+        } catch (e) {
+          try { db.exec("ROLLBACK"); } catch (_) {}
+          console.error("[DB] schema_version 15 migration (audit_logs enhancement):", e);
+        } finally {
+          try { db.exec("PRAGMA foreign_keys = ON"); } catch (_) {}
+        }
       }
 
       try {

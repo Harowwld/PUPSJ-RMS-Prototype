@@ -104,7 +104,11 @@ export async function POST(req, ctx) {
     storageFilename: targetStorageFilename,
   });
   await markIngestPromoted(id, doc.id);
-  await writeAuditLog(req, `Promoted ingest #${id} to document #${doc.id}`);
+  await writeAuditLog(req, `Promote Ingest`, { 
+    details: `promoted digital artifact '${ingest.original_filename}' to formal record for student '${studentName || studentNo}' (Type: ${docType})`,
+    entity_type: "Document",
+    entity_id: doc.id
+  });
 
   return NextResponse.json({ ok: true, data: { ingestId: id, document: doc } }, { status: 201 });
 }

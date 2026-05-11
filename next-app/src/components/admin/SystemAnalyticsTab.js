@@ -129,7 +129,11 @@ export default function SystemAnalyticsTab({
 
   const handlePrint = () => {
     window.print();
-    onLogAction?.("Generated physical compliance report (Print/PDF)");
+    onLogAction?.({
+      action: "Generate Report",
+      details: `generated formal physical record compliance report (Status: ${statusFilter}, Course: ${courseFilter || 'All'}) for university accreditation files`,
+      entityType: "Report"
+    });
   };
 
   const downloadCsv = useCallback(() => {
@@ -190,8 +194,12 @@ export default function SystemAnalyticsTab({
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
 
-    onLogAction?.("Exported compliance report (CSV)");
-  }, [summary, meta, byCourse, showByCourse, onLogAction]);
+    onLogAction?.({
+      action: "Export CSV",
+      details: `exported digitization compliance dataset (Status: ${statusFilter}, Course: ${courseFilter || 'All'}) to local CSV storage volume`,
+      entityType: "Report"
+    });
+  }, [summary, meta, byCourse, showByCourse, onLogAction, statusFilter, courseFilter]);
 
   const reportDate = formatPHDateTime(new Date().toISOString());
 
@@ -398,6 +406,9 @@ export default function SystemAnalyticsTab({
                   <div className="text-2xl font-bold text-white leading-none">
                     {summary?.totalStudents?.toLocaleString?.() ?? summary?.totalStudents}
                   </div>
+                  <div className="text-[11px] text-[#f7c9ce]/80 mt-2">
+                    Enrolled in the system
+                  </div>
                 </div>
 
                 {/* Fully Digitized */}
@@ -409,7 +420,7 @@ export default function SystemAnalyticsTab({
                   <div className="text-2xl font-bold text-[#7a1e28] leading-none">
                     {summary?.digitizedStudents?.toLocaleString?.() ?? summary?.digitizedStudents}
                   </div>
-                  <div className="text-[11px] text-[#b07078] mt-1">
+                  <div className="text-[11px] text-[#b07078] mt-2">
                     100% complete records
                   </div>
                 </div>
@@ -423,7 +434,7 @@ export default function SystemAnalyticsTab({
                   <div className="text-2xl font-bold text-[#7a1e28] leading-none">
                     {summary?.percentDigitized != null ? `${summary.percentDigitized}%` : "0%"}
                   </div>
-                  <div className="text-[11px] text-[#b07078] mt-1">
+                  <div className="text-[11px] text-[#b07078] mt-2">
                     Overall record health
                   </div>
                 </div>
@@ -448,6 +459,9 @@ export default function SystemAnalyticsTab({
                         Action Needed
                       </span>
                     )}
+                  </div>
+                  <div className="text-[11px] text-[#b07078] mt-2">
+                    Compliance status
                   </div>
                 </div>
               </div>

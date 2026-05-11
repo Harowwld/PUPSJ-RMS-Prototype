@@ -2,11 +2,18 @@ import { NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
 import { getBackupById, getBackupsDir } from "../../../../../lib/backupsRepo";
+import { requireAdmin, createAuthErrorResponse } from "../../../../../lib/authHelpers";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function GET(req) {
   try {
+    const { user, error } = await requireAdmin(req);
+    if (error || !user) {
+      return createAuthErrorResponse(error || "Admin access required", 403);
+    }
+
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ ok: false, error: "Missing ID" }, { status: 400 });
@@ -29,10 +36,11 @@ export async function GET(req) {
     return new NextResponse(fileBuffer, {
       headers: {
         "Content-Type": isEncrypted ? "application/octet-stream" : "application/zip",
-        "Content-Disposition": `attachment; filename="${filename}"`,
+        "Content-Disposition": `attachment; filename=\"${filename}\"`,
       },
     });
   } catch (error) {
+    console.error("Backup Download Error:", error);
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 }

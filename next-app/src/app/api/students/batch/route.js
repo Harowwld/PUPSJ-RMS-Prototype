@@ -119,10 +119,7 @@ export async function POST(req) {
   }
   const successCount = results.filter((r) => r.ok).length;
   const failCount = results.length - successCount;
-  await writeAuditLog(
-    req,
-    `Batch student import: ${rows.length} rows (${successCount} success, ${failCount} failed)`
-  );
+  await writeAuditLog(req, `Batch student import`, { details: `${rows.length} rows (${successCount} success, ${failCount} failed)` });
 
   return NextResponse.json({ ok: true, data: results });
 }

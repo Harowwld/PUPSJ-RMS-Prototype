@@ -44,14 +44,11 @@ export async function POST(req) {
     const result = await clearRateLimitViolation(endpointType, identifier);
 
     // Log the admin action
-    await writeAuditLog(req, `Cleared rate limit violation for ${endpointType}:${identifier}`, {
-      actor: auth.payload.sub || 'Unknown Admin',
-      role: 'Admin',
-      details: {
-        endpointType,
-        identifier,
-        changes: result.changes
-      }
+    await writeAuditLog(req, `Security Maintenance`, {
+      details: `manually purged brute-force protection locks for '${identifier}' (Endpoint: ${endpointType}) and restored access permissions`,
+      severity: "WARNING",
+      entity_type: "Security",
+      entity_id: identifier
     });
 
     return NextResponse.json({ 

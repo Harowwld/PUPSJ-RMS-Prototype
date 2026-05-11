@@ -49,12 +49,21 @@ export async function PATCH(req, ctx) {
   if (body.status === "Active") {
     const row = await restoreStudent(studentNo);
     if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
-    await writeAuditLog(req, `Restored student: ${studentNo}`);
+    await writeAuditLog(req, `Restore Student`, { 
+      details: `restored active system status for student record '${row.name}' (ID: ${studentNo})`,
+      entity_type: "Student",
+      entity_id: studentNo
+    });
     return NextResponse.json({ ok: true, data: row });
   } else if (body.status === "Archived") {
     const row = await archiveStudent(studentNo);
     if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
-    await writeAuditLog(req, `Archived student: ${studentNo}`);
+    await writeAuditLog(req, `Archive Student`, { 
+      details: `moved student record '${row.name}' (ID: ${studentNo}) to the system archive and disabled associated processing`,
+      severity: "WARNING",
+      entity_type: "Student",
+      entity_id: studentNo
+    });
     return NextResponse.json({ ok: true, data: row });
   }
 
@@ -73,7 +82,11 @@ export async function PATCH(req, ctx) {
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
-  await writeAuditLog(req, `Updated student: ${studentNo}`);
+  await writeAuditLog(req, `Update Student`, { 
+    details: `modified profile and registry metadata for student '${row.name}' (ID: ${studentNo})`,
+    entity_type: "Student",
+    entity_id: studentNo
+  });
 
   return NextResponse.json({ ok: true, data: row });
 }
@@ -92,7 +105,12 @@ export async function DELETE(req, ctx) {
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
-  await writeAuditLog(req, `Archived student: ${studentNo}`);
+  await writeAuditLog(req, `Archive Student`, { 
+    details: `moved student record '${row.name}' (ID: ${studentNo}) to the system archive via DELETE protocol`,
+    severity: "WARNING",
+    entity_type: "Student",
+    entity_id: studentNo
+  });
 
   return NextResponse.json({ ok: true, data: row });
 }

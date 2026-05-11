@@ -40,6 +40,11 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
   const [activeSubTab, setActiveSubTab] = useState("document-types");
   const [showArchived, setShowArchived] = useState(false);
 
+  // Search States
+  const [docSearch, setDocSearch] = useState("");
+  const [courseSearch, setCourseSearch] = useState("");
+  const [sectionSearch, setSectionSearch] = useState("");
+
   // Document Types State
   const [docTypes, setDocTypes] = useState([]);
   const [isAddDocTypeOpen, setIsAddDocTypeOpen] = useState(false);
@@ -52,6 +57,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
   const [isAddCourseOpen, setIsAddCourseOpen] = useState(false);
   const [newCourseCode, setNewCourseCode] = useState("");
   const [newCourseName, setNewCourseName] = useState("");
+  const [newCourseBlocks, setNewCourseBlocks] = useState([""]);
   const [isEditCourseOpen, setIsEditCourseOpen] = useState(false);
   const [editCourse, setEditCourse] = useState({ id: null, code: "", name: "" });
 
@@ -91,12 +97,27 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
     loadAll();
   }, [showArchived]);
 
+  const filteredDocTypes = docTypes.filter(dt => 
+    dt.name.toLowerCase().includes(docSearch.toLowerCase())
+  );
+
+  const filteredCourses = courses.filter(c => 
+    c.code.toLowerCase().includes(courseSearch.toLowerCase()) ||
+    c.name.toLowerCase().includes(courseSearch.toLowerCase())
+  );
+
+  const filteredSections = sections.filter(sec => {
+    const matchesProgram = selectedCourseFilter === "" || sec.course_code === selectedCourseFilter;
+    const matchesSearch = sec.name.toLowerCase().includes(sectionSearch.toLowerCase());
+    return matchesProgram && matchesSearch;
+  });
+
   async function loadAll() {
     setLoading(true);
     setError(null);
     try {
       const q = showArchived ? "includeArchived=true" : "";
-      
+
       const [rDoc, rCourse, rSec, rSecQ] = await Promise.all([
         fetch(`/api/doc-types?admin=true${q ? "&" + q : ""}`),
         fetch(`/api/courses${q ? "?" + q : ""}`),
@@ -140,6 +161,12 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Add failed");
+      logAdminAction({
+        action: "Create Document Type",
+        details: `created new document type identifier '${newDocTypeName.trim()}'`,
+        entityType: "DocumentType",
+        entityId: json.data?.id
+      });
       setNewDocTypeName("");
       setIsAddDocTypeOpen(false);
       showToast({ title: "Success", description: "Document type added." });
@@ -160,6 +187,12 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Update failed");
+      logAdminAction({
+        action: "Update Document Type",
+        details: `updated configuration for document type '${editDocType.name.trim()}'`,
+        entityType: "DocumentType",
+        entityId: editDocType.id
+      });
       setIsEditDocTypeOpen(false);
       showToast({ title: "Success", description: "Document type updated." });
       loadAll();
@@ -173,6 +206,13 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       const res = await fetch(`/api/doc-types?id=${id}`, { method: "DELETE" });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Archive failed");
+      logAdminAction({
+        action: "Archive Document Type",
+        details: `archived document type '${name || "Unknown"}' and disabled its requirement logic`,
+        severity: "WARNING",
+        entityType: "DocumentType",
+        entityId: id
+      });
       setConfirmOpen(false);
       showToast({ title: "Success", description: "Document type archived." });
       loadAll();
@@ -183,13 +223,19 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
 
   async function resDocType(id, name) {
     try {
-      const res = await fetch(`/api/doc-types?id=${id}`, { 
+      const res = await fetch(`/api/doc-types?id=${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: "Active" })
       });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Restore failed");
+      logAdminAction({
+        action: "Restore Document Type",
+        details: `restored document type '${name || "Unknown"}' from system archive`,
+        entityType: "DocumentType",
+        entityId: id
+      });
       setConfirmOpen(false);
       showToast({ title: "Success", description: "Document type restored." });
       loadAll();
@@ -209,12 +255,20 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
         body: JSON.stringify({
           code: newCourseCode.trim(),
           name: newCourseName.trim(),
+          blocks: newCourseBlocks.filter(b => b.trim()),
         }),
       });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Add failed");
+      logAdminAction({
+        action: "Create Degree Program",
+        details: `deployed new academic program '${newCourseCode.trim()}' (${newCourseName.trim()}) with ${newCourseBlocks.filter(b => b.trim()).length} block(s)`,
+        entityType: "Course",
+        entityId: newCourseCode.trim()
+      });
       setNewCourseCode("");
       setNewCourseName("");
+      setNewCourseBlocks([""]);
       setIsAddCourseOpen(false);
       showToast({ title: "Success", description: "Degree program added." });
       loadAll();
@@ -237,6 +291,12 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Update failed");
+      logAdminAction({
+        action: "Update Degree Program",
+        details: `updated designation for program '${editCourse.code.trim()}' to '${editCourse.name.trim()}'`,
+        entityType: "Course",
+        entityId: editCourse.id
+      });
       setIsEditCourseOpen(false);
       showToast({ title: "Success", description: "Degree program updated." });
       loadAll();
@@ -250,6 +310,13 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       const res = await fetch(`/api/courses?id=${id}`, { method: "DELETE" });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Archive failed");
+      logAdminAction({
+        action: "Archive Degree Program",
+        details: `archived academic program '${code || "Unknown"}' and all associated enrollment routes`,
+        severity: "WARNING",
+        entityType: "Course",
+        entityId: id
+      });
       setConfirmOpen(false);
       showToast({ title: "Success", description: "Degree program archived." });
       loadAll();
@@ -263,6 +330,12 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       const res = await fetch(`/api/courses?id=${id}&restore=true`, { method: "DELETE" });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Restore failed");
+      logAdminAction({
+        action: "Restore Degree Program",
+        details: `restored academic program '${code || "Unknown"}' to active deployment status`,
+        entityType: "Course",
+        entityId: id
+      });
       setConfirmOpen(false);
       showToast({ title: "Success", description: "Degree program restored." });
       loadAll();
@@ -286,6 +359,12 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Add failed");
+      logAdminAction({
+        action: "Create Course Block",
+        details: `created section block '${secName.trim()}' assigned to program '${secCourseCode.trim()}'`,
+        entityType: "Section",
+        entityId: json.data?.id
+      });
       setSecName("");
       setSecCourseCode("");
       setIsAddSectionOpen(false);
@@ -310,6 +389,12 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Update failed");
+      logAdminAction({
+        action: "Update Course Block",
+        details: `updated block identifier to '${editSection.name.trim()}' and re-assigned to program '${editSection.courseCode.trim()}'`,
+        entityType: "Section",
+        entityId: editSection.id
+      });
       setIsEditSectionOpen(false);
       showToast({ title: "Success", description: "Section block updated." });
       loadAll();
@@ -323,6 +408,13 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       const res = await fetch(`/api/sections?id=${id}`, { method: "DELETE" });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Archive failed");
+      logAdminAction({
+        action: "Archive Course Block",
+        details: `archived course block identifier '${name || "Unknown"}'`,
+        severity: "WARNING",
+        entityType: "Section",
+        entityId: id
+      });
       setConfirmOpen(false);
       showToast({ title: "Success", description: "Section block archived." });
       loadAll();
@@ -336,6 +428,12 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       const res = await fetch(`/api/sections?id=${id}&restore=true`, { method: "DELETE" });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Restore failed");
+      logAdminAction({
+        action: "Restore Course Block",
+        details: `restored course block '${name || "Unknown"}' to active status`,
+        entityType: "Section",
+        entityId: id
+      });
       setConfirmOpen(false);
       showToast({ title: "Success", description: "Section block restored." });
       loadAll();
@@ -359,7 +457,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
         body: JSON.stringify({ questions: filtered }),
       });
       const json = await res.json();
-      
+
       if (res.status === 403 && json?.requiresTOTP && onVerifyTOTP) {
         if (totpToken) {
           throw new Error(json.error || "Invalid verification code");
@@ -367,8 +465,14 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
         await onVerifyTOTP((token) => handleSaveSecurityQuestions(null, token));
         return;
       }
-      
+
       if (!res.ok || !json.ok) throw new Error(json.error || "Failed to save questions");
+      logAdminAction({
+        action: "Update Security Policy",
+        details: `updated global security question framework (Total: ${filtered.length} active challenges)`,
+        severity: "CRITICAL",
+        entityType: "Security"
+      });
       showToast({ title: "Success", description: "Global security questions updated." });
       loadAll();
     } catch (err) {
@@ -379,13 +483,20 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
     }
   };
 
-  // --- ACTIONS: Bulk Import ---
-  async function handleCsvImport(e) {
+  // --- ACTIONS: Bulk Import (Staged) ---
+  const [importFile, setImportFile] = useState(null);
+  const [importRows, setImportRows] = useState([]); // [{ category, name, code, error, index }]
+  const [importStatus, setImportStatus] = useState("idle"); // idle, preview, importing, complete
+  const [importResults, setImportResults] = useState(null);
+
+  async function handleCsvSelect(e) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setImporting(true);
+    setImportFile(file);
+    setImportStatus("preview");
+    setImportResults(null);
+    
     try {
-      // Parse CSV file client-side
       const text = await file.text();
       const lines = text.split(/\r?\n/).filter((l) => l.trim());
       if (lines.length < 2) {
@@ -402,37 +513,76 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
         throw new Error(`Missing required columns: ${missingCols.join(", ")}`);
       }
 
-      const rows = lines.slice(1).map((line) => {
+      const parsed = lines.slice(1).map((line, idx) => {
         const vals = line.split(",");
         const row = {};
-        headers.forEach((h, idx) => {
-          row[h] = vals[idx]?.trim() || "";
+        headers.forEach((h, hIdx) => {
+          row[h] = vals[hIdx]?.trim() || "";
         });
-        return {
-          category: row.category || "",
-          name: row.name || "",
-          code: row.code || "",
-        };
-      }).filter((r) => r.category && r.name); // Skip empty rows
 
+        const category = row.category || "";
+        const name = row.name || "";
+        const code = row.code || "";
+
+        let error = "";
+        if (!category) error = "Missing Category";
+        else if (!name) error = "Missing Name";
+        else if (!["documenttype", "course", "section"].includes(category.toLowerCase())) {
+          error = "Invalid Category";
+        }
+
+        return { category, name, code, error, index: idx + 1 };
+      });
+
+      setImportRows(parsed);
+    } catch (err) {
+      showToast({ title: "Parsing Error", description: err.message }, true);
+      setImportFile(null);
+      setImportStatus("idle");
+    } finally {
+      e.target.value = "";
+    }
+  }
+
+  async function executeBulkImport() {
+    const validRows = importRows.filter(r => !r.error);
+    if (validRows.length === 0) return;
+
+    setImportStatus("importing");
+    try {
       const res = await fetch("/api/system/bulk-import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rows }),
+        body: JSON.stringify({ rows: validRows }),
       });
       const json = await res.json();
       if (!res.ok || !json.ok) throw new Error(json.error || "Import failed");
+
+      logAdminAction({
+        action: "Bulk Data Import",
+        details: `processed batch taxonomy ingestion: ${json.data?.successCount || 0} successful, ${json.data?.failCount || 0} failed`,
+        severity: json.data?.failCount > 0 ? "WARNING" : "INFO",
+        entityType: "System"
+      });
+
+      setImportResults(json.data);
+      setImportStatus("complete");
       showToast({
         title: "Import Successful",
-        description: `Processed ${json.data?.successCount || 0} taxonomy records (${json.data?.failCount || 0} failed).`,
+        description: `Processed ${json.data?.successCount || 0} taxonomy records.`,
       });
       loadAll();
     } catch (err) {
       showToast({ title: "Import Error", description: err.message }, true);
-    } finally {
-      setImporting(false);
-      e.target.value = "";
+      setImportStatus("preview");
     }
+  }
+
+  function resetImport() {
+    setImportFile(null);
+    setImportRows([]);
+    setImportStatus("idle");
+    setImportResults(null);
   }
 
   function handleCopySample() {
@@ -475,16 +625,30 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
   }
 
   const archivedToggle = (
-    <Toggle
-      pressed={showArchived}
-      onPressedChange={setShowArchived}
-      variant="outline"
-      size="sm"
-      className="ml-auto h-8 px-3 font-black text-[10px] uppercase border-gray-300 data-[state=on]:bg-red-600 data-[state=on]:text-white data-[state=on]:border-red-600 transition-all gap-1.5 shadow-sm"
-    >
-      <i className={`ph-bold text-xs ${showArchived ? "ph-archive" : "ph-archive-box"}`}></i>
-      {showArchived ? "ARCHIVED VIEW" : "ACTIVE VIEW"}
-    </Toggle>
+    <div className="ml-auto inline-flex items-center p-1 bg-gray-100 rounded-lg border border-gray-200 shadow-sm h-10 shrink-0">
+      <button
+        onClick={() => setShowArchived(false)}
+        className={`flex items-center gap-2 px-3 h-full rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${
+          !showArchived
+            ? "bg-pup-maroon text-white shadow-md ring-1 ring-black/5"
+            : "text-gray-500 hover:text-gray-700"
+        }`}
+      >
+        <i className="ph-bold ph-check-circle text-xs"></i>
+        <span>Active Records</span>
+      </button>
+      <button
+        onClick={() => setShowArchived(true)}
+        className={`flex items-center gap-2 px-3 h-full rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${
+          showArchived
+            ? "bg-amber-600 text-white shadow-md ring-1 ring-black/5"
+            : "text-gray-500 hover:text-gray-700"
+        }`}
+      >
+        <i className="ph-bold ph-archive text-xs"></i>
+        <span>Archive Vault</span>
+      </button>
+    </div>
   );
 
   return (
@@ -496,7 +660,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
         orientation="horizontal"
         className="flex-1 min-h-0 flex flex-col"
       >
-        <div className="shrink-0 flex items-center gap-4">
+        <div className="shrink-0 flex flex-col sm:flex-row items-center gap-4">
           <div className="inline-flex p-1 bg-gray-100/80 rounded-brand border border-gray-200/50 backdrop-blur-sm h-auto">
             <button
               type="button"
@@ -565,33 +729,51 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
         <Card className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm flex flex-col p-0 min-h-[500px] relative mt-4">
           <TabsContent value="document-types" className="flex-1 flex flex-col min-h-0 m-0 border-0 focus-visible:ring-0">
             <div className="flex flex-col h-full animate-fade-in w-full overflow-hidden">
-              <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
-                    <i className="ph-duotone ph-files text-2xl"></i>
+              <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
+                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
+                      <i className="ph-duotone ph-files text-2xl"></i>
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-black text-gray-900 tracking-tight leading-none flex items-center gap-2">
+                        Document Types
+                        {showArchived && (
+                          <Badge className="bg-red-50 text-red-700 border-red-100 font-black text-[10px]">ARCHIVE VIEW</Badge>
+                        )}
+                      </CardTitle>
+                      <CardDescription className="text-sm font-medium text-gray-500 mt-1.5">
+                        Manage formal document categories and digitization requirements.
+                      </CardDescription>
+                    </div>
                   </div>
-                  <div>
-                    <CardTitle className="text-xl font-black text-gray-900 tracking-tight leading-none flex items-center gap-2">
-                      {activeSubTab === "document-types" ? "Document Types" : activeSubTab === "degree-programs" ? "Degree Programs" : "Course Blocks"}
-                      {showArchived && (
-                        <Badge className="bg-red-50 text-red-700 border-red-100 font-black text-[10px]">ARCHIVE VIEW</Badge>
-                      )}
-                    </CardTitle>
-                    <CardDescription className="text-sm font-medium text-gray-500 mt-1.5">
-                      {activeSubTab === "document-types" 
-                        ? "Manage formal document categories and digitization requirements." 
-                        : activeSubTab === "degree-programs"
-                        ? "Manage available university course paths and academic designations."
-                        : "Construct logical section blocks and identifiers for student routing."}
-                    </CardDescription>
+                  <div className="flex flex-col sm:flex-row gap-3 items-end">
+                    <div className="w-full sm:w-64">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">Search Document Types</label>
+                        {docSearch && (
+                          <button onClick={() => setDocSearch("")} className="text-[9px] font-bold text-pup-maroon hover:underline uppercase">Clear</button>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <Input
+                          type="text"
+                          placeholder="Search document names..."
+                          className="pl-9 h-10 bg-white border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon"
+                          value={docSearch}
+                          onChange={(e) => setDocSearch(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => setIsAddDocTypeOpen(true)}
+                      className="bg-pup-maroon text-white h-10 px-5 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors w-full sm:w-auto"
+                    >
+                      <i className="ph-bold ph-plus"></i> ADD DOCUMENT TYPE
+                    </Button>
                   </div>
                 </div>
-                <Button
-                  onClick={() => setIsAddDocTypeOpen(true)}
-                  className="bg-pup-maroon text-white h-10 px-5 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors w-full sm:w-auto"
-                >
-                  <i className="ph-bold ph-plus"></i> ADD DOCUMENT TYPE
-                </Button>
               </CardHeader>
               <div className="flex-1 overflow-auto min-h-0 bg-white relative rounded-brand border border-gray-200">
                 <table className="min-w-full text-sm">
@@ -605,7 +787,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {docTypes.map((dt) => (
+                    {filteredDocTypes.map((dt) => (
                       <tr
                         key={dt.id}
                         className={`hover:bg-gray-50 transition-colors group cursor-default ${dt.status === "Archived" ? "opacity-75" : ""}`}
@@ -682,7 +864,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                         </td>
                       </tr>
                     ))}
-                    {docTypes.length === 0 && (
+                    {filteredDocTypes.length === 0 && (
                       <tr className="border-0 hover:bg-transparent">
                         <td colSpan={3} className="p-0 border-0">
                           <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
@@ -692,9 +874,11 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                               </EmptyMedia>
                               <EmptyTitle className="text-lg font-bold text-gray-900">No document types found</EmptyTitle>
                               <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                                {showArchived 
-                                  ? "There are no archived document types in the system."
-                                  : "Use the form above to add a new document configuration to the system framework."}
+                                {docSearch 
+                                  ? `No results matching "${docSearch}" in the current view.`
+                                  : showArchived
+                                    ? "There are no archived document types in the system."
+                                    : "Use the form above to add a new document configuration to the system framework."}
                               </EmptyDescription>
                             </EmptyHeader>
                           </Empty>
@@ -709,29 +893,51 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
 
           <TabsContent value="degree-programs" className="flex-1 flex flex-col min-h-0 m-0 border-0 focus-visible:ring-0">
             <div className="flex flex-col h-full animate-fade-in w-full overflow-hidden">
-              <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
-                    <i className="ph-duotone ph-books text-2xl"></i>
+              <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
+                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
+                      <i className="ph-duotone ph-books text-2xl"></i>
+                    </div>
+                    <div>
+                      <CardTitle className="text-xl font-black text-gray-900 tracking-tight leading-none flex items-center gap-2">
+                        Degree Programs
+                        {showArchived && (
+                          <Badge className="bg-red-50 text-red-700 border-red-100 font-black text-[10px]">ARCHIVE VIEW</Badge>
+                        )}
+                      </CardTitle>
+                      <CardDescription className="text-sm font-medium text-gray-500 mt-1.5">
+                        Manage available university course paths and academic designations.
+                      </CardDescription>
+                    </div>
                   </div>
-                  <div>
-                    <CardTitle className="text-xl font-black text-gray-900 tracking-tight leading-none flex items-center gap-2">
-                      Degree Programs
-                      {showArchived && (
-                        <Badge className="bg-red-50 text-red-700 border-red-100 font-black text-[10px]">ARCHIVE VIEW</Badge>
-                      )}
-                    </CardTitle>
-                    <CardDescription className="text-sm font-medium text-gray-500 mt-1.5">
-                      Manage available university course paths and academic designations.
-                    </CardDescription>
+                  <div className="flex flex-col sm:flex-row gap-3 items-end">
+                    <div className="w-full sm:w-64">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">Search Programs</label>
+                        {courseSearch && (
+                          <button onClick={() => setCourseSearch("")} className="text-[9px] font-bold text-pup-maroon hover:underline uppercase">Clear</button>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <Input
+                          type="text"
+                          placeholder="Search code or name..."
+                          className="pl-9 h-10 bg-white border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon"
+                          value={courseSearch}
+                          onChange={(e) => setCourseSearch(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <Button
+                      onClick={() => setIsAddCourseOpen(true)}
+                      className="bg-pup-maroon text-white h-10 px-5 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors w-full sm:w-auto"
+                    >
+                      <i className="ph-bold ph-plus"></i> ADD DEGREE PROGRAM
+                    </Button>
                   </div>
                 </div>
-                <Button
-                  onClick={() => setIsAddCourseOpen(true)}
-                  className="bg-pup-maroon text-white h-10 px-5 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors w-full sm:w-auto"
-                >
-                  <i className="ph-bold ph-plus"></i> ADD DEGREE PROGRAM
-                </Button>
               </CardHeader>
               <div className="flex-1 overflow-auto min-h-0 bg-white relative rounded-brand border border-gray-200">
                 <table className="min-w-full text-sm">
@@ -748,7 +954,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {courses.map((c) => (
+                    {filteredCourses.map((c) => (
                       <tr
                         key={c.id}
                         className={`hover:bg-gray-50 transition-colors group cursor-default ${c.status === "Archived" ? "opacity-75" : ""}`}
@@ -828,7 +1034,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                         </td>
                       </tr>
                     ))}
-                    {courses.length === 0 && (
+                    {filteredCourses.length === 0 && (
                       <tr className="border-0 hover:bg-transparent">
                         <td colSpan={4} className="p-0 border-0">
                           <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
@@ -838,9 +1044,11 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                               </EmptyMedia>
                               <EmptyTitle className="text-lg font-bold text-gray-900">No degree programs found</EmptyTitle>
                               <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                                {showArchived 
-                                  ? "There are no archived degree programs in the system."
-                                  : "Use the form above to deploy a new university course path."}
+                                {courseSearch
+                                  ? `No results matching "${courseSearch}" in the current view.`
+                                  : showArchived
+                                    ? "There are no archived degree programs in the system."
+                                    : "Use the form above to deploy a new university course path."}
                               </EmptyDescription>
                             </EmptyHeader>
                           </Empty>
@@ -855,54 +1063,65 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
 
           <TabsContent value="course-blocks" className="flex-1 flex flex-col min-h-0 m-0 border-0 focus-visible:ring-0">
             <div className="flex flex-col h-full animate-fade-in w-full overflow-hidden">
-              <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
-                    <i className="ph-duotone ph-list-numbers text-2xl"></i>
-                  </div>
-                  <div>
-                    <CardTitle className="text-xl font-black text-gray-900 tracking-tight leading-none flex items-center gap-2">
-                      Course Blocks
-                      {showArchived && (
-                        <Badge className="bg-red-50 text-red-700 border-red-100 font-black text-[10px]">ARCHIVE VIEW</Badge>
-                      )}
-                    </CardTitle>
-                    <CardDescription className="text-sm font-medium text-gray-500 mt-1.5">
-                      Construct logical section blocks and identifiers for student routing.
-                    </CardDescription>
-                  </div>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-                  <div className="flex-1 min-w-0 sm:w-64">
-                    <div className="flex items-center justify-between mb-1">
-                      <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">
-                        Filter by Program
-                      </label>
-                      {selectedCourseFilter !== "" && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedCourseFilter("")}
-                          className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
-                        >
-                          CLEAR ALL
-                        </Button>
-                      )}
+              <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
+                <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-4">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
+                      <i className="ph-duotone ph-list-numbers text-2xl"></i>
                     </div>
-                    <select
-                      className="h-10 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
-                      value={selectedCourseFilter}
-                      onChange={(e) => setSelectedCourseFilter(e.target.value)}
-                    >
-                      <option value="">All Degree Programs</option>
-                      {courses.map((c) => (
-                        <option key={c.code} value={c.code}>
-                          {c.code} - {c.name}
-                        </option>
-                      ))}
-                    </select>
+                    <div>
+                      <CardTitle className="text-xl font-black text-gray-900 tracking-tight leading-none flex items-center gap-2">
+                        Course Blocks
+                        {showArchived && (
+                          <Badge className="bg-red-50 text-red-700 border-red-100 font-black text-[10px]">ARCHIVE VIEW</Badge>
+                        )}
+                      </CardTitle>
+                      <CardDescription className="text-sm font-medium text-gray-500 mt-1.5">
+                        Construct logical section blocks and identifiers for student routing.
+                      </CardDescription>
+                    </div>
                   </div>
-                  <div className="flex items-end">
+                  <div className="flex flex-col sm:flex-row gap-3 items-end">
+                    <div className="w-full sm:w-56">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">Search Blocks</label>
+                        {sectionSearch && (
+                          <button onClick={() => setSectionSearch("")} className="text-[9px] font-bold text-pup-maroon hover:underline uppercase">Clear</button>
+                        )}
+                      </div>
+                      <div className="relative">
+                        <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                        <Input
+                          type="text"
+                          placeholder="Block name..."
+                          className="pl-9 h-10 bg-white border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon"
+                          value={sectionSearch}
+                          onChange={(e) => setSectionSearch(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="w-full sm:w-64">
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">
+                          Filter by Program
+                        </label>
+                        {selectedCourseFilter !== "" && (
+                          <button onClick={() => setSelectedCourseFilter("")} className="text-[9px] font-bold text-pup-maroon hover:underline uppercase">Clear</button>
+                        )}
+                      </div>
+                      <select
+                        className="h-10 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                        value={selectedCourseFilter}
+                        onChange={(e) => setSelectedCourseFilter(e.target.value)}
+                      >
+                        <option value="">All Degree Programs</option>
+                        {courses.map((c) => (
+                          <option key={c.code} value={c.code}>
+                            {c.code} - {c.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                     <Button
                       onClick={() => {
                         setSecCourseCode(selectedCourseFilter);
@@ -930,13 +1149,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
-                    {sections
-                      .filter(
-                        (sec) =>
-                          selectedCourseFilter === "" ||
-                          sec.course_code === selectedCourseFilter,
-                      )
-                      .map((sec) => (
+                    {filteredSections.map((sec) => (
                         <tr
                           key={sec.id}
                           className={`hover:bg-gray-50 transition-colors group cursor-default ${sec.status === "Archived" ? "opacity-75" : ""}`}
@@ -1020,11 +1233,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                           </td>
                         </tr>
                       ))}
-                    {sections.filter(
-                      (sec) =>
-                        selectedCourseFilter === "" ||
-                        sec.course_code === selectedCourseFilter,
-                    ).length === 0 && (
+                    {filteredSections.length === 0 && (
                       <tr className="border-0 hover:bg-transparent">
                         <td colSpan={4} className="p-0 border-0">
                           <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
@@ -1033,14 +1242,16 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                                 <i className="ph-duotone ph-list-numbers text-3xl text-pup-maroon"></i>
                               </EmptyMedia>
                               <EmptyTitle className="text-lg font-bold text-gray-900">
-                                {selectedCourseFilter
-                                  ? `No sections found for ${selectedCourseFilter}`
+                                {selectedCourseFilter || sectionSearch
+                                  ? `No sections found matching criteria`
                                   : "No sections found"}
                               </EmptyTitle>
                               <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                                {showArchived
-                                  ? "There are no archived sections matching your criteria."
-                                  : "Use the form above to construct student routing blocks."}
+                                {sectionSearch 
+                                  ? `No results matching "${sectionSearch}" in the current view.`
+                                  : showArchived
+                                    ? "There are no archived sections matching your criteria."
+                                    : "Use the form above to construct student routing blocks."}
                               </EmptyDescription>
                             </EmptyHeader>
                           </Empty>
@@ -1055,97 +1266,252 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
 
           <TabsContent value="bulk-import" className="flex-1 flex flex-col min-h-0 m-0 border-0 overflow-auto bg-gray-50/50 focus-visible:ring-0">
             <div className="flex-1 flex flex-col p-6 min-h-0">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1">
-                {/* Protocol card — Now #1 */}
-                <Card className="bg-white border border-gray-300 rounded-brand shadow-sm overflow-hidden flex flex-col">
-                  <div className="p-4 border-b border-gray-100 bg-gray-50/50 text-xs font-black text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-pup-maroon text-white flex items-center justify-center text-[10px] font-black">1</div>
-                    Import Protocol
-                  </div>
-                  <CardContent className="p-6 space-y-6 overflow-y-auto">
-                    <div className="space-y-3">
-                      <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                        <i className="ph-bold ph-info text-pup-maroon" />
-                        Required Column Architecture
+              {importStatus === "idle" ? (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1">
+                  {/* Protocol card */}
+                  <Card className="bg-white border border-gray-300 rounded-brand shadow-sm overflow-hidden flex flex-col">
+                    <div className="p-4 border-b border-gray-100 bg-gray-50/50 text-xs font-black text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full bg-pup-maroon text-white flex items-center justify-center text-[10px] font-black">1</div>
+                      Import Protocol
+                    </div>
+                    <CardContent className="p-6 space-y-6 overflow-y-auto">
+                      <div className="space-y-3">
+                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
+                          <i className="ph-bold ph-info text-pup-maroon" />
+                          Required Column Architecture
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {["Category", "Name", "Code"].map((col) => (
+                            <code key={col} className="font-mono text-gray-900 bg-gray-50 px-2 py-1 rounded border border-gray-200 text-xs font-bold shadow-xs">
+                              {col}
+                            </code>
+                          ))}
+                        </div>
                       </div>
-                      <div className="flex flex-wrap gap-2">
-                        {["Category", "Name", "Code"].map((col) => (
-                          <code key={col} className="font-mono text-gray-900 bg-gray-50 px-2 py-1 rounded border border-gray-200 text-xs font-bold shadow-xs">
-                            {col}
-                          </code>
+
+                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm font-mono text-gray-700 leading-relaxed shadow-inner">
+                        <div className="text-[10px] font-black text-gray-400 mb-1.5 tracking-widest uppercase">CSV Data Example</div>
+                        Category,Name,Code<br />
+                        DocumentType,Transcript of Records,<br />
+                        Course,Bachelor of Science in IT,BSIT<br />
+                        Section,Block 1,BSIT
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-3">
+                        {[
+                          { label: "DocumentType", desc: "Identifier code is optional. Only 'Name' is required." },
+                          { label: "Course", desc: "Short code is required (e.g. BSIT, BSA) for record routing." },
+                          { label: "Section", desc: "The 'Code' field MUST match an existing Degree Program code." },
+                        ].map((rule) => (
+                          <div key={rule.label} className="p-3 rounded-lg border border-gray-100 bg-white">
+                            <div className="text-[10px] font-black text-pup-maroon uppercase tracking-tight mb-1">{rule.label}</div>
+                            <div className="text-[11px] text-gray-600 font-medium leading-snug">{rule.desc}</div>
+                          </div>
                         ))}
                       </div>
-                    </div>
+                    </CardContent>
+                  </Card>
 
-                    <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm font-mono text-gray-700 leading-relaxed shadow-inner">
-                      <div className="text-[10px] font-black text-gray-400 mb-1.5 tracking-widest uppercase">CSV Data Example</div>
-                      Category,Name,Code<br />
-                      DocumentType,Birth Certificate,<br />
-                      Course,Bachelor of Science in IT,BSIT<br />
-                      Section,Block 1,BSIT
+                  {/* Upload card */}
+                  <Card className="bg-white border border-gray-300 rounded-brand shadow-sm overflow-hidden flex flex-col">
+                    <div className="p-4 border-b border-gray-100 bg-gray-50/50 text-xs font-black text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                      <div className="w-5 h-5 rounded-full bg-pup-maroon text-white flex items-center justify-center text-[10px] font-black">2</div>
+                      Choose File
                     </div>
-
-                    <div className="grid grid-cols-1 gap-3">
-                      {[
-                        { label: "DocumentType", desc: "Identifier code is optional. Only 'Name' is required." },
-                        { label: "Course", desc: "Short code is required (e.g. BSIT, BSA) for record routing." },
-                        { label: "Section", desc: "The 'Code' field MUST match an existing Degree Program code." },
-                      ].map((rule) => (
-                        <div key={rule.label} className="p-3 rounded-lg border border-gray-100 bg-white">
-                          <div className="text-[10px] font-black text-pup-maroon uppercase tracking-tight mb-1">{rule.label}</div>
-                          <div className="text-[11px] text-gray-600 font-medium leading-snug">{rule.desc}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Upload card — Now #2 */}
-                <Card className="bg-white border border-gray-300 rounded-brand shadow-sm overflow-hidden flex flex-col">
-                  <div className="p-4 border-b border-gray-100 bg-gray-50/50 text-xs font-black text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                    <div className="w-5 h-5 rounded-full bg-pup-maroon text-white flex items-center justify-center text-[10px] font-black">2</div>
-                    Choose File
-                  </div>
-                  <CardContent className="p-6 flex-1 flex flex-col">
-                    <div className="mb-6 flex flex-wrap items-center gap-3">
-                      <a
-                        href="data:text/csv;charset=utf-8,Category,Name,Code%0ADocumentType,Birth Certificate,%0ACourse,Bachelor of Science in IT,BSIT%0ASection,Block 1,BSIT"
-                        download="taxonomy-import-template.csv"
-                        className="flex-1 inline-flex items-center justify-center gap-2 h-11 px-4 rounded-lg border border-gray-300 bg-white text-xs font-black text-gray-700 uppercase tracking-wider hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-xs"
-                      >
-                        <i className="ph-bold ph-file-csv text-base"></i>
-                        Download Template
-                      </a>
-                      <button
-                        type="button"
-                        onClick={handleCopySample}
-                        className="flex-1 inline-flex items-center justify-center gap-2 h-11 px-4 rounded-lg border border-gray-300 bg-white text-xs font-black text-gray-700 uppercase tracking-wider hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-xs"
-                      >
-                        <i className="ph-bold ph-copy text-base"></i>
-                        Copy Raw Sample
-                      </button>
-                    </div>
-                    <div className="flex-1 bg-white border-2 border-dashed border-gray-300 rounded-brand p-12 hover:bg-red-50/20 hover:border-pup-maroon transition-all group relative cursor-pointer flex flex-col items-center justify-center text-center shadow-sm min-h-[300px]">
-                      <input
-                        type="file"
-                        accept=".csv"
-                        disabled={importing}
-                        onChange={handleCsvImport}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer disabled:cursor-not-allowed z-10"
-                      />
-                      <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-red-50 transition-colors mb-6 shadow-sm border border-gray-200 group-hover:border-red-200">
-                        <i className="ph-duotone ph-cloud-arrow-up text-4xl text-gray-400 group-hover:text-pup-maroon transition-colors"></i>
+                    <CardContent className="p-6 flex-1 flex flex-col">
+                      <div className="mb-6 flex flex-wrap items-center gap-3">
+                        <a
+                          href="data:text/csv;charset=utf-8,Category,Name,Code%0ADocumentType,Transcript of Records,%0ACourse,Bachelor of Science in IT,BSIT%0ASection,Block 1,BSIT"
+                          download="taxonomy-import-template.csv"
+                          className="flex-1 inline-flex items-center justify-center gap-2 h-11 px-4 rounded-lg border border-gray-300 bg-white text-xs font-black text-gray-700 uppercase tracking-wider hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-xs"
+                        >
+                          <i className="ph-bold ph-file-csv text-base"></i>
+                          Download Template
+                        </a>
+                        <button
+                          type="button"
+                          onClick={handleCopySample}
+                          className="flex-1 inline-flex items-center justify-center gap-2 h-11 px-4 rounded-lg border border-gray-300 bg-white text-xs font-black text-gray-700 uppercase tracking-wider hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-xs"
+                        >
+                          <i className="ph-bold ph-copy text-base"></i>
+                          Copy Raw Sample
+                        </button>
                       </div>
-                      <h3 className="text-lg font-black text-gray-900 leading-tight">
-                        {importing ? "Importing Data..." : "Ready to Ingest"}
-                      </h3>
-                      <p className="text-sm text-gray-500 font-medium mt-2 max-w-xs">
-                        Drop your structured <span className="font-mono text-pup-maroon font-bold">.csv</span> file here or click to browse.
+                      <div className="flex-1 bg-white border-2 border-dashed border-gray-300 rounded-brand p-12 hover:bg-red-50/20 hover:border-pup-maroon transition-all group relative cursor-pointer flex flex-col items-center justify-center text-center shadow-sm min-h-[300px]">
+                        <input
+                          type="file"
+                          accept=".csv"
+                          onChange={handleCsvSelect}
+                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        />
+                        <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-red-50 transition-colors mb-6 shadow-sm border border-gray-200 group-hover:border-red-200">
+                          <i className="ph-duotone ph-cloud-arrow-up text-4xl text-gray-400 group-hover:text-pup-maroon transition-colors"></i>
+                        </div>
+                        <h3 className="text-lg font-black text-gray-900 leading-tight">
+                          Ready to Ingest
+                        </h3>
+                        <p className="text-sm text-gray-500 font-medium mt-2 max-w-xs">
+                          Drop your structured <span className="font-mono text-pup-maroon font-bold">.csv</span> file here or click to browse.
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              ) : importStatus === "preview" ? (
+                <div className="flex-1 flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={resetImport}
+                        className="h-9 px-3 border-gray-300 text-gray-600 hover:text-pup-maroon hover:border-pup-maroon rounded-brand"
+                      >
+                        <i className="ph-bold ph-arrow-left mr-2"></i> BACK
+                      </Button>
+                      <h3 className="text-lg font-black text-gray-900 tracking-tight">CSV Ingestion Preview</h3>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="px-3 py-1.5 bg-white border border-gray-200 rounded-full flex items-center gap-4 shadow-sm">
+                        <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest border-r pr-4 border-gray-100">
+                          Summary
+                        </span>
+                        <div className="flex items-center gap-4">
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
+                            <span className="text-xs font-bold text-gray-700">{importRows.filter(r => !r.error).length} Ready</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <div className="w-2 h-2 rounded-full bg-red-500"></div>
+                            <span className="text-xs font-bold text-gray-700">{importRows.filter(r => r.error).length} Invalid</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Card className="flex-1 bg-white border border-gray-300 rounded-brand shadow-sm overflow-hidden flex flex-col">
+                    <div className="flex-1 overflow-auto bg-white">
+                      <table className="min-w-full text-sm">
+                        <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-20">
+                          <tr className="text-left text-[11px] font-black uppercase tracking-wider text-gray-500">
+                            <th className="p-4 w-12 text-center">Row</th>
+                            <th className="p-4 w-40">Category</th>
+                            <th className="p-4">Name / Label</th>
+                            <th className="p-4 w-32">Identifier</th>
+                            <th className="p-4 w-40">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                          {importRows.map((row) => (
+                            <tr key={row.index} className={`hover:bg-gray-50 transition-colors ${row.error ? 'bg-red-50/30' : ''}`}>
+                              <td className="p-4 text-center font-mono text-[11px] text-gray-400">{row.index}</td>
+                              <td className="p-4">
+                                <Badge variant="outline" className={`font-black text-[9px] uppercase tracking-widest px-2 py-0.5 border-0 ${
+                                  row.category.toLowerCase() === 'documenttype' ? 'bg-purple-100 text-purple-700' :
+                                  row.category.toLowerCase() === 'course' ? 'bg-blue-100 text-blue-700' :
+                                  'bg-amber-100 text-amber-700'
+                                }`}>
+                                  {row.category || 'MISSING'}
+                                </Badge>
+                              </td>
+                              <td className={`p-4 font-bold text-sm ${row.error && !row.name ? 'text-red-400 italic' : 'text-gray-900'}`}>
+                                {row.name || '(Required field missing)'}
+                              </td>
+                              <td className="p-4 font-mono text-xs text-gray-500">
+                                {row.code || '—'}
+                              </td>
+                              <td className="p-4">
+                                {row.error ? (
+                                  <div className="flex items-center gap-1.5 text-red-600">
+                                    <i className="ph-bold ph-warning-circle text-base"></i>
+                                    <span className="text-[11px] font-black uppercase tracking-tight">{row.error}</span>
+                                  </div>
+                                ) : (
+                                  <div className="flex items-center gap-1.5 text-emerald-600">
+                                    <i className="ph-bold ph-check-circle text-base"></i>
+                                    <span className="text-[11px] font-black uppercase tracking-tight">Validated</span>
+                                  </div>
+                                )}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
+                      <p className="text-[10px] font-medium text-gray-500 max-w-md">
+                        Only valid rows will be committed to the database. Invalid rows will be skipped automatically. 
+                        Records that already exist (matching name or code) will be ignored.
+                      </p>
+                      <div className="flex items-center gap-3">
+                        <Button 
+                          variant="ghost" 
+                          onClick={resetImport}
+                          className="h-10 px-6 font-bold text-gray-500 hover:text-gray-700"
+                        >
+                          ABORT
+                        </Button>
+                        <Button
+                          onClick={executeBulkImport}
+                          disabled={importRows.filter(r => !r.error).length === 0}
+                          className="h-10 px-8 bg-pup-maroon text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 hover:bg-red-900 transition-all rounded-brand"
+                        >
+                          <i className="ph-bold ph-check-square mr-2 text-lg"></i>
+                          Confirm & Import {importRows.filter(r => !r.error).length} Records
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                </div>
+              ) : importStatus === "importing" ? (
+                <div className="flex-1 flex flex-col items-center justify-center bg-white border border-gray-300 rounded-brand shadow-sm animate-fade-in">
+                  <div className="flex flex-col items-center gap-6 max-w-sm text-center">
+                    <div className="relative">
+                      <div className="h-20 w-20 rounded-full border-4 border-pup-maroon/10 border-t-pup-maroon animate-spin"></div>
+                      <i className="ph-duotone ph-database absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-3xl text-pup-maroon"></i>
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-black text-gray-900">Committing Taxonomy</h3>
+                      <p className="text-sm text-gray-500 font-medium mt-2">
+                        Writing validated entries to the system repository. Please do not close the window.
                       </p>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex-1 flex flex-col items-center justify-center bg-white border border-gray-300 rounded-brand shadow-sm animate-in zoom-in-95 duration-300">
+                  <div className="flex flex-col items-center gap-8 max-w-md text-center">
+                    <div className="w-24 h-24 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-lg shadow-emerald-500/10">
+                      <i className="ph-duotone ph-check-circle text-6xl"></i>
+                    </div>
+                    <div>
+                      <h3 className="text-2xl font-black text-gray-900 tracking-tight">Ingestion Complete</h3>
+                      <p className="text-sm text-gray-500 font-medium mt-2 leading-relaxed">
+                        The batch taxonomy has been successfully merged into the system framework.
+                      </p>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4 w-full bg-gray-50 p-6 rounded-xl border border-gray-100">
+                      <div className="space-y-1">
+                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Added</div>
+                        <div className="text-2xl font-black text-emerald-600">{importResults?.successCount || 0}</div>
+                      </div>
+                      <div className="space-y-1">
+                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Skipped / Duplicates</div>
+                        <div className="text-2xl font-black text-amber-600">{importResults?.failCount || 0}</div>
+                      </div>
+                    </div>
+
+                    <Button 
+                      onClick={resetImport}
+                      className="h-11 px-10 bg-gray-900 text-white font-black uppercase tracking-widest rounded-brand hover:bg-black transition-all shadow-lg"
+                    >
+                      RETURN TO IMPORTS
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </TabsContent>
 
@@ -1196,7 +1562,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                                 {i + 1}
                               </span>
                               <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest group-focus-within:text-gray-900 transition-colors">
-                                Security Challenge Question
+                                Security Challenge Question {i < 2 ? <span className="text-pup-maroon">*</span> : <span className="text-gray-400 normal-case ml-1">(Optional)</span>}
                               </label>
                             </div>
                             <Input
@@ -1235,7 +1601,13 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       </Tabs>
 
       {/* MODALS */}
-      <Dialog open={isAddDocTypeOpen} onOpenChange={setIsAddDocTypeOpen}>
+      <Dialog 
+        open={isAddDocTypeOpen} 
+        onOpenChange={(open) => {
+          setIsAddDocTypeOpen(open);
+          if (!open) setNewDocTypeName("");
+        }}
+      >
         <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
           <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
             <div className="flex items-start gap-4">
@@ -1267,7 +1639,15 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
               />
             </div>
             <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
-              <Button type="button" variant="outline" onClick={() => setIsAddDocTypeOpen(false)} className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setIsAddDocTypeOpen(false);
+                  setNewDocTypeName("");
+                }} 
+                className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+              >
                 CANCEL
               </Button>
               <Button type="submit" className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand">
@@ -1279,7 +1659,13 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isEditDocTypeOpen} onOpenChange={setIsEditDocTypeOpen}>
+      <Dialog 
+        open={isEditDocTypeOpen} 
+        onOpenChange={(open) => {
+          setIsEditDocTypeOpen(open);
+          if (!open) setEditDocType({ id: null, name: "" });
+        }}
+      >
         <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
           <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
             <div className="flex items-start gap-4">
@@ -1312,7 +1698,15 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
               />
             </div>
             <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
-              <Button type="button" variant="outline" onClick={() => setIsEditDocTypeOpen(false)} className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setIsEditDocTypeOpen(false);
+                  setEditDocType({ id: null, name: "" });
+                }} 
+                className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+              >
                 CANCEL
               </Button>
               <Button type="submit" className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand">
@@ -1324,7 +1718,17 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isAddCourseOpen} onOpenChange={setIsAddCourseOpen}>
+      <Dialog 
+        open={isAddCourseOpen} 
+        onOpenChange={(open) => {
+          setIsAddCourseOpen(open);
+          if (!open) {
+            setNewCourseCode("");
+            setNewCourseName("");
+            setNewCourseBlocks([""]);
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
           <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
             <div className="flex items-start gap-4">
@@ -1347,31 +1751,98 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
                   Short Code <span className="text-pup-maroon">*</span>
                 </label>
-                <Input
-                  type="text"
-                  placeholder="e.g. BSIT"
-                  className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                  value={newCourseCode}
-                  onChange={(e) => setNewCourseCode(e.target.value)}
-                  required
-                />
+                <div className="relative">
+                  <i className="ph-bold ph-text-aa absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                  <Input
+                    type="text"
+                    placeholder="e.g. BSIT"
+                    className="pl-10 h-11 w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                    value={newCourseCode}
+                    onChange={(e) => setNewCourseCode(e.target.value.toUpperCase())}
+                    required
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
                   Full Designation <span className="text-pup-maroon">*</span>
                 </label>
-                <Input
-                  type="text"
-                  placeholder="e.g. Bachelor of Science in Information Technology"
-                  className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                  value={newCourseName}
-                  onChange={(e) => setNewCourseName(e.target.value)}
-                  required
-                />
+                <div className="relative">
+                  <i className="ph-bold ph-text-t absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                  <Input
+                    type="text"
+                    placeholder="e.g. Bachelor of Science in Information Technology"
+                    className="pl-10 h-11 w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                    value={newCourseName}
+                    onChange={(e) => setNewCourseName(e.target.value)}
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-gray-100">
+                <div className="flex items-center justify-between mb-3">
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">
+                    Initial Course Blocks
+                  </label>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setNewCourseBlocks([...newCourseBlocks, ""])}
+                    className="h-7 px-2 text-[10px] font-black text-pup-maroon hover:bg-red-50"
+                  >
+                    <i className="ph-bold ph-plus mr-1"></i> ADD BLOCK
+                  </Button>
+                </div>
+                <div className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
+                  {newCourseBlocks.map((block, idx) => (
+                    <div key={idx} className="flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                      <Input
+                        type="text"
+                        placeholder={`e.g. Block ${idx + 1}`}
+                        className="h-9 bg-gray-50 mt-1 mb-1 ml-1  border-gray-200 text-xs focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                        value={block}
+                        onChange={(e) => {
+                          const updated = [...newCourseBlocks];
+                          updated[idx] = e.target.value;
+                          setNewCourseBlocks(updated);
+                        }}
+                      />
+                      {newCourseBlocks.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const updated = newCourseBlocks.filter((_, i) => i !== idx);
+                            setNewCourseBlocks(updated);
+                          }}
+                          className="h-9 w-9 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50 shrink-0"
+                        >
+                          <i className="ph-bold ph-trash"></i>
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  {newCourseBlocks.length === 0 && (
+                    <p className="text-[10px] text-gray-400 italic text-center py-2">No blocks added yet.</p>
+                  )}
+                </div>
               </div>
             </div>
             <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
-              <Button type="button" variant="outline" onClick={() => setIsAddCourseOpen(false)} className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setIsAddCourseOpen(false);
+                  setNewCourseCode("");
+                  setNewCourseName("");
+                  setNewCourseBlocks([""]);
+                }} 
+                className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+              >
                 CANCEL
               </Button>
               <Button type="submit" className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand">
@@ -1383,7 +1854,13 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isEditCourseOpen} onOpenChange={setIsEditCourseOpen}>
+      <Dialog 
+        open={isEditCourseOpen} 
+        onOpenChange={(open) => {
+          setIsEditCourseOpen(open);
+          if (!open) setEditCourse({ id: null, code: "", name: "" });
+        }}
+      >
         <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
           <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
             <div className="flex items-start gap-4">
@@ -1432,7 +1909,15 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
               </div>
             </div>
             <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
-              <Button type="button" variant="outline" onClick={() => setIsEditCourseOpen(false)} className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setIsEditCourseOpen(false);
+                  setEditCourse({ id: null, code: "", name: "" });
+                }} 
+                className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+              >
                 CANCEL
               </Button>
               <Button type="submit" className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand">
@@ -1444,7 +1929,16 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isAddSectionOpen} onOpenChange={setIsAddSectionOpen}>
+      <Dialog 
+        open={isAddSectionOpen} 
+        onOpenChange={(open) => {
+          setIsAddSectionOpen(open);
+          if (!open) {
+            setSecName("");
+            setSecCourseCode("");
+          }
+        }}
+      >
         <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
           <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
             <div className="flex items-start gap-4">
@@ -1496,7 +1990,16 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
               </div>
             </div>
             <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
-              <Button type="button" variant="outline" onClick={() => setIsAddSectionOpen(false)} className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setIsAddSectionOpen(false);
+                  setSecName("");
+                  setSecCourseCode("");
+                }} 
+                className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+              >
                 CANCEL
               </Button>
               <Button type="submit" className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand">
@@ -1508,7 +2011,13 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isEditSectionOpen} onOpenChange={setIsEditSectionOpen}>
+      <Dialog 
+        open={isEditSectionOpen} 
+        onOpenChange={(open) => {
+          setIsEditSectionOpen(open);
+          if (!open) setEditSection({ id: null, name: "", courseCode: "" });
+        }}
+      >
         <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
           <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
             <div className="flex items-start gap-4">
@@ -1563,7 +2072,15 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
               </div>
             </div>
             <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
-              <Button type="button" variant="outline" onClick={() => setIsEditSectionOpen(false)} className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => {
+                  setIsEditSectionOpen(false);
+                  setEditSection({ id: null, name: "", courseCode: "" });
+                }} 
+                className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+              >
                 CANCEL
               </Button>
               <Button type="submit" className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand">

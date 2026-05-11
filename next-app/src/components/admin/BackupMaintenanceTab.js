@@ -30,6 +30,7 @@ export default function BackupMaintenanceTab({
   onSyncExternal,
   onDownloadBackup,
   onDeleteBackup,
+  onRefresh,
   showToast,
 }) {
   const restoreFileRef = useRef(null);
@@ -199,7 +200,7 @@ export default function BackupMaintenanceTab({
 
           {/* RIGHT COLUMN: History Table */}
           <Card className="w-full lg:w-[70%] bg-white rounded-brand border border-gray-200 shadow-sm flex flex-col h-full overflow-hidden">
-            <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
+            <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6 flex flex-row items-center justify-between space-y-0">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
                   <i className="ph-duotone ph-clock-counter-clockwise text-2xl"></i>
@@ -213,6 +214,16 @@ export default function BackupMaintenanceTab({
                   </CardDescription>
                 </div>
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onRefresh}
+                disabled={isLoading}
+                className="h-9 px-4 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50 flex items-center gap-2 transition-all"
+              >
+                <i className={`ph-bold ph-arrows-clockwise ${isLoading ? "animate-spin" : ""}`}></i>
+                REFRESH
+              </Button>
             </CardHeader>
 
             <CardContent className="p-6 flex-1 flex flex-col min-h-0 bg-white">
@@ -343,7 +354,7 @@ export default function BackupMaintenanceTab({
                                 size="sm"
                                 onClick={() => onDeleteBackup(b.id)}
                                 className="h-8 px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
-                                title="Destroy Volume"
+                                title="Delete Local Copy"
                               >
                                 <i className="ph-bold ph-trash mr-1.5"></i>
                                 DELETE

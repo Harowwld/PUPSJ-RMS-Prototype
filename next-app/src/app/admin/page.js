@@ -64,10 +64,13 @@ function AdminPageContent() {
 
   const [staffData, setStaffData] = useState([]);
   const [auditLogs, setAuditLogs] = useState([]);
+  const [logStats, setLogStats] = useState(null);
   const [logPage, setLogPage] = useState(1);
   const [logTotal, setLogTotal] = useState(0);
   const [logsPerPage, setLogsPerPage] = useState(20);
   const [logSearch, setLogSearch] = useState("");
+  const [logRoleFilter, setLogRoleFilter] = useState("All");
+  const [logSeverityFilter, setLogSeverityFilter] = useState("All");
   const [logsMineOnly, setLogsMineOnly] = useState(false);
 
   const [systemHealth, setSystemHealth] = useState({
@@ -213,8 +216,10 @@ function AdminPageContent() {
     try {
       const offset = (logPage - 1) * logsPerPage;
       const mineQuery = logsMineOnly ? "&mine=1" : "";
+      const roleQuery = logRoleFilter !== "All" ? `&role=${encodeURIComponent(logRoleFilter)}` : "";
+      const sevQuery = logSeverityFilter !== "All" ? `&severity=${encodeURIComponent(logSeverityFilter)}` : "";
       const resLogs = await fetch(
-        `/api/audit-logs?limit=${logsPerPage}&offset=${offset}&search=${encodeURIComponent(logSearch)}${mineQuery}`,
+        `/api/audit-logs?limit=${logsPerPage}&offset=${offset}&search=${encodeURIComponent(logSearch)}${mineQuery}${roleQuery}${sevQuery}`,
       );
       const jsonLogs = await resLogs.json();
       if (!resLogs.ok || !jsonLogs?.ok)
@@ -224,10 +229,16 @@ function AdminPageContent() {
       const rows = Array.isArray(jsonLogs.data) ? jsonLogs.data : [];
       setAuditLogs(
         rows.map((r) => ({
+          id: r.id,
           time: formatPHDateTime(r.created_at),
           user: r.actor,
           role: r.role,
           action: r.action,
+          details: r.details || "—",
+          severity: r.severity || "INFO",
+          userAgent: r.user_agent || "—",
+          entityType: r.entity_type || "",
+          entityId: r.entity_id || "",
           ip: r.ip || "—",
         })),
       );
@@ -237,7 +248,19 @@ function AdminPageContent() {
     } finally {
       setViewLoading((prev) => ({ ...prev, logs: false }));
     }
-  }, [logPage, logsPerPage, logSearch, logsMineOnly]);
+  }, [logPage, logsPerPage, logSearch, logsMineOnly, logRoleFilter, logSeverityFilter]);
+
+  const refreshLogStats = useCallback(async () => {
+    try {
+      const res = await fetch("/api/audit-logs/stats");
+      const json = await res.json();
+      if (res.ok && json?.ok) {
+        setLogStats(json.data);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   const refreshSystemHealth = useCallback(async () => {
     try {
@@ -290,16 +313,35 @@ function AdminPageContent() {
   }, [reviewStatusFilter, showToast]);
 
   const logAdminAction = useCallback(
-    async (action) => {
+    async (input, detailsInput = "") => {
+      // Support legacy (action, details) and new { action, details, severity, ... } patterns
+      const data = typeof input === "string" 
+        ? { action: input, details: detailsInput }
+        : input;
+
+      const { 
+        action, 
+        details = "", 
+        severity = "INFO", 
+        entityType = "", 
+        entityId = "" 
+      } = data;
+
       try {
+        const actor = authUser ? `${authUser.fname} ${authUser.lname}`.trim() : "System";
+        const role = authUser ? authUser.role : "System";
+
         await fetch("/api/audit-logs", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            actor: authUser ? `${authUser.fname} ${authUser.lname}`.trim() : "Admin User",
-            role: authUser ? authUser.role : "Admin",
+            actor,
+            role,
             action,
-            ip: "localhost",
+            details,
+            severity,
+            entity_type: entityType,
+            entity_id: entityId,
           }),
         });
         refreshAuditLogs();
@@ -370,9 +412,10 @@ function AdminPageContent() {
       // Render the tab first, then hydrate data in the background.
       setTimeout(() => {
         refreshAuditLogs();
+        refreshLogStats();
       }, 0);
     }
-  }, [view, refreshAuditLogs]);
+  }, [view, refreshAuditLogs, refreshLogStats]);
 
   useEffect(() => {
     if (view === "review") {
@@ -411,6 +454,10 @@ function AdminPageContent() {
 
   const reviewDocumentStatus = useCallback(
     async (id, approvalStatus, reviewNote = "") => {
+      const record = reviewRecords.find(r => r.id === id);
+      const studentName = record?.student_name || "Unknown";
+      const docType = record?.doc_type || "Document";
+
       try {
         const res = await fetch(`/api/documents/${id}`, {
           method: "PATCH",
@@ -421,13 +468,22 @@ function AdminPageContent() {
         if (!res.ok || !json?.ok) {
           throw new Error(json?.error || "Failed to review document");
         }
+
+        logAdminAction({
+          action: `${approvalStatus} Document`,
+          details: `${approvalStatus.toLowerCase()} digital record for student '${studentName}' (Document: ${docType})${reviewNote ? `. Reason: ${reviewNote}` : ""}`,
+          severity: approvalStatus === "Declined" ? "WARNING" : "INFO",
+          entityType: "Document",
+          entityId: id
+        });
+
         showToast({ title: "Review Complete", description: `The document has been ${approvalStatus.toLowerCase()}.` });
         refreshReviewRecords();
       } catch (err) {
         showToast({ title: "Review Failed", description: err?.message || "Unable to update document status." }, true);
       }
     },
-    [refreshReviewRecords, showToast, logAdminAction]
+    [reviewRecords, refreshReviewRecords, showToast, logAdminAction]
   );
 
   const openDeclinePrompt = useCallback((id) => {
@@ -490,12 +546,24 @@ function AdminPageContent() {
       });
     };
 
+    const onBackupSyncComplete = (data) => {
+      console.log("[BACKUP] Received backupSyncComplete event:", data);
+      refreshBackups();
+      if (data.status === "Success") {
+        showToast({ title: "External Sync Complete", description: "A redundant copy has been secured on the external volume." });
+      } else {
+        showToast({ title: "External Sync Failed", description: data.error || "Unable to secure external copy." }, true);
+      }
+    };
+
     socket.on("staffLogin", onStaffLogin);
     socket.on("staffLogout", onStaffLogout);
+    socket.on("backupSyncComplete", onBackupSyncComplete);
 
     return () => {
       socket.off("staffLogin", onStaffLogin);
       socket.off("staffLogout", onStaffLogout);
+      socket.off("backupSyncComplete", onBackupSyncComplete);
     };
   }, [socket, showToast, refreshBackups]);
 
@@ -509,10 +577,10 @@ function AdminPageContent() {
   };
 
   const handleCreate = async (e, totpToken = null) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     const section = createForm.role === "Admin" ? "Administrative" : "Records";
     const headers = { "Content-Type": "application/json" };
-    if (totpToken) {
+    if (typeof totpToken === "string") {
       headers["x-totp-token"] = totpToken;
     }
     try {
@@ -525,10 +593,10 @@ function AdminPageContent() {
       
       if (res.status === 403) {
         if (json?.requiresTOTP) {
-          if (totpToken) {
+          if (typeof totpToken === "string") {
             throw new Error(json.error || "Invalid verification code");
           }
-          await executeWithTOTP((token) => handleCreate(e, token), "Create Staff", true);
+          await executeWithTOTP((token) => handleCreate(null, token), "Create Staff", true);
           return;
         }
         throw new Error(json?.error || "Access denied");
@@ -554,16 +622,16 @@ function AdminPageContent() {
       });
       switchView("directory");
     } catch (err) {
-      if (totpToken) throw err;
+      if (typeof totpToken === "string") throw err;
       showToast({ title: "Creation Failed", description: err.message }, true);
     }
   };
 
   const handleEditSubmit = async (e, totpToken = null) => {
-    e.preventDefault();
+    if (e && e.preventDefault) e.preventDefault();
     const section = editForm.role === "Admin" ? "Administrative" : "Records";
     const headers = { "Content-Type": "application/json" };
-    if (totpToken) {
+    if (typeof totpToken === "string") {
       headers["x-totp-token"] = totpToken;
     }
     try {
@@ -576,10 +644,10 @@ function AdminPageContent() {
       
       if (res.status === 403) {
         if (json?.requiresTOTP) {
-          if (totpToken) {
+          if (typeof totpToken === "string") {
             throw new Error(json.error || "Invalid verification code");
           }
-          await executeWithTOTP((token) => handleEditSubmit(e, token), "Update Staff", true);
+          await executeWithTOTP((token) => handleEditSubmit(null, token), "Update Staff", true);
           return;
         }
         throw new Error(json?.error || "Access denied");
@@ -594,7 +662,7 @@ function AdminPageContent() {
       showToast({ title: "Account Updated", description: "Staff profile changes have been saved." });
       setEditOpen(false);
     } catch (err) {
-      if (totpToken) throw err;
+      if (typeof totpToken === "string") throw err;
       showToast({ title: "Update Failed", description: err.message }, true);
     }
   };
@@ -618,37 +686,30 @@ function AdminPageContent() {
     }
   };
 
-  const confirmDelete = async (totpToken = null, targetId = null, targetName = null) => {
+  const confirmDelete = async (tokenOrEvent = null, targetId = null, targetName = null) => {
+    const totpToken = typeof tokenOrEvent === "string" ? tokenOrEvent : null;
     const id = targetId || deleteTarget?.id;
     const name = targetName || deleteTarget?.fname;
-    console.log("[DELETE FLOW] confirmDelete called, token:", totpToken, "targetId:", id, "targetName:", name);
-    if (!id || deleteLoading) {
-      console.log("[DELETE FLOW] confirmDelete early return - no target or loading");
-      return;
-    }
-    console.log("[DELETE FLOW] confirmDelete: setting deleteLoading true");
+    
+    if (!id || deleteLoading) return;
     setDeleteLoading(true);
     const headers = {};
     if (totpToken) {
       headers["x-totp-token"] = totpToken;
     }
     try {
-      console.log("[DELETE FLOW] confirmDelete: calling DELETE API for:", id);
       const res = await fetch(`/api/staff/${id}`, {
         method: "DELETE",
         headers,
       });
       const json = await res.json();
-      console.log("[DELETE FLOW] confirmDelete response:", res.status, json);
       
       if (res.status === 403) {
         if (json?.requiresTOTP) {
           if (totpToken) {
-            console.log("[DELETE FLOW] confirmDelete: TOTP invalid, throwing error");
             setDeleteLoading(false);
             throw new Error(json.error || "Invalid verification code");
           }
-          console.log("[DELETE FLOW] confirmDelete: TOTP required, opening modal");
           setDeleteLoading(false);
           await executeWithTOTP((token) => confirmDelete(token, id, name), "Delete Staff", true);
           return;
@@ -657,64 +718,69 @@ function AdminPageContent() {
       }
       
       if (!res.ok || !json?.ok) {
-        console.log("[DELETE FLOW] confirmDelete: API error, throwing");
         throw new Error(json?.error || "Failed to delete staff");
       }
-      console.log("[DELETE FLOW] confirmDelete: success, updating staffData");
       setStaffData((prev) => prev.map((s) => (s.id === id ? json.data : s)));
       showToast({ title: "Account Archived", description: `${name}'s account has been archived.` });
       setDeleteOpen(false);
     } catch (err) {
-      console.log("[DELETE FLOW] confirmDelete catch error:", err.message);
       if (totpToken) throw err;
       showToast({ title: "Deletion Failed", description: err.message }, true);
     } finally {
-      console.log("[DELETE FLOW] confirmDelete: finally, setting deleteLoading false");
       setDeleteLoading(false);
     }
   };
 
-  const simulateBackup = async (totpToken = null) => {
-    const headers = {};
-    if (totpToken) {
-      headers["x-totp-token"] = totpToken;
+  const simulateBackup = async (tokenOrEvent = null) => {
+    const totpToken = typeof tokenOrEvent === "string" ? tokenOrEvent : null;
+    
+    if (authUser?.totp_enabled && !totpToken) {
+      executeWithTOTP((token) => simulateBackup(token), "Create Backup", true);
+      return;
     }
+
+    const headers = new Headers();
+    if (totpToken) {
+      headers.set("x-totp-token", totpToken);
+    }
+
     await toast.promise(
       (async () => {
-      const res = await fetch("/api/system/backup", { method: "POST", headers });
-      const json = await res.json();
-      
-      if (res.status === 403) {
-        if (json?.requiresTOTP) {
+        const res = await fetch("/api/system/backup", { 
+          method: "POST", 
+          headers 
+        });
+        const json = await res.json();
+
+        if (res.status === 403 && json?.requiresTOTP) {
           if (totpToken) {
             throw new Error(json.error || "Invalid verification code");
           }
-          throw { requiresTOTP: true };
+          return { requiresTOTP: true };
         }
-        throw new Error(json?.error || "Access denied");
-      }
-      
-      if (!res.ok || !json?.ok)
-        throw new Error(json?.error || "Failed to create backup");
 
-      if (json.data?.id) {
-        const link = document.createElement("a");
-        link.href = `/api/system/backup/download?id=${json.data.id}`;
-        link.download = json.data.filename;
-        link.click();
-      }
-      refreshBackups();
-      return json?.data?.filename || "backup package";
+        if (!res.ok || !json?.ok)
+          throw new Error(json?.error || "Failed to create backup");
+
+        if (json.data?.id) {
+          const link = document.createElement("a");
+          link.href = `/api/system/backup/download?id=${json.data.id}`;
+          link.download = json.data.filename;
+          link.click();
+        }
+        refreshBackups();
+        return { success: true, filename: json?.data?.filename || "backup package" };
       })(),
       {
         loading: "Creating full system backup…",
-        success: (filename) => ({ title: "Backup Complete", description: `Package ready: ${filename}` }),
-        error: (err) => {
-          if (err?.requiresTOTP) {
+        success: (result) => {
+          if (result?.requiresTOTP) {
             executeWithTOTP((token) => simulateBackup(token), "Create Backup", true);
-            return { title: "Verification Required", description: "Please verify your identity" };
+            return { title: "Verification Required", description: "Please enter your 2FA code." };
           }
-          if (totpToken) throw err;
+          return { title: "Backup Complete", description: `Package ready: ${result.filename}` };
+        },
+        error: (err) => {
           return { title: "Backup Failed", description: err?.message || "Unable to create system backup." };
         },
       }
@@ -758,7 +824,8 @@ function AdminPageContent() {
     }
   };
 
-  const confirmRestore = async (totpToken = null) => {
+  const confirmRestore = async (tokenOrEvent = null) => {
+    const totpToken = typeof tokenOrEvent === "string" ? tokenOrEvent : null;
     if (!restoreFile || restoreLoading) return;
     setRestoreLoading(true);
     const formData = new FormData();
@@ -861,10 +928,10 @@ function AdminPageContent() {
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50 font-inter">
       <Header authUser={authUser} onLogout={handleLogout} />
 
-      <div className="flex-1 flex overflow-hidden w-full">
+      <div className="flex-1 flex w-full min-h-0">
         <Sidebar items={sidebarItems} activeKey={sidebarActiveKey} onSelect={switchView} />
 
-        <main className="flex-1 overflow-hidden p-4 relative w-full min-w-0">
+        <main className="flex-1 overflow-y-auto p-4 relative w-full min-w-0">
         {view === "directory" && (
           <StaffDirectoryTab
             staffData={staffData}
@@ -885,29 +952,19 @@ function AdminPageContent() {
             }}
             onRestoreUser={handleRestoreUser}
             onDeleteUser={(id) => {
-              console.log("[DELETE FLOW] Step 1: onDeleteUser called, id:", id);
-              console.log("[DELETE FLOW] Step 2: authUser.totp_enabled:", authUser?.totp_enabled);
               const u = staffData.find((s) => s.id === id);
-              if (!u) {
-                console.log("[DELETE FLOW] Step 3: User not found in staffData");
-                return;
-              }
-              console.log("[DELETE FLOW] Step 4: Found user:", u.fname, u.id);
+              if (!u) return;
               if (authUser?.totp_enabled) {
-                console.log("[DELETE FLOW] Step 5: TOTP enabled, opening TOTP modal");
                 setDeleteTarget(u);
                 setTotpActionLabel("Delete Account");
                 setTotpModalDescription(`Enter your authenticator code to permanently delete ${u.fname}'s account.`);
                 const targetId = u.id;
                 const targetName = u.fname;
                 totpPendingActionRef.current = async (token) => {
-                  console.log("[DELETE FLOW] Step 6: TOTP action called with token:", token, "targetId:", targetId);
                   await confirmDelete(token, targetId, targetName);
                 };
                 setTotpModalOpen(true);
-                console.log("[DELETE FLOW] Step 7: TOTP modal opened");
               } else {
-                console.log("[DELETE FLOW] Step 5: TOTP not enabled, opening confirm modal");
                 setDeleteTarget(u);
                 setDeleteOpen(true);
               }
@@ -939,6 +996,7 @@ function AdminPageContent() {
         {view === "logs" && (
           <AuditLogsTab
             displayLogs={auditLogs}
+            logStats={logStats}
             isLoading={viewLoading.logs}
             logPage={logPage}
             setLogPage={setLogPage}
@@ -947,6 +1005,10 @@ function AdminPageContent() {
             setLogsPerPage={setLogsPerPage}
             logSearch={logSearch}
             setLogSearch={setLogSearch}
+            logRoleFilter={logRoleFilter}
+            setLogRoleFilter={setLogRoleFilter}
+            logSeverityFilter={logSeverityFilter}
+            setLogSeverityFilter={setLogSeverityFilter}
           />
         )}
 
@@ -994,7 +1056,7 @@ function AdminPageContent() {
             systemHealth={systemHealth}
             backups={backups}
             isLoading={viewLoading.system || viewLoading.backup}
-            onSimulateBackup={simulateBackup}
+            onSimulateBackup={() => simulateBackup()}
             onSyncExternal={syncExternal}
             onDownloadBackup={(b) => {
               const link = document.createElement("a");
@@ -1017,6 +1079,7 @@ function AdminPageContent() {
                 e.target.value = "";
               }
             }}
+            onRefresh={refreshBackups}
             showToast={showToast}
           />
         )}
@@ -1046,8 +1109,8 @@ function AdminPageContent() {
       <ConfirmModal
         open={backupDeleteOpen}
         title="Delete System Backup"
-        message={`Permanently remove ${backupDeleteTarget?.filename}? This volume cannot be recovered once destroyed.`}
-        confirmLabel="Destroy Volume"
+        message={`Remove ${backupDeleteTarget?.filename} from the local server? If this backup was previously synced, its copy on the external drive will be preserved.`}
+        confirmLabel="Delete Local Copy"
         onConfirm={confirmDeleteBackup}
         onCancel={() => setBackupDeleteOpen(false)}
         isLoading={backupDeleteLoading}
@@ -1059,7 +1122,7 @@ function AdminPageContent() {
         variant="warning"
         message={`Overwrite all repository data with ${restoreFile?.name}? This action is irreversible.`}
         confirmLabel="Begin Restoration"
-        onConfirm={confirmRestore}
+        onConfirm={() => confirmRestore()}
         onCancel={() => setRestoreConfirmOpen(false)}
         isLoading={restoreLoading}
       />

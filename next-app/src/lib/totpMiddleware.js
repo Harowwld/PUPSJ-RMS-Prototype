@@ -18,11 +18,11 @@ export async function requireTOTP(userId, token) {
 
   // TOTP is enabled, so we REQUIRE a valid token.
   if (!token) {
-    return { valid: false, error: "Verification code required" };
+    return { valid: false, error: "Verification code required", missing: true };
   }
 
   if (!isValidToken(token)) {
-    return { valid: false, error: "Invalid verification code format" };
+    return { valid: false, error: "Invalid verification code format (must be 6 digits)" };
   }
 
   const decrypted = decryptSecret(staff.totp_secret);
@@ -39,9 +39,28 @@ export async function requireTOTP(userId, token) {
 }
 
 export function extractTOTPToken(headers) {
-  const authHeader = headers.get("x-totp-token");
-  if (authHeader && isValidToken(authHeader)) {
-    return authHeader.trim();
+  if (!headers) return null;
+  
+  // Try case-insensitive lookup first if it's a Headers object
+  if (typeof headers.get === 'function') {
+    const token = headers.get("x-totp-token");
+    if (token) return token.trim();
+    
+    // Fallback to common variations
+    const variations = ["X-TOTP-Token", "X-Totp-Token", "x-totp-code"];
+    for (const v of variations) {
+      const val = headers.get(v);
+      if (val) return val.trim();
+    }
+  } else {
+    // If it's a plain object, try common variations
+    const keys = Object.keys(headers);
+    for (const k of keys) {
+      if (k.toLowerCase() === "x-totp-token" || k.toLowerCase() === "x-totp-code") {
+        return String(headers[k] || "").trim();
+      }
+    }
   }
+  
   return null;
 }

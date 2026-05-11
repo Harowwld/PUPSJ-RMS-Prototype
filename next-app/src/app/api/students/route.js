@@ -99,7 +99,7 @@ export async function POST(req) {
       drawer,
       status,
     });
-    await writeAuditLog(req, `Created student: ${studentNo}`);
+    await writeAuditLog(req, `Created student`, { details: `${studentNo}` });
 
     return NextResponse.json({ ok: true, data: row }, { status: 201 });
   } catch (e) {

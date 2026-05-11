@@ -140,10 +140,11 @@ export async function POST(req) {
     );
   }
 
-  await writeAuditLog(
-    req,
-    `Created document request #${row.id} for ${studentNo} (${docType})`
-  );
+  await writeAuditLog(req, `Create Document Request`, { 
+    details: `initiated formal document request for student '${student.name}' (ID: ${studentNo}) - Category: ${docType}`,
+    entity_type: "DocumentRequest",
+    entity_id: row.id
+  });
 
   return NextResponse.json({ ok: true, data: row });
 }

@@ -47,10 +47,7 @@ export async function POST(req) {
   }
 
   if (rows.length > 0) {
-    await writeAuditLog(
-      req,
-      `Bulk imported system configuration: ${rows.length} rows (${successCount} success, ${failCount} failed)`
-    );
+    await writeAuditLog(req, `Bulk imported system configuration`, { details: `${rows.length} rows (${successCount} success, ${failCount} failed)` });
   }
 
   return NextResponse.json({ ok: true, data: { successCount, failCount } });

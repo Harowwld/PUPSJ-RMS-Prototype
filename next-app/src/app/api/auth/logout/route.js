@@ -26,16 +26,23 @@ export async function POST(req) {
 
       if (userId && userId !== "admin") {
         await setStaffStatus(userId, "Inactive");
-        await writeAuditLog(req, `User logout: ${username || userId}`);
+        await writeAuditLog(req, `User Logout`, { 
+          details: `personnel '${username || userId}' successfully terminated system session and cleared credentials`,
+          entity_type: "User",
+          entity_id: userId
+        });
         // Broadcast to admins
         broadcastToAdmins("staffLogout", {
           staffId: userId,
           status: "Inactive",
         });
       } else if (userId === "admin") {
-        await writeAuditLog(req, `User logout: ${username || "admin"}`, {
+        await writeAuditLog(req, `User Logout`, { 
+          details: `administrator session terminated and secure credentials purged from client storage`,
           actor: username || "admin",
           role: "Admin",
+          entity_type: "User",
+          entity_id: "admin"
         });
         // Broadcast admin logout too
         broadcastToAdmins("staffLogout", {

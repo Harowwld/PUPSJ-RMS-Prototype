@@ -109,13 +109,15 @@ export default function AccountSetupModal({ authUser }) {
   const submitSecurity = async (e) => {
     e.preventDefault();
     if (secSubmitting) return;
+// Validation
+const requiredQuestions = questions.filter(q => q.is_required);
+for (const q of requiredQuestions) {
+  if (!answers[q.id] || !answers[q.id].trim()) {
+    setSecError("Please provide an answer for all required questions.");
+    return;
+  }
+}
 
-    for (const q of questions) {
-      if (!answers[q.id] || !answers[q.id].trim()) {
-        setSecError("Please provide an answer for all questions.");
-        return;
-      }
-    }
 
     setSecError("");
     setSecSubmitting(true);
@@ -271,7 +273,7 @@ export default function AccountSetupModal({ authUser }) {
                     questions.map((q) => (
                       <div key={q.id}>
                         <label className="block text-xs font-bold text-gray-700 mb-1.5 tracking-wide leading-tight uppercase">
-                          {q.question} <span className="text-pup-maroon">*</span>
+                          {q.question} {q.is_required ? <span className="text-pup-maroon">*</span> : <span className="text-gray-400 normal-case ml-1 font-medium">(Optional)</span>}
                         </label>
                         <Input
                           type="text"
@@ -279,7 +281,7 @@ export default function AccountSetupModal({ authUser }) {
                           className="w-full h-11 bg-gray-50 border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon font-bold text-gray-900"
                           value={answers[q.id] || ""}
                           onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })}
-                          required
+                          required={!!q.is_required}
                         />
                       </div>
                     ))

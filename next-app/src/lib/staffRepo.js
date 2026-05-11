@@ -232,12 +232,20 @@ export function getStaffDisplayName(staff) {
 }
 
 export async function hasAllSecurityAnswers(id) {
-  const allQuestions = await dbGet("SELECT COUNT(*) as count FROM security_questions");
-  const totalGlobal = allQuestions?.count || 0;
+  // Only check for questions marked as required
+  const requiredQuestions = await dbAll("SELECT id FROM security_questions WHERE is_required = 1");
+  const totalRequired = requiredQuestions?.length || 0;
 
-  // If no global questions are defined, we consider the requirement "satisfied"
-  if (totalGlobal === 0) return true;
+  // If no required global questions are defined, we consider the requirement "satisfied"
+  if (totalRequired === 0) return true;
 
-  const answers = await dbGet("SELECT COUNT(*) as count FROM staff_security_answers WHERE staff_id = ?", [id]);
-  return answers?.count >= totalGlobal;
+  const answers = await dbAll("SELECT question_id FROM staff_security_answers WHERE staff_id = ?", [id]);
+  const answeredSet = new Set((answers || []).map(a => a.question_id));
+
+  // Check if every required question has an answer
+  for (const q of requiredQuestions) {
+    if (!answeredSet.has(q.id)) return false;
+  }
+
+  return true;
 }

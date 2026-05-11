@@ -67,7 +67,12 @@ export async function POST(req) {
       { status: 404 }
     );
   }
-  await writeAuditLog(req, `Changed password for account: ${id}`);
+  await writeAuditLog(req, `Rotate Password`, { 
+    details: `personnel successfully rotated credentials for account ID '${id}'`,
+    severity: "WARNING",
+    entity_type: "User",
+    entity_id: id
+  });
 
   const nextPayload = {
     sub: session?.sub || id,

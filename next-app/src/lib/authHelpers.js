@@ -164,3 +164,22 @@ export function extractTokenFromHeaders(req) {
   
   return null;
 }
+
+/**
+ * Retrieves the full name of the currently authenticated user from the session cookie.
+ * @returns {Promise<string>} The user's full name or an empty string if not authenticated.
+ */
+export async function getSessionActorName() {
+  const store = await cookies();
+  const token = store.get(getSessionCookieName())?.value || "";
+  if (!token) return "";
+  try {
+    const payload = await verifySessionToken(token);
+    const id = String(payload?.sub || "").trim();
+    if (!id) return "";
+    const staff = await getStaffById(id);
+    return `${staff?.fname || ""} ${staff?.lname || ""}`.trim();
+  } catch {
+    return "";
+  }
+}

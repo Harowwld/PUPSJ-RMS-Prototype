@@ -3,7 +3,6 @@ import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
 import AdmZip from "adm-zip";
-import { cookies } from "next/headers";
 import {
   createBackupRecord,
   decryptBackupBuffer,
@@ -14,24 +13,20 @@ import {
 } from "../../../../../lib/backupsRepo";
 import { reloadDb } from "../../../../../lib/sqlite";
 import { writeAuditLog } from "../../../../../lib/auditLogRequest";
-import { getSessionCookieName, verifySessionToken } from "../../../../../lib/jwt";
+import { requireAdmin, createAuthErrorResponse } from "../../../../../lib/authHelpers";
 import { requireTOTP, extractTOTPToken } from "../../../../../lib/totpMiddleware";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 export async function POST(req) {
-  const store = await cookies();
-  const token = store.get(getSessionCookieName())?.value || "";
-  let userId = null;
-  if (token) {
-    try {
-      const payload = await verifySessionToken(token);
-      userId = payload?.sub;
-    } catch {}
+  const { user, error } = await requireAdmin(req);
+  if (error || !user) {
+    return createAuthErrorResponse(error || "Admin access required", 403);
   }
 
   const totpToken = extractTOTPToken(req.headers);
-  const totpResult = await requireTOTP(userId, totpToken);
+  const totpResult = await requireTOTP(user.id, totpToken);
   if (!totpResult.valid) {
     return NextResponse.json(
       { ok: false, error: "TOTP verification required: " + totpResult.error, requiresTOTP: true },
@@ -82,7 +77,11 @@ export async function POST(req) {
 
     // --- PHASE 1: CREATE SNAPSHOT FILE ---
     console.log("[RESTORE] Creating pre-restore snapshot file...");
-    const snapshotFilename = `pre-restore-snapshot-${isoTimestamp}.zip.enc`;
+    const timestamp = new Date();
+    const dateStr = timestamp.toISOString().split("T")[0]; // YYYY-MM-DD
+    const timeStr = timestamp.toTimeString().split(" ")[0].replace(/:/g, "").slice(0, 4); // HHMM
+    const snapshotFilename = `PUP-RECORDS-SAFETY-SNAPSHOT-${dateStr}-${timeStr}.zip.enc`;
+    
     const backupsDir = getBackupsDir();
     const snapshotPath = path.join(backupsDir, snapshotFilename);
 
@@ -169,7 +168,7 @@ export async function POST(req) {
     fs.rmSync(stagingDir, { recursive: true, force: true });
     console.log("[RESTORE] Process complete.");
 
-    await writeAuditLog(req, `Restored system backup from uploaded file: ${file.name}`);
+    await writeAuditLog(req, `Restored system backup from uploaded file`, { details: `${file.name}` });
     return NextResponse.json({
       ok: true,
       message: "System restored successfully from backup. A safety snapshot was created."

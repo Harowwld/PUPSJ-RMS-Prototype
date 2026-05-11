@@ -60,8 +60,8 @@ export async function GET(req) {
       }
     }
 
-    // Set schema version back to current (8) so migrations don't re-run and cause double seeding
-    db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '8')");
+    // Set schema version back to current (14) so migrations don't re-run and cause double seeding
+    db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '14')");
 
     // Seed default Admin staff account (bootstrap)
     try {
@@ -104,9 +104,10 @@ export async function GET(req) {
 
     // Seed default security questions
     try {
-      for (const q of DEFAULT_SECURITY_QUESTIONS) {
-        db.exec(`INSERT INTO security_questions (question) VALUES ('${q.replace(/'/g, "''")}')`);
-      }
+      DEFAULT_SECURITY_QUESTIONS.forEach((q, i) => {
+        const isRequired = i < 2 ? 1 : 0;
+        db.exec(`INSERT INTO security_questions (question, is_required) VALUES ('${q.replace(/'/g, "''")}', ${isRequired})`);
+      });
     } catch (e) {
       console.error("Failed to seed default security questions:", e?.message || e);
     }

@@ -56,12 +56,20 @@ export async function POST(req) {
     const { searchParams } = new URL(req.url);
     if (searchParams.get("admin") === "true") {
       const created = await createDocTypeFull(name);
-      await writeAuditLog(req, `Created document type (admin): ${name}`);
+      await writeAuditLog(req, `Create Document Type`, { 
+        details: `created new administrative document type identifier '${name}'`,
+        entity_type: "DocumentType",
+        entity_id: created.id
+      });
       return NextResponse.json({ ok: true, data: created }, { status: 201 });
     }
 
     const created = await createDocType(name);
-    await writeAuditLog(req, `Created document type: ${name}`);
+    await writeAuditLog(req, `Create Document Type`, { 
+      details: `registered new document category '${name}' in system taxonomy`,
+      entity_type: "DocumentType",
+      entity_id: created.id
+    });
     return NextResponse.json({ ok: true, data: created }, { status: 201 });
   } catch (e) {
     const msg = String(e?.message || "");
@@ -91,7 +99,11 @@ export async function PUT(req) {
     if (!name) throw new Error("Document name is required");
 
     const updated = await updateDocType(id, name);
-    await writeAuditLog(req, `Updated document type: ${updated.name}`);
+    await writeAuditLog(req, `Update Document Type`, { 
+      details: `updated configuration for document type identifier '${updated.name}'`,
+      entity_type: "DocumentType",
+      entity_id: id
+    });
     return NextResponse.json({ ok: true, data: updated });
   } catch (err) {
     return NextResponse.json(
@@ -113,10 +125,19 @@ export async function PATCH(req) {
 
     if (status === "Active") {
       await restoreDocType(id);
-      await writeAuditLog(req, `Restored document type: ${name}`);
+      await writeAuditLog(req, `Restore Document Type`, { 
+        details: `restored document type '${name}' from system archive`,
+        entity_type: "DocumentType",
+        entity_id: id
+      });
     } else if (status === "Archived") {
       await archiveDocType(id);
-      await writeAuditLog(req, `Archived document type: ${name}`);
+      await writeAuditLog(req, `Archive Document Type`, { 
+        details: `archived document type '${name}' and disabled its requirement logic`,
+        severity: "WARNING",
+        entity_type: "DocumentType",
+        entity_id: id
+      });
     } else {
        throw new Error("Invalid status update");
     }
@@ -138,7 +159,12 @@ export async function DELETE(req) {
 
     const name = await getTargetName(id);
     await archiveDocType(id);
-    await writeAuditLog(req, `Archived document type: ${name}`);
+    await writeAuditLog(req, `Archive Document Type`, { 
+      details: `archived document type '${name}' via DELETE protocol`,
+      severity: "WARNING",
+      entity_type: "DocumentType",
+      entity_id: id
+    });
     return NextResponse.json({ ok: true });
   } catch (err) {
     return NextResponse.json(

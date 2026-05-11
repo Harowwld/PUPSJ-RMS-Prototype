@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { executeBackup, listBackups } from "../../../../lib/backupsRepo";
+import { executeBackup, listBackups, syncBackupExternally } from "../../../../lib/backupsRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
-import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { requireTOTP, extractTOTPToken } from "../../../../lib/totpMiddleware";
+import { requireAdmin, createAuthErrorResponse } from "../../../../lib/authHelpers";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,8 +10,13 @@ export const dynamic = "force-dynamic";
 /**
  * GET: List all backups from database
  */
-export async function GET() {
+export async function GET(req) {
   try {
+    const { user, error } = await requireAdmin(req);
+    if (error || !user) {
+      return createAuthErrorResponse(error || "Admin access required", 403);
+    }
+
     const data = await listBackups();
     return NextResponse.json({ ok: true, data });
   } catch (error) {
@@ -25,35 +29,62 @@ export async function GET() {
  * POST: Create a new AES-256 encrypted ZIP backup
  */
 export async function POST(req) {
-  const store = await cookies();
-  const token = store.get(getSessionCookieName())?.value || "";
-  let userId = null;
-  if (token) {
-    try {
-      const payload = await verifySessionToken(token);
-      userId = payload?.sub;
-    } catch {}
+  console.log("[BACKUP API] POST request received");
+  const { user, error } = await requireAdmin(req);
+  if (error || !user) {
+    console.log("[BACKUP API] Admin check failed:", error);
+    return createAuthErrorResponse(error || "Admin access required", 403);
   }
 
+  console.log("[BACKUP API] Admin verified:", user.id);
   const totpToken = extractTOTPToken(req.headers);
-  const totpResult = await requireTOTP(userId, totpToken);
+  console.log("[BACKUP API] Extracted TOTP token:", totpToken ? "PRESENT" : "MISSING");
+  
+  if (!totpToken) {
+    const allHeaders = {};
+    req.headers.forEach((val, key) => { allHeaders[key] = val; });
+    console.log("[BACKUP API] Missing token. Available headers:", JSON.stringify(allHeaders));
+  }
+  
+  const totpResult = await requireTOTP(user.id, totpToken);
   if (!totpResult.valid) {
+    console.log("[BACKUP API] TOTP verification failed:", totpResult.error);
     return NextResponse.json(
-      { ok: false, error: "TOTP verification required: " + totpResult.error, requiresTOTP: true },
+      { 
+        ok: false, 
+        error: "TOTP verification required: " + totpResult.error, 
+        requiresTOTP: true,
+        missingToken: !!totpResult.missing
+      },
       { status: 403 }
     );
   }
 
+  console.log("[BACKUP API] TOTP verified, executing backup...");
   try {
     const record = await executeBackup();
-    await writeAuditLog(req, `Created system backup: ${record?.filename || "unknown"}`);
+    console.log("[BACKUP API] Backup executed successfully:", record.filename);
+    
+    // --- AUTOMATED BACKGROUND SYNC ---
+    // We intentionally do NOT 'await' this call so the user gets an immediate response.
+    // The sync will happen in the background and update the status in the DB when done.
+    syncBackupExternally(record.id).catch(err => {
+      console.error(`[BACKUP API] Background auto-sync failed for ${record.id}:`, err.message);
+    });
+
+    await writeAuditLog(req, `Create Backup`, { 
+      details: `initiated full system state capture (Package: ${record?.filename || "unknown"}) and distributed to primary storage`,
+      entity_type: "Backup",
+      entity_id: record?.id
+    });
+
     return NextResponse.json({
       ok: true,
-      message: "Encrypted backup created successfully",
+      message: "Encrypted backup created successfully. Automatic external synchronization initiated in background.",
       data: record
     });
   } catch (error) {
-    console.error("Backup Creation Error:", error);
+    console.error("[BACKUP API] Backup Creation Error:", error);
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 }

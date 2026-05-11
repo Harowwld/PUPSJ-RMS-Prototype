@@ -88,7 +88,7 @@ export async function POST(req) {
       lastActive,
       password,
     });
-    await writeAuditLog(req, `Created staff account: ${id}`);
+    await writeAuditLog(req, `Created staff account`, { details: `${id}` });
 
     return NextResponse.json({ ok: true, data: row, defaultPassword: password === DEFAULT_PASSWORD ? DEFAULT_PASSWORD : null }, { status: 201 });
   } catch (e) {

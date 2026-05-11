@@ -9,13 +9,14 @@ import { toast } from "sonner";
 
 export default function Home() {
   const router = useRouter();
+  const [view, setView] = useState("login"); // "login" or "forgot"
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
   // Forgot Password State
-  const [isForgotOpen, setIsForgotOpen] = useState(false);
   const [forgotStep, setForgotStep] = useState(1);
   const [forgotIdentifier, setForgotIdentifier] = useState("");
   const [forgotUserId, setForgotUserId] = useState(null);
@@ -37,6 +38,7 @@ export default function Home() {
     setForgotNewPassword("");
     setForgotConfirmPassword("");
     setForgotError("");
+    setForgotLoading(false);
   };
 
   const handleForgotIdentify = async (e) => {
@@ -100,7 +102,7 @@ export default function Home() {
         throw new Error(json.error || "Failed to reset password.");
       }
       toast.success("Password Reset Successful", { description: "You can now log in with your new password." });
-      setIsForgotOpen(false);
+      setView("login");
       resetForgotState();
     } catch (err) {
       setForgotError(err.message);
@@ -151,263 +153,262 @@ export default function Home() {
         <i className="ph-fill ph-bank text-[800px] absolute -right-20 -bottom-40 rotate-12 text-pup-maroon"></i>
       </div>
 
-      <div className="w-full max-w-md p-6 animate-fade-up z-10">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full shadow-sm mb-4 border border-pup-border">
-            <i className="ph-bold ph-bank text-4xl text-pup-maroon"></i>
-          </div>
-          <h1 className="text-2xl font-bold text-pup-maroon tracking-tight">
-            PUP E-Manage
-          </h1>
-          <p className="text-xs text-gray-600 uppercase tracking-widest mt-1">
-            Student Record Keeping System
-          </p>
-        </div>
-
-        <div className="bg-white rounded-brand border border-pup-border shadow-sm p-8">
-          <div className="mb-6">
-            <h2 className="text-lg font-bold text-gray-800">System Login</h2>
-            <p className="text-sm text-gray-600">
-              Please enter your credentials to continue.
+      <div className={`w-full ${view === "login" ? "max-w-md" : "max-w-lg"} transition-all duration-300 p-6 animate-fade-up z-10`}>
+        <div className="bg-white rounded-2xl border border-pup-border shadow-sm p-8">
+          <div className="text-center mb-8">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full shadow-sm mb-4 border border-pup-border">
+              <i className="ph-bold ph-bank text-4xl text-pup-maroon"></i>
+            </div>
+            <h1 className="text-2xl font-bold text-pup-maroon tracking-tight">
+              PUP E-Manage
+            </h1>
+            <p className="text-xs text-gray-600 uppercase tracking-widest mt-1">
+              Student Record Keeping System
             </p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label
-                htmlFor="username"
-                className="block text-xs font-bold text-gray-700 mb-1 uppercase"
-              >
-                Username
-              </label>
-              <div className="relative">
-                <i className="ph-bold ph-user absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none z-10"></i>
-                <Input
-                  type="text"
-                  id="username"
-                  className="pl-10 bg-white border border-pup-border rounded-brand text-sm focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                  placeholder="Enter your ID (e.g., admin)"
-                  required
-                  autoFocus
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                />
+          {view === "login" ? (
+            <>
+              <div className="mb-6 text-center border-t border-gray-100 pt-6">
+                <h2 className="text-lg font-bold text-gray-800">System Login</h2>
+                <p className="text-sm text-gray-600">
+                  Please enter your credentials to continue.
+                </p>
               </div>
-            </div>
 
-            <div>
-              <div className="flex justify-between items-center mb-1">
-                <label
-                  htmlFor="password"
-                  className="block text-xs font-bold text-gray-700 uppercase"
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <label
+                    htmlFor="username"
+                    className="block text-xs font-bold text-gray-700 mb-1 uppercase"
+                  >
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <i className="ph-bold ph-envelope-simple absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none z-10"></i>
+                    <Input
+                      type="text"
+                      id="username"
+                      className="pl-10 bg-white border border-pup-border rounded-brand text-sm focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                      placeholder="e.g. admin@pup.edu.ph"
+                      required
+                      autoFocus
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label
+                      htmlFor="password"
+                      className="block text-xs font-bold text-gray-700 uppercase"
+                    >
+                      Password
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setView("forgot")}
+                      className="text-xs text-pup-maroon hover:underline font-medium"
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <i className="ph-bold ph-lock-key absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none z-10"></i>
+                    <Input
+                      type={showPassword ? "text" : "password"}
+                      id="password"
+                      className="pl-10 pr-10 bg-white border border-pup-border rounded-brand text-sm focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                      placeholder="••••••••"
+                      required
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-pup-maroon transition-colors z-10"
+                    >
+                      <i className={`ph-bold ${showPassword ? "ph-eye-slash" : "ph-eye"} text-lg`}></i>
+                    </button>
+                  </div>
+                </div>
+
+                {error ? (
+                  <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-brand px-3 py-2">
+                    {error}
+                  </div>
+                ) : null}
+
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className={`w-full bg-pup-maroon text-white font-bold text-sm hover:bg-red-900 transition-all shadow-sm flex items-center justify-center gap-2 group mt-2 ${
+                    isLoading ? "opacity-75 cursor-not-allowed" : ""
+                  }`}
                 >
-                  Password
-                </label>
-              </div>
-              <div className="relative">
-                <i className="ph-bold ph-lock-key absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none z-10"></i>
-                <Input
-                  type="password"
-                  id="password"
-                  className="pl-10 bg-white border border-pup-border rounded-brand text-sm focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                  placeholder="••••••••"
-                  required
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-              </div>
-              <div className="flex justify-end mt-1">
-                <button
-                  type="button"
-                  onClick={() => setIsForgotOpen(true)}
-                  className="text-xs text-pup-maroon hover:underline font-medium"
-                >
-                  Forgot Password?
-                </button>
-              </div>
-            </div>
-
-            {error ? (
-              <div className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-brand px-3 py-2">
-                {error}
-              </div>
-            ) : null}
-
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className={`w-full bg-pup-maroon text-white font-bold text-sm hover:bg-red-900 transition-all shadow-sm flex items-center justify-center gap-2 group mt-2 ${
-                isLoading ? "opacity-75 cursor-not-allowed" : ""
-              }`}
-            >
-              {isLoading ? (
-                <>
-                  <i className="ph-bold ph-spinner animate-spin text-lg"></i>
-                  Authenticating...
-                </>
-              ) : (
-                <>
-                  <span>Sign In</span>
-                  <i className="ph-bold ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
-                </>
-              )}
-            </Button>
-          </form>
-        </div>
-
-        <div className="text-center mt-8 text-xs text-gray-500">
-          <p>&copy; 2026 Polytechnic University of the Philippines</p>
-        </div>
-      </div>
-
-      <Dialog open={isForgotOpen} onOpenChange={(open) => {
-        setIsForgotOpen(open);
-        if (!open) resetForgotState();
-      }}>
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
-          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
-                <i className="ph-duotone ph-lock-key text-2xl"></i>
-              </div>
-              <div className="min-w-0">
-                <DialogTitle className="text-lg font-black tracking-tight text-gray-900">
-                  Password Recovery
-                </DialogTitle>
-                <DialogDescription className="text-sm font-medium mt-1 text-gray-600">
+                  {isLoading ? (
+                    <>
+                      <i className="ph-bold ph-spinner animate-spin text-lg"></i>
+                      Authenticating...
+                    </>
+                  ) : (
+                    <>
+                      <span>Log In</span>
+                      <i className="ph-bold ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                    </>
+                  )}
+                </Button>
+              </form>
+            </>
+          ) : (
+            <>
+              <div className="mb-6 text-center border-t border-gray-100 pt-6">
+                <h2 className="text-lg font-bold text-gray-800">Password Recovery</h2>
+                <p className="text-sm text-gray-600">
                   {forgotStep === 1
                     ? "Enter your email or Staff ID to locate your account."
                     : "Answer your security question to reset your password."}
-                </DialogDescription>
+                </p>
               </div>
-            </div>
-          </DialogHeader>
 
-          {forgotStep === 1 ? (
-            <form onSubmit={handleForgotIdentify}>
-              <div className="p-6">
-                {forgotError && (
-                  <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-brand">
-                    {forgotError}
+              {forgotStep === 1 ? (
+                <form onSubmit={handleForgotIdentify} className="space-y-4">
+                  {forgotError && (
+                    <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-brand">
+                      {forgotError}
+                    </div>
+                  )}
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                      Email or Staff ID <span className="text-pup-maroon">*</span>
+                    </label>
+                    <Input
+                      type="text"
+                      placeholder="e.g. admin or professional.email@pup.edu.ph"
+                      className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                      value={forgotIdentifier}
+                      onChange={(e) => setForgotIdentifier(e.target.value)}
+                      autoFocus
+                      required
+                    />
                   </div>
-                )}
-                <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-                  Email or Staff ID <span className="text-pup-maroon">*</span>
-                </label>
-                <Input
-                  type="text"
-                  placeholder="e.g. admin or professional.email@pup.edu.ph"
-                  className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                  value={forgotIdentifier}
-                  onChange={(e) => setForgotIdentifier(e.target.value)}
-                  autoFocus
-                  required
-                />
-              </div>
-              <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsForgotOpen(false)}
-                  className="px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={forgotLoading}
-                  className="px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
-                >
-                  {forgotLoading ? "Locating..." : "Next Step"}
-                </Button>
-              </div>
-            </form>
-          ) : (
-            <form onSubmit={handleForgotReset}>
-              <div className="p-6 space-y-4">
-                {forgotError && (
-                  <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-brand">
-                    {forgotError}
+                  <div className="flex flex-col gap-2 pt-2">
+                    <Button
+                      type="submit"
+                      disabled={forgotLoading}
+                      className="w-full bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
+                    >
+                      {forgotLoading ? "Locating..." : "Next Step"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        setView("login");
+                        resetForgotState();
+                      }}
+                      className="w-full text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                    >
+                      Back to Login
+                    </Button>
                   </div>
-                )}
+                </form>
+              ) : (
+                <form onSubmit={handleForgotReset} className="space-y-4">
+                  {forgotError && (
+                    <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-brand">
+                      {forgotError}
+                    </div>
+                  )}
 
-                <div className="p-3 bg-gray-50 border border-gray-200 rounded-brand">
-                  <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Select Security Question</p>
-                  <select
-                    className="form-select h-11 w-full bg-white border border-gray-300 rounded-brand text-sm px-3 py-2 font-bold text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon"
-                    value={forgotQuestionId || ""}
-                    onChange={(e) => setForgotQuestionId(Number(e.target.value))}
-                  >
-                    {forgotQuestions.map(q => (
-                      <option key={q.id} value={q.id}>{q.question}</option>
-                    ))}
-                  </select>
-                </div>
+                  <div className="p-3 bg-gray-50 border border-gray-200 rounded-brand">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Select Security Question</p>
+                    <select
+                      className="form-select h-11 w-full bg-white border border-gray-300 rounded-brand text-sm px-3 py-2 font-bold text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon"
+                      value={forgotQuestionId || ""}
+                      onChange={(e) => setForgotQuestionId(Number(e.target.value))}
+                    >
+                      {forgotQuestions.map(q => (
+                        <option key={q.id} value={q.id}>{q.question}</option>
+                      ))}
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-                    Your Answer <span className="text-pup-maroon">*</span>
-                  </label>
-                  <Input
-                    type="password"
-                    placeholder="Answer"
-                    className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                    value={forgotAnswer}
-                    onChange={(e) => setForgotAnswer(e.target.value)}
-                    autoFocus
-                    required
-                  />
-                </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                      Your Answer <span className="text-pup-maroon">*</span>
+                    </label>
+                    <Input
+                      type="password"
+                      placeholder="Answer"
+                      className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                      value={forgotAnswer}
+                      onChange={(e) => setForgotAnswer(e.target.value)}
+                      autoFocus
+                      required
+                    />
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-                    New Password <span className="text-pup-maroon">*</span>
-                  </label>
-                  <Input
-                    type="password"
-                    placeholder="Min. 6 alphanumeric characters"
-                    className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                    value={forgotNewPassword}
-                    onChange={(e) => setForgotNewPassword(e.target.value)}
-                    required
-                  />
-                </div>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                        New Password <span className="text-pup-maroon">*</span>
+                      </label>
+                      <Input
+                        type="password"
+                        placeholder="Min. 6 chars"
+                        className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                        value={forgotNewPassword}
+                        onChange={(e) => setForgotNewPassword(e.target.value)}
+                        required
+                      />
+                    </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-                    Confirm New Password <span className="text-pup-maroon">*</span>
-                  </label>
-                  <Input
-                    type="password"
-                    placeholder="Must match the entry above"
-                    className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                    value={forgotConfirmPassword}
-                    onChange={(e) => setForgotConfirmPassword(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-              <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setForgotStep(1)}
-                  className="px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
-                >
-                  Back
-                </Button>
-                <Button
-                  type="submit"
-                  disabled={forgotLoading}
-                  className="px-5 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
-                >
-                  {forgotLoading ? "Resetting..." : "Reset Password"}
-                </Button>
-              </div>
-            </form>
+                    <div>
+                      <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                        Confirm <span className="text-pup-maroon">*</span>
+                      </label>
+                      <Input
+                        type="password"
+                        placeholder="Confirm"
+                        className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                        value={forgotConfirmPassword}
+                        onChange={(e) => setForgotConfirmPassword(e.target.value)}
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-2 pt-2">
+                    <Button
+                      type="submit"
+                      disabled={forgotLoading}
+                      className="w-full bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
+                    >
+                      {forgotLoading ? "Resetting..." : "Reset Password"}
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => setForgotStep(1)}
+                      className="w-full text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+                    >
+                      Back
+                    </Button>
+                  </div>
+                </form>
+              )}
+            </>
           )}
-        </DialogContent>
-      </Dialog>
+
+          <div className="text-center mt-8 pt-6 border-t border-gray-100 text-[10px] text-gray-400 uppercase tracking-widest font-bold">
+            <p>&copy; 2026 Polytechnic University of the Philippines</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

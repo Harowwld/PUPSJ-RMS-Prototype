@@ -17,14 +17,17 @@ export async function GET(req) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const questions = await dbAll("SELECT id, question FROM security_questions ORDER BY id ASC");
+    const questions = await dbAll("SELECT id, question, is_required FROM security_questions ORDER BY id ASC");
     
     // Also fetch what they have answered so far, if any
     const uid = user.sub || user.id;
     const answeredRows = await dbAll("SELECT question_id FROM staff_security_answers WHERE staff_id = ?", [uid]);
     const answeredSet = new Set((answeredRows || []).map(r => r.question_id));
     
-    const hasAllQuestions = questions.length > 0 && answeredSet.size === questions.length;
+    // Updated logic: have they answered all REQUIRED questions?
+    const requiredQuestions = (questions || []).filter(q => q.is_required === 1);
+    const hasAllQuestions = requiredQuestions.length === 0 || 
+                           requiredQuestions.every(q => answeredSet.has(q.id));
 
     const formattedQuestions = (questions || []).map(q => ({
       ...q,

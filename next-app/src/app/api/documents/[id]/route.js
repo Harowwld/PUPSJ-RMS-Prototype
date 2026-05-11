@@ -148,8 +148,12 @@ export async function PATCH(req, ctx) {
       if (!declined) {
         return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
       }
-      const noteText = reviewNote ? ` | reason: ${reviewNote}` : "";
-      await writeAuditLog(req, `Declined document and removed file #${id}${noteText}`);
+      await writeAuditLog(req, `Review Document`, { 
+        details: `declined digital record for student '${declined.student_name}' (Document: ${declined.doc_type}) and purged associated binary file from storage${reviewNote ? `. Reason: ${reviewNote}` : ""}`,
+        severity: "WARNING",
+        entity_type: "Document",
+        entity_id: id
+      });
       return NextResponse.json({
         ok: true,
         data: declined,
@@ -164,7 +168,11 @@ export async function PATCH(req, ctx) {
     if (!row) {
       return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
     }
-    await writeAuditLog(req, `Reviewed document #${id}: ${approvalStatus}`);
+    await writeAuditLog(req, `Review Document`, { 
+      details: `${approvalStatus.toLowerCase()} digital record for student '${row.student_name}' (Document: ${row.doc_type})${reviewNote ? `. Review note: ${reviewNote}` : ""}`,
+      entity_type: "Document",
+      entity_id: id
+    });
     return NextResponse.json({ ok: true, data: row });
   }
 
@@ -189,10 +197,13 @@ export async function PATCH(req, ctx) {
     });
     replaced = true;
   }
-  await writeAuditLog(
-    req,
-    replaced ? `Replaced document file #${id}` : `Updated document metadata #${id}`
-  );
+  await writeAuditLog(req, replaced ? `Replace Document File` : `Update Document`, {
+    details: replaced 
+      ? `overwrote binary file for student '${row.student_name}' (Document: ${row.doc_type}) with updated PDF upload`
+      : `updated registry metadata (Student: '${row.student_name}', Type: '${row.doc_type}') for document record #${id}`,
+    entity_type: "Document",
+    entity_id: id
+  });
 
   return NextResponse.json({ ok: true, data: row });
 }
@@ -212,7 +223,12 @@ export async function DELETE(_req, ctx) {
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
-  await writeAuditLog(_req, `Deleted document #${id}`);
+  await writeAuditLog(_req, `Delete Document`, {
+    details: `permanently removed digital record for student '${row.student_name}' (Document: ${row.doc_type}) from system repository`,
+    severity: "WARNING",
+    entity_type: "Document",
+    entity_id: id
+  });
 
   return NextResponse.json({ ok: true, data: row });
 }
