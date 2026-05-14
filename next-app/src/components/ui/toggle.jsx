@@ -28,16 +28,29 @@ const toggleVariants = cva(
 )
 
 function Toggle({
+  asChild,
+  children,
   className,
   variant = "default",
   size = "default",
   ...props
 }) {
+  if (asChild && React.isValidElement(children)) {
+    return (
+      <TogglePrimitive
+        data-slot="toggle"
+        render={children}
+        className={cn(toggleVariants({ variant, size, className }))}
+        {...props} />
+    );
+  }
   return (
     <TogglePrimitive
       data-slot="toggle"
       className={cn(toggleVariants({ variant, size, className }))}
-      {...props} />
+      {...props}>
+      {children}
+    </TogglePrimitive>
   );
 }
 

@@ -29,8 +29,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import PageHeader from "@/components/shared/PageHeader";
 
-export default function SystemAnalyticsTab({
+export default function DigitizationComplianceTab({
   showToast,
   onLogAction,
 }) {
@@ -319,7 +320,7 @@ export default function SystemAnalyticsTab({
                 size="sm"
                 onClick={() => setReportOpen(true)}
                 disabled={loading || !data}
-                className="h-9 px-6 font-bold text-sm bg-pup-maroon text-white border border-pup-maroon shadow-sm hover:bg-red-900 disabled:opacity-60"
+                className="h-10 px-6 font-bold text-sm bg-pup-maroon text-white border border-pup-maroon shadow-sm hover:bg-red-900 disabled:opacity-60 rounded-brand transition-colors"
               >
                 <i className="ph-bold ph-file-pdf text-sm mr-1.5" aria-hidden />
                 GENERATE REPORT
@@ -330,9 +331,9 @@ export default function SystemAnalyticsTab({
                 size="sm"
                 onClick={downloadCsv}
                 disabled={loading || !data}
-                className="h-9 px-4 font-bold text-sm text-gray-600 bg-white border border-gray-300 shadow-sm hover:bg-gray-50"
+                className="h-10 px-4 font-bold border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 rounded-brand transition-colors"
               >
-                <i className="ph-bold ph-download-simple text-sm mr-1.5" aria-hidden />
+                <i className="ph-bold ph-download-simple text-sm mr-1.5 text-pup-maroon" aria-hidden />
                 EXPORT CSV
               </Button>
 
@@ -345,7 +346,7 @@ export default function SystemAnalyticsTab({
                       size="sm"
                       onClick={load}
                       disabled={loading}
-                      className="h-9 w-9 p-0 text-gray-600 bg-white border border-gray-300 shadow-sm hover:bg-gray-50 transition-all active:scale-95"
+                      className="h-10 w-10 p-0 text-gray-600 bg-white border border-gray-300 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 rounded-brand"
                     >
                       <i
                         className={cn(
@@ -386,7 +387,7 @@ export default function SystemAnalyticsTab({
               </div>
               <p className="text-lg font-bold text-gray-900">Could not load compliance data</p>
               <p className="text-sm font-medium text-gray-600 mt-1 max-w-md">{error}</p>
-              <Button variant="outline" size="sm" className="mt-6 font-bold" onClick={load}>Try Again</Button>
+              <Button variant="outline" size="sm" className="mt-6 h-10 px-4 font-bold border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 rounded-brand transition-colors" onClick={load}>Try Again</Button>
             </div>
           ) : !data ? (
             <div className="h-full flex items-center justify-center">
@@ -610,12 +611,12 @@ export default function SystemAnalyticsTab({
                 <p>
                   This document serves as the official compliance assessment regarding the digitization of student records at the Polytechnic University of the Philippines - San Juan City Campus.
                 </p>
-                
+
                 <div className="bg-gray-50 border border-gray-100 p-6 rounded-lg space-y-4">
                   <p className="text-sm font-medium text-gray-700">
                     As of the current reporting period, the student population is distributed across the following academic batches:
                   </p>
-                  
+
                   <div className="w-full">
                     <div className="flex justify-between text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">
                       <span>Academic Year / Batch</span>
@@ -736,13 +737,13 @@ export default function SystemAnalyticsTab({
             <Button
               variant="outline"
               onClick={() => setReportOpen(false)}
-              className="h-11 px-6 text-sm font-bold text-gray-600 border-gray-300 hover:bg-gray-50"
+              className="h-11 px-6 font-bold border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 rounded-brand transition-colors"
             >
               CLOSE PREVIEW
             </Button>
             <Button
               onClick={handlePrint}
-              className="h-11 px-8 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 flex items-center gap-2"
+              className="h-11 px-8 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 flex items-center gap-2 rounded-brand transition-colors"
             >
               <i className="ph-bold ph-printer text-lg"></i> FINALIZE AND PRINT REPORT
             </Button>

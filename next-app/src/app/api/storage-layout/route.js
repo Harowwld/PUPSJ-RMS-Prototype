@@ -127,12 +127,17 @@ export async function PUT(req) {
     }
 
     const saved = await setStorageLayout(incomingLayout);
-    await writeAuditLog(
-      req,
-      reassignments.length > 0
-        ? `Updated storage layout (v${saved?.version || 1}) with drawer reassignment (${movedCount} records moved)`
-        : `Updated storage layout (v${saved?.version || 1})`
-    );
+    const roomCount = Array.isArray(incomingLayout?.rooms) ? incomingLayout.rooms.length : 0;
+    const cabinetCount = (incomingLayout?.rooms || []).reduce((sum, r) => sum + (r.cabinets?.length || 0), 0);
+
+    await writeAuditLog(req, `Update Storage Layout`, {
+      details: reassignments.length > 0
+        ? `saved physical archive layout (v${saved?.version || 1}, ${roomCount} room(s), ${cabinetCount} cabinet(s)) with drawer reassignment — ${movedCount} student record(s) migrated to new locations`
+        : `saved physical archive layout (v${saved?.version || 1}, ${roomCount} room(s), ${cabinetCount} cabinet(s))`,
+      entity_type: "StorageLayout",
+      entity_id: saved?.version || 1,
+      severity: movedCount > 0 ? "WARNING" : "INFO"
+    });
 
     return NextResponse.json({
       ok: true,

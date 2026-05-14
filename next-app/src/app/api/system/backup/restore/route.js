@@ -11,10 +11,11 @@ import {
   getLocalDir,
   listBackups,
 } from "../../../../../lib/backupsRepo";
-import { reloadDb } from "../../../../../lib/sqlite";
+import { dbRun, reloadDb } from "../../../../../lib/sqlite";
 import { writeAuditLog } from "../../../../../lib/auditLogRequest";
 import { requireAdmin, createAuthErrorResponse } from "../../../../../lib/authHelpers";
 import { requireTOTP, extractTOTPToken } from "../../../../../lib/totpMiddleware";
+import { clearHealthCache } from "../../health/route";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -77,9 +78,9 @@ export async function POST(req) {
 
     // --- PHASE 1: CREATE SNAPSHOT FILE ---
     console.log("[RESTORE] Creating pre-restore snapshot file...");
-    const timestamp = new Date();
-    const dateStr = timestamp.toISOString().split("T")[0]; // YYYY-MM-DD
-    const timeStr = timestamp.toTimeString().split(" ")[0].replace(/:/g, "").slice(0, 4); // HHMM
+    const snapshotTimestamp = new Date();
+    const dateStr = snapshotTimestamp.toISOString().split("T")[0]; // YYYY-MM-DD
+    const timeStr = snapshotTimestamp.toTimeString().split(" ")[0].replace(/:/g, "").slice(0, 4); // HHMM
     const snapshotFilename = `PUP-RECORDS-SAFETY-SNAPSHOT-${dateStr}-${timeStr}.zip.enc`;
     
     const backupsDir = getBackupsDir();
@@ -168,7 +169,22 @@ export async function POST(req) {
     fs.rmSync(stagingDir, { recursive: true, force: true });
     console.log("[RESTORE] Process complete.");
 
-    await writeAuditLog(req, `Restored system backup from uploaded file`, { details: `${file.name}` });
+    await writeAuditLog(req, `Restore System Backup`, { 
+      details: `restored full system state from uploaded backup file '${file.name}'. A pre-restore safety snapshot was automatically created`,
+      severity: "WARNING",
+      entity_type: "Backup"
+    });
+
+    // Record restoration timestamp in settings
+    try {
+      const now = new Date().toISOString();
+      await dbRun("INSERT OR REPLACE INTO settings (key, value) VALUES ('last_restoration_at', ?)", [now]);
+      // Clear health cache so the new timestamp is picked up immediately
+      clearHealthCache();
+    } catch (settingErr) {
+      console.error("[RESTORE] Failed to update last_restoration_at setting:", settingErr);
+    }
+
     return NextResponse.json({
       ok: true,
       message: "System restored successfully from backup. A safety snapshot was created."

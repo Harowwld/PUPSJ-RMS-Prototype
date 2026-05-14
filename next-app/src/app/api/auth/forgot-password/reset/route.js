@@ -76,7 +76,7 @@ export async function POST(req) {
 
     const newPasswordHash = crypto.createHash("sha256").update(newPassword).digest("hex");
 
-    await dbRun("UPDATE staff SET password_hash = ?, updated_at = (datetime('now')) WHERE id = ?", [
+    await dbRun("UPDATE staff SET password_hash = ?, updated_at = (datetime('now')), password_last_changed = (datetime('now')) WHERE id = ?", [
       newPasswordHash, staff.id
     ]);
 

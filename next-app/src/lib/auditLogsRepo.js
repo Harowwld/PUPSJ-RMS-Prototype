@@ -34,6 +34,8 @@ export async function countAuditLogs(options) {
   const actorExact = opt.actorExact || "";
   const role = opt.role || "";
   const severity = opt.severity || "";
+  const startDate = opt.startDate || "";
+  const endDate = opt.endDate || "";
 
   let query = "SELECT COUNT(*) as count FROM audit_logs";
   let params = [];
@@ -52,6 +54,16 @@ export async function countAuditLogs(options) {
   if (severity && severity !== "All") {
     whereClauses.push("severity = ?");
     params.push(severity);
+  }
+
+  if (startDate) {
+    whereClauses.push("date(created_at, 'localtime') >= date(?)");
+    params.push(startDate);
+  }
+
+  if (endDate) {
+    whereClauses.push("date(created_at, 'localtime') <= date(?)");
+    params.push(endDate);
   }
 
   if (search) {
@@ -76,6 +88,10 @@ export async function listAuditLogs(options) {
   const actorExact = opt.actorExact || "";
   const role = opt.role || "";
   const severity = opt.severity || "";
+  const startDate = opt.startDate || "";
+  const endDate = opt.endDate || "";
+  const sortBy = opt.sortBy || "created_at";
+  const sortOrder = String(opt.sortOrder || "DESC").toUpperCase() === "ASC" ? "ASC" : "DESC";
 
   const lim = Math.min(Math.max(parseInt(limit) || 20, 1), 500);
   const off = Math.max(parseInt(offset) || 0, 0);
@@ -99,6 +115,16 @@ export async function listAuditLogs(options) {
     params.push(severity);
   }
 
+  if (startDate) {
+    whereClauses.push("date(created_at, 'localtime') >= date(?)");
+    params.push(startDate);
+  }
+
+  if (endDate) {
+    whereClauses.push("date(created_at, 'localtime') <= date(?)");
+    params.push(endDate);
+  }
+
   if (search) {
     whereClauses.push("(actor LIKE ? OR action LIKE ? OR details LIKE ? OR ip LIKE ? OR entity_type LIKE ? OR entity_id LIKE ?)");
     const term = "%" + search + "%";
@@ -109,14 +135,25 @@ export async function listAuditLogs(options) {
     query += " WHERE " + whereClauses.join(" AND ");
   }
 
-  query += " ORDER BY datetime(created_at) DESC, id DESC LIMIT ? OFFSET ?";
+  // Sanitize sortBy
+  const validSortCols = ["id", "created_at", "actor", "role", "action", "severity", "ip"];
+  const sortCol = validSortCols.includes(sortBy) ? sortBy : "created_at";
+
+  if (sortCol === "created_at") {
+    query += ` ORDER BY datetime(created_at) ${sortOrder}, id ${sortOrder}`;
+  } else {
+    query += ` ORDER BY ${sortCol} ${sortOrder}, id DESC`;
+  }
+
+  query += " LIMIT ? OFFSET ?";
   params.push(lim, off);
 
   return await dbAll(query, params);
 }
 
 export async function getAuditLogStats(actor = "") {
-  let query = "SELECT " +
+  // Main stats
+  let mainQuery = "SELECT " +
     "COUNT(*) as totalLogs, " +
     "COALESCE(SUM(CASE WHEN date(created_at, 'localtime') = date('now', 'localtime') THEN 1 ELSE 0 END), 0) as logsToday, " +
     "COALESCE(SUM(CASE WHEN LOWER(action) LIKE '%login%' OR LOWER(action) LIKE '%logout%' THEN 1 ELSE 0 END), 0) as authEvents, " +
@@ -126,10 +163,46 @@ export async function getAuditLogStats(actor = "") {
   
   let params = [];
   if (actor) {
-    query += " WHERE actor = ?";
+    mainQuery += " WHERE actor = ?";
     params.push(actor);
   }
 
-  const rows = await dbAll(query, params);
-  return (rows && rows.length > 0) ? rows[0] : { totalLogs: 0, logsToday: 0, authEvents: 0, systemChanges: 0, criticalEvents: 0 };
+  const mainRows = await dbAll(mainQuery, params);
+  const stats = (mainRows && mainRows.length > 0) ? mainRows[0] : { totalLogs: 0, logsToday: 0, authEvents: 0, systemChanges: 0, criticalEvents: 0 };
+
+  // 7-day trend data
+  // We'll get counts for each of the last 7 days
+  let trendQuery = "SELECT " +
+    "date(created_at, 'localtime') as day, " +
+    "COUNT(*) as count, " +
+    "COALESCE(SUM(CASE WHEN LOWER(action) LIKE '%login%' OR LOWER(action) LIKE '%logout%' THEN 1 ELSE 0 END), 0) as authCount, " +
+    "COALESCE(SUM(CASE WHEN severity = 'CRITICAL' THEN 1 ELSE 0 END), 0) as criticalCount " +
+    "FROM audit_logs " +
+    "WHERE date(created_at, 'localtime') >= date('now', 'localtime', '-6 days') ";
+  
+  if (actor) {
+    trendQuery += " AND actor = ? ";
+  }
+  
+  trendQuery += "GROUP BY day ORDER BY day ASC";
+  
+  const trendRows = await dbAll(trendQuery, params);
+  
+  // Fill in missing days with zeros
+  const trends = [];
+  for (let i = 6; i >= 0; i--) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dayStr = d.toISOString().split('T')[0];
+    const match = trendRows.find(r => r.day === dayStr);
+    trends.push({
+      day: dayStr,
+      total: match ? match.count : 0,
+      auth: match ? match.authCount : 0,
+      critical: match ? match.criticalCount : 0
+    });
+  }
+  
+  stats.trends = trends;
+  return stats;
 }

@@ -11,6 +11,10 @@ export async function GET(req) {
   const search = searchParams.get("search") || "";
   const role = searchParams.get("role") || "";
   const severity = searchParams.get("severity") || "";
+  const startDate = searchParams.get("startDate") || "";
+  const endDate = searchParams.get("endDate") || "";
+  const sortBy = searchParams.get("sortBy") || "created_at";
+  const sortOrder = searchParams.get("sortOrder") || "DESC";
   const mine = searchParams.get("mine") === "1";
   const actorExact = mine ? await getSessionActorName() : "";
 
@@ -19,8 +23,8 @@ export async function GET(req) {
   }
 
   const [rows, total] = await Promise.all([
-    listAuditLogs({ limit, offset, search, actorExact, role, severity }),
-    countAuditLogs({ search, actorExact, role, severity }),
+    listAuditLogs({ limit, offset, search, actorExact, role, severity, startDate, endDate, sortBy, sortOrder }),
+    countAuditLogs({ search, actorExact, role, severity, startDate, endDate }),
   ]);
 
   return NextResponse.json({ ok: true, data: rows, total });

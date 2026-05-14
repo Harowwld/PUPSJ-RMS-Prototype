@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   Dialog,
@@ -6,9 +6,9 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 
 export default function DocTypeModal({
   open,
@@ -20,21 +20,21 @@ export default function DocTypeModal({
   onSave,
   isLoading,
 }) {
-  if (!open) return null;
+  if (!open) return null
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
-        <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+      <DialogContent className="overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md">
+        <DialogHeader className="border-b border-gray-100 bg-gray-50/50 p-6">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm">
               <i className="ph-duotone ph-pencil-line text-2xl"></i>
             </div>
             <div className="min-w-0">
               <DialogTitle className="text-lg font-black tracking-tight text-gray-900">
                 Create Document Type
               </DialogTitle>
-              <DialogDescription className="text-sm font-medium mt-1 text-gray-600">
+              <DialogDescription className="mt-1 text-sm font-medium text-gray-600">
                 Create a new document type to categorize uploaded records.
               </DialogDescription>
             </div>
@@ -42,40 +42,40 @@ export default function DocTypeModal({
         </DialogHeader>
 
         <div className="p-6">
-          <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+          <label className="mb-1 block text-xs font-bold text-gray-700 uppercase">
             Document Type
           </label>
           <Input
             type="text"
-            className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+            className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
             placeholder="Enter new document type..."
             value={value}
             onChange={(e) => {
-              setError("");
-              setValue(e.target.value);
+              setError("")
+              setValue(e.target.value)
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter") {
-                e.preventDefault();
-                onSave();
+                e.preventDefault()
+                onSave()
               }
             }}
             autoFocus
           />
 
           {error ? (
-            <div className="mt-3 p-3 rounded-brand border border-red-200 bg-red-50 text-red-800 text-sm font-bold">
+            <div className="mt-3 rounded-brand border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-800">
               {error}
             </div>
           ) : null}
         </div>
 
-        <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+        <div className="flex flex-col-reverse gap-2 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end">
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
-            className="h-11 px-5 text-sm border-gray-300 text-gray-700 hover:bg-gray-50 font-bold rounded-brand"
+            className="h-11 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 hover:bg-gray-50"
             disabled={isLoading}
           >
             Cancel
@@ -83,7 +83,7 @@ export default function DocTypeModal({
           <Button
             type="button"
             onClick={onSave}
-            className="h-11 px-5 bg-pup-maroon text-white hover:bg-red-900 font-bold shadow-sm rounded-brand"
+            className="h-11 rounded-brand bg-pup-maroon px-5 font-bold text-white shadow-sm hover:bg-red-900"
             disabled={isLoading}
           >
             {isLoading ? "Saving..." : "Save"}
@@ -91,5 +91,5 @@ export default function DocTypeModal({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

@@ -1,10 +1,19 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { useState } from "react"
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import PageHeader from "@/components/shared/PageHeader"
 
 export default function RegisterAccountTab({
   createForm,
@@ -12,63 +21,66 @@ export default function RegisterAccountTab({
   onResetForm,
   onCreateAccount,
 }) {
-  const [showDefaultPw, setShowDefaultPw] = useState(false);
-  const defaultPassword = process.env.NEXT_PUBLIC_DEFAULT_STAFF_PASSWORD || "pupstaff";
+  const [showDefaultPw, setShowDefaultPw] = useState(false)
+  const defaultPassword =
+    process.env.NEXT_PUBLIC_DEFAULT_STAFF_PASSWORD || "pupstaff"
 
   return (
     <TooltipProvider delay={200}>
-      <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter">
-        <Card className="flex-1 bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-          <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
-                <i className="ph-duotone ph-user-plus text-2xl"></i>
-              </div>
-              <div>
-                <CardTitle className="text-xl font-black text-gray-900 tracking-tight">
-                  Account Registration
-                </CardTitle>
-                <CardDescription className="font-medium text-gray-500">
-                  Provision new network credentials for registrar personnel and administrators.
-                </CardDescription>
-              </div>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
+      <div className="animate-fade-in font-inter flex h-full w-full flex-col">
+        <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm">
+          <PageHeader
+            icon="ph-user-plus"
+            title="Account Registration"
+            description="Provision new network credentials for registrar personnel and administrators."
+            actions={
               <Button
                 variant="outline"
                 size="sm"
                 onClick={onResetForm}
-                className="h-10 px-5 font-bold text-sm border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50 hover:border-pup-maroon rounded-brand shadow-sm transition-all"
+                className="h-10 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon"
               >
                 <i className="ph-bold ph-arrow-counter-clockwise mr-1.5"></i>
                 CLEAR FORM
               </Button>
-            </div>
-          </CardHeader>
+            }
+          />
 
-          <CardContent className="flex-1 overflow-y-auto p-6 bg-gray-50/50">
-            <div className="max-w-5xl mx-auto space-y-6">
+          <CardContent className="flex-1 overflow-y-auto bg-gray-50/50 p-6">
+            <div className="mx-auto max-w-5xl space-y-6">
               {/* Comprehensive Info Cards */}
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
                 {/* Registration Guidelines — Maroon Accent Card */}
-                <div className="lg:col-span-2 relative rounded-xl p-5 overflow-hidden border border-[#5c1520] bg-[#7a1e28] shadow-sm group transition-all">
-                  <i className="ph-duotone ph-identification-card absolute -right-4 -bottom-4 text-[72px] opacity-20 text-white rotate-12 pointer-events-none" />
+                <div className="group relative overflow-hidden rounded-xl border border-[#5c1520] bg-[#7a1e28] p-5 shadow-sm transition-all lg:col-span-2">
+                  <i className="ph-duotone ph-identification-card pointer-events-none absolute -right-4 -bottom-4 rotate-12 text-[72px] text-white opacity-20" />
                   <div className="relative z-10 flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-white/10 text-white flex items-center justify-center shrink-0 border border-white/20">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-white">
                       <i className="ph-duotone ph-identification-card text-xl"></i>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-black text-[#f7c9ce] uppercase tracking-wider mb-2">Registration Guidelines</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="min-w-0 flex-1">
+                      <h4 className="mb-2 text-sm font-black tracking-wider text-[#f7c9ce] uppercase">
+                        Registration Guidelines
+                      </h4>
+                      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div className="space-y-2">
-                          <p className="text-[10px] font-black text-[#f7c9ce]/70 uppercase tracking-widest">ID Convention</p>
-                          <code className="block w-full bg-black/20 p-2 rounded border border-white/10 font-mono text-[10px] text-white">PUPREGISTRAR-[XXX]</code>
+                          <p className="text-[10px] font-black tracking-widest text-[#f7c9ce]/70 uppercase">
+                            ID Convention
+                          </p>
+                          <code className="block w-full rounded border border-white/10 bg-black/20 p-2 font-mono text-[10px] text-white">
+                            PUPREGISTRAR-[XXX]
+                          </code>
                         </div>
                         <div className="space-y-2">
-                          <p className="text-[10px] font-black text-[#f7c9ce]/70 uppercase tracking-widest">Email Policy</p>
+                          <p className="text-[10px] font-black tracking-widest text-[#f7c9ce]/70 uppercase">
+                            Email Policy
+                          </p>
                           <div className="space-y-1">
-                            <code className="block bg-black/20 px-2 py-1 rounded border border-white/10 font-mono text-[9px] text-white/80">admin.[name]@pup.local</code>
-                            <code className="block bg-black/20 px-2 py-1 rounded border border-white/10 font-mono text-[9px] text-white/80">staff.[name]@pup.local</code>
+                            <code className="block rounded border border-white/10 bg-black/20 px-2 py-1 font-mono text-[9px] text-white/80">
+                              admin.[name]@pup.local
+                            </code>
+                            <code className="block rounded border border-white/10 bg-black/20 px-2 py-1 font-mono text-[9px] text-white/80">
+                              staff.[name]@pup.local
+                            </code>
                           </div>
                         </div>
                       </div>
@@ -77,17 +89,21 @@ export default function RegisterAccountTab({
                 </div>
 
                 {/* Temporary Access — Light Card */}
-                <div className="relative rounded-xl p-5 overflow-hidden border border-[#7a1e28]/15 bg-[#fdf6f6] shadow-sm group transition-all">
-                  <i className="ph-duotone ph-lock-key absolute -right-3 -bottom-3 text-[60px] opacity-10 text-[#7a1e28] rotate-12 pointer-events-none" />
+                <div className="group relative overflow-hidden rounded-xl border border-[#7a1e28]/15 bg-[#fdf6f6] p-5 shadow-sm transition-all">
+                  <i className="ph-duotone ph-lock-key pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-[#7a1e28] opacity-10" />
                   <div className="relative z-10 flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-lg bg-[#7a1e28]/5 text-[#7a1e28] flex items-center justify-center shrink-0 border border-[#7a1e28]/10">
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#7a1e28]/10 bg-[#7a1e28]/5 text-[#7a1e28]">
                       <i className="ph-duotone ph-lock-key text-xl"></i>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-black text-[#9e5a62] uppercase tracking-wider mb-2">Temporary Access</h4>
+                    <div className="min-w-0 flex-1">
+                      <h4 className="mb-2 text-sm font-black tracking-wider text-[#9e5a62] uppercase">
+                        Temporary Access
+                      </h4>
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between bg-white/50 p-2 rounded border border-[#7a1e28]/10">
-                          <span className="text-[10px] font-bold text-[#b07078]">Password</span>
+                        <div className="flex items-center justify-between rounded border border-[#7a1e28]/10 bg-white/50 p-2">
+                          <span className="text-[10px] font-bold text-[#b07078]">
+                            Password
+                          </span>
                           <div className="flex items-center gap-1.5">
                             <code className="font-mono text-[11px] font-black text-[#7a1e28]">
                               {showDefaultPw ? defaultPassword : "••••••••"}
@@ -95,15 +111,18 @@ export default function RegisterAccountTab({
                             <button
                               type="button"
                               onClick={() => setShowDefaultPw(!showDefaultPw)}
-                              className="text-[#7a1e28] hover:text-[#5c1520] transition-colors"
+                              className="text-[#7a1e28] transition-colors hover:text-[#5c1520]"
                             >
-                              <i className={`ph-bold ${showDefaultPw ? "ph-eye-slash" : "ph-eye"} text-xs`}></i>
+                              <i
+                                className={`ph-bold ${showDefaultPw ? "ph-eye-slash" : "ph-eye"} text-xs`}
+                              ></i>
                             </button>
                           </div>
                         </div>
-                        <p className="text-[10px] font-bold text-[#b07078] leading-tight">
+                        <p className="text-[10px] leading-tight font-bold text-[#b07078]">
                           <i className="ph-fill ph-warning-circle mr-1 text-[#7a1e28]" />
-                          Personnel are required to update these credentials upon initial system entry.
+                          Personnel are required to update these credentials
+                          upon initial system entry.
                         </p>
                       </div>
                     </div>
@@ -112,23 +131,25 @@ export default function RegisterAccountTab({
               </div>
 
               {/* Main Registration Form */}
-              <Card className="border-gray-200 shadow-md rounded-brand overflow-hidden bg-white">
-                <div className="bg-gray-50/50 border-b border-gray-100 p-5">
-                  <h3 className="text-sm font-black text-gray-900 uppercase tracking-widest flex items-center gap-2">
-                    <i className="ph-bold ph-list-plus text-pup-maroon"></i> Enrollment Form
+              <Card className="overflow-hidden rounded-brand border-gray-200 bg-white shadow-md">
+                <div className="border-b border-gray-100 bg-gray-50/50 p-5">
+                  <h3 className="flex items-center gap-2 text-sm font-black tracking-widest text-gray-900 uppercase">
+                    <i className="ph-bold ph-list-plus text-pup-maroon"></i>{" "}
+                    Enrollment Form
                   </h3>
                 </div>
-                <CardContent className="p-8 bg-white">
+                <CardContent className="bg-white p-8">
                   <form onSubmit={onCreateAccount} className="space-y-8">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       <div className="space-y-2">
-                        <label className="block text-[11px] font-black text-gray-600 uppercase tracking-wider">
-                          Employee Identification <span className="text-pup-maroon">*</span>
+                        <label className="block text-[11px] font-black tracking-wider text-gray-600 uppercase">
+                          Employee Identification{" "}
+                          <span className="text-pup-maroon">*</span>
                         </label>
                         <Input
                           type="text"
                           required
-                          className="font-mono bg-white border-gray-300 rounded-brand text-sm h-11 focus-visible:ring-pup-maroon transition-all"
+                          className="h-11 rounded-brand border-gray-300 bg-white font-mono text-sm transition-all focus-visible:ring-pup-maroon"
                           placeholder="PUPREGISTRAR-[XXX]"
                           value={createForm.id}
                           onChange={(e) =>
@@ -137,77 +158,93 @@ export default function RegisterAccountTab({
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="block text-[11px] font-black text-gray-600 uppercase tracking-wider">
-                          Assigned System Role <span className="text-pup-maroon">*</span>
+                        <label className="block text-[11px] font-black tracking-wider text-gray-600 uppercase">
+                          Assigned System Role{" "}
+                          <span className="text-pup-maroon">*</span>
                         </label>
                         <select
                           required
-                          className="h-11 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-900 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                          className="h-11 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-bold text-gray-900 shadow-sm transition-all focus:border-pup-maroon focus:ring-2 focus:ring-pup-maroon focus:outline-none"
                           value={createForm.role}
                           onChange={(e) =>
-                            setCreateForm((f) => ({ ...f, role: e.target.value }))
+                            setCreateForm((f) => ({
+                              ...f,
+                              role: e.target.value,
+                            }))
                           }
                         >
-                          <option value="" disabled>Select Authorization Level...</option>
+                          <option value="" disabled>
+                            Select Authorization Level...
+                          </option>
                           <option value="Admin">Administrator</option>
                           <option value="Staff">Registrar Staff</option>
                         </select>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                       <div className="space-y-2">
-                        <label className="block text-[11px] font-black text-gray-600 uppercase tracking-wider">
+                        <label className="block text-[11px] font-black tracking-wider text-gray-600 uppercase">
                           First Name <span className="text-pup-maroon">*</span>
                         </label>
                         <Input
                           type="text"
                           required
-                          className="bg-white border-gray-300 rounded-brand text-sm h-11 focus-visible:ring-pup-maroon transition-all"
+                          className="h-11 rounded-brand border-gray-300 bg-white text-sm transition-all focus-visible:ring-pup-maroon"
                           placeholder="Juan"
                           value={createForm.fname}
                           onChange={(e) =>
-                            setCreateForm((f) => ({ ...f, fname: e.target.value }))
+                            setCreateForm((f) => ({
+                              ...f,
+                              fname: e.target.value,
+                            }))
                           }
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="block text-[11px] font-black text-gray-600 uppercase tracking-wider">
+                        <label className="block text-[11px] font-black tracking-wider text-gray-600 uppercase">
                           Last Name <span className="text-pup-maroon">*</span>
                         </label>
                         <Input
                           type="text"
                           required
-                          className="bg-white border-gray-300 rounded-brand text-sm h-11 focus-visible:ring-pup-maroon transition-all"
+                          className="h-11 rounded-brand border-gray-300 bg-white text-sm transition-all focus-visible:ring-pup-maroon"
                           placeholder="Dela Cruz"
                           value={createForm.lname}
                           onChange={(e) =>
-                            setCreateForm((f) => ({ ...f, lname: e.target.value }))
+                            setCreateForm((f) => ({
+                              ...f,
+                              lname: e.target.value,
+                            }))
                           }
                         />
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <label className="block text-[11px] font-black text-gray-600 uppercase tracking-wider">
-                        Institutional Identifier / Email <span className="text-pup-maroon">*</span>
+                      <label className="block text-[11px] font-black tracking-wider text-gray-600 uppercase">
+                        Institutional Identifier / Email{" "}
+                        <span className="text-pup-maroon">*</span>
                       </label>
                       <Input
                         type="email"
                         required
-                        className="bg-white border-gray-300 rounded-brand text-sm h-11 focus-visible:ring-pup-maroon transition-all"
+                        className="h-11 rounded-brand border-gray-300 bg-white text-sm transition-all focus-visible:ring-pup-maroon"
                         placeholder="[role].[name]@pup.local"
                         value={createForm.email}
                         onChange={(e) =>
-                          setCreateForm((f) => ({ ...f, email: e.target.value }))
+                          setCreateForm((f) => ({
+                            ...f,
+                            email: e.target.value,
+                          }))
                         }
                       />
                     </div>
 
-                    <div className="pt-6 border-t border-gray-100 flex flex-col-reverse sm:flex-row items-center justify-end gap-3">
+                    <div className="flex flex-col-reverse items-center justify-end gap-3 border-t border-gray-100 pt-6 sm:flex-row">
                       <Button
                         type="submit"
-                        className="w-full sm:w-auto h-12 px-8 bg-pup-maroon text-white hover:bg-red-900 shadow-lg font-black text-xs uppercase tracking-widest rounded-brand gap-2 transition-all active:scale-95"
+                        className="h-12 w-full gap-2 rounded-brand bg-pup-maroon px-8 text-xs font-black tracking-widest text-white uppercase shadow-lg transition-all hover:bg-red-900 active:scale-95 sm:w-auto"
                       >
                         <i className="ph-bold ph-user-circle-plus text-lg"></i>
                         REGISTER ACCOUNT
@@ -221,5 +258,5 @@ export default function RegisterAccountTab({
         </Card>
       </div>
     </TooltipProvider>
-  );
+  )
 }

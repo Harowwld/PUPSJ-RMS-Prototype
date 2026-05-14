@@ -341,21 +341,12 @@ function StaffPageContent() {
     return () => clearTimeout(timer);
   }, [quickQuery, students]);
 
-  const logAction = useCallback(async (action) => {
+  const handleLogout = async () => {
     try {
-      await fetch("/api/audit-logs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action }),
-      });
+      await fetch("/api/auth/logout", { method: "POST" });
     } catch {
       /* silent */
     }
-  }, []);
-
-  const handleLogout = async () => {
-    await logAction("Logged out from system");
-    await fetch("/api/auth/logout", { method: "POST" });
     router.push("/");
   };
 
@@ -817,9 +808,7 @@ function StaffPageContent() {
           if (!patchRes.ok) locationUpdateFailed = true;
         }
       }
-      await logAction(
-        `Uploaded ${payload.get("docType")} for ${payload.get("studentNo")}`,
-      );
+
       if (locationUpdateFailed) {
         showToast(
           { title: "Partial Upload", description: "Document saved, but storage location was not updated." },
@@ -1235,17 +1224,32 @@ function StaffPageContent() {
 
                   const successCount = res.filter((r) => r.ok).length;
                   const failCount = res.length - successCount;
-                  if (failCount > 0) {
-                    showToast(
-                      { title: "Batch Import Partial", description: `${successCount} succeeded, ${failCount} failed out of ${res.length} records.` },
-                      true
-                    );
-                  } else {
-                    showToast({ title: "Batch Import Complete", description: `${res.length} student records have been processed.` });
+
+                  if (successCount === res.length) {
+                    showToast({ 
+                      title: "Import Successful", 
+                      description: `Successfully added all ${res.length} student records.` 
+                    });
                     // Clear CSV preview after fully successful import.
                     setCsvFile(null);
                     setCsvRows([]);
                     setCsvResults([]);
+                  } else if (successCount > 0) {
+                    showToast(
+                      { 
+                        title: "Partial Import", 
+                        description: `${successCount} records added, ${failCount} skipped (duplicates or invalid).` 
+                      },
+                      "warning"
+                    );
+                  } else {
+                    showToast(
+                      { 
+                        title: "No Records Added", 
+                        description: `All ${failCount} selected entries already exist or contain errors.` 
+                      },
+                      "warning"
+                    );
                   }
 
                   setCsvError("");

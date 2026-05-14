@@ -1,619 +1,807 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"
 
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
-  CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Toggle } from "@/components/ui/toggle";
-import ConfirmModal from "@/components/shared/ConfirmModal";
-import {
-  Tabs,
-  TabsList,
-  TabsTrigger,
-  TabsContent,
-} from "@/components/ui/tabs";
+} from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Toggle } from "@/components/ui/toggle"
+import ConfirmModal from "@/components/shared/ConfirmModal"
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import {
   Empty,
   EmptyHeader,
   EmptyTitle,
   EmptyDescription,
   EmptyMedia,
-} from "@/components/ui/empty";
+} from "@/components/ui/empty"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
+} from "@/components/ui/dialog"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
-export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOTP, error: errorProp = null }) {
-  const [activeSubTab, setActiveSubTab] = useState("document-types");
-  const [showArchived, setShowArchived] = useState(false);
+import DocTypesTab from "./system-config/DocTypesTab"
+import CoursesTab from "./system-config/CoursesTab"
+import SectionsTab from "./system-config/SectionsTab"
+import BulkImportTab from "./system-config/BulkImportTab"
+import SecurityQuestionsTab from "./system-config/SecurityQuestionsTab"
+
+export default function SystemConfigTab({
+  showToast,
+  logAdminAction,
+  onVerifyTOTP,
+  error: errorProp = null,
+}) {
+  const [activeSubTab, setActiveSubTab] = useState("document-types")
+  const [showArchived, setShowArchived] = useState(false)
 
   // Search States
-  const [docSearch, setDocSearch] = useState("");
-  const [courseSearch, setCourseSearch] = useState("");
-  const [sectionSearch, setSectionSearch] = useState("");
+  const [docSearch, setDocSearch] = useState("")
+  const [courseSearch, setCourseSearch] = useState("")
+  const [sectionSearch, setSectionSearch] = useState("")
+
+  const [debouncedDocSearch, setDebouncedDocSearch] = useState("")
+  const [debouncedCourseSearch, setDebouncedCourseSearch] = useState("")
+  const [debouncedSectionSearch, setDebouncedSectionSearch] = useState("")
+
+  // Debounce effects
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedDocSearch(docSearch)
+      setPageDoc(1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [docSearch])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedCourseSearch(courseSearch)
+      setPageCourse(1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [courseSearch])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSectionSearch(sectionSearch)
+      setPageSection(1)
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [sectionSearch])
 
   // Document Types State
-  const [docTypes, setDocTypes] = useState([]);
-  const [isAddDocTypeOpen, setIsAddDocTypeOpen] = useState(false);
-  const [newDocTypeName, setNewDocTypeName] = useState("");
-  const [isEditDocTypeOpen, setIsEditDocTypeOpen] = useState(false);
-  const [editDocType, setEditDocType] = useState({ id: null, name: "" });
-
+  const [docTypes, setDocTypes] = useState([])
   // Courses State
-  const [courses, setCourses] = useState([]);
-  const [isAddCourseOpen, setIsAddCourseOpen] = useState(false);
-  const [newCourseCode, setNewCourseCode] = useState("");
-  const [newCourseName, setNewCourseName] = useState("");
-  const [newCourseBlocks, setNewCourseBlocks] = useState([""]);
-  const [isEditCourseOpen, setIsEditCourseOpen] = useState(false);
-  const [editCourse, setEditCourse] = useState({ id: null, code: "", name: "" });
+  const [courses, setCourses] = useState([])
 
   // Sections State
-  const [sections, setSections] = useState([]);
-  const [isAddSectionOpen, setIsAddSectionOpen] = useState(false);
-  const [secName, setSecName] = useState("");
-  const [secCourseCode, setSecCourseCode] = useState("");
-  const [selectedCourseFilter, setSelectedCourseFilter] = useState("");
-  const [isEditSectionOpen, setIsEditSectionOpen] = useState(false);
-  const [editSection, setEditSection] = useState({
-    id: null,
-    name: "",
-    courseCode: "",
-  });
+  const [sections, setSections] = useState([])
+  const [selectedCourseFilter, setSelectedCourseFilter] = useState("")
 
   // Security Questions State
-  const [securityQuestions, setSecurityQuestions] = useState(["", "", "", "", ""]);
-  const [securitySaving, setSecuritySaving] = useState(false);
+  const [securityQuestions, setSecurityQuestions] = useState([
+    "",
+    "",
+    "",
+    "",
+    "",
+  ])
+  const [securitySaving, setSecuritySaving] = useState(false)
+
+  // Table Selection States
+  const [selectedDocTypes, setSelectedDocTypes] = useState({})
+  const [selectedCourses, setSelectedCourses] = useState({})
+  const [selectedSections, setSelectedSections] = useState({})
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+
+  // Pagination States
+  const [pageDoc, setPageDoc] = useState(1)
+  const [pageCourse, setPageCourse] = useState(1)
+  const [pageSection, setPageSection] = useState(1)
+
+  // Sorting States
+  const [sortDoc, setSortDoc] = useState({ key: "name", direction: "asc" })
+  const [sortCourse, setSortCourse] = useState({
+    key: "code",
+    direction: "asc",
+  })
+  const [sortSection, setSortSection] = useState({
+    key: "name",
+    direction: "asc",
+  })
 
   // Common State
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [importing, setImporting] = useState(false);
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const [importing, setImporting] = useState(false)
 
   // Confirmation Modal
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false)
   const [confirmPayload, setConfirmPayload] = useState({
     title: "",
     message: "",
     confirmLabel: "",
     variant: "danger",
     onConfirm: () => {},
-  });
+  })
 
   useEffect(() => {
-    loadAll();
-  }, [showArchived]);
+    // Reset selection states when view mode or sub-tab changes to avoid persisting 
+    // batch actions between unrelated records or categories
+    setSelectedDocTypes({})
+    setSelectedCourses({})
+    setSelectedSections({})
+    
+    loadAll()
+  }, [showArchived, activeSubTab])
 
-  const filteredDocTypes = docTypes.filter(dt => 
-    dt.name.toLowerCase().includes(docSearch.toLowerCase())
-  );
+  // --- Transform Helpers ---
+  const applySortAndPagination = (data, sort, page, perPage) => {
+    const sorted = [...data].sort((a, b) => {
+      let valA = a[sort.key] || ""
+      let valB = b[sort.key] || ""
+      if (typeof valA === "string") valA = valA.toLowerCase()
+      if (typeof valB === "string") valB = valB.toLowerCase()
 
-  const filteredCourses = courses.filter(c => 
-    c.code.toLowerCase().includes(courseSearch.toLowerCase()) ||
-    c.name.toLowerCase().includes(courseSearch.toLowerCase())
-  );
+      if (valA < valB) return sort.direction === "asc" ? -1 : 1
+      if (valA > valB) return sort.direction === "asc" ? 1 : -1
+      return 0
+    })
+    const start = (page - 1) * perPage
+    return sorted.slice(start, start + perPage)
+  }
 
-  const filteredSections = sections.filter(sec => {
-    const matchesProgram = selectedCourseFilter === "" || sec.course_code === selectedCourseFilter;
-    const matchesSearch = sec.name.toLowerCase().includes(sectionSearch.toLowerCase());
-    return matchesProgram && matchesSearch;
-  });
+  const handleSort = (tab, key, direction = null) => {
+    const setter =
+      tab === "doc"
+        ? setSortDoc
+        : tab === "course"
+          ? setSortCourse
+          : setSortSection
+    setter((prev) => {
+      const nextDirection = direction || (prev.key === key && prev.direction === "asc" ? "desc" : "asc")
+      return {
+        key,
+        direction: nextDirection,
+      }
+    })
+    // Reset page
+    if (tab === "doc") setPageDoc(1)
+    if (tab === "course") setPageCourse(1)
+    if (tab === "section") setPageSection(1)
+  }
+
+  // --- Derived Data ---
+  const filteredDocTypesFull = docTypes.filter((dt) => {
+    const matchesSearch = dt.name
+      .toLowerCase()
+      .includes(debouncedDocSearch.toLowerCase())
+    const matchesStatus = showArchived
+      ? dt.status === "Archived"
+      : dt.status !== "Archived"
+    return matchesSearch && matchesStatus
+  })
+  const filteredDocTypes = applySortAndPagination(
+    filteredDocTypesFull,
+    sortDoc,
+    pageDoc,
+    itemsPerPage
+  )
+
+  const filteredCoursesFull = courses.filter((c) => {
+    const matchesSearch =
+      c.code.toLowerCase().includes(debouncedCourseSearch.toLowerCase()) ||
+      c.name.toLowerCase().includes(debouncedCourseSearch.toLowerCase())
+    const matchesStatus = showArchived
+      ? c.status === "Archived"
+      : c.status !== "Archived"
+    return matchesSearch && matchesStatus
+  })
+  const filteredCourses = applySortAndPagination(
+    filteredCoursesFull,
+    sortCourse,
+    pageCourse,
+    itemsPerPage
+  )
+
+  const filteredSectionsFull = sections.filter((sec) => {
+    const matchesProgram =
+      selectedCourseFilter === "" || sec.course_code === selectedCourseFilter
+    const matchesSearch = sec.name
+      .toLowerCase()
+      .includes(debouncedSectionSearch.toLowerCase())
+    const matchesStatus = showArchived
+      ? sec.status === "Archived"
+      : sec.status !== "Archived"
+    return matchesProgram && matchesSearch && matchesStatus
+  })
+  const filteredSections = applySortAndPagination(
+    filteredSectionsFull,
+    sortSection,
+    pageSection,
+    itemsPerPage
+  )
+
+  const SortIndicator = ({ currentSort, columnKey }) => {
+    if (currentSort.key !== columnKey)
+      return (
+        <i className="ph-bold ph-caret-up-down ml-1 opacity-20 transition-opacity group-hover:opacity-100"></i>
+      )
+    return (
+      <i
+        className={`ph-bold ml-1 text-pup-maroon ${currentSort.direction === "asc" ? "ph-caret-up" : "ph-caret-down"}`}
+      ></i>
+    )
+  }
+
+  // Selection Handlers
+  const toggleDocTypeSelected = (id) => {
+    setSelectedDocTypes((prev) => ({ ...prev, [id]: !prev[id] }))
+  }
+
+  const toggleAllDocTypes = (checked) => {
+    if (!checked) {
+      setSelectedDocTypes({})
+    } else {
+      const next = {}
+      filteredDocTypes.forEach((dt) => {
+        next[dt.id] = true
+      })
+      setSelectedDocTypes(next)
+    }
+  }
+
+  const toggleCourseSelected = (id) => {
+    setSelectedCourses((prev) => ({ ...prev, [id]: !prev[id] }))
+  }
+
+  const toggleAllCourses = (checked) => {
+    if (!checked) {
+      setSelectedCourses({})
+    } else {
+      const next = {}
+      filteredCourses.forEach((c) => {
+        next[c.id] = true
+      })
+      setSelectedCourses(next)
+    }
+  }
+
+  const toggleSectionSelected = (id) => {
+    setSelectedSections((prev) => ({ ...prev, [id]: !prev[id] }))
+  }
+
+  const toggleAllSections = (checked) => {
+    if (!checked) {
+      setSelectedSections({})
+    } else {
+      const next = {}
+      filteredSections.forEach((s) => {
+        next[s.id] = true
+      })
+      setSelectedSections(next)
+    }
+  }
+
+  async function executeBulkTaxonomyAction(category, action) {
+    let ids = []
+    let label = ""
+    const isRestore = action === "restore"
+
+    if (category === "DocumentType") {
+      ids = Object.keys(selectedDocTypes).filter((id) => selectedDocTypes[id])
+      label = "Document Types"
+    } else if (category === "Course") {
+      ids = Object.keys(selectedCourses).filter((id) => selectedCourses[id])
+      label = "Degree Programs"
+    } else if (category === "Section") {
+      ids = Object.keys(selectedSections).filter((id) => selectedSections[id])
+      label = "Course Blocks"
+    }
+
+    if (ids.length === 0) return
+
+    setLoading(true)
+    try {
+      await Promise.all(
+        ids.map((id) => {
+          if (category === "DocumentType") {
+            if (isRestore) {
+              return fetch(`/api/doc-types?id=${id}&silent=1`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: "Active" }),
+              })
+            }
+            return fetch(`/api/doc-types?id=${id}&silent=1`, {
+              method: "DELETE",
+            })
+          } else if (category === "Course") {
+            if (isRestore) {
+              return fetch(`/api/courses?id=${id}&restore=true&silent=1`, {
+                method: "DELETE",
+              })
+            }
+            return fetch(`/api/courses?id=${id}&silent=1`, { method: "DELETE" })
+          } else if (category === "Section") {
+            if (isRestore) {
+              return fetch(`/api/sections?id=${id}&restore=true&silent=1`, {
+                method: "DELETE",
+              })
+            }
+            return fetch(`/api/sections?id=${id}&silent=1`, {
+              method: "DELETE",
+            })
+          }
+        })
+      )
+
+      logAdminAction({
+        action: `${isRestore ? "Bulk Restore" : "Bulk Archive"} ${category}`,
+        details: `${isRestore ? "restored" : "archived"} ${ids.length} ${label.toLowerCase()} in a single batch operation`,
+        severity: isRestore ? "INFO" : "WARNING",
+        entityType: "System",
+      })
+
+      // Clear selections
+      if (category === "DocumentType") setSelectedDocTypes({})
+      else if (category === "Course") setSelectedCourses({})
+      else if (category === "Section") setSelectedSections({})
+
+      showToast({
+        title: "Batch Action Success",
+        description: `Successfully ${isRestore ? "restored" : "archived"} ${ids.length} ${label.toLowerCase()}.`,
+      })
+      loadAll()
+    } catch (err) {
+      showToast({ title: "Batch Action Error", description: err.message }, true)
+    } finally {
+      setConfirmOpen(false)
+      setLoading(false)
+    }
+  }
 
   async function loadAll() {
-    setLoading(true);
-    setError(null);
+    setLoading(true)
+    setError(null)
     try {
-      const q = showArchived ? "includeArchived=true" : "";
+      const q = showArchived ? "includeArchived=true" : ""
 
       const [rDoc, rCourse, rSec, rSecQ] = await Promise.all([
         fetch(`/api/doc-types?admin=true${q ? "&" + q : ""}`),
         fetch(`/api/courses${q ? "?" + q : ""}`),
         fetch(`/api/sections${q ? "?" + q : ""}`),
-        fetch("/api/system/security-questions")
-      ]);
+        fetch("/api/system/security-questions"),
+      ])
 
-      const jDoc = await rDoc.json();
-      const jCourse = await rCourse.json();
-      const jSec = await rSec.json();
-      const jSecQ = await rSecQ.json();
+      const jDoc = await rDoc.json()
+      const jCourse = await rCourse.json()
+      const jSec = await rSec.json()
+      const jSecQ = await rSecQ.json()
 
-      if (!rDoc.ok || !jDoc.ok) throw new Error(jDoc.error || "Failed doc-types");
-      if (!rCourse.ok || !jCourse.ok) throw new Error(jCourse.error || "Failed courses");
-      if (!rSec.ok || !jSec.ok) throw new Error(jSec.error || "Failed sections");
+      if (!rDoc.ok || !jDoc.ok)
+        throw new Error(jDoc.error || "Failed doc-types")
+      if (!rCourse.ok || !jCourse.ok)
+        throw new Error(jCourse.error || "Failed courses")
+      if (!rSec.ok || !jSec.ok) throw new Error(jSec.error || "Failed sections")
 
-      setDocTypes(jDoc.data);
-      setCourses(jCourse.data);
-      setSections(jSec.data);
+      setDocTypes(jDoc.data)
+      setCourses(jCourse.data)
+      setSections(jSec.data)
 
       if (jSecQ.ok && Array.isArray(jSecQ.data)) {
-        const qList = [...jSecQ.data, "", "", "", "", ""].slice(0, 5);
-        setSecurityQuestions(qList);
+        const qList = [...jSecQ.data, "", "", "", "", ""].slice(0, 5)
+        setSecurityQuestions(qList)
       }
     } catch (err) {
-      setError(err.message);
+      setError(err.message)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }
 
-  // --- ACTIONS: Document Types ---
-  async function addDocType(e) {
-    e.preventDefault();
-    if (!newDocTypeName.trim()) return;
-    try {
-      const res = await fetch("/api/doc-types?admin=true", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newDocTypeName.trim() }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || "Add failed");
-      logAdminAction({
-        action: "Create Document Type",
-        details: `created new document type identifier '${newDocTypeName.trim()}'`,
-        entityType: "DocumentType",
-        entityId: json.data?.id
-      });
-      setNewDocTypeName("");
-      setIsAddDocTypeOpen(false);
-      showToast({ title: "Success", description: "Document type added." });
-      loadAll();
-    } catch (err) {
-      showToast({ title: "Error", description: err.message }, true);
-    }
-  }
 
-  async function updDocType(e) {
-    e.preventDefault();
-    if (!editDocType.name.trim()) return;
-    try {
-      const res = await fetch(`/api/doc-types?id=${editDocType.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editDocType.name.trim() }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || "Update failed");
-      logAdminAction({
-        action: "Update Document Type",
-        details: `updated configuration for document type '${editDocType.name.trim()}'`,
-        entityType: "DocumentType",
-        entityId: editDocType.id
-      });
-      setIsEditDocTypeOpen(false);
-      showToast({ title: "Success", description: "Document type updated." });
-      loadAll();
-    } catch (err) {
-      showToast({ title: "Error", description: err.message }, true);
-    }
-  }
 
-  async function delDocType(id, name) {
-    try {
-      const res = await fetch(`/api/doc-types?id=${id}`, { method: "DELETE" });
-      const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || "Archive failed");
-      logAdminAction({
-        action: "Archive Document Type",
-        details: `archived document type '${name || "Unknown"}' and disabled its requirement logic`,
-        severity: "WARNING",
-        entityType: "DocumentType",
-        entityId: id
-      });
-      setConfirmOpen(false);
-      showToast({ title: "Success", description: "Document type archived." });
-      loadAll();
-    } catch (err) {
-      showToast({ title: "Error", description: err.message }, true);
-    }
-  }
-
-  async function resDocType(id, name) {
-    try {
-      const res = await fetch(`/api/doc-types?id=${id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "Active" })
-      });
-      const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || "Restore failed");
-      logAdminAction({
-        action: "Restore Document Type",
-        details: `restored document type '${name || "Unknown"}' from system archive`,
-        entityType: "DocumentType",
-        entityId: id
-      });
-      setConfirmOpen(false);
-      showToast({ title: "Success", description: "Document type restored." });
-      loadAll();
-    } catch (err) {
-      showToast({ title: "Error", description: err.message }, true);
-    }
-  }
-
-  // --- ACTIONS: Courses ---
-  async function addCourse(e) {
-    e.preventDefault();
-    if (!newCourseCode.trim() || !newCourseName.trim()) return;
-    try {
-      const res = await fetch("/api/courses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          code: newCourseCode.trim(),
-          name: newCourseName.trim(),
-          blocks: newCourseBlocks.filter(b => b.trim()),
-        }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || "Add failed");
-      logAdminAction({
-        action: "Create Degree Program",
-        details: `deployed new academic program '${newCourseCode.trim()}' (${newCourseName.trim()}) with ${newCourseBlocks.filter(b => b.trim()).length} block(s)`,
-        entityType: "Course",
-        entityId: newCourseCode.trim()
-      });
-      setNewCourseCode("");
-      setNewCourseName("");
-      setNewCourseBlocks([""]);
-      setIsAddCourseOpen(false);
-      showToast({ title: "Success", description: "Degree program added." });
-      loadAll();
-    } catch (err) {
-      showToast({ title: "Error", description: err.message }, true);
-    }
-  }
-
-  async function updCourse(e) {
-    e.preventDefault();
-    if (!editCourse.code.trim() || !editCourse.name.trim()) return;
-    try {
-      const res = await fetch(`/api/courses?id=${editCourse.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          code: editCourse.code.trim(),
-          name: editCourse.name.trim(),
-        }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || "Update failed");
-      logAdminAction({
-        action: "Update Degree Program",
-        details: `updated designation for program '${editCourse.code.trim()}' to '${editCourse.name.trim()}'`,
-        entityType: "Course",
-        entityId: editCourse.id
-      });
-      setIsEditCourseOpen(false);
-      showToast({ title: "Success", description: "Degree program updated." });
-      loadAll();
-    } catch (err) {
-      showToast({ title: "Error", description: err.message }, true);
-    }
-  }
-
-  async function delCourse(id, code) {
-    try {
-      const res = await fetch(`/api/courses?id=${id}`, { method: "DELETE" });
-      const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || "Archive failed");
-      logAdminAction({
-        action: "Archive Degree Program",
-        details: `archived academic program '${code || "Unknown"}' and all associated enrollment routes`,
-        severity: "WARNING",
-        entityType: "Course",
-        entityId: id
-      });
-      setConfirmOpen(false);
-      showToast({ title: "Success", description: "Degree program archived." });
-      loadAll();
-    } catch (err) {
-      showToast({ title: "Error", description: err.message }, true);
-    }
-  }
-
-  async function resCourse(id, code) {
-    try {
-      const res = await fetch(`/api/courses?id=${id}&restore=true`, { method: "DELETE" });
-      const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || "Restore failed");
-      logAdminAction({
-        action: "Restore Degree Program",
-        details: `restored academic program '${code || "Unknown"}' to active deployment status`,
-        entityType: "Course",
-        entityId: id
-      });
-      setConfirmOpen(false);
-      showToast({ title: "Success", description: "Degree program restored." });
-      loadAll();
-    } catch (err) {
-      showToast({ title: "Error", description: err.message }, true);
-    }
-  }
-
-  // --- ACTIONS: Sections ---
-  async function addSection(e) {
-    e.preventDefault();
-    if (!secName.trim()) return;
-    try {
-      const res = await fetch("/api/sections", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: secName.trim(),
-          courseCode: secCourseCode.trim() || null,
-        }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || "Add failed");
-      logAdminAction({
-        action: "Create Course Block",
-        details: `created section block '${secName.trim()}' assigned to program '${secCourseCode.trim()}'`,
-        entityType: "Section",
-        entityId: json.data?.id
-      });
-      setSecName("");
-      setSecCourseCode("");
-      setIsAddSectionOpen(false);
-      showToast({ title: "Success", description: "Section block created." });
-      loadAll();
-    } catch (err) {
-      showToast({ title: "Error", description: err.message }, true);
-    }
-  }
-
-  async function updSection(e) {
-    e.preventDefault();
-    if (!editSection.name.trim()) return;
-    try {
-      const res = await fetch(`/api/sections?id=${editSection.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: editSection.name.trim(),
-          courseCode: editSection.courseCode.trim() || null,
-        }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || "Update failed");
-      logAdminAction({
-        action: "Update Course Block",
-        details: `updated block identifier to '${editSection.name.trim()}' and re-assigned to program '${editSection.courseCode.trim()}'`,
-        entityType: "Section",
-        entityId: editSection.id
-      });
-      setIsEditSectionOpen(false);
-      showToast({ title: "Success", description: "Section block updated." });
-      loadAll();
-    } catch (err) {
-      showToast({ title: "Error", description: err.message }, true);
-    }
-  }
-
-  async function delSection(id, name) {
-    try {
-      const res = await fetch(`/api/sections?id=${id}`, { method: "DELETE" });
-      const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || "Archive failed");
-      logAdminAction({
-        action: "Archive Course Block",
-        details: `archived course block identifier '${name || "Unknown"}'`,
-        severity: "WARNING",
-        entityType: "Section",
-        entityId: id
-      });
-      setConfirmOpen(false);
-      showToast({ title: "Success", description: "Section block archived." });
-      loadAll();
-    } catch (err) {
-      showToast({ title: "Error", description: err.message }, true);
-    }
-  }
-
-  async function resSection(id, name) {
-    try {
-      const res = await fetch(`/api/sections?id=${id}&restore=true`, { method: "DELETE" });
-      const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || "Restore failed");
-      logAdminAction({
-        action: "Restore Course Block",
-        details: `restored course block '${name || "Unknown"}' to active status`,
-        entityType: "Section",
-        entityId: id
-      });
-      setConfirmOpen(false);
-      showToast({ title: "Success", description: "Section block restored." });
-      loadAll();
-    } catch (err) {
-      showToast({ title: "Error", description: err.message }, true);
-    }
-  }
 
   const handleSaveSecurityQuestions = async (e, totpToken = null) => {
-    if (e) e.preventDefault();
-    setSecuritySaving(true);
-    const headers = { "Content-Type": "application/json" };
+    if (e) e.preventDefault()
+    setSecuritySaving(true)
+    const headers = { "Content-Type": "application/json" }
     if (totpToken) {
-      headers["x-totp-token"] = totpToken;
+      headers["x-totp-token"] = totpToken
     }
     try {
-      const filtered = securityQuestions.filter(q => q.trim() !== "");
+      const filtered = securityQuestions.filter((q) => q.trim() !== "")
       const res = await fetch("/api/system/security-questions", {
         method: "PUT",
         headers,
         body: JSON.stringify({ questions: filtered }),
-      });
-      const json = await res.json();
+      })
+      const json = await res.json()
 
       if (res.status === 403 && json?.requiresTOTP && onVerifyTOTP) {
         if (totpToken) {
-          throw new Error(json.error || "Invalid verification code");
+          throw new Error(json.error || "Invalid verification code")
         }
-        await onVerifyTOTP((token) => handleSaveSecurityQuestions(null, token));
-        return;
+        await onVerifyTOTP((token) => handleSaveSecurityQuestions(null, token))
+        return
       }
 
-      if (!res.ok || !json.ok) throw new Error(json.error || "Failed to save questions");
-      logAdminAction({
-        action: "Update Security Policy",
-        details: `updated global security question framework (Total: ${filtered.length} active challenges)`,
-        severity: "CRITICAL",
-        entityType: "Security"
-      });
-      showToast({ title: "Success", description: "Global security questions updated." });
-      loadAll();
+      if (!res.ok || !json.ok)
+        throw new Error(json.error || "Failed to save questions")
+      showToast({
+        title: "Success",
+        description: "Global security questions updated.",
+      })
+      loadAll()
     } catch (err) {
-      if (totpToken) throw err;
-      showToast({ title: "Error", description: err.message }, true);
+      if (totpToken) throw err
+      showToast({ title: "Error", description: err.message }, true)
     } finally {
-      setSecuritySaving(false);
+      setSecuritySaving(false)
     }
-  };
+  }
+
+  // --- ACTIONS: Export Taxonomy ---
+  const downloadCsv = (filename, content) => {
+    const blob = new Blob([content], { type: "text/csv;charset=utf-8;" })
+    const link = document.createElement("a")
+    const url = URL.createObjectURL(blob)
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 16)
+    const finalFilename = filename.replace(".csv", `_${timestamp}.csv`)
+    
+    link.setAttribute("href", url)
+    link.setAttribute("download", finalFilename)
+    link.style.visibility = "hidden"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  const escapeCsv = (val) => {
+    if (val === null || val === undefined) return ""
+    const str = String(val)
+    if (str.includes(",") || str.includes("\"") || str.includes("\n")) {
+      return `"${str.replace(/"/g, "\"\"")}"`
+    }
+    return str
+  }
+
+  const handleExportDocTypes = () => {
+    const headers = "Category,Name,Code\n"
+    const csvContent = docTypes
+      .map((dt) => `DocumentType,${escapeCsv(dt.name)},`)
+      .join("\n")
+    downloadCsv("taxonomy_document_types.csv", headers + csvContent)
+    logAdminAction({
+      action: "Export Taxonomy",
+      details: `exported ${docTypes.length} document type configurations to CSV`,
+      entityType: "System",
+    })
+    showToast({
+      title: "Export Success",
+      description: "Document types taxonomy has been successfully exported to CSV.",
+    })
+  }
+
+  const handleExportCourses = () => {
+    const headers = "Category,Name,Code\n"
+    const csvContent = courses
+      .map((c) => `Course,${escapeCsv(c.name)},${escapeCsv(c.code)}`)
+      .join("\n")
+    downloadCsv("taxonomy_degree_programs.csv", headers + csvContent)
+    logAdminAction({
+      action: "Export Taxonomy",
+      details: `exported ${courses.length} degree program configurations to CSV`,
+      entityType: "System",
+    })
+    showToast({
+      title: "Export Success",
+      description: "Degree programs configuration has been successfully exported to CSV.",
+    })
+  }
+
+  const handleExportSections = () => {
+    const headers = "Category,Name,Code\n"
+    const csvContent = sections
+      .map((s) => `Section,${escapeCsv(s.name)},${escapeCsv(s.course_code || "")}`)
+      .join("\n")
+    downloadCsv("taxonomy_course_blocks.csv", headers + csvContent)
+    logAdminAction({
+      action: "Export Taxonomy",
+      details: `exported ${sections.length} course block configurations to CSV`,
+      entityType: "System",
+    })
+    showToast({
+      title: "Export Success",
+      description: "Course blocks configuration has been successfully exported to CSV.",
+    })
+  }
 
   // --- ACTIONS: Bulk Import (Staged) ---
-  const [importFile, setImportFile] = useState(null);
-  const [importRows, setImportRows] = useState([]); // [{ category, name, code, error, index }]
-  const [importStatus, setImportStatus] = useState("idle"); // idle, preview, importing, complete
-  const [importResults, setImportResults] = useState(null);
+  const [importFile, setImportFile] = useState(null)
+  const [importRows, setImportRows] = useState([]) // [{ category, name, code, error, index }]
+  const [importSelected, setImportSelected] = useState({}) // { [index]: boolean }
+  const [importStatus, setImportStatus] = useState("idle") // idle, preview, importing, complete
+  const [importResults, setImportResults] = useState(null)
+  const [importDropActive, setImportDropActive] = useState(false)
 
   async function handleCsvSelect(e) {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImportFile(file);
-    setImportStatus("preview");
-    setImportResults(null);
-    
+    const file = e.target.files?.[0] || e.dataTransfer?.files?.[0]
+    if (!file) return
+    setImportFile(file)
+    setImportStatus("preview")
+    setImportResults(null)
+
     try {
-      const text = await file.text();
-      const lines = text.split(/\r?\n/).filter((l) => l.trim());
+      const text = await file.text()
+      const lines = text.split(/\r?\n/).filter((l) => l.trim())
       if (lines.length < 2) {
-        throw new Error("CSV must have a header row and at least one data row");
+        throw new Error("CSV must have a header row and at least one data row")
       }
 
       const headers = lines[0]
         .split(",")
-        .map((h) => h.trim().toLowerCase().replace(/\s+/g, ""));
+        .map((h) => h.trim().toLowerCase().replace(/\s+/g, ""))
 
-      const requiredCols = ["category", "name"];
-      const missingCols = requiredCols.filter((c) => !headers.includes(c));
+      const requiredCols = ["category", "name"]
+      const missingCols = requiredCols.filter((c) => !headers.includes(c))
       if (missingCols.length > 0) {
-        throw new Error(`Missing required columns: ${missingCols.join(", ")}`);
+        throw new Error(`Missing required columns: ${missingCols.join(", ")}`)
       }
 
+      const initialSelection = {}
       const parsed = lines.slice(1).map((line, idx) => {
-        const vals = line.split(",");
-        const row = {};
+        const vals = line.split(",")
+        const row = {}
         headers.forEach((h, hIdx) => {
-          row[h] = vals[hIdx]?.trim() || "";
-        });
+          row[h] = vals[hIdx]?.trim() || ""
+        })
 
-        const category = row.category || "";
-        const name = row.name || "";
-        const code = row.code || "";
+        const category = row.category || ""
+        const name = row.name || ""
+        const code = row.code || ""
 
-        let error = "";
-        if (!category) error = "Missing Category";
-        else if (!name) error = "Missing Name";
-        else if (!["documenttype", "course", "section"].includes(category.toLowerCase())) {
-          error = "Invalid Category";
+        let error = ""
+        if (!category) error = "Missing Category"
+        else if (!name) error = "Missing Name"
+        else if (
+          !["documenttype", "course", "section"].includes(
+            category.toLowerCase()
+          )
+        ) {
+          error = "Invalid Category"
+        } else if (category.toLowerCase() === "section") {
+          // Deep Validation: Check if the program code exists
+          const exists = courses.some(
+            (c) => c.code.toLowerCase() === code.toLowerCase()
+          )
+          if (!exists) {
+            error = "Program Not Found"
+          }
         }
 
-        return { category, name, code, error, index: idx + 1 };
-      });
+        const rowIndex = idx + 1
+        if (!error) {
+          initialSelection[rowIndex] = true
+        }
 
-      setImportRows(parsed);
+        return { category, name, code, error, index: rowIndex }
+      })
+
+      setImportRows(parsed)
+      setImportSelected(initialSelection)
     } catch (err) {
-      showToast({ title: "Parsing Error", description: err.message }, true);
-      setImportFile(null);
-      setImportStatus("idle");
+      showToast({ title: "Parsing Error", description: err.message }, true)
+      setImportFile(null)
+      setImportStatus("idle")
     } finally {
-      e.target.value = "";
+      e.target.value = ""
+    }
+  }
+
+  const toggleImportRowSelected = (index) => {
+    setImportSelected((prev) => ({
+      ...prev,
+      [index]: !prev[index],
+    }))
+  }
+
+  const toggleImportSelectAll = (checked) => {
+    if (!checked) {
+      setImportSelected({})
+    } else {
+      const next = {}
+      importRows.forEach((r) => {
+        if (!r.error) next[r.index] = true
+      })
+      setImportSelected(next)
+    }
+  }
+
+  const handleUpdateImportRow = (index, newData) => {
+    setImportRows((prev) => {
+      const updated = prev.map((row) => {
+        if (row.index === index) {
+          const category = newData.category || ""
+          const name = newData.name || ""
+          const code = newData.code || ""
+
+          let error = ""
+          if (!category) error = "Missing Category"
+          else if (!name) error = "Missing Name"
+          else if (
+            !["documenttype", "course", "section"].includes(
+              category.toLowerCase()
+            )
+          ) {
+            error = "Invalid Category"
+          } else if (category.toLowerCase() === "section") {
+            // Deep Validation: Check if the program code exists
+            const exists = courses.some(
+              (c) => c.code.toLowerCase() === code.toLowerCase()
+            )
+            if (!exists) {
+              error = "Program Not Found"
+            }
+          }
+
+          if (!error) {
+            setImportSelected((prevSel) => ({ ...prevSel, [index]: true }))
+          } else {
+            setImportSelected((prevSel) => ({ ...prevSel, [index]: false }))
+          }
+
+          return { ...row, category, name, code, error }
+        }
+        return row
+      })
+      return updated
+    })
+  }
+
+  const handleManualAddRow = (newData) => {
+    const category = newData.category || ""
+    const name = newData.name || ""
+    const code = newData.code || ""
+
+    let error = ""
+    if (!category) error = "Missing Category"
+    else if (!name) error = "Missing Name"
+    else if (
+      !["documenttype", "course", "section"].includes(
+        category.toLowerCase()
+      )
+    ) {
+      error = "Invalid Category"
+    } else if (category.toLowerCase() === "section") {
+      const exists = courses.some(
+        (c) => c.code.toLowerCase() === code.toLowerCase()
+      )
+      if (!exists) {
+        error = "Program Not Found"
+      }
+    }
+
+    const nextIndex = importRows.length > 0 ? Math.max(...importRows.map((r) => r.index)) + 1 : 1
+    const newRow = { category, name, code, error, index: nextIndex }
+
+    setImportRows((prev) => [newRow, ...prev])
+    if (!error) {
+      setImportSelected((prev) => ({ ...prev, [nextIndex]: true }))
     }
   }
 
   async function executeBulkImport() {
-    const validRows = importRows.filter(r => !r.error);
-    if (validRows.length === 0) return;
+    const validAndSelectedRows = importRows.filter(
+      (r) => !r.error && importSelected[r.index]
+    )
+    if (validAndSelectedRows.length === 0) return
 
-    setImportStatus("importing");
+    setImportStatus("importing")
     try {
       const res = await fetch("/api/system/bulk-import", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ rows: validRows }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || "Import failed");
+        body: JSON.stringify({ rows: validAndSelectedRows }),
+      })
+      const json = await res.json()
+      if (!res.ok || !json.ok) throw new Error(json.error || "Import failed")
 
-      logAdminAction({
-        action: "Bulk Data Import",
-        details: `processed batch taxonomy ingestion: ${json.data?.successCount || 0} successful, ${json.data?.failCount || 0} failed`,
-        severity: json.data?.failCount > 0 ? "WARNING" : "INFO",
-        entityType: "System"
-      });
+      const s = json.data?.successCount || 0
+      const f = json.data?.failCount || 0
 
-      setImportResults(json.data);
-      setImportStatus("complete");
-      showToast({
-        title: "Import Successful",
-        description: `Processed ${json.data?.successCount || 0} taxonomy records.`,
-      });
-      loadAll();
+      setImportResults(json.data)
+      setImportStatus("complete")
+      if (s > 0 && f === 0) {
+        showToast({
+          title: "Import Successful",
+          description: `Successfully added ${s} new records to the system.`,
+        })
+      } else if (s > 0 && f > 0) {
+        showToast(
+          {
+            title: "Partial Import",
+            description: `Added ${s} records, but ${f} duplicates were skipped.`,
+          },
+          "warning"
+        )
+      } else {
+        showToast(
+          {
+            title: "No Records Added",
+            description: `All ${f} selected entries already exist in the system repository.`,
+          },
+          "warning"
+        )
+      }
+
+      loadAll()
     } catch (err) {
-      showToast({ title: "Import Error", description: err.message }, true);
-      setImportStatus("preview");
+      showToast({ title: "Import Error", description: err.message }, true)
+      setImportStatus("preview")
     }
   }
 
   function resetImport() {
-    setImportFile(null);
-    setImportRows([]);
-    setImportStatus("idle");
-    setImportResults(null);
+    setImportFile(null)
+    setImportRows([])
+    setImportSelected({})
+    setImportStatus("idle")
+    setImportResults(null)
   }
 
   function handleCopySample() {
-    const sample = "Category,Name,Code\nDocumentType,Transcript of Records,\nCourse,Bachelor of Science in Accountancy,BSA\nSection,Section 1,BSA";
-    navigator.clipboard.writeText(sample);
-    showToast({ title: "Copied", description: "CSV sample copied to clipboard." });
+    const sample =
+      "Category,Name,Code\nDocumentType,Transcript of Records,\nCourse,Bachelor of Science in Accountancy,BSA\nSection,Section 1,BSA"
+    navigator.clipboard.writeText(sample)
+    showToast({
+      title: "Copied",
+      description: "CSV sample copied to clipboard.",
+    })
   }
 
-  if (loading && !docTypes.length) {
+  /* if (loading && !docTypes.length) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-10 w-full max-w-md rounded-brand" />
         <Skeleton className="h-[400px] w-full rounded-brand" />
       </div>
-    );
-  }
+    )
+  } */
 
-  const activeError = errorProp || error;
+  const activeError = errorProp || error
 
   if (activeError) {
     return (
-      <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter min-h-0">
-        <Card className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col min-h-0">
-          <CardContent className="p-6 flex-1 flex flex-col min-h-0">
-            <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+      <div className="animate-fade-in font-inter flex w-full flex-col gap-4">
+        <Card className="flex flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm">
+          <CardContent className="flex flex-col p-6">
+            <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500">
               <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
                   <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
                 </EmptyMedia>
-                <EmptyTitle className="text-lg font-bold text-gray-900">Could not load configuration</EmptyTitle>
-                <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                <EmptyTitle className="text-lg font-bold text-gray-900">
+                  Could not load configuration
+                </EmptyTitle>
+                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600">
                   {activeError}
                 </EmptyDescription>
               </EmptyHeader>
@@ -621,14 +809,14 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
   const archivedToggle = (
-    <div className="ml-auto inline-flex items-center p-1 bg-gray-100 rounded-lg border border-gray-200 shadow-sm h-10 shrink-0">
+    <div className="ml-auto inline-flex h-10 shrink-0 items-center rounded-lg border border-gray-200 bg-gray-100 p-1 shadow-sm">
       <button
         onClick={() => setShowArchived(false)}
-        className={`flex items-center gap-2 px-3 h-full rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${
+        className={`flex h-full items-center gap-2 rounded-md px-3 text-[10px] font-black tracking-widest uppercase transition-all ${
           !showArchived
             ? "bg-pup-maroon text-white shadow-md ring-1 ring-black/5"
             : "text-gray-500 hover:text-gray-700"
@@ -639,7 +827,7 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
       </button>
       <button
         onClick={() => setShowArchived(true)}
-        className={`flex items-center gap-2 px-3 h-full rounded-md text-[10px] font-black uppercase tracking-widest transition-all ${
+        className={`flex h-full items-center gap-2 rounded-md px-3 text-[10px] font-black tracking-widest uppercase transition-all ${
           showArchived
             ? "bg-amber-600 text-white shadow-md ring-1 ring-black/5"
             : "text-gray-500 hover:text-gray-700"
@@ -649,1458 +837,245 @@ export default function SystemConfigTab({ showToast, logAdminAction, onVerifyTOT
         <span>Archive Vault</span>
       </button>
     </div>
-  );
+  )
 
   return (
-    <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter min-h-0">
-      <Tabs
-        defaultValue="document-types"
-        value={activeSubTab}
-        onValueChange={setActiveSubTab}
-        orientation="horizontal"
-        className="flex-1 min-h-0 flex flex-col"
-      >
-        <div className="shrink-0 flex flex-col sm:flex-row items-center gap-4">
-          <div className="inline-flex p-1 bg-gray-100/80 rounded-brand border border-gray-200/50 backdrop-blur-sm h-auto">
-            <button
-              type="button"
-              onClick={() => setActiveSubTab("document-types")}
-              className={`flex items-center gap-2.5 px-5 py-2 rounded-brand text-sm font-bold transition-all duration-200 ${
-                activeSubTab === "document-types"
-                  ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-white/50"
-              }`}
-            >
-              <i className={`ph-bold ph-files ${activeSubTab === "document-types" ? "" : "text-gray-400"}`}></i>
-              <span>DOCUMENT TYPES</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveSubTab("degree-programs")}
-              className={`flex items-center gap-2.5 px-5 py-2 rounded-brand text-sm font-bold transition-all duration-200 ${
-                activeSubTab === "degree-programs"
-                  ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-white/50"
-              }`}
-            >
-              <i className={`ph-bold ph-books ${activeSubTab === "degree-programs" ? "" : "text-gray-400"}`}></i>
-              <span>DEGREE PROGRAMS</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveSubTab("course-blocks")}
-              className={`flex items-center gap-2.5 px-5 py-2 rounded-brand text-sm font-bold transition-all duration-200 ${
-                activeSubTab === "course-blocks"
-                  ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-white/50"
-              }`}
-            >
-              <i className={`ph-bold ph-list-numbers ${activeSubTab === "course-blocks" ? "" : "text-gray-400"}`}></i>
-              <span>COURSE BLOCKS</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveSubTab("bulk-import")}
-              className={`flex items-center gap-2.5 px-5 py-2 rounded-brand text-sm font-bold transition-all duration-200 ${
-                activeSubTab === "bulk-import"
-                  ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-white/50"
-              }`}
-            >
-              <i className={`ph-bold ph-upload-simple ${activeSubTab === "bulk-import" ? "" : "text-gray-400"}`}></i>
-              <span>IMPORTS</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveSubTab("security-questions")}
-              className={`flex items-center gap-2.5 px-5 py-2 rounded-brand text-sm font-bold transition-all duration-200 ${
-                activeSubTab === "security-questions"
-                  ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
-                  : "text-gray-500 hover:text-gray-700 hover:bg-white/50"
-              }`}
-            >
-              <i className={`ph-bold ph-lock-key ${activeSubTab === "security-questions" ? "" : "text-gray-400"}`}></i>
-              <span>SECURITY</span>
-            </button>
+    <TooltipProvider delayDuration={200}>
+      <div className="animate-fade-in font-inter flex w-full flex-col gap-4">
+        <Tabs
+          defaultValue="document-types"
+          value={activeSubTab}
+          onValueChange={setActiveSubTab}
+          orientation="horizontal"
+          className="flex min-h-0 flex-1 flex-col"
+        >
+          <div className="flex shrink-0 flex-col items-center gap-4 sm:flex-row">
+            <div className="inline-flex h-auto rounded-brand border border-gray-200/50 bg-gray-100/80 p-1 backdrop-blur-sm">
+              <button
+                type="button"
+                onClick={() => setActiveSubTab("document-types")}
+                className={`flex items-center gap-2.5 rounded-brand px-5 py-2 text-sm font-bold transition-all duration-200 active:scale-95 ${
+                  activeSubTab === "document-types"
+                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
+                    : "text-gray-500 hover:bg-white/50 hover:text-gray-700"
+                }`}
+              >
+                <i
+                  className={`ph-bold ph-files ${activeSubTab === "document-types" ? "" : "text-gray-400"}`}
+                ></i>
+                <span>DOCUMENT TYPES</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveSubTab("degree-programs")}
+                className={`flex items-center gap-2.5 rounded-brand px-5 py-2 text-sm font-bold transition-all duration-200 active:scale-95 ${
+                  activeSubTab === "degree-programs"
+                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
+                    : "text-gray-500 hover:bg-white/50 hover:text-gray-700"
+                }`}
+              >
+                <i
+                  className={`ph-bold ph-books ${activeSubTab === "degree-programs" ? "" : "text-gray-400"}`}
+                ></i>
+                <span>DEGREE PROGRAMS</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveSubTab("course-blocks")}
+                className={`flex items-center gap-2.5 rounded-brand px-5 py-2 text-sm font-bold transition-all duration-200 active:scale-95 ${
+                  activeSubTab === "course-blocks"
+                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
+                    : "text-gray-500 hover:bg-white/50 hover:text-gray-700"
+                }`}
+              >
+                <i
+                  className={`ph-bold ph-list-numbers ${activeSubTab === "course-blocks" ? "" : "text-gray-400"}`}
+                ></i>
+                <span>COURSE BLOCKS</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveSubTab("bulk-import")}
+                className={`flex items-center gap-2.5 rounded-brand px-5 py-2 text-sm font-bold transition-all duration-200 active:scale-95 ${
+                  activeSubTab === "bulk-import"
+                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
+                    : "text-gray-500 hover:bg-white/50 hover:text-gray-700"
+                }`}
+              >
+                <i
+                  className={`ph-bold ph-upload-simple ${activeSubTab === "bulk-import" ? "" : "text-gray-400"}`}
+                ></i>
+                <span>IMPORTS</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveSubTab("security-questions")}
+                className={`flex items-center gap-2.5 rounded-brand px-5 py-2 text-sm font-bold transition-all duration-200 active:scale-95 ${
+                  activeSubTab === "security-questions"
+                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
+                    : "text-gray-500 hover:bg-white/50 hover:text-gray-700"
+                }`}
+              >
+                <i
+                  className={`ph-bold ph-lock-key ${activeSubTab === "security-questions" ? "" : "text-gray-400"}`}
+                ></i>
+                <span>SECURITY</span>
+              </button>
+            </div>
           </div>
-          {activeSubTab !== "bulk-import" && activeSubTab !== "security-questions" && archivedToggle}
-        </div>
 
-        <Card className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm flex flex-col p-0 min-h-[500px] relative mt-4">
-          <TabsContent value="document-types" className="flex-1 flex flex-col min-h-0 m-0 border-0 focus-visible:ring-0">
-            <div className="flex flex-col h-full animate-fade-in w-full overflow-hidden">
-              <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
-                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
-                      <i className="ph-duotone ph-files text-2xl"></i>
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl font-black text-gray-900 tracking-tight leading-none flex items-center gap-2">
-                        Document Types
-                        {showArchived && (
-                          <Badge className="bg-red-50 text-red-700 border-red-100 font-black text-[10px]">ARCHIVE VIEW</Badge>
-                        )}
-                      </CardTitle>
-                      <CardDescription className="text-sm font-medium text-gray-500 mt-1.5">
-                        Manage formal document categories and digitization requirements.
-                      </CardDescription>
-                    </div>
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-3 items-end">
-                    <div className="w-full sm:w-64">
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">Search Document Types</label>
-                        {docSearch && (
-                          <button onClick={() => setDocSearch("")} className="text-[9px] font-bold text-pup-maroon hover:underline uppercase">Clear</button>
-                        )}
-                      </div>
-                      <div className="relative">
-                        <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                        <Input
-                          type="text"
-                          placeholder="Search document names..."
-                          className="pl-9 h-10 bg-white border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon"
-                          value={docSearch}
-                          onChange={(e) => setDocSearch(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <Button
-                      onClick={() => setIsAddDocTypeOpen(true)}
-                      className="bg-pup-maroon text-white h-10 px-5 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors w-full sm:w-auto"
-                    >
-                      <i className="ph-bold ph-plus"></i> ADD DOCUMENT TYPE
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <div className="flex-1 overflow-auto min-h-0 bg-white relative rounded-brand border border-gray-200">
-                <table className="min-w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                    <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
-                      <th className="p-3 font-bold px-6">Document Name</th>
-                      <th className="p-3 font-bold px-6 w-32">Status</th>
-                      <th className="p-3 font-bold text-right px-6 w-48">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {filteredDocTypes.map((dt) => (
-                      <tr
-                        key={dt.id}
-                        className={`hover:bg-gray-50 transition-colors group cursor-default ${dt.status === "Archived" ? "opacity-75" : ""}`}
-                      >
-                        <td className="p-3 px-6 font-bold text-gray-800">
-                          {dt.name}
-                        </td>
-                        <td className="p-3 px-6">
-                           {dt.status === "Archived" ? (
-                             <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 font-bold uppercase text-[9px] tracking-wider px-2 py-0.5">
-                               ARCHIVED
-                             </Badge>
-                           ) : (
-                             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 font-bold uppercase text-[9px] tracking-wider px-2 py-0.5">
-                               ACTIVE
-                             </Badge>
-                           )}
-                        </td>
-                        <td className="p-3 px-6 text-right">
-                          <div className="inline-flex items-center justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={dt.status === "Archived"}
-                              onClick={() => {
-                                setEditDocType({ id: dt.id, name: dt.name });
-                                setIsEditDocTypeOpen(true);
-                              }}
-                              className="px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50 hover:border-pup-maroon"
-                            >
-                              <i className="ph-bold ph-pencil-simple mr-1.5"></i>
-                              EDIT
-                            </Button>
-                            {dt.status === "Archived" ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setConfirmPayload({
-                                    title: "Restore Document Type",
-                                    message: `Restore document type "${dt.name}"? It will be visible for new records again.`,
-                                    confirmLabel: "Restore",
-                                    variant: "success",
-                                    onConfirm: () => resDocType(dt.id, dt.name),
-                                  });
-                                  setConfirmOpen(true);
-                                }}
-                                className="px-3 font-bold text-xs border-green-300 text-green-700 hover:text-green-800 hover:bg-green-50"
-                              >
-                                <i className="ph-bold ph-arrow-counter-clockwise mr-1.5"></i>
-                                RESTORE
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setConfirmPayload({
-                                    title: "Archive Document Type",
-                                    message: `Archive document type "${dt.name}"? This will hide it from new registrations but preserve history.`,
-                                    confirmLabel: "Archive",
-                                    variant: "danger",
-                                    onConfirm: () => delDocType(dt.id, dt.name),
-                                  });
-                                  setConfirmOpen(true);
-                                }}
-                                className="px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
-                              >
-                                <i className="ph-bold ph-archive mr-1.5"></i>
-                                ARCHIVE
-                              </Button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    {filteredDocTypes.length === 0 && (
-                      <tr className="border-0 hover:bg-transparent">
-                        <td colSpan={3} className="p-0 border-0">
-                          <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
-                            <EmptyHeader className="flex flex-col items-center gap-0">
-                              <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                                <i className="ph-duotone ph-files text-3xl text-pup-maroon"></i>
-                              </EmptyMedia>
-                              <EmptyTitle className="text-lg font-bold text-gray-900">No document types found</EmptyTitle>
-                              <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                                {docSearch 
-                                  ? `No results matching "${docSearch}" in the current view.`
-                                  : showArchived
-                                    ? "There are no archived document types in the system."
-                                    : "Use the form above to add a new document configuration to the system framework."}
-                              </EmptyDescription>
-                            </EmptyHeader>
-                          </Empty>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="degree-programs" className="flex-1 flex flex-col min-h-0 m-0 border-0 focus-visible:ring-0">
-            <div className="flex flex-col h-full animate-fade-in w-full overflow-hidden">
-              <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
-                <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
-                      <i className="ph-duotone ph-books text-2xl"></i>
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl font-black text-gray-900 tracking-tight leading-none flex items-center gap-2">
-                        Degree Programs
-                        {showArchived && (
-                          <Badge className="bg-red-50 text-red-700 border-red-100 font-black text-[10px]">ARCHIVE VIEW</Badge>
-                        )}
-                      </CardTitle>
-                      <CardDescription className="text-sm font-medium text-gray-500 mt-1.5">
-                        Manage available university course paths and academic designations.
-                      </CardDescription>
-                    </div>
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-3 items-end">
-                    <div className="w-full sm:w-64">
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">Search Programs</label>
-                        {courseSearch && (
-                          <button onClick={() => setCourseSearch("")} className="text-[9px] font-bold text-pup-maroon hover:underline uppercase">Clear</button>
-                        )}
-                      </div>
-                      <div className="relative">
-                        <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                        <Input
-                          type="text"
-                          placeholder="Search code or name..."
-                          className="pl-9 h-10 bg-white border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon"
-                          value={courseSearch}
-                          onChange={(e) => setCourseSearch(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <Button
-                      onClick={() => setIsAddCourseOpen(true)}
-                      className="bg-pup-maroon text-white h-10 px-5 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors w-full sm:w-auto"
-                    >
-                      <i className="ph-bold ph-plus"></i> ADD DEGREE PROGRAM
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <div className="flex-1 overflow-auto min-h-0 bg-white relative rounded-brand border border-gray-200">
-                <table className="min-w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                    <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
-                      <th className="p-3 font-bold px-6 w-48">
-                        Course Code
-                      </th>
-                      <th className="p-3 font-bold px-6">Full Designation</th>
-                      <th className="p-3 font-bold px-6 w-32">Status</th>
-                      <th className="p-3 font-bold text-right px-6 w-56">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {filteredCourses.map((c) => (
-                      <tr
-                        key={c.id}
-                        className={`hover:bg-gray-50 transition-colors group cursor-default ${c.status === "Archived" ? "opacity-75" : ""}`}
-                      >
-                        <td className="p-3 px-6 font-black text-gray-900">
-                          {c.code}
-                        </td>
-                        <td className="p-3 px-6 font-bold text-gray-600">
-                          {c.name}
-                        </td>
-                        <td className="p-3 px-6">
-                           {c.status === "Archived" ? (
-                             <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 font-bold uppercase text-[9px] tracking-wider px-2 py-0.5">
-                               ARCHIVED
-                             </Badge>
-                           ) : (
-                             <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 font-bold uppercase text-[9px] tracking-wider px-2 py-0.5">
-                               ACTIVE
-                             </Badge>
-                           )}
-                        </td>
-                        <td className="p-3 px-6 text-right">
-                          <div className="inline-flex items-center justify-end gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={c.status === "Archived"}
-                              onClick={() => {
-                                setEditCourse({ id: c.id, code: c.code, name: c.name });
-                                setIsEditCourseOpen(true);
-                              }}
-                              className="px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50 hover:border-pup-maroon"
-                            >
-                              <i className="ph-bold ph-pencil-simple mr-1.5"></i>
-                              EDIT
-                            </Button>
-                            {c.status === "Archived" ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setConfirmPayload({
-                                    title: "Restore Degree Program",
-                                    message: `Restore program "${c.code}"? It will be visible for new records again.`,
-                                    confirmLabel: "Restore",
-                                    variant: "success",
-                                    onConfirm: () => resCourse(c.id, c.code),
-                                  });
-                                  setConfirmOpen(true);
-                                }}
-                                className="px-3 font-bold text-xs border-green-300 text-green-700 hover:text-green-800 hover:bg-green-50"
-                              >
-                                <i className="ph-bold ph-arrow-counter-clockwise mr-1.5"></i>
-                                RESTORE
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setConfirmPayload({
-                                    title: "Archive Degree Program",
-                                    message: `Archive degree program "${c.code}"? This will hide it from new registrations but preserve history.`,
-                                    confirmLabel: "Archive",
-                                    variant: "danger",
-                                    onConfirm: () => delCourse(c.id, c.code),
-                                  });
-                                  setConfirmOpen(true);
-                                }}
-                                className="px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
-                              >
-                                <i className="ph-bold ph-archive mr-1.5"></i>
-                                ARCHIVE
-                              </Button>
-                            )}
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                    {filteredCourses.length === 0 && (
-                      <tr className="border-0 hover:bg-transparent">
-                        <td colSpan={4} className="p-0 border-0">
-                          <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
-                            <EmptyHeader className="flex flex-col items-center gap-0">
-                              <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                                <i className="ph-duotone ph-books text-3xl text-pup-maroon"></i>
-                              </EmptyMedia>
-                              <EmptyTitle className="text-lg font-bold text-gray-900">No degree programs found</EmptyTitle>
-                              <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                                {courseSearch
-                                  ? `No results matching "${courseSearch}" in the current view.`
-                                  : showArchived
-                                    ? "There are no archived degree programs in the system."
-                                    : "Use the form above to deploy a new university course path."}
-                              </EmptyDescription>
-                            </EmptyHeader>
-                          </Empty>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="course-blocks" className="flex-1 flex flex-col min-h-0 m-0 border-0 focus-visible:ring-0">
-            <div className="flex flex-col h-full animate-fade-in w-full overflow-hidden">
-              <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6">
-                <div className="flex flex-col xl:flex-row xl:items-end justify-between gap-4">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
-                      <i className="ph-duotone ph-list-numbers text-2xl"></i>
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl font-black text-gray-900 tracking-tight leading-none flex items-center gap-2">
-                        Course Blocks
-                        {showArchived && (
-                          <Badge className="bg-red-50 text-red-700 border-red-100 font-black text-[10px]">ARCHIVE VIEW</Badge>
-                        )}
-                      </CardTitle>
-                      <CardDescription className="text-sm font-medium text-gray-500 mt-1.5">
-                        Construct logical section blocks and identifiers for student routing.
-                      </CardDescription>
-                    </div>
-                  </div>
-                  <div className="flex flex-col sm:flex-row gap-3 items-end">
-                    <div className="w-full sm:w-56">
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">Search Blocks</label>
-                        {sectionSearch && (
-                          <button onClick={() => setSectionSearch("")} className="text-[9px] font-bold text-pup-maroon hover:underline uppercase">Clear</button>
-                        )}
-                      </div>
-                      <div className="relative">
-                        <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                        <Input
-                          type="text"
-                          placeholder="Block name..."
-                          className="pl-9 h-10 bg-white border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon"
-                          value={sectionSearch}
-                          onChange={(e) => setSectionSearch(e.target.value)}
-                        />
-                      </div>
-                    </div>
-                    <div className="w-full sm:w-64">
-                      <div className="flex items-center justify-between mb-1">
-                        <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wide">
-                          Filter by Program
-                        </label>
-                        {selectedCourseFilter !== "" && (
-                          <button onClick={() => setSelectedCourseFilter("")} className="text-[9px] font-bold text-pup-maroon hover:underline uppercase">Clear</button>
-                        )}
-                      </div>
-                      <select
-                        className="h-10 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
-                        value={selectedCourseFilter}
-                        onChange={(e) => setSelectedCourseFilter(e.target.value)}
-                      >
-                        <option value="">All Degree Programs</option>
-                        {courses.map((c) => (
-                          <option key={c.code} value={c.code}>
-                            {c.code} - {c.name}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <Button
-                      onClick={() => {
-                        setSecCourseCode(selectedCourseFilter);
-                        setIsAddSectionOpen(true);
-                      }}
-                      className="h-10 bg-pup-maroon text-white px-5 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors w-full sm:w-auto shrink-0"
-                    >
-                      <i className="ph-bold ph-plus"></i> ADD COURSE BLOCK
-                    </Button>
-                  </div>
-                </div>
-              </CardHeader>
-              <div className="flex-1 overflow-auto min-h-0 bg-white relative rounded-brand border border-gray-200">
-                <table className="min-w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                    <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
-                      <th className="p-3 font-bold px-6 w-48">
-                        Degree Program
-                      </th>
-                      <th className="p-3 font-bold px-6">Block Identifier</th>
-                      <th className="p-3 font-bold px-6 w-32">Status</th>
-                      <th className="p-3 font-bold text-right px-6 w-56">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {filteredSections.map((sec) => (
-                        <tr
-                          key={sec.id}
-                          className={`hover:bg-gray-50 transition-colors group cursor-default ${sec.status === "Archived" ? "opacity-75" : ""}`}
-                        >
-                          <td className="p-3 px-6 text-pup-maroon font-black bg-gray-50/30">
-                            {sec.course_code ? `${sec.course_code}` : "—"}
-                          </td>
-                          <td className="p-3 px-6 font-bold text-gray-800">
-                            {sec.name}
-                          </td>
-                          <td className="p-3 px-6">
-                             {sec.status === "Archived" ? (
-                               <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 font-bold uppercase text-[9px] tracking-wider px-2 py-0.5">
-                                 ARCHIVED
-                               </Badge>
-                             ) : (
-                               <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 font-bold uppercase text-[9px] tracking-wider px-2 py-0.5">
-                                 ACTIVE
-                               </Badge>
-                             )}
-                          </td>
-                          <td className="p-3 px-6 text-right">
-                            <div className="inline-flex items-center justify-end gap-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={sec.status === "Archived"}
-                                onClick={() => {
-                                  setEditSection({
-                                    id: sec.id,
-                                    name: sec.name,
-                                    courseCode: sec.course_code || "",
-                                  });
-                                  setIsEditSectionOpen(true);
-                                }}
-                                className="px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50 hover:border-pup-maroon"
-                              >
-                                <i className="ph-bold ph-pencil-simple mr-1.5"></i>
-                                EDIT
-                              </Button>
-                              {sec.status === "Archived" ? (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setConfirmPayload({
-                                      title: "Restore Section Block",
-                                      message: `Restore block "${sec.name}"? It will be visible for new records again.`,
-                                      confirmLabel: "Restore",
-                                      variant: "success",
-                                      onConfirm: () => resSection(sec.id, sec.name),
-                                    });
-                                    setConfirmOpen(true);
-                                  }}
-                                  className="px-3 font-bold text-xs border-green-300 text-green-700 hover:text-green-800 hover:bg-green-50"
-                                >
-                                  <i className="ph-bold ph-arrow-counter-clockwise mr-1.5"></i>
-                                  RESTORE
-                                </Button>
-                              ) : (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setConfirmPayload({
-                                      title: "Archive Section Block",
-                                      message: `Archive section block "${sec.name}"? This will hide it from new registrations but preserve history.`,
-                                      confirmLabel: "Archive",
-                                      variant: "danger",
-                                      onConfirm: () => delSection(sec.id, sec.name),
-                                    });
-                                    setConfirmOpen(true);
-                                  }}
-                                  className="px-3 font-bold text-xs border-red-300 text-red-700 hover:text-red-800 hover:bg-red-50"
-                                >
-                                  <i className="ph-bold ph-archive mr-1.5"></i>
-                                  ARCHIVE
-                                </Button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    {filteredSections.length === 0 && (
-                      <tr className="border-0 hover:bg-transparent">
-                        <td colSpan={4} className="p-0 border-0">
-                          <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
-                            <EmptyHeader className="flex flex-col items-center gap-0">
-                              <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                                <i className="ph-duotone ph-list-numbers text-3xl text-pup-maroon"></i>
-                              </EmptyMedia>
-                              <EmptyTitle className="text-lg font-bold text-gray-900">
-                                {selectedCourseFilter || sectionSearch
-                                  ? `No sections found matching criteria`
-                                  : "No sections found"}
-                              </EmptyTitle>
-                              <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                                {sectionSearch 
-                                  ? `No results matching "${sectionSearch}" in the current view.`
-                                  : showArchived
-                                    ? "There are no archived sections matching your criteria."
-                                    : "Use the form above to construct student routing blocks."}
-                              </EmptyDescription>
-                            </EmptyHeader>
-                          </Empty>
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="bulk-import" className="flex-1 flex flex-col min-h-0 m-0 border-0 overflow-auto bg-gray-50/50 focus-visible:ring-0">
-            <div className="flex-1 flex flex-col p-6 min-h-0">
-              {importStatus === "idle" ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 flex-1">
-                  {/* Protocol card */}
-                  <Card className="bg-white border border-gray-300 rounded-brand shadow-sm overflow-hidden flex flex-col">
-                    <div className="p-4 border-b border-gray-100 bg-gray-50/50 text-xs font-black text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-full bg-pup-maroon text-white flex items-center justify-center text-[10px] font-black">1</div>
-                      Import Protocol
-                    </div>
-                    <CardContent className="p-6 space-y-6 overflow-y-auto">
-                      <div className="space-y-3">
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest flex items-center gap-2">
-                          <i className="ph-bold ph-info text-pup-maroon" />
-                          Required Column Architecture
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          {["Category", "Name", "Code"].map((col) => (
-                            <code key={col} className="font-mono text-gray-900 bg-gray-50 px-2 py-1 rounded border border-gray-200 text-xs font-bold shadow-xs">
-                              {col}
-                            </code>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="rounded-lg border border-gray-200 bg-gray-50 p-4 text-sm font-mono text-gray-700 leading-relaxed shadow-inner">
-                        <div className="text-[10px] font-black text-gray-400 mb-1.5 tracking-widest uppercase">CSV Data Example</div>
-                        Category,Name,Code<br />
-                        DocumentType,Transcript of Records,<br />
-                        Course,Bachelor of Science in IT,BSIT<br />
-                        Section,Block 1,BSIT
-                      </div>
-
-                      <div className="grid grid-cols-1 gap-3">
-                        {[
-                          { label: "DocumentType", desc: "Identifier code is optional. Only 'Name' is required." },
-                          { label: "Course", desc: "Short code is required (e.g. BSIT, BSA) for record routing." },
-                          { label: "Section", desc: "The 'Code' field MUST match an existing Degree Program code." },
-                        ].map((rule) => (
-                          <div key={rule.label} className="p-3 rounded-lg border border-gray-100 bg-white">
-                            <div className="text-[10px] font-black text-pup-maroon uppercase tracking-tight mb-1">{rule.label}</div>
-                            <div className="text-[11px] text-gray-600 font-medium leading-snug">{rule.desc}</div>
-                          </div>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-
-                  {/* Upload card */}
-                  <Card className="bg-white border border-gray-300 rounded-brand shadow-sm overflow-hidden flex flex-col">
-                    <div className="p-4 border-b border-gray-100 bg-gray-50/50 text-xs font-black text-gray-900 uppercase tracking-wider flex items-center gap-2">
-                      <div className="w-5 h-5 rounded-full bg-pup-maroon text-white flex items-center justify-center text-[10px] font-black">2</div>
-                      Choose File
-                    </div>
-                    <CardContent className="p-6 flex-1 flex flex-col">
-                      <div className="mb-6 flex flex-wrap items-center gap-3">
-                        <a
-                          href="data:text/csv;charset=utf-8,Category,Name,Code%0ADocumentType,Transcript of Records,%0ACourse,Bachelor of Science in IT,BSIT%0ASection,Block 1,BSIT"
-                          download="taxonomy-import-template.csv"
-                          className="flex-1 inline-flex items-center justify-center gap-2 h-11 px-4 rounded-lg border border-gray-300 bg-white text-xs font-black text-gray-700 uppercase tracking-wider hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-xs"
-                        >
-                          <i className="ph-bold ph-file-csv text-base"></i>
-                          Download Template
-                        </a>
-                        <button
-                          type="button"
-                          onClick={handleCopySample}
-                          className="flex-1 inline-flex items-center justify-center gap-2 h-11 px-4 rounded-lg border border-gray-300 bg-white text-xs font-black text-gray-700 uppercase tracking-wider hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-xs"
-                        >
-                          <i className="ph-bold ph-copy text-base"></i>
-                          Copy Raw Sample
-                        </button>
-                      </div>
-                      <div className="flex-1 bg-white border-2 border-dashed border-gray-300 rounded-brand p-12 hover:bg-red-50/20 hover:border-pup-maroon transition-all group relative cursor-pointer flex flex-col items-center justify-center text-center shadow-sm min-h-[300px]">
-                        <input
-                          type="file"
-                          accept=".csv"
-                          onChange={handleCsvSelect}
-                          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                        />
-                        <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center group-hover:bg-red-50 transition-colors mb-6 shadow-sm border border-gray-200 group-hover:border-red-200">
-                          <i className="ph-duotone ph-cloud-arrow-up text-4xl text-gray-400 group-hover:text-pup-maroon transition-colors"></i>
-                        </div>
-                        <h3 className="text-lg font-black text-gray-900 leading-tight">
-                          Ready to Ingest
-                        </h3>
-                        <p className="text-sm text-gray-500 font-medium mt-2 max-w-xs">
-                          Drop your structured <span className="font-mono text-pup-maroon font-bold">.csv</span> file here or click to browse.
-                        </p>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              ) : importStatus === "preview" ? (
-                <div className="flex-1 flex flex-col gap-4 animate-in fade-in slide-in-from-bottom-2 duration-300">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={resetImport}
-                        className="h-9 px-3 border-gray-300 text-gray-600 hover:text-pup-maroon hover:border-pup-maroon rounded-brand"
-                      >
-                        <i className="ph-bold ph-arrow-left mr-2"></i> BACK
-                      </Button>
-                      <h3 className="text-lg font-black text-gray-900 tracking-tight">CSV Ingestion Preview</h3>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="px-3 py-1.5 bg-white border border-gray-200 rounded-full flex items-center gap-4 shadow-sm">
-                        <span className="text-[10px] font-black uppercase text-gray-400 tracking-widest border-r pr-4 border-gray-100">
-                          Summary
-                        </span>
-                        <div className="flex items-center gap-4">
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-2 h-2 rounded-full bg-emerald-500"></div>
-                            <span className="text-xs font-bold text-gray-700">{importRows.filter(r => !r.error).length} Ready</span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <div className="w-2 h-2 rounded-full bg-red-500"></div>
-                            <span className="text-xs font-bold text-gray-700">{importRows.filter(r => r.error).length} Invalid</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <Card className="flex-1 bg-white border border-gray-300 rounded-brand shadow-sm overflow-hidden flex flex-col">
-                    <div className="flex-1 overflow-auto bg-white">
-                      <table className="min-w-full text-sm">
-                        <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-20">
-                          <tr className="text-left text-[11px] font-black uppercase tracking-wider text-gray-500">
-                            <th className="p-4 w-12 text-center">Row</th>
-                            <th className="p-4 w-40">Category</th>
-                            <th className="p-4">Name / Label</th>
-                            <th className="p-4 w-32">Identifier</th>
-                            <th className="p-4 w-40">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-gray-100">
-                          {importRows.map((row) => (
-                            <tr key={row.index} className={`hover:bg-gray-50 transition-colors ${row.error ? 'bg-red-50/30' : ''}`}>
-                              <td className="p-4 text-center font-mono text-[11px] text-gray-400">{row.index}</td>
-                              <td className="p-4">
-                                <Badge variant="outline" className={`font-black text-[9px] uppercase tracking-widest px-2 py-0.5 border-0 ${
-                                  row.category.toLowerCase() === 'documenttype' ? 'bg-purple-100 text-purple-700' :
-                                  row.category.toLowerCase() === 'course' ? 'bg-blue-100 text-blue-700' :
-                                  'bg-amber-100 text-amber-700'
-                                }`}>
-                                  {row.category || 'MISSING'}
-                                </Badge>
-                              </td>
-                              <td className={`p-4 font-bold text-sm ${row.error && !row.name ? 'text-red-400 italic' : 'text-gray-900'}`}>
-                                {row.name || '(Required field missing)'}
-                              </td>
-                              <td className="p-4 font-mono text-xs text-gray-500">
-                                {row.code || '—'}
-                              </td>
-                              <td className="p-4">
-                                {row.error ? (
-                                  <div className="flex items-center gap-1.5 text-red-600">
-                                    <i className="ph-bold ph-warning-circle text-base"></i>
-                                    <span className="text-[11px] font-black uppercase tracking-tight">{row.error}</span>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center gap-1.5 text-emerald-600">
-                                    <i className="ph-bold ph-check-circle text-base"></i>
-                                    <span className="text-[11px] font-black uppercase tracking-tight">Validated</span>
-                                  </div>
-                                )}
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                    <div className="p-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-                      <p className="text-[10px] font-medium text-gray-500 max-w-md">
-                        Only valid rows will be committed to the database. Invalid rows will be skipped automatically. 
-                        Records that already exist (matching name or code) will be ignored.
-                      </p>
-                      <div className="flex items-center gap-3">
-                        <Button 
-                          variant="ghost" 
-                          onClick={resetImport}
-                          className="h-10 px-6 font-bold text-gray-500 hover:text-gray-700"
-                        >
-                          ABORT
-                        </Button>
-                        <Button
-                          onClick={executeBulkImport}
-                          disabled={importRows.filter(r => !r.error).length === 0}
-                          className="h-10 px-8 bg-pup-maroon text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 hover:bg-red-900 transition-all rounded-brand"
-                        >
-                          <i className="ph-bold ph-check-square mr-2 text-lg"></i>
-                          Confirm & Import {importRows.filter(r => !r.error).length} Records
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                </div>
-              ) : importStatus === "importing" ? (
-                <div className="flex-1 flex flex-col items-center justify-center bg-white border border-gray-300 rounded-brand shadow-sm animate-fade-in">
-                  <div className="flex flex-col items-center gap-6 max-w-sm text-center">
-                    <div className="relative">
-                      <div className="h-20 w-20 rounded-full border-4 border-pup-maroon/10 border-t-pup-maroon animate-spin"></div>
-                      <i className="ph-duotone ph-database absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-3xl text-pup-maroon"></i>
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-black text-gray-900">Committing Taxonomy</h3>
-                      <p className="text-sm text-gray-500 font-medium mt-2">
-                        Writing validated entries to the system repository. Please do not close the window.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex-1 flex flex-col items-center justify-center bg-white border border-gray-300 rounded-brand shadow-sm animate-in zoom-in-95 duration-300">
-                  <div className="flex flex-col items-center gap-8 max-w-md text-center">
-                    <div className="w-24 h-24 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shadow-lg shadow-emerald-500/10">
-                      <i className="ph-duotone ph-check-circle text-6xl"></i>
-                    </div>
-                    <div>
-                      <h3 className="text-2xl font-black text-gray-900 tracking-tight">Ingestion Complete</h3>
-                      <p className="text-sm text-gray-500 font-medium mt-2 leading-relaxed">
-                        The batch taxonomy has been successfully merged into the system framework.
-                      </p>
-                    </div>
-                    
-                    <div className="grid grid-cols-2 gap-4 w-full bg-gray-50 p-6 rounded-xl border border-gray-100">
-                      <div className="space-y-1">
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Added</div>
-                        <div className="text-2xl font-black text-emerald-600">{importResults?.successCount || 0}</div>
-                      </div>
-                      <div className="space-y-1">
-                        <div className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Skipped / Duplicates</div>
-                        <div className="text-2xl font-black text-amber-600">{importResults?.failCount || 0}</div>
-                      </div>
-                    </div>
-
-                    <Button 
-                      onClick={resetImport}
-                      className="h-11 px-10 bg-gray-900 text-white font-black uppercase tracking-widest rounded-brand hover:bg-black transition-all shadow-lg"
-                    >
-                      RETURN TO IMPORTS
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="security-questions" className="flex-1 flex flex-col min-h-0 m-0 border-0 overflow-auto bg-gray-50/50 focus-visible:ring-0">
-            <div className="flex-1 flex flex-col p-6 min-h-0">
-              {loading ? (
-                <div className="space-y-4 bg-white border border-gray-300 rounded-brand p-6 shadow-sm">
-                  {[1, 2, 3, 4, 5].map((i) => (
-                    <div key={i} className="space-y-2">
-                      <Skeleton className="h-3 w-24" />
-                      <Skeleton className="h-10 w-full" />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <Card className="flex-1 bg-white border border-gray-300 rounded-brand shadow-sm overflow-hidden flex flex-col">
-                  <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6 flex flex-col sm:flex-row items-center justify-between gap-4 shrink-0">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
-                        <i className="ph-duotone ph-lock-key text-2xl"></i>
-                      </div>
-                      <div>
-                        <CardTitle className="text-xl font-black text-gray-900 tracking-tight leading-none">
-                          Global Security Questions
-                        </CardTitle>
-                        <CardDescription className="text-sm font-medium text-gray-500 mt-1.5">
-                          Define up to 5 verification challenges for personnel account recovery and setup.
-                        </CardDescription>
-                      </div>
-                    </div>
-                    <Button
-                      onClick={handleSaveSecurityQuestions}
-                      disabled={securitySaving}
-                      className="bg-pup-maroon text-white h-10 px-6 font-bold shadow-sm flex items-center gap-2 hover:bg-red-900 transition-colors w-full sm:w-auto"
-                    >
-                      <i className="ph-bold ph-floppy-disk"></i>
-                      {securitySaving ? "SAVING..." : "SAVE QUESTIONS"}
-                    </Button>
-                  </CardHeader>
-
-                  <CardContent className="p-8 flex-1 overflow-y-auto">
-                    <div className="max-w-4xl space-y-8">
-                      <div className="grid grid-cols-1 gap-6">
-                        {securityQuestions.map((q, i) => (
-                          <div key={i} className="space-y-2 group">
-                            <div className="flex items-center gap-2">
-                              <span className="w-6 h-6 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center text-[10px] font-black text-gray-500 group-focus-within:bg-red-50 group-focus-within:border-red-100 group-focus-within:text-pup-maroon transition-colors">
-                                {i + 1}
-                              </span>
-                              <label className="text-[11px] font-black text-gray-500 uppercase tracking-widest group-focus-within:text-gray-900 transition-colors">
-                                Security Challenge Question {i < 2 ? <span className="text-pup-maroon">*</span> : <span className="text-gray-400 normal-case ml-1">(Optional)</span>}
-                              </label>
-                            </div>
-                            <Input
-                              type="text"
-                              placeholder="e.g. What was the name of your first elementary school?"
-                              className="h-12 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon shadow-xs transition-all"
-                              value={q}
-                              onChange={(e) => {
-                                const updated = [...securityQuestions];
-                                updated[i] = e.target.value;
-                                setSecurityQuestions(updated);
-                              }}
-                            />
-                          </div>
-                        ))}
-                      </div>
-
-                      <div className="p-4 rounded-xl bg-amber-50 border border-amber-100 flex items-start gap-4">
-                        <div className="w-10 h-10 rounded-lg bg-white border border-amber-200 flex items-center justify-center text-amber-600 shadow-xs shrink-0">
-                          <i className="ph-duotone ph-shield-warning text-xl" />
-                        </div>
-                        <div>
-                          <h4 className="text-xs font-black text-amber-900 uppercase tracking-tight">Deployment Note</h4>
-                          <p className="text-xs text-amber-700 font-medium leading-relaxed mt-0.5">
-                            Changes to these questions will apply to all future personnel registrations. Active staff members will not be forced to update their existing recovery answers unless they manually re-configure their security settings.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
-        </Card>
-      </Tabs>
-
-      {/* MODALS */}
-      <Dialog 
-        open={isAddDocTypeOpen} 
-        onOpenChange={(open) => {
-          setIsAddDocTypeOpen(open);
-          if (!open) setNewDocTypeName("");
-        }}
-      >
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
-          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
-                <i className="ph-duotone ph-pencil-line text-2xl"></i>
-              </div>
-              <div className="min-w-0">
-                <DialogTitle className="text-lg font-black tracking-tight text-gray-900 leading-tight">
-                  New Document Configuration
-                </DialogTitle>
-                <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 leading-relaxed">
-                  Deploy a new formal document type to the digitization framework.
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-          <form onSubmit={addDocType}>
-            <div className="p-6">
-              <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-                Document Name <span className="text-pup-maroon">*</span>
-              </label>
-              <Input
-                type="text"
-                placeholder="e.g. Honorable Dismissal"
-                className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                value={newDocTypeName}
-                onChange={(e) => setNewDocTypeName(e.target.value)}
-                required
+          <Card className="relative mt-4 flex flex-col rounded-brand border border-gray-300 bg-white p-0 shadow-sm">
+            <TabsContent
+              value="document-types"
+              className="m-0 flex flex-col border-0 focus-visible:ring-0"
+            >
+              <DocTypesTab
+                loading={loading}
+                docTypes={docTypes}
+                docSearch={docSearch}
+                setDocSearch={setDocSearch}
+                showArchived={showArchived}
+                setShowArchived={setShowArchived}
+                pageDoc={pageDoc}
+                setPageDoc={setPageDoc}
+                itemsPerPage={itemsPerPage}
+                setItemsPerPage={setItemsPerPage}
+                filteredDocTypes={filteredDocTypes}
+                filteredDocTypesFull={filteredDocTypesFull}
+                selectedDocTypes={selectedDocTypes}
+                toggleDocTypeSelected={toggleDocTypeSelected}
+                toggleAllDocTypes={toggleAllDocTypes}
+                executeBulkTaxonomyAction={executeBulkTaxonomyAction}
+                setConfirmPayload={setConfirmPayload}
+                setConfirmOpen={setConfirmOpen}
+                onSort={(key, dir) => handleSort("doc", key, dir)}
+                sortDoc={sortDoc}
+                showToast={showToast}
+                loadAll={loadAll}
+                handleExportDocTypes={handleExportDocTypes}
               />
-            </div>
-            <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => {
-                  setIsAddDocTypeOpen(false);
-                  setNewDocTypeName("");
-                }} 
-                className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
-              >
-                CANCEL
-              </Button>
-              <Button type="submit" className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand">
-                <i className="ph-bold ph-check text-lg"></i>
-                CREATE TYPE
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+            </TabsContent>
 
-      <Dialog 
-        open={isEditDocTypeOpen} 
-        onOpenChange={(open) => {
-          setIsEditDocTypeOpen(open);
-          if (!open) setEditDocType({ id: null, name: "" });
-        }}
-      >
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
-          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
-                <i className="ph-duotone ph-pencil-line text-2xl"></i>
-              </div>
-              <div className="min-w-0">
-                <DialogTitle className="text-lg font-black tracking-tight text-gray-900 leading-tight">
-                  Edit Document Type
-                </DialogTitle>
-                <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 leading-relaxed">
-                  Update the document category label.
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-          <form onSubmit={updDocType}>
-            <div className="p-6">
-              <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-                Document Type Name <span className="text-pup-maroon">*</span>
-              </label>
-              <Input
-                type="text"
-                className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                value={editDocType.name}
-                onChange={(e) =>
-                  setEditDocType((prev) => ({ ...prev, name: e.target.value }))
-                }
-                required
+            <TabsContent
+              value="degree-programs"
+              className="m-0 flex flex-col border-0 focus-visible:ring-0"
+            >
+              <CoursesTab
+                loading={loading}
+                courses={courses}
+                sections={sections}
+                courseSearch={courseSearch}
+                setCourseSearch={setCourseSearch}
+                showArchived={showArchived}
+                setShowArchived={setShowArchived}
+                pageCourse={pageCourse}
+                setPageCourse={setPageCourse}
+                itemsPerPage={itemsPerPage}
+                setItemsPerPage={setItemsPerPage}
+                filteredCourses={filteredCourses}
+                filteredCoursesFull={filteredCoursesFull}
+                selectedCourses={selectedCourses}
+                toggleCourseSelected={toggleCourseSelected}
+                toggleAllCourses={toggleAllCourses}
+                executeBulkTaxonomyAction={executeBulkTaxonomyAction}
+                setConfirmPayload={setConfirmPayload}
+                setConfirmOpen={setConfirmOpen}
+                onSort={(key, dir) => handleSort("course", key, dir)}
+                sortCourse={sortCourse}
+                showToast={showToast}
+                loadAll={loadAll}
+                handleExportCourses={handleExportCourses}
               />
-            </div>
-            <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => {
-                  setIsEditDocTypeOpen(false);
-                  setEditDocType({ id: null, name: "" });
-                }} 
-                className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
-              >
-                CANCEL
-              </Button>
-              <Button type="submit" className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand">
-                <i className="ph-bold ph-check text-lg"></i>
-                SAVE CHANGES
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+            </TabsContent>
 
-      <Dialog 
-        open={isAddCourseOpen} 
-        onOpenChange={(open) => {
-          setIsAddCourseOpen(open);
-          if (!open) {
-            setNewCourseCode("");
-            setNewCourseName("");
-            setNewCourseBlocks([""]);
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
-          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
-                <i className="ph-duotone ph-pencil-line text-2xl"></i>
-              </div>
-              <div className="min-w-0">
-                <DialogTitle className="text-lg font-black tracking-tight text-gray-900 leading-tight">
-                  New Academic Program
-                </DialogTitle>
-                <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 leading-relaxed">
-                  Define a new degree course for student classification.
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-          <form onSubmit={addCourse}>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-                  Short Code <span className="text-pup-maroon">*</span>
-                </label>
-                <div className="relative">
-                  <i className="ph-bold ph-text-aa absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                  <Input
-                    type="text"
-                    placeholder="e.g. BSIT"
-                    className="pl-10 h-11 w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                    value={newCourseCode}
-                    onChange={(e) => setNewCourseCode(e.target.value.toUpperCase())}
-                    required
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-                  Full Designation <span className="text-pup-maroon">*</span>
-                </label>
-                <div className="relative">
-                  <i className="ph-bold ph-text-t absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                  <Input
-                    type="text"
-                    placeholder="e.g. Bachelor of Science in Information Technology"
-                    className="pl-10 h-11 w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                    value={newCourseName}
-                    onChange={(e) => setNewCourseName(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
+            <TabsContent
+              value="course-blocks"
+              className="m-0 flex flex-col border-0 focus-visible:ring-0"
+            >
+              <SectionsTab
+                loading={loading}
+                courses={courses}
+                sections={sections}
+                sectionSearch={sectionSearch}
+                setSectionSearch={setSectionSearch}
+                selectedCourseFilter={selectedCourseFilter}
+                setSelectedCourseFilter={setSelectedCourseFilter}
+                showArchived={showArchived}
+                setShowArchived={setShowArchived}
+                pageSection={pageSection}
+                setPageSection={setPageSection}
+                itemsPerPage={itemsPerPage}
+                setItemsPerPage={setItemsPerPage}
+                filteredSections={filteredSections}
+                filteredSectionsFull={filteredSectionsFull}
+                selectedSections={selectedSections}
+                toggleSectionSelected={toggleSectionSelected}
+                toggleAllSections={toggleAllSections}
+                executeBulkTaxonomyAction={executeBulkTaxonomyAction}
+                setSelectedSections={setSelectedSections}
+                setConfirmPayload={setConfirmPayload}
+                setConfirmOpen={setConfirmOpen}
+                onSort={(key, dir) => handleSort("section", key, dir)}
+                sortSection={sortSection}
+                showToast={showToast}
+                loadAll={loadAll}
+                handleExportSections={handleExportSections}
+              />
+            </TabsContent>
 
-              <div className="pt-4 border-t border-gray-100">
-                <div className="flex items-center justify-between mb-3">
-                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">
-                    Initial Course Blocks
-                  </label>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setNewCourseBlocks([...newCourseBlocks, ""])}
-                    className="h-7 px-2 text-[10px] font-black text-pup-maroon hover:bg-red-50"
-                  >
-                    <i className="ph-bold ph-plus mr-1"></i> ADD BLOCK
-                  </Button>
-                </div>
-                <div className="space-y-2 max-h-40 overflow-y-auto pr-2 custom-scrollbar">
-                  {newCourseBlocks.map((block, idx) => (
-                    <div key={idx} className="flex items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                      <Input
-                        type="text"
-                        placeholder={`e.g. Block ${idx + 1}`}
-                        className="h-9 bg-gray-50 mt-1 mb-1 ml-1  border-gray-200 text-xs focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                        value={block}
-                        onChange={(e) => {
-                          const updated = [...newCourseBlocks];
-                          updated[idx] = e.target.value;
-                          setNewCourseBlocks(updated);
-                        }}
-                      />
-                      {newCourseBlocks.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            const updated = newCourseBlocks.filter((_, i) => i !== idx);
-                            setNewCourseBlocks(updated);
-                          }}
-                          className="h-9 w-9 p-0 text-gray-400 hover:text-red-600 hover:bg-red-50 shrink-0"
-                        >
-                          <i className="ph-bold ph-trash"></i>
-                        </Button>
-                      )}
-                    </div>
-                  ))}
-                  {newCourseBlocks.length === 0 && (
-                    <p className="text-[10px] text-gray-400 italic text-center py-2">No blocks added yet.</p>
-                  )}
-                </div>
-              </div>
-            </div>
-            <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => {
-                  setIsAddCourseOpen(false);
-                  setNewCourseCode("");
-                  setNewCourseName("");
-                  setNewCourseBlocks([""]);
-                }} 
-                className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
-              >
-                CANCEL
-              </Button>
-              <Button type="submit" className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand">
-                <i className="ph-bold ph-check text-lg"></i>
-                ADD PROGRAM
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+            <TabsContent
+              value="bulk-import"
+              className="m-0 flex flex-col border-0 bg-gray-50/50 focus-visible:ring-0"
+            >
+              <BulkImportTab
+                importStatus={importStatus}
+                importDropActive={importDropActive}
+                setImportDropActive={setImportDropActive}
+                handleCsvSelect={handleCsvSelect}
+                handleCopySample={handleCopySample}
+                resetImport={resetImport}
+                importFile={importFile}
+                importRows={importRows}
+                importSelected={importSelected}
+                toggleImportRowSelected={toggleImportRowSelected}
+                toggleImportSelectAll={toggleImportSelectAll}
+                executeBulkImport={executeBulkImport}
+                importResults={importResults}
+                setActiveSubTab={setActiveSubTab}
+                onUpdateRow={handleUpdateImportRow}
+                onAddRow={handleManualAddRow}
+                courses={courses}
+              />
+            </TabsContent>
 
-      <Dialog 
-        open={isEditCourseOpen} 
-        onOpenChange={(open) => {
-          setIsEditCourseOpen(open);
-          if (!open) setEditCourse({ id: null, code: "", name: "" });
-        }}
-      >
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
-          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
-                <i className="ph-duotone ph-pencil-line text-2xl"></i>
-              </div>
-              <div className="min-w-0">
-                <DialogTitle className="text-lg font-black tracking-tight text-gray-900 leading-tight">
-                  Edit Degree Program
-                </DialogTitle>
-                <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 leading-relaxed">
-                  Update the code and designation for this program.
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-          <form onSubmit={updCourse}>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-                  Short Code <span className="text-pup-maroon">*</span>
-                </label>
-                <Input
-                  type="text"
-                  className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                  value={editCourse.code}
-                  onChange={(e) =>
-                    setEditCourse((prev) => ({ ...prev, code: e.target.value }))
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-                  Full Designation <span className="text-pup-maroon">*</span>
-                </label>
-                <Input
-                  type="text"
-                  className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                  value={editCourse.name}
-                  onChange={(e) =>
-                    setEditCourse((prev) => ({ ...prev, name: e.target.value }))
-                  }
-                  required
-                />
-              </div>
-            </div>
-            <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => {
-                  setIsEditCourseOpen(false);
-                  setEditCourse({ id: null, code: "", name: "" });
-                }} 
-                className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
-              >
-                CANCEL
-              </Button>
-              <Button type="submit" className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand">
-                <i className="ph-bold ph-check text-lg"></i>
-                SAVE CHANGES
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+            <TabsContent
+              value="security-questions"
+              className="m-0 flex flex-col border-0 focus-visible:ring-0"
+            >
+              <SecurityQuestionsTab
+                loading={loading}
+                securityQuestions={securityQuestions}
+                setSecurityQuestions={setSecurityQuestions}
+                securitySaving={securitySaving}
+                handleSaveSecurityQuestions={handleSaveSecurityQuestions}
+              />
+            </TabsContent>
+          </Card>
+        </Tabs>
 
-      <Dialog 
-        open={isAddSectionOpen} 
-        onOpenChange={(open) => {
-          setIsAddSectionOpen(open);
-          if (!open) {
-            setSecName("");
-            setSecCourseCode("");
-          }
-        }}
-      >
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
-          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
-                <i className="ph-duotone ph-pencil-line text-2xl"></i>
-              </div>
-              <div className="min-w-0">
-                <DialogTitle className="text-lg font-black tracking-tight text-gray-900 leading-tight">
-                  New Course Block
-                </DialogTitle>
-                <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 leading-relaxed">
-                  Create a section block and assign it to a degree program.
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-          <form onSubmit={addSection}>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-                  Degree Program <span className="text-pup-maroon">*</span>
-                </label>
-                <select
-                  className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
-                  value={secCourseCode}
-                  onChange={(e) => setSecCourseCode(e.target.value)}
-                  required
-                >
-                  <option value="">Select program...</option>
-                  {courses.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.code} - {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-                  Block Name <span className="text-pup-maroon">*</span>
-                </label>
-                <Input
-                  type="text"
-                  placeholder="e.g. Block 1"
-                  className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                  value={secName}
-                  onChange={(e) => setSecName(e.target.value)}
-                  required
-                />
-              </div>
-            </div>
-            <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => {
-                  setIsAddSectionOpen(false);
-                  setSecName("");
-                  setSecCourseCode("");
-                }} 
-                className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
-              >
-                CANCEL
-              </Button>
-              <Button type="submit" className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand">
-                <i className="ph-bold ph-check text-lg"></i>
-                CREATE BLOCK
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+        {/* MODALS */}
 
-      <Dialog 
-        open={isEditSectionOpen} 
-        onOpenChange={(open) => {
-          setIsEditSectionOpen(open);
-          if (!open) setEditSection({ id: null, name: "", courseCode: "" });
-        }}
-      >
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
-          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
-                <i className="ph-duotone ph-pencil-line text-2xl"></i>
-              </div>
-              <div className="min-w-0">
-                <DialogTitle className="text-lg font-black tracking-tight text-gray-900 leading-tight">
-                  Edit Course Block
-                </DialogTitle>
-                <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 leading-relaxed">
-                  Update the section block and assigned degree program.
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-          <form onSubmit={updSection}>
-            <div className="p-6 space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-                  Degree Program <span className="text-pup-maroon">*</span>
-                </label>
-                <select
-                  className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
-                  value={editSection.courseCode}
-                  onChange={(e) =>
-                    setEditSection((prev) => ({ ...prev, courseCode: e.target.value }))
-                  }
-                  required
-                >
-                  <option value="">Select program...</option>
-                  {courses.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      {c.code} - {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-                  Block Name <span className="text-pup-maroon">*</span>
-                </label>
-                <Input
-                  type="text"
-                  className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-                  value={editSection.name}
-                  onChange={(e) =>
-                    setEditSection((prev) => ({ ...prev, name: e.target.value }))
-                  }
-                  required
-                />
-              </div>
-            </div>
-            <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
-              <Button 
-                type="button" 
-                variant="outline" 
-                onClick={() => {
-                  setIsEditSectionOpen(false);
-                  setEditSection({ id: null, name: "", courseCode: "" });
-                }} 
-                className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
-              >
-                CANCEL
-              </Button>
-              <Button type="submit" className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand">
-                <i className="ph-bold ph-check text-lg"></i>
-                SAVE CHANGES
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <ConfirmModal
-        open={confirmOpen}
-        onCancel={() => setConfirmOpen(false)}
-        title={confirmPayload.title}
-        message={confirmPayload.message}
-        confirmLabel={confirmPayload.confirmLabel}
-        variant={confirmPayload.variant}
-        onConfirm={confirmPayload.onConfirm}
-      />
-    </div>
-  );
+        <ConfirmModal
+          open={confirmOpen}
+          onCancel={() => setConfirmOpen(false)}
+          title={confirmPayload.title}
+          message={confirmPayload.message}
+          confirmLabel={confirmPayload.confirmLabel}
+          variant={confirmPayload.variant}
+          selectedItems={confirmPayload.selectedItems}
+          onConfirm={confirmPayload.onConfirm}
+        />
+      </div>
+    </TooltipProvider>
+  )
 }

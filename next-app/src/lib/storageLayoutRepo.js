@@ -98,16 +98,16 @@ function normalizeStorageLayout(layoutRaw) {
     cabinets.sort((a, b) => String(a.id).localeCompare(String(b.id), undefined, { numeric: true }));
     const doorX = coerceFiniteNumber(r?.door?.x);
     const doorY = coerceFiniteNumber(r?.door?.y);
+    const doorW = coerceFiniteNumber(r?.door?.w);
+    const doorH = coerceFiniteNumber(r?.door?.h);
+    const doorRotation = normalizeRotation(r?.door?.rotation);
     const fallbackDoor = getDefaultDoor();
     const door = {
-      x:
-        doorX === null
-          ? fallbackDoor.x
-          : Math.max(0, Math.min(1, doorX)),
-      y:
-        doorY === null
-          ? fallbackDoor.y
-          : Math.max(0, Math.min(1, doorY)),
+      x: doorX === null ? fallbackDoor.x : Math.max(0, Math.min(1, doorX)),
+      y: doorY === null ? fallbackDoor.y : Math.max(0, Math.min(1, doorY)),
+      w: doorW === null ? (fallbackDoor.w ?? 0.08) : Math.max(0.01, Math.min(1, doorW)),
+      h: doorH === null ? (fallbackDoor.h ?? 0.03) : Math.max(0.01, Math.min(1, doorH)),
+      rotation: doorRotation,
     };
 
     rooms.push({ id: roomId, name: roomName || `Room ${roomId}`, cabinets, door });

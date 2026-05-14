@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
 import { getBackupById, getBackupsDir } from "../../../../../lib/backupsRepo";
+import { writeAuditLog } from "../../../../../lib/auditLogRequest";
 import { requireAdmin, createAuthErrorResponse } from "../../../../../lib/authHelpers";
 
 export const runtime = "nodejs";
@@ -29,6 +30,12 @@ export async function GET(req) {
     }
 
     const fileBuffer = fs.readFileSync(filePath);
+
+    await writeAuditLog(req, `Download Backup`, {
+      details: `downloaded encrypted backup package '${backup.filename}' from local storage`,
+      entity_type: "Backup",
+      entity_id: id
+    });
 
     const filename = String(backup.filename || "backup.bin");
     const isEncrypted = filename.endsWith(".enc");

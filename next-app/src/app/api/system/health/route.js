@@ -4,6 +4,7 @@ import { promisify } from "node:util";
 import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
+import { dbGet } from "@/lib/sqlite";
 
 export const runtime = "nodejs";
 
@@ -12,6 +13,11 @@ const execFileAsync = promisify(execFile);
 const HEALTH_TTL_MS = 10000;
 let healthCache = null;
 let healthCacheAt = 0;
+
+export function clearHealthCache() {
+  healthCache = null;
+  healthCacheAt = 0;
+}
 
 function getLocalDataRoot() {
   return process.env.LOCAL_DATA_DIR
@@ -173,16 +179,27 @@ async function readDbSize() {
   }
 }
 
+async function readLastRestoration() {
+  try {
+    const res = await dbGet("SELECT value FROM settings WHERE key = 'last_restoration_at'");
+    return res?.value || null;
+  } catch {
+    return null;
+  }
+}
+
 async function buildHealthData() {
-  const [cpu, disk, dbSize] = await Promise.all([
+  const [cpu, disk, dbSize, lastRestorationAt] = await Promise.all([
     readCpuUsage(),
     readDiskStats(),
     readDbSize(),
+    readLastRestoration(),
   ]);
   return {
     cpu,
     disk,
     dbSize,
+    lastRestorationAt,
     dbStatus: "Healthy",
     timestamp: new Date().toISOString(),
   };

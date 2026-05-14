@@ -104,7 +104,7 @@ export default function DocumentsTab({
 
   const uniqueStudents = Array.from(new Set(docsRows.map(r => r.student_no)));
   const isSingleStudentView = uniqueStudents.length === 1 && !docsForm.docType.trim() && docsRows.length > 0;
-  
+
   let compPercent = 0;
   let compUploaded = 0;
   let compTotal = 0;
@@ -243,7 +243,7 @@ export default function DocumentsTab({
                   <Skeleton className="h-2.5 w-32 sm:w-48 rounded-full" />
                 </div>
               </div>
-              
+
               <div className="flex-1 border border-gray-200 rounded-brand overflow-hidden flex flex-col">
                 <Skeleton className="h-10 w-full rounded-none" />
                 <div className="divide-y divide-gray-100 flex-1">
@@ -305,7 +305,7 @@ export default function DocumentsTab({
                         {compPercent}%
                       </span>
                       <div className="w-32 sm:w-48 h-2.5 bg-gray-200 rounded-full overflow-hidden">
-                        <div 
+                        <div
                           className={`h-full transition-all duration-500 ${compPercent >= 100 ? "bg-emerald-500" : compPercent >= 50 ? "bg-amber-500" : "bg-red-500"}`}
                           style={{ width: `${compPercent}%` }}
                         />
@@ -542,7 +542,7 @@ export default function DocumentsTab({
                 value={updateStudentNo}
               />
             </div>
-            
+
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
                 Replacement PDF <span className="text-pup-maroon">*</span>
@@ -665,8 +665,8 @@ export default function DocumentsTab({
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Full Name <span className="text-pup-maroon">*</span></label>
-                <Input 
-                  value={editStudentForm.name} 
+                <Input
+                  value={editStudentForm.name}
                   onChange={e => setEditStudentForm(p => ({ ...p, name: e.target.value.toUpperCase() }))}
                   placeholder="LAST NAME, FIRST NAME"
                   className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
@@ -687,8 +687,8 @@ export default function DocumentsTab({
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Section <span className="text-pup-maroon">*</span></label>
-                <Input 
-                  value={editStudentForm.section} 
+                <Input
+                  value={editStudentForm.section}
                   onChange={e => setEditStudentForm(p => ({ ...p, section: e.target.value }))}
                   className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
                   required

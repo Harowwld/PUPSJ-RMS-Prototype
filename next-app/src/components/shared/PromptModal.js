@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   Dialog,
@@ -6,10 +6,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 
 export default function PromptModal({
   open,
@@ -23,24 +23,27 @@ export default function PromptModal({
   cancelLabel = "Cancel",
   placeholder = "",
   isLoading = false,
+  confirmDisabled = false,
   multiline = false,
+  itemsList = [], // Array of strings to display as a list
+  inputLabel = "", // Text to display above the input
 }) {
-  if (!open) return null;
+  if (!open) return null
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
-        <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+      <DialogContent className="overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md">
+        <DialogHeader className="border-b border-gray-100 bg-gray-50/50 p-6">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
-              <i className="ph-duotone ph-pencil-line text-2xl"></i>
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm">
+              <i className="ph-duotone ph-warning-circle text-2xl"></i>
             </div>
             <div className="min-w-0">
-              <DialogTitle className="text-lg font-black tracking-tight text-gray-900 leading-tight">
+              <DialogTitle className="text-lg leading-tight font-black tracking-tight text-gray-900">
                 {title}
               </DialogTitle>
               {message ? (
-                <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 leading-relaxed">
+                <DialogDescription className="mt-1.5 text-sm leading-relaxed font-medium text-gray-600">
                   {message}
                 </DialogDescription>
               ) : null}
@@ -48,33 +51,53 @@ export default function PromptModal({
           </div>
         </DialogHeader>
 
-        <div className="p-6">
-          {multiline ? (
-            <textarea
-              className="flex w-full h-24 rounded-brand border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon min-h-[96px] transition-all"
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              placeholder={placeholder}
-              autoFocus
-            />
-          ) : (
-            <Input
-              type="text"
-              className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
-              value={value}
-              onChange={(e) => onChange(e.target.value)}
-              placeholder={placeholder}
-              autoFocus
-            />
+        <div className="space-y-4 p-6">
+          {itemsList && itemsList.length > 0 && (
+            <div className="max-h-[120px] overflow-y-auto rounded-lg border border-gray-100 bg-gray-50 p-3 shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)]">
+              <ul className="space-y-1.5">
+                {itemsList.map((item, idx) => (
+                  <li key={idx} className="flex items-center gap-2 text-[10px] font-bold text-gray-700">
+                    <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-pup-maroon/40" />
+                    <span className="truncate">{item}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
           )}
+
+          <div className="space-y-1.5">
+            {inputLabel && (
+              <p className="px-1 text-[10px] font-black tracking-widest text-gray-400 uppercase">
+                {inputLabel}
+              </p>
+            )}
+            {multiline ? (
+              <textarea
+                className="flex h-24 min-h-[96px] w-full rounded-brand border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all placeholder:text-gray-400 focus:border-pup-maroon focus:ring-2 focus:ring-pup-maroon focus:outline-none"
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder={placeholder}
+                autoFocus
+              />
+            ) : (
+              <Input
+                type="text"
+                className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
+                value={value}
+                onChange={(e) => onChange(e.target.value)}
+                placeholder={placeholder}
+                autoFocus
+              />
+            )}
+          </div>
         </div>
 
-        <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+        <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end">
           <Button
             type="button"
             variant="outline"
             onClick={onCancel}
-            className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+            className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-700 hover:bg-gray-50"
             disabled={isLoading}
           >
             {cancelLabel}
@@ -82,8 +105,8 @@ export default function PromptModal({
           <Button
             type="button"
             onClick={onConfirm}
-            className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 text-sm font-bold shadow-sm rounded-brand gap-2 flex items-center"
-            disabled={isLoading}
+            className="flex h-11 items-center gap-2 rounded-brand bg-pup-maroon px-6 text-sm font-bold text-white shadow-sm hover:bg-red-900 disabled:opacity-50"
+            disabled={isLoading || confirmDisabled}
           >
             <i className="ph-bold ph-check-circle text-lg"></i>
             {isLoading ? "Processing..." : confirmLabel}
@@ -91,5 +114,5 @@ export default function PromptModal({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

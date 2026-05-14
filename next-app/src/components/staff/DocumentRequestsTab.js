@@ -21,6 +21,12 @@ import {
   EmptyDescription,
   EmptyMedia,
 } from "@/components/ui/empty";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 const STATUS_OPTIONS = [
   "Pending",
@@ -53,7 +59,8 @@ export default function DocumentRequestsTab({
   const [debouncedQ, setDebouncedQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
-  const perPage = 20;
+  const [itemsPerPage, setItemsPerPage] = useState(20);
+  const [jumpPage, setJumpPage] = useState("1");
 
   const [createOpen, setCreateOpen] = useState(false);
   const [createStudentNo, setCreateStudentNo] = useState("");
@@ -106,9 +113,9 @@ export default function DocumentRequestsTab({
       const showLoading = opts.showLoading !== false;
       if (showLoading) setLoading(true);
       try {
-        const offset = (page - 1) * perPage;
+        const offset = (page - 1) * itemsPerPage;
         const qs = new URLSearchParams();
-        qs.set("limit", String(perPage));
+        qs.set("limit", String(itemsPerPage));
         qs.set("offset", String(offset));
         if (debouncedQ) qs.set("q", debouncedQ);
         if (statusFilter) qs.set("status", statusFilter);
@@ -129,7 +136,7 @@ export default function DocumentRequestsTab({
         if (showLoading) setLoading(false);
       }
     },
-    [page, debouncedQ, statusFilter, showToast]
+    [page, itemsPerPage, debouncedQ, statusFilter, showToast]
   );
 
   useEffect(() => {
@@ -282,7 +289,27 @@ export default function DocumentRequestsTab({
     }
   };
 
-  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const totalPages = Math.max(1, Math.ceil(total / itemsPerPage));
+
+  useEffect(() => {
+    setJumpPage(String(page));
+  }, [page]);
+
+  const handleJumpPage = (e) => {
+    if (e.key === "Enter" || e.type === "blur") {
+      const val = parseInt(jumpPage);
+      if (!isNaN(val) && val >= 1 && val <= totalPages) {
+        setPage(val);
+      } else {
+        setJumpPage(String(page));
+      }
+    }
+  };
+
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(Number(e.target.value));
+    setPage(1);
+  };
 
   return (
     <div className="flex flex-col h-full min-h-0 gap-4 animate-fade-in font-inter">
@@ -497,12 +524,44 @@ export default function DocumentRequestsTab({
               </div>
             </div>
             {total > 0 ? (
-              <div className="p-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between text-xs font-medium text-gray-600">
-                <span>
-                  Showing {(page - 1) * perPage + 1}-{Math.min(page * perPage, total)} of{" "}
-                  <strong className="text-gray-900">{total.toLocaleString()}</strong>{" "}
-                  document requests
-                </span>
+              <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
+                <div className="flex items-center gap-4 text-xs font-medium text-gray-500">
+                  <span>
+                    {(page - 1) * itemsPerPage + 1}-
+                    {Math.min(page * itemsPerPage, total)} of{" "}
+                    <strong className="text-gray-900">
+                      {total.toLocaleString()}
+                    </strong>{" "}
+                    entries
+                  </span>
+
+                  <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase">
+                      Rows:
+                    </span>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <select
+                            className="h-7 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-1 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none"
+                            value={itemsPerPage}
+                            onChange={handleItemsPerPageChange}
+                          >
+                            <option value={10}>10</option>
+                            <option value={20}>20</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                            <option value={200}>200</option>
+                          </select>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="rounded-brand">
+                          Items per page
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  </div>
+                </div>
+
                 <div className="flex items-center gap-2">
                   <Button
                     type="button"
@@ -510,13 +569,21 @@ export default function DocumentRequestsTab({
                     size="sm"
                     disabled={page <= 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="h-8 text-xs font-bold text-gray-600"
+                    className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
                   >
-                    <i className="ph-bold ph-caret-left text-[10px] mr-1"></i>
-                    PREVIOUS
+                    <i className="ph-bold ph-caret-left mr-1"></i> PREV
                   </Button>
-                  <div className="px-3 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-md h-8 flex items-center justify-center min-w-12 shadow-sm">
-                    {page} / {totalPages}
+                  <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-2 text-[11px] font-bold text-gray-700 shadow-xs focus-within:border-pup-maroon focus-within:ring-1 focus-within:ring-pup-maroon">
+                    <input
+                      type="text"
+                      className="w-6 bg-transparent text-center focus:outline-none"
+                      value={jumpPage}
+                      onChange={(e) => setJumpPage(e.target.value)}
+                      onKeyDown={handleJumpPage}
+                      onBlur={handleJumpPage}
+                    />
+                    <span className="mx-0.5 text-gray-400">/</span>
+                    <span>{totalPages}</span>
                   </div>
                   <Button
                     type="button"
@@ -524,10 +591,9 @@ export default function DocumentRequestsTab({
                     size="sm"
                     disabled={page >= totalPages}
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    className="h-8 text-xs font-bold text-gray-600"
+                    className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
                   >
-                    NEXT
-                    <i className="ph-bold ph-caret-right text-[10px] ml-1"></i>
+                    NEXT <i className="ph-bold ph-caret-right ml-1"></i>
                   </Button>
                 </div>
               </div>

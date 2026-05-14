@@ -24,11 +24,11 @@ import { AdminGuard } from "@/components/shared/AuthGuard";
 import StaffDirectoryTab from "@/components/admin/StaffDirectoryTab";
 import RegisterAccountTab from "@/components/admin/RegisterAccountTab";
 import AuditLogsTab from "@/components/admin/AuditLogsTab";
-import BackupMaintenanceTab from "@/components/admin/BackupMaintenanceTab";
+import BackupTab from "@/components/admin/BackupTab";
 import EditUserModal from "@/components/admin/EditUserModal";
 import SystemConfigTab from "@/components/admin/SystemConfigTab";
 import DigitalRecordsReviewTab from "@/components/admin/DigitalRecordsReviewTab";
-import SystemAnalyticsTab from "@/components/admin/SystemAnalyticsTab";
+import DigitizationComplianceTab from "@/components/admin/DigitizationComplianceTab";
 import SLAAnalyticsTab from "@/components/admin/SLAAnalyticsTab";
 import StorageLayoutEditorTab from "@/components/admin/StorageLayoutEditorTab";
 import { formatPHDateTime } from "@/lib/timeFormat";
@@ -71,6 +71,10 @@ function AdminPageContent() {
   const [logSearch, setLogSearch] = useState("");
   const [logRoleFilter, setLogRoleFilter] = useState("All");
   const [logSeverityFilter, setLogSeverityFilter] = useState("All");
+  const [logStartDate, setLogStartDate] = useState("");
+  const [logEndDate, setLogEndDate] = useState("");
+  const [logSortBy, setLogSortBy] = useState("created_at");
+  const [logSortOrder, setLogSortOrder] = useState("DESC");
   const [logsMineOnly, setLogsMineOnly] = useState(false);
 
   const [systemHealth, setSystemHealth] = useState({
@@ -110,10 +114,13 @@ function AdminPageContent() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  const [restoreOpen, setRestoreOpen] = useState(false);
+  const [restoreTarget, setRestoreTarget] = useState(null);
 
+  const [backupDeleteTargets, setBackupDeleteTargets] = useState([]);
   const [backupDeleteOpen, setBackupDeleteOpen] = useState(false);
-  const [backupDeleteTarget, setBackupDeleteTarget] = useState(null);
   const [backupDeleteLoading, setBackupDeleteLoading] = useState(false);
+  const [backupDeleteTypedText, setBackupDeleteTypedText] = useState("");
 
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false);
   const [restoreFile, setRestoreFile] = useState(null);
@@ -149,18 +156,18 @@ function AdminPageContent() {
     const opts = isRich && msg.description ? { description: msg.description } : {};
     
     if (typeOrIsError === true || typeOrIsError === "error") {
-      toast.error(title, opts);
-      return;
+      return toast.error(title, opts);
     }
     if (typeOrIsError === "warning") {
-      toast.warning(title, opts);
-      return;
+      return toast.warning(title, opts);
+    }
+    if (typeOrIsError === "loading") {
+      return toast.loading(title, opts);
     }
     if (!autoHide) {
-      toast.message(title, { ...opts, duration: 5000 });
-      return;
+      return toast.message(title, { ...opts, duration: 5000 });
     }
-    toast.success(title, opts);
+    return toast.success(title, opts);
   }, []);
 
   const executeWithTOTP = useCallback(async (action, actionLabel, hasToken = false) => {
@@ -218,8 +225,12 @@ function AdminPageContent() {
       const mineQuery = logsMineOnly ? "&mine=1" : "";
       const roleQuery = logRoleFilter !== "All" ? `&role=${encodeURIComponent(logRoleFilter)}` : "";
       const sevQuery = logSeverityFilter !== "All" ? `&severity=${encodeURIComponent(logSeverityFilter)}` : "";
+      const startQuery = logStartDate ? `&startDate=${encodeURIComponent(logStartDate)}` : "";
+      const endQuery = logEndDate ? `&endDate=${encodeURIComponent(logEndDate)}` : "";
+      const sortQuery = `&sortBy=${encodeURIComponent(logSortBy)}&sortOrder=${encodeURIComponent(logSortOrder)}`;
+
       const resLogs = await fetch(
-        `/api/audit-logs?limit=${logsPerPage}&offset=${offset}&search=${encodeURIComponent(logSearch)}${mineQuery}${roleQuery}${sevQuery}`,
+        `/api/audit-logs?limit=${logsPerPage}&offset=${offset}&search=${encodeURIComponent(logSearch)}${mineQuery}${roleQuery}${sevQuery}${startQuery}${endQuery}${sortQuery}`,
       );
       const jsonLogs = await resLogs.json();
       if (!resLogs.ok || !jsonLogs?.ok)
@@ -248,7 +259,7 @@ function AdminPageContent() {
     } finally {
       setViewLoading((prev) => ({ ...prev, logs: false }));
     }
-  }, [logPage, logsPerPage, logSearch, logsMineOnly, logRoleFilter, logSeverityFilter]);
+  }, [logPage, logsPerPage, logSearch, logsMineOnly, logRoleFilter, logSeverityFilter, logStartDate, logEndDate, logSortBy, logSortOrder]);
 
   const refreshLogStats = useCallback(async () => {
     try {
@@ -454,10 +465,6 @@ function AdminPageContent() {
 
   const reviewDocumentStatus = useCallback(
     async (id, approvalStatus, reviewNote = "") => {
-      const record = reviewRecords.find(r => r.id === id);
-      const studentName = record?.student_name || "Unknown";
-      const docType = record?.doc_type || "Document";
-
       try {
         const res = await fetch(`/api/documents/${id}`, {
           method: "PATCH",
@@ -469,22 +476,88 @@ function AdminPageContent() {
           throw new Error(json?.error || "Failed to review document");
         }
 
-        logAdminAction({
-          action: `${approvalStatus} Document`,
-          details: `${approvalStatus.toLowerCase()} digital record for student '${studentName}' (Document: ${docType})${reviewNote ? `. Reason: ${reviewNote}` : ""}`,
-          severity: approvalStatus === "Declined" ? "WARNING" : "INFO",
-          entityType: "Document",
-          entityId: id
-        });
-
         showToast({ title: "Review Complete", description: `The document has been ${approvalStatus.toLowerCase()}.` });
         refreshReviewRecords();
       } catch (err) {
         showToast({ title: "Review Failed", description: err?.message || "Unable to update document status." }, true);
       }
     },
-    [reviewRecords, refreshReviewRecords, showToast, logAdminAction]
+    [reviewRecords, refreshReviewRecords, showToast]
   );
+
+  const bulkReviewDocumentsStatus = useCallback(
+    async (ids, approvalStatus, reviewNote = "") => {
+      if (!ids || ids.length === 0) return;
+      const toastId = showToast(
+        {
+          title: "Processing Batch",
+          description: `Updating ${ids.length} digital records...`,
+        },
+        "loading"
+      );
+
+      const results = { success: 0, failed: 0 };
+
+      for (const id of ids) {
+        try {
+          const res = await fetch(`/api/documents/${id}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ approvalStatus, reviewNote }),
+          });
+          const json = await res.json().catch(() => null);
+          if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed");
+          results.success++;
+        } catch {
+          results.failed++;
+        }
+      }
+
+      toast.dismiss(toastId);
+      if (results.failed === 0) {
+        showToast({
+          title: "Batch Action Complete",
+          description: `Successfully ${approvalStatus.toLowerCase()} ${results.success} records.`,
+        });
+      } else {
+        showToast(
+          {
+            title: "Batch Action Partial",
+            description: `Processed ${results.success} success, ${results.failed} failed.`,
+          },
+          true
+        );
+      }
+      refreshReviewRecords();
+    },
+    [refreshReviewRecords, showToast]
+  );
+
+  const [bulkDeclineIds, setBulkDeclineIds] = useState([]);
+  const [bulkDeclineOpen, setBulkDeclineOpen] = useState(false);
+  const [bulkDeclineReason, setBulkDeclineReason] = useState("");
+
+  const handleBulkApprove = useCallback(
+    async (ids) => {
+      await bulkReviewDocumentsStatus(ids, "Approved");
+    },
+    [bulkReviewDocumentsStatus]
+  );
+
+  const handleBulkDecline = useCallback((ids) => {
+    setBulkDeclineIds(ids);
+    setBulkDeclineReason("");
+    setBulkDeclineOpen(true);
+  }, []);
+
+  const submitBulkDecline = useCallback(async () => {
+    const ids = bulkDeclineIds;
+    const note = bulkDeclineReason;
+    setBulkDeclineOpen(false);
+    setBulkDeclineIds([]);
+    setBulkDeclineReason("");
+    await bulkReviewDocumentsStatus(ids, "Declined", note);
+  }, [bulkDeclineIds, bulkDeclineReason, bulkReviewDocumentsStatus]);
 
   const openDeclinePrompt = useCallback((id) => {
     setPendingDeclineDocId(id);
@@ -669,7 +742,15 @@ function AdminPageContent() {
 
   const handleRestoreUser = async (id) => {
     const u = staffData.find((s) => s.id === id);
-    const name = u ? `${u.fname} ${u.lname}` : id;
+    if (!u) return;
+    setRestoreTarget(u);
+    setRestoreOpen(true);
+  };
+
+  const confirmRestoreUser = async () => {
+    if (!restoreTarget) return;
+    const { id, fname, lname } = restoreTarget;
+    const name = `${fname} ${lname}`;
     try {
       const res = await fetch(`/api/staff/${id}`, {
         method: "PATCH",
@@ -681,6 +762,7 @@ function AdminPageContent() {
       
       setStaffData((prev) => prev.map((s) => (s.id === id ? json.data : s)));
       showToast({ title: "Account Restored", description: `${name}'s access has been reactivated.` });
+      setRestoreOpen(false);
     } catch (err) {
       showToast({ title: "Restore Failed", description: err.message }, true);
     }
@@ -744,51 +826,48 @@ function AdminPageContent() {
       headers.set("x-totp-token", totpToken);
     }
 
-    await toast.promise(
-      (async () => {
-        const res = await fetch("/api/system/backup", { 
-          method: "POST", 
-          headers 
-        });
-        const json = await res.json();
+    try {
+      const res = await fetch("/api/system/backup", { 
+        method: "POST", 
+        headers 
+      });
+      const json = await res.json();
 
-        if (res.status === 403 && json?.requiresTOTP) {
-          if (totpToken) {
-            throw new Error(json.error || "Invalid verification code");
-          }
-          return { requiresTOTP: true };
+      if (res.status === 403 && json?.requiresTOTP) {
+        if (totpToken) {
+          throw new Error(json.error || "Invalid verification code");
         }
-
-        if (!res.ok || !json?.ok)
-          throw new Error(json?.error || "Failed to create backup");
-
-        if (json.data?.id) {
-          const link = document.createElement("a");
-          link.href = `/api/system/backup/download?id=${json.data.id}`;
-          link.download = json.data.filename;
-          link.click();
-        }
-        refreshBackups();
-        return { success: true, filename: json?.data?.filename || "backup package" };
-      })(),
-      {
-        loading: "Creating full system backup…",
-        success: (result) => {
-          if (result?.requiresTOTP) {
-            executeWithTOTP((token) => simulateBackup(token), "Create Backup", true);
-            return { title: "Verification Required", description: "Please enter your 2FA code." };
-          }
-          return { title: "Backup Complete", description: `Package ready: ${result.filename}` };
-        },
-        error: (err) => {
-          return { title: "Backup Failed", description: err?.message || "Unable to create system backup." };
-        },
+        executeWithTOTP((token) => simulateBackup(token), "Create Backup", true);
+        return;
       }
-    );
+
+      if (!res.ok || !json?.ok)
+        throw new Error(json?.error || "Failed to create backup");
+
+      if (json.data?.id) {
+        const link = document.createElement("a");
+        link.href = `/api/system/backup/download?id=${json.data.id}`;
+        link.download = json.data.filename;
+        link.click();
+      }
+      refreshBackups();
+      showToast({
+        title: "Snapshot Created Successfully",
+        description: `Archive '${json?.data?.filename || "backup package"}' is ready. A redundant copy is being synchronized to the external drive automatically.`,
+      });
+    } catch (err) {
+      showToast({ title: "Backup Execution Failed", description: err?.message || "Unable to complete the system snapshot process." }, true);
+    }
   };
 
   const syncExternal = async (id) => {
-    showToast({ title: "Sync In Progress", description: "Transferring encrypted backup to external drive…" }, false, false);
+    const toastId = showToast(
+      {
+        title: "Sync In Progress",
+        description: "Transferring encrypted backup to external drive…",
+      },
+      "loading"
+    );
     try {
       const res = await fetch("/api/system/backup/sync-external", {
         method: "POST",
@@ -797,24 +876,41 @@ function AdminPageContent() {
       });
       const json = await res.json();
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Sync failed");
-      showToast({ title: "Sync Complete", description: "Backup has been transferred to the external drive." });
+      toast.dismiss(toastId);
+      showToast({
+        title: "Sync Complete",
+        description: "Backup has been transferred to the external drive.",
+      });
       refreshBackups();
     } catch (err) {
+      toast.dismiss(toastId);
       showToast({ title: "Sync Failed", description: err.message }, true);
     }
   };
 
   const confirmDeleteBackup = async () => {
-    if (!backupDeleteTarget || backupDeleteLoading) return;
+    if (backupDeleteTargets.length === 0 || backupDeleteLoading) return;
     setBackupDeleteLoading(true);
     try {
-      const res = await fetch(`/api/system/backup/${backupDeleteTarget.id}`, {
-        method: "DELETE",
-      });
+      const isBulk = backupDeleteTargets.length > 1;
+      const res = await fetch(
+        isBulk ? "/api/system/backup" : `/api/system/backup/${backupDeleteTargets[0].id}`,
+        {
+          method: "DELETE",
+          headers: isBulk ? { "Content-Type": "application/json" } : {},
+          body: isBulk ? JSON.stringify({ ids: backupDeleteTargets.map(t => t.id) }) : undefined,
+        },
+      );
       const json = await res.json();
       if (!res.ok || !json?.ok)
-        throw new Error(json?.error || "Failed to delete backup");
-      showToast({ title: "Backup Removed", description: "The selected backup has been permanently deleted." });
+        throw new Error(json?.error || "Failed to delete backup(s)");
+      
+      showToast({ 
+        title: isBulk ? "Backups Removed" : "Backup Removed", 
+        description: isBulk 
+          ? `Successfully removed ${json.deletedCount} backup archives.`
+          : "The selected backup has been permanently deleted." 
+      });
       setBackupDeleteOpen(false);
       refreshBackups();
     } catch (err) {
@@ -1009,6 +1105,15 @@ function AdminPageContent() {
             setLogRoleFilter={setLogRoleFilter}
             logSeverityFilter={logSeverityFilter}
             setLogSeverityFilter={setLogSeverityFilter}
+            logStartDate={logStartDate}
+            setLogStartDate={setLogStartDate}
+            logEndDate={logEndDate}
+            setLogEndDate={setLogEndDate}
+            logSortBy={logSortBy}
+            setLogSortBy={setLogSortBy}
+            logSortOrder={logSortOrder}
+            setLogSortOrder={setLogSortOrder}
+            showToast={showToast}
           />
         )}
 
@@ -1028,17 +1133,20 @@ function AdminPageContent() {
           <DigitalRecordsReviewTab
             records={reviewRecords}
             isLoading={viewLoading.review}
+            error={null}
             statusFilter={reviewStatusFilter}
             setStatusFilter={setReviewStatusFilter}
             onRefresh={refreshReviewRecords}
             onApprove={(id) => reviewDocumentStatus(id, "Approved")}
             onDecline={openDeclinePrompt}
+            onBulkApprove={handleBulkApprove}
+            onBulkDecline={handleBulkDecline}
             onPreviewDocument={handlePreviewDocument}
           />
         )}
 
         {view === "digitization" && (
-          <SystemAnalyticsTab
+          <DigitizationComplianceTab
             showToast={showToast}
             onLogAction={logAdminAction}
           />
@@ -1052,7 +1160,7 @@ function AdminPageContent() {
         )}
 
         {(view === "system" || view === "backup") && (
-          <BackupMaintenanceTab
+          <BackupTab
             systemHealth={systemHealth}
             backups={backups}
             isLoading={viewLoading.system || viewLoading.backup}
@@ -1065,9 +1173,11 @@ function AdminPageContent() {
               link.click();
             }}
             onDeleteBackup={(id) => {
-              const b = backups.find((x) => x.id === id);
-              if (b) {
-                setBackupDeleteTarget(b);
+              const ids = Array.isArray(id) ? id : [id];
+              const targets = backups.filter((x) => ids.includes(x.id));
+              if (targets.length > 0) {
+                setBackupDeleteTargets(targets);
+                setBackupDeleteTypedText("");
                 setBackupDeleteOpen(true);
               }
             }}
@@ -1076,6 +1186,7 @@ function AdminPageContent() {
               if (f) {
                 setRestoreFile(f);
                 setRestoreConfirmOpen(true);
+                // Reset file input value so selecting the same file again triggers onChange
                 e.target.value = "";
               }
             }}
@@ -1098,29 +1209,51 @@ function AdminPageContent() {
 
       <ConfirmModal
         open={deleteOpen}
-        title="Remove Personnel Profile"
-        message={`This will permanently delete ${deleteTarget?.fname}'s account. This action cannot be undone.`}
-        confirmLabel="Remove Account"
+        title="Archive Personnel Account"
+        message={`Archive this personnel account? This will restrict their system access immediately but can be restored later if needed.`}
+        confirmLabel="Archive Account"
+        selectedItems={[deleteTarget ? `${deleteTarget.fname} ${deleteTarget.lname}` : ""]}
         onConfirm={confirmDelete}
         onCancel={() => setDeleteOpen(false)}
         isLoading={deleteLoading}
       />
 
       <ConfirmModal
+        open={restoreOpen}
+        title="Restore Personnel Account"
+        message={`Reactivate system access for this personnel profile? They will be able to log in to the system again.`}
+        confirmLabel="Restore Account"
+        variant="success"
+        selectedItems={[restoreTarget ? `${restoreTarget.fname} ${restoreTarget.lname}` : ""]}
+        onConfirm={confirmRestoreUser}
+        onCancel={() => setRestoreOpen(false)}
+      />
+
+      <PromptModal
         open={backupDeleteOpen}
-        title="Delete System Backup"
-        message={`Remove ${backupDeleteTarget?.filename} from the local server? If this backup was previously synced, its copy on the external drive will be preserved.`}
-        confirmLabel="Delete Local Copy"
+        title={backupDeleteTargets.length > 1 ? "Bulk Delete Backups" : "Delete System Backup"}
+        message={backupDeleteTargets.length > 1 
+          ? `You are about to permanently remove ${backupDeleteTargets.length} backup archives from the local server. This action is irreversible.` 
+          : `You are about to permanently remove the following backup archive from the local server. This action is irreversible.`
+        }
+        itemsList={backupDeleteTargets.map(t => t.filename)}
+        inputLabel="Please type 'DELETE' to confirm deletion"
+        value={backupDeleteTypedText}
+        onChange={setBackupDeleteTypedText}
         onConfirm={confirmDeleteBackup}
         onCancel={() => setBackupDeleteOpen(false)}
+        confirmLabel="Delete Permanently"
+        placeholder="Type 'DELETE' to authorize..."
         isLoading={backupDeleteLoading}
+        confirmDisabled={backupDeleteTypedText !== "DELETE"}
       />
 
       <ConfirmModal
         open={restoreConfirmOpen}
         title="Restore System Image"
-        variant="warning"
-        message={`Overwrite all repository data with ${restoreFile?.name}? This action is irreversible.`}
+        variant="danger"
+        message={`Overwrite all repository data with the following backup archive? This action is irreversible.`}
+        selectedItems={[restoreFile?.name]}
         confirmLabel="Begin Restoration"
         onConfirm={() => confirmRestore()}
         onCancel={() => setRestoreConfirmOpen(false)}
@@ -1141,6 +1274,23 @@ function AdminPageContent() {
         }}
         confirmLabel="Submit Decline"
         placeholder="Enter reason..."
+        multiline
+      />
+
+      {/* Bulk Decline Prompt */}
+      <PromptModal
+        open={bulkDeclineOpen}
+        onCancel={() => {
+          setBulkDeclineOpen(false);
+          setBulkDeclineReason("");
+        }}
+        title="Bulk Decline Documents"
+        message={`You are declining ${bulkDeclineIds.length} records. Please provide a reason that will be applied to all selected items.`}
+        value={bulkDeclineReason}
+        onChange={setBulkDeclineReason}
+        placeholder="Reason for bulk rejection (e.g., missing signatures, invalid ID)..."
+        onConfirm={submitBulkDecline}
+        confirmLabel="Decline All"
         multiline
       />
 

@@ -14,13 +14,8 @@ import {
   TabsTrigger,
   TabsContent,
 } from "@/components/ui/tabs";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
+import PageHeader from "@/components/shared/PageHeader";
+import { formatPHDateTime } from "@/lib/timeFormat";
 
 function AccountPageContent() {
   const router = useRouter();
@@ -407,41 +402,33 @@ function AccountPageContent() {
       <Header authUser={authUser} onLogout={handleLogout} />
 
       <main className="flex-1 w-full max-w-[1200px] mx-auto py-8 px-6">
-        {/* Sleek Page Header */}
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-200 pb-6">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-black text-pup-maroon uppercase tracking-widest mb-1">
-              <i className="ph-bold ph-gear"></i>
-              System Settings
-            </div>
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight">
-              Account Settings
-            </h1>
-            <p className="text-sm text-gray-500 font-medium mt-1">
-              Configure your professional identity and security protocol.
-            </p>
-          </div>
+        <PageHeader
+          icon="ph-user-gear"
+          title="Account Settings"
+          description="Configure your professional identity and security protocol."
+          actions={
+            <Button
+              variant="outline"
+              onClick={() => {
+                const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
+                router.push(path);
+              }}
+              className="px-6 h-10 font-black uppercase tracking-widest text-xs border-gray-300 hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-sm flex items-center gap-2 shrink-0 rounded-brand"
+            >
+              <i className="ph-bold ph-arrow-left"></i>
+              Return to Dashboard
+            </Button>
+          }
+        />
 
-          <Button
-            variant="outline"
-            onClick={() => {
-              const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
-              router.push(path);
-            }}
-            className="px-6 font-black uppercase tracking-widest text-xs border-gray-300 hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-sm flex items-center gap-2 shrink-0 rounded-brand"
+        <div className="mt-8">
+          <Tabs
+            defaultValue="profile"
+            value={activeTab}
+            onValueChange={setActiveTab}
+            orientation="vertical"
+            className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start"
           >
-            <i className="ph-bold ph-arrow-left"></i>
-            Return to Dashboard
-          </Button>
-        </div>
-
-        <Tabs
-          defaultValue="profile"
-          value={activeTab}
-          onValueChange={setActiveTab}
-          orientation="vertical"
-          className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-8 items-start"
-        >
           {/* Sidebar Navigation */}
           <aside className="space-y-6 shrink-0">
             <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden">
@@ -606,6 +593,11 @@ function AccountPageContent() {
                         <CardDescription className="font-medium text-gray-500">
                           Rotate your password regularly to maintain account
                           integrity.
+                          {authUser?.password_last_changed && (
+                            <span className="block mt-1 text-[10px] text-gray-400 font-bold uppercase tracking-wider">
+                              Last reset on {formatPHDateTime(authUser.password_last_changed)}
+                            </span>
+                          )}
                         </CardDescription>
                       </div>
                     </div>
@@ -952,6 +944,7 @@ function AccountPageContent() {
             </TabsContent>
           </div>
         </Tabs>
+        </div>
       </main>
     </div>
   );

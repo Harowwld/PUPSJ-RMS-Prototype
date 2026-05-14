@@ -1055,6 +1055,25 @@ export async function getDb() {
         }
       }
 
+      // Migration to version 16: Add password_last_changed to staff table
+      if (schemaVersion < 16) {
+        try {
+          const pragma = db.exec("PRAGMA table_info(staff)");
+          const cols = new Set(
+            (pragma?.[0]?.values || []).map((r) => String(r?.[1] || ""))
+          );
+          if (!cols.has("password_last_changed")) {
+            db.exec("ALTER TABLE staff ADD COLUMN password_last_changed TEXT");
+            // For existing staff, set to created_at as a baseline
+            db.exec("UPDATE staff SET password_last_changed = created_at WHERE password_last_changed IS NULL");
+          }
+          db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '16')");
+          persistDb();
+        } catch (e) {
+          console.error("[DB] schema_version 16 migration (password_last_changed):", e);
+        }
+      }
+
       try {
         db.exec("PRAGMA foreign_keys = ON");
       } catch (e) {

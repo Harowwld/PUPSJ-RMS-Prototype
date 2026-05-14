@@ -25,7 +25,11 @@ export async function POST(req) {
     // Perform sync
     const result = await syncBackupExternally(id);
 
-    await writeAuditLog(req, `Synced backup to external`, { details: `${backup.filename} (id ${id})` });
+    await writeAuditLog(req, `Sync Backup External`, { 
+      details: `synchronized encrypted backup '${backup.filename}' (ID: ${id}) to external hardware storage node`,
+      entity_type: "Backup",
+      entity_id: id
+    });
 
     return NextResponse.json({
       ok: true,

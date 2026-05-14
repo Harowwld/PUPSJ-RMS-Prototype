@@ -47,7 +47,15 @@ export async function POST(req) {
   }
 
   if (rows.length > 0) {
-    await writeAuditLog(req, `Bulk imported system configuration`, { details: `${rows.length} rows (${successCount} success, ${failCount} failed)` });
+    const action = "Bulk Data Import";
+    const details = `processed batch taxonomy ingestion: ${successCount} added, ${failCount} skipped as duplicates or invalid`;
+    const severity = (failCount > 0 && successCount > 0) ? "WARNING" : "INFO";
+    
+    await writeAuditLog(req, action, { 
+      details, 
+      severity,
+      entity_type: "System"
+    });
   }
 
   return NextResponse.json({ ok: true, data: { successCount, failCount } });

@@ -19,9 +19,14 @@ function DropdownMenuPortal({
 }
 
 function DropdownMenuTrigger({
+  asChild,
+  children,
   ...props
 }) {
-  return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props} />;
+  if (asChild && React.isValidElement(children)) {
+    return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" render={children} {...props} />;
+  }
+  return <MenuPrimitive.Trigger data-slot="dropdown-menu-trigger" {...props}>{children}</MenuPrimitive.Trigger>;
 }
 
 function DropdownMenuContent({

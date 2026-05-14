@@ -19,8 +19,10 @@
     "chokidar": "^4.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
     "jose": "^5.2.4",
     "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
     "lucide-react": "^1.7.0",
     "next": "16.1.6",
     "next-themes": "^0.4.6",
@@ -28,6 +30,7 @@
     "pdfjs-dist": "^4.10.38",
     "qrcode": "^1.5.4",
     "react": "19.2.3",
+    "react-day-picker": "^10.0.0",
     "react-dom": "19.2.3",
     "recharts": "^3.8.1",
     "shadcn": "^4.1.0",
@@ -48,6 +51,8 @@
     "dotenv": "^16.4.7",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
+    "prettier": "^3.8.3",
+    "prettier-plugin-tailwindcss": "^0.8.0",
     "tailwindcss": "^4",
     "wait-on": "^8.0.1"
   }

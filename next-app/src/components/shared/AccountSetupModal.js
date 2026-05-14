@@ -1,209 +1,249 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
-import { Skeleton } from "@/components/ui/skeleton";
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function AccountSetupModal({ authUser }) {
-  const [open, setOpen] = useState(false);
-  const [step, setStep] = useState(1); // 1 = Password, 2 = Security
+  const [open, setOpen] = useState(false)
+  const [step, setStep] = useState(1) // 1 = Password, 2 = Security
 
-  const needsPassword = authUser?.mustChangePassword;
-  const needsSecurity = authUser?.mustSetSecurityQuestions;
+  const needsPassword = authUser?.mustChangePassword
+  const needsSecurity = authUser?.mustSetSecurityQuestions
 
   // Password state
-  const [pwCurrent, setPwCurrent] = useState("");
-  const [pwNext, setPwNext] = useState("");
-  const [pwConfirm, setPwConfirm] = useState("");
-  const [pwLoading, setPwLoading] = useState(false);
-  const [pwError, setPwError] = useState("");
+  const [pwCurrent, setPwCurrent] = useState("")
+  const [pwNext, setPwNext] = useState("")
+  const [pwConfirm, setPwConfirm] = useState("")
+  const [pwLoading, setPwLoading] = useState(false)
+  const [pwError, setPwError] = useState("")
 
   // Security state
-  const [questions, setQuestions] = useState([]);
-  const [answers, setAnswers] = useState({});
-  const [secLoading, setSecLoading] = useState(false);
-  const [secSubmitting, setSecSubmitting] = useState(false);
-  const [secError, setSecError] = useState("");
+  const [questions, setQuestions] = useState([])
+  const [answers, setAnswers] = useState({})
+  const [secLoading, setSecLoading] = useState(false)
+  const [secSubmitting, setSecSubmitting] = useState(false)
+  const [secError, setSecError] = useState("")
 
   useEffect(() => {
     if (needsPassword || needsSecurity) {
-      setOpen(true);
+      setOpen(true)
       if (needsPassword) {
-        setStep(1);
+        setStep(1)
       } else {
-        setStep(2);
-        fetchQuestions();
+        setStep(2)
+        fetchQuestions()
       }
     } else {
-      setOpen(false);
+      setOpen(false)
     }
-  }, [needsPassword, needsSecurity]);
+  }, [needsPassword, needsSecurity])
 
   const fetchQuestions = async () => {
-    setSecLoading(true);
+    setSecLoading(true)
     try {
-      const res = await fetch("/api/staff/security");
-      const json = await res.json();
+      const res = await fetch("/api/staff/security")
+      const json = await res.json()
       if (json.ok && json.data?.questions) {
-        setQuestions(json.data.questions);
+        setQuestions(json.data.questions)
       }
     } catch (e) {
-      console.error(e);
+      console.error(e)
     }
-    setSecLoading(false);
-  };
+    setSecLoading(false)
+  }
 
   const submitPassword = async (e) => {
-    e.preventDefault();
-    if (pwLoading) return;
+    e.preventDefault()
+    if (pwLoading) return
     if (!pwCurrent || !pwNext || !pwConfirm) {
-      setPwError("Please fill all fields");
-      return;
+      setPwError("Please fill all fields")
+      return
     }
     if (pwNext !== pwConfirm) {
-      setPwError("New passwords do not match");
-      return;
+      setPwError("New passwords do not match")
+      return
     }
     if (pwNext.length < 6) {
-      setPwError("Password must be at least 6 characters");
-      return;
+      setPwError("Password must be at least 6 characters")
+      return
     }
 
-    setPwError("");
-    setPwLoading(true);
+    setPwError("")
+    setPwLoading(true)
 
     try {
       const res = await fetch("/api/auth/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ currentPassword: pwCurrent, newPassword: pwNext }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to change password");
+        body: JSON.stringify({
+          currentPassword: pwCurrent,
+          newPassword: pwNext,
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok || !json?.ok)
+        throw new Error(json?.error || "Failed to change password")
 
-      toast.success("Password Updated", { description: "Your new credentials are now active." });
+      toast.success("Password Updated", {
+        description: "Your new credentials are now active.",
+      })
 
       if (needsSecurity) {
-        setStep(2);
-        fetchQuestions();
+        setStep(2)
+        fetchQuestions()
       } else {
-        setOpen(false);
-        setTimeout(() => window.location.reload(), 1000);
+        setOpen(false)
+        setTimeout(() => window.location.reload(), 1000)
       }
     } catch (err) {
-      setPwError(err?.message || "Failed to change password");
+      setPwError(err?.message || "Failed to change password")
     } finally {
-      setPwLoading(false);
+      setPwLoading(false)
     }
-  };
+  }
 
   const submitSecurity = async (e) => {
-    e.preventDefault();
-    if (secSubmitting) return;
-// Validation
-const requiredQuestions = questions.filter(q => q.is_required);
-for (const q of requiredQuestions) {
-  if (!answers[q.id] || !answers[q.id].trim()) {
-    setSecError("Please provide an answer for all required questions.");
-    return;
-  }
-}
+    e.preventDefault()
+    if (secSubmitting) return
+    // Validation
+    const requiredQuestions = questions.filter((q) => q.is_required)
+    for (const q of requiredQuestions) {
+      if (!answers[q.id] || !answers[q.id].trim()) {
+        setSecError("Please provide an answer for all required questions.")
+        return
+      }
+    }
 
-
-    setSecError("");
-    setSecSubmitting(true);
+    setSecError("")
+    setSecSubmitting(true)
     try {
       const payload = questions.map((q) => ({
         questionId: q.id,
-        answer: answers[q.id].trim()
-      }));
+        answer: answers[q.id].trim(),
+      }))
 
       const res = await fetch("/api/staff/security", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ answers: payload }),
-      });
-      const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || "Failed to save answers");
+      })
+      const json = await res.json()
+      if (!res.ok || !json.ok)
+        throw new Error(json.error || "Failed to save answers")
 
-      toast.success("Account Setup Complete", { description: "Your account is now fully secured." });
-      setOpen(false);
-      setTimeout(() => window.location.reload(), 1000);
+      toast.success("Account Setup Complete", {
+        description: "Your account is now fully secured.",
+      })
+      setOpen(false)
+      setTimeout(() => window.location.reload(), 1000)
     } catch (err) {
-      setSecError(err?.message || "Failed to save answers");
+      setSecError(err?.message || "Failed to save answers")
     } finally {
-      setSecSubmitting(false);
+      setSecSubmitting(false)
     }
-  };
+  }
 
-  if (!open) return null;
+  if (!open) return null
 
   return (
     <Dialog open={open} onOpenChange={() => {}}>
-      <DialogContent className="sm:max-w-2xl p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand flex md:flex-row flex-col h-[85vh] md:h-[600px] max-h-screen" hideClose>
+      <DialogContent
+        className="flex h-[85vh] max-h-screen flex-col overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-2xl md:h-[600px] md:flex-row"
+        hideClose
+      >
         {/* Sidebar Tabs */}
-        <div className="w-full md:w-1/3 bg-gray-50 border-r border-gray-200 p-6 flex flex-col gap-3 shrink-0 overflow-y-auto">
+        <div className="flex w-full shrink-0 flex-col gap-3 overflow-y-auto border-r border-gray-200 bg-gray-50 p-6 md:w-1/3">
           <div className="mb-2">
-            <h3 className="text-xs font-black text-gray-500 uppercase tracking-widest px-1">Account Setup</h3>
-            <p className="text-[11px] text-gray-400 font-medium px-1 mt-0.5 leading-tight">Complete these steps to access your dashboard securely.</p>
+            <h3 className="px-1 text-xs font-black tracking-widest text-gray-500 uppercase">
+              Account Setup
+            </h3>
+            <p className="mt-0.5 px-1 text-[11px] leading-tight font-medium text-gray-400">
+              Complete these steps to access your dashboard securely.
+            </p>
           </div>
 
-          <div className={`px-4 py-3 rounded-brand flex flex-col gap-1 transition-all ${step === 1 ? 'bg-white shadow-sm border border-gray-200 scale-100 opacity-100' : 'opacity-40 grayscale scale-95'}`}>
+          <div
+            className={`flex flex-col gap-1 rounded-brand px-4 py-3 transition-all ${step === 1 ? "scale-100 border border-gray-200 bg-white opacity-100 shadow-sm" : "scale-95 opacity-40 grayscale"}`}
+          >
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <i className={`text-lg ${needsPassword && step > 1 ? 'ph-fill ph-check-circle text-emerald-500' : 'ph-duotone ph-password text-pup-maroon'}`}></i>
+                <i
+                  className={`text-lg ${needsPassword && step > 1 ? "ph-fill ph-check-circle text-emerald-500" : "ph-duotone ph-password text-pup-maroon"}`}
+                ></i>
                 <span className="text-sm font-black text-gray-900">Step 1</span>
               </div>
-              {needsPassword && step > 1 && <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider bg-emerald-50 px-2 py-0.5 rounded-full">Done</span>}
+              {needsPassword && step > 1 && (
+                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold tracking-wider text-emerald-600 uppercase">
+                  Done
+                </span>
+              )}
             </div>
-            <span className="text-xs font-bold text-gray-600 pl-7">Change Password</span>
-            <p className="text-[10px] text-gray-500 pl-7 mt-0.5 leading-tight">Update your default system password.</p>
+            <span className="pl-7 text-xs font-bold text-gray-600">
+              Change Password
+            </span>
+            <p className="mt-0.5 pl-7 text-[10px] leading-tight text-gray-500">
+              Update your default system password.
+            </p>
           </div>
 
-          <div className={`px-4 py-3 rounded-brand flex flex-col gap-1 transition-all ${step === 2 ? 'bg-white shadow-sm border border-gray-200 scale-100 opacity-100' : 'opacity-40 grayscale scale-95'}`}>
+          <div
+            className={`flex flex-col gap-1 rounded-brand px-4 py-3 transition-all ${step === 2 ? "scale-100 border border-gray-200 bg-white opacity-100 shadow-sm" : "scale-95 opacity-40 grayscale"}`}
+          >
             <div className="flex items-center gap-2">
               <i className="ph-duotone ph-shield-check text-lg text-pup-maroon"></i>
               <span className="text-sm font-black text-gray-900">Step 2</span>
             </div>
-            <span className="text-xs font-bold text-gray-600 pl-7">Security Answers</span>
-            <p className="text-[10px] text-gray-500 pl-7 mt-0.5 leading-tight">Set up your account recovery questions.</p>
+            <span className="pl-7 text-xs font-bold text-gray-600">
+              Security Answers
+            </span>
+            <p className="mt-0.5 pl-7 text-[10px] leading-tight text-gray-500">
+              Set up your account recovery questions.
+            </p>
           </div>
         </div>
 
         {/* Content Area */}
-        <div className="w-full md:w-2/3 flex flex-col bg-white">
+        <div className="flex w-full flex-col bg-white md:w-2/3">
           {step === 1 && (
             <>
-              <DialogHeader className="p-6 border-b border-gray-100 bg-white shrink-0">
+              <DialogHeader className="shrink-0 border-b border-gray-100 bg-white p-6">
                 <DialogTitle className="text-xl font-black tracking-tight text-gray-900">
                   Update Default Password
                 </DialogTitle>
-                <DialogDescription className="text-sm font-medium mt-1 text-gray-600">
-                  You are logging in for the first time. Please change your default password to continue using the system securely.
+                <DialogDescription className="mt-1 text-sm font-medium text-gray-600">
+                  You are logging in for the first time. Please change your
+                  default password to continue using the system securely.
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={submitPassword} className="flex flex-col flex-1 min-h-0">
-                <div className="p-6 space-y-5 overflow-y-auto flex-1">
+              <form
+                onSubmit={submitPassword}
+                className="flex min-h-0 flex-1 flex-col"
+              >
+                <div className="flex-1 space-y-5 overflow-y-auto p-6">
                   {pwError && (
-                    <div className="p-3 bg-red-50 border border-red-100 text-red-700 text-sm font-bold rounded-brand flex items-center gap-2">
+                    <div className="flex items-center gap-2 rounded-brand border border-red-100 bg-red-50 p-3 text-sm font-bold text-red-700">
                       <i className="ph-bold ph-warning-circle text-lg"></i>
                       {pwError}
                     </div>
                   )}
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Current Password <span className="text-pup-maroon">*</span></label>
+                    <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase">
+                      Current Password{" "}
+                      <span className="text-pup-maroon">*</span>
+                    </label>
                     <Input
                       type="password"
-                      className="h-11 bg-gray-50 border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon font-bold text-gray-900"
+                      className="h-11 rounded-brand border-gray-300 bg-gray-50 text-sm font-bold text-gray-900 focus-visible:ring-pup-maroon"
                       value={pwCurrent}
                       onChange={(e) => setPwCurrent(e.target.value)}
                       placeholder="e.g. pupstaff"
@@ -211,10 +251,12 @@ for (const q of requiredQuestions) {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">New Password <span className="text-pup-maroon">*</span></label>
+                    <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase">
+                      New Password <span className="text-pup-maroon">*</span>
+                    </label>
                     <Input
                       type="password"
-                      className="h-11 bg-gray-50 border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon font-bold text-gray-900"
+                      className="h-11 rounded-brand border-gray-300 bg-gray-50 text-sm font-bold text-gray-900 focus-visible:ring-pup-maroon"
                       value={pwNext}
                       onChange={(e) => setPwNext(e.target.value)}
                       placeholder="Min. 6 characters"
@@ -222,10 +264,13 @@ for (const q of requiredQuestions) {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Confirm New Password <span className="text-pup-maroon">*</span></label>
+                    <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase">
+                      Confirm New Password{" "}
+                      <span className="text-pup-maroon">*</span>
+                    </label>
                     <Input
                       type="password"
-                      className="h-11 bg-gray-50 border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon font-bold text-gray-900"
+                      className="h-11 rounded-brand border-gray-300 bg-gray-50 text-sm font-bold text-gray-900 focus-visible:ring-pup-maroon"
                       value={pwConfirm}
                       onChange={(e) => setPwConfirm(e.target.value)}
                       placeholder="Must match new password"
@@ -233,9 +278,17 @@ for (const q of requiredQuestions) {
                     />
                   </div>
                 </div>
-                <div className="p-5 border-t border-gray-100 bg-gray-50 flex justify-end shrink-0">
-                  <Button type="submit" disabled={pwLoading} className="bg-pup-maroon text-white h-11 px-6 font-bold shadow-sm hover:bg-red-900 transition-colors uppercase tracking-widest text-xs">
-                    {pwLoading ? "Saving..." : (needsSecurity ? "Next: Security Questions" : "Save Password & Enter")}
+                <div className="flex shrink-0 justify-end border-t border-gray-100 bg-gray-50 p-5">
+                  <Button
+                    type="submit"
+                    disabled={pwLoading}
+                    className="h-11 bg-pup-maroon px-6 text-xs font-bold tracking-widest text-white uppercase shadow-sm transition-colors hover:bg-red-900"
+                  >
+                    {pwLoading
+                      ? "Saving..."
+                      : needsSecurity
+                        ? "Next: Security Questions"
+                        : "Save Password & Enter"}
                   </Button>
                 </div>
               </form>
@@ -244,18 +297,22 @@ for (const q of requiredQuestions) {
 
           {step === 2 && (
             <>
-              <DialogHeader className="p-6 border-b border-gray-100 bg-white shrink-0">
+              <DialogHeader className="shrink-0 border-b border-gray-100 bg-white p-6">
                 <DialogTitle className="text-xl font-black tracking-tight text-gray-900">
                   Recovery Questions
                 </DialogTitle>
-                <DialogDescription className="text-sm font-medium mt-1 text-gray-600">
-                  Set up your security questions to recover your account if you forget your password.
+                <DialogDescription className="mt-1 text-sm font-medium text-gray-600">
+                  Set up your security questions to recover your account if you
+                  forget your password.
                 </DialogDescription>
               </DialogHeader>
-              <form onSubmit={submitSecurity} className="flex flex-col flex-1 min-h-0">
-                <div className="p-6 space-y-5 overflow-y-auto flex-1 custom-scrollbar">
+              <form
+                onSubmit={submitSecurity}
+                className="flex min-h-0 flex-1 flex-col"
+              >
+                <div className="custom-scrollbar flex-1 space-y-5 overflow-y-auto p-6">
                   {secError && (
-                    <div className="p-3 bg-red-50 border border-red-100 text-red-700 text-sm font-bold rounded-brand flex items-center gap-2">
+                    <div className="flex items-center gap-2 rounded-brand border border-red-100 bg-red-50 p-3 text-sm font-bold text-red-700">
                       <i className="ph-bold ph-warning-circle text-lg"></i>
                       {secError}
                     </div>
@@ -268,27 +325,44 @@ for (const q of requiredQuestions) {
                       </div>
                     ))
                   ) : questions.length === 0 ? (
-                    <div className="text-sm text-gray-500 font-medium">No global security questions have been configured.</div>
+                    <div className="text-sm font-medium text-gray-500">
+                      No global security questions have been configured.
+                    </div>
                   ) : (
                     questions.map((q) => (
                       <div key={q.id}>
-                        <label className="block text-xs font-bold text-gray-700 mb-1.5 tracking-wide leading-tight uppercase">
-                          {q.question} {q.is_required ? <span className="text-pup-maroon">*</span> : <span className="text-gray-400 normal-case ml-1 font-medium">(Optional)</span>}
+                        <label className="mb-1.5 block text-xs leading-tight font-bold tracking-wide text-gray-700 uppercase">
+                          {q.question}{" "}
+                          {q.is_required ? (
+                            <span className="text-pup-maroon">*</span>
+                          ) : (
+                            <span className="ml-1 font-medium text-gray-400 normal-case">
+                              (Optional)
+                            </span>
+                          )}
                         </label>
                         <Input
                           type="text"
                           placeholder="Enter your answer"
-                          className="w-full h-11 bg-gray-50 border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon font-bold text-gray-900"
+                          className="h-11 w-full rounded-brand border-gray-300 bg-gray-50 text-sm font-bold text-gray-900 focus-visible:ring-pup-maroon"
                           value={answers[q.id] || ""}
-                          onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })}
+                          onChange={(e) =>
+                            setAnswers({ ...answers, [q.id]: e.target.value })
+                          }
                           required={!!q.is_required}
                         />
                       </div>
                     ))
                   )}
                 </div>
-                <div className="p-5 border-t border-gray-100 bg-gray-50 flex justify-end shrink-0">
-                  <Button type="submit" disabled={secLoading || secSubmitting || questions.length === 0} className="bg-pup-maroon text-white h-11 px-6 font-bold shadow-sm hover:bg-red-900 transition-colors uppercase tracking-widest text-xs">
+                <div className="flex shrink-0 justify-end border-t border-gray-100 bg-gray-50 p-5">
+                  <Button
+                    type="submit"
+                    disabled={
+                      secLoading || secSubmitting || questions.length === 0
+                    }
+                    className="h-11 bg-pup-maroon px-6 text-xs font-bold tracking-widest text-white uppercase shadow-sm transition-colors hover:bg-red-900"
+                  >
                     {secSubmitting ? "Saving..." : "Complete Setup & Enter"}
                   </Button>
                 </div>
@@ -298,5 +372,5 @@ for (const q of requiredQuestions) {
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

@@ -246,6 +246,7 @@ export async function listStudentLocationUsage() {
     `
       SELECT room, cabinet, drawer, COUNT(*) as count
       FROM students
+      WHERE status = 'Active'
       GROUP BY room, cabinet, drawer
       ORDER BY room ASC, cabinet ASC, drawer ASC
     `,

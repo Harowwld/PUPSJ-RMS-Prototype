@@ -15,7 +15,7 @@ export async function setStaffPasswordById(id, newPassword) {
 
   await dbRun(
     `UPDATE staff
-     SET password_hash = ?, updated_at = datetime('now')
+     SET password_hash = ?, updated_at = datetime('now'), password_last_changed = datetime('now')
      WHERE id = ?`,
     [hashPassword(newPassword), id]
   );
@@ -53,8 +53,9 @@ export async function createStaff({
       email,
       last_active,
       password_hash,
+      password_last_changed,
       updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
   `,
     [
       id,

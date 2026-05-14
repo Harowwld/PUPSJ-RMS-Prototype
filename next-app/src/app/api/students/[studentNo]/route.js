@@ -49,7 +49,7 @@ export async function PATCH(req, ctx) {
   if (body.status === "Active") {
     const row = await restoreStudent(studentNo);
     if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
-    await writeAuditLog(req, `Restore Student`, { 
+    await writeAuditLog(req, `Restore Student`, {
       details: `restored active system status for student record '${row.name}' (ID: ${studentNo})`,
       entity_type: "Student",
       entity_id: studentNo
@@ -58,7 +58,7 @@ export async function PATCH(req, ctx) {
   } else if (body.status === "Archived") {
     const row = await archiveStudent(studentNo);
     if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
-    await writeAuditLog(req, `Archive Student`, { 
+    await writeAuditLog(req, `Archive Student`, {
       details: `moved student record '${row.name}' (ID: ${studentNo}) to the system archive and disabled associated processing`,
       severity: "WARNING",
       entity_type: "Student",
@@ -82,7 +82,7 @@ export async function PATCH(req, ctx) {
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
-  await writeAuditLog(req, `Update Student`, { 
+  await writeAuditLog(req, `Update Student`, {
     details: `modified profile and registry metadata for student '${row.name}' (ID: ${studentNo})`,
     entity_type: "Student",
     entity_id: studentNo
@@ -105,8 +105,8 @@ export async function DELETE(req, ctx) {
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
-  await writeAuditLog(req, `Archive Student`, { 
-    details: `moved student record '${row.name}' (ID: ${studentNo}) to the system archive via DELETE protocol`,
+  await writeAuditLog(req, `Archive Student`, {
+    details: `moved student record '${row.name}' (ID: ${studentNo}) to the system archive and disabled its requirement logic`,
     severity: "WARNING",
     entity_type: "Student",
     entity_id: studentNo

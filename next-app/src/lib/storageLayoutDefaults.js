@@ -13,7 +13,7 @@ export const ROOM_TEMPLATES = [
 ];
 
 export function getDefaultDoor() {
-  return { x: 0.05, y: 0.96 };
+  return { x: 0.05, y: 0.96, w: 0.08, h: 0.03, rotation: 0 };
 }
 
 function buildGridCabinets({

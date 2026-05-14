@@ -1,87 +1,115 @@
-"use client";
+"use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react"
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { formatPHDateTimeParts } from "@/lib/timeFormat";
+} from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
+import { Skeleton } from "@/components/ui/skeleton"
+import { formatPHDateTimeParts } from "@/lib/timeFormat"
 import {
   Empty,
   EmptyHeader,
   EmptyTitle,
   EmptyDescription,
   EmptyMedia,
-} from "@/components/ui/empty";
+} from "@/components/ui/empty"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import PageHeader from "@/components/shared/PageHeader"
 
 function statusUi(status) {
-  const s = String(status || "Pending");
+  const s = String(status || "Pending")
   if (s === "Approved") {
     return {
       label: "Approved",
       badge: "bg-green-50 text-green-700 border-green-200",
       icon: "ph-fill ph-check-circle",
-    };
+    }
   }
   if (s === "Declined") {
     return {
       label: "Declined",
       badge: "bg-red-50 text-red-700 border-red-200",
       icon: "ph-fill ph-x-circle",
-    };
+    }
   }
   return {
     label: s || "Pending",
     badge: "bg-amber-50 text-amber-700 border-amber-200",
     icon: "ph-fill ph-clock",
-  };
+  }
 }
 
-export default function NotificationsTab({ onPreviewDocument, onUnreadChange }) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [items, setItems] = useState([]);
-  const [total, setTotal] = useState(0);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [lastSeenReviewedAt, setLastSeenReviewedAt] = useState(null);
-  const [page, setPage] = useState(1);
-  const pageSize = 20;
+export default function NotificationsTab({
+  onPreviewDocument,
+  onUnreadChange,
+}) {
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [items, setItems] = useState([])
+  const [total, setTotal] = useState(0)
+  const [unreadCount, setUnreadCount] = useState(0)
+  const [lastSeenReviewedAt, setLastSeenReviewedAt] = useState(null)
+  const [page, setPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(20)
+  const [jumpPage, setJumpPage] = useState("1")
 
-  const totalPages = Math.max(1, Math.ceil(total / pageSize) || 1);
-  const displayPage = Math.min(page, totalPages);
-  const offset = (displayPage - 1) * pageSize;
+  const totalPages = Math.max(1, Math.ceil(total / itemsPerPage) || 1)
+  const displayPage = Math.min(page, totalPages)
+  const offset = (displayPage - 1) * itemsPerPage
 
   const load = useCallback(async () => {
-    setIsLoading(true);
-    setError("");
+    setIsLoading(true)
+    setError("")
     try {
       const res = await fetch(
-        `/api/notifications?limit=${pageSize}&offset=${offset}`,
-        { cache: "no-store" },
-      );
-      const json = await res.json().catch(() => null);
+        `/api/notifications?limit=${itemsPerPage}&offset=${offset}`,
+        { cache: "no-store" }
+      )
+      const json = await res.json().catch(() => null)
       if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Failed to load notifications");
+        throw new Error(json?.error || "Failed to load notifications")
       }
-      const data = json.data || {};
-      const nextItems = Array.isArray(data.items) ? data.items : [];
-      setItems(nextItems);
-      setTotal(Number(data.total || 0));
-      setUnreadCount(Number(data.unreadCount || 0));
-      setLastSeenReviewedAt(data.lastSeenReviewedAt || null);
-      onUnreadChange?.(Number(data.unreadCount || 0));
+      const data = json.data || {}
+      const nextItems = Array.isArray(data.items) ? data.items : []
+      setItems(nextItems)
+      setTotal(Number(data.total || 0))
+      setUnreadCount(Number(data.unreadCount || 0))
+      setLastSeenReviewedAt(data.lastSeenReviewedAt || null)
+      onUnreadChange?.(Number(data.unreadCount || 0))
     } catch (e) {
-      setError(e?.message || "Failed to load notifications");
+      setError(e?.message || "Failed to load notifications")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  }, [offset, onUnreadChange]);
+  }, [offset, itemsPerPage, onUnreadChange])
+
+  useEffect(() => {
+    setJumpPage(String(displayPage))
+  }, [displayPage])
+
+  const handleJumpPage = (e) => {
+    if (e.key === "Enter" || e.type === "blur") {
+      const val = parseInt(jumpPage)
+      if (!isNaN(val) && val >= 1 && val <= totalPages) {
+        setPage(val)
+      } else {
+        setJumpPage(String(displayPage))
+      }
+    }
+  }
+
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(Number(e.target.value))
+    setPage(1)
+  }
 
   const markAllRead = useCallback(async () => {
     try {
@@ -89,113 +117,106 @@ export default function NotificationsTab({ onPreviewDocument, onUnreadChange }) 
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "markSeen" }),
-      });
-      const json = await res.json().catch(() => null);
+      })
+      const json = await res.json().catch(() => null)
       if (!res.ok || !json?.ok) {
-        throw new Error(json?.error || "Failed to mark as read");
+        throw new Error(json?.error || "Failed to mark as read")
       }
-      const nextUnread = Number(json?.data?.unreadCount || 0);
-      setUnreadCount(nextUnread);
-      setLastSeenReviewedAt(json?.data?.lastSeenReviewedAt || null);
-      onUnreadChange?.(nextUnread);
-      await load();
+      const nextUnread = Number(json?.data?.unreadCount || 0)
+      setUnreadCount(nextUnread)
+      setLastSeenReviewedAt(json?.data?.lastSeenReviewedAt || null)
+      onUnreadChange?.(nextUnread)
+      await load()
     } catch {
       // silent
     }
-  }, [load, onUnreadChange]);
+  }, [load, onUnreadChange])
 
   useEffect(() => {
-    load();
-  }, [load]);
+    load()
+  }, [load])
 
   useEffect(() => {
     const onVisible = () => {
-      if (document.visibilityState !== "visible") return;
-      load();
-    };
-    document.addEventListener("visibilitychange", onVisible);
-    window.addEventListener("focus", onVisible);
+      if (document.visibilityState !== "visible") return
+      load()
+    }
+    document.addEventListener("visibilitychange", onVisible)
+    window.addEventListener("focus", onVisible)
     return () => {
-      document.removeEventListener("visibilitychange", onVisible);
-      window.removeEventListener("focus", onVisible);
-    };
-  }, [load]);
+      document.removeEventListener("visibilitychange", onVisible)
+      window.removeEventListener("focus", onVisible)
+    }
+  }, [load])
 
   const unreadCutoff = useMemo(() => {
-    const s = String(lastSeenReviewedAt || "").trim();
-    return s ? s : null;
-  }, [lastSeenReviewedAt]);
+    const s = String(lastSeenReviewedAt || "").trim()
+    return s ? s : null
+  }, [lastSeenReviewedAt])
 
   return (
-    <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter">
-      <Card className="flex-1 bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-        <CardHeader className="bg-gray-50/50 border-b border-gray-100 p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
-              <i className="ph-duotone ph-bell text-2xl"></i>
+    <div className="animate-fade-in font-inter flex h-full w-full flex-col">
+      <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm">
+        <PageHeader
+          icon="ph-bell"
+          title="System Notifications"
+          description="Real-time updates on document review decisions and system alerts."
+          actions={
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={load}
+                className="h-10 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon"
+              >
+                <i className="ph-bold ph-arrows-clockwise mr-1.5"></i>
+                REFRESH
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={unreadCount <= 0}
+                onClick={markAllRead}
+                className="h-10 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon"
+              >
+                <i className="ph-bold ph-checks mr-1.5"></i>
+                MARK ALL AS READ
+              </Button>
             </div>
-            <div>
-              <CardTitle className="text-xl font-black text-gray-900 tracking-tight">
-                System Notifications
-              </CardTitle>
-              <CardDescription className="font-medium text-gray-500">
-                Real-time updates on document review decisions and system alerts.
-              </CardDescription>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 shrink-0">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={load}
-              className="h-10 px-5 font-bold text-sm border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50 hover:border-pup-maroon rounded-brand shadow-sm transition-all"
-            
-            >
-              <i className="ph-bold ph-arrows-clockwise mr-1.5"></i>
-              REFRESH
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              disabled={unreadCount <= 0}
-              onClick={markAllRead}
-              className="h-10 px-5 font-bold text-sm border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50 hover:border-pup-maroon rounded-brand shadow-sm transition-all"
-            >
-              <i className="ph-bold ph-checks mr-1.5"></i>
-              MARK ALL AS READ
-            </Button>
-          </div>
-        </CardHeader>
-
-        <CardContent className="p-6 flex-1 flex flex-col min-h-0">
+          }
+        />
+        <CardContent className="flex min-h-0 flex-1 flex-col p-6">
           {isLoading ? (
-            <div className="flex-1 flex flex-col space-y-4">
-              <div className="flex-1 border border-gray-200 rounded-brand overflow-hidden flex flex-col">
+            <div className="flex flex-1 flex-col space-y-4">
+              <div className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200">
                 <Skeleton className="h-10 w-full rounded-none" />
-                <div className="divide-y divide-gray-100 flex-1">
+                <div className="flex-1 divide-y divide-gray-100">
                   {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                    <div key={i} className="p-4 flex items-center justify-between">
-                      <div className="flex-1 grid grid-cols-1 lg:grid-cols-8 gap-4">
+                    <div
+                      key={i}
+                      className="flex items-center justify-between p-4"
+                    >
+                      <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-8">
                         <div className="flex items-center">
                           <Skeleton className="h-6 w-20 rounded-full" />
                         </div>
-                        <div className="hidden lg:flex items-center">
+                        <div className="hidden items-center lg:flex">
                           <Skeleton className="h-4 w-24 font-mono" />
                         </div>
-                        <div className="hidden lg:flex items-center">
+                        <div className="hidden items-center lg:flex">
                           <Skeleton className="h-4 w-32" />
                         </div>
-                        <div className="hidden lg:flex items-center">
+                        <div className="hidden items-center lg:flex">
                           <Skeleton className="h-6 w-16 rounded-full" />
                         </div>
-                        <div className="hidden lg:flex items-center space-y-1 flex-col">
+                        <div className="hidden flex-col items-center space-y-1 lg:flex">
                           <Skeleton className="h-4 w-40" />
                           <Skeleton className="h-2 w-24" />
                         </div>
-                        <div className="hidden lg:flex items-center">
+                        <div className="hidden items-center lg:flex">
                           <Skeleton className="h-4 w-24" />
                         </div>
-                        <div className="hidden lg:flex items-center space-y-1 flex-col">
+                        <div className="hidden flex-col items-center space-y-1 lg:flex">
                           <Skeleton className="h-3 w-16" />
                           <Skeleton className="h-2 w-12" />
                         </div>
@@ -217,23 +238,25 @@ export default function NotificationsTab({ onPreviewDocument, onUnreadChange }) 
               </div>
             </div>
           ) : error ? (
-            <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+            <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500">
               <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
                   <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
                 </EmptyMedia>
-                <EmptyTitle className="text-lg font-bold text-gray-900">Could not load notifications</EmptyTitle>
-                <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                <EmptyTitle className="text-lg font-bold text-gray-900">
+                  Could not load notifications
+                </EmptyTitle>
+                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600">
                   {error}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
           ) : (
             <>
-              <div className="flex-1 overflow-y-auto overflow-x-auto border border-gray-200 rounded-brand">
+              <div className="flex-1 overflow-x-auto overflow-y-auto rounded-brand border border-gray-200">
                 <table className="min-w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                    <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
+                  <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50">
+                    <tr className="text-left text-xs tracking-wider text-gray-600 uppercase">
                       <th className="p-3 font-bold">Decision</th>
                       <th className="p-3 font-bold">Student No</th>
                       <th className="p-3 font-bold">Name</th>
@@ -241,22 +264,24 @@ export default function NotificationsTab({ onPreviewDocument, onUnreadChange }) 
                       <th className="p-3 font-bold">File</th>
                       <th className="p-3 font-bold">Reviewed By</th>
                       <th className="p-3 font-bold">Reviewed</th>
-                      <th className="p-3 font-bold text-right">Actions</th>
+                      <th className="p-3 text-right font-bold">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {items.length === 0 ? (
                       <tr className="border-0 hover:bg-transparent">
-                        <td colSpan={8} className="p-0 border-0">
-                          <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+                        <td colSpan={8} className="border-0 p-0">
+                          <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500">
                             <EmptyHeader className="flex flex-col items-center gap-0">
-                              <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                              <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
                                 <i className="ph-duotone ph-bell text-3xl text-pup-maroon"></i>
                               </EmptyMedia>
-                              <EmptyTitle className="text-lg font-bold text-gray-900">No notifications yet</EmptyTitle>
-                              <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                                When admins approve or decline uploaded documents,
-                                updates will appear here.
+                              <EmptyTitle className="text-lg font-bold text-gray-900">
+                                No notifications yet
+                              </EmptyTitle>
+                              <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600">
+                                When admins approve or decline uploaded
+                                documents, updates will appear here.
                               </EmptyDescription>
                             </EmptyHeader>
                           </Empty>
@@ -264,16 +289,16 @@ export default function NotificationsTab({ onPreviewDocument, onUnreadChange }) 
                       </tr>
                     ) : (
                       items.map((n) => {
-                        const ui = statusUi(n.approval_status);
-                        const reviewed = formatPHDateTimeParts(n.reviewed_at);
+                        const ui = statusUi(n.approval_status)
+                        const reviewed = formatPHDateTimeParts(n.reviewed_at)
                         const isUnread =
                           unreadCutoff == null
                             ? true
-                            : String(n.reviewed_at || "") > unreadCutoff;
+                            : String(n.reviewed_at || "") > unreadCutoff
                         return (
                           <tr
                             key={n.id}
-                            className={`hover:bg-gray-50 transition-colors ${
+                            className={`transition-colors hover:bg-gray-50 ${
                               isUnread ? "bg-red-50/40" : ""
                             }`}
                           >
@@ -281,13 +306,13 @@ export default function NotificationsTab({ onPreviewDocument, onUnreadChange }) 
                               <div className="flex items-center gap-2">
                                 <Badge
                                   variant="outline"
-                                  className={`${ui.badge} font-bold text-xs px-2 py-1 rounded-full border shadow-xs`}
+                                  className={`${ui.badge} rounded-full border px-2 py-1 text-xs font-bold shadow-xs`}
                                 >
                                   <i className={`${ui.icon} mr-1.5`}></i>
                                   {ui.label}
                                 </Badge>
                                 {isUnread ? (
-                                  <span className="text-[10px] font-extrabold text-pup-maroon uppercase tracking-widest animate-pulse">
+                                  <span className="animate-pulse text-[10px] font-extrabold tracking-widest text-pup-maroon uppercase">
                                     New
                                   </span>
                                 ) : null}
@@ -296,28 +321,28 @@ export default function NotificationsTab({ onPreviewDocument, onUnreadChange }) 
                             <td className="p-3 font-mono font-bold text-gray-900">
                               {n.student_no}
                             </td>
-                            <td className="p-3 text-gray-800 font-medium">
+                            <td className="p-3 font-medium text-gray-800">
                               {n.student_name || "—"}
                             </td>
                             <td className="p-3">
-                              <span className="inline-flex items-center px-2 py-1 rounded-full bg-red-50 text-pup-maroon border border-red-100 text-xs font-bold">
+                              <span className="inline-flex items-center rounded-full border border-red-100 bg-red-50 px-2 py-1 text-xs font-bold text-pup-maroon">
                                 {n.doc_type}
                               </span>
                             </td>
                             <td className="p-3 text-gray-700">
-                              <div className="text-sm font-medium max-w-[200px] truncate">
+                              <div className="max-w-[200px] truncate text-sm font-medium">
                                 {n.original_filename}
                               </div>
                               {n.review_note && (
-                                <div className="text-[11px] text-gray-500 italic mt-0.5 line-clamp-1">
+                                <div className="mt-0.5 line-clamp-1 text-[11px] text-gray-500 italic">
                                   Note: {n.review_note}
                                 </div>
                               )}
                             </td>
-                            <td className="p-3 text-gray-700 font-medium">
+                            <td className="p-3 font-medium text-gray-700">
                               {n.reviewed_by || "—"}
                             </td>
-                            <td className="p-3 text-gray-600 font-medium">
+                            <td className="p-3 font-medium text-gray-600">
                               <div className="font-mono text-[11px]">
                                 {reviewed.date}
                               </div>
@@ -326,9 +351,9 @@ export default function NotificationsTab({ onPreviewDocument, onUnreadChange }) 
                               </div>
                             </td>
                             <td className="p-3">
-                              <div className="flex justify-end flex-wrap gap-2">
+                              <div className="flex flex-wrap justify-end gap-2">
                                 {n.approval_status === "Declined" ? (
-                                  <span className="px-3 h-9 inline-flex items-center rounded-brand border border-gray-200 text-gray-400 font-bold text-xs bg-gray-50">
+                                  <span className="inline-flex h-9 items-center rounded-brand border border-gray-200 bg-gray-50 px-3 text-xs font-bold text-gray-400">
                                     <i className="ph-bold ph-file-x mr-1.5"></i>
                                     File Removed
                                   </span>
@@ -341,10 +366,10 @@ export default function NotificationsTab({ onPreviewDocument, onUnreadChange }) 
                                         n.doc_type,
                                         n.student_name,
                                         n.student_no,
-                                        n.id,
+                                        n.id
                                       )
                                     }
-                                    className="px-3 font-bold text-xs border-gray-300 text-gray-700 hover:text-pup-maroon hover:bg-red-50 hover:border-pup-maroon rounded-brand transition-all shadow-sm h-9"
+                                    className="h-9 rounded-brand border-gray-300 px-3 text-xs font-bold text-gray-700 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon"
                                   >
                                     <i className="ph-bold ph-eye mr-1.5"></i>
                                     VIEW
@@ -353,7 +378,7 @@ export default function NotificationsTab({ onPreviewDocument, onUnreadChange }) 
                               </div>
                             </td>
                           </tr>
-                        );
+                        )
                       })
                     )}
                   </tbody>
@@ -361,60 +386,101 @@ export default function NotificationsTab({ onPreviewDocument, onUnreadChange }) 
               </div>
 
               <div className="mt-4 flex items-center justify-between">
-                <div className="text-xs font-medium text-gray-500">
-                  {total > 0 ? (
+                <div className="flex items-center gap-4 text-xs font-medium text-gray-500">
+                  {total > 0 && (
                     <>
-                      Showing {offset + 1}-
-                      {Math.min(offset + pageSize, total)} of{" "}
-                      <strong className="text-gray-900">
-                        {total.toLocaleString()}
-                      </strong>{" "}
-                      notifications
-                      {unreadCount > 0 ? (
-                        <>
-                          {" "}
-                          •{" "}
-                          <strong className="text-pup-maroon">
-                            {unreadCount.toLocaleString()}
-                          </strong>{" "}
-                          unread
-                        </>
-                      ) : null}
+                      <span>
+                        {offset + 1}-{Math.min(offset + itemsPerPage, total)}{" "}
+                        of{" "}
+                        <strong className="text-gray-900">
+                          {total.toLocaleString()}
+                        </strong>{" "}
+                        entries
+                        {unreadCount > 0 ? (
+                          <>
+                            {" "}
+                            •{" "}
+                            <strong className="text-pup-maroon">
+                              {unreadCount.toLocaleString()}
+                            </strong>{" "}
+                            unread
+                          </>
+                        ) : null}
+                      </span>
+
+                      <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase">
+                          Rows:
+                        </span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <select
+                                className="h-7 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-1 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none"
+                                value={itemsPerPage}
+                                onChange={handleItemsPerPageChange}
+                              >
+                                <option value={10}>10</option>
+                                <option value={20}>20</option>
+                                <option value={50}>50</option>
+                                <option value={100}>100</option>
+                                <option value={200}>200</option>
+                              </select>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="top"
+                              className="rounded-brand"
+                            >
+                              Items per page
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                     </>
-                  ) : null}
+                  )}
                 </div>
 
-                {total > 0 ? (
+                {total > 0 && (
                   <div className="flex items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
                       disabled={displayPage <= 1}
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      className="text-xs font-bold text-gray-600"
+                      className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
                     >
-                      <i className="ph-bold ph-caret-left text-[10px] mr-1"></i> PREVIOUS
+                      <i className="ph-bold ph-caret-left mr-1"></i> PREV
                     </Button>
-                    <div className="px-3 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-md h-8 flex items-center justify-center min-w-12 shadow-sm">
-                      {displayPage} / {totalPages}
+                    <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-2 text-[11px] font-bold text-gray-700 shadow-xs focus-within:border-pup-maroon focus-within:ring-1 focus-within:ring-pup-maroon">
+                      <input
+                        type="text"
+                        className="w-6 bg-transparent text-center focus:outline-none"
+                        value={jumpPage}
+                        onChange={(e) => setJumpPage(e.target.value)}
+                        onKeyDown={handleJumpPage}
+                        onBlur={handleJumpPage}
+                      />
+                      <span className="mx-0.5 text-gray-400">/</span>
+                      <span>{totalPages}</span>
                     </div>
                     <Button
                       variant="outline"
                       size="sm"
                       disabled={displayPage >= totalPages}
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                      className="text-xs font-bold text-gray-600"
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages, p + 1))
+                      }
+                      className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
                     >
-                      NEXT <i className="ph-bold ph-caret-right text-[10px] ml-1"></i>
+                      NEXT <i className="ph-bold ph-caret-right ml-1"></i>
                     </Button>
                   </div>
-                ) : null}
+                )}
               </div>
             </>
           )}
         </CardContent>
       </Card>
     </div>
-  );
+  )
 }
-

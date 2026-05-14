@@ -1,5 +1,14 @@
 import { NextResponse } from "next/server";
-import { executeBackup, listBackups, syncBackupExternally } from "../../../../lib/backupsRepo";
+import fs from "node:fs";
+import path from "node:path";
+import { 
+  executeBackup, 
+  listBackups, 
+  syncBackupExternally,
+  getBackupById,
+  getBackupsDir,
+  deleteBackupRecord
+} from "../../../../lib/backupsRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { requireTOTP, extractTOTPToken } from "../../../../lib/totpMiddleware";
 import { requireAdmin, createAuthErrorResponse } from "../../../../lib/authHelpers";
@@ -85,6 +94,74 @@ export async function POST(req) {
     });
   } catch (error) {
     console.error("[BACKUP API] Backup Creation Error:", error);
+    return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
+  }
+}
+
+/**
+ * DELETE: Bulk delete multiple backups
+ */
+export async function DELETE(req) {
+  try {
+    const { user, error: authError } = await requireAdmin(req);
+    if (authError || !user) {
+      return createAuthErrorResponse(authError || "Admin access required", 403);
+    }
+
+    const body = await req.json();
+    const { ids } = body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json({ ok: false, error: "No IDs provided" }, { status: 400 });
+    }
+
+    console.log(`[BULK DELETE BACKUP] User ${user.id} attempting to delete backups: ${ids.join(", ")}`);
+
+    const deletedFiles = [];
+    const errors = [];
+
+    for (const id of ids) {
+      try {
+        const backup = await getBackupById(id);
+        if (!backup) {
+          errors.push(`Backup ${id} not found`);
+          continue;
+        }
+
+        const backupsDir = getBackupsDir();
+        const filePath = path.resolve(backupsDir, backup.filename);
+        
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+
+        const changes = await deleteBackupRecord(id);
+        if (changes > 0) {
+          deletedFiles.push(backup.filename);
+        } else {
+          errors.push(`Failed to remove DB record for ${backup.filename}`);
+        }
+      } catch (err) {
+        errors.push(`Error deleting ${id}: ${err.message}`);
+      }
+    }
+
+    if (deletedFiles.length > 0) {
+      await writeAuditLog(req, `Bulk Delete Backups`, {
+        details: `permanently deleted ${deletedFiles.length} backup packages: ${deletedFiles.join(", ")}`,
+        severity: "WARNING",
+        entity_type: "Backup",
+        entity_id: ids[0] // Reference first ID for relation
+      });
+    }
+
+    return NextResponse.json({
+      ok: true,
+      deletedCount: deletedFiles.length,
+      errors: errors.length > 0 ? errors : undefined
+    });
+  } catch (error) {
+    console.error("[BULK DELETE BACKUP] Global Error:", error);
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });
   }
 }

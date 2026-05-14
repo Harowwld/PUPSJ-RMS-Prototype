@@ -1,14 +1,14 @@
-"use client";
+"use client"
 
-import { useState } from "react";
+import { useState } from "react"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogDescription,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
 
 export default function DefaultPasswordModal({
   open,
@@ -16,70 +16,77 @@ export default function DefaultPasswordModal({
   userName,
   password,
 }) {
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState(false)
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(password);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      await navigator.clipboard.writeText(password)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
     } catch {
       // Ignore copy errors
     }
-  };
+  }
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
-        <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+      <DialogContent className="overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md">
+        <DialogHeader className="border-b border-gray-100 bg-gray-50/50 p-6">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm">
               <i className="ph-duotone ph-key text-2xl"></i>
             </div>
             <div className="min-w-0">
-              <DialogTitle className="text-lg font-black tracking-tight text-gray-900 leading-tight">
+              <DialogTitle className="text-lg leading-tight font-black tracking-tight text-gray-900">
                 Account Credentials Ready
               </DialogTitle>
-              <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 leading-relaxed">
-                The staff account has been created. Securely share these temporary credentials with the user.
+              <DialogDescription className="mt-1.5 text-sm leading-relaxed font-medium text-gray-600">
+                The staff account has been created. Securely share these
+                temporary credentials with the user.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
-        <div className="p-6 space-y-4">
+        <div className="space-y-4 p-6">
           {/* User info */}
-          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-brand border border-gray-200">
-            <div className="w-10 h-10 rounded-full bg-pup-maroon/10 flex items-center justify-center shrink-0">
-              <i className="ph-bold ph-user text-pup-maroon text-lg"></i>
+          <div className="flex items-center gap-3 rounded-brand border border-gray-200 bg-gray-50 p-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pup-maroon/10">
+              <i className="ph-bold ph-user text-lg text-pup-maroon"></i>
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">New Account</p>
-              <p className="text-sm font-bold text-gray-900 truncate">{userName}</p>
+              <p className="text-xs font-bold tracking-wider text-gray-500 uppercase">
+                New Account
+              </p>
+              <p className="truncate text-sm font-bold text-gray-900">
+                {userName}
+              </p>
             </div>
           </div>
 
           {/* Password display - prominent style */}
           <div className="space-y-2">
-            <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide">
+            <label className="block text-xs font-bold tracking-wide text-gray-700 uppercase">
               Temporary Password
             </label>
             <div className="relative">
-              <div className="p-4 bg-amber-50 border-2 border-amber-200 rounded-brand">
-                <p className="font-mono text-xl font-black text-amber-900 tracking-wider text-center break-all">
+              <div className="rounded-brand border-2 border-amber-200 bg-amber-50 p-4">
+                <p className="text-center font-mono text-xl font-black tracking-wider break-all text-amber-900">
                   {password}
                 </p>
               </div>
               <button
                 type="button"
                 onClick={handleCopy}
-                className={`absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5 px-3 py-1.5 rounded-brand text-xs font-bold transition-all ${
+                className={`absolute top-1/2 right-3 flex -translate-y-1/2 items-center gap-1.5 rounded-brand px-3 py-1.5 text-xs font-bold transition-all ${
                   copied
-                    ? "bg-green-100 text-green-700 border border-green-200"
-                    : "bg-white text-pup-maroon border border-red-200 hover:bg-red-50 shadow-sm"
+                    ? "border border-green-200 bg-green-100 text-green-700"
+                    : "border border-red-200 bg-white text-pup-maroon shadow-sm hover:bg-red-50"
                 }`}
               >
-                <i className={`ph-bold ${copied ? "ph-check" : "ph-copy"} text-sm`}></i>
+                <i
+                  className={`ph-bold ${copied ? "ph-check" : "ph-copy"} text-sm`}
+                ></i>
                 {copied ? "Copied" : "Copy"}
               </button>
             </div>
@@ -90,18 +97,18 @@ export default function DefaultPasswordModal({
           </div>
         </div>
 
-        <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+        <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end">
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
-            className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+            className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-700 hover:bg-gray-50"
           >
             Close
           </Button>
           <Button
             onClick={onClose}
-            className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand"
+            className="flex h-11 items-center gap-2 rounded-brand bg-pup-maroon px-6 font-bold text-white shadow-sm hover:bg-red-900"
           >
             <i className="ph-bold ph-check text-lg"></i>
             I&apos;ve Recorded This
@@ -109,5 +116,5 @@ export default function DefaultPasswordModal({
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

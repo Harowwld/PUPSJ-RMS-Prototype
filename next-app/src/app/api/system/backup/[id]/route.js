@@ -57,7 +57,12 @@ export async function DELETE(req, { params }) {
     if (changes === 0) {
       throw new Error("Record was not removed from database");
     }
-    await writeAuditLog(req, `Deleted local backup`, { details: `${backup.filename} (id ${id})` });
+    await writeAuditLog(req, `Delete Backup`, { 
+      details: `permanently deleted local backup package '${backup.filename}' (ID: ${id}) from primary storage`,
+      severity: "WARNING",
+      entity_type: "Backup",
+      entity_id: id
+    });
 
     return NextResponse.json({
       ok: true,

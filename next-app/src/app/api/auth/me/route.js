@@ -37,6 +37,7 @@ export async function GET(req) {
         mustSetSecurityQuestions: !hasSecurity,
         totp_enabled: Boolean(staff?.totp_enabled),
         last_active: payload.last_active || null,
+        password_last_changed: staff?.password_last_changed || null,
       },
     });
   } catch (err) {

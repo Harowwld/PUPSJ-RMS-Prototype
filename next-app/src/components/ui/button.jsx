@@ -43,16 +43,29 @@ const buttonVariants = cva(
 )
 
 function Button({
+  asChild,
+  children,
   className,
   variant = "default",
   size = "default",
   ...props
 }) {
+  if (asChild && React.isValidElement(children)) {
+    return (
+      <ButtonPrimitive
+        data-slot="button"
+        render={children}
+        className={cn(buttonVariants({ variant, size, className }))}
+        {...props} />
+    );
+  }
   return (
     <ButtonPrimitive
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
-      {...props} />
+      {...props}>
+      {children}
+    </ButtonPrimitive>
   );
 }
 

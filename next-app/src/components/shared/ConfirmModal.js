@@ -20,6 +20,8 @@ export default function ConfirmModal({
   onCancel,
   isLoading = false,
   variant = "danger",
+  selectedItems = [],
+  note,
 }) {
   if (!open) return null;
 
@@ -63,28 +65,64 @@ export default function ConfirmModal({
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
       <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
-        <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
-          <div className="flex items-start gap-4">
+        <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50 min-w-0">
+          <div className="flex items-start gap-4 w-full">
             <div className={`w-12 h-12 rounded-full border flex items-center justify-center shrink-0 ${v.iconWrap}`}>
               <i className={`${v.icon} text-2xl`}></i>
             </div>
-            <div className="min-w-0">
-              <DialogTitle className={`text-lg font-black tracking-tight leading-tight ${v.title}`}>
+            <div className="min-w-0 flex-1">
+              <DialogTitle className={`text-lg font-black tracking-tight leading-tight ${v.title} truncate`}>
                 {title}
               </DialogTitle>
               <DialogDescription className={`text-sm font-medium mt-1.5 leading-relaxed ${v.description}`}>
                 {message}
               </DialogDescription>
+              {note && (
+                <div className="mt-3 flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+                  <i className="ph-bold ph-info text-amber-600 shrink-0" />
+                  <p className="text-[11px] font-bold text-amber-700 leading-tight">
+                    {note}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </DialogHeader>
+
+        {selectedItems.length > 0 && (
+          <div className="p-6 bg-white min-w-0">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+              Selected Items ({selectedItems.length})
+            </p>
+            <div className="relative w-full">
+              <div className="max-h-32 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50/50 p-2 space-y-1 custom-scrollbar pb-6 w-full">
+                {selectedItems.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="flex items-center gap-2 px-2 py-1.5 rounded bg-white border border-gray-100 shadow-sm overflow-hidden w-full"
+                  >
+                    <div className={`w-1.5 h-1.5 shrink-0 rounded-full ${variant === "success" ? "bg-emerald-500" : "bg-red-500"}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="truncate text-[11px] font-bold text-gray-700">
+                        {item}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {selectedItems.length > 3 && (
+                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-50/50 to-transparent pointer-events-none rounded-b-lg z-10" />
+              )}
+            </div>
+          </div>
+        )}
 
         <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
           <Button
             type="button"
             variant="outline"
             onClick={onCancel}
-            className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+            className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 uppercase hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon shadow-sm transition-colors"
             disabled={isLoading}
           >
             {cancelLabel}

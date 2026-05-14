@@ -95,6 +95,7 @@ export async function DELETE(req) {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     const restore = searchParams.get("restore") === "true";
+    const silent = searchParams.get("silent") === "true" || searchParams.get("silent") === "1";
 
     if (!id) {
       return NextResponse.json(
@@ -109,19 +110,23 @@ export async function DELETE(req) {
     if (restore) {
       const { restoreSection } = await import("../../../lib/sectionsRepo");
       await restoreSection(id);
-      await writeAuditLog(req, `Restore Course Block`, { 
-        details: `restored section block '${target?.name || id}' from system archive`,
-        entity_type: "Section",
-        entity_id: id
-      });
+      if (!silent) {
+        await writeAuditLog(req, `Restore Course Block`, { 
+          details: `restored section block '${target?.name || id}' (Program: ${target?.course_code || "Unknown"}) from system archive`,
+          entity_type: "Section",
+          entity_id: id
+        });
+      }
     } else {
       await archiveSection(id);
-      await writeAuditLog(req, `Archive Course Block`, { 
-        details: `archived section block '${target?.name || id}' and disabled associated student routing`,
-        severity: "WARNING",
-        entity_type: "Section",
-        entity_id: id
-      });
+      if (!silent) {
+        await writeAuditLog(req, `Archive Course Block`, { 
+          details: `archived section block '${target?.name || id}' (Program: ${target?.course_code || "Unknown"}) and disabled associated student routing`,
+          severity: "WARNING",
+          entity_type: "Section",
+          entity_id: id
+        });
+      }
     }
     return NextResponse.json({ ok: true });
   } catch (error) {

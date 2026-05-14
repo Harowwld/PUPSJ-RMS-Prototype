@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 export default function RoomMap2D({
   kind, // "cabinets" | "drawers"
@@ -9,19 +9,19 @@ export default function RoomMap2D({
   onCabinetClick,
   onDrawerClick,
 }) {
-  const cabinetRects = cabinets || [];
+  const cabinetRects = cabinets || []
 
   const getEffectiveRect = (c) => {
-    const rot = Number(c?.rotation) === 90 ? 90 : 0;
-    if (rot !== 90) return c.rect;
-    return { ...c.rect, w: c.rect.h, h: c.rect.w };
-  };
+    const rot = Number(c?.rotation) === 90 ? 90 : 0
+    if (rot !== 90) return c.rect
+    return { ...c.rect, w: c.rect.h, h: c.rect.w }
+  }
 
   return (
-    <div className="relative w-full h-full rounded-brand overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 border border-gray-300">
+    <div className="relative h-full w-full overflow-hidden rounded-brand border border-gray-300 bg-gradient-to-br from-gray-100 to-gray-200">
       {/* Subtle background grid */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-40"
+        className="pointer-events-none absolute inset-0 opacity-40"
         style={{
           backgroundImage:
             "linear-gradient(to right, rgba(0,0,0,0.08) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,0,0,0.08) 1px, transparent 1px)",
@@ -31,31 +31,31 @@ export default function RoomMap2D({
 
       {/* Orientation marker (Door Symbol) for staff navigation */}
       <div
-        className="absolute z-[2] group"
+        className="group absolute z-[2]"
         style={{
           left: `${(roomDoor?.x ?? 0.05) * 100}%`,
           top: `${(roomDoor?.y ?? 0.96) * 100}%`,
           transform: "translate(-50%, -50%)",
         }}
       >
-        <div className="relative w-10 h-10 flex items-center justify-center">
+        <div className="relative flex h-10 w-10 items-center justify-center">
           {/* Floor plan door quadrant symbol */}
-          <div className="absolute bottom-0 left-0 w-full h-[2px] bg-gray-400 rounded-full group-hover:bg-gray-600 transition-colors" />
-          <div className="absolute bottom-0 left-0 w-[2px] h-full bg-pup-maroon rounded-full transition-all" />
-          <div className="absolute inset-0 border-t-2 border-r-2 border-pup-maroon/20 rounded-tr-full group-hover:border-pup-maroon/40 transition-colors" />
-          
+          <div className="absolute bottom-0 left-0 h-[2px] w-full rounded-full bg-gray-400 transition-colors group-hover:bg-gray-600" />
+          <div className="absolute bottom-0 left-0 h-full w-[2px] rounded-full bg-pup-maroon transition-all" />
+          <div className="absolute inset-0 rounded-tr-full border-t-2 border-r-2 border-pup-maroon/20 transition-colors group-hover:border-pup-maroon/40" />
+
           {/* Subtle Label */}
-          <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-gray-900 text-white text-[9px] px-1.5 py-0.5 rounded font-black uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-lg z-10">
+          <div className="pointer-events-none absolute -top-6 left-1/2 z-10 -translate-x-1/2 rounded bg-gray-900 px-1.5 py-0.5 text-[9px] font-black tracking-widest whitespace-nowrap text-white uppercase opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
             Entrance / Door
           </div>
         </div>
       </div>
 
       {cabinetRects.map((c) => {
-        const isSelected = kind === "drawers" && c.cab === selectedCabinetId;
-        const isTarget = Boolean(c.isTarget);
-        const rect = getEffectiveRect(c);
-        const showCabBadge = !(kind === "drawers" && isSelected);
+        const isSelected = kind === "drawers" && c.cab === selectedCabinetId
+        const isTarget = Boolean(c.isTarget)
+        const rect = getEffectiveRect(c)
+        const showCabBadge = !(kind === "drawers" && isSelected)
 
         return (
           <div
@@ -71,17 +71,17 @@ export default function RoomMap2D({
               cursor: "pointer",
             }}
             onClick={() => {
-              onCabinetClick?.(c.cab);
+              onCabinetClick?.(c.cab)
             }}
           >
             {showCabBadge ? (
-              <div className="absolute left-1.5 top-1.5 z-[1] text-[11px] font-black text-gray-800 bg-white/80 px-1.5 py-0.5 rounded-sm border border-gray-200">
+              <div className="absolute top-1.5 left-1.5 z-[1] rounded-sm border border-gray-200 bg-white/80 px-1.5 py-0.5 text-[11px] font-black text-gray-800">
                 CAB-{c.cab}
               </div>
             ) : null}
 
             {kind === "cabinets" ? (
-              <div className="absolute inset-x-0 bottom-1.5 px-1 text-[11px] text-center font-bold text-gray-700 bg-white/80 mx-1 rounded-sm border border-gray-200">
+              <div className="absolute inset-x-0 bottom-1.5 mx-1 rounded-sm border border-gray-200 bg-white/80 px-1 text-center text-[11px] font-bold text-gray-700">
                 {c.occupiedCount} Records
               </div>
             ) : isSelected ? (
@@ -91,21 +91,21 @@ export default function RoomMap2D({
                 </div>
                 <div className="flex min-h-0 flex-1 flex-col gap-1.5">
                   {drawerSlots?.map((d) => {
-                    const drawerText = `Drawer ${d.drawer}`;
+                    const drawerText = `Drawer ${d.drawer}`
                     const drawerClass =
                       d.count > 0
                         ? "drawer-occupied"
-                        : "bg-white border-gray-200 text-gray-300";
+                        : "bg-white border-gray-200 text-gray-300"
 
                     return (
                       <div
                         key={d.drawer}
-                        className={`drawer-box flex min-h-0 flex-1 rounded-brand items-center justify-center transition-all border cursor-pointer locator-tile ${drawerClass} ${
+                        className={`drawer-box locator-tile flex min-h-0 flex-1 cursor-pointer items-center justify-center rounded-brand border transition-all ${drawerClass} ${
                           d.isTarget ? "drawer-located" : ""
                         }`}
                         onClick={(e) => {
-                          e.stopPropagation();
-                          onDrawerClick?.(d.drawer);
+                          e.stopPropagation()
+                          onDrawerClick?.(d.drawer)
                         }}
                       >
                         <span
@@ -116,19 +116,18 @@ export default function RoomMap2D({
                           {drawerText}
                         </span>
                       </div>
-                    );
+                    )
                   })}
                 </div>
               </div>
             ) : (
-              <div className="absolute inset-x-0 bottom-1.5 px-1 text-[10px] text-center font-bold text-gray-600">
+              <div className="absolute inset-x-0 bottom-1.5 px-1 text-center text-[10px] font-bold text-gray-600">
                 {c.occupiedCount} Records
               </div>
             )}
           </div>
-        );
+        )
       })}
     </div>
-  );
+  )
 }
-

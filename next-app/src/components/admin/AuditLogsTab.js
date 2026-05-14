@@ -1,19 +1,19 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { formatPHDateTime } from "@/lib/timeFormat";
-import {
-  Empty,
-  EmptyHeader,
-  EmptyTitle,
-  EmptyDescription,
-  EmptyMedia,
-} from "@/components/ui/empty";
+import { useState, useEffect } from "react"
+import { Card, CardContent } from "@/components/ui/card"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { formatPHDateTime } from "@/lib/timeFormat"
+import { format } from "date-fns"
+import { cn } from "@/lib/utils"
+import jsPDF from "jspdf"
+import autoTable from "jspdf-autotable"
+
+import StatCards from "./audit-logs/StatCards"
+import LogFilters from "./audit-logs/LogFilters"
+import LogTable from "./audit-logs/LogTable"
+import LogDetailSheet from "./audit-logs/LogDetailSheet"
+import PdfPreviewDialog from "./audit-logs/PdfPreviewDialog"
 
 export default function AuditLogsTab({
   displayLogs,
@@ -31,51 +31,66 @@ export default function AuditLogsTab({
   setLogRoleFilter,
   logSeverityFilter,
   setLogSeverityFilter,
+  logStartDate,
+  setLogStartDate,
+  logEndDate,
+  setLogEndDate,
+  logSortBy,
+  setLogSortBy,
+  logSortOrder,
+  setLogSortOrder,
+  showToast,
 }) {
-  const [searchQuery, setSearchQuery] = useState(logSearch || "");
-  const [itemsPerPage, setItemsPerPage] = useState(logsPerPage || 10);
-  const [isExporting, setIsExporting] = useState(false);
+  const [localSearch, setLocalSearch] = useState(logSearch || "")
+  const [itemsPerPage, setItemsPerPage] = useState(logsPerPage || 10)
+  const [isExporting, setIsExporting] = useState(false)
+  const [selectedLog, setSelectedLog] = useState(null)
+  const [jumpPage, setJumpPage] = useState(String(logPage))
 
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-    setLogSearch(e.target.value);
-    setLogPage(1);
-  };
+  // PDF Preview State
+  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
+  const [pdfBlobUrl, setPdfPreviewUrl] = useState(null)
+  const [previewFrameReady, setPreviewFrameReady] = useState(false)
 
-  const handleRoleChange = (e) => {
-    setLogRoleFilter(e.target.value);
-    setLogPage(1);
-  };
+  useEffect(() => {
+    setJumpPage(String(logPage))
+  }, [logPage])
 
-  const handleSeverityChange = (e) => {
-    setLogSeverityFilter(e.target.value);
-    setLogPage(1);
-  };
+  // Debounced Search
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localSearch !== logSearch) {
+        setLogSearch(localSearch)
+        setLogPage(1)
+      }
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [localSearch, logSearch, setLogSearch, setLogPage])
 
-  const handleItemsPerPageChange = (e) => {
-    const value = Number(e.target.value);
-    setItemsPerPage(value);
-    setLogsPerPage(value);
-    setLogPage(1);
-  };
+  const handleSearchChange = (e) => setLocalSearch(e.target.value)
+  const handleRoleChange = (e) => { setLogRoleFilter(e.target.value); setLogPage(1) }
+  const handleSeverityChange = (e) => { setLogSeverityFilter(e.target.value); setLogPage(1) }
+  const handleSort = (column, order) => { setLogSortBy(column); setLogSortOrder(order); setLogPage(1) }
 
-  const startItem = (logPage - 1) * itemsPerPage + 1;
-  const endItem = Math.min(logPage * itemsPerPage, logTotal);
+  const fetchAllForExport = async () => {
+    const roleQuery = logRoleFilter !== "All" ? `&role=${encodeURIComponent(logRoleFilter)}` : ""
+    const sevQuery = logSeverityFilter !== "All" ? `&severity=${encodeURIComponent(logSeverityFilter)}` : ""
+    const startQuery = logStartDate ? `&startDate=${encodeURIComponent(logStartDate)}` : ""
+    const endQuery = logEndDate ? `&endDate=${encodeURIComponent(logEndDate)}` : ""
+    const res = await fetch(
+      `/api/audit-logs?limit=50000&search=${encodeURIComponent(logSearch)}${roleQuery}${sevQuery}${startQuery}${endQuery}&sortBy=${logSortBy}&sortOrder=${logSortOrder}`
+    )
+    const json = await res.json()
+    if (!res.ok || !json.ok) throw new Error(json.error || "Export failed")
+    return Array.isArray(json.data) ? json.data : []
+  }
 
   const handleDownloadCSV = async () => {
-    if (logTotal === 0 || isExporting) return;
-    setIsExporting(true);
-
+    if (logTotal === 0 || isExporting) return
+    setIsExporting(true)
     try {
-      const roleQuery = logRoleFilter !== "All" ? `&role=${encodeURIComponent(logRoleFilter)}` : "";
-      const sevQuery = logSeverityFilter !== "All" ? `&severity=${encodeURIComponent(logSeverityFilter)}` : "";
-      const res = await fetch(`/api/audit-logs?limit=50000&search=${encodeURIComponent(logSearch)}${roleQuery}${sevQuery}`);
-      const json = await res.json();
-      if (!res.ok || !json.ok) throw new Error(json.error || "Export failed");
-
-      const allLogs = Array.isArray(json.data) ? json.data : [];
-      const headers = ["Date & Time", "Severity", "Actor", "Role", "Action", "Details", "IP Address", "User Agent", "Entity Type", "Entity ID"];
-      
+      const allLogs = await fetchAllForExport()
+      const headers = ["Date & Time", "Severity", "Actor", "Role", "Action", "Details", "IP Address", "User Agent", "Entity Type", "Entity ID"]
       const rows = allLogs.map((log) => [
         formatPHDateTime(log.created_at),
         log.severity || "INFO",
@@ -87,370 +102,237 @@ export default function AuditLogsTab({
         log.user_agent || "—",
         log.entity_type || "—",
         log.entity_id || "—",
-      ]);
-
+      ])
       const csvContent = [
         headers.join(","),
-        ...rows.map((row) =>
-          row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
-        ),
-      ].join("\n");
-
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-      const link = document.createElement("a");
-      const url = URL.createObjectURL(blob);
-      link.setAttribute("href", url);
-      link.setAttribute("download", `audit-logs-full-${new Date().toISOString().split("T")[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+        ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
+      ].join("\n")
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const link = document.createElement("a")
+      const url = URL.createObjectURL(blob)
+      link.setAttribute("href", url)
+      link.setAttribute("download", `PUP-AUDIT-LOGS-DATA-${format(new Date(), "yyyy-MM-dd-HHmm")}.csv`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      showToast({ title: "Export Success", description: "Audit logs have been exported to CSV successfully." })
     } catch (err) {
-      console.error("[Export Error]", err);
+      console.error("[Export Error]", err)
+      showToast({ title: "Export Failed", description: err.message || "Unable to export audit logs to CSV." }, true)
     } finally {
-      setIsExporting(false);
+      setIsExporting(false)
     }
-  };
+  }
 
-  const getSeverityColor = (sev) => {
-    switch (String(sev || "").toUpperCase()) {
-      case "CRITICAL": return "bg-red-100 text-red-700 border-red-200";
-      case "WARNING": return "bg-amber-100 text-amber-700 border-amber-200";
-      default: return "bg-blue-100 text-blue-700 border-blue-200";
+  const generatePdfBlob = async () => {
+    const allLogs = await fetchAllForExport()
+    const doc = new jsPDF("l", "pt", "a4")
+
+    const addHeader = (doc) => {
+      doc.setFillColor(122, 30, 40)
+      doc.rect(0, 0, doc.internal.pageSize.getWidth(), 80, "F")
+      try {
+        doc.addImage("/assets/pup-logo.webp", "WEBP", 40, 15, 50, 50)
+      } catch (e) {
+        console.error("Logo failed to load", e)
+      }
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(18)
+      doc.setFont("helvetica", "bold")
+      doc.text("POLYTECHNIC UNIVERSITY OF THE PHILIPPINES", 100, 35)
+      doc.setFontSize(12)
+      doc.setFont("helvetica", "normal")
+      doc.text("SAN JUAN BRANCH - RECORDS MANAGEMENT SYSTEM", 100, 50)
+      doc.setFontSize(14)
+      doc.setFont("helvetica", "bold")
+      doc.text("AUDIT LOGS REPORT", 100, 70)
+      doc.setTextColor(60, 60, 60)
+      doc.setFontSize(9)
+      doc.setFont("helvetica", "bold")
+      doc.text("GENERATED ON:", 40, 105)
+      doc.setFont("helvetica", "normal")
+      doc.text(new Date().toLocaleString(), 130, 105)
+      doc.setFont("helvetica", "bold")
+      doc.text("FILTER CRITERIA:", 40, 120)
+      doc.setFont("helvetica", "normal")
+      const filterText = `Role: ${logRoleFilter} | Severity: ${logSeverityFilter} | Range: ${logStartDate || "Any"} to ${logEndDate || "Any"} | Search: ${logSearch || "None"}`
+      doc.text(filterText, 130, 120)
+      doc.setDrawColor(200, 200, 200)
+      doc.line(40, 130, doc.internal.pageSize.getWidth() - 40, 130)
     }
-  };
+
+    addHeader(doc)
+    const tableData = allLogs.map((log) => [
+      formatPHDateTime(log.created_at),
+      log.severity || "INFO",
+      log.actor,
+      log.role,
+      log.action,
+      log.details || "—",
+      log.ip || "—",
+    ])
+    autoTable(doc, {
+      startY: 145,
+      head: [["Timestamp", "Severity", "Actor", "Role", "Action", "Details", "IP Address"]],
+      body: tableData,
+      theme: "striped",
+      headStyles: { fillColor: [122, 30, 40] },
+      styles: { fontSize: 8, cellPadding: 4 },
+      columnStyles: {
+        0: { cellWidth: 90 }, 1: { cellWidth: 50 }, 2: { cellWidth: 80 },
+        3: { cellWidth: 50 }, 4: { cellWidth: 80 }, 5: { cellWidth: "auto" }, 6: { cellWidth: 70 },
+      },
+    })
+    return doc.output("blob")
+  }
+
+  const handlePreviewPDF = async () => {
+    if (logTotal === 0 || isExporting) return
+    setIsExporting(true)
+    try {
+      const blob = await generatePdfBlob()
+      const url = URL.createObjectURL(blob)
+      setPdfPreviewUrl(url)
+      setPdfPreviewOpen(true)
+    } catch (err) {
+      console.error("[PDF Preview Error]", err)
+      showToast({ title: "Preview Failed", description: err.message || "Unable to generate PDF preview." }, true)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
+  const handleDownloadFromPreview = () => {
+    if (!pdfBlobUrl) return
+    try {
+      const link = document.createElement("a")
+      link.href = pdfBlobUrl
+      link.setAttribute("download", `PUP-AUDIT-LOGS-REPORT-${format(new Date(), "yyyy-MM-dd-HHmm")}.pdf`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      showToast({ title: "Download Success", description: "Audit logs report has been downloaded successfully." })
+    } catch (err) {
+      console.error("[PDF Download Error]", err)
+      showToast({ title: "Download Failed", description: "Unable to download the PDF report." }, true)
+    }
+  }
+
+  const handleCopy = (text, label) => {
+    if (!text) return
+    navigator.clipboard.writeText(text)
+    showToast({ title: "Copied!", description: `${label} copied to clipboard.` })
+  }
+
+  const handleNextLog = () => {
+    if (!selectedLog) return
+    const currentIndex = displayLogs.findIndex((log) => log.id === selectedLog.id)
+    if (currentIndex < displayLogs.length - 1) {
+      setSelectedLog(displayLogs[currentIndex + 1])
+    }
+  }
+
+  const handlePrevLog = () => {
+    if (!selectedLog) return
+    const currentIndex = displayLogs.findIndex((log) => log.id === selectedLog.id)
+    if (currentIndex > 0) {
+      setSelectedLog(displayLogs[currentIndex - 1])
+    }
+  }
 
   return (
-    <div className="flex flex-col w-full gap-4 animate-fade-in font-inter">
-      {/* Stat Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm relative overflow-hidden group hover:border-pup-maroon/30 transition-all">
-          <i className="ph-duotone ph-scroll absolute -right-3 -bottom-3 text-6xl opacity-5 text-pup-maroon rotate-12 group-hover:scale-110 transition-transform" />
-          <div className="relative z-10">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Logs</p>
-            {isLoading || !logStats ? (
-              <Skeleton className="h-8 w-20" />
-            ) : (
-              <>
-                <h3 className="text-2xl font-black text-gray-900 tracking-tight">
-                  {logStats.totalLogs.toLocaleString()}
-                </h3>
-                <p className="text-[10px] font-medium text-gray-500 mt-0.5">Cumulative system events</p>
-              </>
-            )}
-          </div>
-        </div>
+    <TooltipProvider delay={200}>
+      <div className="animate-fade-in font-inter flex w-full flex-col gap-4">
+        {/* Stat Cards */}
+        <StatCards isLoading={isLoading} logStats={logStats} />
 
-        <div className="bg-[#fdf6f6] rounded-xl p-5 border border-[#7a1e28]/10 shadow-sm relative overflow-hidden group hover:border-pup-maroon/30 transition-all">
-          <i className="ph-duotone ph-calendar-check absolute -right-3 -bottom-3 text-6xl opacity-10 text-pup-maroon rotate-12 group-hover:scale-110 transition-transform" />
-          <div className="relative z-10">
-            <p className="text-[10px] font-black text-[#9e5a62] uppercase tracking-widest mb-1">Logs Today</p>
-            {isLoading || !logStats ? (
-              <Skeleton className="h-8 w-20 bg-[#7a1e28]/5" />
-            ) : (
-              <>
-                <h3 className="text-2xl font-black text-pup-maroon tracking-tight">
-                  {logStats.logsToday.toLocaleString()}
-                </h3>
-                <p className="text-[10px] font-medium text-[#9e5a62] mt-0.5">Activity since midnight</p>
-              </>
-            )}
-          </div>
-        </div>
+        {/* Main Table Card */}
+        <Card className="rounded-brand border border-gray-300 bg-white shadow-sm">
+          <LogFilters
+            localSearch={localSearch}
+            handleSearchChange={handleSearchChange}
+            logRoleFilter={logRoleFilter}
+            handleRoleChange={handleRoleChange}
+            logSeverityFilter={logSeverityFilter}
+            handleSeverityChange={handleSeverityChange}
+            logStartDate={logStartDate}
+            setLogStartDate={setLogStartDate}
+            logEndDate={logEndDate}
+            setLogEndDate={setLogEndDate}
+            setLogPage={setLogPage}
+            setLocalSearch={setLocalSearch}
+            setLogSearch={setLogSearch}
+            setLogRoleFilter={setLogRoleFilter}
+            setLogSeverityFilter={setLogSeverityFilter}
+            logTotal={logTotal}
+            isExporting={isExporting}
+            handleDownloadCSV={handleDownloadCSV}
+            handlePreviewPDF={handlePreviewPDF}
+          />
 
-        <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm relative overflow-hidden group hover:border-pup-maroon/30 transition-all">
-          <i className="ph-duotone ph-fingerprint absolute -right-3 -bottom-3 text-6xl opacity-5 text-pup-maroon rotate-12 group-hover:scale-110 transition-transform" />
-          <div className="relative z-10">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Auth Events</p>
-            {isLoading || !logStats ? (
-              <Skeleton className="h-8 w-20" />
-            ) : (
-              <>
-                <h3 className="text-2xl font-black text-gray-900 tracking-tight">
-                  {logStats.authEvents.toLocaleString()}
-                </h3>
-                <p className="text-[10px] font-medium text-gray-500 mt-0.5">Logins and access attempts</p>
-              </>
-            )}
-          </div>
-        </div>
+          <CardContent className="p-6">
+            <LogTable
+              isLoading={isLoading}
+              error={error}
+              displayLogs={displayLogs}
+              selectedLog={selectedLog}
+              setSelectedLog={setSelectedLog}
+              logTotal={logTotal}
+              logPage={logPage}
+              setLogPage={setLogPage}
+              itemsPerPage={itemsPerPage}
+              logsPerPage={logsPerPage}
+              setItemsPerPage={setItemsPerPage}
+              setLogsPerPage={setLogsPerPage}
+              jumpPage={jumpPage}
+              setJumpPage={setJumpPage}
+              handleSort={handleSort}
+              logSortBy={logSortBy}
+              logSortOrder={logSortOrder}
+              localSearch={localSearch}
+              logRoleFilter={logRoleFilter}
+              logSeverityFilter={logSeverityFilter}
+              logStartDate={logStartDate}
+              logEndDate={logEndDate}
+              setLocalSearch={setLocalSearch}
+              setLogSearch={setLogSearch}
+              setLogRoleFilter={setLogRoleFilter}
+              setLogSeverityFilter={setLogSeverityFilter}
+              setLogStartDate={setLogStartDate}
+              setLogEndDate={setLogEndDate}
+              handleCopy={handleCopy}
+              cn={cn}
+            />
+          </CardContent>
+        </Card>
 
-        <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm relative overflow-hidden group hover:border-pup-maroon/30 transition-all">
-          <i className="ph-duotone ph-warning-octagon absolute -right-3 -bottom-3 text-6xl opacity-5 text-red-600 rotate-12 group-hover:scale-110 transition-transform" />
-          <div className="relative z-10">
-            <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Critical Events</p>
-            {isLoading || !logStats ? (
-              <Skeleton className="h-8 w-20" />
-            ) : (
-              <>
-                <h3 className={`text-2xl font-black tracking-tight ${logStats.criticalEvents > 0 ? "text-red-600" : "text-gray-900"}`}>
-                  {logStats.criticalEvents.toLocaleString()}
-                </h3>
-                <p className="text-[10px] font-medium text-gray-500 mt-0.5">High-priority security alerts</p>
-              </>
-            )}
-          </div>
-        </div>
+        {/* Log Detail Side Sheet */}
+        <LogDetailSheet
+          selectedLog={selectedLog}
+          setSelectedLog={setSelectedLog}
+          handleCopy={handleCopy}
+          onSearchSimilar={(term) => {
+            setLocalSearch(term)
+            setLogSearch(term)
+            setLogPage(1)
+          }}
+          onNext={handleNextLog}
+          onPrev={handlePrevLog}
+          hasNext={displayLogs.length > 0 && selectedLog && displayLogs.findIndex(l => l.id === selectedLog.id) < displayLogs.length - 1}
+          hasPrev={displayLogs.length > 0 && selectedLog && displayLogs.findIndex(l => l.id === selectedLog.id) > 0}
+        />
+
+        {/* PDF Export Preview */}
+        <PdfPreviewDialog
+          pdfPreviewOpen={pdfPreviewOpen}
+          setPdfPreviewOpen={setPdfPreviewOpen}
+          pdfBlobUrl={pdfBlobUrl}
+          setPdfPreviewUrl={setPdfPreviewUrl}
+          previewFrameReady={previewFrameReady}
+          setPreviewFrameReady={setPreviewFrameReady}
+          handleDownloadFromPreview={handleDownloadFromPreview}
+        />
       </div>
-
-      <Card className="bg-white rounded-brand border border-gray-300 shadow-sm">
-        {/* Header with filters */}
-        <div className="p-4 bg-gray-50/50 border-b border-gray-200">
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-end">
-            <div className="xl:col-span-4">
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-bold text-gray-700 uppercase">
-                  Search Logs
-                </label>
-                {(searchQuery !== "" || logRoleFilter !== "All" || logSeverityFilter !== "All") && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setSearchQuery("");
-                      setLogSearch("");
-                      setLogRoleFilter("All");
-                      setLogSeverityFilter("All");
-                      setLogPage(1);
-                    }}
-                    className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
-                  >
-                    CLEAR ALL
-                  </Button>
-                )}
-              </div>
-              <div className="relative">
-                <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                <Input
-                  type="text"
-                  placeholder="User, action, details, entity, or IP..."
-                  className="pl-10 h-10 w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"                  value={searchQuery}
-                  onChange={handleSearchChange}
-                />
-              </div>
-            </div>
-
-            <div className="xl:col-span-2">
-              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                Filter by Role
-              </label>
-              <select
-                className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
-                value={logRoleFilter}
-                onChange={handleRoleChange}
-              >
-                <option value="All">All Roles</option>
-                <option value="Admin">Admin</option>
-                <option value="Staff">Staff</option>
-                <option value="System">System</option>
-              </select>
-            </div>
-
-            <div className="xl:col-span-2">
-              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                Severity
-              </label>
-              <select
-                className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
-                value={logSeverityFilter}
-                onChange={handleSeverityChange}
-              >
-                <option value="All">All Severities</option>
-                <option value="INFO">INFO</option>
-                <option value="WARNING">WARNING</option>
-                <option value="CRITICAL">CRITICAL</option>
-              </select>
-            </div>
-
-            <div className="xl:col-span-2">
-              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                Items
-              </label>
-              <select
-                className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
-                value={itemsPerPage}
-                onChange={handleItemsPerPageChange}
-              >
-                <option value={10}>10</option>
-                <option value={20}>20</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-                <option value={200}>200</option>
-              </select>
-            </div>
-
-            <div className="xl:col-span-2">
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleDownloadCSV}
-                disabled={logTotal === 0 || isExporting}
-                className="h-10 w-full font-bold text-sm bg-pup-maroon text-white hover:bg-red-900 border border-pup-maroon shadow-sm disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              >
-                <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-download-simple"} text-sm`}></i>
-                {isExporting ? "EXPORTING..." : "EXPORT CSV"}
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* Table content */}
-        <CardContent className="p-6">
-          {isLoading ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <Skeleton key={i} className="h-20 rounded-brand" />
-                ))}
-              </div>
-              <Skeleton className="h-4 w-full max-w-md rounded-brand" />
-              <Skeleton className="h-32 rounded-brand" />
-            </div>
-          ) : error ? (
-            <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
-              <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
-                </EmptyMedia>
-                <EmptyTitle className="text-lg font-bold text-gray-900">Could not load report</EmptyTitle>
-                <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                  {error}
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            <>
-              <div className={`overflow-x-auto rounded-brand ${displayLogs.length === 0 ? '' : 'border border-gray-200'}`}>
-                <table className="min-w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                  <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
-                    <th className="p-3 font-bold w-40">Timestamp</th>
-                    <th className="p-3 font-bold w-24">Severity</th>
-                    <th className="p-3 font-bold w-44">User / Actor</th>
-                    <th className="p-3 font-bold w-44">Action</th>
-                    <th className="p-3 font-bold">Rich Details</th>
-                    <th className="p-3 font-bold w-12 text-center"><i className="ph-bold ph-desktop" title="Device/Browser"></i></th>
-                    <th className="p-3 font-bold text-right w-32">IP Address</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {displayLogs.length === 0 ? (
-                    <tr className="border-0 hover:bg-transparent">
-                      <td colSpan={7} className="p-0 border-0">
-                        <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
-                          <EmptyHeader className="flex flex-col items-center gap-0">
-                            <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                              <i className="ph-duotone ph-list-magnifying-glass text-3xl text-pup-maroon"></i>
-                            </EmptyMedia>
-                            <EmptyTitle className="text-lg font-bold text-gray-900">No audit logs yet</EmptyTitle>
-                            <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                              We couldn&apos;t find any audit logs matching your search criteria.
-                            </EmptyDescription>
-                          </EmptyHeader>
-                        </Empty>
-                      </td>
-                    </tr>
-                  ) : (
-                    displayLogs.map((log) => {
-                      const isArchival =
-                        log.action.toLowerCase().includes("delete") ||
-                        log.action.toLowerCase().includes("remove") ||
-                        log.action.toLowerCase().includes("archive");
-                      const isAuth =
-                        log.action.toLowerCase().includes("login") ||
-                        log.action.toLowerCase().includes("logout");
-
-                      return (
-                        <tr
-                          key={log.id}
-                          className="hover:bg-gray-50 group cursor-default transition-colors"
-                        >
-                          <td className="p-3 font-mono text-[10px] text-gray-500 whitespace-nowrap">
-                            {log.time}
-                          </td>
-                          <td className="p-3">
-                            <Badge variant="outline" className={`font-black text-[9px] px-1.5 py-0.5 rounded-sm border-0 ${getSeverityColor(log.severity)}`}>
-                              {log.severity}
-                            </Badge>
-                          </td>
-                          <td className="p-3">
-                            <div className="flex flex-col">
-                              <span className="font-bold text-gray-900 text-sm whitespace-nowrap">{log.user}</span>
-                              <span className="text-[9px] text-gray-400 font-black uppercase tracking-tighter">{log.role}</span>
-                            </div>
-                          </td>
-                          <td className="p-3 text-xs font-bold">
-                            {isArchival ? (
-                              <span className="text-red-600 uppercase tracking-tighter">{log.action}</span>
-                            ) : isAuth ? (
-                              <span className="text-blue-600 uppercase tracking-tighter">{log.action}</span>
-                            ) : (
-                              <span className="text-gray-700 uppercase tracking-tighter">{log.action}</span>
-                            )}
-                          </td>
-                          <td className="p-3 text-xs text-gray-600 leading-relaxed font-medium">
-                            {log.details}
-                            {(log.entityType || log.entityId) && (
-                              <div className="flex gap-2 mt-1">
-                                {log.entityType && <span className="bg-gray-100 text-gray-500 text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase">{log.entityType}</span>}
-                                {log.entityId && <span className="text-[9px] text-gray-400 font-mono">ID: {log.entityId}</span>}
-                              </div>
-                            )}
-                          </td>
-                          <td className="p-3 text-center">
-                            <div className="inline-flex items-center justify-center text-gray-300 hover:text-gray-600 transition-colors" title={log.userAgent}>
-                              <i className="ph-bold ph-info text-base"></i>
-                            </div>
-                          </td>
-                          <td className="p-3 text-right font-mono text-[10px] text-gray-400">
-                            {log.ip}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-                </table>
-              </div>
-
-              <div className="mt-4 flex items-center justify-between">
-                <div className="text-xs font-medium text-gray-500">
-                  {logTotal > 0 ? (
-                    <>
-                      Showing {startItem}-{endItem} of{" "}
-                      <strong className="text-gray-900">{logTotal.toLocaleString()}</strong>{" "}
-                      audit log entries
-                    </>
-                  ) : null}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={logPage <= 1}
-                    onClick={() => setLogPage((p) => p - 1)}
-                    className="h-8 text-xs font-bold text-gray-600"
-                  >
-                    <i className="ph-bold ph-caret-left"></i> PREVIOUS
-                  </Button>
-                  <div className="px-3 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-md h-8 flex items-center justify-center min-w-12 shadow-sm">
-                    {logPage} / {Math.max(1, Math.ceil(logTotal / itemsPerPage))}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={logPage >= Math.ceil(logTotal / itemsPerPage)}
-                    onClick={() => setLogPage((p) => p + 1)}
-                    className="h-8 text-xs font-bold text-gray-600"
-                  >
-                    NEXT <i className="ph-bold ph-caret-right"></i>
-                  </Button>
-                </div>
-              </div>
-            </>
-          )}
-        </CardContent>
-    </Card>
-  </div>
-);
+    </TooltipProvider>
+  )
 }
