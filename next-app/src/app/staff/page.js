@@ -197,7 +197,7 @@ function StaffPageContent() {
       setDocTypes(dData.data || []);
       setCourses(cData.data || []);
       setSections(secData.data || []);
-      setStorageLayout(layoutData?.data || null);
+      setStorageLayout(layoutData?.data || { version: 2, rooms: [] });
       coreDataLoadedRef.current = true;
     } catch (err) {
       showToast({ title: "Sync Failed", description: "Unable to refresh data from the server." }, true);
@@ -771,8 +771,8 @@ function StaffPageContent() {
     try {
       const studentNo = String(newRec.studentNo || "").trim().toUpperCase();
       const docType = String(newRec.docType || "").trim();
-      const cleanStudentNo = studentNo.replace(/[^a-zA-Z0-9-]/g, "_");
-      const cleanDocType = docType.replace(/[^a-zA-Z0-9-]/g, "_");
+      const cleanStudentNo = studentNo.replace(/[^a-zA-Z0-9-]/g, "_") || "UNKNOWN";
+      const cleanDocType = docType.replace(/[^a-zA-Z0-9-]/g, "_") || "DOC";
       const extension = (fileToUpload.name || "file.pdf").split(".").pop().toLowerCase();
       const newFileName = `${cleanStudentNo}_${cleanDocType}.${extension}`;
       
@@ -788,6 +788,7 @@ function StaffPageContent() {
 
     if (uploadStudentIsExisting) {
       payload.append("studentNo", String(newRec.studentNo).trim());
+      payload.append("studentName", String(newRec.name || "").trim());
       payload.append("docType", newRec.docType);
     } else {
       payload.append("studentNo", newRec.studentNo);
@@ -1061,7 +1062,7 @@ function StaffPageContent() {
 
           <TabsContent value="upload" className="h-full m-0 border-0 focus-visible:ring-0">
             <ScanUploadTab
-              loading={!storageLayout || docTypes.length === 0}
+              loading={!storageLayout}
               uploadMode={uploadMode}
               uploadStudentIsExisting={uploadStudentIsExisting}
               setUploadStudentIsExisting={setUploadStudentIsExisting}

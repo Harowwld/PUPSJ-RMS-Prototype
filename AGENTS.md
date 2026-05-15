@@ -397,6 +397,7 @@ All API responses follow this structure:
 | `/api/audit-logs` | GET | Any auth | Search logs (`?mine=1` for personal) |
 | `/api/storage-layout` | GET/PUT | Any auth / Admin only PUT | Room/cabinet layout |
 | `/api/system/reset-db` | GET | Any auth (destructive) | Wipe and reseed database |
+| `/api/system/seed-mock-data` | GET | Any auth | Populate database with mock data |
 | `/api/system/health` | GET | Any auth | System metrics |
 | `/api/ingest/hot-folder` | POST | Bearer token | Scanner hot-folder ingest |
 
