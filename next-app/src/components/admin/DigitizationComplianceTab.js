@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { formatPHDateTime } from "@/lib/timeFormat";
+import { generateDigitizationCompliancePdf } from "@/lib/pdfGenerator";
 import {
   Empty,
   EmptyHeader,
@@ -128,13 +129,29 @@ export default function DigitizationComplianceTab({
     return Math.min(100, Math.max(0, p));
   }, [summary]);
 
-  const handlePrint = () => {
-    window.print();
-    onLogAction?.({
-      action: "Generate Report",
-      details: `generated formal physical record compliance report (Status: ${statusFilter}, Course: ${courseFilter || 'All'}) for university accreditation files`,
-      entityType: "Report"
-    });
+  const handlePrint = async () => {
+    try {
+      const blob = await generateDigitizationCompliancePdf(data, summary, meta, byCourse);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `pup-rks-compliance-report-${new Date().toISOString().split("T")[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      
+      onLogAction?.({
+        action: "Generate Report",
+        details: `generated formal physical record compliance report (Status: ${statusFilter}, Course: ${courseFilter || 'All'}) for university accreditation files`,
+        entityType: "Report"
+      });
+      
+      showToast?.({ title: "Success", description: "Report downloaded successfully." });
+    } catch (e) {
+      console.error("PDF Generation failed:", e);
+      showToast?.({ title: "Error", description: "Failed to generate PDF report." }, true);
+    }
   };
 
   const downloadCsv = useCallback(() => {
@@ -206,39 +223,6 @@ export default function DigitizationComplianceTab({
 
   return (
     <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter min-h-0">
-      <style dangerouslySetInnerHTML={{
-        __html: `
-        @media print {
-          @page { size: A4; margin: 0; }
-          body * { visibility: hidden; }
-          .printable-report, .printable-report * { visibility: visible; }
-          .printable-report {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 210mm !important;
-            height: 297mm !important;
-            margin: 0 !important;
-            padding: 25mm !important;
-            background: white !important;
-            z-index: 9999 !important;
-            box-shadow: none !important;
-            page-break-after: always;
-          }
-          .no-print { display: none !important; }
-          .rounded-brand, .rounded-xl { border-radius: 0 !important; }
-          .shadow-sm, .shadow-xs, .shadow-2xl { box-shadow: none !important; }
-          .border { border: 1px solid #e2e8f0 !important; }
-          .bg-gray-50\\/50 { background-color: transparent !important; }
-          .bg-white { background-color: white !important; }
-          .text-pup-maroon { color: #800000 !important; }
-          table { width: 100% !important; border-collapse: collapse !important; border: 1px solid #e2e8f0 !important; }
-          th, td { border: 1px solid #e2e8f0 !important; padding: 12px !important; }
-          .progress-bar-container { border: 1px solid #e2e8f0 !important; height: 16px !important; }
-          .progress-bar-fill { background-color: #800000 !important; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
-        }
-      `}} />
-
       <Card className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col min-h-0">
         <div className="p-4 bg-gray-50/50 flex-none border-b border-gray-200">
           <div className="flex flex-col lg:flex-row lg:items-end gap-4 justify-between">

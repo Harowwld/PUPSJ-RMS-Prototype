@@ -26,7 +26,12 @@ export async function GET(req) {
       return createAuthErrorResponse(error || "Admin access required", 403);
     }
 
-    const data = await listBackups();
+    const { searchParams } = new URL(req.url);
+    const search = searchParams.get("search") || "";
+    const startDate = searchParams.get("startDate") || "";
+    const endDate = searchParams.get("endDate") || "";
+
+    const data = await listBackups({ search, startDate, endDate });
     return NextResponse.json({ ok: true, data });
   } catch (error) {
     console.error("Backup List Error:", error);

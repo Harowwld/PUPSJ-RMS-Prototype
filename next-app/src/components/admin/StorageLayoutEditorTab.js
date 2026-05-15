@@ -82,7 +82,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
     return Math.round(val / SNAP_STEP) * SNAP_STEP
   }
 
-  const getEffectiveSize = (item) => {
+  const getCabinetEffectiveSize = (item) => {
     const baseW = Number(item?.rect?.w ?? item?.w) || 0
     const baseH = Number(item?.rect?.h ?? item?.h) || 0
     const rot = Number(item?.rotation) === 90 ? 90 : 0
@@ -105,7 +105,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
     for (const other of currentRoom.cabinets) {
       if (other.id === targetId) continue
 
-      const otherEff = getEffectiveSize(other)
+      const otherEff = getCabinetEffectiveSize(other)
       const oL = other.rect.x
       const oR = other.rect.x + otherEff.w
       const oT = other.rect.y
@@ -128,7 +128,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
   const clampToRoom = (item) => {
     const x = Number(item?.rect?.x ?? item?.x) || 0
     const y = Number(item?.rect?.y ?? item?.y) || 0
-    const { w, h } = getEffectiveSize(item)
+    const { w, h } = getCabinetEffectiveSize(item)
     const cx = clamp(x, 0, Math.max(0, 1 - w))
     const cy = clamp(y, 0, Math.max(0, 1 - h))
     if (item.rect) {
@@ -179,7 +179,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
 
     // Mark obstacles (cabinets)
     room.cabinets.forEach((cab) => {
-      const eff = getEffectiveSize(cab)
+      const eff = getCabinetEffectiveSize(cab)
       const sx = Math.max(0, Math.floor(cab.rect.x * GRID_SIZE))
       const sy = Math.max(0, Math.floor(cab.rect.y * GRID_SIZE))
       const ex = Math.min(GRID_SIZE - 1, Math.ceil((cab.rect.x + eff.w) * GRID_SIZE))
@@ -191,11 +191,11 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
       }
     })
 
-    const doorEff = getEffectiveSize(door)
+    const doorEff = getCabinetEffectiveSize(door)
     const startX = clamp(Math.floor((door.x + doorEff.w / 2) * GRID_SIZE), 0, GRID_SIZE - 1)
     const startY = clamp(Math.floor((door.y + doorEff.h / 2) * GRID_SIZE), 0, GRID_SIZE - 1)
     
-    const cabEff = getEffectiveSize(targetCab)
+    const cabEff = getCabinetEffectiveSize(targetCab)
     const endX = clamp(Math.floor((targetCab.rect.x + cabEff.w / 2) * GRID_SIZE), 0, GRID_SIZE - 1)
     const endY = clamp(Math.floor((targetCab.rect.y + cabEff.h / 2) * GRID_SIZE), 0, GRID_SIZE - 1)
 
@@ -808,7 +808,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
     if (!activeRoom || !selectedCabinet) return
     updateCabinet(activeRoom.id, selectedCabinet.id, (c) => {
       const nextRotation = Number(c.rotation) === 90 ? 0 : 90
-      return clampCabinetToRoom({ ...c, rotation: nextRotation })
+      return clampToRoom({ ...c, rotation: nextRotation })
     })
   }
 

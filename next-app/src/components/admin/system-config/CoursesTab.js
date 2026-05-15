@@ -514,7 +514,7 @@ export default function CoursesTab({
                       )}
                     </td>
                     <td className="p-3 px-6 text-right">
-                      <div className="inline-flex items-center justify-end gap-2 opacity-40 transition-opacity group-hover:opacity-100">
+                      <div className="inline-flex items-center justify-end gap-2">
                         {!showArchived && (
                           <Button
                             variant="outline"

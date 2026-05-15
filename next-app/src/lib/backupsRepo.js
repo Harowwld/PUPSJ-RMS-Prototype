@@ -69,14 +69,35 @@ export async function createBackupRecord({
   return await getBackupById(res.lastInsertRowid);
 }
 
-export async function listBackups() {
-  const rows = await dbAll(
-    `SELECT * FROM backups ORDER BY datetime(created_at) DESC`
-  );
-  console.log(`[REPO] listBackups returned ${rows.length} rows.`);
-  if (rows.length > 0) {
-    console.log(`[REPO] Latest backup: ${rows[0].filename} (Created: ${rows[0].created_at})`);
+export async function listBackups(filters = {}) {
+  const { search, startDate, endDate } = filters;
+  let sql = `SELECT * FROM backups`;
+  const params = [];
+  const conditions = [];
+
+  if (search) {
+    conditions.push(`filename LIKE ?`);
+    params.push(`%${search}%`);
   }
+
+  if (startDate) {
+    conditions.push(`datetime(created_at) >= datetime(?)`);
+    params.push(`${startDate} 00:00:00`);
+  }
+
+  if (endDate) {
+    conditions.push(`datetime(created_at) <= datetime(?)`);
+    params.push(`${endDate} 23:59:59`);
+  }
+
+  if (conditions.length > 0) {
+    sql += ` WHERE ` + conditions.join(" AND ");
+  }
+
+  sql += ` ORDER BY datetime(created_at) DESC`;
+
+  const rows = await dbAll(sql, params);
+  console.log(`[REPO] listBackups returned ${rows.length} rows.`);
   return rows;
 }
 

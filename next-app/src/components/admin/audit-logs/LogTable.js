@@ -23,6 +23,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
+import LogExpandedRow from "./LogExpandedRow"
+import LogPagination from "./LogPagination"
+
 function SortIndicator({ column, logSortBy, logSortOrder }) {
   if (logSortBy !== column)
     return <i className="ph-bold ph-caret-up-down ml-1 opacity-30"></i>
@@ -89,9 +92,6 @@ export default function LogTable({
 }) {
   const [expandedRows, setExpandedRows] = useState({});
 
-  const startItem = (logPage - 1) * itemsPerPage + 1
-  const endItem = Math.min(logPage * itemsPerPage, logTotal)
-
   const toggleRow = (id) => {
     setExpandedRows(prev => ({
       ...prev,
@@ -120,14 +120,50 @@ export default function LogTable({
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-20 rounded-brand" />
-          ))}
+      <div className="animate-pulse">
+        <div className="overflow-x-auto rounded-brand border border-gray-100">
+          <table className="min-w-full text-sm">
+            <thead className="bg-gray-50/50">
+              <tr>
+                {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                  <th key={i} className="p-3">
+                    <Skeleton className="h-3 w-16" />
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {[1, 2, 3, 4, 5].map((row) => (
+                <tr key={row}>
+                  <td className="p-3">
+                    <Skeleton className="h-6 w-6 rounded-full" />
+                  </td>
+                  <td className="p-3">
+                    <Skeleton className="h-3 w-24" />
+                  </td>
+                  <td className="p-3">
+                    <Skeleton className="h-5 w-16 rounded-sm" />
+                  </td>
+                  <td className="p-3">
+                    <div className="space-y-1">
+                      <Skeleton className="h-3 w-20" />
+                      <Skeleton className="h-2 w-12" />
+                    </div>
+                  </td>
+                  <td className="p-3">
+                    <Skeleton className="h-3 w-20" />
+                  </td>
+                  <td className="p-3">
+                    <Skeleton className="h-3 w-full" />
+                  </td>
+                  <td className="p-3">
+                    <Skeleton className="h-8 w-8 rounded-full" />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-        <Skeleton className="h-4 w-full max-w-md rounded-brand" />
-        <Skeleton className="h-32 rounded-brand" />
       </div>
     )
   }
@@ -158,7 +194,18 @@ export default function LogTable({
         <table className="min-w-full text-sm">
           <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50">
             <tr className="text-left text-xs tracking-wider text-gray-600 uppercase">
-              <th className="w-10 p-3 text-center"></th>
+              <th className="w-10 p-3 text-center">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-200 text-gray-500 transition-colors hover:bg-pup-maroon/10 hover:text-pup-maroon">
+                      <i className="ph-bold ph-info text-[10px]"></i>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="rounded-brand max-w-[200px] text-[10px] font-bold leading-tight uppercase tracking-tight">
+                    Double-click any row to quickly expand details.
+                  </TooltipContent>
+                </Tooltip>
+              </th>
               <th className="w-40 p-3 font-bold">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
@@ -248,37 +295,13 @@ export default function LogTable({
                 </DropdownMenu>
               </th>
               <th className="p-3 font-bold">Rich Details</th>
-              <th className="w-32 p-3 text-right font-bold">
-                <div className="flex justify-end">
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button className="flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100">
-                        IP Address{" "}
-                        <SortIndicator
-                          column="ip"
-                          logSortBy={logSortBy}
-                          logSortOrder={logSortOrder}
-                        />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="rounded-brand">
-                      <DropdownMenuItem onClick={() => handleSort("ip", "ASC")}>
-                        Ascending
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => handleSort("ip", "DESC")}>
-                        Descending
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </th>
               <th className="w-20 p-3 text-center font-bold">Details</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
             {displayLogs.length === 0 ? (
               <tr className="border-0 hover:bg-transparent">
-                <td colSpan={8} className="border-0 p-0">
+                <td colSpan={7} className="border-0 p-0">
                   <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500">
                     <EmptyHeader className="flex flex-col items-center gap-0">
                       <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
@@ -310,7 +333,7 @@ export default function LogTable({
                           }}
                           className="mt-4 flex items-center gap-2 rounded-brand border border-gray-300 px-4 text-[10px] font-bold text-gray-600 hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon sm:text-xs shadow-sm transition-colors"
                         >
-                          <i className="ph-bold ph-arrow-counter-clockwise"></i>
+                          <i className="ph-bold ph-x-circle"></i>
                           CLEAR ALL FILTERS
                         </Button>
                       )}
@@ -374,7 +397,7 @@ export default function LogTable({
                       <td className="p-3 text-xs leading-relaxed font-medium text-gray-600">
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="line-clamp-1 max-w-[400px]">
+                            <div className="line-clamp-1 max-w-[600px]">
                               {log.details}
                             </div>
                           </TooltipTrigger>
@@ -385,9 +408,6 @@ export default function LogTable({
                             {log.details}
                           </TooltipContent>
                         </Tooltip>
-                      </td>
-                      <td className="p-3 text-right text-[10px] text-gray-400">
-                        {log.ip}
                       </td>
                       <td className="p-3 text-center">
                         <div className="flex items-center justify-center transition-opacity">
@@ -411,97 +431,8 @@ export default function LogTable({
                     </tr>
                     {isExpanded && (
                       <tr className="border-0 bg-gray-50/50">
-                        <td colSpan={8} className="p-0">
-                          <div className="animate-in fade-in slide-in-from-top-1 border-t border-gray-100 p-6 duration-200">
-                            <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-                              {/* Rich Description */}
-                              <div className="flex flex-col gap-3">
-                                <div className="flex items-center gap-2">
-                                  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-pup-maroon/10 text-pup-maroon">
-                                    <i className="ph-duotone ph-newspaper text-sm"></i>
-                                  </div>
-                                  <h5 className="text-[10px] font-black tracking-widest text-gray-400 uppercase">
-                                    Rich Description
-                                  </h5>
-                                </div>
-                                <div className="rounded-brand border border-gray-200 bg-white p-3 shadow-xs">
-                                  <p className="text-xs leading-relaxed font-medium text-gray-700">
-                                    {log.details}
-                                  </p>
-                                </div>
-                              </div>
-
-                              {/* Network & Device */}
-                              <div className="flex flex-col gap-3 border-l border-gray-100 pl-6">
-                                <div className="flex items-center gap-2">
-                                  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-pup-maroon/10 text-pup-maroon">
-                                    <i className="ph-duotone ph-broadcast text-sm"></i>
-                                  </div>
-                                  <h5 className="text-[10px] font-black tracking-widest text-gray-400 uppercase">
-                                    Network & Device
-                                  </h5>
-                                </div>
-                                <div className="space-y-3 rounded-brand border border-gray-200 bg-white p-4 shadow-xs">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-bold text-gray-400">IP ADDRESS:</span>
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-mono text-[10px] font-bold text-gray-900">{log.ip}</span>
-                                      <Button 
-                                        variant="outline"
-                                        size="icon"
-                                        onClick={() => handleCopy(log.ip, "IP Address")}
-                                        className="h-6 w-6 rounded-md border-gray-200 bg-gray-50 text-gray-400 hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon shadow-xs transition-all"
-                                      >
-                                        <i className="ph-bold ph-copy text-[10px]"></i>
-                                      </Button>
-                                    </div>
-                                  </div>
-                                  <div className="flex flex-col gap-1.5 border-t border-gray-50 pt-3">
-                                    <span className="text-[10px] font-bold text-gray-400">USER AGENT:</span>
-                                    <span className="text-[10px] leading-snug font-medium text-gray-600 italic">
-                                      {log.userAgent}
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {/* Entity Context */}
-                              <div className="flex flex-col gap-3 border-l border-gray-100 pl-6">
-                                <div className="flex items-center gap-2">
-                                  <div className="flex h-6 w-6 items-center justify-center rounded-md bg-pup-maroon/10 text-pup-maroon">
-                                    <i className="ph-duotone ph-cube text-sm"></i>
-                                  </div>
-                                  <h5 className="text-[10px] font-black tracking-widest text-gray-400 uppercase">
-                                    Entity Context
-                                  </h5>
-                                </div>
-                                <div className="space-y-3 rounded-brand border border-gray-200 bg-white p-4 shadow-xs">
-                                  <div className="flex items-center justify-between">
-                                    <span className="text-[10px] font-bold text-gray-400">TARGET TYPE:</span>
-                                    <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[9px] font-black text-gray-600 uppercase">
-                                      {log.entityType || "N/A"}
-                                    </span>
-                                  </div>
-                                  <div className="flex items-center justify-between border-t border-gray-50 pt-3">
-                                    <span className="text-[10px] font-bold text-gray-400">REFERENCE ID:</span>
-                                    <div className="flex items-center gap-2">
-                                      <span className="font-mono text-[10px] font-bold text-gray-900">{log.entityId || "N/A"}</span>
-                                      {log.entityId && (
-                                        <Button 
-                                          variant="outline"
-                                          size="icon"
-                                          onClick={() => handleCopy(log.entityId, "Reference ID")}
-                                          className="h-6 w-6 rounded-md border-gray-200 bg-gray-50 text-gray-400 hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon shadow-xs transition-all"
-                                        >
-                                          <i className="ph-bold ph-copy text-[10px]"></i>
-                                        </Button>
-                                      )}
-                                    </div>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
+                        <td colSpan={7} className="p-0">
+                          <LogExpandedRow log={log} handleCopy={handleCopy} />
                         </td>
                       </tr>
                     )}
@@ -514,75 +445,17 @@ export default function LogTable({
       </div>
 
       {/* Pagination */}
-      <div className="mt-4 flex items-center justify-between">
-        <div className="flex items-center gap-4 text-xs font-medium text-gray-500">
-          {logTotal > 0 ? (
-            <span>
-              {startItem}-{endItem} of{" "}
-              <strong className="text-gray-900">
-                {logTotal.toLocaleString()}
-              </strong>{" "}
-              entries
-            </span>
-          ) : null}
-
-          <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
-            <span className="text-[10px] font-bold text-gray-400 uppercase">
-              Rows:
-            </span>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <select
-                  className="h-7 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-1 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none"
-                  value={itemsPerPage}
-                  onChange={handleItemsPerPageChange}
-                >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                  <option value={200}>200</option>
-                </select>
-              </TooltipTrigger>
-              <TooltipContent side="top" className="rounded-brand">
-                Items per page
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={logPage <= 1}
-            onClick={() => setLogPage((p) => p - 1)}
-            className="h-8 rounded-brand border-gray-300 px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30 shadow-sm transition-colors"
-          >
-            <i className="ph-bold ph-caret-left mr-1"></i> PREV
-          </Button>
-          <div className="flex h-8 items-center justify-center rounded-md border border-gray-200 bg-white px-2 text-[11px] font-bold text-gray-700 shadow-xs focus-within:border-pup-maroon focus-within:ring-1 focus-within:ring-pup-maroon">
-            <input
-              type="text"
-              className="w-8 bg-transparent text-center focus:outline-none"
-              value={jumpPage}
-              onChange={(e) => setJumpPage(e.target.value)}
-              onKeyDown={handleJumpPage}
-              onBlur={handleJumpPage}
-            />
-            <span className="mx-0.5 text-gray-400">/</span>
-            <span>{Math.max(1, Math.ceil(logTotal / logsPerPage))}</span>
-          </div>
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={logPage >= Math.ceil(logTotal / logsPerPage)}
-            onClick={() => setLogPage((p) => p + 1)}
-            className="h-8 rounded-brand border-gray-300 px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30 shadow-sm transition-colors"
-          >
-            NEXT <i className="ph-bold ph-caret-right ml-1"></i>
-          </Button>
-        </div>
-      </div>
+      <LogPagination
+        logTotal={logTotal}
+        logPage={logPage}
+        setLogPage={setLogPage}
+        itemsPerPage={itemsPerPage}
+        logsPerPage={logsPerPage}
+        handleItemsPerPageChange={handleItemsPerPageChange}
+        jumpPage={jumpPage}
+        setJumpPage={setJumpPage}
+        handleJumpPage={handleJumpPage}
+      />
     </>
   )
 }

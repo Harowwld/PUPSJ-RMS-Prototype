@@ -6,8 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip"
 import { formatPHDateTime } from "@/lib/timeFormat"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
-import jsPDF from "jspdf"
-import autoTable from "jspdf-autotable"
+import { generateAuditLogsPdf } from "@/lib/pdfGenerator"
 
 import StatCards from "./audit-logs/StatCards"
 import LogFilters from "./audit-logs/LogFilters"
@@ -124,73 +123,18 @@ export default function AuditLogsTab({
     }
   }
 
-  const generatePdfBlob = async () => {
-    const allLogs = await fetchAllForExport()
-    const doc = new jsPDF("l", "pt", "a4")
-
-    const addHeader = (doc) => {
-      doc.setFillColor(122, 30, 40)
-      doc.rect(0, 0, doc.internal.pageSize.getWidth(), 80, "F")
-      try {
-        doc.addImage("/assets/pup-logo.webp", "WEBP", 40, 15, 50, 50)
-      } catch (e) {
-        console.error("Logo failed to load", e)
-      }
-      doc.setTextColor(255, 255, 255)
-      doc.setFontSize(18)
-      doc.setFont("helvetica", "bold")
-      doc.text("POLYTECHNIC UNIVERSITY OF THE PHILIPPINES", 100, 35)
-      doc.setFontSize(12)
-      doc.setFont("helvetica", "normal")
-      doc.text("SAN JUAN BRANCH - RECORDS MANAGEMENT SYSTEM", 100, 50)
-      doc.setFontSize(14)
-      doc.setFont("helvetica", "bold")
-      doc.text("AUDIT LOGS REPORT", 100, 70)
-      doc.setTextColor(60, 60, 60)
-      doc.setFontSize(9)
-      doc.setFont("helvetica", "bold")
-      doc.text("GENERATED ON:", 40, 105)
-      doc.setFont("helvetica", "normal")
-      doc.text(new Date().toLocaleString(), 130, 105)
-      doc.setFont("helvetica", "bold")
-      doc.text("FILTER CRITERIA:", 40, 120)
-      doc.setFont("helvetica", "normal")
-      const filterText = `Role: ${logRoleFilter} | Severity: ${logSeverityFilter} | Range: ${logStartDate || "Any"} to ${logEndDate || "Any"} | Search: ${logSearch || "None"}`
-      doc.text(filterText, 130, 120)
-      doc.setDrawColor(200, 200, 200)
-      doc.line(40, 130, doc.internal.pageSize.getWidth() - 40, 130)
-    }
-
-    addHeader(doc)
-    const tableData = allLogs.map((log) => [
-      formatPHDateTime(log.created_at),
-      log.severity || "INFO",
-      log.actor,
-      log.role,
-      log.action,
-      log.details || "—",
-      log.ip || "—",
-    ])
-    autoTable(doc, {
-      startY: 145,
-      head: [["Timestamp", "Severity", "Actor", "Role", "Action", "Details", "IP Address"]],
-      body: tableData,
-      theme: "striped",
-      headStyles: { fillColor: [122, 30, 40] },
-      styles: { fontSize: 8, cellPadding: 4 },
-      columnStyles: {
-        0: { cellWidth: 90 }, 1: { cellWidth: 50 }, 2: { cellWidth: 80 },
-        3: { cellWidth: 50 }, 4: { cellWidth: 80 }, 5: { cellWidth: "auto" }, 6: { cellWidth: 70 },
-      },
-    })
-    return doc.output("blob")
-  }
-
   const handlePreviewPDF = async () => {
     if (logTotal === 0 || isExporting) return
     setIsExporting(true)
     try {
-      const blob = await generatePdfBlob()
+      const allLogs = await fetchAllForExport()
+      const blob = await generateAuditLogsPdf(allLogs, {
+        role: logRoleFilter,
+        severity: logSeverityFilter,
+        startDate: logStartDate,
+        endDate: logEndDate,
+        search: logSearch
+      })
       const url = URL.createObjectURL(blob)
       setPdfPreviewUrl(url)
       setPdfPreviewOpen(true)

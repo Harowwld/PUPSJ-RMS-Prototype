@@ -84,6 +84,9 @@ function AdminPageContent() {
     dbStatus: "Healthy",
   });
   const [backups, setBackups] = useState([]);
+  const [backupSearch, setBackupSearch] = useState("");
+  const [backupStartDate, setBackupStartDate] = useState("");
+  const [backupEndDate, setBackupEndDate] = useState("");
   const [reviewRecords, setReviewRecords] = useState([]);
   const [reviewStatusFilter, setReviewStatusFilter] = useState("All");
 
@@ -288,7 +291,11 @@ function AdminPageContent() {
   const refreshBackups = useCallback(async () => {
     setViewLoading((prev) => ({ ...prev, system: true, backup: true }));
     try {
-      const res = await fetch(`/api/system/backup?t=${Date.now()}`, {
+      const searchQuery = backupSearch ? `&search=${encodeURIComponent(backupSearch)}` : "";
+      const startQuery = backupStartDate ? `&startDate=${encodeURIComponent(backupStartDate)}` : "";
+      const endQuery = backupEndDate ? `&endDate=${encodeURIComponent(backupEndDate)}` : "";
+      
+      const res = await fetch(`/api/system/backup?t=${Date.now()}${searchQuery}${startQuery}${endQuery}`, {
         cache: "no-store",
       });
       const json = await res.json();
@@ -302,7 +309,7 @@ function AdminPageContent() {
     } finally {
       setViewLoading((prev) => ({ ...prev, system: false, backup: false }));
     }
-  }, []);
+  }, [backupSearch, backupStartDate, backupEndDate]);
 
   const refreshReviewRecords = useCallback(async () => {
     setViewLoading((prev) => ({ ...prev, review: true }));
@@ -622,11 +629,6 @@ function AdminPageContent() {
     const onBackupSyncComplete = (data) => {
       console.log("[BACKUP] Received backupSyncComplete event:", data);
       refreshBackups();
-      if (data.status === "Success") {
-        showToast({ title: "External Sync Complete", description: "A redundant copy has been secured on the external volume." });
-      } else {
-        showToast({ title: "External Sync Failed", description: data.error || "Unable to secure external copy." }, true);
-      }
     };
 
     socket.on("staffLogin", onStaffLogin);
@@ -826,7 +828,7 @@ function AdminPageContent() {
       headers.set("x-totp-token", totpToken);
     }
 
-    try {
+    const promise = (async () => {
       const res = await fetch("/api/system/backup", { 
         method: "POST", 
         headers 
@@ -838,7 +840,7 @@ function AdminPageContent() {
           throw new Error(json.error || "Invalid verification code");
         }
         executeWithTOTP((token) => simulateBackup(token), "Create Backup", true);
-        return;
+        throw new Error("TOTP_REQUIRED");
       }
 
       if (!res.ok || !json?.ok)
@@ -851,24 +853,33 @@ function AdminPageContent() {
         link.click();
       }
       refreshBackups();
-      showToast({
-        title: "Snapshot Created Successfully",
-        description: `Archive '${json?.data?.filename || "backup package"}' is ready. A redundant copy is being synchronized to the external drive automatically.`,
-      });
-    } catch (err) {
-      showToast({ title: "Backup Execution Failed", description: err?.message || "Unable to complete the system snapshot process." }, true);
-    }
+      return json;
+    })();
+
+    toast.promise(promise, {
+      loading: "Creating full system snapshot...",
+      success: (json) => {
+        return (
+          <div className="flex flex-col gap-1">
+            <p className="font-bold text-sm">Snapshot Created</p>
+            <p className="text-xs opacity-80 font-medium">Archive '{json?.data?.filename || "backup package"}' is ready.</p>
+          </div>
+        )
+      },
+      error: (err) => {
+        if (err.message === "TOTP_REQUIRED") return null;
+        return (
+          <div className="flex flex-col gap-1">
+            <p className="font-bold text-sm text-red-600">Backup Failed</p>
+            <p className="text-xs opacity-80 font-medium">{err.message || "Unable to complete system snapshot."}</p>
+          </div>
+        )
+      },
+    });
   };
 
   const syncExternal = async (id) => {
-    const toastId = showToast(
-      {
-        title: "Sync In Progress",
-        description: "Transferring encrypted backup to external drive…",
-      },
-      "loading"
-    );
-    try {
+    const promise = (async () => {
       const res = await fetch("/api/system/backup/sync-external", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -876,16 +887,25 @@ function AdminPageContent() {
       });
       const json = await res.json();
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Sync failed");
-      toast.dismiss(toastId);
-      showToast({
-        title: "Sync Complete",
-        description: "Backup has been transferred to the external drive.",
-      });
       refreshBackups();
-    } catch (err) {
-      toast.dismiss(toastId);
-      showToast({ title: "Sync Failed", description: err.message }, true);
-    }
+      return json;
+    })();
+
+    toast.promise(promise, {
+      loading: "Transferring encrypted backup to external volume...",
+      success: (
+        <div className="flex flex-col gap-1">
+          <p className="font-bold text-sm">External Sync Complete</p>
+          <p className="text-xs opacity-80 font-medium">A redundant copy has been secured on the external drive.</p>
+        </div>
+      ),
+      error: (err) => (
+        <div className="flex flex-col gap-1">
+          <p className="font-bold text-sm text-red-600">Sync Failed</p>
+          <p className="text-xs opacity-80 font-medium">{err.message || "Unable to secure external copy."}</p>
+        </div>
+      ),
+    });
   };
 
   const confirmDeleteBackup = async () => {
@@ -924,13 +944,15 @@ function AdminPageContent() {
     const totpToken = typeof tokenOrEvent === "string" ? tokenOrEvent : null;
     if (!restoreFile || restoreLoading) return;
     setRestoreLoading(true);
+    
     const formData = new FormData();
     formData.append("file", restoreFile);
     const headers = {};
     if (totpToken) {
       headers["x-totp-token"] = totpToken;
     }
-    try {
+
+    const promise = (async () => {
       const res = await fetch("/api/system/backup/restore", {
         method: "POST",
         headers,
@@ -946,21 +968,36 @@ function AdminPageContent() {
           }
           setRestoreLoading(false);
           await executeWithTOTP((token) => confirmRestore(token), "Restore System", true);
-          return;
+          throw new Error("TOTP_REQUIRED");
         }
         throw new Error(json?.error || "Access denied");
       }
       
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to restore system");
-      showToast({ title: "System Restored", description: "Database restored from backup. Reloading in 3s…" });
+
       setTimeout(() => location.reload(), 3000);
-    } catch (err) {
-      if (totpToken) throw err;
-      showToast({ title: "Restore Failed", description: err.message }, true);
-      setRestoreLoading(false);
-    }
+      return json;
+    })();
+
+    toast.promise(promise, {
+      loading: "Restoring system from encrypted archive...",
+      success: {
+        title: "System Restored",
+        description: "Database recovered successfully. Reloading system in 3s...",
+      },
+      error: (err) => {
+        setRestoreLoading(false);
+        if (err.message === "TOTP_REQUIRED") return null;
+        return {
+          title: "Restore Failed",
+          description: err.message || "Critical error during restoration.",
+        };
+      },
+    });
   };
+
+
 
   const exportData = () => {
     let csv = "ID,First Name,Last Name,Role,Status,Email\n";
@@ -1164,12 +1201,20 @@ function AdminPageContent() {
             systemHealth={systemHealth}
             backups={backups}
             isLoading={viewLoading.system || viewLoading.backup}
+            backupSearch={backupSearch}
+            setBackupSearch={setBackupSearch}
+            backupStartDate={backupStartDate}
+            setBackupStartDate={setBackupStartDate}
+            backupEndDate={backupEndDate}
+            setBackupEndDate={setBackupEndDate}
             onSimulateBackup={() => simulateBackup()}
             onSyncExternal={syncExternal}
             onDownloadBackup={(b) => {
+              const id = typeof b === 'object' ? b.id : b;
+              const filename = typeof b === 'object' ? b.filename : 'backup.zip.enc';
               const link = document.createElement("a");
-              link.href = `/api/system/backup/download?id=${b.id}`;
-              link.download = b.filename;
+              link.href = `/api/system/backup/download?id=${id}`;
+              link.download = filename;
               link.click();
             }}
             onDeleteBackup={(id) => {
@@ -1246,6 +1291,7 @@ function AdminPageContent() {
         placeholder="Type 'DELETE' to authorize..."
         isLoading={backupDeleteLoading}
         confirmDisabled={backupDeleteTypedText !== "DELETE"}
+        variant="danger"
       />
 
       <ConfirmModal

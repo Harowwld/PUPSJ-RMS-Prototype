@@ -41,6 +41,7 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
+import { generateSLAAnalyticsPdf } from "@/lib/pdfGenerator"
 import PageHeader from "@/components/shared/PageHeader"
 
 export default function SLAAnalyticsTab({
@@ -94,14 +95,29 @@ export default function SLAAnalyticsTab({
     .map(([name, value]) => ({ name, value }))
     .filter((d) => d.value > 0)
 
-  const handlePrint = () => {
-    window.print()
-    onLogAction?.({
-      action: "Generate Report",
-      details:
-        "generated formal SLA compliance report (Print/PDF) for administrative records",
-      entityType: "Report",
-    })
+  const handlePrint = async () => {
+    try {
+      const blob = await generateSLAAnalyticsPdf(data, total, slaHours, completionRate);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `pup-rks-sla-report-${new Date().toISOString().split("T")[0]}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      onLogAction?.({
+        action: "Generate Report",
+        details:
+          "generated formal SLA compliance report (Print/PDF) for administrative records",
+        entityType: "Report",
+      })
+      showToast?.({ title: "Success", description: "Report downloaded successfully." });
+    } catch (e) {
+      console.error("PDF Generation failed:", e);
+      showToast?.({ title: "Error", description: "Failed to generate PDF report." }, true);
+    }
   }
 
   const downloadCsv = () => {
@@ -161,40 +177,6 @@ export default function SLAAnalyticsTab({
 
   return (
     <div className="animate-fade-in font-inter flex h-full min-h-0 w-full flex-col">
-      <style
-        dangerouslySetInnerHTML={{
-          __html: `
-        @media print {
-          @page { size: A4; margin: 0; }
-          body * { visibility: hidden; }
-          .printable-report, .printable-report * { visibility: visible; }
-          .printable-report {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
-            width: 210mm !important;
-            height: 297mm !important;
-            margin: 0 !important;
-            padding: 25mm !important;
-            background: white !important;
-            z-index: 9999 !important;
-            box-shadow: none !important;
-            page-break-after: always;
-          }
-          .no-print { display: none !important; }
-          .rounded-brand, .rounded-xl { border-radius: 0 !important; }
-          .shadow-sm, .shadow-xs, .shadow-2xl { box-shadow: none !important; }
-          .border { border: 1px solid #e2e8f0 !important; }
-          .bg-gray-50\\/50 { background-color: transparent !important; }
-          .bg-white { background-color: white !important; }
-          .text-pup-maroon { color: #800000 !important; }
-          table { width: 100% !important; border-collapse: collapse !important; border: 1px solid #e2e8f0 !important; }
-          th, td { border: 1px solid #e2e8f0 !important; padding: 12px !important; }
-        }
-      `,
-        }}
-      />
-
       <Card className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm">
         <PageHeader
           icon="ph-chart-line-up"

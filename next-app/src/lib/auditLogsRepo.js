@@ -57,12 +57,20 @@ export async function countAuditLogs(options) {
   }
 
   if (startDate) {
-    whereClauses.push("date(created_at, 'localtime') >= date(?)");
+    if (startDate.includes("T") || startDate.includes(":")) {
+      whereClauses.push("datetime(created_at) >= datetime(?)");
+    } else {
+      whereClauses.push("date(created_at, 'localtime') >= date(?)");
+    }
     params.push(startDate);
   }
 
   if (endDate) {
-    whereClauses.push("date(created_at, 'localtime') <= date(?)");
+    if (endDate.includes("T") || endDate.includes(":")) {
+      whereClauses.push("datetime(created_at) <= datetime(?)");
+    } else {
+      whereClauses.push("date(created_at, 'localtime') <= date(?)");
+    }
     params.push(endDate);
   }
 
@@ -116,12 +124,20 @@ export async function listAuditLogs(options) {
   }
 
   if (startDate) {
-    whereClauses.push("date(created_at, 'localtime') >= date(?)");
+    if (startDate.includes("T") || startDate.includes(":")) {
+      whereClauses.push("datetime(created_at) >= datetime(?)");
+    } else {
+      whereClauses.push("date(created_at, 'localtime') >= date(?)");
+    }
     params.push(startDate);
   }
 
   if (endDate) {
-    whereClauses.push("date(created_at, 'localtime') <= date(?)");
+    if (endDate.includes("T") || endDate.includes(":")) {
+      whereClauses.push("datetime(created_at) <= datetime(?)");
+    } else {
+      whereClauses.push("date(created_at, 'localtime') <= date(?)");
+    }
     params.push(endDate);
   }
 
