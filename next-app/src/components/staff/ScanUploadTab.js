@@ -742,110 +742,33 @@ export default function ScanUploadTab({
                       accept=".pdf,image/*"
                       onChange={(e) => handlePdfFileSelect(e.target.files[0])}
                     />
-
-                    {uploadedFile ? (
-                      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-brand bg-white p-6">
-                        {String(uploadedFile?.type || "").startsWith("image/") ? (
-                          <div className="relative mb-4 flex h-48 w-full items-center justify-center overflow-hidden rounded-lg border border-gray-100 bg-gray-50/50">
-                            <img
-                              src={manualPreviewUrl}
-                              alt="Manual upload preview"
-                              className="h-full w-full object-contain transition-transform duration-300"
-                              style={{ transform: `rotate(${rotation}deg)` }}
-                            />
-                          </div>
-                        ) : (
-                          <div className="relative mb-4 flex h-32 w-full items-center justify-center overflow-hidden rounded-lg border border-gray-100 bg-gray-50/50">
-                            <i
-                              className="ph-fill ph-file-pdf text-6xl text-pup-maroon transition-transform duration-300"
-                              style={{ transform: `rotate(${rotation}deg)` }}
-                            ></i>
-                          </div>
-                        )}
-
-                        <div className="mb-4 flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-9 w-9 p-0"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setRotation((r) => r - 90)
-                            }}
-                            title="Rotate Left"
-                          >
-                            <i className="ph-bold ph-arrow-counter-clockwise text-sm" />
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="h-9 w-9 p-0"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setRotation((r) => r + 90)
-                            }}
-                            title="Rotate Right"
-                          >
-                            <i className="ph-bold ph-arrow-clockwise text-sm" />
-                          </Button>
-                        </div>
-
-                        <h4 className="mb-1 max-w-sm text-center text-base font-bold break-all text-gray-900">
-                          {uploadedFile.name}
-                        </h4>
-                        <span className="mb-6 text-xs font-medium text-gray-500">
-                          {(uploadedFile.size / 1024).toFixed(2)} KB
-                        </span>
-
-                        {uploadMode === "pdf" && ocrLoading ? (
-                          <div className="mb-4 text-sm font-bold text-gray-700">
-                            Scanning PDF (OCR)...
-                          </div>
-                        ) : null}
-
-                        {uploadMode === "pdf" && ocrError ? (
-                          <div className="mb-4 max-w-md text-center text-sm font-bold text-red-700">
-                            {ocrError}
-                          </div>
-                        ) : null}
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            handleClearPdf()
-                          }}
-                          className="h-10 rounded-brand border border-gray-300 bg-white px-6 text-sm font-bold text-gray-700 hover:border-pup-maroon"
-                        >
-                          REMOVE FILE
-                        </button>
-                      </div>
-                    ) : null}
                   </div>
                 </div>
               )}
 
-              {/* When a hot-folder item is selected, show the file preview overlaying the drop zone */}
-              {uploadMode === "pdf" && hf.selectedRow ? (
+              {/* Unified Preview Overlay (for both Scanner Inbox and Manual Drops) */}
+              {uploadMode === "pdf" && (hf.selectedRow || uploadedFile) ? (
                 <div className="absolute inset-0 z-10 flex flex-col overflow-hidden rounded-brand bg-white">
                   <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-4 py-2.5">
                     <div className="min-w-0">
-                      <div className="text-xs font-bold text-gray-500 uppercase">
-                        Scanner inbox preview
+                      <div className="text-[10px] font-black tracking-widest text-gray-400 uppercase">
+                        {hf.selectedRow ? "Scanner inbox preview" : "Document preview"}
                       </div>
                       <div className="truncate text-sm font-bold text-gray-900">
-                        {hf.selectedRow.original_filename}
+                        {hf.selectedRow?.original_filename || uploadedFile?.name}
                       </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
-                      {hf.ocrLoading ? (
-                        <span className="text-xs font-medium text-gray-600">
+                      {(hf.ocrLoading || ocrLoading) && (
+                        <span className="flex items-center gap-2 text-xs font-bold text-pup-maroon">
+                          <div className="h-3 w-3 animate-spin rounded-full border border-pup-maroon/20 border-t-pup-maroon" />
                           Running OCR…
                         </span>
-                      ) : null}
+                      )}
+                      <div className="flex items-center gap-1.5 border-l border-gray-200 pl-2">
                         <button
                           type="button"
-                          className="flex h-8 w-8 items-center justify-center rounded-brand border border-gray-300 bg-white text-gray-700 hover:border-pup-maroon"
+                          className="flex h-8 w-8 items-center justify-center rounded-brand border border-gray-200 bg-white text-gray-600 shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon"
                           onClick={() => setRotation((r) => r - 90)}
                           title="Rotate Left"
                         >
@@ -853,7 +776,7 @@ export default function ScanUploadTab({
                         </button>
                         <button
                           type="button"
-                          className="flex h-8 w-8 items-center justify-center rounded-brand border border-gray-300 bg-white text-gray-700 hover:border-pup-maroon"
+                          className="flex h-8 w-8 items-center justify-center rounded-brand border border-gray-200 bg-white text-gray-600 shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon"
                           onClick={() => setRotation((r) => r + 90)}
                           title="Rotate Right"
                         >
@@ -861,32 +784,48 @@ export default function ScanUploadTab({
                         </button>
                         <button
                           type="button"
-                          className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-xs font-bold hover:border-pup-maroon"
-                          onClick={() => hf.clearIngestSelection()}
+                          className="ml-1 flex h-8 items-center gap-2 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-700 uppercase transition-all hover:border-red-600 hover:bg-red-50 hover:text-red-700"
+                          onClick={() => {
+                            if (hf.selectedRow) {
+                              hf.clearIngestSelection()
+                            }
+                            handleClearPdf()
+                          }}
                         >
-                          ✕ CLOSE
+                          <i className="ph-bold ph-x text-xs" />
+                          Close
                         </button>
+                      </div>
                     </div>
                   </div>
-                  <div className="min-h-0 flex-1 overflow-hidden">
-                    {hf.previewMime.startsWith("image/") ? (
-                      <div className="relative h-full w-full">
-                        <img
-                          src={hf.previewUrl}
-                          alt="Scanner inbox preview"
-                          className="h-full w-full object-contain transition-transform duration-300"
-                          draggable="false"
+                  <div className="min-h-0 flex-1 overflow-hidden bg-gray-100">
+                    {(() => {
+                      const url = hf.selectedRow ? hf.previewUrl : manualPreviewUrl
+                      const mime = hf.selectedRow ? hf.previewMime : uploadedFile?.type
+                      const isImg = String(mime || "").startsWith("image/")
+
+                      if (isImg) {
+                        return (
+                          <div className="relative flex h-full w-full items-center justify-center p-4">
+                            <img
+                              src={url}
+                              alt="Preview"
+                              className="max-h-full max-w-full rounded-md object-contain shadow-2xl transition-transform duration-300"
+                              draggable="false"
+                              style={{ transform: `rotate(${rotation}deg)` }}
+                            />
+                          </div>
+                        )
+                      }
+                      return (
+                        <iframe
+                          title="preview"
+                          src={url}
+                          className="h-full w-full border-0 transition-transform duration-300"
                           style={{ transform: `rotate(${rotation}deg)` }}
                         />
-                      </div>
-                    ) : (
-                      <iframe
-                        title="scanner-inbox-preview"
-                        src={hf.previewUrl}
-                        className="h-full w-full transition-transform duration-300"
-                        style={{ transform: `rotate(${rotation}deg)` }}
-                      />
-                    )}
+                      )
+                    })()}
                   </div>
                 </div>
               ) : null}

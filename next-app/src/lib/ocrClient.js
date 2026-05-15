@@ -50,9 +50,6 @@ async function getWorker() {
     }
 
     const Tesseract = await import("tesseract.js");
-    if (Tesseract?.GlobalWorkerOptions) {
-      Tesseract.GlobalWorkerOptions.workerSrc = "/tesseract/worker.min.js";
-    }
 
     const worker = await Tesseract.createWorker("eng", 1, {
       workerPath: "/tesseract/worker.min.js",
@@ -86,8 +83,8 @@ async function ocrFromPdf(file, worker, rotation = 0) {
   const pdf = await pdfjs.getDocument({
     data: bytes,
     useWorkerFetch: false,
-    isEvalSupported: false,
-    disableFontFace: true,
+    isEvalSupported: true,
+    disableFontFace: false,
     disableStream: true,
     disableRange: true,
     disableAutoFetch: true,
@@ -95,7 +92,7 @@ async function ocrFromPdf(file, worker, rotation = 0) {
   }).promise;
 
   const page = await pdf.getPage(1);
-  const vp = page.getViewport({ scale: 1.75, rotation: (page.rotate + rotation) % 360 });
+  const vp = page.getViewport({ scale: 3.0, rotation: (page.rotate + rotation) % 360 });
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) throw new Error("Canvas init failed");
@@ -107,7 +104,7 @@ async function ocrFromPdf(file, worker, rotation = 0) {
 }
 
 async function ocrFromImage(file, worker, rotation = 0) {
-  const bmp = await createImageBitmap(file);
+  const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) throw new Error("Canvas init failed");
