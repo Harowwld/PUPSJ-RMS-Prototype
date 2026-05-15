@@ -3,7 +3,7 @@ import {
   createDocument,
   listDocuments,
 } from "../../../lib/documentsRepo";
-import { createStudent } from "../../../lib/studentsRepo";
+import { createStudent, getStudentByStudentNo } from "../../../lib/studentsRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
 import { requireStaff, createAuthErrorResponse } from "../../../lib/authHelpers";
 
@@ -72,7 +72,7 @@ export async function POST(req) {
 
   const studentNoRaw = String(form.get("studentNo") || "").trim();
   const studentNo = studentNoRaw.toUpperCase();
-  const studentName = String(form.get("studentName") || "").trim();
+  let studentName = String(form.get("studentName") || "").trim();
   const docType = String(form.get("docType") || "").trim();
   const isNewStudent =
     String(form.get("isNewStudent") || "").toLowerCase() === "true";
@@ -82,6 +82,14 @@ export async function POST(req) {
       { ok: false, error: "studentNo and docType are required" },
       { status: 400 }
     );
+  }
+
+  // Server-side safeguard: if studentName is missing, try to look it up from the database.
+  if (!studentName && !isNewStudent) {
+    const student = await getStudentByStudentNo(studentNo);
+    if (student) {
+      studentName = student.name || "";
+    }
   }
 
   if (isNewStudent) {

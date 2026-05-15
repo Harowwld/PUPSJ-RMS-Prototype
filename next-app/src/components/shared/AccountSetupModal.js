@@ -127,10 +127,12 @@ export default function AccountSetupModal({ authUser }) {
     setSecError("")
     setSecSubmitting(true)
     try {
-      const payload = questions.map((q) => ({
-        questionId: q.id,
-        answer: answers[q.id].trim(),
-      }))
+      const payload = questions
+        .map((q) => ({
+          questionId: q.id,
+          answer: (answers[q.id] || "").trim(),
+        }))
+        .filter((ans) => ans.answer !== "");
 
       const res = await fetch("/api/staff/security", {
         method: "PUT",

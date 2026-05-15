@@ -24,10 +24,8 @@ export async function GET(req) {
     const answeredRows = await dbAll("SELECT question_id FROM staff_security_answers WHERE staff_id = ?", [uid]);
     const answeredSet = new Set((answeredRows || []).map(r => r.question_id));
     
-    // Updated logic: have they answered all REQUIRED questions?
-    const requiredQuestions = (questions || []).filter(q => q.is_required === 1);
-    const hasAllQuestions = requiredQuestions.length === 0 || 
-                           requiredQuestions.every(q => answeredSet.has(q.id));
+    // Updated logic: have they answered at least 2 questions?
+    const hasAllQuestions = answeredSet.size >= 2;
 
     const formattedQuestions = (questions || []).map(q => ({
       ...q,

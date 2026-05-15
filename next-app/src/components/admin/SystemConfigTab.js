@@ -444,6 +444,16 @@ export default function SystemConfigTab({
     }
     try {
       const filtered = securityQuestions.filter((q) => q.trim() !== "")
+      if (filtered.length < 2) {
+        showToast({
+          title: "Validation Error",
+          description: "At least two security questions are required.",
+          variant: "destructive"
+        })
+        setSecuritySaving(false)
+        return
+      }
+
       const res = await fetch("/api/system/security-questions", {
         method: "PUT",
         headers,

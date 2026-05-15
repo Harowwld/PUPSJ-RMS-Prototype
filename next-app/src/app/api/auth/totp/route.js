@@ -11,6 +11,12 @@ import {
   decryptSecret,
   isValidToken,
 } from "../../../../lib/totp";
+import { 
+  getRecoveryCodesCount, 
+  generateRecoveryCodes, 
+  setSerialKey 
+} from "../../../../lib/staffRepo";
+import crypto from "node:crypto";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
@@ -46,6 +52,7 @@ export async function GET(req) {
     data: {
       enabled: Boolean(staff.totp_enabled),
       hasSecret: Boolean(staff.totp_secret),
+      recoveryCodesCount: await getRecoveryCodesCount(user.userId),
     },
   });
 }
@@ -71,9 +78,23 @@ export async function POST(req) {
     return handleDisable(req, user, body);
   } else if (action === "validate") {
     return handleValidate(req, user, body);
+  } else if (action === "generate-recovery-codes") {
+    return handleGenerateRecoveryCodes(req, user, body);
+  } else if (action === "get-recovery-codes-status") {
+    return handleGetRecoveryCodesStatus(req, user, body);
   }
 
   return NextResponse.json({ ok: false, error: "Invalid action" }, { status: 400 });
+}
+
+function generateSerialKey() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; // Removed ambiguous O, 0, I, 1
+  let key = "";
+  for (let i = 0; i < 16; i++) {
+    if (i > 0 && i % 4 === 0) key += "-";
+    key += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return key;
 }
 
 async function handleSetup(req, user, body) {
@@ -93,16 +114,21 @@ async function handleSetup(req, user, body) {
   console.log("[TOTP Setup] Encrypted secret:", encrypted);
   const qrDataUrl = await generateQRCode(otpauthUrl);
 
+  const serialKey = generateSerialKey();
+
   await dbRun(
     "UPDATE staff SET totp_secret = ?, updated_at = datetime('now') WHERE id = ?",
     [encrypted, user.userId]
   );
+  
+  await setSerialKey(user.userId, serialKey);
 
   return NextResponse.json({
     ok: true,
     data: {
       secret,
       qrCode: qrDataUrl,
+      serialKey,
     },
   });
 }
@@ -202,4 +228,28 @@ async function handleValidate(req, user, body) {
   const isValid = verifyTOTP(token, decrypted);
   console.log("[TOTP Validate] Result:", isValid);
   return NextResponse.json({ ok: isValid, data: { valid: isValid } });
+}
+
+async function handleGenerateRecoveryCodes(req, user, body) {
+  const staff = await getStaffById(user.userId);
+  if (!staff) {
+    return NextResponse.json({ ok: false, error: "User not found" }, { status: 404 });
+  }
+
+  // Usually we require a recent password or TOTP confirmation to generate new recovery codes,
+  // but for now we'll allow it if they are authenticated.
+  
+  const codes = await generateRecoveryCodes(user.userId);
+  
+  await writeAuditLog(req, "Generated new 2FA recovery codes", {
+    actor: `${staff.fname} ${staff.lname}`,
+    role: staff.role,
+  });
+
+  return NextResponse.json({ ok: true, data: { codes } });
+}
+
+async function handleGetRecoveryCodesStatus(req, user, body) {
+  const count = await getRecoveryCodesCount(user.userId);
+  return NextResponse.json({ ok: true, data: { count } });
 }

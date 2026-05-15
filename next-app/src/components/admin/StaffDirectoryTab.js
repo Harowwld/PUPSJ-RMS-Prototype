@@ -437,7 +437,7 @@ export default function StaffDirectoryTab({
                   </Button>
                   <Button
                     size="sm"
-                    onClick={() => onSwitchView("register")}
+                    onClick={() => onSwitchView("create")}
                     className="h-10 rounded-brand bg-pup-maroon px-5 text-sm font-bold text-white shadow-sm transition-all hover:bg-red-900 active:scale-95"
                   >
                     <i className="ph-bold ph-user-plus mr-1.5"></i>
