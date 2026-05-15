@@ -180,14 +180,18 @@ export default function DigitizationComplianceTab({
 
   const handlePreview = async () => {
     if (!data || loading) return;
+    
+    // Open the modal immediately to show the "Generating..." spinner
+    setReportOpen(true);
+    
     try {
       const blob = await generateDigitizationCompliancePdf(data, summary, meta, byCourse);
       const url = URL.createObjectURL(blob);
       setPdfPreviewUrl(url);
-      setReportOpen(true);
     } catch (e) {
       console.error("PDF Preview generation failed:", e);
       showToast?.({ title: "Preview Failed", description: "Failed to generate compliance report preview." }, true);
+      setReportOpen(false);
     }
   }
 
@@ -271,7 +275,9 @@ export default function DigitizationComplianceTab({
 
     const csvContent = lines.join("\n");
     const now = new Date();
-    const fileName = `PUP-RKS-COMPLIANCE-DATA-${format(now, "yyyy-MM-dd-HHmm")}.csv`;
+    const dateStr = now.toISOString().split("T")[0];
+    const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "");
+    const fileName = `PUP-RKS-COMPLIANCE-DATA-${dateStr}-${timeStr}.csv`;
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
@@ -290,7 +296,6 @@ export default function DigitizationComplianceTab({
     });
   }, [summary, meta, byCourse, showByCourse, onLogAction, statusFilter, courseFilter]);
 
-  const reportDate = formatPHDateTime(new Date().toISOString());
 
   return (
     <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter min-h-0">
@@ -373,7 +378,7 @@ export default function DigitizationComplianceTab({
                 type="button"
                 variant="default"
                 size="sm"
-                onClick={() => setReportOpen(true)}
+                onClick={handlePreview}
                 disabled={loading || !data}
                 className="h-10 px-6 font-bold text-sm bg-pup-maroon text-white border border-pup-maroon shadow-sm hover:bg-red-900 disabled:opacity-60 rounded-brand transition-colors"
               >
