@@ -1290,6 +1290,7 @@ function AdminPageContent() {
               logSortOrder={logSortOrder}
               setLogSortOrder={setLogSortOrder}
               showToast={showToast}
+              onLogAction={logAdminAction}
             />
           )}
 

@@ -86,9 +86,11 @@ export default function BackupTab({
     if (sortBy === column) {
       if (sortOrder === "ASC") {
         setSortOrder("DESC")
-      } else {
+      } else if (column !== "created_at") {
         setSortBy("created_at")
         setSortOrder("DESC")
+      } else {
+        setSortOrder("ASC")
       }
     } else {
       setSortBy(column)

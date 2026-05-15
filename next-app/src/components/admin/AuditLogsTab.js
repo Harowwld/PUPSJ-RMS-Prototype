@@ -41,6 +41,7 @@ export default function AuditLogsTab({
   logSortOrder,
   setLogSortOrder,
   showToast,
+  onLogAction,
 }) {
   const [localSearch, setLocalSearch] = useState(logSearch || "")
   const [itemsPerPage, setItemsPerPage] = useState(logsPerPage || 10)
@@ -83,15 +84,17 @@ export default function AuditLogsTab({
     if (logSortBy === column) {
       if (logSortOrder === "ASC") {
         setLogSortOrder("DESC")
-      } else {
+      } else if (column !== "created_at") {
         setLogSortBy("created_at")
         setLogSortOrder("DESC")
+      } else {
+        setLogSortOrder("ASC")
       }
     } else {
       setLogSortBy(column)
       setLogSortOrder("ASC")
     }
-    setPage(1)
+    setLogPage(1)
   }
 
   const fetchAllForExport = async () => {
@@ -139,6 +142,13 @@ export default function AuditLogsTab({
       link.click()
       document.body.removeChild(link)
       showToast({ title: "Export Success", description: "Audit logs have been exported to CSV successfully." })
+      if (onLogAction) {
+        onLogAction({
+          action: "Exported Audit Logs to CSV",
+          details: `Exported ${allLogs.length} records. Filters - Role: ${logRoleFilter}, Severity: ${logSeverityFilter}, Search: ${logSearch || "None"}`,
+          severity: "INFO"
+        })
+      }
     } catch (err) {
       console.error("[Export Error]", err)
       showToast({ title: "Export Failed", description: err.message || "Unable to export audit logs to CSV." }, true)
@@ -162,6 +172,13 @@ export default function AuditLogsTab({
       const url = URL.createObjectURL(blob)
       setPdfPreviewUrl(url)
       setPdfPreviewOpen(true)
+      if (onLogAction) {
+        onLogAction({
+          action: "Generated Audit Logs PDF Report",
+          details: `Generated report for ${allLogs.length} records. Filters - Role: ${logRoleFilter}, Severity: ${logSeverityFilter}`,
+          severity: "INFO"
+        })
+      }
     } catch (err) {
       console.error("[PDF Preview Error]", err)
       showToast({ title: "Preview Failed", description: err.message || "Unable to generate PDF preview." }, true)

@@ -72,12 +72,12 @@ export default function BackupTable({
             </th>
             <th className="w-1/3 p-3 font-bold">
               <button
-                onClick={() => handleSort("id")}
+                onClick={() => handleSort("filename")}
                 className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
               >
                 Backup Archive{" "}
                 <SortIndicator
-                  column="id"
+                  column="filename"
                   sortBy={sortBy}
                   sortOrder={sortOrder}
                 />

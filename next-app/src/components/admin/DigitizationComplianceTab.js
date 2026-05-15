@@ -1,12 +1,21 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Toggle } from "@/components/ui/toggle";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Tooltip,
   TooltipTrigger,
@@ -31,15 +40,18 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import PageHeader from "@/components/shared/PageHeader";
-import { STATUS_COLORS } from "@/lib/constants";
 
 export default function DigitizationComplianceTab({
   showToast,
   onLogAction,
 }) {
-  const [statusFilter, setStatusFilter] = useState("Active");
-  const [courseFilter, setCourseFilter] = useState("");
-  const [requireApproved, setRequireApproved] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [statusFilter, setStatusFilter] = useState(searchParams.get("status") || "Active");
+  const [courseFilter, setCourseFilter] = useState(searchParams.get("course") || "");
+  const [requireApproved, setRequireApproved] = useState(searchParams.get("approved") === "1");
+  
   const [courses, setCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
   const [data, setData] = useState(null);
@@ -52,6 +64,7 @@ export default function DigitizationComplianceTab({
 
   const [sortBy, setSortBy] = useState("courseCode");
   const [sortOrder, setSortOrder] = useState("asc");
+  const [tableSearch, setTableSearch] = useState("");
 
   const handleSort = (column) => {
     if (sortBy === column) {
@@ -70,7 +83,7 @@ export default function DigitizationComplianceTab({
   const SortIndicator = ({ column }) => {
     if (sortBy !== column)
       return (
-        <i className="ph-bold ph-caret-up-down ml-1 opacity-0 transition-opacity group-hover:opacity-50"></i>
+        <i className="ph-bold ph-caret-up-down ml-1 text-gray-300 transition-opacity group-hover:opacity-100 opacity-0 lg:opacity-100"></i>
       );
     return sortOrder === "asc" ? (
       <i className="ph-bold ph-caret-up ml-1 text-pup-maroon"></i>
@@ -137,13 +150,22 @@ export default function DigitizationComplianceTab({
 
   const firstLoadRef = useRef(true);
   useEffect(() => {
+    // Sync filters with URL
+    const params = new URLSearchParams(searchParams);
+    params.set("status", statusFilter);
+    if (courseFilter) params.set("course", courseFilter); else params.delete("course");
+    if (requireApproved) params.set("approved", "1"); else params.delete("approved");
+    
+    const newUrl = `${window.location.pathname}?${params.toString()}`;
+    window.history.replaceState(null, "", newUrl);
+
     const delay = firstLoadRef.current ? 0 : 350;
     firstLoadRef.current = false;
     const id = setTimeout(() => {
       load();
     }, delay);
     return () => clearTimeout(id);
-  }, [statusFilter, courseFilter, requireApproved, load]);
+  }, [statusFilter, courseFilter, requireApproved, load, searchParams]);
 
   const summary = data?.summary;
   const meta = data?.meta;
@@ -166,11 +188,6 @@ export default function DigitizationComplianceTab({
       return 0;
     });
   }, [byCourse, sortBy, sortOrder]);
-
-  const showByCourse = useMemo(
-    () => sortedByCourse.length > 0 && !String(courseFilter || "").trim(),
-    [sortedByCourse, courseFilter]
-  );
 
   const progressWidth = useMemo(() => {
     const p = summary?.percentDigitized;
@@ -253,7 +270,7 @@ export default function DigitizationComplianceTab({
       row(["Total expected files", summary.totalExpectedDocsCount]),
     ];
 
-    if (showByCourse) {
+    if (byCourse.length > 0) {
       lines.push("");
       lines.push(row(["Course Program Breakdown", "", "", ""]));
       lines.push(row(["Course", "Total Students", "Fully Digitized", "Avg. Completeness"]));
@@ -271,7 +288,7 @@ export default function DigitizationComplianceTab({
 
     const csvContent = lines.join("\n");
     const now = new Date();
-    const fileName = `PUP-RKS-COMPLIANCE-DATA-${format(now, "yyyy-MM-dd-HHmm")}.csv`;
+    const fileName = `PUP-RKS-COMPLIANCE-DATA-${now.toISOString().replace(/[:.]/g, "-")}.csv`;
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
@@ -288,19 +305,75 @@ export default function DigitizationComplianceTab({
       details: `exported digitization compliance dataset (${fileName}) to local CSV storage volume`,
       entityType: "Report"
     });
-  }, [summary, meta, byCourse, showByCourse, onLogAction, statusFilter, courseFilter]);
-
-  const reportDate = formatPHDateTime(new Date().toISOString());
+  }, [summary, meta, byCourse, onLogAction, statusFilter, courseFilter]);
 
   return (
-    <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter min-h-0">
-      <Card className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col min-h-0">
+    <div className="flex flex-col w-full h-full gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500 font-inter min-h-0">
+      <Card className="flex-1 bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0">
+        <PageHeader
+          icon="ph-chart-pie"
+          title="Digitization Compliance Analytics"
+          description="Monitoring of physical record digitization and archival completeness across programs."
+          actions={
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="default"
+                size="sm"
+                onClick={handlePreview}
+                disabled={loading || !data}
+                className="h-10 px-6 font-bold text-xs tracking-wide bg-pup-maroon text-white border border-pup-maroon shadow-sm hover:bg-red-900 active:scale-95 disabled:opacity-60 rounded-brand transition-all uppercase"
+              >
+                <i className="ph-bold ph-file-pdf text-sm mr-2" aria-hidden />
+                Generate Report
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={downloadCsv}
+                disabled={loading || !data}
+                className="h-10 px-4 font-bold text-xs tracking-wide border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 active:scale-95 rounded-brand transition-all uppercase"
+              >
+                <i className="ph-bold ph-file-csv text-sm mr-2 text-pup-maroon" aria-hidden />
+                Export CSV
+              </Button>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={load}
+                      disabled={loading}
+                      className="h-10 w-10 p-0 text-gray-600 bg-white border border-gray-300 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-90 rounded-brand"
+                    >
+                      <i
+                        className={cn(
+                          "ph-bold ph-arrows-clockwise text-sm",
+                          loading && "animate-spin"
+                        )}
+                        aria-hidden
+                      />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    <p className="font-bold text-xs">Refresh Compliance Data</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          }
+        />
+
         <div className="p-4 bg-gray-50/50 flex-none border-b border-gray-200">
           <div className="flex flex-col lg:flex-row lg:items-end gap-4 justify-between">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 flex-1">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-bold text-gray-700 uppercase">
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">
                     Student Status
                   </label>
                   {(statusFilter !== "Active" || courseFilter !== "") && (
@@ -318,33 +391,40 @@ export default function DigitizationComplianceTab({
                   )}
                 </div>
                 <select
-                  className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                  className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-pup-maroon/20 focus:border-pup-maroon hover:border-gray-400"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
                   <option value="Active">Active</option>
-                  <option value="All">All statuses</option>
+                  <option value="All">All</option>
                   <option value="Inactive">Inactive</option>
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-widest">
                   Course Filter
                 </label>
-                <select
-                  className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon disabled:opacity-60"
-                  value={courseFilter}
-                  onChange={(e) => setCourseFilter(e.target.value)}
-                  disabled={coursesLoading}
-                >
-                  <option value="">All courses</option>
-                  {courses.map((c) => (
-                    <option key={c.code || c.id} value={String(c.code || "")}>
-                      {c.code}
-                      {c.name ? ` — ${c.name}` : ""}
-                    </option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <select
+                    className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-pup-maroon/20 focus:border-pup-maroon hover:border-gray-400 disabled:opacity-60"
+                    value={courseFilter}
+                    onChange={(e) => setCourseFilter(e.target.value)}
+                    disabled={coursesLoading}
+                  >
+                    <option value="">All</option>
+                    {courses.map((c) => (
+                      <option key={c.code || c.id} value={String(c.code || "")}>
+                        {c.code}
+                        {c.name ? ` — ${c.name}` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  {coursesLoading && (
+                    <div className="absolute right-8 top-1/2 -translate-y-1/2">
+                      <i className="ph-bold ph-spinner animate-spin text-gray-400" />
+                    </div>
+                  )}
+                </div>
               </div>
               <div className="flex items-end">
                 <Toggle
@@ -352,9 +432,9 @@ export default function DigitizationComplianceTab({
                   pressed={requireApproved}
                   onPressedChange={setRequireApproved}
                   className={cn(
-                    "h-10 px-4 gap-2 rounded-brand border border-gray-300 font-bold text-xs uppercase transition-all select-none w-full sm:w-auto",
-                    "hover:bg-gray-50 hover:text-gray-700",
-                    "data-[state=on]:bg-pup-maroon data-[state=on]:text-white data-[state=on]:border-pup-maroon data-[state=on]:shadow-sm"
+                    "h-10 px-4 gap-2 rounded-brand border border-gray-300 font-bold text-[10px] uppercase tracking-wider transition-all select-none w-full sm:w-auto",
+                    "hover:bg-gray-50 hover:text-gray-700 hover:border-gray-400",
+                    "data-[state=on]:bg-pup-maroon data-[state=on]:text-white data-[state=on]:border-pup-maroon data-[state=on]:shadow-md"
                   )}
                 >
                   <i
@@ -368,297 +448,326 @@ export default function DigitizationComplianceTab({
                 </Toggle>
               </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <Button
-                type="button"
-                variant="default"
-                size="sm"
-                onClick={() => setReportOpen(true)}
-                disabled={loading || !data}
-                className="h-10 px-6 font-bold text-sm bg-pup-maroon text-white border border-pup-maroon shadow-sm hover:bg-red-900 disabled:opacity-60 rounded-brand transition-colors"
-              >
-                <i className="ph-bold ph-file-pdf text-sm mr-1.5" aria-hidden />
-                GENERATE REPORT
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={downloadCsv}
-                disabled={loading || !data}
-                className="h-10 px-4 font-bold border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 rounded-brand transition-colors"
-              >
-                <i className="ph-bold ph-download-simple text-sm mr-1.5 text-pup-maroon" aria-hidden />
-                EXPORT CSV
-              </Button>
-
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={load}
-                      disabled={loading}
-                      className="h-10 w-10 p-0 text-gray-600 bg-white border border-gray-300 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 rounded-brand"
-                    >
-                      <i
-                        className={cn(
-                          "ph-bold ph-arrows-clockwise text-sm",
-                          loading && "animate-spin"
-                        )}
-                        aria-hidden
-                      />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p className="font-bold">Refresh Analytics Data</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </div>
           </div>
         </div>
 
         <CardContent className="flex-1 flex flex-col min-h-0 p-6 overflow-auto bg-white">
-          {loading ? (
-            <div className="space-y-6">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {loading && !data ? (
+            <div className="space-y-8 animate-pulse">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[1, 2, 3, 4].map((i) => (
-                  <Skeleton key={i} className="h-24 rounded-brand" />
+                  <Skeleton key={i} className="h-28 rounded-xl bg-gray-100" />
                 ))}
               </div>
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-full max-w-md rounded-brand" />
-                <Skeleton className="h-3 w-full rounded-full" />
+              <div className="space-y-4">
+                <div className="flex justify-between">
+                   <Skeleton className="h-3 w-40 rounded-full bg-gray-100" />
+                   <Skeleton className="h-4 w-12 rounded-full bg-gray-100" />
+                </div>
+                <Skeleton className="h-4 w-full rounded-full bg-gray-100" />
               </div>
-              <Skeleton className="h-64 rounded-brand w-full" />
+              <div className="border border-gray-100 rounded-xl overflow-hidden">
+                <Skeleton className="h-10 w-full bg-gray-50" />
+                <div className="p-4 space-y-4">
+                  {[1, 2, 3, 4, 5].map(i => (
+                    <Skeleton key={i} className="h-8 w-full bg-gray-50/50" />
+                  ))}
+                </div>
+              </div>
             </div>
           ) : error ? (
-            <div className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500">
-              <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
+            <div className="h-[400px] flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-gray-100 rounded-3xl bg-gray-50/30">
+              <div className="w-20 h-20 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-6 shadow-md animate-bounce">
+                <i className="ph-duotone ph-warning-circle text-4xl text-pup-maroon" />
               </div>
-              <p className="text-lg font-bold text-gray-900">Could not load compliance data</p>
-              <p className="text-sm font-medium text-gray-600 mt-1 max-w-md">{error}</p>
-              <Button variant="outline" size="sm" className="mt-6 h-10 px-4 font-bold border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 rounded-brand transition-colors" onClick={load}>Try Again</Button>
-            </div>
-          ) : !data ? (
-            <div className="h-full flex items-center justify-center">
-              <Skeleton className="h-64 w-full rounded-brand" />
+              <h3 className="text-xl font-black text-gray-900 tracking-tight">Data Unavailable</h3>
+              <p className="text-sm font-medium text-gray-500 mt-2 max-w-sm">{error}</p>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="mt-8 h-12 px-8 font-bold border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 rounded-brand transition-all active:scale-95" 
+                onClick={load}
+              >
+                Retry Connection
+              </Button>
             </div>
           ) : data ? (
-            <div className={cn("transition-opacity duration-300", loading && "opacity-40")}>
-              {/* Stats Cards - PUP Maroon Theme */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            <div className={cn("transition-all duration-500", loading ? "opacity-40 blur-[1px]" : "opacity-100")}>
+              {/* Stats Cards - Aligned with SLA Tab Style */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
 
-                {/* Total Students — Accent Card */}
-                <div className="relative rounded-xl p-4 overflow-hidden border border-[#5c1520] bg-[#7a1e28]">
-                  <i className="ph-duotone ph-users-three absolute -right-3 -bottom-3 text-[60px] opacity-20 text-white rotate-12 pointer-events-none" />
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#f7c9ce] mb-2">
-                    Total Students
-                  </div>
-                  <div className="text-2xl font-bold text-white leading-none">
-                    {summary?.totalStudents?.toLocaleString?.() ?? summary?.totalStudents}
-                  </div>
-                  <div className="text-[11px] text-[#f7c9ce]/80 mt-2">
-                    Enrolled in the system
+                {/* Total Students — Light Card */}
+                <div className="group relative overflow-hidden rounded-xl border border-[#7a1e28]/15 bg-[#fdf6f6] p-5 shadow-sm transition-all">
+                  <i className="ph-duotone ph-users-three pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-[#7a1e28] opacity-10" />
+                  <div className="relative z-10">
+                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-[#9e5a62] uppercase">
+                      <i className="ph-bold ph-users-three" /> Total Students
+                    </div>
+                    <div className="text-3xl font-black text-[#7a1e28]">
+                      {summary?.totalStudents?.toLocaleString?.() ?? summary?.totalStudents}
+                    </div>
+                    <div className="mt-1 text-[10px] font-medium text-[#b07078]">
+                      Enrolled Students
+                    </div>
                   </div>
                 </div>
 
-                {/* Fully Digitized */}
-                <div className="relative rounded-xl p-4 overflow-hidden border border-[#7a1e28]/15 bg-[#fdf6f6]">
-                  <i className="ph-duotone ph-check-square-offset absolute -right-3 -bottom-3 text-[60px] opacity-10 text-[#7a1e28] rotate-12 pointer-events-none" />
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#9e5a62] mb-2">
-                    Fully Digitized
-                  </div>
-                  <div className="text-2xl font-bold text-[#7a1e28] leading-none">
-                    {summary?.digitizedStudents?.toLocaleString?.() ?? summary?.digitizedStudents}
-                  </div>
-                  <div className="text-[11px] text-[#b07078] mt-2">
-                    100% complete records
-                  </div>
-                </div>
-
-                {/* Avg. Completeness */}
-                <div className="relative rounded-xl p-4 overflow-hidden border border-[#7a1e28]/15 bg-[#fdf6f6]">
-                  <i className="ph-duotone ph-chart-pie absolute -right-3 -bottom-3 text-[60px] opacity-10 text-[#7a1e28] rotate-12 pointer-events-none" />
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#9e5a62] mb-2">
-                    Avg. Completeness
-                  </div>
-                  <div className="text-2xl font-bold text-[#7a1e28] leading-none">
-                    {summary?.percentDigitized != null ? `${summary.percentDigitized}%` : "0%"}
-                  </div>
-                  <div className="text-[11px] text-[#b07078] mt-2">
-                    Overall record health
+                {/* Fully Digitized — Light Card */}
+                <div className="group relative overflow-hidden rounded-xl border border-[#7a1e28]/15 bg-[#fdf6f6] p-5 shadow-sm transition-all">
+                  <i className="ph-duotone ph-check-square-offset pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-[#7a1e28] opacity-10" />
+                  <div className="relative z-10">
+                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-[#9e5a62] uppercase">
+                      <i className="ph-bold ph-check-square-offset" /> Fully Digitized
+                    </div>
+                    <div className="text-3xl font-black text-[#7a1e28]">
+                      {summary?.digitizedStudents?.toLocaleString?.() ?? summary?.digitizedStudents}
+                    </div>
+                    <div className="mt-1 text-[10px] font-bold text-emerald-600 flex items-center gap-1.5">
+                      <i className="ph-bold ph-trend-up" /> 100% Complete
+                    </div>
                   </div>
                 </div>
 
-                {/* Archive Health */}
-                <div className="relative rounded-xl p-4 overflow-hidden border border-[#7a1e28]/15 bg-[#fdf6f6]">
-                  <i className="ph-duotone ph-shield-check absolute -right-3 -bottom-3 text-[60px] opacity-10 text-[#7a1e28] rotate-12 pointer-events-none" />
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-[#9e5a62] mb-2">
-                    Archive Health
+                {/* Avg. Completeness — Accent Card */}
+                <div className="group relative overflow-hidden rounded-xl border border-[#5c1520] bg-[#7a1e28] p-5 shadow-sm transition-all">
+                  <i className="ph-duotone ph-chart-pie pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-20" />
+                  <div className="relative z-10">
+                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-[#f7c9ce] uppercase">
+                      <i className="ph-bold ph-chart-pie" /> Avg. Completeness
+                    </div>
+                    <div className="text-3xl font-black text-white">
+                      {summary?.percentDigitized != null ? `${summary.percentDigitized}%` : "0%"}
+                    </div>
+                    <div className="mt-1 text-[10px] font-medium text-[#f7c9ce]/80">
+                      Overall record health index
+                    </div>
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-black/20">
+                      <div
+                        className="h-full bg-emerald-400"
+                        style={{ width: `${progressWidth}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="mt-1">
-                    {summary?.percentDigitized >= 95 ? (
-                      <span className="inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-md bg-[#e1f5ee] text-[#085041] border border-[#9fe1cb]">
-                        Excellent
-                      </span>
-                    ) : summary?.percentDigitized >= 80 ? (
-                      <span className="inline-block text-[10px] font-medium uppercase tracking-wider px-2 py-1 rounded-md bg-[#e6f1fb] text-[#0c447c] border border-[#b5d4f4]">
-                        Healthy
-                      </span>
-                    ) : (
-                      <span className="inline-block text-[10px] font-medium uppercase tracking-wider px-2 py-1 rounded-md bg-[#faeeda] text-[#633806] border border-[#fac775]">
-                        Action Needed
-                      </span>
-                    )}
-                  </div>
-                  <div className="text-[11px] text-[#b07078] mt-2">
-                    Compliance status
+                </div>
+
+                {/* Archive Health — Light Card with SLA-style Tooltip */}
+                <div className="group relative overflow-hidden rounded-xl border border-[#7a1e28]/15 bg-[#fdf6f6] p-5 shadow-sm transition-all">
+                  <i className="ph-duotone ph-shield-check pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-[#7a1e28] opacity-10" />
+                  <div className="relative z-10">
+                    <div className="mb-1 flex items-center gap-2 text-[10px] font-bold tracking-widest text-[#9e5a62] uppercase">
+                      <i className="ph-bold ph-shield-check" /> Archive Health
+                      <TooltipProvider>
+                        <Tooltip delayDuration={300}>
+                          <TooltipTrigger asChild>
+                            <i className="ph-bold ph-info text-sm text-[#7a1e28] transition-opacity hover:opacity-70 cursor-pointer" />
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-[240px] border-[#7a1e28]/20 bg-[#7a1e28] p-3 text-white">
+                            <p className="font-bold leading-tight text-xs mb-1">Health Thresholds:</p>
+                            <ul className="space-y-1 text-[10px] font-medium opacity-90">
+                              <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500" /> 95%+ Excellent</li>
+                              <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-blue-500" /> 80%+ Healthy</li>
+                              <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-500" /> Below 80% Warning</li>
+                            </ul>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                    <div className="mt-1">
+                      {summary?.percentDigitized >= 95 ? (
+                        <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 font-black text-[10px] uppercase tracking-wider px-2 py-1">
+                          Excellent
+                        </Badge>
+                      ) : summary?.percentDigitized >= 80 ? (
+                        <Badge className="bg-blue-50 text-blue-700 border-blue-200 font-black text-[10px] uppercase tracking-wider px-2 py-1">
+                          Healthy
+                        </Badge>
+                      ) : (
+                        <Badge className="bg-amber-50 text-amber-700 border-amber-200 font-black text-[10px] uppercase tracking-wider px-2 py-1">
+                          Action Needed
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="mt-2 text-[10px] font-medium text-[#b07078]">
+                      Compliance rating
+                    </div>
                   </div>
                 </div>
               </div>
 
               <div className="mb-2 flex items-center justify-between gap-2">
-                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
                   Overall System Completeness
                 </span>
-                <span className="text-sm font-bold text-gray-900">
+                <span className="text-sm font-black text-gray-900 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100 shadow-sm">
                   {summary?.percentDigitized != null ? `${summary.percentDigitized}%` : "N/A"}
                 </span>
               </div>
-              <div className="h-4 w-full rounded-full bg-gray-100 border border-gray-200 overflow-hidden mb-6 shadow-inner">
+              <div className="h-4 w-full rounded-full bg-gray-100 border border-gray-200 overflow-hidden mb-8 shadow-inner">
                 <div
-                  className="h-full rounded-full bg-pup-maroon shadow-sm transition-[width] duration-700 ease-out"
+                  className={cn(
+                    "h-full shadow-sm transition-all duration-1000 ease-out",
+                    summary?.percentDigitized >= 95 ? "bg-emerald-500" : summary?.percentDigitized >= 80 ? "bg-pup-maroon" : "bg-amber-500"
+                  )}
                   style={{ width: `${progressWidth}%` }}
                 />
               </div>
 
-              <div className="flex flex-wrap gap-8 mb-8 bg-gray-50/50 p-4 rounded-xl border border-gray-100">
+              <div className="flex flex-wrap gap-8 mb-8 bg-gray-50/50 p-6 rounded-2xl border border-gray-100 shadow-inner">
                 <div>
-                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Digitized Files</div>
-                  <div className="text-lg font-bold text-gray-700">{summary?.totalDigitizedDocsCount?.toLocaleString() || 0}</div>
+                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Digitized Files</div>
+                  <div className="text-xl font-black text-gray-900 tracking-tight">{summary?.totalDigitizedDocsCount?.toLocaleString() || 0}</div>
                 </div>
                 <div>
-                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Required Files</div>
-                  <div className="text-lg font-bold text-gray-700">{summary?.totalExpectedDocsCount?.toLocaleString() || 0}</div>
+                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Required Files</div>
+                  <div className="text-xl font-black text-gray-900 tracking-tight">{summary?.totalExpectedDocsCount?.toLocaleString() || 0}</div>
                 </div>
                 <div>
-                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Full Record Rate</div>
-                  <div className="text-lg font-bold text-emerald-600">{summary?.fullyDigitizedRate != null ? `${summary.fullyDigitizedRate}%` : "0%"}</div>
+                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Full Record Rate</div>
+                  <div className="text-xl font-black text-emerald-600 tracking-tight">{summary?.fullyDigitizedRate != null ? `${summary.fullyDigitizedRate}%` : "0%"}</div>
                 </div>
                 <div className="sm:ml-auto">
-                  <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1 italic">Report Formula</div>
-                  <div className="text-[11px] text-gray-500 max-w-xs">{meta?.definitions?.expectedCountFormula}</div>
+                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 italic">Report Formula</div>
+                  <div className="text-[11px] font-medium text-gray-500 max-w-xs leading-relaxed">
+                    {meta?.definitions?.expectedCountFormula}
+                  </div>
                 </div>
               </div>
 
-              {showByCourse ? (
-                <div className="flex-1 min-h-0 flex flex-col border border-gray-200 rounded-brand overflow-hidden">
-                  <div className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-4 py-3 bg-gray-50 border-b border-gray-200">
-                    Breakdown By Academic Program
+              <div className="flex-1 min-h-0 flex flex-col border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm mt-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-4 bg-gray-50/50 border-b border-gray-200">
+                  <div className="flex items-center gap-3">
+                    <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
+                      Breakdown By Academic Program
+                    </h4>
+                    {courseFilter && (
+                      <Badge variant="outline" className="bg-white border-pup-maroon/20 text-pup-maroon font-bold text-[9px] h-5 px-1.5">
+                        Filtered: {courseFilter}
+                      </Badge>
+                    )}
                   </div>
-                  <div className="overflow-auto flex-1">
-                    <table className="min-w-full text-sm">
-                      <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                        <tr className="text-left text-[11px] uppercase tracking-wider text-gray-600">
-                          <th className="p-4 font-bold">
-                            <button
-                              onClick={() => handleSort("courseCode")}
-                              className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
-                            >
-                              Course Code <SortIndicator column="courseCode" />
-                            </button>
-                          </th>
-                          <th className="p-4 font-bold text-center">
-                            <div className="flex justify-center">
-                              <button
-                                onClick={() => handleSort("total")}
-                                className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
-                              >
-                                Total Students <SortIndicator column="total" />
-                              </button>
-                            </div>
-                          </th>
-                          <th className="p-4 font-bold text-emerald-600 text-center">
-                            <div className="flex justify-center">
-                              <button
-                                onClick={() => handleSort("digitized")}
-                                className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
-                              >
-                                Fully Digitized <SortIndicator column="digitized" />
-                              </button>
-                            </div>
-                          </th>
-                          <th className="p-4 font-bold text-pup-maroon text-right w-44">
-                            <div className="flex justify-end">
-                              <button
-                                onClick={() => handleSort("percent")}
-                                className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
-                              >
-                                Avg. Completeness <SortIndicator column="percent" />
-                              </button>
-                            </div>
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {sortedByCourse.map((row) => (
-                          <tr key={row.courseCode} className="hover:bg-gray-50 group transition-colors">
-                            <td className="p-4 font-mono font-bold text-gray-900 text-xs">{row.courseCode || "—"}</td>
-                            <td className="p-4 text-gray-700 font-medium text-center">{row.total?.toLocaleString?.() ?? row.total}</td>
-                            <td className="p-4 text-emerald-600 font-bold text-center">
-                              {row.digitized?.toLocaleString?.() ?? row.digitized}
-                              <span className="text-[10px] text-gray-400 font-medium ml-1">({row.fullyDigitizedRate}%)</span>
-                            </td>
-                            <td className="p-4 text-right">
-                              <div className="flex items-center justify-end gap-3">
-                                <span className="text-gray-900 font-bold text-xs">{row.percent != null ? `${row.percent}%` : "0%"}</span>
-                                <div className="w-16 h-1.5 rounded-full bg-gray-100 overflow-hidden border border-gray-200 hidden sm:block">
-                                  <div className="h-full bg-pup-maroon" style={{ width: `${Math.min(100, row.percent || 0)}%` }} />
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                  <div className="relative w-full sm:w-64">
+                    <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
+                    <input
+                      type="text"
+                      placeholder="Search program code..."
+                      className="w-full pl-9 pr-3 py-2 text-xs font-bold rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pup-maroon/20 focus:border-pup-maroon transition-all shadow-sm placeholder:text-gray-400 placeholder:font-normal"
+                      value={tableSearch}
+                      onChange={(e) => setTableSearch(e.target.value)}
+                    />
                   </div>
                 </div>
-              ) : String(courseFilter || "").trim() ? (
-                <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border border-gray-200 rounded-brand bg-gray-50/50 shadow-sm">
-                  <EmptyHeader className="flex flex-col items-center gap-0">
-                    <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                      <i className="ph-bold ph-eye-slash text-3xl text-gray-400" />
-                    </EmptyMedia>
-                    <EmptyTitle className="text-lg font-bold text-gray-900">Breakdown hidden</EmptyTitle>
-                    <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-sm px-4">
-                      Per-course breakdown is hidden while a specific course is selected.
-                    </EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
-              ) : (
-                <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border border-gray-200 rounded-brand bg-white shadow-sm">
-                  <EmptyHeader className="flex flex-col items-center gap-0">
-                    <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                      <i className="ph-duotone ph-chart-bar text-3xl text-pup-maroon" />
-                    </EmptyMedia>
-                    <EmptyTitle className="text-lg font-bold text-gray-900">Analytics unavailable</EmptyTitle>
-                    <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-sm px-4">
-                      Add students with course codes to see a detailed program breakdown.
-                    </EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
-              )}
+
+                <div className="overflow-auto flex-1">
+                  {sortedByCourse.length > 0 ? (
+                    <Table>
+                      <TableHeader className="bg-gray-50/30 sticky top-0 z-10 backdrop-blur-md">
+                        <TableRow className="hover:bg-transparent border-b-2">
+                          <TableHead className="py-4 px-6">
+                            <button
+                              onClick={() => handleSort("courseCode")}
+                              className="group flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-gray-600 hover:text-pup-maroon transition-colors"
+                            >
+                              Program <SortIndicator column="courseCode" />
+                            </button>
+                          </TableHead>
+                          <TableHead className="py-4 px-6 text-center">
+                            <button
+                              onClick={() => handleSort("total")}
+                              className="group mx-auto flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-gray-600 hover:text-pup-maroon transition-colors"
+                            >
+                              Students <SortIndicator column="total" />
+                            </button>
+                          </TableHead>
+                          <TableHead className="py-4 px-6 text-center">
+                            <button
+                              onClick={() => handleSort("digitized")}
+                              className="group mx-auto flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-700 hover:text-emerald-800 transition-colors"
+                            >
+                              Complete <SortIndicator column="digitized" />
+                            </button>
+                          </TableHead>
+                          <TableHead className="py-4 px-6 text-right">
+                            <button
+                              onClick={() => handleSort("percent")}
+                              className="group ml-auto flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-pup-maroon hover:text-red-800 transition-colors"
+                            >
+                              Completeness <SortIndicator column="percent" />
+                            </button>
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {sortedByCourse
+                          .filter(r => !tableSearch || r.courseCode?.toLowerCase().includes(tableSearch.toLowerCase()))
+                          .map((row) => (
+                            <TableRow key={row.courseCode} className="group hover:bg-red-50/20 transition-all border-b border-gray-100 last:border-0">
+                              <TableCell className="py-4 px-6 font-mono font-bold text-gray-900 text-xs">
+                                {row.courseCode || "—"}
+                              </TableCell>
+                              <TableCell className="py-4 px-6 text-gray-600 font-medium text-center">
+                                {row.total?.toLocaleString?.() ?? row.total}
+                              </TableCell>
+                              <TableCell className="py-4 px-6 text-center">
+                                <span className="text-emerald-600 font-black">
+                                  {row.digitized?.toLocaleString?.() ?? row.digitized}
+                                </span>
+                                <span className="text-[10px] text-gray-400 font-bold ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  ({row.fullyDigitizedRate}%)
+                                </span>
+                              </TableCell>
+                              <TableCell className="py-4 px-6 text-right">
+                                <div className="flex items-center justify-end gap-4">
+                                  <span className="text-gray-900 font-black text-xs">
+                                    {row.percent != null ? `${row.percent}%` : "0%"}
+                                  </span>
+                                  <div className="w-20 h-1.5 rounded-full bg-gray-100 overflow-hidden border border-gray-200 hidden sm:block shadow-inner">
+                                    <div
+                                      className={cn(
+                                        "h-full transition-all duration-700",
+                                        row.percent >= 90 ? "bg-emerald-500" : "bg-pup-maroon"
+                                      )}
+                                      style={{ width: `${Math.min(100, row.percent || 0)}%` }}
+                                    />
+                                  </div>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        {sortedByCourse.filter(r => !tableSearch || r.courseCode?.toLowerCase().includes(tableSearch.toLowerCase())).length === 0 && (
+                           <TableRow>
+                             <TableCell colSpan={4} className="py-20 text-center">
+                                <div className="flex flex-col items-center justify-center opacity-40">
+                                   <i className="ph-duotone ph-magnifying-glass text-5xl mb-4" />
+                                   <p className="text-sm font-bold text-gray-500 italic">No academic programs matching "{tableSearch}"</p>
+                                </div>
+                             </TableCell>
+                           </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  ) : (
+                    <Empty className="h-[300px] flex flex-col items-center justify-center text-center p-12">
+                      <EmptyHeader className="flex flex-col items-center gap-0">
+                        <EmptyMedia className="w-20 h-20 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center mb-6">
+                          <i className="ph-duotone ph-magnifying-glass text-4xl text-gray-300" />
+                        </EmptyMedia>
+                        <EmptyTitle className="text-lg font-black text-gray-900">No program data</EmptyTitle>
+                        <EmptyDescription className="text-sm font-medium text-gray-500 mt-2 max-w-sm">
+                          {courseFilter
+                            ? `No records found matching the course code "${courseFilter}".`
+                            : "No student records available to analyze for compliance metrics."}
+                        </EmptyDescription>
+                      </EmptyHeader>
+                    </Empty>
+                  )}
+                </div>
+              </div>
             </div>
           ) : null}
         </CardContent>
       </Card>
 
-      {/* Report Preview Modal */}
+      {/* Report Preview Modal - Reverted to Standard Consistent Style */}
       <Dialog
         open={reportOpen}
         onOpenChange={(open) => {
@@ -679,18 +788,18 @@ export default function DigitizationComplianceTab({
                 ? "fixed h-screen w-screen max-w-none sm:max-w-none m-0 rounded-none z-[100] left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] sm:w-screen sm:h-screen" 
                 : "h-[90vh] w-[96vw] max-w-[96vw] xl:max-w-[1200px] rounded-brand"
         )}>
-          <DialogHeader className="bg-gray-50/50 border-b border-gray-100 p-6 shrink-0">
+          <DialogHeader className="shrink-0 border-b border-gray-100 bg-gray-50/50 p-6">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon shadow-sm">
                   <i className="ph-duotone ph-file-text text-2xl"></i>
                 </div>
                 <div className="min-w-0">
-                  <DialogTitle className="text-xl font-black text-gray-900 tracking-tight leading-none text-left">
+                  <DialogTitle className="text-left text-xl leading-none font-black tracking-tight text-gray-900">
                     Formal Compliance Report
                   </DialogTitle>
-                  <p className="text-sm font-medium text-gray-500 mt-1.5 text-left">
-                    Filter: {statusFilter} | {courseFilter || "All Courses"} {requireApproved && " | Approved Only"}
+                  <p className="mt-1.5 text-left text-sm font-medium text-gray-500">
+                    Filter: {statusFilter} | {courseFilter || "All"} {requireApproved && " | Approved Only"}
                   </p>
                 </div>
               </div>
@@ -740,7 +849,7 @@ export default function DigitizationComplianceTab({
             )}
           </div>
 
-          <div className="p-4 border-t border-gray-100 bg-white flex justify-end gap-3 shrink-0">
+          <div className="flex shrink-0 justify-end gap-3 border-t border-gray-100 bg-white p-4">
             <Button
               variant="outline"
               onClick={() => setReportOpen(false)}
@@ -751,7 +860,7 @@ export default function DigitizationComplianceTab({
             <Button
               onClick={handlePrint}
               disabled={!pdfBlobUrl}
-              className="h-11 px-8 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 flex items-center gap-2 rounded-brand transition-colors"
+              className="flex h-11 items-center gap-2 bg-pup-maroon px-8 font-bold text-white shadow-sm hover:bg-red-900 rounded-brand transition-colors"
             >
               <i className="ph-bold ph-printer text-lg"></i> FINALIZE AND PRINT REPORT
             </Button>

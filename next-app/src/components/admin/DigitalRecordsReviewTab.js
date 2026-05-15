@@ -103,9 +103,11 @@ export default function DigitalRecordsReviewTab({
     if (sortBy === column) {
       if (sortOrder === "ASC") {
         setSortOrder("DESC")
-      } else {
+      } else if (column !== "created_at") {
         setSortBy("created_at")
         setSortOrder("DESC")
+      } else {
+        setSortOrder("ASC")
       }
     } else {
       setSortBy(column)
@@ -172,13 +174,16 @@ export default function DigitalRecordsReviewTab({
     })
 
     return [...baseFiltered].sort((a, b) => {
-      let valA = a[sortBy]
-      let valB = b[sortBy]
+      let valA = a[sortBy] ?? ""
+      let valB = b[sortBy] ?? ""
 
       if (sortBy === "student_name") {
         valA = a.student_name || ""
         valB = b.student_name || ""
       }
+
+      if (typeof valA === "string") valA = valA.toLowerCase()
+      if (typeof valB === "string") valB = valB.toLowerCase()
 
       if (!valA && valA !== 0) return sortOrder === "ASC" ? 1 : -1
       if (!valB && valB !== 0) return sortOrder === "ASC" ? -1 : 1

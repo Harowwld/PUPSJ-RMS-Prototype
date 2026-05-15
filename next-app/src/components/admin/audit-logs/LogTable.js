@@ -118,7 +118,7 @@ export default function LogTable({
     }
   }
 
-  if (isLoading) {
+  if (isLoading && displayLogs.length === 0) {
     return (
       <div className="animate-pulse">
         <div className="overflow-x-auto rounded-brand border border-gray-100">
@@ -189,7 +189,7 @@ export default function LogTable({
   return (
     <>
       <div
-        className={`overflow-x-auto rounded-brand ${displayLogs.length === 0 ? "" : "border border-gray-200"}`}
+        className={`overflow-x-auto rounded-brand transition-opacity duration-200 ${displayLogs.length === 0 ? "" : "border border-gray-200"} ${isLoading ? "opacity-50 pointer-events-none" : "opacity-100"}`}
       >
         <table className="min-w-full text-sm">
           <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50">
