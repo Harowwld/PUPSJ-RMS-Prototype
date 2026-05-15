@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { scanFileForSuggestion } from "@/lib/ocrClient";
 
-const POLL_MS = 15000;
+const POLL_MS = 3000;
 
 export function useHotFolderInbox({
   enabled,
