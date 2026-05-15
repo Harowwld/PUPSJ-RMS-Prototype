@@ -98,6 +98,7 @@ function StaffPageContent() {
   const [ocrSuggestion, setOcrSuggestion] = useState(null);
   const [ocrPromptOpen, setOcrPromptOpen] = useState(false);
   const [ocrError, setOcrError] = useState("");
+  const [rotation, setRotation] = useState(0);
 
   const [newRec, setNewRec] = useState({
     studentNo: "",
@@ -615,7 +616,7 @@ function StaffPageContent() {
     }));
   }, []);
 
-  const handleFileSelect = async (file, skipOcr = false) => {
+  const handleFileSelect = async (file, skipOcr = false, rotationParam) => {
     if (!file) return;
     setUploadedFile(file);
     clearUploadFieldError("pdfFile");
@@ -628,9 +629,11 @@ function StaffPageContent() {
           file,
           students,
           docTypes,
+          rotation: rotationParam !== undefined ? rotationParam : rotation,
         });
+        lastRotationOcrRef.current =
+          rotationParam !== undefined ? rotationParam : rotation;
         setOcrSuggestion(suggestion);
-
 
         console.log("[OCR handleFileSelect] suggestion:", {
           name: suggestion.name,
@@ -646,7 +649,6 @@ function StaffPageContent() {
         const ambiguous = nameMatches.length > 1;
 
         if (ambiguous) {
-
           console.log("[OCR] → AMBIGUOUS branch, setting docType:", suggestion.docType);
           setNewRec((p) => ({
             ...p,
@@ -663,14 +665,12 @@ function StaffPageContent() {
           clearAllUploadFieldErrors();
           setOcrPromptOpen(true);
         } else if (suggestion.matchedStudent) {
-
           console.log("[OCR] → MATCHED STUDENT branch, setting docType:", suggestion.docType);
           applyStudentToPdfForm(suggestion.matchedStudent, suggestion.docType);
           setUploadStudentIsExisting(true);
           clearAllUploadFieldErrors();
           setOcrPromptOpen(false);
         } else {
-
           console.log("[OCR] → NEW STUDENT branch, setting docType:", suggestion.docType);
           setNewRec((p) => ({
             ...p,
@@ -698,6 +698,24 @@ function StaffPageContent() {
       }
     }
   };
+
+  const lastRotationOcrRef = useRef(0);
+
+  useEffect(() => {
+    if (!uploadedFile) {
+      lastRotationOcrRef.current = 0;
+      return;
+    }
+    // If rotation hasn't changed since last OCR, skip
+    if (rotation === lastRotationOcrRef.current) return;
+
+    const timer = setTimeout(() => {
+      handleFileSelect(uploadedFile, false, rotation);
+      lastRotationOcrRef.current = rotation;
+    }, 1000);
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rotation, uploadedFile]);
 
   const processSubmission = async ({ onSuccess } = {}) => {
     if (!uploadedFile) {
@@ -1057,11 +1075,14 @@ function StaffPageContent() {
               uploadedFile={uploadedFile}
               fileInputRef={fileInputRef}
               onFileSelect={handleFileSelect}
+              rotation={rotation}
+              setRotation={setRotation}
               onClearFile={() => {
                 setUploadedFile(null);
                 setOcrSuggestion(null);
                 setUploadStudentIsExisting(false);
                 setUploadFieldErrors({});
+                setRotation(0);
               }}
               ocrLoading={ocrLoading}
               ocrError={ocrError}

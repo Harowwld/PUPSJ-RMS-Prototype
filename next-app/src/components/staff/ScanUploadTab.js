@@ -1,7 +1,7 @@
 "use client"
 
 import Image from "next/image"
-import { useMemo, useState } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { useHotFolderInbox } from "@/hooks/useHotFolderInbox"
 import {
   Dialog,
@@ -88,6 +88,8 @@ export default function ScanUploadTab({
   showToast = () => {},
   onIngestPromoted,
   onSelectExistingStudent,
+  rotation = 0,
+  setRotation,
 }) {
   const [clearInboxOpen, setClearInboxOpen] = useState(false)
   const fe = uploadFieldErrors || {}
@@ -141,6 +143,21 @@ export default function ScanUploadTab({
   const lockedField =
     "!bg-gray-200 !text-gray-500 !border-gray-300 cursor-not-allowed placeholder:!text-gray-400 focus:!border-gray-300 focus:!shadow-none focus:!ring-0"
   const lockedLabel = "text-gray-400"
+
+  const manualPreviewUrl = useMemo(() => {
+    if (!uploadedFile) return null
+    try {
+      return URL.createObjectURL(uploadedFile)
+    } catch {
+      return null
+    }
+  }, [uploadedFile])
+
+  useEffect(() => {
+    return () => {
+      if (manualPreviewUrl) URL.revokeObjectURL(manualPreviewUrl)
+    }
+  }, [manualPreviewUrl])
 
   const hf = useHotFolderInbox({
     enabled: uploadMode === "pdf",
@@ -728,17 +745,55 @@ export default function ScanUploadTab({
 
                     {uploadedFile ? (
                       <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-brand bg-white p-6">
-                        {String(uploadedFile?.type || "").startsWith(
-                          "image/"
-                        ) ? (
-                          <i className="ph-fill ph-file-image mb-4 text-6xl text-pup-maroon"></i>
+                        {String(uploadedFile?.type || "").startsWith("image/") ? (
+                          <div className="relative mb-4 flex h-48 w-full items-center justify-center overflow-hidden rounded-lg border border-gray-100 bg-gray-50/50">
+                            <img
+                              src={manualPreviewUrl}
+                              alt="Manual upload preview"
+                              className="h-full w-full object-contain transition-transform duration-300"
+                              style={{ transform: `rotate(${rotation}deg)` }}
+                            />
+                          </div>
                         ) : (
-                          <i className="ph-fill ph-file-pdf mb-4 text-6xl text-pup-maroon"></i>
+                          <div className="relative mb-4 flex h-32 w-full items-center justify-center overflow-hidden rounded-lg border border-gray-100 bg-gray-50/50">
+                            <i
+                              className="ph-fill ph-file-pdf text-6xl text-pup-maroon transition-transform duration-300"
+                              style={{ transform: `rotate(${rotation}deg)` }}
+                            ></i>
+                          </div>
                         )}
-                        <h4 className="mb-1 max-w-sm text-center text-lg font-bold break-all text-gray-900">
+
+                        <div className="mb-4 flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9 w-9 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setRotation((r) => r - 90)
+                            }}
+                            title="Rotate Left"
+                          >
+                            <i className="ph-bold ph-arrow-counter-clockwise text-sm" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-9 w-9 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setRotation((r) => r + 90)
+                            }}
+                            title="Rotate Right"
+                          >
+                            <i className="ph-bold ph-arrow-clockwise text-sm" />
+                          </Button>
+                        </div>
+
+                        <h4 className="mb-1 max-w-sm text-center text-base font-bold break-all text-gray-900">
                           {uploadedFile.name}
                         </h4>
-                        <span className="mb-6 text-sm font-medium text-gray-500">
+                        <span className="mb-6 text-xs font-medium text-gray-500">
                           {(uploadedFile.size / 1024).toFixed(2)} KB
                         </span>
 
@@ -788,40 +843,48 @@ export default function ScanUploadTab({
                           Running OCR…
                         </span>
                       ) : null}
-                      <button
-                        type="button"
-                        className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-xs font-bold hover:border-pup-maroon disabled:opacity-60"
-                        onClick={() => hf.runOcrAgain()}
-                        disabled={hf.ocrLoading}
-                      >
-                        RE-SCAN
-                      </button>
-                      <button
-                        type="button"
-                        className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-xs font-bold hover:border-pup-maroon"
-                        onClick={() => hf.clearIngestSelection()}
-                      >
-                        ✕ CLOSE
-                      </button>
+                        <button
+                          type="button"
+                          className="flex h-8 w-8 items-center justify-center rounded-brand border border-gray-300 bg-white text-gray-700 hover:border-pup-maroon"
+                          onClick={() => setRotation((r) => r - 90)}
+                          title="Rotate Left"
+                        >
+                          <i className="ph-bold ph-arrow-counter-clockwise text-xs" />
+                        </button>
+                        <button
+                          type="button"
+                          className="flex h-8 w-8 items-center justify-center rounded-brand border border-gray-300 bg-white text-gray-700 hover:border-pup-maroon"
+                          onClick={() => setRotation((r) => r + 90)}
+                          title="Rotate Right"
+                        >
+                          <i className="ph-bold ph-arrow-clockwise text-xs" />
+                        </button>
+                        <button
+                          type="button"
+                          className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-xs font-bold hover:border-pup-maroon"
+                          onClick={() => hf.clearIngestSelection()}
+                        >
+                          ✕ CLOSE
+                        </button>
                     </div>
                   </div>
                   <div className="min-h-0 flex-1 overflow-hidden">
                     {hf.previewMime.startsWith("image/") ? (
                       <div className="relative h-full w-full">
-                        <Image
+                        <img
                           src={hf.previewUrl}
                           alt="Scanner inbox preview"
-                          fill
-                          unoptimized
-                          className="object-contain"
+                          className="h-full w-full object-contain transition-transform duration-300"
                           draggable="false"
+                          style={{ transform: `rotate(${rotation}deg)` }}
                         />
                       </div>
                     ) : (
                       <iframe
                         title="scanner-inbox-preview"
                         src={hf.previewUrl}
-                        className="h-full w-full"
+                        className="h-full w-full transition-transform duration-300"
+                        style={{ transform: `rotate(${rotation}deg)` }}
                       />
                     )}
                   </div>

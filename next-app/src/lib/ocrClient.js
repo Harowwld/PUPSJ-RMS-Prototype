@@ -78,7 +78,7 @@ export async function warmupOcrWorker() {
 
 // ─── 2. TEXT EXTRACTION (PDF / Image → string) ─────────────────────────────
 
-async function ocrFromPdf(file, worker) {
+async function ocrFromPdf(file, worker, rotation = 0) {
   const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
   pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.mjs";
 
@@ -95,7 +95,7 @@ async function ocrFromPdf(file, worker) {
   }).promise;
 
   const page = await pdf.getPage(1);
-  const vp = page.getViewport({ scale: 1.75 });
+  const vp = page.getViewport({ scale: 1.75, rotation: (page.rotate + rotation) % 360 });
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) throw new Error("Canvas init failed");
@@ -106,14 +106,25 @@ async function ocrFromPdf(file, worker) {
   return String((await worker.recognize(canvas))?.data?.text ?? "");
 }
 
-async function ocrFromImage(file, worker) {
+async function ocrFromImage(file, worker, rotation = 0) {
   const bmp = await createImageBitmap(file);
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) throw new Error("Canvas init failed");
-  canvas.width = Math.max(1, bmp.width);
-  canvas.height = Math.max(1, bmp.height);
-  ctx.drawImage(bmp, 0, 0);
+
+  const angle = (rotation % 360 + 360) % 360;
+  if (angle === 90 || angle === 270) {
+    canvas.width = bmp.height;
+    canvas.height = bmp.width;
+  } else {
+    canvas.width = bmp.width;
+    canvas.height = bmp.height;
+  }
+
+  ctx.translate(canvas.width / 2, canvas.height / 2);
+  ctx.rotate((angle * Math.PI) / 180);
+  ctx.drawImage(bmp, -bmp.width / 2, -bmp.height / 2);
+
   return String((await worker.recognize(canvas))?.data?.text ?? "");
 }
 
@@ -527,7 +538,7 @@ export async function scanPdfForSuggestion(payload) {
   return scanFileForSuggestion(payload);
 }
 
-export async function scanFileForSuggestion({ file, students, docTypes }) {
+export async function scanFileForSuggestion({ file, students, docTypes, rotation = 0 }) {
   if (!file) throw new Error("Missing file");
 
   const worker = await getWorker();
@@ -537,7 +548,7 @@ export async function scanFileForSuggestion({ file, students, docTypes }) {
   if (!isPdf && !isImg) throw new Error("Unsupported file type");
 
   // ── Extract raw text ──
-  const rawText = isPdf ? await ocrFromPdf(file, worker) : await ocrFromImage(file, worker);
+  const rawText = isPdf ? await ocrFromPdf(file, worker, rotation) : await ocrFromImage(file, worker, rotation);
 
    
   console.log("=== OCR RAW TEXT ===\n" + rawText + "\n====================");
