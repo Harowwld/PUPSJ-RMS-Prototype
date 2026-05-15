@@ -51,7 +51,7 @@ export default function DigitizationComplianceTab({
   const [statusFilter, setStatusFilter] = useState(searchParams.get("status") || "Active");
   const [courseFilter, setCourseFilter] = useState(searchParams.get("course") || "");
   const [requireApproved, setRequireApproved] = useState(searchParams.get("approved") === "1");
-  
+
   const [courses, setCourses] = useState([]);
   const [coursesLoading, setCoursesLoading] = useState(true);
   const [data, setData] = useState(null);
@@ -155,7 +155,7 @@ export default function DigitizationComplianceTab({
     params.set("status", statusFilter);
     if (courseFilter) params.set("course", courseFilter); else params.delete("course");
     if (requireApproved) params.set("approved", "1"); else params.delete("approved");
-    
+
     const newUrl = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState(null, "", newUrl);
 
@@ -197,14 +197,18 @@ export default function DigitizationComplianceTab({
 
   const handlePreview = async () => {
     if (!data || loading) return;
+
+    // Open the modal immediately to show the "Generating..." spinner
+    setReportOpen(true);
+
     try {
       const blob = await generateDigitizationCompliancePdf(data, summary, meta, byCourse);
       const url = URL.createObjectURL(blob);
       setPdfPreviewUrl(url);
-      setReportOpen(true);
     } catch (e) {
       console.error("PDF Preview generation failed:", e);
       showToast?.({ title: "Preview Failed", description: "Failed to generate compliance report preview." }, true);
+      setReportOpen(false);
     }
   }
 
@@ -288,7 +292,9 @@ export default function DigitizationComplianceTab({
 
     const csvContent = lines.join("\n");
     const now = new Date();
-    const fileName = `PUP-RKS-COMPLIANCE-DATA-${now.toISOString().replace(/[:.]/g, "-")}.csv`;
+    const dateStr = now.toISOString().split("T")[0];
+    const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "");
+    const fileName = `PUP-RKS-COMPLIANCE-DATA-${dateStr}-${timeStr}.csv`;
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
@@ -482,10 +488,10 @@ export default function DigitizationComplianceTab({
               </div>
               <h3 className="text-xl font-black text-gray-900 tracking-tight">Data Unavailable</h3>
               <p className="text-sm font-medium text-gray-500 mt-2 max-w-sm">{error}</p>
-              <Button 
-                variant="outline" 
-                size="lg" 
-                className="mt-8 h-12 px-8 font-bold border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 rounded-brand transition-all active:scale-95" 
+              <Button
+                variant="outline"
+                size="lg"
+                className="mt-8 h-12 px-8 font-bold border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 rounded-brand transition-all active:scale-95"
                 onClick={load}
               >
                 Retry Connection
@@ -780,12 +786,12 @@ export default function DigitizationComplianceTab({
           setReportOpen(open)
         }}
       >
-        <DialogContent 
+        <DialogContent
           hideClose={isFullscreenPreview}
           className={cn(
             "flex flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out",
-            isFullscreenPreview 
-                ? "fixed h-screen w-screen max-w-none sm:max-w-none m-0 rounded-none z-[100] left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] sm:w-screen sm:h-screen" 
+            isFullscreenPreview
+                ? "fixed h-screen w-screen max-w-none sm:max-w-none m-0 rounded-none z-[100] left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] sm:w-screen sm:h-screen"
                 : "h-[90vh] w-[96vw] max-w-[96vw] xl:max-w-[1200px] rounded-brand"
         )}>
           <DialogHeader className="shrink-0 border-b border-gray-100 bg-gray-50/50 p-6">

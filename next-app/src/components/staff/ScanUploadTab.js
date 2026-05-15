@@ -649,7 +649,7 @@ export default function ScanUploadTab({
                             Scanner inbox
                           </div>
                           <div className="text-sm font-bold text-gray-900">
-                            {hf.rows.length} waiting · auto-refresh ~15s
+                            {hf.rows.length} waiting · auto-refresh ~3s
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
