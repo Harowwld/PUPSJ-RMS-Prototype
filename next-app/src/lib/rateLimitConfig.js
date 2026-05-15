@@ -64,7 +64,7 @@ export function getLockoutDuration(violationCount) {
 export const ENDPOINT_TYPE_MAPPING = {
   // Authentication endpoints
   '/api/auth/login': 'auth_login',
-  '/api/auth/logout': 'auth_login',
+  '/api/auth/logout': 'api_general',
   '/api/auth/forgot-password': 'auth_forgot_password',
   
   // Sensitive operations

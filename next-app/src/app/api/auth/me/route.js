@@ -5,14 +5,22 @@ import { getStaffById, hasAllSecurityAnswers } from "../../../../lib/staffRepo";
 
 export const runtime = "nodejs";
 
+function addSecurityHeaders(response) {
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  return response;
+}
+
 export async function GET(req) {
   try {
     const cookieName = getSessionCookieName();
-    const cookieStore = cookies();
-    const store = (cookieStore instanceof Promise) ? await cookieStore : cookieStore;
-    const token = store.get(cookieName)?.value || "";
+    const cookieStore = await cookies();
+    const token = cookieStore.get(cookieName)?.value || "";
+    
     if (!token) {
-      return NextResponse.json({ ok: false, error: "Not authenticated: Missing token cookie" }, { status: 401 });
+      return addSecurityHeaders(NextResponse.json({ ok: false, error: "Not authenticated: Missing token cookie" }, { status: 401 }));
     }
 
     const payload = await verifySessionToken(token);
@@ -24,7 +32,7 @@ export async function GET(req) {
     const currentStatus = staff?.status || "Inactive";
     const hasSecurity = userId ? await hasAllSecurityAnswers(userId) : true;
 
-    return NextResponse.json({
+    return addSecurityHeaders(NextResponse.json({
       ok: true,
       data: {
         id: userId,
@@ -39,9 +47,10 @@ export async function GET(req) {
         last_active: payload.last_active || null,
         password_last_changed: staff?.password_last_changed || null,
       },
-    });
+    }));
   } catch (err) {
     console.error("[GET /api/auth/me Error]:", err);
-    return NextResponse.json({ ok: false, error: "Invalid session: " + err.message }, { status: 401 });
+    return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid session: " + err.message }, { status: 401 }));
   }
 }
+

@@ -7,14 +7,17 @@ import { writeAuditLog } from "../../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
 
+function addSecurityHeaders(response) {
+  response.headers.set('X-Content-Type-Options', 'nosniff');
+  response.headers.set('X-Frame-Options', 'DENY');
+  response.headers.set('X-XSS-Protection', '1; mode=block');
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin');
+  return response;
+}
+
 export async function POST(req) {
-  // Get the session cookie to remove from store and set status
-  const cookieHeader = req.headers.get("cookie");
   const sessionName = getSessionCookieName();
-  const token = cookieHeader
-    ?.split(";")
-    .find((c) => c.trim().startsWith(`${sessionName}=`))
-    ?.split("=")[1];
+  const token = req.cookies.get(sessionName)?.value;
 
   if (token) {
     removeSession(token);
@@ -64,6 +67,9 @@ export async function POST(req) {
     secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 0,
+    expires: new Date(0), // Ensure immediate expiration
   });
-  return res;
+  
+  return addSecurityHeaders(res);
 }
+

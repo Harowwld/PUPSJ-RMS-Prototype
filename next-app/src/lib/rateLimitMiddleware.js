@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getRateLimiter } from "./rateLimiter";
 import { getEndpointType } from "./rateLimitConfig";
 import { writeAuditLog } from "./auditLogRequest";
-import { verifySessionToken } from "./jwt";
+import { verifySessionToken, getSessionCookieName } from "./jwt";
 import { detectBruteForcePatterns, shouldBlockIP, logBruteForceDetection } from "./bruteForceDetector";
 
 /**
@@ -28,7 +28,8 @@ function getClientIP(req) {
   }
   
   // For local development, use a consistent IP
-  if (req.headers.get('host')?.includes('localhost') || req.headers.get('host')?.includes('127.0.0.1')) {
+  const host = req.headers.get('host') || '';
+  if (host.includes('localhost') || host.includes('127.0.0.1')) {
     return '127.0.0.1';
   }
   
@@ -40,7 +41,7 @@ function getClientIP(req) {
  * Extract user ID from request if authenticated
  */
 async function getUserIdFromRequest(req) {
-  const token = req.cookies.get('pup_session')?.value;
+  const token = req.cookies.get(getSessionCookieName())?.value;
   if (!token) {
     return null;
   }
@@ -52,6 +53,7 @@ async function getUserIdFromRequest(req) {
     return null;
   }
 }
+
 
 /**
  * Rate limiting middleware function
