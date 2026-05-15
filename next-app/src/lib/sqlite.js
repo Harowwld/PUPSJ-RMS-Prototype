@@ -129,6 +129,32 @@ function ensureStaffNotificationStateTable() {
   }
 }
 
+function ensureRecoveryCodesTable() {
+  if (!db) return;
+  try {
+    const check = db.exec(
+      "SELECT name FROM sqlite_master WHERE type='table' AND name='staff_recovery_codes'"
+    );
+    if (check?.[0]?.values?.length > 0) return;
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS staff_recovery_codes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        staff_id TEXT NOT NULL,
+        code_hash TEXT NOT NULL,
+        used_at TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        FOREIGN KEY (staff_id) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE CASCADE
+      );
+      CREATE INDEX IF NOT EXISTS idx_recovery_codes_staff_id ON staff_recovery_codes(staff_id);
+    `);
+    persistDb();
+  } catch (e) {
+    console.error("[DB] ensureRecoveryCodesTable:", e);
+  }
+}
+
+
+
 export const DEFAULT_SECURITY_QUESTIONS = [
   "What was the name of your first pet?",
   "What is your mother's maiden name?",
@@ -149,6 +175,8 @@ export async function getDb() {
       ensureDocumentRequestsTable();
       ensureIngestQueueTable();
       ensureStaffNotificationStateTable();
+      ensureRecoveryCodesTable();
+      ensureSerialKeyColumn();
       return currentDb;
     } catch (e) {
       // Database was closed externally
@@ -258,6 +286,7 @@ export async function getDb() {
           last_active TEXT,
           totp_secret TEXT,
           totp_enabled INTEGER NOT NULL DEFAULT 0,
+          serial_key_hash TEXT,
           created_at TEXT NOT NULL DEFAULT (datetime('now')),
           updated_at TEXT NOT NULL DEFAULT (datetime('now'))
         );
@@ -1074,6 +1103,44 @@ export async function getDb() {
         }
       }
 
+      // Migration to version 17: Add staff_recovery_codes table
+      if (schemaVersion < 17) {
+        try {
+          db.exec(`
+            CREATE TABLE IF NOT EXISTS staff_recovery_codes (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              staff_id TEXT NOT NULL,
+              code_hash TEXT NOT NULL,
+              used_at TEXT,
+              created_at TEXT NOT NULL DEFAULT (datetime('now')),
+              FOREIGN KEY (staff_id) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_recovery_codes_staff_id ON staff_recovery_codes(staff_id);
+          `);
+          db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '17')");
+          persistDb();
+        } catch (e) {
+          console.error("[DB] schema_version 17 migration (recovery codes):", e);
+        }
+      }
+
+      // Migration to version 18: Add serial_key_hash to staff table
+      if (schemaVersion < 18) {
+        try {
+          const pragma = db.exec("PRAGMA table_info(staff)");
+          const cols = new Set(
+            (pragma?.[0]?.values || []).map((r) => String(r?.[1] || ""))
+          );
+          if (!cols.has("serial_key_hash")) {
+            db.exec("ALTER TABLE staff ADD COLUMN serial_key_hash TEXT");
+          }
+          db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '18')");
+          persistDb();
+        } catch (e) {
+          console.error("[DB] schema_version 18 migration (serial_key_hash):", e);
+        }
+      }
+
       try {
         db.exec("PRAGMA foreign_keys = ON");
       } catch (e) {
@@ -1083,6 +1150,8 @@ export async function getDb() {
       ensureDocumentRequestsTable();
       ensureIngestQueueTable();
       ensureStaffNotificationStateTable();
+      ensureRecoveryCodesTable();
+      ensureSerialKeyColumn();
 
       initializing = null;
       return db;
@@ -1168,4 +1237,19 @@ export function reloadDb() {
   global.sqliteDb = null;
   initializing = null;
   console.log("[DB] In-memory database cache cleared for reload.");
+}
+
+function ensureSerialKeyColumn() {
+  if (!db) return;
+  try {
+    const pragma = db.exec("PRAGMA table_info(staff)");
+    const cols = new Set((pragma?.[0]?.values || []).map((r) => String(r?.[1] || "")));
+    if (!cols.has("serial_key_hash")) {
+      db.exec("ALTER TABLE staff ADD COLUMN serial_key_hash TEXT");
+      persistDb();
+      console.log("[DB] Added missing serial_key_hash column to staff table.");
+    }
+  } catch (e) {
+    console.error("[DB] ensureSerialKeyColumn:", e);
+  }
 }

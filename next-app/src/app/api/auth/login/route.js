@@ -107,13 +107,35 @@ export async function POST(req) {
     return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid credentials" }, { status: 401 }));
   }
 
-  // 3. Create Session
+  // 3. Create Session or Require 2FA
   const touched = await touchStaffLastActiveById(staff.id);
   if (!touched) {
     return addSecurityHeaders(NextResponse.json(
       { ok: false, error: "Failed to update last active" },
       { status: 500 }
     ));
+  }
+
+  // Check if TOTP is enabled
+  if (touched.totp_enabled && touched.totp_secret) {
+    // Generate a temporary token for 2FA verification
+    const tempPayload = {
+      sub: touched.id,
+      purpose: "2fa",
+      role: touched.role || "Staff",
+      username: touched.email,
+    };
+    // Sign with a short expiry (e.g., 5 minutes)
+    const tempToken = await signSessionToken(tempPayload, "5m");
+    
+    return addSecurityHeaders(NextResponse.json({
+      ok: true,
+      data: {
+        totpRequired: true,
+        tempToken,
+        username: touched.email,
+      },
+    }));
   }
 
   const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";

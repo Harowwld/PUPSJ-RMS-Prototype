@@ -250,3 +250,88 @@ export async function hasAllSecurityAnswers(id) {
 
   return true;
 }
+
+/**
+ * Generates 10 single-use recovery codes for a staff member.
+ * Existing unused codes are invalidated.
+ */
+export async function generateRecoveryCodes(staffId) {
+  const codes = [];
+  for (let i = 0; i < 10; i++) {
+    // Generate 8-character alphanumeric code
+    const code = crypto.randomBytes(4).toString("hex").toUpperCase();
+    codes.push(code);
+  }
+
+  // Delete existing unused codes
+  await dbRun("DELETE FROM staff_recovery_codes WHERE staff_id = ? AND used_at IS NULL", [staffId]);
+
+  // Insert new codes
+  for (const code of codes) {
+    const hash = crypto.createHash("sha256").update(code).digest("hex");
+    await dbRun(
+      "INSERT INTO staff_recovery_codes (staff_id, code_hash) VALUES (?, ?)",
+      [staffId, hash]
+    );
+  }
+
+  return codes;
+}
+
+/**
+ * Gets the count of unused recovery codes for a staff member.
+ */
+export async function getRecoveryCodesCount(staffId) {
+  const res = await dbGet(
+    "SELECT COUNT(*) as count FROM staff_recovery_codes WHERE staff_id = ? AND used_at IS NULL",
+    [staffId]
+  );
+  return res?.count || 0;
+}
+
+/**
+ * Verifies a recovery code and marks it as used if valid.
+ */
+export async function verifyRecoveryCode(staffId, code) {
+  if (!code || typeof code !== "string") return false;
+  
+  const hash = crypto.createHash("sha256").update(code.trim().toUpperCase()).digest("hex");
+  const match = await dbGet(
+    "SELECT id FROM staff_recovery_codes WHERE staff_id = ? AND code_hash = ? AND used_at IS NULL",
+    [staffId, hash]
+  );
+
+  if (!match) return false;
+
+  await dbRun(
+    "UPDATE staff_recovery_codes SET used_at = datetime('now') WHERE id = ?",
+    [match.id]
+  );
+
+  return true;
+}
+
+/**
+ * Sets a new serial key for a staff member.
+ */
+export async function setSerialKey(staffId, serialKey) {
+  if (!serialKey) return null;
+  const hash = crypto.createHash("sha256").update(serialKey.trim().toUpperCase()).digest("hex");
+  await dbRun(
+    "UPDATE staff SET serial_key_hash = ?, updated_at = datetime('now') WHERE id = ?",
+    [hash, staffId]
+  );
+  return true;
+}
+
+/**
+ * Verifies a serial key against the stored hash.
+ */
+export async function verifySerialKey(staffId, serialKey) {
+  if (!serialKey) return false;
+  const staff = await getStaffById(staffId);
+  if (!staff || !staff.serial_key_hash) return false;
+  
+  const hash = crypto.createHash("sha256").update(serialKey.trim().toUpperCase()).digest("hex");
+  return staff.serial_key_hash === hash;
+}

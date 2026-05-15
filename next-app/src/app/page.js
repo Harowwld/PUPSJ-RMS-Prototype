@@ -16,6 +16,13 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // 2FA State
+  const [show2FAModal, setShow2FAModal] = useState(false);
+  const [twoFactorCode, setTwoFactorCode] = useState("");
+  const [twoFactorLoading, setTwoFactorLoading] = useState(false);
+  const [twoFactorError, setTwoFactorError] = useState("");
+  const [tempToken, setTempToken] = useState("");
+
   // Forgot Password State
   const [forgotStep, setForgotStep] = useState(1);
   const [forgotIdentifier, setForgotIdentifier] = useState("");
@@ -133,6 +140,13 @@ export default function Home() {
           throw new Error(json?.error || "Invalid username or password.");
         }
 
+        if (json.data.totpRequired) {
+          setTempToken(json.data.tempToken);
+          setShow2FAModal(true);
+          setIsLoading(false);
+          return;
+        }
+
         const role = String(json?.data?.role || "");
         if (role === "Admin") {
           router.push("/admin");
@@ -146,6 +160,43 @@ export default function Home() {
       }
     })();
   }
+
+  const handle2FAVerify = async (e) => {
+    e.preventDefault();
+    if (!twoFactorCode || twoFactorCode.length < 6) {
+      setTwoFactorError("Please enter a valid code.");
+      return;
+    }
+    setTwoFactorError("");
+    setTwoFactorLoading(true);
+    try {
+      const res = await fetch("/api/auth/login/verify-2fa", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tempToken,
+          code: twoFactorCode.trim()
+        })
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        throw new Error(json.error || "Verification failed.");
+      }
+
+      toast.success("Verification Successful", { description: "Logging you in..." });
+      
+      const role = String(json?.data?.role || "");
+      if (role === "Admin") {
+        router.push("/admin");
+      } else {
+        router.push("/staff");
+      }
+    } catch (err) {
+      setTwoFactorError(err.message);
+    } finally {
+      setTwoFactorLoading(false);
+    }
+  };
 
   return (
     <div className="h-screen flex items-center justify-center relative overflow-hidden">
@@ -409,6 +460,78 @@ export default function Home() {
           </div>
         </div>
       </div>
+
+      {/* 2FA Modal */}
+      <Dialog open={show2FAModal} onOpenChange={(open) => {
+        if (!twoFactorLoading) setShow2FAModal(open);
+      }}>
+        <DialogContent className="max-w-md rounded-brand border-pup-border">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-black text-gray-900 flex items-center gap-2">
+              <i className="ph-fill ph-shield-check text-pup-maroon"></i>
+              Two-Factor Authentication
+            </DialogTitle>
+            <DialogDescription className="font-medium text-gray-500">
+              Enter the 6-digit code from your authenticator app, a recovery code, or your Serial Key.
+            </DialogDescription>
+          </DialogHeader>
+
+          <form onSubmit={handle2FAVerify} className="space-y-4 mt-2">
+            {twoFactorError && (
+              <div className="p-3 bg-red-50 border border-red-200 text-red-700 text-sm font-bold rounded-brand">
+                {twoFactorError}
+              </div>
+            )}
+            
+            <div className="space-y-2">
+              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide ml-1">
+                Verification Code
+              </label>
+              <Input
+                type="text"
+                placeholder="000000, Recovery Code, or Serial Key"
+                className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon text-center tracking-widest font-black h-12 text-lg"
+                value={twoFactorCode}
+                onChange={(e) => setTwoFactorCode(e.target.value)}
+                autoFocus
+                required
+              />
+            </div>
+
+            <div className="flex flex-col gap-2 pt-2">
+              <Button
+                type="submit"
+                disabled={twoFactorLoading}
+                className="w-full h-11 bg-pup-maroon text-white font-black shadow-sm hover:bg-red-900 rounded-brand uppercase tracking-widest flex items-center justify-center gap-2"
+              >
+                {twoFactorLoading ? (
+                  <>
+                    <i className="ph-bold ph-spinner animate-spin"></i>
+                    Verifying...
+                  </>
+                ) : (
+                  <>
+                    <i className="ph-bold ph-lock-key"></i>
+                    Verify & Log In
+                  </>
+                )}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => {
+                  setShow2FAModal(false);
+                  setTwoFactorCode("");
+                  setTwoFactorError("");
+                }}
+                className="w-full text-sm font-bold text-gray-500 hover:text-gray-700 hover:bg-gray-50"
+              >
+                Cancel
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

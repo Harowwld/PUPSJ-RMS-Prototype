@@ -21,6 +21,13 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import PageHeader from "@/components/shared/PageHeader";
 import { formatPHDateTime } from "@/lib/timeFormat";
 
@@ -58,6 +65,9 @@ function AccountPageContent() {
   const [totpLoading, setTotpLoading] = useState(false);
   const [totpError, setTotpError] = useState("");
   const [totpStep, setTotpStep] = useState("idle");
+  const [recoveryCodes, setRecoveryCodes] = useState([]);
+  const [recoveryCodesCount, setRecoveryCodesCount] = useState(0);
+  const [showRecoveryCodesDialog, setShowRecoveryCodesDialog] = useState(false);
 
   const [activeTab, setActiveTab] = useState("profile");
 
@@ -102,6 +112,7 @@ function AccountPageContent() {
         const jsonTOTP = await resTOTP.json().catch(() => null);
         if (jsonTOTP?.ok && jsonTOTP.data) {
           setTotpEnabled(jsonTOTP.data.enabled);
+          setRecoveryCodesCount(jsonTOTP.data.recoveryCodesCount || 0);
         }
       } catch {
         router.push("/");
@@ -365,12 +376,58 @@ function AccountPageContent() {
       setTotpLoading(false);
     }
   };
-
   const cancelTOTPSetup = () => {
     setTotpStep("idle");
     setTotpSetupData(null);
     setTotpToken("");
     setTotpError("");
+  };
+
+  const generateNewRecoveryCodes = async () => {
+    setTotpLoading(true);
+    setTotpError("");
+    try {
+      const res = await fetch("/api/auth/totp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "generate-recovery-codes" }),
+      });
+      const json = await res.json();
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || "Failed to generate recovery codes");
+      }
+      setRecoveryCodes(json.data.codes);
+      setRecoveryCodesCount(json.data.codes.length);
+      setShowRecoveryCodesDialog(true);
+      toast.success("Recovery Codes Generated", {
+        description: "Please save these codes in a secure location.",
+      });
+    } catch (err) {
+      toast.error("Generation Failed", {
+        description: err?.message || "Unable to generate recovery codes.",
+      });
+    } finally {
+      setTotpLoading(false);
+    }
+  };
+
+  const copyRecoveryCodes = () => {
+    const text = recoveryCodes.join("\n");
+    navigator.clipboard.writeText(text);
+    toast.success("Copied to Clipboard");
+  };
+
+  const downloadRecoveryCodes = () => {
+    const text = `PUPSJ Records Keeping System - Recovery Codes\nGenerated on: ${new Date().toLocaleString()}\n\n${recoveryCodes.join("\n")}\n\nKeep these codes safe. Each code can only be used once.`;
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "pupsj-recovery-codes.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   };
 
   if (loading) {
@@ -816,7 +873,11 @@ function AccountPageContent() {
                           <i className="ph-fill ph-check-circle text-xl mt-0.5 shrink-0 text-emerald-600"></i>
                           <div>
                             <p>Two-factor authentication is enabled.</p>
-                            <p className="text-xs font-medium text-emerald-700 mt-1">You&apos;ll need to enter a code from your authenticator app for sensitive actions.</p>
+                            <p className="text-xs font-medium text-emerald-700 mt-1">
+                              You&apos;ll need to enter a code from your authenticator app or your 
+                              <span className="font-black mx-1 underline underline-offset-2">Serial Key</span> 
+                              for sensitive actions.
+                            </p>
                           </div>
                         </div>
 
@@ -855,6 +916,39 @@ function AccountPageContent() {
                             Disable TOTP
                           </Button>
                         </div>
+
+                        <div className="pt-8 border-t border-gray-100">
+                          <div className="flex items-center justify-between mb-4">
+                            <div>
+                              <h4 className="text-sm font-black text-gray-900">Recovery Codes</h4>
+                              <p className="text-xs font-medium text-gray-500 mt-0.5">
+                                {recoveryCodesCount > 0 
+                                  ? `You have ${recoveryCodesCount} unused recovery codes remaining.`
+                                  : "You haven't generated any recovery codes yet."}
+                              </p>
+                            </div>
+                            <Button
+                              onClick={generateNewRecoveryCodes}
+                              disabled={totpLoading}
+                              variant="outline"
+                              className="h-9 px-4 font-bold text-xs uppercase tracking-widest border-gray-300 hover:border-pup-maroon hover:text-pup-maroon rounded-brand"
+                            >
+                              {totpLoading ? (
+                                <i className="ph-bold ph-spinner animate-spin mr-2"></i>
+                              ) : (
+                                <i className="ph-bold ph-arrows-clockwise mr-2"></i>
+                              )}
+                              {recoveryCodesCount > 0 ? "Regenerate Codes" : "Generate Codes"}
+                            </Button>
+                          </div>
+                          
+                          <div className="p-3 bg-amber-50 border border-amber-100 rounded-brand flex items-start gap-3">
+                            <i className="ph-fill ph-info text-lg mt-0.5 shrink-0 text-amber-600"></i>
+                            <p className="text-[10px] text-amber-800 font-bold leading-tight">
+                              Recovery codes can be used to access your account if you lose your mobile device. Each code can only be used once. Regenerating new codes will invalidate any previous ones.
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     ) : totpStep === "setup" && totpSetupData ? (
                       <div className="space-y-6">
@@ -869,8 +963,14 @@ function AccountPageContent() {
                               className="w-48 h-48"
                             />
                           </div>
-                          <p className="text-[10px] text-gray-500 mt-4 font-black uppercase tracking-widest bg-white px-3 py-1 rounded-full border border-gray-200 shadow-sm">
-                            Secret: {totpSetupData.secret}
+                          <p className="text-[10px] text-gray-500 mt-4 font-black uppercase tracking-widest bg-white px-3 py-1 rounded-full border border-gray-200 shadow-sm flex flex-col gap-1 items-center">
+                            <span>Setup Secret: {totpSetupData.secret}</span>
+                            <span className="text-pup-maroon border-t border-gray-100 pt-1 mt-1 w-full text-center">
+                              Serial Key: {totpSetupData.serialKey}
+                            </span>
+                          </p>
+                          <p className="text-[9px] text-gray-400 font-bold uppercase tracking-tighter mt-2 max-w-xs leading-tight">
+                            Use the Serial Key as a permanent backup if you cannot use an authenticator app.
                           </p>
                         </div>
 
@@ -952,6 +1052,54 @@ function AccountPageContent() {
           </div>
         </Tabs>
         </div>
+
+        {/* Recovery Codes Modal */}
+        <Dialog open={showRecoveryCodesDialog} onOpenChange={setShowRecoveryCodesDialog}>
+          <DialogContent className="max-w-md rounded-brand border-pup-border">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-black text-gray-900">Your Recovery Codes</DialogTitle>
+              <DialogDescription className="font-medium text-gray-500">
+                Save these codes in a secure place. They will not be shown again.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="bg-gray-50 p-6 rounded-xl border border-gray-100 my-4">
+              <div className="grid grid-cols-2 gap-4">
+                {recoveryCodes.map((code, idx) => (
+                  <div key={idx} className="font-mono text-sm font-bold text-gray-700 flex items-center gap-2">
+                    <span className="text-[10px] text-gray-400 w-4">{idx + 1}.</span>
+                    {code}
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <div className="flex gap-3">
+                <Button 
+                  onClick={copyRecoveryCodes}
+                  variant="outline" 
+                  className="flex-1 h-10 font-bold uppercase tracking-widest text-xs border-gray-300 rounded-brand"
+                >
+                  <i className="ph-bold ph-copy mr-2"></i> Copy
+                </Button>
+                <Button 
+                  onClick={downloadRecoveryCodes}
+                  variant="outline" 
+                  className="flex-1 h-10 font-bold uppercase tracking-widest text-xs border-gray-300 rounded-brand"
+                >
+                  <i className="ph-bold ph-download-simple mr-2"></i> Download
+                </Button>
+              </div>
+              <Button 
+                onClick={() => setShowRecoveryCodesDialog(false)}
+                className="w-full h-11 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest rounded-brand"
+              >
+                I Have Saved These Codes
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </main>
     </div>
   );
