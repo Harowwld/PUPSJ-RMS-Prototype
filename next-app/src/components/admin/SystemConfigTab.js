@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Toggle } from "@/components/ui/toggle"
+import { format } from "date-fns"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import {
@@ -144,6 +145,17 @@ export default function SystemConfigTab({
   useEffect(() => {
     // Reset selection states when view mode or sub-tab changes to avoid persisting 
     // batch actions between unrelated records or categories
+    const docCount = Object.values(selectedDocTypes).filter(Boolean).length;
+    const courseCount = Object.values(selectedCourses).filter(Boolean).length;
+    const sectionCount = Object.values(selectedSections).filter(Boolean).length;
+
+    if ((docCount > 0 || courseCount > 0 || sectionCount > 0) && showToast) {
+       showToast({
+         title: "Selections Reset",
+         description: "Category selections cleared to prevent accidental batch actions.",
+       });
+    }
+
     setSelectedDocTypes({})
     setSelectedCourses({})
     setSelectedSections({})
@@ -167,19 +179,23 @@ export default function SystemConfigTab({
     return sorted.slice(start, start + perPage)
   }
 
-  const handleSort = (tab, key, direction = null) => {
+  const handleSort = (tab, key) => {
     const setter =
       tab === "doc"
         ? setSortDoc
         : tab === "course"
           ? setSortCourse
           : setSortSection
+          
+    const defaultKey = tab === "doc" ? "name" : tab === "course" ? "code" : "name"
+
     setter((prev) => {
-      const nextDirection = direction || (prev.key === key && prev.direction === "asc" ? "desc" : "asc")
-      return {
-        key,
-        direction: nextDirection,
+      if (prev.key === key) {
+        if (prev.direction === "asc") return { key, direction: "desc" }
+        // Cycle back to default sort (usually name or code)
+        return { key: defaultKey, direction: "asc" }
       }
+      return { key, direction: "asc" }
     })
     // Reset page
     if (tab === "doc") setPageDoc(1)
@@ -446,13 +462,13 @@ export default function SystemConfigTab({
       if (!res.ok || !json.ok)
         throw new Error(json.error || "Failed to save questions")
       showToast({
-        title: "Success",
-        description: "Global security questions updated.",
+        title: "Security Configuration Updated",
+        description: "The global security questions have been successfully saved to the system.",
       })
       loadAll()
     } catch (err) {
       if (totpToken) throw err
-      showToast({ title: "Error", description: err.message }, true)
+      showToast({ title: "Configuration Update Failed", description: err.message }, true)
     } finally {
       setSecuritySaving(false)
     }
@@ -463,8 +479,8 @@ export default function SystemConfigTab({
     const blob = new Blob([content], { type: "text/csv;charset=utf-8;" })
     const link = document.createElement("a")
     const url = URL.createObjectURL(blob)
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 16)
-    const finalFilename = filename.replace(".csv", `_${timestamp}.csv`)
+    const timestamp = format(new Date(), "yyyy-MM-dd-HHmm")
+    const finalFilename = `PUP-TAXONOMY-${filename.toUpperCase().replace(".CSV", "").replace(/_/g, "-")}-${timestamp}.csv`
     
     link.setAttribute("href", url)
     link.setAttribute("download", finalFilename)
@@ -488,7 +504,7 @@ export default function SystemConfigTab({
     const csvContent = docTypes
       .map((dt) => `DocumentType,${escapeCsv(dt.name)},`)
       .join("\n")
-    downloadCsv("taxonomy_document_types.csv", headers + csvContent)
+    downloadCsv("document_types.csv", headers + csvContent)
     logAdminAction({
       action: "Export Taxonomy",
       details: `exported ${docTypes.length} document type configurations to CSV`,
@@ -505,7 +521,7 @@ export default function SystemConfigTab({
     const csvContent = courses
       .map((c) => `Course,${escapeCsv(c.name)},${escapeCsv(c.code)}`)
       .join("\n")
-    downloadCsv("taxonomy_degree_programs.csv", headers + csvContent)
+    downloadCsv("degree_programs.csv", headers + csvContent)
     logAdminAction({
       action: "Export Taxonomy",
       details: `exported ${courses.length} degree program configurations to CSV`,
@@ -522,7 +538,7 @@ export default function SystemConfigTab({
     const csvContent = sections
       .map((s) => `Section,${escapeCsv(s.name)},${escapeCsv(s.course_code || "")}`)
       .join("\n")
-    downloadCsv("taxonomy_course_blocks.csv", headers + csvContent)
+    downloadCsv("course_blocks.csv", headers + csvContent)
     logAdminAction({
       action: "Export Taxonomy",
       details: `exported ${sections.length} course block configurations to CSV`,
@@ -769,11 +785,11 @@ export default function SystemConfigTab({
 
   function handleCopySample() {
     const sample =
-      "Category,Name,Code\nDocumentType,Transcript of Records,\nCourse,Bachelor of Science in Accountancy,BSA\nSection,Section 1,BSA"
+      "Category,Name,Code\nDocumentType,Transcript of Records,\nDocumentType,Diploma,\nCourse,Bachelor of Science in Information Technology,BSIT\nCourse,Bachelor of Science in Accountancy,BSA\nSection,Block 1,BSIT\nSection,Section 1,BSA"
     navigator.clipboard.writeText(sample)
     showToast({
-      title: "Copied",
-      description: "CSV sample copied to clipboard.",
+      title: "Copied to Clipboard",
+      description: "The CSV sample data has been successfully copied to your clipboard.",
     })
   }
 
@@ -1072,6 +1088,8 @@ export default function SystemConfigTab({
           message={confirmPayload.message}
           confirmLabel={confirmPayload.confirmLabel}
           variant={confirmPayload.variant}
+          icon={confirmPayload.icon}
+          buttonIcon={confirmPayload.buttonIcon}
           selectedItems={confirmPayload.selectedItems}
           onConfirm={confirmPayload.onConfirm}
         />

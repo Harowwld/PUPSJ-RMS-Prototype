@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useRef, useState, useEffect } from "react"
+import { format } from "date-fns"
 import {
   Card,
   CardContent,
@@ -65,6 +66,7 @@ export default function BackupTab({
   const [page, setPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [jumpPage, setJumpPage] = useState("1")
+  const [isExporting, setIsExporting] = useState(false)
 
   const [localSearch, setLocalSearch] = useState(backupSearch)
 
@@ -80,9 +82,18 @@ export default function BackupTab({
     return () => clearTimeout(timer)
   }, [localSearch, setBackupSearch])
 
-  const handleSort = (column, order) => {
-    setSortBy(column)
-    setSortOrder(order)
+  const handleSort = (column) => {
+    if (sortBy === column) {
+      if (sortOrder === "ASC") {
+        setSortOrder("DESC")
+      } else {
+        setSortBy("created_at")
+        setSortOrder("DESC")
+      }
+    } else {
+      setSortBy(column)
+      setSortOrder("ASC")
+    }
     setPage(1)
   }
 
@@ -157,7 +168,7 @@ export default function BackupTab({
   const handleRestoreFileChangeLocal = async (e) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    
+
     setLocalLoading(prev => ({ ...prev, uploading: true }));
     // Small delay to ensure the UI updates before the heavy file selection state update
     setTimeout(() => {
@@ -186,6 +197,41 @@ export default function BackupTab({
     setPage(1)
   }
 
+  const handleExportCSV = async () => {
+    if (isExporting) return
+    setIsExporting(true)
+    try {
+      const { formatBytes } = await import("@/lib/utils")
+      const { formatPHDateTime } = await import("@/lib/timeFormat")
+      const headers = ["ID", "Filename", "Size", "Local Status", "External Status", "Offsite Status", "Created At"]
+      const csvRows = backups.map((b) => [
+        b.id,
+        b.filename || "—",
+        formatBytes(b.size_bytes),
+        b.status_local || "—",
+        b.status_external || "—",
+        b.status_offsite || "—",
+        b.created_at ? formatPHDateTime(b.created_at) : "—",
+      ])
+      const csvContent = [
+        headers.join(","),
+        ...csvRows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
+      ].join("\n")
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const link = document.createElement("a")
+      const url = URL.createObjectURL(blob)
+      link.setAttribute("href", url)
+      link.setAttribute("download", `PUP-BACKUP-HISTORY-${format(new Date(), "yyyy-MM-dd-HHmm")}.csv`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } catch (err) {
+      console.error("[Backup Export Error]", err)
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   const handleJumpPage = (e) => {
     if (e.key === "Enter" || e.type === "blur") {
       const val = parseInt(jumpPage)
@@ -210,8 +256,8 @@ export default function BackupTab({
             <Skeleton className="h-full flex-1 rounded-brand" />
           </div>
         ) : error ? (
-          <Card className="flex flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm min-h-[400px]">
-            <CardContent className="flex flex-1 flex-col p-6 items-center justify-center">
+          <Card className="flex min-h-[400px] flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm">
+            <CardContent className="flex flex-1 flex-col items-center justify-center p-6">
               <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
@@ -238,11 +284,31 @@ export default function BackupTab({
             />
 
             {/* MAIN CONTENT */}
-            <Card className="flex h-fit w-full flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm min-h-[600px]">
+            <Card className="flex h-fit min-h-[600px] w-full flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm">
               <PageHeader
                 icon="ph-hard-drives"
                 title="Encrypted Backup History"
                 description="Manage institutional snapshots and secure redundancy nodes."
+                extraChips={[
+                  ...(backupStartDate
+                    ? [
+                        {
+                          label: "From",
+                          value: backupStartDate,
+                          onClear: () => setBackupStartDate(""),
+                        },
+                      ]
+                    : []),
+                  ...(backupEndDate
+                    ? [
+                        {
+                          label: "Until",
+                          value: backupEndDate,
+                          onClear: () => setBackupEndDate(""),
+                        },
+                      ]
+                    : []),
+                ]}
                 leftAction={
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -284,8 +350,12 @@ export default function BackupTab({
                         disabled={localLoading.uploading}
                         className="flex h-9 items-center gap-2 rounded-brand border-amber-300 bg-amber-50/30 px-4 text-xs font-bold text-amber-700 shadow-sm transition-colors hover:border-amber-500 hover:bg-amber-100/50 hover:text-amber-800 active:scale-95 disabled:opacity-50"
                       >
-                        <i className={`ph-bold ${localLoading.uploading ? "ph-arrows-clockwise animate-spin" : "ph-warning-circle"} text-sm`}></i>{" "}
-                        {localLoading.uploading ? "READING FILE..." : "RESTORE IMAGE"}
+                        <i
+                          className={`ph-bold ${localLoading.uploading ? "ph-arrows-clockwise animate-spin" : "ph-arrow-counter-clockwise"} text-sm`}
+                        ></i>{" "}
+                        {localLoading.uploading
+                          ? "READING FILE..."
+                          : "RESTORE IMAGE"}
                       </Button>
                       <input
                         ref={restoreFileRef}
@@ -295,6 +365,28 @@ export default function BackupTab({
                         onChange={handleRestoreFileChangeLocal}
                       />
                     </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={onRefresh}
+                      disabled={isLoading}
+                      className="flex h-10 w-28 items-center justify-center gap-2 rounded-brand border-gray-300 bg-white px-4 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-50"
+                    >
+                      <i className={`ph-bold ph-arrows-clockwise ${isLoading ? "animate-spin" : ""} text-base`}></i>
+                      REFRESH
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleExportCSV}
+                      disabled={backups.length === 0 || isExporting}
+                      className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-50"
+                    >
+                      <i
+                        className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv"} text-base`}
+                      ></i>
+                      {isExporting ? "PREPARING..." : "EXPORT CSV"}
+                    </Button>
                   </div>
                 }
               />
@@ -312,11 +404,9 @@ export default function BackupTab({
                 setLocalSearch={setLocalSearch}
                 setBackupSearch={setBackupSearch}
                 backupTotal={backups.length}
-                onRefresh={onRefresh}
-                isLoading={isLoading}
               />
 
-              <CardContent className="flex flex-1 flex-col bg-white p-5 min-h-[400px]">
+              <CardContent className="flex min-h-[400px] flex-1 flex-col bg-white p-5">
                 <BackupTable
                   backups={backups}
                   sortedAndPaginatedBackups={sortedAndPaginatedBackups}
@@ -366,7 +456,7 @@ export default function BackupTab({
           onCancel={() => setSelectedBackupIds([])}
           onAction={() => onDeleteBackup(selectedBackupIds)}
           actionLabel="DELETE PERMANENTLY"
-          actionIcon="ph-trash"
+          actionIcon="ph-archive"
         />
       </div>
     </TooltipProvider>

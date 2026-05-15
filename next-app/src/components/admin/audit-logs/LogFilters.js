@@ -28,9 +28,6 @@ export default function LogFilters({
   setLogRoleFilter,
   setLogSeverityFilter,
   logTotal,
-  isExporting,
-  handleDownloadCSV,
-  handlePreviewPDF,
 }) {
   const hasActiveFilters =
     localSearch !== "" ||
@@ -74,8 +71,8 @@ export default function LogFilters({
       setLogStartDate(start.toISOString())
       setLogEndDate(end.toISOString())
     } else {
-      setLogStartDate(start.toISOString().split("T")[0])
-      setLogEndDate(end.toISOString().split("T")[0])
+      setLogStartDate(format(start, "yyyy-MM-dd"))
+      setLogEndDate(format(end, "yyyy-MM-dd"))
     }
     setLogPage(1)
   }
@@ -88,39 +85,79 @@ export default function LogFilters({
     setLogStartDate("")
     setLogEndDate("")
     setLogPage(1)
-  };
+  }
 
   return (
     <div className="rounded-t-brand border-b border-gray-200 bg-gray-50/50 p-4">
       {/* Active Filter Chips */}
       {hasActiveFilters && (
-        <div className="mb-4 flex flex-wrap items-center gap-2">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mr-1">Active Filters:</span>
+        <div className="mb-3 flex flex-wrap items-center gap-2">
+          <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+            Active Filters:
+          </span>
           {localSearch && (
-            <div className="flex items-center gap-1 rounded-full bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon border border-pup-maroon/20">
+            <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon">
               Search: {localSearch}
+              <button
+                onClick={() => {
+                  setLocalSearch("")
+                  setLogSearch("")
+                  setLogPage(1)
+                }}
+                className="ml-1 transition-colors hover:text-pup-darkMaroon"
+              >
+                <i className="ph-bold ph-x text-[8px]"></i>
+              </button>
             </div>
           )}
           {logRoleFilter !== "All" && (
-            <div className="flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 border border-blue-100">
+            <div className="flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600">
               Role: {logRoleFilter}
+              <button
+                onClick={() => {
+                  setLogRoleFilter("All")
+                  setLogPage(1)
+                }}
+                className="ml-1 transition-colors hover:text-blue-800"
+              >
+                <i className="ph-bold ph-x text-[8px]"></i>
+              </button>
             </div>
           )}
           {logSeverityFilter !== "All" && (
-            <div className="flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 border border-amber-100">
+            <div className="flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600">
               Severity: {logSeverityFilter}
+              <button
+                onClick={() => {
+                  setLogSeverityFilter("All")
+                  setLogPage(1)
+                }}
+                className="ml-1 transition-colors hover:text-amber-800"
+              >
+                <i className="ph-bold ph-x text-[8px]"></i>
+              </button>
             </div>
           )}
           {(logStartDate || logEndDate) && (
-            <div className="flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 border border-emerald-100">
-              Range: {logStartDate || '...'} to {logEndDate || '...'}
+            <div className="flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600">
+              Range: {logStartDate || "..."} to {logEndDate || "..."}
+              <button
+                onClick={() => {
+                  setLogStartDate("")
+                  setLogEndDate("")
+                  setLogPage(1)
+                }}
+                className="ml-1 transition-colors hover:text-emerald-800"
+              >
+                <i className="ph-bold ph-x text-[8px]"></i>
+              </button>
             </div>
           )}
           <Button
             variant="ghost"
             size="sm"
             onClick={clearAllFilters}
-            className="h-6 rounded-full px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon border border-dashed border-pup-maroon/30"
+            className="h-6 rounded-full border border-dashed border-pup-maroon/30 px-3 text-[10px] font-black text-pup-maroon transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-darkMaroon"
           >
             CLEAR ALL FILTERS
           </Button>
@@ -129,7 +166,7 @@ export default function LogFilters({
 
       <div className="flex w-full flex-wrap items-end gap-4">
         {/* Search */}
-        <div className="min-w-[280px] flex-1">
+        <div className="min-w-[400px] flex-1">
           <label className="mb-1 block text-xs font-bold text-gray-700 uppercase">
             Search Logs
           </label>
@@ -154,35 +191,35 @@ export default function LogFilters({
             <div className="flex gap-1.5">
               <button
                 onClick={() => handleQuickRange("lastHour")}
-                className="text-[9px] font-black text-gray-400 uppercase hover:text-pup-maroon transition-colors"
+                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon"
               >
                 Last Hour
               </button>
-              <span className="text-gray-300 text-[9px]">•</span>
+              <span className="text-[9px] text-gray-300">•</span>
               <button
                 onClick={() => handleQuickRange("today")}
-                className="text-[9px] font-black text-gray-400 uppercase hover:text-pup-maroon transition-colors"
+                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon"
               >
                 Today
               </button>
-              <span className="text-gray-300 text-[9px]">•</span>
+              <span className="text-[9px] text-gray-300">•</span>
               <button
                 onClick={() => handleQuickRange("yesterday")}
-                className="text-[9px] font-black text-gray-400 uppercase hover:text-pup-maroon transition-colors"
+                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon"
               >
                 Yesterday
               </button>
-              <span className="text-gray-300 text-[9px]">•</span>
+              <span className="text-[9px] text-gray-300">•</span>
               <button
                 onClick={() => handleQuickRange("last7")}
-                className="text-[9px] font-black text-gray-400 uppercase hover:text-pup-maroon transition-colors"
+                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon"
               >
                 Last 7 Days
               </button>
-              <span className="text-gray-300 text-[9px]">•</span>
+              <span className="text-[9px] text-gray-300">•</span>
               <button
                 onClick={() => handleQuickRange("last30")}
-                className="text-[9px] font-black text-gray-400 uppercase hover:text-pup-maroon transition-colors"
+                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon"
               >
                 Last 30 Days
               </button>
@@ -209,12 +246,17 @@ export default function LogFilters({
                     )}{" "}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto rounded-brand p-0" align="start">
+                <PopoverContent
+                  className="w-auto rounded-brand p-0"
+                  align="start"
+                >
                   <Calendar
                     mode="single"
                     selected={logStartDate ? new Date(logStartDate) : undefined}
                     onSelect={(date) => {
-                      setLogStartDate(date ? date.toISOString().split("T")[0] : "")
+                      setLogStartDate(
+                        date ? format(date, "yyyy-MM-dd") : ""
+                      )
                       setLogPage(1)
                     }}
                     initialFocus
@@ -242,12 +284,17 @@ export default function LogFilters({
                     )}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto rounded-brand p-0" align="start">
+                <PopoverContent
+                  className="w-auto rounded-brand p-0"
+                  align="start"
+                >
                   <Calendar
                     mode="single"
                     selected={logEndDate ? new Date(logEndDate) : undefined}
                     onSelect={(date) => {
-                      setLogEndDate(date ? date.toISOString().split("T")[0] : "")
+                      setLogEndDate(
+                        date ? format(date, "yyyy-MM-dd") : ""
+                      )
                       setLogPage(1)
                     }}
                     initialFocus
@@ -290,37 +337,6 @@ export default function LogFilters({
             <option value="WARNING">Warning</option>
             <option value="CRITICAL">Critical</option>
           </select>
-        </div>
-
-        {/* Export Actions */}
-        <div className="flex w-fit gap-2">
-          <div className="w-32">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDownloadCSV}
-              disabled={logTotal === 0 || isExporting}
-              className="flex h-10 w-full items-center justify-center gap-1.5 rounded-brand border-gray-300 text-[10px] font-bold text-gray-600 hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-50 shadow-sm transition-colors"
-            >
-              <i
-                className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv"} text-base`}
-              ></i>
-              {isExporting ? "PREPARING..." : "CSV"}
-            </Button>
-          </div>
-          <div className="w-32">
-            <Button
-              size="sm"
-              onClick={handlePreviewPDF}
-              disabled={logTotal === 0 || isExporting}
-              className="flex h-10 w-full items-center justify-center gap-1.5 rounded-brand bg-pup-maroon text-[10px] font-bold text-white hover:bg-red-900 active:scale-95 disabled:opacity-50 shadow-sm"
-            >
-              <i
-                className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-pdf"} text-base`}
-              ></i>
-              {isExporting ? "GENERATING..." : "PDF"}
-            </Button>
-          </div>
         </div>
       </div>
     </div>

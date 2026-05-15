@@ -1,6 +1,6 @@
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
-import { formatPHDateTime } from "./timeFormat"
+import { formatPHDateTime, formatDurationHuman } from "./timeFormat"
 
 /**
  * Helper to convert a source image to a PNG data URL (preserves transparency in jsPDF better than WebP)
@@ -171,27 +171,33 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
   
   y += 40
   doc.setFontSize(12)
+  doc.setFont("helvetica", "bold")
+  doc.setTextColor(122, 30, 40) // PUP Maroon
   doc.text("I. Executive Summary", 40, y)
-  doc.setLineWidth(0.5)
-  doc.setDrawColor(200, 200, 200)
+  doc.setLineWidth(1.5)
+  doc.setDrawColor(122, 30, 40)
   doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
   
-  y += 25
+  y += 30
   doc.setFontSize(10)
   doc.setFont("helvetica", "normal")
-  const intro = "This document serves as the official compliance assessment regarding the digitization of student records at the Polytechnic University of the Philippines - San Juan City Campus."
+  doc.setTextColor(60, 60, 60)
+  const intro = "This document serves as the official compliance assessment regarding the digitization of student records at the Polytechnic University of the Philippines - San Juan City Campus. The analysis evaluates the current state of digital archives against institutional standards."
   const splitIntro = doc.splitTextToSize(intro, doc.internal.pageSize.getWidth() - 80)
   doc.text(splitIntro, 40, y)
   y += splitIntro.length * 14 + 10
   
   doc.setFont("helvetica", "bold")
+  doc.setTextColor(80, 80, 80)
   doc.text("Student Population Distribution:", 40, y)
   y += 20
   if (data?.byYear) {
     data.byYear.forEach(yearData => {
       doc.setFont("helvetica", "bold")
+      doc.setTextColor(122, 30, 40)
       doc.text(`Batch ${yearData.year}`, 60, y)
       doc.setFont("helvetica", "normal")
+      doc.setTextColor(60, 60, 60)
       doc.text(`${yearData.count} Students`, doc.internal.pageSize.getWidth() - 60, y, { align: "right" })
       y += 15
     })
@@ -199,12 +205,13 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
   
   y += 15
   doc.setFont("helvetica", "normal")
-  const p2 = `The primary objective of this audit is to measure the completeness of the digital archives. The system requires ${meta?.definitions?.configuredDocTypes?.length || 0} unique document types per student.`
+  doc.setTextColor(60, 60, 60)
+  const p2 = `The primary objective of this audit is to measure the completeness of the digital archives against the mandatory document set defined by university policy and accreditation requirements. The system currently requires ${meta?.definitions?.configuredDocTypes?.length || 0} unique document types per student record.`
   const splitP2 = doc.splitTextToSize(p2, doc.internal.pageSize.getWidth() - 80)
   doc.text(splitP2, 40, y)
-  y += splitP2.length * 14 + 10
+  y += splitP2.length * 14 + 15
 
-  const p3 = `The total percentage of digitized records currently stands at ${summary?.percentDigitized}%. This represents a verified volume of ${summary?.totalDigitizedDocsCount?.toLocaleString()} digital files.`
+  const p3 = `Based on the comprehensive audit performed by the Records Keeping System (RKS), the total percentage of digitized records currently stands at ${summary?.percentDigitized}%. This represents a verified volume of ${summary?.totalDigitizedDocsCount?.toLocaleString()} digital files out of the ${summary?.totalExpectedDocsCount?.toLocaleString()} documents required for full compliance.`
   const splitP3 = doc.splitTextToSize(p3, doc.internal.pageSize.getWidth() - 80)
   doc.text(splitP3, 40, y)
 
@@ -212,9 +219,20 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
   y = 60
   doc.setFontSize(12)
   doc.setFont("helvetica", "bold")
+  doc.setTextColor(122, 30, 40)
   doc.text("II. Program-Specific Breakdown", 40, y)
+  doc.setLineWidth(1.5)
+  doc.setDrawColor(122, 30, 40)
   doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
-  y += 20
+  y += 25
+
+  doc.setFontSize(10)
+  doc.setFont("helvetica", "normal")
+  doc.setTextColor(60, 60, 60)
+  const programDesc = "The following table provides a detailed analysis of digitization progress categorized by Academic Program. This breakdown identifies areas of high performance and highlights programs that may require additional resources to meet compliance targets."
+  const splitProgram = doc.splitTextToSize(programDesc, doc.internal.pageSize.getWidth() - 80)
+  doc.text(splitProgram, 40, y)
+  y += splitProgram.length * 14 + 10
   
   const tableData = byCourse.map((c) => [c.courseCode, c.total, c.digitized, `${c.percent}%`])
   autoTable(doc, {
@@ -222,7 +240,7 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
     head: [["Academic Program", "Enrolled", "Complete", "Avg. Progress"]],
     body: tableData,
     theme: "striped",
-    headStyles: { fillColor: [240, 240, 240], textColor: [100, 100, 100], fontStyle: "bold" },
+    headStyles: { fillColor: [122, 30, 40], textColor: [255, 255, 255], fontStyle: "bold" },
     styles: { fontSize: 10, cellPadding: 6 },
     columnStyles: {
       0: { fontStyle: "bold" },
@@ -235,12 +253,16 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
   y = doc.lastAutoTable.finalY + 40
   doc.setFontSize(12)
   doc.setFont("helvetica", "bold")
+  doc.setTextColor(122, 30, 40)
   doc.text("III. Certification Statement", 40, y)
+  doc.setLineWidth(1.5)
+  doc.setDrawColor(122, 30, 40)
   doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
-  y += 20
+  y += 25
   doc.setFontSize(10)
   doc.setFont("helvetica", "normal")
-  const cert = "We hereby certify that the data presented in this report is an accurate representation of the digital archives maintained by the Polytechnic University of the Philippines - San Juan City Campus."
+  doc.setTextColor(60, 60, 60)
+  const cert = "We hereby certify that the data presented in this report is an accurate representation of the digital archives maintained by the Polytechnic University of the Philippines - San Juan City Campus. The metrics have been generated through the Records Keeping System (RKS) audit engine, reflecting real-time synchronization with physical folders."
   const splitCert = doc.splitTextToSize(cert, doc.internal.pageSize.getWidth() - 80)
   doc.text(splitCert, 40, y)
   y += splitCert.length * 14 + 60
@@ -252,7 +274,7 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
 /**
  * Generates a SLA Analytics PDF Report
  */
-export const generateSLAAnalyticsPdf = async (data, total, slaHours, completionRate) => {
+export const generateSLAAnalyticsPdf = async (data, total, slaHours, completionRate, options = {}) => {
   const doc = new jsPDF("p", "pt", "a4")
   const logoData = await getLogoAsPng()
   
@@ -263,46 +285,59 @@ export const generateSLAAnalyticsPdf = async (data, total, slaHours, completionR
   doc.setFont("helvetica", "bold")
   doc.setFontSize(9)
   doc.setTextColor(150, 150, 150)
-  doc.text("DATE", 40, y)
+  doc.text("GENERATED ON:", 40, y)
   doc.setTextColor(0, 0, 0)
-  doc.text(formatPHDateTime(new Date().toISOString()), 40, y + 12)
+  doc.text(formatPHDateTime(new Date().toISOString()), 130, y)
+
+  if (options.startDate || options.endDate) {
+    y += 15
+    doc.setTextColor(150, 150, 150)
+    doc.text("REPORTING PERIOD:", 40, y)
+    doc.setTextColor(0, 0, 0)
+    const period = `${options.startDate || "Beginning"} to ${options.endDate || "Present"}`
+    doc.text(period, 130, y)
+  }
   
   y += 40
   doc.setFontSize(12)
+  doc.setFont("helvetica", "bold")
+  doc.setTextColor(122, 30, 40) // PUP Maroon
   doc.text("I. Service Efficiency Summary", 40, y)
-  doc.setLineWidth(0.5)
-  doc.setDrawColor(200, 200, 200)
+  doc.setLineWidth(1.5)
+  doc.setDrawColor(122, 30, 40) // PUP Maroon
   doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
   
-  y += 25
+  y += 30
   doc.setFontSize(10)
   doc.setFont("helvetica", "normal")
-  const intro = `This document details the registry's fulfillment efficiency across ${total} total documented requests.`
+  doc.setTextColor(60, 60, 60)
+  const intro = `This document details the registry's fulfillment efficiency across ${total} total documented requests. The key performance indicator for public service operations is measured through our Service Level Agreement (SLA) Turnaround Time, which tracks the interval from initial request pending state to final fulfillment.`
   const splitIntro = doc.splitTextToSize(intro, doc.internal.pageSize.getWidth() - 80)
   doc.text(splitIntro, 40, y)
-  y += splitIntro.length * 14 + 20
+  y += splitIntro.length * 14 + 25
   
-  doc.setDrawColor(200, 200, 200)
-  doc.setFillColor(250, 250, 250)
-  doc.roundedRect(40, y, (doc.internal.pageSize.getWidth() - 90) / 2, 70, 5, 5, "FD")
-  doc.roundedRect(doc.internal.pageSize.getWidth() / 2 + 5, y, (doc.internal.pageSize.getWidth() - 90) / 2, 70, 5, 5, "FD")
+  doc.setDrawColor(230, 230, 230)
+  doc.setFillColor(252, 252, 252)
+  doc.roundedRect(40, y, (doc.internal.pageSize.getWidth() - 90) / 2, 80, 5, 5, "FD")
+  doc.roundedRect(doc.internal.pageSize.getWidth() / 2 + 5, y, (doc.internal.pageSize.getWidth() - 90) / 2, 80, 5, 5, "FD")
   
   doc.setFontSize(9)
   doc.setFont("helvetica", "bold")
-  doc.setTextColor(150, 150, 150)
-  doc.text("AVERAGE TURNAROUND (SLA)", 50, y + 20)
-  doc.text("FULFILLMENT COMPLETION", doc.internal.pageSize.getWidth() / 2 + 15, y + 20)
+  doc.setTextColor(100, 100, 100)
+  doc.text("AVERAGE TURNAROUND (SLA)", 50, y + 25)
+  doc.text("FULFILLMENT COMPLETION", doc.internal.pageSize.getWidth() / 2 + 15, y + 25)
   
-  doc.setFontSize(18)
-  doc.setTextColor(0, 0, 0)
-  doc.text(slaHours != null ? `${slaHours.toFixed(1)} hrs` : "N/A", 50, y + 45)
-  doc.setTextColor(16, 185, 129)
-  doc.text(`${completionRate}%`, doc.internal.pageSize.getWidth() / 2 + 15, y + 45)
+  doc.setFontSize(22)
+  doc.setTextColor(122, 30, 40) // PUP Maroon
+  doc.text(formatDurationHuman(slaHours), 50, y + 55)
+  doc.setTextColor(16, 185, 129) // Emerald for completion
+  doc.text(`${completionRate}%`, doc.internal.pageSize.getWidth() / 2 + 15, y + 55)
   
-  y += 100
+  y += 110
   doc.setFontSize(9)
   doc.setFont("helvetica", "italic")
-  const note = "Note: Continued tracking of these analytics will help properly balance human resources during peak enrollment periods."
+  doc.setTextColor(100, 100, 100)
+  const note = "Note: Continued tracking of these analytics will help properly balance human resources during peak enrollment periods. The data provides a historical baseline for public service efficiency and administrative accountability."
   const splitNote = doc.splitTextToSize(note, doc.internal.pageSize.getWidth() - 80)
   doc.text(splitNote, 40, y)
 
@@ -310,17 +345,28 @@ export const generateSLAAnalyticsPdf = async (data, total, slaHours, completionR
   y = 60
   doc.setFontSize(12)
   doc.setFont("helvetica", "bold")
+  doc.setTextColor(122, 30, 40) // PUP Maroon
   doc.text("II. Top Demand Analysis", 40, y)
+  doc.setLineWidth(1.5)
+  doc.setDrawColor(122, 30, 40)
   doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
-  y += 20
+  y += 25
   
+  doc.setFontSize(10)
+  doc.setFont("helvetica", "normal")
+  doc.setTextColor(60, 60, 60)
+  const demandDesc = "The following table aggregates the most frequently requested documents, identifying the highest administrative priorities based on volume. This data is critical for prioritizing document template optimization."
+  const splitDemand = doc.splitTextToSize(demandDesc, doc.internal.pageSize.getWidth() - 80)
+  doc.text(splitDemand, 40, y)
+  y += splitDemand.length * 14 + 10
+
   const topDemandData = (data?.topDocTypes || []).map((dt, i) => [`${i + 1}. ${dt.name}`, dt.count])
   autoTable(doc, {
     startY: y,
     head: [["Document Type", "Total Requests"]],
     body: topDemandData,
     theme: "striped",
-    headStyles: { fillColor: [240, 240, 240], textColor: [100, 100, 100], fontStyle: "bold" },
+    headStyles: { fillColor: [122, 30, 40], textColor: [255, 255, 255], fontStyle: "bold" },
     styles: { fontSize: 10, cellPadding: 6 },
     columnStyles: { 0: { fontStyle: "bold" }, 1: { halign: "right", fontStyle: "bold", textColor: [122, 30, 40] } },
   })
@@ -328,9 +374,20 @@ export const generateSLAAnalyticsPdf = async (data, total, slaHours, completionR
   y = doc.lastAutoTable.finalY + 40
   doc.setFontSize(12)
   doc.setFont("helvetica", "bold")
+  doc.setTextColor(122, 30, 40)
   doc.text("III. Recent Historical Volume", 40, y)
+  doc.setLineWidth(1.5)
+  doc.setDrawColor(122, 30, 40)
   doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
-  y += 20
+  y += 25
+
+  doc.setFontSize(10)
+  doc.setFont("helvetica", "normal")
+  doc.setTextColor(60, 60, 60)
+  const volumeDesc = "Volume analysis tracks the inflow and fulfillment of requests over a rolling 6-month period, providing insights into seasonal peaks and registry throughput."
+  const splitVolume = doc.splitTextToSize(volumeDesc, doc.internal.pageSize.getWidth() - 80)
+  doc.text(splitVolume, 40, y)
+  y += splitVolume.length * 14 + 10
   
   const volumeData = (data?.volumeTrend || []).map((v) => [v.label, v.received, v.completed])
   autoTable(doc, {
@@ -338,7 +395,7 @@ export const generateSLAAnalyticsPdf = async (data, total, slaHours, completionR
     head: [["Period", "Received", "Completed"]],
     body: volumeData,
     theme: "striped",
-    headStyles: { fillColor: [240, 240, 240], textColor: [100, 100, 100], fontStyle: "bold" },
+    headStyles: { fillColor: [122, 30, 40], textColor: [255, 255, 255], fontStyle: "bold" },
     styles: { fontSize: 10, cellPadding: 6 },
     columnStyles: { 0: { fontStyle: "bold" }, 1: { halign: "center" }, 2: { halign: "center", textColor: [16, 185, 129], fontStyle: "bold" } },
   })

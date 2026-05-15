@@ -6,7 +6,11 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { formatPHDateTimeParts } from "@/lib/timeFormat"
+import { format } from "date-fns"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { cn } from "@/lib/utils"
+import { formatPHDateTime, formatPHDateTimeParts } from "@/lib/timeFormat"
 import {
   Empty,
   EmptyHeader,
@@ -59,6 +63,9 @@ export default function DigitalRecordsReviewTab({
   const [jumpPage, setJumpPage] = useState("1")
   const [sortBy, setSortBy] = useState("created_at")
   const [sortOrder, setSortOrder] = useState("DESC")
+  const [dateFrom, setDateFrom] = useState("")
+  const [dateTo, setDateTo] = useState("")
+  const [isExporting, setIsExporting] = useState(false)
   const [selectedIds, setSelectedIds] = useState(new Set())
 
   useEffect(() => {
@@ -92,15 +99,68 @@ export default function DigitalRecordsReviewTab({
     }
   }, [])
 
-  const handleSort = (column, order) => {
-    setSortBy(column)
-    setSortOrder(order)
+  const handleSort = (column) => {
+    if (sortBy === column) {
+      if (sortOrder === "ASC") {
+        setSortOrder("DESC")
+      } else {
+        setSortBy("created_at")
+        setSortOrder("DESC")
+      }
+    } else {
+      setSortBy(column)
+      setSortOrder("ASC")
+    }
     setCurrentPage(1)
+  }
+
+  const handleExportCSV = async () => {
+    if (isExporting) return
+    setIsExporting(true)
+    try {
+      const rows = sortedRecords
+      const headers = ["Record ID", "Student No.", "Student Name", "Document Type", "Filename", "Status", "Reviewed By", "Reviewed At", "Uploaded At"]
+      const csvRows = rows.map((r) => [
+        r.id,
+        r.student_no || "—",
+        r.student_name || "—",
+        r.doc_type || "—",
+        r.original_filename || "—",
+        r.approval_status || "Pending",
+        r.reviewed_by || "—",
+        r.reviewed_at ? formatPHDateTime(r.reviewed_at) : "—",
+        r.created_at ? formatPHDateTime(r.created_at) : "—",
+      ])
+      const csvContent = [
+        headers.join(","),
+        ...csvRows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
+      ].join("\n")
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const link = document.createElement("a")
+      const url = URL.createObjectURL(blob)
+      link.setAttribute("href", url)
+      link.setAttribute("download", `PUP-DIGITAL-RECORDS-${format(new Date(), "yyyy-MM-dd-HHmm")}.csv`)
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } catch (err) {
+      console.error("[Export Error]", err)
+    } finally {
+      setIsExporting(false)
+    }
   }
 
   const sortedRecords = useMemo(() => {
     const baseFiltered = records.filter((r) => {
       if (docTypeFilter !== "All" && r.doc_type !== docTypeFilter) return false
+      if (dateFrom) {
+        const created = r.created_at ? r.created_at.split("T")[0] : ""
+        if (created < dateFrom) return false
+      }
+      if (dateTo) {
+        const created = r.created_at ? r.created_at.split("T")[0] : ""
+        if (created > dateTo) return false
+      }
       if (!searchQuery.trim()) return true
       const query = searchQuery.toLowerCase()
       return (
@@ -127,7 +187,7 @@ export default function DigitalRecordsReviewTab({
       if (valA > valB) return sortOrder === "ASC" ? 1 : -1
       return 0
     })
-  }, [records, docTypeFilter, searchQuery, sortBy, sortOrder])
+  }, [records, docTypeFilter, dateFrom, dateTo, searchQuery, sortBy, sortOrder])
 
   const totalPages = Math.ceil(sortedRecords.length / itemsPerPage) || 1
   const displayPage = Math.min(currentPage, totalPages)
@@ -330,32 +390,79 @@ export default function DigitalRecordsReviewTab({
       </div>
 
       <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm">
-        {/* Reverted Header with filters */}
+        {/* Filter Bar */}
         <div className="flex-none border-b border-gray-200 bg-gray-50/50 p-4">
-          <div className="grid grid-cols-1 items-end gap-4 lg:grid-cols-3">
-            <div className="lg:col-span-1">
-              <div className="mb-1 flex items-center justify-between">
-                <label className="block text-xs font-bold text-gray-700 uppercase">
-                  Search Records
-                </label>
-                {(searchQuery !== "" ||
-                  statusFilter !== "All" ||
-                  docTypeFilter !== "All") && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setSearchQuery("")
-                      setLocalSearch("")
-                      setStatusFilter("All")
-                      setDocTypeFilter("All")
-                    }}
-                    className="h-5 rounded-brand px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
+          {/* Active Filter Chips */}
+          {(localSearch !== "" || statusFilter !== "All" || docTypeFilter !== "All" || dateFrom || dateTo) && (
+            <div className="mb-3 flex flex-wrap items-center gap-2">
+              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">Active Filters:</span>
+              {localSearch && (
+                <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon">
+                  Search: {localSearch}
+                  <button
+                    onClick={() => { setSearchQuery(""); setLocalSearch(""); setCurrentPage(1); }}
+                    className="ml-1 hover:text-pup-darkMaroon transition-colors"
                   >
-                    CLEAR
-                  </Button>
-                )}
-              </div>
+                    <i className="ph-bold ph-x text-[8px]"></i>
+                  </button>
+                </div>
+              )}
+              {statusFilter !== "All" && (
+                <div className="flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600">
+                  Status: {statusFilter}
+                  <button
+                    onClick={() => { setStatusFilter("All"); setCurrentPage(1); }}
+                    className="ml-1 hover:text-blue-800 transition-colors"
+                  >
+                    <i className="ph-bold ph-x text-[8px]"></i>
+                  </button>
+                </div>
+              )}
+              {docTypeFilter !== "All" && (
+                <div className="flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600">
+                  Doc Type: {docTypeFilter}
+                  <button
+                    onClick={() => { setDocTypeFilter("All"); setCurrentPage(1); }}
+                    className="ml-1 hover:text-amber-800 transition-colors"
+                  >
+                    <i className="ph-bold ph-x text-[8px]"></i>
+                  </button>
+                </div>
+              )}
+              {(dateFrom || dateTo) && (
+                <div className="flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600">
+                  Range: {dateFrom || "..."} to {dateTo || "..."}
+                  <button
+                    onClick={() => { setDateFrom(""); setDateTo(""); setCurrentPage(1); }}
+                    className="ml-1 hover:text-emerald-800 transition-colors"
+                  >
+                    <i className="ph-bold ph-x text-[8px]"></i>
+                  </button>
+                </div>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchQuery("")
+                  setLocalSearch("")
+                  setStatusFilter("All")
+                  setDocTypeFilter("All")
+                  setDateFrom("")
+                  setDateTo("")
+                  setCurrentPage(1)
+                }}
+                className="h-6 rounded-full border border-dashed border-pup-maroon/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
+              >
+                CLEAR ALL FILTERS
+              </Button>
+            </div>
+          )}
+
+          <div className="flex w-full flex-wrap items-end gap-3">
+            {/* Search */}
+            <div className="min-w-[400px] flex-1">
+              <label className="mb-1 block text-xs font-bold text-gray-700 uppercase">Search Records</label>
               <div className="relative">
                 <i className="ph-bold ph-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"></i>
                 <Input
@@ -368,14 +475,14 @@ export default function DigitalRecordsReviewTab({
               </div>
             </div>
 
-            <div className="lg:col-span-1">
-              <label className="mb-1 block text-xs font-bold text-gray-700 uppercase">
-                Status
-              </label>
+
+            {/* Status Filter */}
+            <div className="w-36 shrink-0">
+              <label className="mb-1 block text-xs font-bold text-gray-700 uppercase">Status</label>
               <select
-                className="h-10 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:border-pup-maroon focus:ring-2 focus:ring-pup-maroon focus:outline-none"
+                className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:border-pup-maroon focus:ring-2 focus:ring-pup-maroon focus:outline-none"
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
+                onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1) }}
               >
                 <option value="All">All</option>
                 <option value="Pending">Pending</option>
@@ -384,25 +491,100 @@ export default function DigitalRecordsReviewTab({
               </select>
             </div>
 
-            <div className="lg:col-span-1">
-              <label className="mb-1 block text-xs font-bold text-gray-700 uppercase">
-                Document Type
-              </label>
+            {/* Doc Type Filter */}
+            <div className="w-44 shrink-0">
+              <label className="mb-1 block text-xs font-bold text-gray-700 uppercase">Document Type</label>
               <select
-                className="h-10 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:border-pup-maroon focus:ring-2 focus:ring-pup-maroon focus:outline-none"
+                className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:border-pup-maroon focus:ring-2 focus:ring-pup-maroon focus:outline-none"
                 value={docTypeFilter}
-                onChange={(e) => {
-                  setDocTypeFilter(e.target.value)
-                  setCurrentPage(1)
-                }}
+                onChange={(e) => { setDocTypeFilter(e.target.value); setCurrentPage(1) }}
               >
                 <option value="All">All</option>
                 {activeDocTypes.map((docTypeName) => (
-                  <option key={docTypeName} value={docTypeName}>
-                    {docTypeName}
-                  </option>
+                  <option key={docTypeName} value={docTypeName}>{docTypeName}</option>
                 ))}
               </select>
+            </div>
+
+            {/* Date Range */}
+            <div className="flex min-w-[280px] flex-1 flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <label className="block text-xs font-bold text-gray-700 uppercase">Upload Date Range</label>
+                <div className="flex gap-1.5">
+                  {[{ label: "Today", days: 0 }, { label: "Last 7d", days: 7 }, { label: "Last 30d", days: 30 }].map(({ label, days }) => (
+                    <button
+                      key={label}
+                      onClick={() => {
+                        const end = new Date()
+                        const start = new Date()
+                        start.setDate(start.getDate() - days)
+                        start.setHours(0, 0, 0, 0)
+                        setDateFrom(format(start, "yyyy-MM-dd"))
+                        setDateTo(format(end, "yyyy-MM-dd"))
+                        setCurrentPage(1)
+                      }}
+                      className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon"
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn("h-10 flex-1 justify-start rounded-brand border-gray-300 text-left text-xs font-medium", !dateFrom && "text-muted-foreground")}
+                    >
+                      <i className="ph-bold ph-calendar-dots mr-2 text-base"></i>
+                      {dateFrom ? format(new Date(dateFrom), "PPP") : <span className="text-[10px] font-bold tracking-tight uppercase opacity-60">Start Date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto rounded-brand p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateFrom ? new Date(dateFrom) : undefined}
+                      onSelect={(date) => { setDateFrom(date ? format(date, "yyyy-MM-dd") : ""); setCurrentPage(1) }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn("h-10 flex-1 justify-start rounded-brand border-gray-300 text-left text-xs font-medium", !dateTo && "text-muted-foreground")}
+                    >
+                      <i className="ph-bold ph-calendar-dots mr-2 text-base"></i>
+                      {dateTo ? format(new Date(dateTo), "PPP") : <span className="text-[10px] font-bold tracking-tight uppercase opacity-60">End Date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto rounded-brand p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateTo ? new Date(dateTo) : undefined}
+                      onSelect={(date) => { setDateTo(date ? format(date, "yyyy-MM-dd") : ""); setCurrentPage(1) }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </div>
+
+            {/* Export CSV */}
+            <div className="w-36 shrink-0">
+              <label className="mb-1 block text-xs font-bold text-gray-700 uppercase opacity-0">Export</label>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportCSV}
+                disabled={sortedRecords.length === 0 || isExporting}
+                className="flex h-10 w-full items-center justify-center gap-1.5 rounded-brand border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-50"
+              >
+                <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv"} text-base`}></i>
+                {isExporting ? "PREPARING..." : "EXPORT CSV"}
+              </Button>
             </div>
           </div>
         </div>
@@ -464,125 +646,57 @@ export default function DigitalRecordsReviewTab({
                         />
                       </th>
                       <th className="p-3 font-bold">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100">
-                              Student Identity{" "}
-                              <SortIndicator
-                                column="student_name"
-                                sortBy={sortBy}
-                                sortOrder={sortOrder}
-                              />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="start"
-                            className="rounded-brand"
-                          >
-                            <DropdownMenuItem
-                              onClick={() => handleSort("student_name", "ASC")}
-                            >
-                              Ascending
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleSort("student_name", "DESC")}
-                            >
-                              Descending
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <button
+                          onClick={() => handleSort("student_name")}
+                          className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                        >
+                          Student Identity{" "}
+                          <SortIndicator
+                            column="student_name"
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                          />
+                        </button>
                       </th>
                       <th className="p-3 font-bold">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100">
-                              Document Type{" "}
-                              <SortIndicator
-                                column="doc_type"
-                                sortBy={sortBy}
-                                sortOrder={sortOrder}
-                              />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="start"
-                            className="rounded-brand"
-                          >
-                            <DropdownMenuItem
-                              onClick={() => handleSort("doc_type", "ASC")}
-                            >
-                              Ascending
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleSort("doc_type", "DESC")}
-                            >
-                              Descending
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <button
+                          onClick={() => handleSort("doc_type")}
+                          className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                        >
+                          Document Type{" "}
+                          <SortIndicator
+                            column="doc_type"
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                          />
+                        </button>
                       </th>
                       <th className="p-3 font-bold">Original File</th>
                       <th className="p-3 font-bold">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100">
-                              Review Status{" "}
-                              <SortIndicator
-                                column="approval_status"
-                                sortBy={sortBy}
-                                sortOrder={sortOrder}
-                              />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="start"
-                            className="rounded-brand"
-                          >
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleSort("approval_status", "ASC")
-                              }
-                            >
-                              Ascending
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() =>
-                                handleSort("approval_status", "DESC")
-                              }
-                            >
-                              Descending
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <button
+                          onClick={() => handleSort("approval_status")}
+                          className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                        >
+                          Review Status{" "}
+                          <SortIndicator
+                            column="approval_status"
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                          />
+                        </button>
                       </th>
                       <th className="p-3 font-bold">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100">
-                              Date Uploaded{" "}
-                              <SortIndicator
-                                column="created_at"
-                                sortBy={sortBy}
-                                sortOrder={sortOrder}
-                              />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent
-                            align="start"
-                            className="rounded-brand"
-                          >
-                            <DropdownMenuItem
-                              onClick={() => handleSort("created_at", "ASC")}
-                            >
-                              Ascending
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                              onClick={() => handleSort("created_at", "DESC")}
-                            >
-                              Descending
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
+                        <button
+                          onClick={() => handleSort("created_at")}
+                          className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                        >
+                          Date Uploaded{" "}
+                          <SortIndicator
+                            column="created_at"
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                          />
+                        </button>
                       </th>
                       <th className="p-3 text-right font-bold">Actions</th>
                     </tr>

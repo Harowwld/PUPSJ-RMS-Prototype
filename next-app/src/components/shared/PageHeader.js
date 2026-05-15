@@ -30,7 +30,10 @@ export default function PageHeader({
   onSearchChange,
   filters,
   actions,
+  extraChips, // Optional array of { label, value, onClear }
 }) {
+  const hasActiveFilters = searchValue || (extraChips && extraChips.length > 0)
+
   return (
     <div className="border-b border-gray-100 bg-gray-50/50 p-6 rounded-t-brand">
       <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
@@ -66,16 +69,6 @@ export default function PageHeader({
                   <label className="mb-1 block text-[10px] font-bold text-gray-700 uppercase tracking-wide">
                     {searchLabel}
                   </label>
-                  {searchValue && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onSearchChange("")}
-                      className="h-5 px-1.5 text-[9px] font-black text-pup-maroon hover:bg-red-50"
-                    >
-                      CLEAR
-                    </Button>
-                  )}
                 </div>
                 <div className="relative">
                   <i className="ph-bold ph-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"></i>
@@ -98,6 +91,59 @@ export default function PageHeader({
           )}
         </div>
       </div>
+
+      {/* Active Filter Chips Row */}
+      {hasActiveFilters && (
+        <div className="mt-4 flex flex-wrap items-center gap-2 animate-in fade-in slide-in-from-top-1 duration-300">
+          <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+            Active Filters:
+          </span>
+          {searchValue && (
+            <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon">
+              Search: {searchValue}
+              <button 
+                onClick={() => onSearchChange("")}
+                className="ml-1 transition-colors hover:text-pup-darkMaroon"
+              >
+                <i className="ph-bold ph-x text-[8px]"></i>
+              </button>
+            </div>
+          )}
+          {extraChips && extraChips.map((chip, idx) => (
+            <div 
+              key={idx}
+              className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-bold ${
+                chip.color === 'amber' ? 'border border-amber-100 bg-amber-50 text-amber-600' :
+                chip.color === 'emerald' ? 'border border-emerald-100 bg-emerald-50 text-emerald-600' :
+                'border border-blue-100 bg-blue-50 text-blue-600'
+              }`}
+            >
+              {chip.label}: {chip.value}
+              <button 
+                onClick={chip.onClear}
+                className={`ml-1 transition-colors ${
+                  chip.color === 'amber' ? 'hover:text-amber-800' :
+                  chip.color === 'emerald' ? 'hover:text-emerald-800' :
+                  'hover:text-blue-800'
+                }`}
+              >
+                <i className="ph-bold ph-x text-[8px]"></i>
+              </button>
+            </div>
+          ))}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              if (onSearchChange) onSearchChange("")
+              if (extraChips) extraChips.forEach(c => c.onClear())
+            }}
+            className="h-6 rounded-full border border-dashed border-pup-maroon/30 px-3 text-[10px] font-black text-pup-maroon transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-darkMaroon"
+          >
+            CLEAR ALL FILTERS
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

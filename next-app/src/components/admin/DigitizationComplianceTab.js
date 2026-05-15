@@ -31,6 +31,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import PageHeader from "@/components/shared/PageHeader";
+import { STATUS_COLORS } from "@/lib/constants";
 
 export default function DigitizationComplianceTab({
   showToast,
@@ -45,6 +46,38 @@ export default function DigitizationComplianceTab({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
+  const [pdfBlobUrl, setPdfPreviewUrl] = useState(null);
+  const [previewFrameReady, setPreviewFrameReady] = useState(false);
+  const [isFullscreenPreview, setIsFullscreenPreview] = useState(false);
+
+  const [sortBy, setSortBy] = useState("courseCode");
+  const [sortOrder, setSortOrder] = useState("asc");
+
+  const handleSort = (column) => {
+    if (sortBy === column) {
+      if (sortOrder === "asc") {
+        setSortOrder("desc");
+      } else {
+        setSortBy("courseCode");
+        setSortOrder("asc");
+      }
+    } else {
+      setSortBy(column);
+      setSortOrder("asc");
+    }
+  };
+
+  const SortIndicator = ({ column }) => {
+    if (sortBy !== column)
+      return (
+        <i className="ph-bold ph-caret-up-down ml-1 opacity-0 transition-opacity group-hover:opacity-50"></i>
+      );
+    return sortOrder === "asc" ? (
+      <i className="ph-bold ph-caret-up ml-1 text-pup-maroon"></i>
+    ) : (
+      <i className="ph-bold ph-caret-down ml-1 text-pup-maroon"></i>
+    );
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -94,7 +127,7 @@ export default function DigitizationComplianceTab({
       setData(null);
       setError(e?.message || "Load failed");
       showToast?.(
-        { title: "Load Failed", description: e?.message || "Unable to load report." },
+        { title: "Compliance Data Load Failed", description: e?.message || "The system was unable to retrieve digitization compliance statistics." },
         true
       );
     } finally {
@@ -118,9 +151,25 @@ export default function DigitizationComplianceTab({
     () => (Array.isArray(data?.byCourse) ? data.byCourse : []),
     [data?.byCourse]
   );
+  const sortedByCourse = useMemo(() => {
+    return [...byCourse].sort((a, b) => {
+      let valA = a[sortBy];
+      let valB = b[sortBy];
+
+      if (typeof valA === "string") {
+        valA = valA.toLowerCase();
+        valB = (valB || "").toLowerCase();
+      }
+
+      if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+      if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [byCourse, sortBy, sortOrder]);
+
   const showByCourse = useMemo(
-    () => byCourse.length > 0 && !String(courseFilter || "").trim(),
-    [byCourse, courseFilter]
+    () => sortedByCourse.length > 0 && !String(courseFilter || "").trim(),
+    [sortedByCourse, courseFilter]
   );
 
   const progressWidth = useMemo(() => {
@@ -129,29 +178,52 @@ export default function DigitizationComplianceTab({
     return Math.min(100, Math.max(0, p));
   }, [summary]);
 
-  const handlePrint = async () => {
+  const handlePreview = async () => {
+    if (!data || loading) return;
     try {
       const blob = await generateDigitizationCompliancePdf(data, summary, meta, byCourse);
       const url = URL.createObjectURL(blob);
+      setPdfPreviewUrl(url);
+      setReportOpen(true);
+    } catch (e) {
+      console.error("PDF Preview generation failed:", e);
+      showToast?.({ title: "Preview Failed", description: "Failed to generate compliance report preview." }, true);
+    }
+  }
+
+  const handlePrint = async () => {
+    if (!pdfBlobUrl) {
+      try {
+        const blob = await generateDigitizationCompliancePdf(data, summary, meta, byCourse);
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `pup-rks-compliance-report-${new Date().toISOString().split("T")[0]}.pdf`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      } catch (e) {
+        console.error("PDF Generation failed:", e);
+        showToast?.({ title: "Report Generation Failed", description: "An error occurred while generating the PDF report." }, true);
+        return;
+      }
+    } else {
       const link = document.createElement("a");
-      link.href = url;
+      link.href = pdfBlobUrl;
       link.download = `pup-rks-compliance-report-${new Date().toISOString().split("T")[0]}.pdf`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-      
-      onLogAction?.({
-        action: "Generate Report",
-        details: `generated formal physical record compliance report (Status: ${statusFilter}, Course: ${courseFilter || 'All'}) for university accreditation files`,
-        entityType: "Report"
-      });
-      
-      showToast?.({ title: "Success", description: "Report downloaded successfully." });
-    } catch (e) {
-      console.error("PDF Generation failed:", e);
-      showToast?.({ title: "Error", description: "Failed to generate PDF report." }, true);
     }
+
+    onLogAction?.({
+      action: "Generate Report",
+      details: `generated formal physical record compliance report (Status: ${statusFilter}, Course: ${courseFilter || 'All'}) for university accreditation files`,
+      entityType: "Report"
+    });
+
+    showToast?.({ title: "Report Downloaded", description: "The Compliance report has been successfully downloaded." });
   };
 
   const downloadCsv = useCallback(() => {
@@ -198,15 +270,14 @@ export default function DigitizationComplianceTab({
     }
 
     const csvContent = lines.join("\n");
+    const now = new Date();
+    const fileName = `PUP-RKS-COMPLIANCE-DATA-${format(now, "yyyy-MM-dd-HHmm")}.csv`;
 
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
-    link.setAttribute(
-      "download",
-      `system-analytics-${new Date().toISOString().split("T")[0]}.csv`
-    );
+    link.setAttribute("download", fileName);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -214,7 +285,7 @@ export default function DigitizationComplianceTab({
 
     onLogAction?.({
       action: "Export CSV",
-      details: `exported digitization compliance dataset (Status: ${statusFilter}, Course: ${courseFilter || 'All'}) to local CSV storage volume`,
+      details: `exported digitization compliance dataset (${fileName}) to local CSV storage volume`,
       entityType: "Report"
     });
   }, [summary, meta, byCourse, showByCourse, onLogAction, statusFilter, courseFilter]);
@@ -377,8 +448,8 @@ export default function DigitizationComplianceTab({
             <div className="h-full flex items-center justify-center">
               <Skeleton className="h-64 w-full rounded-brand" />
             </div>
-          ) : (
-            <>
+          ) : data ? (
+            <div className={cn("transition-opacity duration-300", loading && "opacity-40")}>
               {/* Stats Cards - PUP Maroon Theme */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
 
@@ -494,14 +565,48 @@ export default function DigitizationComplianceTab({
                     <table className="min-w-full text-sm">
                       <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
                         <tr className="text-left text-[11px] uppercase tracking-wider text-gray-600">
-                          <th className="p-4 font-bold">Course Code</th>
-                          <th className="p-4 font-bold text-center">Total Students</th>
-                          <th className="p-4 font-bold text-emerald-600 text-center">Fully Digitized</th>
-                          <th className="p-4 font-bold text-pup-maroon text-right w-44">Avg. Completeness</th>
+                          <th className="p-4 font-bold">
+                            <button
+                              onClick={() => handleSort("courseCode")}
+                              className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                            >
+                              Course Code <SortIndicator column="courseCode" />
+                            </button>
+                          </th>
+                          <th className="p-4 font-bold text-center">
+                            <div className="flex justify-center">
+                              <button
+                                onClick={() => handleSort("total")}
+                                className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                              >
+                                Total Students <SortIndicator column="total" />
+                              </button>
+                            </div>
+                          </th>
+                          <th className="p-4 font-bold text-emerald-600 text-center">
+                            <div className="flex justify-center">
+                              <button
+                                onClick={() => handleSort("digitized")}
+                                className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                              >
+                                Fully Digitized <SortIndicator column="digitized" />
+                              </button>
+                            </div>
+                          </th>
+                          <th className="p-4 font-bold text-pup-maroon text-right w-44">
+                            <div className="flex justify-end">
+                              <button
+                                onClick={() => handleSort("percent")}
+                                className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                              >
+                                Avg. Completeness <SortIndicator column="percent" />
+                              </button>
+                            </div>
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100">
-                        {byCourse.map((row) => (
+                        {sortedByCourse.map((row) => (
                           <tr key={row.courseCode} className="hover:bg-gray-50 group transition-colors">
                             <td className="p-4 font-mono font-bold text-gray-900 text-xs">{row.courseCode || "—"}</td>
                             <td className="p-4 text-gray-700 font-medium text-center">{row.total?.toLocaleString?.() ?? row.total}</td>
@@ -548,173 +653,91 @@ export default function DigitizationComplianceTab({
                   </EmptyHeader>
                 </Empty>
               )}
-            </>
-          )}
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 
       {/* Report Preview Modal */}
-      <Dialog open={reportOpen} onOpenChange={reportOpen ? () => setReportOpen(false) : undefined}>
-        <DialogContent className="w-[96vw] max-w-[96vw] xl:max-w-[1200px] h-[90vh] p-0 flex flex-col overflow-hidden bg-gray-100 border border-gray-200 shadow-2xl rounded-brand">
+      <Dialog
+        open={reportOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            if (pdfBlobUrl) URL.revokeObjectURL(pdfBlobUrl)
+            setPdfPreviewUrl(null)
+            setPreviewFrameReady(false)
+            setIsFullscreenPreview(false)
+          }
+          setReportOpen(open)
+        }}
+      >
+        <DialogContent 
+          hideClose={isFullscreenPreview}
+          className={cn(
+            "flex flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out",
+            isFullscreenPreview 
+                ? "fixed h-screen w-screen max-w-none sm:max-w-none m-0 rounded-none z-[100] left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] sm:w-screen sm:h-screen" 
+                : "h-[90vh] w-[96vw] max-w-[96vw] xl:max-w-[1200px] rounded-brand"
+        )}>
           <DialogHeader className="bg-gray-50/50 border-b border-gray-100 p-6 shrink-0">
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
-                <i className="ph-duotone ph-file-text text-2xl"></i>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon shadow-sm shrink-0">
+                  <i className="ph-duotone ph-file-text text-2xl"></i>
+                </div>
+                <div className="min-w-0">
+                  <DialogTitle className="text-xl font-black text-gray-900 tracking-tight leading-none text-left">
+                    Formal Compliance Report
+                  </DialogTitle>
+                  <p className="text-sm font-medium text-gray-500 mt-1.5 text-left">
+                    Filter: {statusFilter} | {courseFilter || "All Courses"} {requireApproved && " | Approved Only"}
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0">
-                <DialogTitle className="text-xl font-black text-gray-900 tracking-tight leading-none text-left">
-                  Formal Compliance Report
-                </DialogTitle>
-                <p className="text-sm font-medium text-gray-500 mt-1.5 text-left">
-                  This document is formatted for formal accreditation submission. Review the narrative summary and statistical data below.
-                </p>
+
+              <div className={cn("flex items-center gap-2", !isFullscreenPreview && "mr-8")}>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
+                    className="h-10 gap-2 rounded-brand border-gray-300 bg-white font-bold text-gray-700 hover:bg-gray-50 active:scale-95 shadow-sm"
+                >
+                    <i className={cn("ph-bold", isFullscreenPreview ? "ph-corners-in" : "ph-corners-out")} />
+                    {isFullscreenPreview ? "EXIT FULL SCREEN" : "FULL SCREEN"}
+                </Button>
               </div>
             </div>
           </DialogHeader>
 
-          <div className="flex-1 overflow-auto p-10 flex flex-col items-center gap-10 scroll-smooth bg-gray-200/50">
-            {/* PAGE 1: EXECUTIVE SUMMARY */}
-            <div className="printable-report w-[210mm] min-h-[297mm] bg-white shadow-2xl p-[25mm] flex flex-col box-border shrink-0">
-              <div className="flex flex-col items-center text-center border-b-2 border-pup-maroon pb-6 mb-10">
-                <img src="/assets/pup-logo.webp" alt="PUP Logo" className="w-20 h-20 mb-4" />
-                <h1 className="text-2xl font-black text-pup-maroon uppercase tracking-tight leading-tight">Polytechnic University of the Philippines - San Juan City Campus</h1>
-                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em] mt-1">Admission and Registration Office</p>
-                <h2 className="text-xl font-bold text-gray-800 uppercase tracking-widest mt-6">Digitization Compliance Report</h2>
-                <p className="text-sm text-gray-500 mt-2 font-medium italic">Document ID: PUP-RKS-ANL-{new Date().getFullYear()}-{Math.floor(Math.random() * 10000)}</p>
-              </div>
-
-              <div className="space-y-6 text-gray-800 leading-relaxed text-sm">
-                <div className="mb-8 bg-gray-50 p-4 border border-gray-100 rounded-lg">
-                  <div className="space-y-1">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date</p>
-                    <p className="font-black text-gray-700">{reportDate}</p>
+          <div className="relative flex-1 overflow-hidden bg-gray-100">
+            {pdfBlobUrl ? (
+              <div className="relative h-full w-full">
+                {!previewFrameReady && (
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white p-10">
+                    <div className="w-full max-w-2xl space-y-4">
+                      <Skeleton className="h-8 w-64" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-[60vh] w-full" />
+                    </div>
                   </div>
-                </div>
-
-                <h3 className="text-base font-black text-gray-900 uppercase tracking-wider border-b border-gray-200 pb-2">I. Executive Summary</h3>
-                <p>
-                  This document serves as the official compliance assessment regarding the digitization of student records at the Polytechnic University of the Philippines - San Juan City Campus.
-                </p>
-
-                <div className="bg-gray-50 border border-gray-100 p-6 rounded-lg space-y-4">
-                  <p className="text-sm font-medium text-gray-700">
-                    As of the current reporting period, the student population is distributed across the following academic batches:
+                )}
+                <iframe
+                  src={`${pdfBlobUrl}#toolbar=0&navpanes=0`}
+                  className="h-full w-full border-none"
+                  onLoad={() => setPreviewFrameReady(true)}
+                  title="Compliance Report Preview"
+                />
+              </div>
+            ) : (
+              <div className="flex h-full w-full flex-col items-center justify-center bg-white p-10">
+                <div className="flex flex-col items-center gap-4">
+                  <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon" />
+                  <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">
+                    Generating Report Preview...
                   </p>
-
-                  <div className="w-full">
-                    <div className="flex justify-between text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2 px-1">
-                      <span>Academic Year / Batch</span>
-                      <span>Total Student Count</span>
-                    </div>
-                    <div className="space-y-2">
-                      {(data?.byYear || []).map(y => (
-                        <div key={y.year} className="flex items-end gap-2 text-xs px-1">
-                          <span className="font-bold text-gray-700 whitespace-nowrap">Batch {y.year}</span>
-                          <div className="flex-1 border-b border-dotted border-gray-300 mb-1"></div>
-                          <span className="font-mono text-pup-maroon font-black whitespace-nowrap">{y.count} Students</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <p>
-                  The primary objective of this audit is to measure the completeness of the digital archives against the mandatory document set defined by university policy and accreditation requirements.
-                  The current system configuration requires a total of <strong>{meta?.definitions?.configuredDocTypes?.length || 0} unique document types</strong> per student record.
-                </p>
-                <p>
-                  Based on the comprehensive audit performed by the Records Keeping System (RKS), the total percentage of digitized records currently stands at <strong>{summary?.percentDigitized}%</strong>.
-                  This represents a verified volume of <strong>{summary?.totalDigitizedDocsCount?.toLocaleString()}</strong> digital files out of the <strong>{summary?.totalExpectedDocsCount?.toLocaleString()}</strong> documents required for full compliance.
-                </p>
-              </div>
-
-              <div className="mt-auto pt-12 flex justify-end border-t border-gray-100">
-                <div className="text-right italic text-[10px] text-gray-400 flex items-end">
-                  Page 1 of 2
                 </div>
               </div>
-            </div>
-
-            {/* PAGE 2: STATISTICAL BREAKDOWN & SIGNATURES */}
-            <div className="printable-report w-[210mm] min-h-[297mm] bg-white shadow-2xl p-[25mm] flex flex-col box-border shrink-0">
-              <div className="space-y-6 text-gray-800 leading-relaxed text-sm">
-                <h3 className="text-base font-black text-gray-900 uppercase tracking-wider border-b border-gray-200 pb-2">II. Program-Specific Breakdown</h3>
-                <p>
-                  The following table provides a detailed analysis of digitization progress categorized by Academic Program.
-                  This breakdown identifies areas of high performance and highlights programs that may require additional resources to meet compliance targets.
-                </p>
-
-                <div className="mt-6 border border-gray-200 rounded-sm overflow-hidden">
-                  <table className="w-full border-collapse">
-                    <thead className="bg-gray-50">
-                      <tr className="text-[10px] font-bold uppercase text-gray-600">
-                        <th className="p-4 text-left border-b border-gray-200">Academic Program (Course Code)</th>
-                        <th className="p-4 text-center border-b border-gray-200 w-24">Enrolled</th>
-                        <th className="p-4 text-center border-b border-gray-200 w-24 text-emerald-700">Complete</th>
-                        <th className="p-4 text-right border-b border-gray-200 w-32">Avg. Progress</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {byCourse.map(c => (
-                        <tr key={c.courseCode} className="text-xs">
-                          <td className="p-4 font-bold text-gray-900">{c.courseCode}</td>
-                          <td className="p-4 text-center">{c.total}</td>
-                          <td className="p-4 text-center font-bold text-emerald-600">{c.digitized}</td>
-                          <td className="p-4 text-right">
-                            <div className="flex flex-col items-end gap-1">
-                              <span className="font-mono font-bold text-pup-maroon">{c.percent}%</span>
-                              <div className="w-24 h-1 bg-gray-100 rounded-full overflow-hidden no-print">
-                                <div className="h-full bg-pup-maroon" style={{ width: `${c.percent}%` }}></div>
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                <h3 className="text-base font-black text-gray-900 uppercase tracking-wider border-b border-gray-200 pb-2 mt-12">III. Certification Statement</h3>
-                <p>
-                  We hereby certify that the data presented in this report is an accurate representation of the digital archives maintained by the Polytechnic University of the Philippines - San Juan City Campus.
-                  The metrics have been generated through the Records Keeping System (RKS) audit engine, reflecting real-time synchronization with the physical student folders.
-                </p>
-              </div>
-
-              <div className="mt-auto pt-12 flex flex-col gap-10 border-t border-gray-100">
-                <div className="grid grid-cols-2 gap-10">
-                  <div className="flex flex-col gap-1">
-                    <p className="text-[9px] font-bold text-gray-400 uppercase">Prepared By</p>
-                    <div className="mt-6">
-                      <div className="w-full border-b border-gray-900"></div>
-                      <p className="text-[10px] font-bold text-gray-900 uppercase mt-1">Administrative Staff</p>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col gap-1">
-                    <p className="text-[9px] font-bold text-gray-400 uppercase">Checked By</p>
-                    <div className="mt-6">
-                      <div className="w-full border-b border-gray-900"></div>
-                      <p className="text-[10px] font-bold text-gray-900 uppercase mt-1">Campus Registrar</p>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex flex-col gap-1">
-                  <p className="text-[9px] font-bold text-gray-400 uppercase">Noted By</p>
-                  <div className="mt-6">
-                    <div className="w-64 border-b border-gray-900"></div>
-                    <p className="text-[10px] font-bold text-gray-900 uppercase mt-1">Campus Director</p>
-                  </div>
-                </div>
-
-                <div className="flex justify-end pt-4">
-                  <div className="text-right italic text-[10px] text-gray-400">
-                    Page 2 of 2
-                  </div>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
 
           <div className="p-4 border-t border-gray-100 bg-white flex justify-end gap-3 shrink-0">
@@ -727,6 +750,7 @@ export default function DigitizationComplianceTab({
             </Button>
             <Button
               onClick={handlePrint}
+              disabled={!pdfBlobUrl}
               className="h-11 px-8 bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 flex items-center gap-2 rounded-brand transition-colors"
             >
               <i className="ph-bold ph-printer text-lg"></i> FINALIZE AND PRINT REPORT

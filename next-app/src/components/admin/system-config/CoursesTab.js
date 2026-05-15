@@ -105,10 +105,10 @@ export default function CoursesTab({
         setNewCourseName("")
       }
 
-      showToast({ title: "Success", description: "Degree program added." })
+      showToast({ title: "Degree Program Added", description: "The new degree program has been successfully registered in the system." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast({ title: "Error", description: err.message }, true)
+      showToast({ title: "Registration Failed", description: err.message }, true)
     } finally {
       if (overrideData) setIsQuickAddLoading(false)
     }
@@ -132,12 +132,12 @@ export default function CoursesTab({
       setIsEditCourseOpen(false)
       setEditCourseBlocks([""])
       showToast({
-        title: "Success",
-        description: "Degree program and blocks updated.",
+        title: "Degree Program Updated",
+        description: "The changes to the degree program and its associated blocks have been successfully saved.",
       })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast({ title: "Error", description: err.message }, true)
+      showToast({ title: "Update Failed", description: err.message }, true)
     }
   }
 
@@ -147,10 +147,10 @@ export default function CoursesTab({
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Archive failed")
       setConfirmOpen(false)
-      showToast({ title: "Success", description: "Degree program archived." })
+      showToast({ title: "Degree Program Archived", description: "The selected degree program has been successfully moved to the archive." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast({ title: "Error", description: err.message }, true)
+      showToast({ title: "Archival Failed", description: err.message }, true)
     }
   }
 
@@ -162,10 +162,10 @@ export default function CoursesTab({
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Restore failed")
       setConfirmOpen(false)
-      showToast({ title: "Success", description: "Degree program restored." })
+      showToast({ title: "Degree Program Restored", description: "The degree program has been successfully restored from the archive." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast({ title: "Error", description: err.message }, true)
+      showToast({ title: "Restoration Failed", description: err.message }, true)
     }
   }
 
@@ -247,6 +247,8 @@ export default function CoursesTab({
       message: `Apply ${showArchived ? "restoration" : "archival"} to the following ${selectedCount} degree programs?`,
       confirmLabel: showArchived ? "Restore Selected" : "Archive Selected",
       variant: showArchived ? "success" : "danger",
+      buttonIcon: showArchived ? "ph-bold ph-arrow-counter-clockwise" : "ph-bold ph-archive",
+      icon: showArchived ? "ph-duotone ph-arrow-counter-clockwise" : "ph-duotone ph-archive",
       selectedItems: selectedNames,
       onConfirm: () => executeBulkTaxonomyAction("Course", showArchived ? "restore" : "delete"),
     })
@@ -287,6 +289,7 @@ export default function CoursesTab({
           searchLabel="Search Degree Programs"
           searchValue={localSearch}
           onSearchChange={setLocalSearch}
+          extraChips={showArchived ? [{ label: "Mode", value: "Archived Records", onClear: () => setShowArchived(false) }] : []}
           filters={
             <div className="inline-flex h-10 items-center rounded-lg border border-gray-200 bg-gray-100 p-1 shadow-sm">
               <button
@@ -372,48 +375,20 @@ export default function CoursesTab({
                     />
                   </th>
                   <th className="w-48 p-3 px-6 font-bold">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100">
-                          Code <SortIndicator column="code" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="start"
-                        className="rounded-brand"
-                      >
-                        <DropdownMenuItem onClick={() => onSort("code", "asc")}>
-                          Ascending
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => onSort("code", "desc")}
-                        >
-                          Descending
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <button
+                      onClick={() => onSort("code")}
+                      className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                    >
+                      Code <SortIndicator column="code" />
+                    </button>
                   </th>
                   <th className="p-3 px-6 font-bold">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100">
-                          Designation <SortIndicator column="name" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="start"
-                        className="rounded-brand"
-                      >
-                        <DropdownMenuItem onClick={() => onSort("name", "asc")}>
-                          Ascending
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => onSort("name", "desc")}
-                        >
-                          Descending
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <button
+                      onClick={() => onSort("name")}
+                      className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                    >
+                      Designation <SortIndicator column="name" />
+                    </button>
                   </th>
                   <th className="w-40 p-3 px-6 font-bold uppercase text-gray-600 text-left">Status</th>
                 <th className="w-32 p-3 px-6 text-right font-bold">Actions</th>
@@ -421,10 +396,10 @@ export default function CoursesTab({
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {!showArchived && (
-                  <tr className="bg-gray-50/30 transition-colors hover:bg-gray-50/50">
+                  <tr className={`transition-all duration-300 ${(newCourseCode.trim() || newCourseName.trim()) ? "bg-amber-50/50 hover:bg-amber-100/50" : "bg-gray-50/30 hover:bg-gray-50/50"}`}>
                     <td className="p-3 px-6 text-center">
-                      <div className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-dashed border-gray-300">
-                        <i className="ph-bold ph-plus text-[10px] text-gray-400"></i>
+                      <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 border-dashed transition-colors ${(newCourseCode.trim() || newCourseName.trim()) ? "border-amber-400" : "border-gray-300"}`}>
+                        <i className={`ph-bold text-[10px] ${(newCourseCode.trim() || newCourseName.trim()) ? "ph-pencil-simple text-amber-600 animate-bounce" : "ph-plus text-gray-400"}`}></i>
                       </div>
                     </td>
                     <td className="p-3 px-6">
@@ -432,7 +407,7 @@ export default function CoursesTab({
                         placeholder="CODE (e.g. BSIT)"
                         value={newCourseCode}
                         onChange={(e) => setNewCourseCode(e.target.value.toUpperCase())}
-                        className="h-9 w-40 rounded-brand border-gray-300 bg-white text-xs font-bold focus-visible:border-pup-maroon focus-visible:ring-pup-maroon"
+                        className={`h-9 w-40 rounded-brand border-gray-300 bg-white text-xs font-black transition-all focus-visible:ring-pup-maroon ${(newCourseCode.trim() || newCourseName.trim()) ? "border-amber-400 ring-1 ring-amber-100" : "focus-visible:border-pup-maroon"}`}
                       />
                     </td>
                     <td className="p-3 px-6">
@@ -442,32 +417,45 @@ export default function CoursesTab({
                           value={newCourseName}
                           onChange={(e) => setNewCourseName(e.target.value)}
                           onKeyDown={(e) => {
-                            if (e.key === "Enter") addCourse(null, { code: newCourseCode, name: newCourseName })
+                            if (e.key === "Enter") {
+                               e.preventDefault();
+                               addCourse(null, { code: newCourseCode, name: newCourseName });
+                            }
                           }}
-                          className="h-9 flex-1 rounded-brand border-gray-300 bg-white text-sm focus-visible:border-pup-maroon focus-visible:ring-pup-maroon"
+                          className={`h-9 flex-1 rounded-brand border-gray-300 bg-white text-sm transition-all focus-visible:ring-pup-maroon ${(newCourseCode.trim() || newCourseName.trim()) ? "border-amber-400 ring-2 ring-amber-100" : "focus-visible:border-pup-maroon"}`}
                         />
                         <Button
                         size="sm"
                         disabled={!newCourseCode.trim() || !newCourseName.trim() || isQuickAddLoading}
                         onClick={() => addCourse(null, { code: newCourseCode, name: newCourseName })}
-                        className="h-9 rounded-brand bg-pup-maroon px-4 text-xs font-bold text-white shadow-sm hover:bg-red-900 active:scale-95 disabled:opacity-50"
+                        className={`h-9 rounded-brand px-4 text-xs font-bold text-white shadow-sm transition-all active:scale-95 disabled:opacity-50 ${(newCourseCode.trim() || newCourseName.trim()) ? "bg-amber-600 hover:bg-amber-700" : "bg-pup-maroon hover:bg-red-900"}`}
                         >
                         {isQuickAddLoading ? (
                           <i className="ph-bold ph-spinner animate-spin"></i>
                         ) : (
                           <>
-                            <i className="ph-bold ph-plus mr-2"></i> ADD
+                            <i className={`ph-bold mr-2 ${(newCourseCode.trim() || newCourseName.trim()) ? "ph-check" : "ph-plus"}`}></i> 
+                            {(newCourseCode.trim() || newCourseName.trim()) ? "SAVE" : "ADD"}
                           </>
                         )}
                         </Button>                      </div>
                     </td>
                     <td className="p-3 px-6">
-                      <Badge
-                        variant="outline"
-                        className="border-gray-200 bg-gray-100 px-2 py-0.5 text-[9px] font-bold tracking-wider text-gray-400 uppercase"
-                      >
-                        NEW RECORD
-                      </Badge>
+                      {(newCourseCode.trim() || newCourseName.trim()) ? (
+                        <Badge
+                          variant="outline"
+                          className="border-amber-200 bg-amber-50 px-2 py-0.5 text-[9px] font-black tracking-wider text-amber-700 uppercase animate-pulse"
+                        >
+                          UNSAVED DRAFT
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="border-gray-200 bg-gray-100 px-2 py-0.5 text-[9px] font-bold tracking-wider text-gray-400 uppercase"
+                        >
+                          NEW RECORD
+                        </Badge>
+                      )}
                     </td>
                     <td className="p-3 px-6 text-right"></td>
                   </tr>
@@ -550,9 +538,11 @@ export default function CoursesTab({
                             onClick={() => {
                               setConfirmPayload({
                                 title: "Restore Degree Program",
-                                message: `Restore "${c.code} - ${c.name}"? This will allow new registrations for this program.`,
+                                message: "Restore this degree program? This will allow new registrations for this program.",
                                 confirmLabel: "Restore",
                                 variant: "success",
+                                buttonIcon: "ph-bold ph-arrow-counter-clockwise",
+                                icon: "ph-duotone ph-arrow-counter-clockwise",
                                 selectedItems: [`${c.code} - ${c.name}`],
                                 onConfirm: () => resCourse(c.id, c.code),
                               })
@@ -570,9 +560,11 @@ export default function CoursesTab({
                             onClick={() => {
                               setConfirmPayload({
                                 title: "Archive Degree Program",
-                                message: `Archive "${c.code} - ${c.name}"? Existing records will remain, but no new registrations can use this program.`,
+                                message: "Archive this degree program? Existing records will remain, but no new registrations can use this program.",
                                 confirmLabel: "Archive",
                                 variant: "danger",
+                                buttonIcon: "ph-bold ph-archive",
+                                icon: "ph-duotone ph-archive",
                                 selectedItems: [`${c.code} - ${c.name}`],
                                 onConfirm: () => delCourse(c.id, c.code),
                               })
@@ -768,8 +760,8 @@ export default function CoursesTab({
           </DialogHeader>
           <form onSubmit={addCourse}>
             <div className="max-h-[60vh] overflow-y-auto p-6 space-y-6">
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-4">
-                <div className="sm:col-span-1">
+              <div className="space-y-6">
+                <div>
                   <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase">
                     Code <span className="text-pup-maroon">*</span>
                   </label>
@@ -784,7 +776,7 @@ export default function CoursesTab({
                     required
                   />
                 </div>
-                <div className="sm:col-span-3">
+                <div>
                   <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase">
                     Program Designation <span className="text-pup-maroon">*</span>
                   </label>
@@ -903,8 +895,8 @@ export default function CoursesTab({
           </DialogHeader>
           <form onSubmit={updCourse}>
             <div className="max-h-[60vh] overflow-y-auto p-6 space-y-6">
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-4">
-                <div className="sm:col-span-1">
+              <div className="space-y-6">
+                <div>
                   <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase">
                     Code <span className="text-pup-maroon">*</span>
                   </label>
@@ -921,7 +913,7 @@ export default function CoursesTab({
                     required
                   />
                 </div>
-                <div className="sm:col-span-3">
+                <div>
                   <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase">
                     Program Designation <span className="text-pup-maroon">*</span>
                   </label>
@@ -984,7 +976,7 @@ export default function CoursesTab({
                           }}
                           className="h-10 w-10 shrink-0 text-gray-400 hover:text-red-600"
                         >
-                          <i className="ph-bold ph-trash"></i>
+                          <i className="ph-bold ph-archive"></i>
                         </Button>
                       )}
                     </div>

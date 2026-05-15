@@ -207,92 +207,56 @@ export default function LogTable({
                 </Tooltip>
               </th>
               <th className="w-40 p-3 font-bold">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100">
-                      Timestamp{" "}
-                      <SortIndicator
-                        column="created_at"
-                        logSortBy={logSortBy}
-                        logSortOrder={logSortOrder}
-                      />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="rounded-brand">
-                    <DropdownMenuItem onClick={() => handleSort("created_at", "ASC")}>
-                      Ascending
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleSort("created_at", "DESC")}>
-                      Descending
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <button
+                  onClick={() => handleSort("created_at")}
+                  className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                >
+                  Timestamp{" "}
+                  <SortIndicator
+                    column="created_at"
+                    logSortBy={logSortBy}
+                    logSortOrder={logSortOrder}
+                  />
+                </button>
               </th>
               <th className="w-24 p-3 font-bold">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100">
-                      Severity{" "}
-                      <SortIndicator
-                        column="severity"
-                        logSortBy={logSortBy}
-                        logSortOrder={logSortOrder}
-                      />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="rounded-brand">
-                    <DropdownMenuItem onClick={() => handleSort("severity", "ASC")}>
-                      Ascending
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleSort("severity", "DESC")}>
-                      Descending
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <button
+                  onClick={() => handleSort("severity")}
+                  className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                >
+                  Severity{" "}
+                  <SortIndicator
+                    column="severity"
+                    logSortBy={logSortBy}
+                    logSortOrder={logSortOrder}
+                  />
+                </button>
               </th>
               <th className="w-44 p-3 font-bold">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100">
-                      User / Actor{" "}
-                      <SortIndicator
-                        column="actor"
-                        logSortBy={logSortBy}
-                        logSortOrder={logSortOrder}
-                      />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="rounded-brand">
-                    <DropdownMenuItem onClick={() => handleSort("actor", "ASC")}>
-                      Ascending
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleSort("actor", "DESC")}>
-                      Descending
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <button
+                  onClick={() => handleSort("actor")}
+                  className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                >
+                  User / Actor{" "}
+                  <SortIndicator
+                    column="actor"
+                    logSortBy={logSortBy}
+                    logSortOrder={logSortOrder}
+                  />
+                </button>
               </th>
               <th className="w-44 p-3 font-bold">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100">
-                      Action{" "}
-                      <SortIndicator
-                        column="action"
-                        logSortBy={logSortBy}
-                        logSortOrder={logSortOrder}
-                      />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="rounded-brand">
-                    <DropdownMenuItem onClick={() => handleSort("action", "ASC")}>
-                      Ascending
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleSort("action", "DESC")}>
-                      Descending
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <button
+                  onClick={() => handleSort("action")}
+                  className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                >
+                  Action{" "}
+                  <SortIndicator
+                    column="action"
+                    logSortBy={logSortBy}
+                    logSortOrder={logSortOrder}
+                  />
+                </button>
               </th>
               <th className="p-3 font-bold">Rich Details</th>
               <th className="w-20 p-3 text-center font-bold">Details</th>

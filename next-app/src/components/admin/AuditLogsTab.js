@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { formatPHDateTime } from "@/lib/timeFormat"
 import { format } from "date-fns"
@@ -13,6 +14,7 @@ import LogFilters from "./audit-logs/LogFilters"
 import LogTable from "./audit-logs/LogTable"
 import LogDetailSheet from "./audit-logs/LogDetailSheet"
 import PdfPreviewDialog from "./audit-logs/PdfPreviewDialog"
+import PageHeader from "@/components/shared/PageHeader"
 
 export default function AuditLogsTab({
   displayLogs,
@@ -50,10 +52,18 @@ export default function AuditLogsTab({
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false)
   const [pdfBlobUrl, setPdfPreviewUrl] = useState(null)
   const [previewFrameReady, setPreviewFrameReady] = useState(false)
+  const [isFullscreenPreview, setIsFullscreenPreview] = useState(false)
 
   useEffect(() => {
     setJumpPage(String(logPage))
   }, [logPage])
+
+  const getFileName = (type, ext) => {
+    const now = new Date();
+    const date = format(now, "yyyy-MM-dd");
+    const time = format(now, "HHmm");
+    return `PUP-AUDIT-LOGS-${type}-${date}-${time}.${ext}`;
+  }
 
   // Debounced Search
   useEffect(() => {
@@ -69,7 +79,20 @@ export default function AuditLogsTab({
   const handleSearchChange = (e) => setLocalSearch(e.target.value)
   const handleRoleChange = (e) => { setLogRoleFilter(e.target.value); setLogPage(1) }
   const handleSeverityChange = (e) => { setLogSeverityFilter(e.target.value); setLogPage(1) }
-  const handleSort = (column, order) => { setLogSortBy(column); setLogSortOrder(order); setLogPage(1) }
+  const handleSort = (column) => {
+    if (logSortBy === column) {
+      if (logSortOrder === "ASC") {
+        setLogSortOrder("DESC")
+      } else {
+        setLogSortBy("created_at")
+        setLogSortOrder("DESC")
+      }
+    } else {
+      setLogSortBy(column)
+      setLogSortOrder("ASC")
+    }
+    setPage(1)
+  }
 
   const fetchAllForExport = async () => {
     const roleQuery = logRoleFilter !== "All" ? `&role=${encodeURIComponent(logRoleFilter)}` : ""
@@ -107,10 +130,11 @@ export default function AuditLogsTab({
         ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
       ].join("\n")
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const fileName = getFileName("DATA", "csv");
       const link = document.createElement("a")
       const url = URL.createObjectURL(blob)
       link.setAttribute("href", url)
-      link.setAttribute("download", `PUP-AUDIT-LOGS-DATA-${format(new Date(), "yyyy-MM-dd-HHmm")}.csv`)
+      link.setAttribute("download", fileName)
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -149,9 +173,10 @@ export default function AuditLogsTab({
   const handleDownloadFromPreview = () => {
     if (!pdfBlobUrl) return
     try {
+      const fileName = getFileName("REPORT", "pdf");
       const link = document.createElement("a")
       link.href = pdfBlobUrl
-      link.setAttribute("download", `PUP-AUDIT-LOGS-REPORT-${format(new Date(), "yyyy-MM-dd-HHmm")}.pdf`)
+      link.setAttribute("download", fileName)
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
@@ -165,7 +190,7 @@ export default function AuditLogsTab({
   const handleCopy = (text, label) => {
     if (!text) return
     navigator.clipboard.writeText(text)
-    showToast({ title: "Copied!", description: `${label} copied to clipboard.` })
+    showToast({ title: "Copied to Clipboard", description: `${label} has been successfully copied to your clipboard.` })
   }
 
   const handleNextLog = () => {
@@ -191,7 +216,35 @@ export default function AuditLogsTab({
         <StatCards isLoading={isLoading} logStats={logStats} />
 
         {/* Main Table Card */}
-        <Card className="rounded-brand border border-gray-300 bg-white shadow-sm">
+        <Card className="rounded-brand border border-gray-300 bg-white shadow-sm overflow-hidden">
+          <PageHeader
+            icon="ph-shield-check"
+            title="Security Audit Logs"
+            description="Trace system activities, security events, and administrative actions."
+            actions={
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadCSV}
+                  disabled={logTotal === 0 || isExporting}
+                  className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border-gray-300 text-[10px] font-bold text-gray-600 hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-50 shadow-sm transition-colors"
+                >
+                  <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv"} text-base`}></i>
+                  {isExporting ? "PREPARING..." : "EXPORT CSV"}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handlePreviewPDF}
+                  disabled={logTotal === 0 || isExporting}
+                  className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand bg-pup-maroon text-[10px] font-bold text-white hover:bg-red-900 active:scale-95 disabled:opacity-50 shadow-sm transition-all"
+                >
+                  <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-pdf"} text-base`}></i>
+                  {isExporting ? "GENERATING..." : "GENERATE PDF"}
+                </Button>
+              </div>
+            }
+          />
           <LogFilters
             localSearch={localSearch}
             handleSearchChange={handleSearchChange}
@@ -209,9 +262,6 @@ export default function AuditLogsTab({
             setLogRoleFilter={setLogRoleFilter}
             setLogSeverityFilter={setLogSeverityFilter}
             logTotal={logTotal}
-            isExporting={isExporting}
-            handleDownloadCSV={handleDownloadCSV}
-            handlePreviewPDF={handlePreviewPDF}
           />
 
           <CardContent className="p-6">
@@ -275,6 +325,8 @@ export default function AuditLogsTab({
           previewFrameReady={previewFrameReady}
           setPreviewFrameReady={setPreviewFrameReady}
           handleDownloadFromPreview={handleDownloadFromPreview}
+          isFullscreenPreview={isFullscreenPreview}
+          setIsFullscreenPreview={setIsFullscreenPreview}
         />
       </div>
     </TooltipProvider>

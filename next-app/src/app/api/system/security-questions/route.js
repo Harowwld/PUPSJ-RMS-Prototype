@@ -52,6 +52,34 @@ export async function PUT(req) {
       return NextResponse.json({ ok: false, error: "Invalid data format" }, { status: 400 });
     }
 
+    // Validation: 10-character minimum and entropy check
+    for (let i = 0; i < 5; i++) {
+      const q = String(questions[i] || "").trim();
+      if (q) {
+        if (q.length < 10) {
+          return NextResponse.json({ 
+            ok: false, 
+            error: `Question ${i + 1} is too short. Minimum 10 characters required.` 
+          }, { status: 400 });
+        }
+
+        // Basic Entropy Check: Count unique characters
+        const uniqueChars = new Set(q.toLowerCase().replace(/\s/g, "")).size;
+        if (uniqueChars < 5) {
+          return NextResponse.json({ 
+            ok: false, 
+            error: `Question ${i + 1} is too simple or repetitive. Please provide a more complex question.` 
+          }, { status: 400 });
+        }
+      } else if (i < 2) {
+        // First two are required
+        return NextResponse.json({ 
+          ok: false, 
+          error: `Question ${i + 1} is required.` 
+        }, { status: 400 });
+      }
+    }
+
     // Clear and re-insert to keep it simple and ordered
     await dbRun("DELETE FROM security_questions");
     for (let i = 0; i < 5; i++) {

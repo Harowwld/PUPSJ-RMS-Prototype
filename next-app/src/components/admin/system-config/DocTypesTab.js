@@ -86,7 +86,7 @@ export default function DocTypesTab({
       })
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Add failed")
-      
+
       if (!nameOverride) {
         setNewDocTypeName("")
         setIsAddDocTypeOpen(false)
@@ -94,10 +94,10 @@ export default function DocTypesTab({
         setNewDocTypeName("")
       }
 
-      showToast({ title: "Success", description: "Document type added." })
+      showToast({ title: "Document Type Added", description: "The new document type has been successfully registered in the system." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast({ title: "Error", description: err.message }, true)
+      showToast({ title: "Registration Failed", description: err.message }, true)
     } finally {
       if (nameOverride) setIsQuickAddLoading(false)
     }
@@ -115,10 +115,10 @@ export default function DocTypesTab({
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Update failed")
       setIsEditDocTypeOpen(false)
-      showToast({ title: "Success", description: "Document type updated." })
+      showToast({ title: "Document Type Updated", description: "The changes to the document type have been successfully saved." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast({ title: "Error", description: err.message }, true)
+      showToast({ title: "Update Failed", description: err.message }, true)
     }
   }
 
@@ -128,10 +128,10 @@ export default function DocTypesTab({
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Archive failed")
       setConfirmOpen(false)
-      showToast({ title: "Success", description: "Document type archived." })
+      showToast({ title: "Document Type Archived", description: "The selected document type has been successfully moved to the archive." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast({ title: "Error", description: err.message }, true)
+      showToast({ title: "Archival Failed", description: err.message }, true)
     }
   }
 
@@ -145,10 +145,10 @@ export default function DocTypesTab({
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Restore failed")
       setConfirmOpen(false)
-      showToast({ title: "Success", description: "Document type restored." })
+      showToast({ title: "Document Type Restored", description: "The document type has been successfully restored from the archive." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast({ title: "Error", description: err.message }, true)
+      showToast({ title: "Restoration Failed", description: err.message }, true)
     }
   }
 
@@ -229,16 +229,14 @@ export default function DocTypesTab({
 
   const handleBulkAction = () => {
     setConfirmPayload({
-      title: showArchived ? "Restore Selected Types" : "Archive Selected Types",
+      title: showArchived ? "Restore Selected Document Types" : "Archive Selected Document Types",
       message: `Apply ${showArchived ? "restoration" : "archival"} to the following ${selectedCount} document types?`,
       confirmLabel: showArchived ? "Restore Selected" : "Archive Selected",
       variant: showArchived ? "success" : "danger",
+      buttonIcon: showArchived ? "ph-bold ph-arrow-counter-clockwise" : "ph-bold ph-archive",
+      icon: showArchived ? "ph-duotone ph-arrow-counter-clockwise" : "ph-duotone ph-archive",
       selectedItems: selectedNames,
-      onConfirm: () =>
-        executeBulkTaxonomyAction(
-          "DocumentType",
-          showArchived ? "restore" : "delete"
-        ),
+      onConfirm: () => executeBulkTaxonomyAction("DocumentType", showArchived ? "restore" : "delete"),
     })
     setConfirmOpen(true)
   }
@@ -277,6 +275,7 @@ export default function DocTypesTab({
           searchLabel="Search Document Types"
           searchValue={localSearch}
           onSearchChange={setLocalSearch}
+          extraChips={showArchived ? [{ label: "Mode", value: "Archived Records", onClear: () => setShowArchived(false) }] : []}
           filters={
             <div className="inline-flex h-10 items-center rounded-lg border border-gray-200 bg-gray-100 p-1 shadow-sm">
               <button
@@ -362,26 +361,12 @@ export default function DocTypesTab({
                     />
                   </th>
                   <th className="p-3 px-6 font-bold">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100">
-                          Name / Label <SortIndicator column="name" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="start"
-                        className="rounded-brand"
-                      >
-                        <DropdownMenuItem onClick={() => onSort("name", "asc")}>
-                          Ascending
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => onSort("name", "desc")}
-                        >
-                          Descending
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <button
+                      onClick={() => onSort("name")}
+                      className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                    >
+                      Name / Label <SortIndicator column="name" />
+                    </button>
                   </th>
                   <th className="w-40 p-3 px-6 font-bold uppercase text-gray-600">Status</th>
                 <th className="w-32 p-3 px-6 text-right font-bold">Actions</th>
@@ -389,10 +374,10 @@ export default function DocTypesTab({
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {!showArchived && (
-                  <tr className="bg-gray-50/30 transition-colors hover:bg-gray-50/50">
+                  <tr className={`transition-all duration-300 ${newDocTypeName.trim() ? "bg-amber-50/50 hover:bg-amber-100/50" : "bg-gray-50/30 hover:bg-gray-50/50"}`}>
                     <td className="p-3 px-6 text-center">
-                      <div className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-dashed border-gray-300">
-                        <i className="ph-bold ph-plus text-[10px] text-gray-400"></i>
+                      <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 border-dashed transition-colors ${newDocTypeName.trim() ? "border-amber-400" : "border-gray-300"}`}>
+                        <i className={`ph-bold text-[10px] ${newDocTypeName.trim() ? "ph-pencil-simple text-amber-600 animate-bounce" : "ph-plus text-gray-400"}`}></i>
                       </div>
                     </td>
                     <td className="p-3 px-6">
@@ -402,32 +387,45 @@ export default function DocTypesTab({
                           value={newDocTypeName}
                           onChange={(e) => setNewDocTypeName(e.target.value)}
                           onKeyDown={(e) => {
-                            if (e.key === "Enter") addDocType(null, newDocTypeName)
+                            if (e.key === "Enter") {
+                               e.preventDefault();
+                               addDocType(null, newDocTypeName);
+                            }
                           }}
-                          className="h-9 flex-1 rounded-brand border-gray-300 bg-white text-sm focus-visible:border-pup-maroon focus-visible:ring-pup-maroon"
+                          className={`h-9 flex-1 rounded-brand border-gray-300 bg-white text-sm transition-all focus-visible:ring-pup-maroon ${newDocTypeName.trim() ? "border-amber-400 ring-2 ring-amber-100" : "focus-visible:border-pup-maroon"}`}
                         />
                         <Button
                         size="sm"
                         disabled={!newDocTypeName.trim() || isQuickAddLoading}
                         onClick={() => addDocType(null, newDocTypeName)}
-                        className="h-9 rounded-brand bg-pup-maroon px-4 text-xs font-bold text-white shadow-sm hover:bg-red-900 active:scale-95 disabled:opacity-50"
+                        className={`h-9 rounded-brand px-4 text-xs font-bold text-white shadow-sm transition-all active:scale-95 disabled:opacity-50 ${newDocTypeName.trim() ? "bg-amber-600 hover:bg-amber-700" : "bg-pup-maroon hover:bg-red-900"}`}
                         >
                         {isQuickAddLoading ? (
                           <i className="ph-bold ph-spinner animate-spin"></i>
                         ) : (
                           <>
-                            <i className="ph-bold ph-plus mr-2"></i> ADD
+                            <i className={`ph-bold mr-2 ${newDocTypeName.trim() ? "ph-check" : "ph-plus"}`}></i>
+                            {newDocTypeName.trim() ? "SAVE" : "ADD"}
                           </>
                         )}
                         </Button>                      </div>
                     </td>
                     <td className="p-3 px-6">
-                      <Badge
-                        variant="outline"
-                        className="border-gray-200 bg-gray-100 px-2 py-0.5 text-[9px] font-bold tracking-wider text-gray-400 uppercase"
-                      >
-                        NEW RECORD
-                      </Badge>
+                      {newDocTypeName.trim() ? (
+                        <Badge
+                          variant="outline"
+                          className="border-amber-200 bg-amber-50 px-2 py-0.5 text-[9px] font-black tracking-wider text-amber-700 uppercase animate-pulse"
+                        >
+                          UNSAVED DRAFT
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="border-gray-200 bg-gray-100 px-2 py-0.5 text-[9px] font-bold tracking-wider text-gray-400 uppercase"
+                        >
+                          NEW RECORD
+                        </Badge>
+                      )}
                     </td>
                     <td className="p-3 px-6 text-right"></td>
                   </tr>
@@ -495,9 +493,11 @@ export default function DocTypesTab({
                             onClick={() => {
                               setConfirmPayload({
                                 title: "Restore Document Type",
-                                message: `Restore document type "${dt.name}"? It will be visible for new records again.`,
+                                message: "Restore this document type? It will be visible for new records again.",
                                 confirmLabel: "Restore",
                                 variant: "success",
+                                buttonIcon: "ph-bold ph-arrow-counter-clockwise",
+                                icon: "ph-duotone ph-arrow-counter-clockwise",
                                 selectedItems: [dt.name],
                                 onConfirm: () => resDocType(dt.id, dt.name),
                               })
@@ -515,9 +515,11 @@ export default function DocTypesTab({
                             onClick={() => {
                               setConfirmPayload({
                                 title: "Archive Document Type",
-                                message: `Archive document type "${dt.name}"? This will hide it from new registrations but preserve history.`,
+                                message: "Archive this document type? This will hide it from new registrations but preserve history.",
                                 confirmLabel: "Archive",
                                 variant: "danger",
+                                buttonIcon: "ph-bold ph-archive",
+                                icon: "ph-duotone ph-archive",
                                 selectedItems: [dt.name],
                                 onConfirm: () => delDocType(dt.id, dt.name),
                               })

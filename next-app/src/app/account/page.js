@@ -249,7 +249,7 @@ function AccountPageContent() {
         throw new Error(json?.error || "Failed to update security questions");
       }
 
-      toast.success("Security Updated", {
+      toast.success("Security Settings Updated", {
         description: "Your security answers have been saved.",
       });
       setSecAnswers({});
@@ -266,7 +266,7 @@ function AccountPageContent() {
       }
     } catch (err) {
       setSecError(err?.message || "Failed to update security questions");
-      toast.error("Update Failed", {
+      toast.error("Security Update Failed", {
         description: err?.message || "Unable to save your security settings.",
       });
     } finally {

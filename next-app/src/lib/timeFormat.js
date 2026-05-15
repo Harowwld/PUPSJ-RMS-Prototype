@@ -50,3 +50,19 @@ export function formatPHDateTimeParts(dateString) {
   }
 }
 
+/**
+ * Formats a decimal hour value (e.g. 12.5) into a human-readable duration (e.g. 12h 30m)
+ */
+export function formatDurationHuman(decimalHours) {
+  if (decimalHours === null || decimalHours === undefined || isNaN(decimalHours)) {
+    return "N/A";
+  }
+  const hours = Math.floor(decimalHours);
+  const minutes = Math.round((decimalHours - hours) * 60);
+  
+  if (hours === 0 && minutes === 0) return "0m";
+  if (hours === 0) return `${minutes}m`;
+  if (minutes === 0) return `${hours}h`;
+  return `${hours}h ${minutes}m`;
+}
+

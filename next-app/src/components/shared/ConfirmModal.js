@@ -22,6 +22,8 @@ export default function ConfirmModal({
   variant = "danger",
   selectedItems = [],
   note,
+  icon: customIcon,
+  buttonIcon: customButtonIcon,
 }) {
   if (!open) return null;
 
@@ -39,7 +41,7 @@ export default function ConfirmModal({
       iconWrap: "bg-amber-50 border-amber-100 text-amber-600 shadow-sm",
       title: "text-gray-900",
       description: "text-gray-600",
-      confirmVariant: "secondary",
+      confirmVariant: "default",
       buttonIcon: "ph-bold ph-warning",
     },
     success: {
@@ -61,6 +63,8 @@ export default function ConfirmModal({
   };
 
   const v = variantClasses[variant] || variantClasses.default;
+  const displayIcon = customIcon || v.icon;
+  const displayButtonIcon = customButtonIcon || v.buttonIcon;
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
@@ -68,7 +72,7 @@ export default function ConfirmModal({
         <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50 min-w-0">
           <div className="flex items-start gap-4 w-full">
             <div className={`w-12 h-12 rounded-full border flex items-center justify-center shrink-0 ${v.iconWrap}`}>
-              <i className={`${v.icon} text-2xl`}></i>
+              <i className={`${displayIcon} text-2xl`}></i>
             </div>
             <div className="min-w-0 flex-1">
               <DialogTitle className={`text-lg font-black tracking-tight leading-tight ${v.title} truncate`}>
@@ -101,7 +105,7 @@ export default function ConfirmModal({
                     key={idx}
                     className="flex items-center gap-2 px-2 py-1.5 rounded bg-white border border-gray-100 shadow-sm overflow-hidden w-full"
                   >
-                    <div className={`w-1.5 h-1.5 shrink-0 rounded-full ${variant === "success" ? "bg-emerald-500" : "bg-red-500"}`} />
+                    <div className={`w-1.5 h-1.5 shrink-0 rounded-full ${variant === "success" ? "bg-emerald-500" : (variant === "warning" ? "bg-amber-500" : "bg-red-500")}`} />
                     <div className="flex-1 min-w-0">
                       <p className="truncate text-[11px] font-bold text-gray-700">
                         {item}
@@ -135,11 +139,12 @@ export default function ConfirmModal({
             className={cn(
               "h-11 px-6 text-sm font-bold shadow-sm rounded-brand gap-2 flex items-center",
               variant === "success" && "bg-green-600 hover:bg-green-700 text-white",
-              (v.confirmVariant === "default" && variant !== "success") && "bg-pup-maroon hover:bg-red-900 text-white",
+              variant === "warning" && "bg-amber-600 hover:bg-amber-700 text-white",
+              (v.confirmVariant === "default" && !["success", "warning"].includes(variant)) && "bg-pup-maroon hover:bg-red-900 text-white",
               v.confirmVariant === "destructive" && "bg-red-600 hover:bg-red-700 text-white"
             )}
           >
-            <i className={`${v.buttonIcon} text-lg`}></i>
+            <i className={`${displayButtonIcon} text-lg`}></i>
             {isLoading ? "Processing..." : confirmLabel}
           </Button>
         </div>

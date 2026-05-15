@@ -64,15 +64,64 @@ export default function StaffDirectoryTab({
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [jumpPage, setJumpPage] = useState("1")
 
+  const [sortBy, setSortBy] = useState("fname")
+  const [sortOrder, setSortOrder] = useState("asc")
+
+  const handleSort = (column) => {
+    if (sortBy === column) {
+      if (sortOrder === "asc") {
+        setSortOrder("desc")
+      } else {
+        setSortBy("fname")
+        setSortOrder("asc")
+      }
+    } else {
+      setSortBy(column)
+      setSortOrder("asc")
+    }
+    setCurrentPage(1)
+  }
+
+  const SortIndicator = ({ column }) => {
+    if (sortBy !== column)
+      return (
+        <i className="ph-bold ph-caret-up-down ml-1 opacity-0 transition-opacity group-hover:opacity-50"></i>
+      )
+    return sortOrder === "asc" ? (
+      <i className="ph-bold ph-caret-up ml-1 text-pup-maroon"></i>
+    ) : (
+      <i className="ph-bold ph-caret-down ml-1 text-pup-maroon"></i>
+    )
+  }
+
   const totalPages = Math.ceil(filteredStaff.length / itemsPerPage) || 1
 
   // Cap current page if filtering reduces dataset below current page
   const displayPage = Math.min(currentPage, totalPages)
 
+  const sortedStaff = useMemo(() => {
+    return [...filteredStaff].sort((a, b) => {
+      let valA = a[sortBy]
+      let valB = b[sortBy]
+
+      if (sortBy === "fname") {
+        valA = `${a.fname} ${a.lname}`.toLowerCase()
+        valB = `${b.fname} ${b.lname}`.toLowerCase()
+      } else if (typeof valA === "string") {
+        valA = valA.toLowerCase()
+        valB = (valB || "").toLowerCase()
+      }
+
+      if (valA < valB) return sortOrder === "asc" ? -1 : 1
+      if (valA > valB) return sortOrder === "asc" ? 1 : -1
+      return 0
+    })
+  }, [filteredStaff, sortBy, sortOrder])
+
   const paginatedStaff = useMemo(() => {
     const start = (displayPage - 1) * itemsPerPage
-    return filteredStaff.slice(start, start + itemsPerPage)
-  }, [filteredStaff, displayPage, itemsPerPage])
+    return sortedStaff.slice(start, start + itemsPerPage)
+  }, [sortedStaff, displayPage, itemsPerPage])
 
   useEffect(() => {
     setJumpPage(String(displayPage))
@@ -402,12 +451,45 @@ export default function StaffDirectoryTab({
                 <table className="min-w-full text-sm">
                   <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50">
                     <tr className="text-left text-xs tracking-wider text-gray-600 uppercase">
-                      <th className="p-3 font-bold">Personnel Name</th>
-                      <th className="w-32 p-3 font-bold">Staff ID</th>
-                      <th className="w-28 p-3 font-bold">Role</th>
-                      <th className="w-28 p-3 font-bold">Status</th>
+                      <th className="p-3 font-bold">
+                        <button
+                          onClick={() => handleSort("fname")}
+                          className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                        >
+                          Personnel Name <SortIndicator column="fname" />
+                        </button>
+                      </th>
+                      <th className="w-32 p-3 font-bold">
+                        <button
+                          onClick={() => handleSort("id")}
+                          className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                        >
+                          Staff ID <SortIndicator column="id" />
+                        </button>
+                      </th>
+                      <th className="w-28 p-3 font-bold">
+                        <button
+                          onClick={() => handleSort("role")}
+                          className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                        >
+                          Role <SortIndicator column="role" />
+                        </button>
+                      </th>
+                      <th className="w-28 p-3 font-bold">
+                        <button
+                          onClick={() => handleSort("status")}
+                          className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                        >
+                          Status <SortIndicator column="status" />
+                        </button>
+                      </th>
                       <th className="p-3 font-bold whitespace-nowrap">
-                        Last Active
+                        <button
+                          onClick={() => handleSort("last_active")}
+                          className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                        >
+                          Last Active <SortIndicator column="last_active" />
+                        </button>
                       </th>
                       <th className="w-24 p-3 text-right font-bold">Actions</th>
                     </tr>

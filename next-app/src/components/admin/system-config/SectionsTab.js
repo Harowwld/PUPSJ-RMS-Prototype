@@ -103,10 +103,10 @@ export default function SectionsTab({
         setNewSectionName("")
       }
 
-      showToast({ title: "Success", description: "Section block created." })
+      showToast({ title: "Course Block Created", description: "The new course block has been successfully registered in the system." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast({ title: "Error", description: err.message }, true)
+      showToast({ title: "Registration Failed", description: err.message }, true)
     } finally {
       if (overrideData) setIsQuickAddLoading(false)
     }
@@ -127,10 +127,10 @@ export default function SectionsTab({
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Update failed")
       setIsEditSectionOpen(false)
-      showToast({ title: "Success", description: "Section block updated." })
+      showToast({ title: "Course Block Updated", description: "The changes to the course block have been successfully saved." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast({ title: "Error", description: err.message }, true)
+      showToast({ title: "Update Failed", description: err.message }, true)
     }
   }
 
@@ -140,10 +140,10 @@ export default function SectionsTab({
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Archive failed")
       setConfirmOpen(false)
-      showToast({ title: "Success", description: "Section block archived." })
+      showToast({ title: "Course Block Archived", description: "The selected course block has been successfully moved to the archive." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast({ title: "Error", description: err.message }, true)
+      showToast({ title: "Archival Failed", description: err.message }, true)
     }
   }
 
@@ -155,10 +155,10 @@ export default function SectionsTab({
       const json = await res.json()
       if (!res.ok || !json.ok) throw new Error(json.error || "Restore failed")
       setConfirmOpen(false)
-      showToast({ title: "Success", description: "Section block restored." })
+      showToast({ title: "Course Block Restored", description: "The course block has been successfully restored from the archive." })
       if (loadAll) loadAll()
     } catch (err) {
-      showToast({ title: "Error", description: err.message }, true)
+      showToast({ title: "Restoration Failed", description: err.message }, true)
     }
   }
 
@@ -240,6 +240,8 @@ export default function SectionsTab({
       message: `Apply ${showArchived ? "restoration" : "archival"} to the following ${selectedCount} section blocks?`,
       confirmLabel: showArchived ? "Restore Selected" : "Archive Selected",
       variant: showArchived ? "success" : "danger",
+      buttonIcon: showArchived ? "ph-bold ph-arrow-counter-clockwise" : "ph-bold ph-archive",
+      icon: showArchived ? "ph-duotone ph-arrow-counter-clockwise" : "ph-duotone ph-archive",
       selectedItems: selectedNames,
       onConfirm: () => executeBulkTaxonomyAction("Section", showArchived ? "restore" : "delete"),
     })
@@ -300,6 +302,10 @@ export default function SectionsTab({
           searchLabel="Search Course Blocks"
           searchValue={localSearch}
           onSearchChange={setLocalSearch}
+          extraChips={[
+            ...(selectedCourseFilter ? [{ label: "Program", value: selectedCourseFilter, onClear: () => setSelectedCourseFilter("") }] : []),
+            ...(showArchived ? [{ label: "Mode", value: "Archived Records", onClear: () => setShowArchived(false) }] : []),
+          ]}
           filters={
             <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
               {programFilter}
@@ -393,50 +399,20 @@ export default function SectionsTab({
                     />
                   </th>
                   <th className="w-56 p-3 px-6 font-bold">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100">
-                          Degree Program <SortIndicator column="course_code" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="start"
-                        className="rounded-brand"
-                      >
-                        <DropdownMenuItem
-                          onClick={() => onSort("course_code", "asc")}
-                        >
-                          Ascending
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => onSort("course_code", "desc")}
-                        >
-                          Descending
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <button
+                      onClick={() => onSort("course_code")}
+                      className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                    >
+                      Degree Program <SortIndicator column="course_code" />
+                    </button>
                   </th>
                   <th className="p-3 px-6 font-bold">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <button className="flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100">
-                          Block Name <SortIndicator column="name" />
-                        </button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent
-                        align="start"
-                        className="rounded-brand"
-                      >
-                        <DropdownMenuItem onClick={() => onSort("name", "asc")}>
-                          Ascending
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => onSort("name", "desc")}
-                        >
-                          Descending
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <button
+                      onClick={() => onSort("name")}
+                      className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                    >
+                      Block Name <SortIndicator column="name" />
+                    </button>
                   </th>
                   <th className="w-40 p-3 px-6 font-bold uppercase text-gray-600 text-left">Status</th>
                 <th className="w-32 p-3 px-6 text-right font-bold">Actions</th>
@@ -444,15 +420,15 @@ export default function SectionsTab({
               </thead>
               <tbody className="divide-y divide-gray-200">
                 {!showArchived && (
-                  <tr className="bg-gray-50/30 transition-colors hover:bg-gray-50/50">
+                  <tr className={`transition-all duration-300 ${(secCourseCode || newSectionName.trim()) ? "bg-amber-50/50 hover:bg-amber-100/50" : "bg-gray-50/30 hover:bg-gray-50/50"}`}>
                     <td className="p-3 px-6 text-center">
-                      <div className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-dashed border-gray-300">
-                        <i className="ph-bold ph-plus text-[10px] text-gray-400"></i>
+                      <div className={`flex h-5 w-5 items-center justify-center rounded-full border-2 border-dashed transition-colors ${(secCourseCode || newSectionName.trim()) ? "border-amber-400" : "border-gray-300"}`}>
+                        <i className={`ph-bold text-[10px] ${(secCourseCode || newSectionName.trim()) ? "ph-pencil-simple text-amber-600 animate-bounce" : "ph-plus text-gray-400"}`}></i>
                       </div>
                     </td>
                     <td className="p-3 px-6">
                       <select
-                        className="h-9 w-full rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-bold uppercase text-gray-700 focus:border-pup-maroon focus:ring-pup-maroon"
+                        className={`h-9 w-full rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-bold uppercase text-gray-700 transition-all focus:border-pup-maroon focus:ring-pup-maroon ${secCourseCode ? "border-amber-400 ring-1 ring-amber-100" : ""}`}
                         value={secCourseCode}
                         onChange={(e) => setSecCourseCode(e.target.value)}
                       >
@@ -471,32 +447,45 @@ export default function SectionsTab({
                           value={newSectionName}
                           onChange={(e) => setNewSectionName(e.target.value)}
                           onKeyDown={(e) => {
-                            if (e.key === "Enter") addSection(null, { courseCode: secCourseCode, name: newSectionName })
+                            if (e.key === "Enter") {
+                               e.preventDefault();
+                               addSection(null, { courseCode: secCourseCode, name: newSectionName });
+                            }
                           }}
-                          className="h-9 flex-1 rounded-brand border-gray-300 bg-white text-sm focus-visible:border-pup-maroon focus-visible:ring-pup-maroon"
+                          className={`h-9 flex-1 rounded-brand border-gray-300 bg-white text-sm transition-all focus-visible:ring-pup-maroon ${(secCourseCode || newSectionName.trim()) ? "border-amber-400 ring-2 ring-amber-100" : "focus-visible:border-pup-maroon"}`}
                         />
                         <Button
                         size="sm"
                         disabled={!secCourseCode || !newSectionName.trim() || isQuickAddLoading}
                         onClick={() => addSection(null, { courseCode: secCourseCode, name: newSectionName })}
-                        className="h-9 rounded-brand bg-pup-maroon px-4 text-xs font-bold text-white shadow-sm hover:bg-red-900 active:scale-95 disabled:opacity-50"
+                        className={`h-9 rounded-brand px-4 text-xs font-bold text-white shadow-sm transition-all active:scale-95 disabled:opacity-50 ${(secCourseCode || newSectionName.trim()) ? "bg-amber-600 hover:bg-amber-700" : "bg-pup-maroon hover:bg-red-900"}`}
                         >
                         {isQuickAddLoading ? (
                           <i className="ph-bold ph-spinner animate-spin"></i>
                         ) : (
                           <>
-                            <i className="ph-bold ph-plus mr-2"></i> ADD
+                            <i className={`ph-bold mr-2 ${(secCourseCode || newSectionName.trim()) ? "ph-check" : "ph-plus"}`}></i> 
+                            {(secCourseCode || newSectionName.trim()) ? "SAVE" : "ADD"}
                           </>
                         )}
                         </Button>                      </div>
                     </td>
                     <td className="p-3 px-6">
-                      <Badge
-                        variant="outline"
-                        className="border-gray-200 bg-gray-100 px-2 py-0.5 text-[9px] font-bold tracking-wider text-gray-400 uppercase"
-                      >
-                        NEW RECORD
-                      </Badge>
+                      {(secCourseCode || newSectionName.trim()) ? (
+                        <Badge
+                          variant="outline"
+                          className="border-amber-200 bg-amber-50 px-2 py-0.5 text-[9px] font-black tracking-wider text-amber-700 uppercase animate-pulse"
+                        >
+                          UNSAVED DRAFT
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="border-gray-200 bg-gray-100 px-2 py-0.5 text-[9px] font-bold tracking-wider text-gray-400 uppercase"
+                        >
+                          NEW RECORD
+                        </Badge>
+                      )}
                     </td>
                     <td className="p-3 px-6 text-right"></td>
                   </tr>
@@ -571,9 +560,11 @@ export default function SectionsTab({
                             onClick={() => {
                               setConfirmPayload({
                                 title: "Restore Course Block",
-                                message: `Restore course block "${sec.name}"? It will be associated with ${sec.course_code || "its original program"} again.`,
+                                message: `Restore this course block? It will be associated with ${sec.course_code || "its original program"} again.`,
                                 confirmLabel: "Restore",
                                 variant: "success",
+                                buttonIcon: "ph-bold ph-arrow-counter-clockwise",
+                                icon: "ph-duotone ph-arrow-counter-clockwise",
                                 selectedItems: [sec.name],
                                 onConfirm: () =>
                                   resSection(
@@ -596,9 +587,11 @@ export default function SectionsTab({
                             onClick={() => {
                               setConfirmPayload({
                                 title: "Archive Course Block",
-                                message: `Archive course block "${sec.name}"? This will prevent new records from being assigned to this block.`,
+                                message: "Archive this course block? This will prevent new records from being assigned to this block.",
                                 confirmLabel: "Archive",
                                 variant: "danger",
+                                buttonIcon: "ph-bold ph-archive",
+                                icon: "ph-duotone ph-archive",
                                 selectedItems: [sec.name],
                                 onConfirm: () =>
                                   delSection(

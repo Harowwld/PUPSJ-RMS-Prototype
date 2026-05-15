@@ -263,13 +263,13 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
         )
       } finally {
         setLoading(false)
-      }
-    })()
-  }, [showToast])
+        }
+        })()
+        }, [showToast])
 
-  useEffect(() => {
-    ;(async () => {
-      try {
+        useEffect(() => {
+        ;(async () => {
+        try {
         const limit = 200
         let offset = 0
         const map = new Map()
@@ -299,177 +299,176 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
         }
         setStudentRoomUsage(map)
         setStudentDrawerUsage(drawerMap)
-      } catch {
+        } catch {
         // silent; server-side save validation still protects integrity
-      }
-    })()
-  }, [])
+        }
+        })()
+        }, [])
 
-  const activeRoomStudentCount = useMemo(() => {
-    if (!activeRoom) return 0
-    return Number(studentRoomUsage.get(Number(activeRoom.id)) || 0)
-  }, [activeRoom, studentRoomUsage])
+        const activeRoomStudentCount = useMemo(() => {
+        if (!activeRoom) return 0
+        return Number(studentRoomUsage.get(Number(activeRoom.id)) || 0)
+        }, [activeRoom, studentRoomUsage])
 
-  useEffect(() => {
-    if (!activeRoom) {
-      if (selectedCabinetIds.size > 0) {
+        useEffect(() => {
+        if (!activeRoom) {
+        if (selectedCabinetIds.size > 0) {
         setSelectedCabinetIds(new Set())
-      }
-    } else {
-      const validIds = new Set()
-      for (const id of selectedCabinetIds) {
+        }
+        } else {
+        const validIds = new Set()
+        for (const id of selectedCabinetIds) {
         if (activeRoom.cabinets.some((c) => c.id === id)) {
           validIds.add(id)
         }
-      }
-      if (validIds.size !== selectedCabinetIds.size) {
+        }
+        if (validIds.size !== selectedCabinetIds.size) {
         setSelectedCabinetIds(validIds)
-      }
-    }
-  }, [activeRoom, selectedCabinetIds.size])
+        }
+        }
+        }, [activeRoom, selectedCabinetIds.size])
 
-  function updateCabinet(roomId, cabinetId, updater) {
-    if (cabinetId === "DOOR") {
-      updateRoom(roomId, (r) => ({
+        function updateCabinet(roomId, cabinetId, updater) {
+        if (cabinetId === "DOOR") {
+        updateRoom(roomId, (r) => ({
         ...r,
         door: updater(r.door),
-      }))
-      return
-    }
-    setLayout((prev) => {
-      if (!prev) return prev
-      const rooms = prev.rooms.map((r) => {
+        }))
+        return
+        }
+        setLayout((prev) => {
+        if (!prev) return prev
+        const rooms = prev.rooms.map((r) => {
         if (r.id !== roomId) return r
         const cabinets = r.cabinets.map((c) => {
           if (c.id !== cabinetId) return c
           return updater(c)
         })
         return { ...r, cabinets }
-      })
-      return { ...prev, rooms }
-    })
-  }
+        })
+        return { ...prev, rooms }
+        })
+        }
 
-  function updateRoom(roomId, updater) {
-    setLayout((prev) => {
-      if (!prev) return prev
-      const rooms = prev.rooms.map((r) => (r.id === roomId ? updater(r) : r))
-      rooms.sort((a, b) => a.id - b.id)
-      return { ...prev, rooms }
-    })
-  }
+        function updateRoom(roomId, updater) {
+        setLayout((prev) => {
+        if (!prev) return prev
+        const rooms = prev.rooms.map((r) => (r.id === roomId ? updater(r) : r))
+        rooms.sort((a, b) => a.id - b.id)
+        return { ...prev, rooms }
+        })
+        }
 
-  function getNextRoomId(rooms) {
-    const max = Math.max(0, ...(rooms || []).map((r) => Number(r.id) || 0))
-    return max + 1
-  }
+        function getNextRoomId(rooms) {
+        const max = Math.max(0, ...(rooms || []).map((r) => Number(r.id) || 0))
+        return max + 1
+        }
 
-  function addRoom() {
-    let createdRoomId = null
-    setLayout((prev) => {
-      if (!prev) return prev
-      const nextId = getNextRoomId(prev.rooms)
-      createdRoomId = nextId
-      const next = {
+        function addRoom() {
+        let createdRoomId = null
+        setLayout((prev) => {
+        if (!prev) return prev
+        const nextId = getNextRoomId(prev.rooms)
+        createdRoomId = nextId
+        const next = {
         id: nextId,
         name: `Room ${nextId}`,
         cabinets: [],
         door: getDefaultDoor(),
-      }
-      return {
+        }
+        return {
         ...prev,
         rooms: [...prev.rooms, next].sort((a, b) => a.id - b.id),
-      }
-    })
-    setSelectedCabinetIds(new Set())
-    if (createdRoomId != null) {
-      setActiveRoomId(createdRoomId)
-    }
-  }
+        }
+        })
+        setSelectedCabinetIds(new Set())
+        if (createdRoomId != null) {
+        setActiveRoomId(createdRoomId)
+        }
+        }
 
-  function removeActiveRoom() {
-    if (!layout || !activeRoom) return
-    if (activeRoomStudentCount > 0) {
-      showToast?.(
+        function removeActiveRoom() {
+        if (!layout || !activeRoom) return
+        if (activeRoomStudentCount > 0) {
+        showToast?.(
         {
           title: "Cannot Remove Room",
           description: `Room ${activeRoom.id} has ${activeRoomStudentCount} student record(s) still assigned.`,
         },
         true
-      )
-      return
-    }
-    if (activeRoom.cabinets?.length) {
-      showToast?.(
+        )
+        return
+        }
+        if (activeRoom.cabinets?.length) {
+        showToast?.(
         {
           title: "Cannot Remove Room",
           description: "Remove all cabinets first before deleting a room.",
         },
         true
-      )
-      return
-    }
-    setLayout((prev) => {
-      if (!prev) return prev
-      const rooms = prev.rooms.filter((r) => r.id !== activeRoom.id)
-      return { ...prev, rooms }
-    })
-    const fallback =
-      layout.rooms.find((r) => r.id !== activeRoom.id)?.id || null
-    setActiveRoomId(fallback)
-    setSelectedCabinetIds(new Set())
-  }
+        )
+        return
+        }
+        setLayout((prev) => {
+        if (!prev) return prev
+        const rooms = prev.rooms.filter((r) => r.id !== activeRoom.id)
+        return { ...prev, rooms }
+        })
+        const fallback =
+        layout.rooms.find((r) => r.id !== activeRoom.id)?.id || null
+        setActiveRoomId(fallback)
+        setSelectedCabinetIds(new Set())
+        }
 
-  function resetActiveRoomCabinets() {
-    if (!layout || !activeRoom) return
-    if (activeRoomStudentCount > 0) {
-      showToast?.(
+        function resetActiveRoomCabinets() {
+        if (!layout || !activeRoom) return
+        if (activeRoomStudentCount > 0) {
+        showToast?.(
         {
           title: "Cannot Reset Room",
           description: `Room ${activeRoom.id} has ${activeRoomStudentCount} student record(s) still assigned.`,
         },
         true
-      )
-      return
-    }
-    if (!activeRoom.cabinets?.length) {
-      showToast?.({
+        )
+        return
+        }
+        if (!activeRoom.cabinets?.length) {
+        showToast?.({
         title: "Nothing to Reset",
         description: "This room has no cabinet layout to clear.",
-      })
-      return
-    }
-    updateRoom(activeRoom.id, (r) => ({
-      ...r,
-      cabinets: [],
-    }))
-    setSelectedCabinetIds(new Set())
-    showToast?.({
-      title: "Layout Reset",
-      description:
-        "Room cleared. Save to apply. Blocked if students still reference this room.",
-    })
-  }
+        })
+        return
+        }
+        updateRoom(activeRoom.id, (r) => ({
+        ...r,
+        cabinets: [],
+        }))
+        setSelectedCabinetIds(new Set())
+        showToast?.({
+        title: "Room Layout Cleared",
+        description: "All cabinets removed. Please click 'Save Layout' to finalize the changes.",
+        })
+        }
 
-  function applyTemplateToActiveRoom() {
-    if (!activeRoom) return
-    const tpl = ROOM_TEMPLATES.find((t) => t.id === selectedTemplateId)
-    if (!tpl) return
-    const targetLocKeys = new Set()
-    const targetOpts = []
-    for (const c of tpl.cabinets || []) {
-      for (const d of c.drawerIds || []) {
+        function applyTemplateToActiveRoom() {
+        if (!activeRoom) return
+        const tpl = ROOM_TEMPLATES.find((t) => t.id === selectedTemplateId)
+        if (!tpl) return
+        const targetLocKeys = new Set()
+        const targetOpts = []
+        for (const c of tpl.cabinets || []) {
+        for (const d of c.drawerIds || []) {
         const key = `${activeRoom.id}|${c.id}|${Number(d)}`
         targetLocKeys.add(key)
         targetOpts.push({
           key,
           label: `Room ${activeRoom.id} / Cabinet ${c.id} / Drawer ${Number(d)}`,
         })
-      }
-    }
-    const conflicts = []
-    for (const c of activeRoom.cabinets || []) {
-      for (const d of c.drawerIds || []) {
+        }
+        }
+        const conflicts = []
+        for (const c of activeRoom.cabinets || []) {
+        for (const d of c.drawerIds || []) {
         const sourceKey = `${activeRoom.id}|${c.id}|${Number(d)}`
         const usedCount = Number(studentDrawerUsage.get(sourceKey) || 0)
         if (usedCount <= 0) continue
@@ -479,48 +478,48 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
           sourceLabel: `Room ${activeRoom.id} / Cabinet ${c.id} / Drawer ${Number(d)}`,
           count: usedCount,
         })
-      }
-    }
-    if (conflicts.length > 0) {
-      const nextDraft = {}
-      for (const c of conflicts) {
+        }
+        }
+        if (conflicts.length > 0) {
+        const nextDraft = {}
+        for (const c of conflicts) {
         nextDraft[c.sourceKey] = ""
-      }
-      setTemplateConflictRows(conflicts)
-      setTemplateTargetOptions(targetOpts)
-      setTemplateMappingDraft(nextDraft)
-      setTemplateApplyPayload({
+        }
+        setTemplateConflictRows(conflicts)
+        setTemplateTargetOptions(targetOpts)
+        setTemplateMappingDraft(nextDraft)
+        setTemplateApplyPayload({
         roomId: activeRoom.id,
         templateId: tpl.id,
-      })
-      setReassignmentMode("")
-      setDragSourceKey("")
-      setTemplateConflictOpen(true)
-      return
-    }
-    updateRoom(activeRoom.id, (r) => ({
-      ...r,
-      cabinets: (tpl.cabinets || []).map((c) => ({
+        })
+        setReassignmentMode("")
+        setDragSourceKey("")
+        setTemplateConflictOpen(true)
+        return
+        }
+        updateRoom(activeRoom.id, (r) => ({
+        ...r,
+        cabinets: (tpl.cabinets || []).map((c) => ({
         id: c.id,
         rect: { ...c.rect },
         rotation: Number(c.rotation) === 90 ? 90 : 0,
         drawerIds: [...(c.drawerIds || [1])],
-      })),
-      door: r.door || getDefaultDoor(),
-    }))
-    setSelectedCabinetIds(new Set())
-    showToast?.({
-      title: "Template Applied",
-      description: `"${tpl.name}" has been loaded into the active room.`,
-    })
-  }
+        })),
+        door: r.door || getDefaultDoor(),
+        }))
+        setSelectedCabinetIds(new Set())
+        showToast?.({
+        title: "Template Applied",
+        description: `"${tpl.name}" has been loaded into the active room.`,
+        })
+        }
 
-  function buildTemplateLayoutPreview(baseLayout, roomId, templateId) {
-    const tpl = ROOM_TEMPLATES.find((t) => t.id === templateId)
-    if (!tpl) return baseLayout
-    return {
-      ...baseLayout,
-      rooms: (baseLayout.rooms || []).map((r) =>
+        function buildTemplateLayoutPreview(baseLayout, roomId, templateId) {
+        const tpl = ROOM_TEMPLATES.find((t) => t.id === templateId)
+        if (!tpl) return baseLayout
+        return {
+        ...baseLayout,
+        rooms: (baseLayout.rooms || []).map((r) =>
         r.id !== roomId
           ? r
           : {
@@ -533,108 +532,108 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
               })),
               door: r.door || getDefaultDoor(),
             }
-      ),
-    }
-  }
+        ),
+        }
+        }
 
-  function buildAutoMappings() {
-    const usedTargets = new Set()
-    const next = {}
-    const sortedTargets = [...templateTargetOptions]
-    for (const row of templateConflictRows) {
-      const parsed = String(row.sourceKey || "").split("|")
-      const sourceCab = String(parsed[1] || "").trim()
-      const sourceDrawer = String(parsed[2] || "").trim()
-      const preferred = sortedTargets.find(
+        function buildAutoMappings() {
+        const usedTargets = new Set()
+        const next = {}
+        const sortedTargets = [...templateTargetOptions]
+        for (const row of templateConflictRows) {
+        const parsed = String(row.sourceKey || "").split("|")
+        const sourceCab = String(parsed[1] || "").trim()
+        const sourceDrawer = String(parsed[2] || "").trim()
+        const preferred = sortedTargets.find(
         (t) =>
           !usedTargets.has(t.key) &&
           t.key.endsWith(`|${sourceCab}|${sourceDrawer}`)
-      )
-      const fallback =
+        )
+        const fallback =
         preferred ||
         sortedTargets.find((t) => !usedTargets.has(t.key)) ||
         sortedTargets[0]
-      next[row.sourceKey] = fallback?.key || ""
-      if (fallback?.key) usedTargets.add(fallback.key)
-    }
-    return next
-  }
+        next[row.sourceKey] = fallback?.key || ""
+        if (fallback?.key) usedTargets.add(fallback.key)
+        }
+        return next
+        }
 
-  function openApplyPreview() {
-    if (!reassignmentMode) {
-      showToast?.(
+        function openApplyPreview() {
+        if (!reassignmentMode) {
+        showToast?.(
         {
           title: "Choose Reassignment Mode",
           description: "Select Manual or Auto before continuing.",
         },
         true
-      )
-      return
-    }
-    if (reassignmentMode === "auto") {
-      const next = buildAutoMappings()
-      setTemplateMappingDraft(next)
-    }
-    const draft =
-      reassignmentMode === "auto" ? buildAutoMappings() : templateMappingDraft
-    const hasMissing = templateConflictRows.some(
-      (r) => !String(draft[r.sourceKey] || "").trim()
-    )
-    if (hasMissing) {
-      showToast?.(
+        )
+        return
+        }
+        if (reassignmentMode === "auto") {
+        const next = buildAutoMappings()
+        setTemplateMappingDraft(next)
+        }
+        const draft =
+        reassignmentMode === "auto" ? buildAutoMappings() : templateMappingDraft
+        const hasMissing = templateConflictRows.some(
+        (r) => !String(draft[r.sourceKey] || "").trim()
+        )
+        if (hasMissing) {
+        showToast?.(
         {
           title: "Incomplete Mapping",
           description: "Assign a target drawer for all in-use source drawers.",
         },
         true
-      )
-      return
-    }
-    const rows = templateConflictRows.map((r) => {
-      const toKey = String(draft[r.sourceKey] || "")
-      const toLabel =
+        )
+        return
+        }
+        const rows = templateConflictRows.map((r) => {
+        const toKey = String(draft[r.sourceKey] || "")
+        const toLabel =
         templateTargetOptions.find((t) => t.key === toKey)?.label || toKey
-      return {
+        return {
         fromKey: r.sourceKey,
         fromLabel: r.sourceLabel,
         count: r.count,
         toKey,
         toLabel,
-      }
-    })
-    setApplyPreviewRows(rows)
-    setApplyPreviewOpen(true)
-  }
+        }
+        })
+        setApplyPreviewRows(rows)
+        setApplyPreviewOpen(true)
+        }
 
-  async function applyTemplateWithMappings() {
-    if (
-      !layout ||
-      !templateApplyPayload?.roomId ||
-      !templateApplyPayload?.templateId
-    ) {
-      showToast?.(
+        async function applyTemplateWithMappings() {
+        if (
+        !layout ||
+        !templateApplyPayload?.roomId ||
+        !templateApplyPayload?.templateId
+        ) {
+        showToast?.(
         {
           title: "Apply Failed",
           description:
             "Missing template apply context. Try applying the template again.",
         },
         true
-      )
-      return
-    }
-    const nextLayout = buildTemplateLayoutPreview(
-      layout,
-      templateApplyPayload.roomId,
-      templateApplyPayload.templateId
-    )
-    const reassignments = applyPreviewRows.map((r) => ({
-      fromKey: r.fromKey,
-      toKey: r.toKey,
-    }))
-    setSaving(true)
-    try {
-      const previousLayoutSnapshot = JSON.parse(JSON.stringify(layout))
-      const res = await fetch("/api/storage-layout", {
+        )
+        return
+        }
+        const nextLayout = buildTemplateLayoutPreview(
+        layout,
+        templateApplyPayload.roomId,
+        templateApplyPayload.templateId
+        )
+        const reassignments = applyPreviewRows.map((r) => ({
+        fromKey: r.fromKey,
+        toKey: r.toKey,
+        }))
+        setSaving(true)
+        try {
+        const previousLayoutSnapshot = JSON.parse(JSON.stringify(layout))
+        const res = await fetch("/api/storage-layout", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -642,39 +641,39 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
           reassignments,
           skipUsageCheck: true,
         }),
-      })
-      const json = await res.json().catch(() => null)
-      if (!res.ok || !json?.ok) {
+        })
+        const json = await res.json().catch(() => null)
+        if (!res.ok || !json?.ok) {
         throw new Error(json?.error || "Template apply failed")
-      }
-      setLayout(json.data)
-      setTemplateConflictOpen(false)
-      setApplyPreviewOpen(false)
-      setTemplateApplyPayload(null)
-      setReassignmentMode("")
-      setDragSourceKey("")
-      const breakdown = Array.isArray(json?.movedBreakdown)
+        }
+        setLayout(json.data)
+        setTemplateConflictOpen(false)
+        setApplyPreviewOpen(false)
+        setTemplateApplyPayload(null)
+        setReassignmentMode("")
+        setDragSourceKey("")
+        const breakdown = Array.isArray(json?.movedBreakdown)
         ? json.movedBreakdown
         : []
-      setApplyReportRows(breakdown)
-      setApplyReportOpen(true)
-      showToast?.({
-        title: "Template Applied",
+        setApplyReportRows(breakdown)
+        setApplyReportOpen(true)
+        showToast?.({
+        title: "Template Applied Successfully",
         description: `Template applied with reassignment. ${Number(json?.movedCount || 0)} student record(s) moved.`,
-      })
-    } catch (err) {
-      showToast?.(
-        {
-          title: "Apply Failed",
-          description:
-            err?.message || "Unable to apply template with reassignment.",
-        },
-        true
-      )
-    } finally {
-      setSaving(false)
-    }
-  }
+        })
+        } catch (err) {
+        showToast?.(
+          {
+            title: "Template Application Failed",
+            description:
+              err?.message || "Unable to apply template with reassignment.",
+          },
+          true
+        )
+        } finally {
+        setSaving(false)
+        }
+        }
 
   function addCabinet() {
     if (!activeRoom) return
@@ -992,14 +991,14 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Save failed")
       setLayout(json.data)
       showToast?.({
-        title: "Layout Saved",
-        description: "All room and cabinet changes have been applied.",
+        title: "Storage Layout Saved",
+        description: "The spatial distribution and cabinet placements have been successfully committed to the repository.",
       })
     } catch (err) {
       showToast?.(
         {
-          title: "Save Failed",
-          description: err?.message || "Unable to save storage layout.",
+          title: "Layout Save Failed",
+          description: err?.message || "An error occurred while attempting to synchronize the spatial layout.",
         },
         true
       )
@@ -1356,9 +1355,8 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                           className="h-10 w-10 text-gray-600 hover:bg-gray-100 hover:text-red-600"
                           disabled={!activeRoom || activeRoomStudentCount > 0}
                         >
-                          <i className="ph-bold ph-trash" />
-                        </Button>
-                      </TooltipTrigger>
+                          <i className="ph-bold ph-archive" />
+                        </Button>                      </TooltipTrigger>
                       <TooltipContent side="bottom">
                         Delete Active Room
                       </TooltipContent>
@@ -1677,7 +1675,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                                   className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-red-600"
                                   onClick={() => setBulkConfirmOpen(true)}
                                 >
-                                  <i className="ph-bold ph-trash text-sm" />
+                                  <i className="ph-bold ph-archive text-sm" />
                                 </Button>
                               </TooltipTrigger>
                               <TooltipContent side="top">Delete</TooltipContent>
@@ -1815,7 +1813,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                           onClick={() => setBulkConfirmOpen(true)}
                           className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-pup-maroon hover:bg-red-50/30 lg:col-span-2"
                         >
-                          <i className="ph-bold ph-trash mr-2 text-pup-maroon" />
+                          <i className="ph-bold ph-archive mr-2 text-pup-maroon" />
                           REMOVE CABINET
                         </Button>
                       </div>
@@ -1962,7 +1960,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
         selectedCount={selectedCabinetIds.size}
         onCancel={() => setSelectedCabinetIds(new Set())}
         actionLabel="DELETE SELECTED"
-        actionIcon="ph-trash"
+        actionIcon="ph-archive"
         onAction={() => setBulkConfirmOpen(true)}
         selectionLabel="Cabinets Selected"
         selectionStatus="Bulk Layout Actions"
@@ -1979,6 +1977,8 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
         note="Changes are staged locally. You must click 'Save Layout' to finalize deletion."
         confirmLabel="DELETE PERMANENTLY"
         variant="danger"
+        icon="ph-duotone ph-archive"
+        buttonIcon="ph-bold ph-archive"
         onConfirm={bulkDeleteCabinets}
       />
 
@@ -1990,6 +1990,8 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
         note="Changes are staged locally. You must click 'Save Layout' to finalize deletion."
         confirmLabel="DELETE ROOM"
         variant="danger"
+        icon="ph-duotone ph-archive"
+        buttonIcon="ph-bold ph-archive"
         onConfirm={() => {
           removeActiveRoom()
           setDeleteRoomConfirmOpen(false)

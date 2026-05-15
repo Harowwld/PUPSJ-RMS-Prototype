@@ -13,6 +13,11 @@ import {
   EmptyDescription,
   EmptyMedia,
 } from "@/components/ui/empty"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 export default function BulkImportTab({
   loading = false,
@@ -185,8 +190,8 @@ export default function BulkImportTab({
             <CardContent className="flex flex-1 flex-col p-6">
               <div className="mb-6 flex flex-wrap items-center gap-3">
                 <a
-                  href="data:text/csv;charset=utf-8,Category,Name,Code%0ADocumentType,Transcript of Records,%0ACourse,Bachelor of Science in IT,BSIT%0ASection,Block 1,BSIT"
-                  download="taxonomy-import-template.csv"
+                  href="data:text/csv;charset=utf-8,Category,Name,Code%0ADocumentType,Transcript of Records,%0ADocumentType,Diploma,%0ACourse,Bachelor of Science in IT,BSIT%0ACourse,Bachelor of Science in Accountancy,BSA%0ASection,Block 1,BSIT%0ASection,Section 1,BSA"
+                  download="PUP-TAXONOMY-IMPORT-TEMPLATE.csv"
                   className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-xs transition-all hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
                 >
                   <i className="ph-bold ph-file-csv text-base"></i>
@@ -316,7 +321,7 @@ export default function BulkImportTab({
                     <th className="w-48 p-4">Category</th>
                     <th className="p-4 min-w-[200px]">Name / Label</th>
                     <th className="w-48 p-4">Identifier</th>
-                    <th className="w-40 p-4 text-right">Status</th>
+                    <th className="w-40 p-4 text-right">Validation</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -413,9 +418,9 @@ export default function BulkImportTab({
                     return (
                       <tr
                         key={row.index}
-                        className={`transition-colors hover:bg-gray-50 ${row.error ? "bg-red-50/30" : ""}`}
+                        className={`transition-colors hover:bg-gray-50 ${row.error ? "bg-red-50" : ""}`}
                       >
-                        <td className="p-4 text-center">
+                        <td className={`p-4 text-center ${row.error ? "border-l-4 border-l-red-500" : ""}`}>
                           <input
                             type="checkbox"
                             className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-30"
@@ -539,12 +544,21 @@ export default function BulkImportTab({
                             </div>
                           ) : row.error ? (
                             <div className="flex items-center justify-end gap-1.5">
-                              <div className="flex items-center gap-1.5 text-red-600">
-                                <i className="ph-bold ph-warning-circle text-base"></i>
-                                <span className="text-[11px] font-black tracking-tight uppercase">
-                                  {row.error}
-                                </span>
-                              </div>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <div className="flex cursor-help items-center gap-1.5 text-red-600">
+                                    <i className="ph-bold ph-warning-circle text-base"></i>
+                                    <span className="text-[11px] font-black tracking-tight uppercase">
+                                      {row.error}
+                                    </span>
+                                  </div>
+                                </TooltipTrigger>
+                                <TooltipContent side="left" className="bg-red-950 text-white border-red-900">
+                                  <p className="text-[10px] font-bold uppercase tracking-wider">
+                                    Row Validation Failed: {row.error}
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
                               <Button
                                 variant="ghost"
                                 size="sm"

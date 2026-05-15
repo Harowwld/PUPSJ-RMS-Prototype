@@ -9,6 +9,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { useState } from "react"
+import { cn } from "@/lib/utils"
 
 function PDFFrame({ docId }) {
   const [frameReady, setFrameReady] = useState(false)
@@ -36,26 +37,57 @@ function PDFFrame({ docId }) {
 }
 
 export default function PDFPreviewModal({ open, onClose, preview }) {
+  const [isFullscreen, setIsFullscreen] = useState(false)
+
   if (!open) return null
 
   const docId = preview?.docId
 
   return (
-    <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl xl:max-w-[1400px]">
+    <Dialog 
+      open={open} 
+      onOpenChange={(isOpen) => {
+        if (!isOpen) {
+          setIsFullscreen(false)
+          onClose()
+        }
+      }}
+    >
+      <DialogContent 
+        hideClose={isFullscreen}
+        className={cn(
+          "flex flex-col overflow-hidden border border-gray-200 bg-white p-0 shadow-2xl transition-all duration-300 ease-out",
+          isFullscreen 
+              ? "fixed h-screen w-screen max-w-none sm:max-w-none m-0 rounded-none z-[100] left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] sm:w-screen sm:h-screen" 
+              : "h-[90vh] w-[96vw] max-w-[96vw] xl:max-w-[1400px] rounded-brand"
+      )}>
         <DialogHeader className="shrink-0 border-b border-gray-100 bg-gray-50/50 p-6">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon shadow-sm">
-              <i className="ph-duotone ph-file-pdf text-2xl"></i>
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon shadow-sm">
+                <i className="ph-duotone ph-file-pdf text-2xl"></i>
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-left text-xl leading-none font-black tracking-tight text-gray-900">
+                  Document Preview: {preview.docType}
+                </DialogTitle>
+                <p className="mt-1.5 text-left text-sm font-medium text-gray-500">
+                  Reviewing digitized record for {preview.studentName}. Ensure all
+                  identifiers and data are clearly legible.
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <DialogTitle className="text-left text-xl leading-none font-black tracking-tight text-gray-900">
-                Document Preview: {preview.docType}
-              </DialogTitle>
-              <p className="mt-1.5 text-left text-sm font-medium text-gray-500">
-                Reviewing digitized record for {preview.studentName}. Ensure all
-                identifiers and data are clearly legible.
-              </p>
+
+            <div className={cn("flex items-center gap-2", !isFullscreen && "mr-8")}>
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsFullscreen(!isFullscreen)}
+                    className="h-10 gap-2 rounded-brand border-gray-300 bg-white font-bold text-gray-700 hover:bg-gray-50 active:scale-95 shadow-sm"
+                >
+                    <i className={cn("ph-bold", isFullscreen ? "ph-corners-in" : "ph-corners-out")} />
+                    {isFullscreen ? "EXIT FULL SCREEN" : "FULL SCREEN"}
+                </Button>
             </div>
           </div>
         </DialogHeader>

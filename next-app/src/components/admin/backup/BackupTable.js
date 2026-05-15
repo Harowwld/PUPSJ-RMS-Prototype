@@ -71,80 +71,45 @@ export default function BackupTable({
               />
             </th>
             <th className="w-1/3 p-3 font-bold">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100">
-                    Backup Archive{" "}
-                    <SortIndicator
-                      column="id"
-                      sortBy={sortBy}
-                      sortOrder={sortOrder}
-                    />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="rounded-brand">
-                  <DropdownMenuItem onClick={() => handleSort("id", "ASC")}>
-                    Ascending
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleSort("id", "DESC")}>
-                    Descending
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <button
+                onClick={() => handleSort("id")}
+                className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+              >
+                Backup Archive{" "}
+                <SortIndicator
+                  column="id"
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                />
+              </button>
             </th>
             <th className="p-3 text-center font-bold">
               <div className="flex justify-center">
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button className="flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100">
-                      Size{" "}
-                      <SortIndicator
-                        column="size_bytes"
-                        sortBy={sortBy}
-                        sortOrder={sortOrder}
-                      />
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="center" className="rounded-brand">
-                    <DropdownMenuItem
-                      onClick={() => handleSort("size_bytes", "ASC")}
-                    >
-                      Ascending
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => handleSort("size_bytes", "DESC")}
-                    >
-                      Descending
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                <button
+                  onClick={() => handleSort("size_bytes")}
+                  className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                >
+                  Size{" "}
+                  <SortIndicator
+                    column="size_bytes"
+                    sortBy={sortBy}
+                    sortOrder={sortOrder}
+                  />
+                </button>
               </div>
             </th>
             <th className="p-3 font-bold">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100">
-                    Creation Date{" "}
-                    <SortIndicator
-                      column="created_at"
-                      sortBy={sortBy}
-                      sortOrder={sortOrder}
-                    />
-                  </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="rounded-brand">
-                  <DropdownMenuItem
-                    onClick={() => handleSort("created_at", "ASC")}
-                  >
-                    Ascending
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => handleSort("created_at", "DESC")}
-                  >
-                    Descending
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <button
+                onClick={() => handleSort("created_at")}
+                className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+              >
+                Creation Date{" "}
+                <SortIndicator
+                  column="created_at"
+                  sortBy={sortBy}
+                  sortOrder={sortOrder}
+                />
+              </button>
             </th>
             <th className="p-3 text-center font-bold whitespace-nowrap">
               Storage Locations
