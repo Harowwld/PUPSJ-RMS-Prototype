@@ -52,34 +52,35 @@ export default function SecurityQuestionsTab({
           <CardContent className="flex-1 overflow-y-auto p-8">
             <div className="max-w-4xl space-y-8">
               <div className="grid grid-cols-1 gap-6">
-                {securityQuestions.map((q, i) => (
-                  <div key={i} className="group space-y-2">
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-[10px] font-black text-gray-500 transition-colors group-focus-within:border-red-100 group-focus-within:bg-red-50 group-focus-within:text-pup-maroon">
-                        {i + 1}
-                      </span>
-                      <label className="text-[11px] font-black tracking-widest text-gray-500 uppercase transition-colors group-focus-within:text-gray-900">
-                        Security Challenge Question{" "}
-                        {i < 2 ? (
-                          <span className="text-pup-maroon">*</span>
-                        ) : (
-                          <span className="ml-1 text-gray-400 normal-case">(Optional)</span>
-                        )}
-                      </label>
-                    </div>
-                    <Input
-                      type="text"
-                      placeholder="e.g. What was the name of your first elementary school?"
-                      className="h-12 rounded-brand border border-gray-300 bg-white text-sm shadow-xs transition-all focus-visible:border-pup-maroon focus-visible:ring-pup-maroon"
-                      value={q}
-                      onChange={(e) => {
-                        const updated = [...securityQuestions]
-                        updated[i] = e.target.value
-                        setSecurityQuestions(updated)
-                      }}
-                    />
-                  </div>
-                ))}
+                 {securityQuestions.map((q, i) => {
+                   const anyFilled = securityQuestions.some(sq => (sq || "").trim() !== "");
+                   const showRed = !anyFilled && !loading;
+
+                   return (
+                     <div key={i} className="group space-y-2">
+                       <div className="flex items-center gap-2">
+                         <span className={`flex h-6 w-6 items-center justify-center rounded-full border ${showRed ? "border-red-200 bg-red-50 text-red-600" : "border-gray-200 bg-gray-100 text-gray-500"} text-[10px] font-black transition-colors group-focus-within:border-red-100 group-focus-within:bg-red-50 group-focus-within:text-pup-maroon`}>
+                           {i + 1}
+                         </span>
+                         <label className={`text-[11px] font-black tracking-widest ${showRed ? "text-red-600" : "text-gray-500"} uppercase transition-colors group-focus-within:text-gray-900`}>
+                           Security Challenge Question
+                           <span className="ml-1 text-gray-400 font-medium normal-case">(Any 2 Required)</span>
+                         </label>
+                       </div>
+                       <Input
+                         type="text"
+                         placeholder="e.g. What was the name of your first elementary school?"
+                         className={`h-12 rounded-brand border ${showRed ? "border-red-500 ring-1 ring-red-500 bg-red-50/30" : "border-gray-300 bg-white"} text-sm shadow-xs transition-all focus-visible:border-pup-maroon focus-visible:ring-pup-maroon`}
+                         value={q}
+                         onChange={(e) => {
+                           const updated = [...securityQuestions]
+                           updated[i] = e.target.value
+                           setSecurityQuestions(updated)
+                         }}
+                       />
+                     </div>
+                   );
+                 })}
               </div>
 
 

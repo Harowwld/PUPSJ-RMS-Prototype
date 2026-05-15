@@ -57,8 +57,8 @@ export async function PUT(req) {
     for (let i = 0; i < 5; i++) {
       const q = String(questions[i] || "").trim();
       if (q) {
-        const isRequired = (i < 2) ? 1 : 0;
-        await dbRun("INSERT INTO security_questions (id, question, is_required) VALUES (?, ?, ?)", [i + 1, q, isRequired]);
+        // Any question provided is now considered a potential recovery challenge
+        await dbRun("INSERT INTO security_questions (id, question, is_required) VALUES (?, ?, ?)", [i + 1, q, 1]);
       }
     }
 

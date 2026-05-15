@@ -135,7 +135,7 @@ function AccountPageContent() {
     e.preventDefault();
     if (profileLoading) return;
 
-    if (!fname.trim() || !lname.trim() || !username.trim()) {
+    if (!(fname || "").trim() || !(lname || "").trim() || !(username || "").trim()) {
       setProfileError("Please fill all required fields.");
       return;
     }
@@ -153,9 +153,9 @@ function AccountPageContent() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fname: fname.trim(),
-          lname: lname.trim(),
-          email: username.trim(),
+          fname: (fname || "").trim(),
+          lname: (lname || "").trim(),
+          email: (username || "").trim(),
         }),
       });
       const json = await res.json();
@@ -241,8 +241,8 @@ function AccountPageContent() {
       }
     }
 
-    if (payload.length === 0) {
-      setSecError("Please provide an answer for at least one question to update.");
+    if (payload.length < 2) {
+      setSecError("Please provide answers for at least two questions.");
       return;
     }
 
@@ -814,7 +814,9 @@ function AccountPageContent() {
                                 {showInput ? (
                                   <Input
                                     type="text"
-                                    className="bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900 animate-in fade-in slide-in-from-top-1 duration-200"
+                                    className={`bg-white border-gray-300 rounded-brand focus:ring-pup-maroon font-bold text-gray-900 animate-in fade-in slide-in-from-top-1 duration-200 ${
+                                      Object.values(secAnswers).every(v => !v?.trim()) && !secLoading ? "border-red-500 ring-1 ring-red-500 bg-red-50/30" : ""
+                                    }`}
                                     placeholder="Your answer"
                                     value={secAnswers[q.id] || ""}
                                     onChange={(e) => setSecAnswers({ ...secAnswers, [q.id]: e.target.value })}
