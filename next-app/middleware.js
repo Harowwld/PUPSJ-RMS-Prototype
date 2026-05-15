@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { getSessionCookieName, verifySessionToken } from "./src/lib/jwt";
-import { rateLimitMiddleware } from "./src/lib/rateLimitMiddleware";
 
 function constantTimeEqual(a, b) {
   const sa = String(a || "");
@@ -27,37 +26,20 @@ export async function middleware(req) {
   const { pathname } = req.nextUrl;
   const method = String(req.method || "GET").toUpperCase();
 
-  // 1. Apply Rate Limiting
-  const rateLimitResponse = await rateLimitMiddleware(req);
-  
-  // Helper to ensure we keep rate limit headers and add security ones
-  const finalize = (res) => {
-    // Copy headers from rateLimitResponse to the new response
-    rateLimitResponse.headers.forEach((value, key) => {
-      if (key.toLowerCase().startsWith('x-ratelimit-') || key.toLowerCase() === 'retry-after') {
-        res.headers.set(key, value);
-      }
-    });
-    return addSecurityHeaders(res);
-  };
-
-  if (rateLimitResponse.status === 429 || rateLimitResponse.status === 403) {
-    return finalize(rateLimitResponse);
-  }
-
-  // 2. Hot-folder ingest auth
+  // 1. Hot-folder ingest auth
   if (pathname === "/api/ingest/hot-folder" && method === "POST") {
     const authHeader = req.headers.get("authorization") || "";
     const match = authHeader.match(/^Bearer\s+(.+)$/i);
     const token = (match?.[1] || "").trim();
     const expected = String(process.env.HOT_FOLDER_INGEST_TOKEN || "").trim();
     if (!expected || !token || !constantTimeEqual(token, expected)) {
-      return finalize(NextResponse.json({ ok: false, error: "Invalid ingest token" }, { status: 401 }));
+      return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid ingest token" }, { status: 401 }));
     }
-    return finalize(NextResponse.next());
+    return addSecurityHeaders(NextResponse.next());
   }
 
-  // 3. Allow specific auth endpoints to skip session check
+  // 2. Allow specific auth endpoints to skip session check
+  // Note: Rate limiting for these is handled within the route handlers to avoid Edge Runtime issues
   if (
     pathname.startsWith("/api/auth/login") || 
     pathname.startsWith("/api/auth/logout") ||
@@ -65,23 +47,23 @@ export async function middleware(req) {
     pathname.startsWith("/api/auth/forgot-password") ||
     pathname === "/api/system/reset-db"
   ) {
-    return finalize(rateLimitResponse);
+    return addSecurityHeaders(NextResponse.next());
   }
 
-  // 4. Public routes
+  // 3. Public routes
   if (pathname === "/") {
-    return finalize(rateLimitResponse);
+    return addSecurityHeaders(NextResponse.next());
   }
 
-  // 5. Session validation for all other protected routes
+  // 4. Session validation for all other protected routes
   const token = req.cookies.get(getSessionCookieName())?.value || "";
   if (!token) {
     if (pathname.startsWith("/api/")) {
-      return finalize(NextResponse.json({ ok: false, error: "Not authenticated (Middleware)" }, { status: 401 }));
+      return addSecurityHeaders(NextResponse.json({ ok: false, error: "Not authenticated (Middleware)" }, { status: 401 }));
     }
     const url = req.nextUrl.clone();
     url.pathname = "/";
-    return finalize(NextResponse.redirect(url));
+    return addSecurityHeaders(NextResponse.redirect(url));
   }
 
   let payload;
@@ -89,21 +71,21 @@ export async function middleware(req) {
     payload = await verifySessionToken(token);
   } catch (err) {
     if (pathname.startsWith("/api/")) {
-      return finalize(NextResponse.json({ ok: false, error: "Invalid session (Middleware): " + err.message }, { status: 401 }));
+      return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid session (Middleware): " + err.message }, { status: 401 }));
     }
     const url = req.nextUrl.clone();
     url.pathname = "/";
-    return finalize(NextResponse.redirect(url));
+    return addSecurityHeaders(NextResponse.redirect(url));
   }
 
   const role = String(payload?.role || "");
 
-  // 6. Role-based routing
+  // 5. Role-based routing
   if (pathname.startsWith("/admin")) {
     if (role !== "Admin") {
       const url = req.nextUrl.clone();
       url.pathname = "/staff";
-      return finalize(NextResponse.redirect(url));
+      return addSecurityHeaders(NextResponse.redirect(url));
     }
   }
 
@@ -111,13 +93,13 @@ export async function middleware(req) {
     if (!role) {
       const url = req.nextUrl.clone();
       url.pathname = "/";
-      return finalize(NextResponse.redirect(url));
+      return addSecurityHeaders(NextResponse.redirect(url));
     }
   }
 
-  // Success: Pass through with rate limit headers and security headers
-  return finalize(rateLimitResponse);
+  return addSecurityHeaders(NextResponse.next());
 }
+
 
 export const config = {
   matcher: [

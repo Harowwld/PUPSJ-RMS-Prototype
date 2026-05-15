@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { dbGet, dbAll } from "@/lib/sqlite";
 import { ForgotPasswordIdentifySchema } from "@/lib/authSchemas";
+import { checkAuthForgotPasswordRateLimit } from "@/lib/rateLimiter";
 
 export const runtime = "nodejs";
 
@@ -14,7 +15,36 @@ function addSecurityHeaders(response) {
 
 export async function POST(req) {
   try {
-    // 1. Validate Input
+    // 1. Check Rate Limit
+    const forwardedFor = req.headers.get('x-forwarded-for');
+    const realIP = req.headers.get('x-real-ip');
+    const ipAddress = forwardedFor ? forwardedFor.split(',')[0].trim() : 
+                      realIP ? realIP.trim() : 
+                      req.ip || 'unknown';
+
+    const rateLimitResult = await checkAuthForgotPasswordRateLimit(ipAddress);
+    if (!rateLimitResult.allowed) {
+      return addSecurityHeaders(NextResponse.json(
+        { 
+          ok: false, 
+          error: rateLimitResult.reason === 'locked_out' 
+            ? `Too many password reset attempts. Account temporarily locked. Please try again later.`
+            : 'Too many password reset attempts. Please try again later.',
+          retryAfter: rateLimitResult.resetTime ? Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000) : undefined
+        },
+        { 
+          status: 429,
+          headers: rateLimitResult.resetTime ? {
+            'Retry-After': Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
+            'X-RateLimit-Limit': rateLimitResult.limit,
+            'X-RateLimit-Remaining': Math.max(0, rateLimitResult.remaining || 0),
+            'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString()
+          } : {}
+        }
+      ));
+    }
+
+    // 2. Validate Input
     const body = await req.json().catch(() => null);
     const validation = ForgotPasswordIdentifySchema.safeParse(body);
     

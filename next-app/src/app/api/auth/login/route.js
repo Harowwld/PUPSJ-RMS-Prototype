@@ -23,7 +23,36 @@ function addSecurityHeaders(response) {
 }
 
 export async function POST(req) {
-  // 1. Validate Input
+  // 1. Check Rate Limit (Moved back to route handler from middleware)
+  const forwardedFor = req.headers.get('x-forwarded-for');
+  const realIP = req.headers.get('x-real-ip');
+  const ipAddress = forwardedFor ? forwardedFor.split(',')[0].trim() : 
+                    realIP ? realIP.trim() : 
+                    req.ip || 'unknown';
+
+  const rateLimitResult = await checkAuthLoginRateLimit(ipAddress);
+  if (!rateLimitResult.allowed) {
+    return addSecurityHeaders(NextResponse.json(
+      { 
+        ok: false, 
+        error: rateLimitResult.reason === 'locked_out' 
+          ? `Account temporarily locked due to too many failed attempts. Please try again later.`
+          : 'Too many login attempts. Please try again later.',
+        retryAfter: rateLimitResult.resetTime ? Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000) : undefined
+      },
+      { 
+        status: 429,
+        headers: rateLimitResult.resetTime ? {
+          'Retry-After': Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
+          'X-RateLimit-Limit': rateLimitResult.limit,
+          'X-RateLimit-Remaining': Math.max(0, rateLimitResult.remaining || 0),
+          'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString()
+        } : {}
+      }
+    ));
+  }
+
+  // 2. Validate Input
   const body = await req.json().catch(() => null);
   const validation = LoginSchema.safeParse(body);
   
