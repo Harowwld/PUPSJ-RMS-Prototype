@@ -22,6 +22,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+import { formatPHDateTimeParts } from "@/lib/timeFormat"
 
 import LogExpandedRow from "./LogExpandedRow"
 import LogPagination from "./LogPagination"
@@ -310,6 +311,8 @@ export default function LogTable({
                 const isSelected = selectedLog?.id === log.id
                 const isExpanded = !!expandedRows[log.id]
                 const isCritical = String(log.severity || "").toUpperCase() === "CRITICAL"
+                const uploaded = formatPHDateTimeParts(log.created_at || log.time)
+
                 return (
                   <React.Fragment key={log.id}>
                     <tr
@@ -332,8 +335,8 @@ export default function LogTable({
                           <i className="ph-bold ph-caret-right text-xs"></i>
                         </button>
                       </td>
-                      <td className="p-3 text-[10px] whitespace-nowrap text-gray-500">
-                        {log.time}
+                      <td className="p-3 text-[10px] whitespace-nowrap text-gray-500 font-medium">
+                        {uploaded.date}
                       </td>
                       <td className="p-3">
                         <Badge

@@ -24,6 +24,7 @@ import { AdminGuard } from "@/components/shared/AuthGuard"
 import StaffDirectoryTab from "@/components/admin/StaffDirectoryTab"
 import RegisterAccountTab from "@/components/admin/RegisterAccountTab"
 import AuditLogsTab from "@/components/admin/AuditLogsTab"
+import { generateExportFilename } from "@/lib/exportHelpers"
 import BackupTab from "@/components/admin/BackupTab"
 import EditUserModal from "@/components/admin/EditUserModal"
 import SystemConfigTab from "@/components/admin/SystemConfigTab"
@@ -42,7 +43,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 
 function AdminPageContent() {
   const router = useRouter()
@@ -149,6 +150,16 @@ function AdminPageContent() {
   const [defaultPwOpen, setDefaultPwOpen] = useState(false)
   const [defaultPwUserLabel, setDefaultPwUserLabel] = useState("")
   const [defaultReturnedPw, setDefaultReturnedPw] = useState("")
+  const [copied, setCopied] = useState(false)
+
+  const handleCopyPassword = useCallback(() => {
+    if (!defaultReturnedPw) return
+    navigator.clipboard.writeText(defaultReturnedPw).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    })
+  }, [defaultReturnedPw])
+
   const [declinePromptOpen, setDeclinePromptOpen] = useState(false)
   const [declineReason, setDeclineReason] = useState("")
   const [pendingDeclineDocId, setPendingDeclineDocId] = useState(null)
@@ -1117,14 +1128,33 @@ function AdminPageContent() {
   }
 
   const exportData = () => {
-    let csv = "ID,First Name,Last Name,Role,Status,Email\n"
-    staffData.forEach((s) => {
-      csv += `${s.id},${s.fname},${s.lname},${s.role},${s.status},${s.email}\n`
-    })
-    const link = document.createElement("a")
-    link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + csv))
-    link.setAttribute("download", "pup_staff_list.csv")
-    link.click()
+    try {
+      let csv = "ID,First Name,Last Name,Role,Status,Email\n"
+      staffData.forEach((s) => {
+        csv += `${s.id},${s.fname},${s.lname},${s.role},${s.status},${s.email}\n`
+      })
+      const link = document.createElement("a")
+      const fileName = generateExportFilename("STAFF-DIRECTORY", "DATA", "csv")
+      link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + csv))
+      link.setAttribute("download", fileName)
+      link.click()
+
+      showToast({
+        title: "Export Success",
+        description: `Personnel directory exported successfully as ${fileName}.`
+      })
+
+      logAdminAction({
+        action: "Export Personnel List",
+        details: `exported ${staffData.length} staff records to CSV`,
+        entityType: "Report"
+      })
+    } catch (err) {
+      showToast({
+        title: "Export Failed",
+        description: "An error occurred while exporting the personnel list."
+      }, true)
+    }
   }
 
   const sidebarItems = [
@@ -1321,6 +1351,8 @@ function AdminPageContent() {
               onBulkApprove={handleBulkApprove}
               onBulkDecline={handleBulkDecline}
               onPreviewDocument={handlePreviewDocument}
+              showToast={showToast}
+              onLogAction={logAdminAction}
             />
           )}
 
@@ -1335,6 +1367,7 @@ function AdminPageContent() {
             <SLAAnalyticsTab
               showToast={showToast}
               onLogAction={logAdminAction}
+              onSwitchView={switchView}
             />
           )}
 
@@ -1519,20 +1552,40 @@ function AdminPageContent() {
             </div>
           </DialogHeader>
 
-          <div className="space-y-6 p-6">
-            <div>
-              <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 uppercase">
-                Default Password for{" "}
-                <span className="font-black text-pup-maroon">
+          <div className="space-y-6 p-8">
+            <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-6 shadow-sm">
+              <label className="mb-3 block text-[10px] font-black tracking-widest text-amber-900 uppercase opacity-60">
+                Temporary Password for{" "}
+                <span className="text-pup-maroon">
                   {defaultPwUserLabel}
                 </span>
               </label>
-              <Input
-                type="text"
-                readOnly
-                className="h-12 rounded-brand border border-gray-300 bg-white font-mono text-sm font-bold focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
-                value={defaultReturnedPw}
-              />
+
+              <div className="group relative flex items-center justify-between rounded-lg border border-amber-200 bg-white p-4 shadow-inner transition-all hover:border-amber-300">
+                <code className="font-mono text-lg font-black tracking-tight text-gray-900">
+                  {defaultReturnedPw}
+                </code>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopyPassword}
+                  className={cn(
+                    "h-10 gap-2 rounded-brand border-amber-200 px-4 font-black transition-all",
+                    copied
+                      ? "bg-emerald-500 text-white border-emerald-600 shadow-emerald-200"
+                      : "bg-white text-amber-900 hover:bg-amber-50 hover:border-amber-400"
+                  )}
+                >
+                  <i className={cn("ph-bold", copied ? "ph-check-circle" : "ph-copy")} />
+                  {copied ? "COPIED!" : "COPY"}
+                </Button>
+              </div>
+
+              <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200/50 bg-white/40 p-3 text-[10px] font-bold leading-relaxed text-amber-800/80">
+                <i className="ph-fill ph-warning-circle text-sm text-amber-600 mt-0.5" />
+                This password is temporary and will expire after the first login. Please ensure the user receives this securely.
+              </div>
             </div>
           </div>
 

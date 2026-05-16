@@ -66,7 +66,6 @@ export default function BackupTab({
   const [page, setPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [jumpPage, setJumpPage] = useState("1")
-  const [isExporting, setIsExporting] = useState(false)
 
   const [localSearch, setLocalSearch] = useState(backupSearch)
 
@@ -199,41 +198,6 @@ export default function BackupTab({
     setPage(1)
   }
 
-  const handleExportCSV = async () => {
-    if (isExporting) return
-    setIsExporting(true)
-    try {
-      const { formatBytes } = await import("@/lib/utils")
-      const { formatPHDateTime } = await import("@/lib/timeFormat")
-      const headers = ["ID", "Filename", "Size", "Local Status", "External Status", "Offsite Status", "Created At"]
-      const csvRows = backups.map((b) => [
-        b.id,
-        b.filename || "—",
-        formatBytes(b.size_bytes),
-        b.status_local || "—",
-        b.status_external || "—",
-        b.status_offsite || "—",
-        b.created_at ? formatPHDateTime(b.created_at) : "—",
-      ])
-      const csvContent = [
-        headers.join(","),
-        ...csvRows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
-      ].join("\n")
-      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-      const link = document.createElement("a")
-      const url = URL.createObjectURL(blob)
-      link.setAttribute("href", url)
-      link.setAttribute("download", `PUP-BACKUP-HISTORY-${format(new Date(), "yyyy-MM-dd-HHmm")}.csv`)
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    } catch (err) {
-      console.error("[Backup Export Error]", err)
-    } finally {
-      setIsExporting(false)
-    }
-  }
-
   const handleJumpPage = (e) => {
     if (e.key === "Enter" || e.type === "blur") {
       const val = parseInt(jumpPage)
@@ -291,26 +255,6 @@ export default function BackupTab({
                 icon="ph-hard-drives"
                 title="Encrypted Backup History"
                 description="Manage institutional snapshots and secure redundancy nodes."
-                extraChips={[
-                  ...(backupStartDate
-                    ? [
-                        {
-                          label: "From",
-                          value: backupStartDate,
-                          onClear: () => setBackupStartDate(""),
-                        },
-                      ]
-                    : []),
-                  ...(backupEndDate
-                    ? [
-                        {
-                          label: "Until",
-                          value: backupEndDate,
-                          onClear: () => setBackupEndDate(""),
-                        },
-                      ]
-                    : []),
-                ]}
                 leftAction={
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -377,21 +321,54 @@ export default function BackupTab({
                       <i className={`ph-bold ph-arrows-clockwise ${isLoading ? "animate-spin" : ""} text-base`}></i>
                       REFRESH
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleExportCSV}
-                      disabled={backups.length === 0 || isExporting}
-                      className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-50"
-                    >
-                      <i
-                        className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv"} text-base`}
-                      ></i>
-                      {isExporting ? "PREPARING..." : "EXPORT CSV"}
-                    </Button>
                   </div>
                 }
               />
+
+              {/* Active Filter Chips Row */}
+              {(localSearch !== "" || backupStartDate !== "" || backupEndDate !== "") && (
+                <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">Active Filters:</span>
+                    {localSearch && (
+                      <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon">
+                        Search: {localSearch}
+                        <button
+                          onClick={() => { setLocalSearch(""); setBackupSearch(""); setPage(1); }}
+                          className="ml-1 hover:text-pup-darkMaroon transition-colors"
+                        >
+                          <i className="ph-bold ph-x text-[8px]"></i>
+                        </button>
+                      </div>
+                    )}
+                    {(backupStartDate || backupEndDate) && (
+                      <div className="flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600">
+                        Range: {backupStartDate || "..."} to {backupEndDate || "..."}
+                        <button
+                          onClick={() => { setBackupStartDate(""); setBackupEndDate(""); setPage(1); }}
+                          className="ml-1 hover:text-emerald-800 transition-colors"
+                        >
+                          <i className="ph-bold ph-x text-[8px]"></i>
+                        </button>
+                      </div>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setLocalSearch("")
+                        setBackupSearch("")
+                        setBackupStartDate("")
+                        setBackupEndDate("")
+                        setPage(1)
+                      }}
+                      className="h-6 rounded-full border border-dashed border-pup-maroon/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
+                    >
+                      CLEAR ALL FILTERS
+                    </Button>
+                  </div>
+                </div>
+              )}
 
               <BackupFilters
                 localSearch={localSearch}
@@ -431,23 +408,18 @@ export default function BackupTab({
                     setBackupEndDate("")
                     setPage(1)
                   }}
+                  page={page}
+                  setPage={setPage}
+                  totalPages={totalPages}
+                  startItem={startItem}
+                  endItem={endItem}
+                  totalCount={backups.length}
+                  itemsPerPage={itemsPerPage}
+                  jumpPage={jumpPage}
+                  setJumpPage={setJumpPage}
+                  handleJumpPage={handleJumpPage}
+                  handleItemsPerPageChange={handleItemsPerPageChange}
                 />
-
-                {backups.length > 0 && (
-                  <BackupPagination
-                    page={page}
-                    setPage={setPage}
-                    totalPages={totalPages}
-                    startItem={startItem}
-                    endItem={endItem}
-                    totalCount={backups.length}
-                    itemsPerPage={itemsPerPage}
-                    jumpPage={jumpPage}
-                    setJumpPage={setJumpPage}
-                    handleJumpPage={handleJumpPage}
-                    handleItemsPerPageChange={handleItemsPerPageChange}
-                  />
-                )}
               </CardContent>
             </Card>
           </div>
@@ -458,7 +430,7 @@ export default function BackupTab({
           onCancel={() => setSelectedBackupIds([])}
           onAction={() => onDeleteBackup(selectedBackupIds)}
           actionLabel="DELETE PERMANENTLY"
-          actionIcon="ph-archive"
+          actionIcon="ph-trash"
         />
       </div>
     </TooltipProvider>

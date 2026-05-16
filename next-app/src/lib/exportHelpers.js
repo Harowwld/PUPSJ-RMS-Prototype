@@ -1,6 +1,27 @@
 import { formatPHDateTime } from "./timeFormat"
 
 /**
+ * Generates a standardized export filename
+ * Format: PUP-[ENTITY]-[TYPE]-[YYYY]-[MM]-[DD]-[HHmm].[EXT]
+ * @param {string} entity - The entity name (e.g. "AUDIT-LOGS", "STAFF")
+ * @param {string} type - The report type (e.g. "REPORT", "DATA")
+ * @param {string} extension - The file extension (e.g. "csv", "pdf")
+ */
+export const generateExportFilename = (entity, type, extension) => {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, "0")
+  const day = String(now.getDate()).padStart(2, "0")
+  const hours = String(now.getHours()).padStart(2, "0")
+  const minutes = String(now.getMinutes()).padStart(2, "0")
+
+  const entityPart = String(entity || "GENERIC").toUpperCase().replace(/\s+/g, "-")
+  const typePart = String(type || "EXPORT").toUpperCase().replace(/\s+/g, "-")
+
+  return `PUP-${entityPart}-${typePart}-${year}-${month}-${day}-${hours}${minutes}.${extension}`
+}
+
+/**
  * Exports SLA analytics data to CSV
  * @param {Object} data - The analytics data object
  * @param {number} total - Total lifetime requests
@@ -12,7 +33,7 @@ import { formatPHDateTime } from "./timeFormat"
 export const downloadSlaCsv = (data, total, slaHours, completionRate, onLogAction, fileName) => {
   if (!data) return
   
-  const finalFileName = fileName || `sla-analytics-${new Date().toISOString().split("T")[0]}.csv`;
+  const finalFileName = fileName || generateExportFilename("SLA-ANALYTICS", "REPORT", "csv");
   const q = (cell) => `"${String(cell).replace(/"/g, '""')}"`
   const row = (cells) => cells.map(q).join(",")
 

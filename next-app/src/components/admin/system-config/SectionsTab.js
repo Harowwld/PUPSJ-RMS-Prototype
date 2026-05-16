@@ -258,7 +258,7 @@ export default function SectionsTab({
         value={selectedCourseFilter}
         onChange={(e) => setSelectedCourseFilter(e.target.value)}
       >
-        <option value="">All Degree Programs</option>
+        <option value="">All</option>
         {courses.map((c) => (
           <option key={c.code} value={c.code}>
             {c.code} - {c.name}
@@ -302,10 +302,6 @@ export default function SectionsTab({
           searchLabel="Search Course Blocks"
           searchValue={localSearch}
           onSearchChange={setLocalSearch}
-          extraChips={[
-            ...(selectedCourseFilter ? [{ label: "Program", value: selectedCourseFilter, onClear: () => setSelectedCourseFilter("") }] : []),
-            ...(showArchived ? [{ label: "Mode", value: "Archived Records", onClear: () => setShowArchived(false) }] : []),
-          ]}
           filters={
             <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
               {programFilter}
@@ -332,7 +328,7 @@ export default function SectionsTab({
                         : "text-gray-500 hover:text-gray-700"
                     }`}
                   >
-                    ARCHIVED RECORDS
+                    ARCHIVED
                   </button>
                 </div>
               </div>
@@ -347,7 +343,7 @@ export default function SectionsTab({
                     onClick={handleExportSections}
                     className="flex h-10 w-10 items-center justify-center rounded-brand border border-gray-300 bg-white p-0 text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
                   >
-                    <i className="ph-bold ph-download-simple text-base"></i>
+                    <i className="ph-bold ph-file-csv text-base"></i>
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent side="top">Export to CSV</TooltipContent>
@@ -364,6 +360,62 @@ export default function SectionsTab({
             </div>
           }
         />
+
+        {/* Active Filter Chips Row */}
+        {(localSearch !== "" || showArchived || selectedCourseFilter) && (
+          <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">Active Filters:</span>
+              {localSearch && (
+                <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon uppercase">
+                  Search: {localSearch}
+                  <button
+                    onClick={() => { setLocalSearch(""); setSectionSearch(""); setPageSection(1); }}
+                    className="ml-1 hover:text-pup-darkMaroon transition-colors"
+                  >
+                    <i className="ph-bold ph-x text-[8px]"></i>
+                  </button>
+                </div>
+              )}
+              {selectedCourseFilter && (
+                <div className="flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 uppercase">
+                  Program: {selectedCourseFilter}
+                  <button
+                    onClick={() => { setSelectedCourseFilter(""); setPageSection(1); }}
+                    className="ml-1 hover:text-blue-800 transition-colors"
+                  >
+                    <i className="ph-bold ph-x text-[8px]"></i>
+                  </button>
+                </div>
+              )}
+              {showArchived && (
+                <div className="flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 uppercase">
+                  Mode: Archived Records
+                  <button
+                    onClick={() => { setShowArchived(false); setPageSection(1); }}
+                    className="ml-1 hover:text-amber-800 transition-colors"
+                  >
+                    <i className="ph-bold ph-x text-[8px]"></i>
+                  </button>
+                </div>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setLocalSearch("")
+                  setSectionSearch("")
+                  setSelectedCourseFilter("")
+                  setShowArchived(false)
+                  setPageSection(1)
+                }}
+                className="h-6 rounded-full border border-dashed border-pup-maroon/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase"
+              >
+                CLEAR ALL FILTERS
+              </Button>
+            </div>
+          </div>
+        )}
 
         <div className="relative flex flex-1 flex-col overflow-hidden">
         {/* Archive Mode Overlay Pattern */}
@@ -625,7 +677,7 @@ export default function SectionsTab({
                           </EmptyTitle>
                           <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600">
                             {sectionSearch
-                              ? `No results matching "${sectionSearch}" for ${selectedCourseFilter || "all programs"}.`
+                              ? `No results matching "${sectionSearch}" for ${selectedCourseFilter || "all"}.`
                               : showArchived
                                 ? "There are no archived course blocks yet."
                                 : "Add Course Block to organize students within degree programs."}

@@ -29,21 +29,11 @@ export default function LogFilters({
   setLogSeverityFilter,
   logTotal,
 }) {
-  const hasActiveFilters =
-    localSearch !== "" ||
-    logRoleFilter !== "All" ||
-    logSeverityFilter !== "All" ||
-    logStartDate !== "" ||
-    logEndDate !== ""
-
   const handleQuickRange = (range) => {
     const end = new Date()
     let start = new Date()
 
     switch (range) {
-      case "lastHour":
-        start.setHours(start.getHours() - 1)
-        break
       case "today":
         start.setHours(0, 0, 0, 0)
         break
@@ -67,13 +57,8 @@ export default function LogFilters({
         break
     }
 
-    if (range === "lastHour") {
-      setLogStartDate(start.toISOString())
-      setLogEndDate(end.toISOString())
-    } else {
-      setLogStartDate(format(start, "yyyy-MM-dd"))
-      setLogEndDate(format(end, "yyyy-MM-dd"))
-    }
+    setLogStartDate(format(start, "yyyy-MM-dd"))
+    setLogEndDate(format(end, "yyyy-MM-dd"))
     setLogPage(1)
   }
 
@@ -89,81 +74,6 @@ export default function LogFilters({
 
   return (
     <div className="rounded-t-brand border-b border-gray-200 bg-gray-50/50 p-4">
-      {/* Active Filter Chips */}
-      {hasActiveFilters && (
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">
-            Active Filters:
-          </span>
-          {localSearch && (
-            <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon">
-              Search: {localSearch}
-              <button
-                onClick={() => {
-                  setLocalSearch("")
-                  setLogSearch("")
-                  setLogPage(1)
-                }}
-                className="ml-1 transition-colors hover:text-pup-darkMaroon"
-              >
-                <i className="ph-bold ph-x text-[8px]"></i>
-              </button>
-            </div>
-          )}
-          {logRoleFilter !== "All" && (
-            <div className="flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600">
-              Role: {logRoleFilter}
-              <button
-                onClick={() => {
-                  setLogRoleFilter("All")
-                  setLogPage(1)
-                }}
-                className="ml-1 transition-colors hover:text-blue-800"
-              >
-                <i className="ph-bold ph-x text-[8px]"></i>
-              </button>
-            </div>
-          )}
-          {logSeverityFilter !== "All" && (
-            <div className="flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600">
-              Severity: {logSeverityFilter}
-              <button
-                onClick={() => {
-                  setLogSeverityFilter("All")
-                  setLogPage(1)
-                }}
-                className="ml-1 transition-colors hover:text-amber-800"
-              >
-                <i className="ph-bold ph-x text-[8px]"></i>
-              </button>
-            </div>
-          )}
-          {(logStartDate || logEndDate) && (
-            <div className="flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600">
-              Range: {logStartDate || "..."} to {logEndDate || "..."}
-              <button
-                onClick={() => {
-                  setLogStartDate("")
-                  setLogEndDate("")
-                  setLogPage(1)
-                }}
-                className="ml-1 transition-colors hover:text-emerald-800"
-              >
-                <i className="ph-bold ph-x text-[8px]"></i>
-              </button>
-            </div>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearAllFilters}
-            className="h-6 rounded-full border border-dashed border-pup-maroon/30 px-3 text-[10px] font-black text-pup-maroon transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-darkMaroon"
-          >
-            CLEAR ALL FILTERS
-          </Button>
-        </div>
-      )}
-
       <div className="flex w-full flex-wrap items-end gap-4">
         {/* Search */}
         <div className="min-w-[400px] flex-1">
@@ -189,13 +99,6 @@ export default function LogFilters({
               Date Range
             </label>
             <div className="flex gap-1.5">
-              <button
-                onClick={() => handleQuickRange("lastHour")}
-                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon"
-              >
-                Last Hour
-              </button>
-              <span className="text-[9px] text-gray-300">•</span>
               <button
                 onClick={() => handleQuickRange("today")}
                 className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon"

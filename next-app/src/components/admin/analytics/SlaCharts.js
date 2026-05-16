@@ -61,7 +61,7 @@ const CustomPieTooltip = ({ active, payload }) => {
   return null
 }
 
-export default function SlaCharts({ data, pieData }) {
+export default function SlaCharts({ data, pieData, onSwitchView }) {
   const totalSlaRequests = pieData.reduce((acc, curr) => acc + curr.value, 0)
 
   const renderLegend = (value, entry) => {
@@ -145,6 +145,14 @@ export default function SlaCharts({ data, pieData }) {
                   Once requests are processed over time, volume trends
                   will appear here.
                 </EmptyDescription>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-4 h-9 rounded-brand border-gray-300 font-bold text-xs"
+                  onClick={() => onSwitchView?.('review')}
+                >
+                  CHECK INCOMING REQUESTS
+                </Button>
               </EmptyHeader>
             </Empty>
           )}
@@ -196,9 +204,17 @@ export default function SlaCharts({ data, pieData }) {
                   <EmptyTitle className="text-lg font-bold text-gray-900">
                     No status data
                   </EmptyTitle>
-                  <EmptyDescription className="mt-1 text-sm font-medium text-gray-600">
+                  <EmptyDescription className="mt-1 text-sm font-medium text-gray-600 mb-4">
                     Status breakdown requires active request data.
                   </EmptyDescription>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-8 rounded-brand border-gray-300 font-bold text-[10px]"
+                    onClick={() => onSwitchView?.('review')}
+                  >
+                    VIEW REQUESTS
+                  </Button>
                 </EmptyHeader>
               </Empty>
             )}
@@ -223,7 +239,7 @@ export default function SlaCharts({ data, pieData }) {
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="font-mono font-black text-gray-900">{d.value}</span>
+                    <span className="font-inter font-black text-gray-900">{d.value}</span>
                     <span className="text-[10px] font-bold text-gray-400">{percent}%</span>
                   </div>
                 </div>
@@ -266,10 +282,18 @@ export default function SlaCharts({ data, pieData }) {
                   <EmptyTitle className="text-lg font-bold text-gray-900">
                     No requests recorded yet
                   </EmptyTitle>
-                  <EmptyDescription className="mt-1 text-sm font-medium text-gray-600">
+                  <EmptyDescription className="mt-1 text-sm font-medium text-gray-600 mb-4">
                     Data will populate as document requests are
                     created.
                   </EmptyDescription>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-8 rounded-brand border-gray-300 font-bold text-[10px]"
+                    onClick={() => onSwitchView?.('review')}
+                  >
+                    GO TO REVIEWS
+                  </Button>
                 </EmptyHeader>
               </Empty>
             )}

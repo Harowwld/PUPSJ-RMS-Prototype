@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Toggle } from "@/components/ui/toggle";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -25,6 +26,7 @@ import {
 import { cn } from "@/lib/utils";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { generateDigitizationCompliancePdf } from "@/lib/pdfGenerator";
+import { generateExportFilename } from "@/lib/exportHelpers";
 import {
   Empty,
   EmptyHeader,
@@ -61,6 +63,8 @@ export default function DigitizationComplianceTab({
   const [pdfBlobUrl, setPdfPreviewUrl] = useState(null);
   const [previewFrameReady, setPreviewFrameReady] = useState(false);
   const [isFullscreenPreview, setIsFullscreenPreview] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isExportingCsv, setIsExportingCsv] = useState(false);
 
   const [sortBy, setSortBy] = useState("courseCode");
   const [sortOrder, setSortOrder] = useState("asc");
@@ -83,7 +87,7 @@ export default function DigitizationComplianceTab({
   const SortIndicator = ({ column }) => {
     if (sortBy !== column)
       return (
-        <i className="ph-bold ph-caret-up-down ml-1 text-gray-300 transition-opacity group-hover:opacity-100 opacity-0 lg:opacity-100"></i>
+        <i className="ph-bold ph-caret-up-down ml-1 opacity-30 transition-opacity group-hover:opacity-100"></i>
       );
     return sortOrder === "asc" ? (
       <i className="ph-bold ph-caret-up ml-1 text-pup-maroon"></i>
@@ -155,7 +159,7 @@ export default function DigitizationComplianceTab({
     params.set("status", statusFilter);
     if (courseFilter) params.set("course", courseFilter); else params.delete("course");
     if (requireApproved) params.set("approved", "1"); else params.delete("approved");
-
+    
     const newUrl = `${window.location.pathname}?${params.toString()}`;
     window.history.replaceState(null, "", newUrl);
 
@@ -173,8 +177,17 @@ export default function DigitizationComplianceTab({
     () => (Array.isArray(data?.byCourse) ? data.byCourse : []),
     [data?.byCourse]
   );
+  
   const sortedByCourse = useMemo(() => {
-    return [...byCourse].sort((a, b) => {
+    let filtered = [...byCourse];
+    if (tableSearch.trim()) {
+      const search = tableSearch.toLowerCase();
+      filtered = filtered.filter(row => 
+        row.courseCode?.toLowerCase().includes(search)
+      );
+    }
+    
+    return filtered.sort((a, b) => {
       let valA = a[sortBy];
       let valB = b[sortBy];
 
@@ -187,7 +200,7 @@ export default function DigitizationComplianceTab({
       if (valA > valB) return sortOrder === "asc" ? 1 : -1;
       return 0;
     });
-  }, [byCourse, sortBy, sortOrder]);
+  }, [byCourse, sortBy, sortOrder, tableSearch]);
 
   const progressWidth = useMemo(() => {
     const p = summary?.percentDigitized;
@@ -197,29 +210,30 @@ export default function DigitizationComplianceTab({
 
   const handlePreview = async () => {
     if (!data || loading) return;
-
-    // Open the modal immediately to show the "Generating..." spinner
-    setReportOpen(true);
-
+    setIsGeneratingPdf(true);
     try {
       const blob = await generateDigitizationCompliancePdf(data, summary, meta, byCourse);
       const url = URL.createObjectURL(blob);
       setPdfPreviewUrl(url);
+      setReportOpen(true);
     } catch (e) {
       console.error("PDF Preview generation failed:", e);
       showToast?.({ title: "Preview Failed", description: "Failed to generate compliance report preview." }, true);
-      setReportOpen(false);
+    } finally {
+      setIsGeneratingPdf(false);
     }
   }
 
   const handlePrint = async () => {
+    const fileName = generateExportFilename("COMPLIANCE", "REPORT", "pdf");
     if (!pdfBlobUrl) {
+      setIsGeneratingPdf(true);
       try {
         const blob = await generateDigitizationCompliancePdf(data, summary, meta, byCourse);
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
-        link.download = `pup-rks-compliance-report-${new Date().toISOString().split("T")[0]}.pdf`;
+        link.download = fileName;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -228,11 +242,13 @@ export default function DigitizationComplianceTab({
         console.error("PDF Generation failed:", e);
         showToast?.({ title: "Report Generation Failed", description: "An error occurred while generating the PDF report." }, true);
         return;
+      } finally {
+        setIsGeneratingPdf(false);
       }
     } else {
       const link = document.createElement("a");
       link.href = pdfBlobUrl;
-      link.download = `pup-rks-compliance-report-${new Date().toISOString().split("T")[0]}.pdf`;
+      link.download = fileName;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -240,78 +256,95 @@ export default function DigitizationComplianceTab({
 
     onLogAction?.({
       action: "Generate Report",
-      details: `generated formal physical record compliance report (Status: ${statusFilter}, Course: ${courseFilter || 'All'}) for university accreditation files`,
+      details: `generated formal physical record compliance report (${fileName}) for university accreditation records`,
       entityType: "Report"
     });
 
     showToast?.({ title: "Report Downloaded", description: "The Compliance report has been successfully downloaded." });
   };
 
-  const downloadCsv = useCallback(() => {
+  const downloadCsv = useCallback(async () => {
     if (!summary) return;
+    setIsExportingCsv(true);
 
-    const q = (cell) => `"${String(cell).replace(/"/g, '""')}"`;
-    const row = (cells) => cells.map(q).join(",");
+    try {
+      await new Promise(resolve => setTimeout(resolve, 600));
 
-    const lines = [
-      row(["System Analytics - Digitization Compliance Report", ""]),
-      row(["Generated (server UTC)", meta?.generatedAt || ""]),
-      row(["Student status filter", meta?.studentStatus || ""]),
-      row(["Course filter", meta?.courseCode || "All"]),
-      row(["Require approved only", meta?.requireApproved ? "Yes" : "No"]),
-      row(["Requirement", meta?.definitions?.expectedCountFormula || ""]),
-      "",
-      row(["Summary Metrics", "Value"]),
-      row(["Total students", summary.totalStudents]),
-      row(["Fully digitized students", summary.digitizedStudents]),
-      row(["Incomplete students", summary.notDigitizedStudents]),
-      row([
-        "Average record completeness",
-        summary.percentDigitized != null ? `${summary.percentDigitized}%` : "N/A",
-      ]),
-      row(["Full Digitization Rate", summary.fullyDigitizedRate != null ? `${summary.fullyDigitizedRate}%` : "N/A"]),
-      row(["Total digitized files", summary.totalDigitizedDocsCount]),
-      row(["Total expected files", summary.totalExpectedDocsCount]),
-    ];
+      const q = (cell) => `"${String(cell).replace(/"/g, '""')}"`;
+      const row = (cells) => cells.map(q).join(",");
 
-    if (byCourse.length > 0) {
-      lines.push("");
-      lines.push(row(["Course Program Breakdown", "", "", ""]));
-      lines.push(row(["Course", "Total Students", "Fully Digitized", "Avg. Completeness"]));
-      for (const r of byCourse) {
-        lines.push(
-          row([
-            r.courseCode,
-            r.total,
-            r.digitized,
-            r.percent != null ? `${r.percent}%` : "N/A",
-          ])
-        );
+      const lines = [
+        row(["System Analytics - Digitization Compliance Report", ""]),
+        row(["Generated (server UTC)", meta?.generatedAt || ""]),
+        row(["Student status filter", meta?.studentStatus || ""]),
+        row(["Course filter", meta?.courseCode || "All"]),
+        row(["Require approved only", meta?.requireApproved ? "Yes" : "No"]),
+        row(["Requirement", meta?.definitions?.expectedCountFormula || ""]),
+        "",
+        row(["Summary Metrics", "Value"]),
+        row(["Total students", summary.totalStudents]),
+        row(["Fully digitized students", summary.digitizedStudents]),
+        row(["Incomplete students", summary.notDigitizedStudents]),
+        row([
+          "Average record completeness",
+          summary.percentDigitized != null ? `${summary.percentDigitized}%` : "N/A",
+        ]),
+        row(["Full Digitization Rate", summary.fullyDigitizedRate != null ? `${summary.fullyDigitizedRate}%` : "N/A"]),
+        row(["Total digitized files", summary.totalDigitizedDocsCount]),
+        row(["Total expected files", summary.totalExpectedDocsCount]),
+      ];
+
+      if (byCourse.length > 0) {
+        lines.push("");
+        lines.push(row(["Course Program Breakdown", "", "", ""]));
+        lines.push(row(["Course", "Total Students", "Fully Digitized", "Avg. Completeness"]));
+        for (const r of byCourse) {
+          lines.push(
+            row([
+              r.courseCode,
+              r.total,
+              r.digitized,
+              r.percent != null ? `${r.percent}%` : "N/A",
+            ])
+          );
+        }
       }
+
+      const csvContent = lines.join("\n");
+      const fileName = generateExportFilename("COMPLIANCE", "DATA", "csv");
+
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      onLogAction?.({
+        action: "Export CSV",
+        details: `exported digitization compliance dataset (${fileName}) to local CSV storage volume`,
+        entityType: "Report"
+      });
+
+      showToast?.({ title: "Export Success", description: `The compliance dataset has been successfully exported as ${fileName}.` });
+    } catch (e) {
+       showToast?.({ title: "Export Failed", description: "An error occurred during the data export process." }, true);
+    } finally {
+      setIsExportingCsv(false);
     }
+  }, [summary, meta, byCourse, onLogAction, showToast]);
 
-    const csvContent = lines.join("\n");
-    const now = new Date();
-    const dateStr = now.toISOString().split("T")[0];
-    const timeStr = now.toTimeString().split(" ")[0].replace(/:/g, "");
-    const fileName = `PUP-RKS-COMPLIANCE-DATA-${dateStr}-${timeStr}.csv`;
+  const handleClearAll = useCallback(() => {
+    setStatusFilter("Active");
+    setCourseFilter("");
+    setRequireApproved(false);
+    setTableSearch("");
+  }, []);
 
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const link = document.createElement("a");
-    const url = URL.createObjectURL(blob);
-    link.setAttribute("href", url);
-    link.setAttribute("download", fileName);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    onLogAction?.({
-      action: "Export CSV",
-      details: `exported digitization compliance dataset (${fileName}) to local CSV storage volume`,
-      entityType: "Report"
-    });
-  }, [summary, meta, byCourse, onLogAction, statusFilter, courseFilter]);
+  const hasActiveFilters = statusFilter !== "Active" || courseFilter !== "" || requireApproved || tableSearch !== "";
 
   return (
     <div className="flex flex-col w-full h-full gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500 font-inter min-h-0">
@@ -327,75 +360,131 @@ export default function DigitizationComplianceTab({
                 variant="default"
                 size="sm"
                 onClick={handlePreview}
-                disabled={loading || !data}
+                disabled={loading || !data || isGeneratingPdf}
                 className="h-10 px-6 font-bold text-xs tracking-wide bg-pup-maroon text-white border border-pup-maroon shadow-sm hover:bg-red-900 active:scale-95 disabled:opacity-60 rounded-brand transition-all uppercase"
               >
-                <i className="ph-bold ph-file-pdf text-sm mr-2" aria-hidden />
-                Generate Report
+                <i className={cn("ph-bold text-sm mr-2", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
+                {isGeneratingPdf ? "Generating..." : "Generate Report"}
               </Button>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={downloadCsv}
-                disabled={loading || !data}
+                disabled={loading || !data || isExportingCsv}
                 className="h-10 px-4 font-bold text-xs tracking-wide border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 active:scale-95 rounded-brand transition-all uppercase"
               >
-                <i className="ph-bold ph-file-csv text-sm mr-2 text-pup-maroon" aria-hidden />
-                Export CSV
+                <i className={cn("ph-bold text-sm mr-2 text-pup-maroon", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
+                {isExportingCsv ? "Exporting..." : "Export CSV"}
               </Button>
 
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={load}
-                      disabled={loading}
-                      className="h-10 w-10 p-0 text-gray-600 bg-white border border-gray-300 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-90 rounded-brand"
-                    >
-                      <i
-                        className={cn(
-                          "ph-bold ph-arrows-clockwise text-sm",
-                          loading && "animate-spin"
-                        )}
-                        aria-hidden
-                      />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p className="font-bold text-xs">Refresh Compliance Data</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4">
+                  <div className="flex flex-col items-end gap-1">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Dataset Sync</p>
+                      <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap">
+                          {hasActiveFilters ? "Filtering live analytics..." : "Showing cumulative data"}
+                      </p>
+                  </div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={load}
+                          disabled={loading}
+                          className="h-10 w-10 p-0 text-gray-600 bg-white border border-gray-300 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-90 rounded-brand"
+                        >
+                          <i
+                            className={cn(
+                              "ph-bold ph-arrows-clockwise text-sm",
+                              loading && "animate-spin"
+                            )}
+                            aria-hidden
+                          />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p className="font-bold text-xs">Dataset Sync: Refresh Compliance Data</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+              </div>
             </div>
           }
         />
+
+        {/* Active Filter Chips Row */}
+        {hasActiveFilters && (
+          <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300">
+            <div className="flex flex-wrap items-center gap-2">
+                <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+                Active Filters:
+                </span>
+                {statusFilter !== "Active" && (
+                    <div className="flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 uppercase">
+                    Status: {statusFilter}
+                    <button
+                        onClick={() => setStatusFilter("Active")}
+                        className="ml-1 transition-colors hover:text-blue-800"
+                    >
+                        <i className="ph-bold ph-x text-[8px]"></i>
+                    </button>
+                    </div>
+                )}
+                {courseFilter !== "" && (
+                    <div className="flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 uppercase">
+                    Program: {courseFilter}
+                    <button
+                        onClick={() => setCourseFilter("")}
+                        className="ml-1 transition-colors hover:text-amber-800"
+                    >
+                        <i className="ph-bold ph-x text-[8px]"></i>
+                    </button>
+                    </div>
+                )}
+                {requireApproved && (
+                    <div className="flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 uppercase">
+                    Requirement: Approved Only
+                    <button
+                        onClick={() => setRequireApproved(false)}
+                        className="ml-1 transition-colors hover:text-emerald-800"
+                    >
+                        <i className="ph-bold ph-x text-[8px]"></i>
+                    </button>
+                    </div>
+                )}
+                {tableSearch && (
+                    <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon uppercase">
+                    Search: {tableSearch}
+                    <button
+                        onClick={() => setTableSearch("")}
+                        className="ml-1 transition-colors hover:text-pup-darkMaroon"
+                    >
+                        <i className="ph-bold ph-x text-[8px]"></i>
+                    </button>
+                    </div>
+                )}
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleClearAll}
+                    className="h-6 rounded-full border border-dashed border-pup-maroon/30 px-3 text-[10px] font-black text-pup-maroon transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase"
+                >
+                    CLEAR ALL FILTERS
+                </Button>
+            </div>
+          </div>
+        )}
 
         <div className="p-4 bg-gray-50/50 flex-none border-b border-gray-200">
           <div className="flex flex-col lg:flex-row lg:items-end gap-4 justify-between">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 flex-1">
               <div>
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-widest">
                     Student Status
-                  </label>
-                  {(statusFilter !== "Active" || courseFilter !== "") && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setStatusFilter("Active");
-                        setCourseFilter("");
-                      }}
-                      className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
-                    >
-                      CLEAR ALL
-                    </Button>
-                  )}
-                </div>
+                </label>
                 <select
                   className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-pup-maroon/20 focus:border-pup-maroon hover:border-gray-400"
                   value={statusFilter}
@@ -408,7 +497,7 @@ export default function DigitizationComplianceTab({
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-widest">
-                  Course Filter
+                  Course
                 </label>
                 <div className="relative">
                   <select
@@ -482,25 +571,52 @@ export default function DigitizationComplianceTab({
               </div>
             </div>
           ) : error ? (
-            <div className="h-[400px] flex flex-col items-center justify-center text-center p-8 border-2 border-dashed border-gray-100 rounded-3xl bg-gray-50/30">
-              <div className="w-20 h-20 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-6 shadow-md animate-bounce">
-                <i className="ph-duotone ph-warning-circle text-4xl text-pup-maroon" />
-              </div>
-              <h3 className="text-xl font-black text-gray-900 tracking-tight">Data Unavailable</h3>
-              <p className="text-sm font-medium text-gray-500 mt-2 max-w-sm">{error}</p>
-              <Button
-                variant="outline"
-                size="lg"
-                className="mt-8 h-12 px-8 font-bold border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 rounded-brand transition-all active:scale-95"
-                onClick={load}
-              >
-                Retry Connection
-              </Button>
-            </div>
+            <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500">
+              <EmptyHeader className="flex flex-col items-center gap-0">
+                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
+                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
+                </EmptyMedia>
+                <EmptyTitle className="text-lg font-bold text-gray-900">Data Unavailable</EmptyTitle>
+                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600">
+                  {error}
+                </EmptyDescription>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={load}
+                  className="mt-6 flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 uppercase tracking-wide" 
+                >
+                  <i className="ph-bold ph-arrows-clockwise"></i>
+                  Retry Connection
+                </Button>
+              </EmptyHeader>
+            </Empty>
           ) : data ? (
             <div className={cn("transition-all duration-500", loading ? "opacity-40 blur-[1px]" : "opacity-100")}>
-              {/* Stats Cards - Aligned with SLA Tab Style */}
+              {/* Stats Cards - Avg Completeness first for hierarchy */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+
+                {/* Avg. Completeness — Primary Accent Card */}
+                <div className="group relative overflow-hidden rounded-xl border border-[#5c1520] bg-[#7a1e28] p-5 shadow-sm transition-all">
+                  <i className="ph-duotone ph-chart-pie pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-20" />
+                  <div className="relative z-10">
+                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-[#f7c9ce] uppercase">
+                      <i className="ph-bold ph-chart-pie" /> Avg. Completeness
+                    </div>
+                    <div className="text-3xl font-black text-white">
+                      {summary?.percentDigitized != null ? `${summary.percentDigitized}%` : "0%"}
+                    </div>
+                    <div className="mt-1 text-[10px] font-medium text-[#f7c9ce]/80">
+                      Overall record health index
+                    </div>
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-black/20">
+                      <div
+                        className="h-full bg-emerald-400 transition-all duration-1000 ease-out"
+                        style={{ width: `${progressWidth}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
 
                 {/* Total Students — Light Card */}
                 <div className="group relative overflow-hidden rounded-xl border border-[#7a1e28]/15 bg-[#fdf6f6] p-5 shadow-sm transition-all">
@@ -530,28 +646,6 @@ export default function DigitizationComplianceTab({
                     </div>
                     <div className="mt-1 text-[10px] font-bold text-emerald-600 flex items-center gap-1.5">
                       <i className="ph-bold ph-trend-up" /> 100% Complete
-                    </div>
-                  </div>
-                </div>
-
-                {/* Avg. Completeness — Accent Card */}
-                <div className="group relative overflow-hidden rounded-xl border border-[#5c1520] bg-[#7a1e28] p-5 shadow-sm transition-all">
-                  <i className="ph-duotone ph-chart-pie pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-20" />
-                  <div className="relative z-10">
-                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-[#f7c9ce] uppercase">
-                      <i className="ph-bold ph-chart-pie" /> Avg. Completeness
-                    </div>
-                    <div className="text-3xl font-black text-white">
-                      {summary?.percentDigitized != null ? `${summary.percentDigitized}%` : "0%"}
-                    </div>
-                    <div className="mt-1 text-[10px] font-medium text-[#f7c9ce]/80">
-                      Overall record health index
-                    </div>
-                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-black/20">
-                      <div
-                        className="h-full bg-emerald-400"
-                        style={{ width: `${progressWidth}%` }}
-                      />
                     </div>
                   </div>
                 </div>
@@ -640,129 +734,135 @@ export default function DigitizationComplianceTab({
               </div>
 
               <div className="flex-1 min-h-0 flex flex-col border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm mt-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-4 bg-gray-50/50 border-b border-gray-200">
+                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 px-6 py-4 bg-gray-50/50 border-b border-gray-200">
                   <div className="flex items-center gap-3">
-                    <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em]">
-                      Breakdown By Academic Program
-                    </h4>
-                    {courseFilter && (
-                      <Badge variant="outline" className="bg-white border-pup-maroon/20 text-pup-maroon font-bold text-[9px] h-5 px-1.5">
-                        Filtered: {courseFilter}
-                      </Badge>
-                    )}
+                    <div>
+                        <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
+                        Academic Program Breakdown
+                        </h4>
+                        <div className="flex items-center gap-2">
+                            <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+                                Total Programs: <span className="text-gray-900 font-bold">{sortedByCourse.length}</span>
+                            </span>
+                        </div>
+                    </div>
                   </div>
-                  <div className="relative w-full sm:w-64">
-                    <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs" />
-                    <input
-                      type="text"
-                      placeholder="Search program code..."
-                      className="w-full pl-9 pr-3 py-2 text-xs font-bold rounded-xl border border-gray-300 focus:outline-none focus:ring-2 focus:ring-pup-maroon/20 focus:border-pup-maroon transition-all shadow-sm placeholder:text-gray-400 placeholder:font-normal"
-                      value={tableSearch}
-                      onChange={(e) => setTableSearch(e.target.value)}
-                    />
+                  <div className="min-w-[300px] flex-1 sm:max-w-md">
+                    <label className="mb-1 block text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                        Search Program
+                    </label>
+                    <div className="relative">
+                        <i className="ph-bold ph-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"></i>
+                        <Input
+                        type="text"
+                        placeholder="Search by program code..."
+                        className="h-10 w-full rounded-brand border border-gray-300 bg-white pl-10 text-sm focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none placeholder:text-gray-400 placeholder:font-normal"
+                        value={tableSearch}
+                        onChange={(e) => setTableSearch(e.target.value)}
+                        />
+                    </div>
                   </div>
                 </div>
 
-                <div className="overflow-auto flex-1">
+                <div className="overflow-auto flex-1 border border-gray-200 shadow-inner rounded-b-2xl min-h-[450px]">
                   {sortedByCourse.length > 0 ? (
-                    <Table>
-                      <TableHeader className="bg-gray-50/30 sticky top-0 z-10 backdrop-blur-md">
-                        <TableRow className="hover:bg-transparent border-b-2">
-                          <TableHead className="py-4 px-6">
+                    <Table className="min-w-full text-sm">
+                      <TableHeader className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50">
+                        <TableRow className="hover:bg-transparent text-left text-xs tracking-wider text-gray-600 uppercase">
+                          <TableHead className="py-4 px-6 font-bold">
                             <button
                               onClick={() => handleSort("courseCode")}
-                              className="group flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-gray-600 hover:text-pup-maroon transition-colors"
+                              className="group flex items-center gap-1.5 rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
                             >
                               Program <SortIndicator column="courseCode" />
                             </button>
                           </TableHead>
-                          <TableHead className="py-4 px-6 text-center">
+                          <TableHead className="py-4 px-6 text-center font-bold">
                             <button
                               onClick={() => handleSort("total")}
-                              className="group mx-auto flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-gray-600 hover:text-pup-maroon transition-colors"
+                              className="group mx-auto flex items-center gap-1.5 rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
                             >
                               Students <SortIndicator column="total" />
                             </button>
                           </TableHead>
-                          <TableHead className="py-4 px-6 text-center">
+                          <TableHead className="py-4 px-6 text-center font-bold">
                             <button
                               onClick={() => handleSort("digitized")}
-                              className="group mx-auto flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-emerald-700 hover:text-emerald-800 transition-colors"
+                              className="group mx-auto flex items-center gap-1.5 rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
                             >
                               Complete <SortIndicator column="digitized" />
                             </button>
                           </TableHead>
-                          <TableHead className="py-4 px-6 text-right">
+                          <TableHead className="py-4 px-6 text-right font-bold">
                             <button
                               onClick={() => handleSort("percent")}
-                              className="group ml-auto flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider text-pup-maroon hover:text-red-800 transition-colors"
+                              className="group ml-auto flex items-center gap-1.5 rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
                             >
                               Completeness <SortIndicator column="percent" />
                             </button>
                           </TableHead>
                         </TableRow>
                       </TableHeader>
-                      <TableBody>
-                        {sortedByCourse
-                          .filter(r => !tableSearch || r.courseCode?.toLowerCase().includes(tableSearch.toLowerCase()))
-                          .map((row) => (
-                            <TableRow key={row.courseCode} className="group hover:bg-red-50/20 transition-all border-b border-gray-100 last:border-0">
-                              <TableCell className="py-4 px-6 font-mono font-bold text-gray-900 text-xs">
-                                {row.courseCode || "—"}
-                              </TableCell>
-                              <TableCell className="py-4 px-6 text-gray-600 font-medium text-center">
-                                {row.total?.toLocaleString?.() ?? row.total}
-                              </TableCell>
-                              <TableCell className="py-4 px-6 text-center">
-                                <span className="text-emerald-600 font-black">
-                                  {row.digitized?.toLocaleString?.() ?? row.digitized}
+                      <TableBody className="divide-y divide-gray-200">
+                        {sortedByCourse.map((row) => (
+                          <TableRow key={row.courseCode} className="group hover:bg-red-50/20 transition-all border-b border-gray-100 last:border-0">
+                            <TableCell className="py-4 px-6 font-inter font-bold text-pup-maroon text-xs">
+                              {row.courseCode || "—"}
+                            </TableCell>
+                            <TableCell className="py-4 px-6 text-gray-700 font-medium text-center">
+                              {row.total?.toLocaleString?.() ?? row.total}
+                            </TableCell>
+                            <TableCell className="py-4 px-6 text-center">
+                              <span className="text-emerald-600 font-black">
+                                {row.digitized?.toLocaleString?.() ?? row.digitized}
+                              </span>
+                              <span className="text-[10px] text-gray-400 font-bold ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                ({row.fullyDigitizedRate}%)
+                              </span>
+                            </TableCell>
+                            <TableCell className="py-4 px-6 text-right">
+                              <div className="flex items-center justify-end gap-4">
+                                <span className="text-gray-900 font-black text-xs">
+                                  {row.percent != null ? `${row.percent}%` : "0%"}
                                 </span>
-                                <span className="text-[10px] text-gray-400 font-bold ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  ({row.fullyDigitizedRate}%)
-                                </span>
-                              </TableCell>
-                              <TableCell className="py-4 px-6 text-right">
-                                <div className="flex items-center justify-end gap-4">
-                                  <span className="text-gray-900 font-black text-xs">
-                                    {row.percent != null ? `${row.percent}%` : "0%"}
-                                  </span>
-                                  <div className="w-20 h-1.5 rounded-full bg-gray-100 overflow-hidden border border-gray-200 hidden sm:block shadow-inner">
-                                    <div
-                                      className={cn(
-                                        "h-full transition-all duration-700",
-                                        row.percent >= 90 ? "bg-emerald-500" : "bg-pup-maroon"
-                                      )}
-                                      style={{ width: `${Math.min(100, row.percent || 0)}%` }}
-                                    />
-                                  </div>
+                                <div className="w-20 h-1.5 rounded-full bg-gray-100 overflow-hidden border border-gray-200 hidden sm:block shadow-inner">
+                                  <div
+                                    className={cn(
+                                      "h-full transition-all duration-700",
+                                      row.percent >= 90 ? "bg-emerald-500" : "bg-pup-maroon"
+                                    )}
+                                    style={{ width: `${Math.min(100, row.percent || 0)}%` }}
+                                  />
                                 </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        {sortedByCourse.filter(r => !tableSearch || r.courseCode?.toLowerCase().includes(tableSearch.toLowerCase())).length === 0 && (
-                           <TableRow>
-                             <TableCell colSpan={4} className="py-20 text-center">
-                                <div className="flex flex-col items-center justify-center opacity-40">
-                                   <i className="ph-duotone ph-magnifying-glass text-5xl mb-4" />
-                                   <p className="text-sm font-bold text-gray-500 italic">No academic programs matching "{tableSearch}"</p>
-                                </div>
-                             </TableCell>
-                           </TableRow>
-                        )}
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        ))}
                       </TableBody>
                     </Table>
                   ) : (
-                    <Empty className="h-[300px] flex flex-col items-center justify-center text-center p-12">
+                    <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500">
                       <EmptyHeader className="flex flex-col items-center gap-0">
-                        <EmptyMedia className="w-20 h-20 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center mb-6">
-                          <i className="ph-duotone ph-magnifying-glass text-4xl text-gray-300" />
+                        <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
+                          <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon" />
                         </EmptyMedia>
-                        <EmptyTitle className="text-lg font-black text-gray-900">No program data</EmptyTitle>
-                        <EmptyDescription className="text-sm font-medium text-gray-500 mt-2 max-w-sm">
-                          {courseFilter
-                            ? `No records found matching the course code "${courseFilter}".`
+                        <EmptyTitle className="text-lg font-bold text-gray-900">No program data</EmptyTitle>
+                        <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600">
+                          {tableSearch 
+                            ? `No academic programs found matching "${tableSearch}".` 
                             : "No student records available to analyze for compliance metrics."}
                         </EmptyDescription>
+                        {hasActiveFilters && (
+                            <Button 
+                                variant="outline" 
+                                size="sm" 
+                                onClick={handleClearAll}
+                                className="mt-4 flex items-center gap-2 rounded-brand border border-gray-300 px-4 text-[10px] font-bold text-gray-600 hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon sm:text-xs shadow-sm transition-colors"
+                            >
+                                <i className="ph-bold ph-x-circle"></i>
+                                CLEAR ALL FILTERS
+                            </Button>
+                        )}
                       </EmptyHeader>
                     </Empty>
                   )}
@@ -773,7 +873,7 @@ export default function DigitizationComplianceTab({
         </CardContent>
       </Card>
 
-      {/* Report Preview Modal - Reverted to Standard Consistent Style */}
+      {/* Report Preview Modal - Standard Consistent Style */}
       <Dialog
         open={reportOpen}
         onOpenChange={(open) => {
@@ -786,12 +886,12 @@ export default function DigitizationComplianceTab({
           setReportOpen(open)
         }}
       >
-        <DialogContent
+        <DialogContent 
           hideClose={isFullscreenPreview}
           className={cn(
-            "flex flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out",
-            isFullscreenPreview
-                ? "fixed h-screen w-screen max-w-none sm:max-w-none m-0 rounded-none z-[100] left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] sm:w-screen sm:h-screen"
+            "flex flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out font-inter",
+            isFullscreenPreview 
+                ? "fixed h-screen w-screen max-w-none sm:max-w-none m-0 rounded-none z-[100] left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] sm:w-screen sm:h-screen" 
                 : "h-[90vh] w-[96vw] max-w-[96vw] xl:max-w-[1200px] rounded-brand"
         )}>
           <DialogHeader className="shrink-0 border-b border-gray-100 bg-gray-50/50 p-6">

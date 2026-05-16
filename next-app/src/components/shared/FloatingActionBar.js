@@ -13,6 +13,7 @@ export default function FloatingActionBar({
   actionVariant = "danger", // danger or success
   selectionLabel = "Records Selected",
   selectionStatus = "Batch In-Progress",
+  customContent,
 }) {
   const [mounted, setMounted] = useState(false)
 
@@ -40,27 +41,35 @@ export default function FloatingActionBar({
         </div>
 
         <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onCancel}
-            className="h-9 px-4 text-xs font-bold text-gray-500 transition-colors hover:bg-red-50/30 hover:text-pup-maroon"
-          >
-            DESELECT ALL
-          </Button>
-          
-          <Button
-            size="sm"
-            onClick={onAction}
-            className={`flex h-10 items-center gap-2 rounded-xl px-6 text-xs font-bold uppercase text-white shadow-lg transition-all active:scale-95 ${
-              actionVariant === "success"
-                ? "bg-emerald-600 shadow-emerald-600/20 hover:bg-emerald-700"
-                : "bg-red-600 shadow-red-600/20 hover:bg-red-700"
-            }`}
-          >
-            <i className={`ph-bold ${actionIcon} text-sm`}></i>
-            {actionLabel}
-          </Button>
+          {customContent ? (
+            customContent
+          ) : (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onCancel}
+                className="h-9 px-4 text-xs font-bold text-gray-500 transition-colors hover:bg-red-50/30 hover:text-pup-maroon"
+              >
+                DESELECT ALL
+              </Button>
+              
+              {actionLabel && (
+                <Button
+                  size="sm"
+                  onClick={onAction}
+                  className={`flex h-10 items-center gap-2 rounded-xl px-6 text-xs font-bold uppercase text-white shadow-lg transition-all active:scale-95 ${
+                    actionVariant === "success"
+                      ? "bg-emerald-600 shadow-emerald-600/20 hover:bg-emerald-700"
+                      : "bg-red-600 shadow-red-600/20 hover:bg-red-700"
+                  }`}
+                >
+                  {actionIcon && <i className={`ph-bold ${actionIcon} text-sm`}></i>}
+                  {actionLabel}
+                </Button>
+              )}
+            </>
+          )}
         </div>
       </div>
     </div>,

@@ -8,6 +8,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { formatPHDateTime } from "@/lib/timeFormat"
+import { generateExportFilename } from "@/lib/exportHelpers"
 import {
   Empty,
   EmptyHeader,
@@ -37,7 +38,7 @@ import SlaCharts from "./analytics/SlaCharts"
 import SlaFilters from "./analytics/SlaFilters"
 
 export default function SLAAnalyticsTab({
- showToast, onLogAction }) {
+ showToast, onLogAction, onSwitchView }) {
   const [data, setData] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -91,13 +92,6 @@ export default function SLAAnalyticsTab({
     .map(([name, value]) => ({ name, value }))
     .filter((d) => d.value > 0)
 
-  const getFileName = (type, ext) => {
-    const now = new Date();
-    const date = now.toISOString().split('T')[0];
-    const time = now.getHours().toString().padStart(2, '0') + now.getMinutes().toString().padStart(2, '0');
-    return `PUP-SLA-${type}-${date}-${time}.${ext}`;
-  }
-
   const handlePreview = async () => {
     if (!data || loading) return;
     setIsGeneratingPdf(true);
@@ -115,7 +109,7 @@ export default function SLAAnalyticsTab({
   }
 
   const handlePrint = async () => {
-    const fileName = getFileName("REPORT", "pdf");
+    const fileName = generateExportFilename("SLA-ANALYTICS", "REPORT", "pdf");
     if (!pdfBlobUrl) {
       setIsGeneratingPdf(true);
       try {
@@ -156,7 +150,7 @@ export default function SLAAnalyticsTab({
     setIsExportingCsv(true);
     try {
       await new Promise(resolve => setTimeout(resolve, 100));
-      const fileName = getFileName("ANALYTICS", "csv");
+      const fileName = generateExportFilename("SLA-ANALYTICS", "DATA", "csv");
       downloadSlaCsv(data, total, slaHours, completionRate, onLogAction, fileName);
       showToast?.({ title: "Export Successful", description: `The SLA data has been successfully exported to ${fileName}.` });
     } catch (e) {
@@ -165,6 +159,8 @@ export default function SLAAnalyticsTab({
       setIsExportingCsv(false);
     }
   }
+
+  const hasActiveFilters = startDate !== "" || endDate !== ""
 
   return (
     <div className="animate-fade-in font-inter flex h-full min-h-0 w-full flex-col">
@@ -181,10 +177,10 @@ export default function SLAAnalyticsTab({
                 size="sm"
                 onClick={handlePreview}
                 disabled={loading || !data || isGeneratingPdf}
-                className="h-10 rounded-brand border border-pup-maroon bg-pup-maroon px-6 text-sm font-bold text-white shadow-sm hover:bg-red-900 disabled:opacity-60 transition-colors"
+                className="h-10 px-6 font-bold text-xs tracking-wide bg-pup-maroon text-white border border-pup-maroon shadow-sm hover:bg-red-900 active:scale-95 disabled:opacity-60 rounded-brand transition-all uppercase"
               >
-                <i className={cn("ph-bold mr-1.5 text-sm", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
-                {isGeneratingPdf ? "GENERATING..." : "GENERATE REPORT"}
+                <i className={cn("ph-bold text-sm mr-2", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
+                {isGeneratingPdf ? "Generating..." : "Generate Report"}
               </Button>
               <Button
                 type="button"
@@ -192,17 +188,79 @@ export default function SLAAnalyticsTab({
                 size="sm"
                 onClick={handleCsvExport}
                 disabled={loading || !data || isExportingCsv}
-                className="h-10 px-4 font-bold border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 rounded-brand transition-colors"
+                className="h-10 px-4 font-bold text-xs tracking-wide border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 active:scale-95 rounded-brand transition-all uppercase"
               >
-                <i
-                  className={cn("ph-bold mr-1.5 text-pup-maroon", isExportingCsv ? "ph-spinner animate-spin" : "ph-download-simple")}
-                  aria-hidden
-                />
-                {isExportingCsv ? "EXPORTING..." : "EXPORT CSV"}
+                <i className={cn("ph-bold text-sm mr-2 text-pup-maroon", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
+                {isExportingCsv ? "Exporting..." : "Export CSV"}
               </Button>
+
+              <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4">
+                  <div className="flex flex-col items-end gap-1">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Dataset Sync</p>
+                      <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap">
+                          {hasActiveFilters ? "Filtering live analytics..." : "Showing cumulative data"}
+                      </p>
+                  </div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={handleRefresh}
+                          disabled={loading}
+                          className="h-10 w-10 p-0 text-gray-600 bg-white border border-gray-300 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-90 rounded-brand"
+                        >
+                          <i
+                            className={cn(
+                              "ph-bold ph-arrows-clockwise text-sm",
+                              loading && "animate-spin"
+                            )}
+                            aria-hidden
+                          />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top">
+                        <p className="font-bold text-xs">Dataset Sync: Refresh Analytics</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+              </div>
             </div>
           }
         />
+
+        {/* Active Filter Chips Row */}
+        {hasActiveFilters && (
+          <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">Active Filters:</span>
+              {(startDate || endDate) && (
+                <div className="flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 uppercase">
+                  Range: {startDate || "..."} to {endDate || "..."}
+                  <button
+                    onClick={() => { setStartDate(""); setEndDate(""); }}
+                    className="ml-1 hover:text-emerald-800 transition-colors"
+                  >
+                    <i className="ph-bold ph-x text-[8px]"></i>
+                  </button>
+                </div>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setStartDate("")
+                  setEndDate("")
+                }}
+                className="h-6 rounded-full border border-dashed border-pup-maroon/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase"
+              >
+                CLEAR ALL FILTERS
+              </Button>
+            </div>
+          </div>
+        )}
 
         <SlaFilters 
             startDate={startDate}
@@ -240,7 +298,7 @@ export default function SLAAnalyticsTab({
           ) : data ? (
             <div className={cn("space-y-6 transition-opacity duration-300", loading && "opacity-40")}>
               <SlaKpiCards total={total} slaHours={slaHours} completionRate={completionRate} />
-              <SlaCharts data={data} pieData={pieData} />
+              <SlaCharts data={data} pieData={pieData} onSwitchView={onSwitchView} />
             </div>
           ) : null}
         </CardContent>

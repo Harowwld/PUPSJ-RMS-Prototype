@@ -11,6 +11,30 @@ import { formatDurationHuman } from "@/lib/timeFormat"
 export default function SlaKpiCards({ total, slaHours, completionRate }) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+      {/* Overall Completion Rate — Primary Performance Card (Accent) */}
+      <div className="group relative overflow-hidden rounded-xl border border-[#5c1520] bg-[#7a1e28] p-5 shadow-sm transition-all">
+        <i className="ph-duotone ph-check-circle pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-20" />
+        <div className="relative z-10">
+          <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-[#f7c9ce] uppercase">
+            <i className="ph-bold ph-check-circle" /> Overall Completion Rate
+          </div>
+          <div className="flex items-end gap-3">
+            <div className="text-3xl font-black text-white">
+              {completionRate}%
+            </div>
+          </div>
+          <div className="mt-1 text-[10px] font-medium text-[#f7c9ce]/80">
+            Fulfillment efficiency performance
+          </div>
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-black/20">
+            <div
+              className="h-full bg-emerald-400"
+              style={{ width: `${completionRate}%` }}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Total Lifetime Requests — Light Card */}
       <div className="group relative overflow-hidden rounded-xl border border-[#7a1e28]/15 bg-[#fdf6f6] p-5 shadow-sm transition-all">
         <i className="ph-duotone ph-envelope-open pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-[#7a1e28] opacity-10" />
@@ -52,30 +76,6 @@ export default function SlaKpiCards({ total, slaHours, completionRate }) {
           </div>
           <div className="mt-1 text-[10px] font-medium text-[#b07078]">
             From Pending to Completed
-          </div>
-        </div>
-      </div>
-
-      {/* Overall Completion Rate — Primary Performance Card (Accent) */}
-      <div className="group relative overflow-hidden rounded-xl border border-[#5c1520] bg-[#7a1e28] p-5 shadow-sm transition-all">
-        <i className="ph-duotone ph-check-circle pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-20" />
-        <div className="relative z-10">
-          <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-[#f7c9ce] uppercase">
-            <i className="ph-bold ph-check-circle" /> Overall Completion Rate
-          </div>
-          <div className="flex items-end gap-3">
-            <div className="text-3xl font-black text-white">
-              {completionRate}%
-            </div>
-          </div>
-          <div className="mt-1 text-[10px] font-medium text-[#f7c9ce]/80">
-            Fulfillment efficiency performance
-          </div>
-          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-black/20">
-            <div
-              className="h-full bg-emerald-400"
-              style={{ width: `${completionRate}%` }}
-            />
           </div>
         </div>
       </div>

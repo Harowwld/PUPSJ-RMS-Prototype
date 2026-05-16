@@ -23,11 +23,6 @@ export default function BackupFilters({
   setBackupSearch,
   backupTotal,
 }) {
-  const hasActiveFilters =
-    localSearch !== "" ||
-    backupStartDate !== "" ||
-    backupEndDate !== ""
-
   const handleQuickRange = (range) => {
     const end = new Date()
     let start = new Date()
@@ -50,10 +45,6 @@ export default function BackupFilters({
         start.setDate(start.getDate() - 30)
         start.setHours(0, 0, 0, 0)
         break
-      case "thisMonth":
-        start.setDate(1)
-        start.setHours(0, 0, 0, 0)
-        break
     }
 
     setBackupStartDate(format(start, "yyyy-MM-dd"))
@@ -61,61 +52,8 @@ export default function BackupFilters({
     setPage(1)
   }
 
-  const clearAllFilters = () => {
-    setLocalSearch("")
-    setBackupSearch("")
-    setBackupStartDate("")
-    setBackupEndDate("")
-    setPage(1)
-  }
-
   return (
     <div className="rounded-t-brand border-b border-gray-200 bg-gray-50/50 p-4">
-      {/* Active Filter Chips */}
-      {hasActiveFilters && (
-        <div className="mb-3 flex flex-wrap items-center gap-2">
-          <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">Active Filters:</span>
-          {localSearch && (
-            <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon">
-              Search: {localSearch}
-              <button
-                onClick={() => {
-                  setLocalSearch("")
-                  setBackupSearch("")
-                  setPage(1)
-                }}
-                className="ml-1 transition-colors hover:text-pup-darkMaroon"
-              >
-                <i className="ph-bold ph-x text-[8px]"></i>
-              </button>
-            </div>
-          )}
-          {(backupStartDate || backupEndDate) && (
-            <div className="flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600">
-              Range: {backupStartDate || '...'} to {backupEndDate || '...'}
-              <button
-                onClick={() => {
-                  setBackupStartDate("")
-                  setBackupEndDate("")
-                  setPage(1)
-                }}
-                className="ml-1 transition-colors hover:text-emerald-800"
-              >
-                <i className="ph-bold ph-x text-[8px]"></i>
-              </button>
-            </div>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={clearAllFilters}
-            className="h-6 rounded-full border border-dashed border-pup-maroon/30 px-3 text-[10px] font-black text-pup-maroon transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-darkMaroon"
-          >
-            CLEAR ALL FILTERS
-          </Button>
-        </div>
-      )}
-
       <div className="flex w-full flex-wrap items-end gap-4">
         {/* Search */}
         <div className="min-w-[400px] flex-1">
@@ -133,7 +71,6 @@ export default function BackupFilters({
             />
           </div>
         </div>
-
 
         {/* Date Range Picker */}
         <div className="flex min-w-[450px] flex-[2] flex-col gap-1">
@@ -240,8 +177,6 @@ export default function BackupFilters({
             </div>
           </div>
         </div>
-
-
       </div>
     </div>
   )

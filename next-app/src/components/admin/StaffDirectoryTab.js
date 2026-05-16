@@ -6,7 +6,11 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
-import { formatPHDateTime, formatPHDateTimeParts } from "@/lib/timeFormat"
+import {
+  formatPHDateTime,
+  formatPHDateTimeParts,
+  formatRelativeTime,
+} from "@/lib/timeFormat"
 import {
   Empty,
   EmptyHeader,
@@ -14,11 +18,15 @@ import {
   EmptyDescription,
   EmptyMedia,
 } from "@/components/ui/empty"
+import { Card, CardContent } from "@/components/ui/card"
 import {
-  Card,
-  CardContent,
-} from "@/components/ui/card"
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import PageHeader from "@/components/shared/PageHeader"
+import { cn } from "@/lib/utils"
 
 export default function StaffDirectoryTab({
   staffData,
@@ -37,12 +45,31 @@ export default function StaffDirectoryTab({
   onExportData,
   onSwitchView,
 }) {
+  // Load persisted filters on mount
+  useEffect(() => {
+    const savedSearch = localStorage.getItem("staffDir_search")
+    const savedRole = localStorage.getItem("staffDir_role")
+    const savedStatus = localStorage.getItem("staffDir_status")
+
+    if (savedSearch !== null) setSearch(savedSearch)
+    if (savedRole !== null) setRoleFilter(savedRole)
+    if (savedStatus !== null) setStatusFilter(savedStatus)
+  }, [setSearch, setRoleFilter, setStatusFilter])
+
+  // Persist filters when they change
+  useEffect(() => {
+    localStorage.setItem("staffDir_search", search)
+    localStorage.setItem("staffDir_role", roleFilter)
+    localStorage.setItem("staffDir_status", statusFilter)
+  }, [search, roleFilter, statusFilter])
+
   const filteredStaff = useMemo(() => {
     const q = search.toLowerCase()
     return staffData.filter((s) => {
       const matchesSearch =
         `${s.fname} ${s.lname}`.toLowerCase().includes(q) ||
-        s.id.toLowerCase().includes(q)
+        s.id.toLowerCase().includes(q) ||
+        (s.email || "").toLowerCase().includes(q)
       const matchesRole = roleFilter === "All" || s.role === roleFilter
       const matchesStatus = statusFilter === "All" || s.status === statusFilter
       return matchesSearch && matchesRole && matchesStatus
@@ -139,11 +166,7 @@ export default function StaffDirectoryTab({
   }
 
   const formatLastActive = (v) => {
-    const raw = String(v || "").trim()
-    if (!raw) return { date: "—", time: "" }
-    // If it's already a human label, just return it as date
-    if (!raw.includes("-") && !raw.includes(":")) return { date: raw, time: "" }
-    return formatPHDateTimeParts(raw)
+    return formatRelativeTime(v)
   }
 
   return (
@@ -361,8 +384,8 @@ export default function StaffDirectoryTab({
                       onChange={(e) => setStatusFilter(e.target.value)}
                     >
                       <option value="All">All</option>
-                      <option value="Active">Active (Online)</option>
-                      <option value="Inactive">Inactive (Offline)</option>
+                      <option value="Active">Online</option>
+                      <option value="Inactive">Offline</option>
                       <option value="Archived">Archived</option>
                     </select>
                   </div>
@@ -392,9 +415,14 @@ export default function StaffDirectoryTab({
                         </div>
                         <div className="flex items-center gap-1.5 text-[10px] font-medium text-gray-400">
                           <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500"></div>
-                          {s.last_active
-                            ? formatLastActive(s.last_active).date
-                            : "Currently Online"}
+                          {s.last_active ? (
+                            <span className="capitalize">
+                              {formatLastActive(s.last_active).relative || 
+                               formatLastActive(s.last_active).date}
+                            </span>
+                          ) : (
+                            "Currently Online"
+                          )}
                         </div>
                       </div>
                     </div>
@@ -432,7 +460,7 @@ export default function StaffDirectoryTab({
                     onClick={onExportData}
                     className="h-10 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon"
                   >
-                    <i className="ph-bold ph-download-simple mr-1.5"></i>
+                    <i className="ph-bold ph-file-csv mr-1.5"></i>
                     EXPORT CSV
                   </Button>
                   <Button
@@ -446,6 +474,75 @@ export default function StaffDirectoryTab({
                 </div>
               }
             />
+
+            {/* Active Filter Chips Row */}
+            {(search !== "" ||
+              roleFilter !== "All" ||
+              statusFilter !== "All") && (
+              <div className="animate-in fade-in slide-in-from-top-1 flex-none border-b border-gray-100 bg-white px-4 py-3 duration-300">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+                    Active Filters:
+                  </span>
+                  {search && (
+                    <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon uppercase">
+                      Search: {search}
+                      <button
+                        onClick={() => {
+                          setSearch("")
+                          setCurrentPage(1)
+                        }}
+                        className="ml-1 transition-colors hover:text-pup-darkMaroon"
+                      >
+                        <i className="ph-bold ph-x text-[8px]"></i>
+                      </button>
+                    </div>
+                  )}
+                  {roleFilter !== "All" && (
+                    <div className="flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 uppercase">
+                      Role: {roleFilter}
+                      <button
+                        onClick={() => {
+                          setRoleFilter("All")
+                          setCurrentPage(1)
+                        }}
+                        className="ml-1 transition-colors hover:text-blue-800"
+                      >
+                        <i className="ph-bold ph-x text-[8px]"></i>
+                      </button>
+                    </div>
+                  )}
+                  {statusFilter !== "All" && (
+                    <div className="flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 uppercase">
+                      Status: {statusFilter}
+                      <button
+                        onClick={() => {
+                          setStatusFilter("All")
+                          setCurrentPage(1)
+                        }}
+                        className="ml-1 transition-colors hover:text-amber-800"
+                      >
+                        <i className="ph-bold ph-x text-[8px]"></i>
+                      </button>
+                    </div>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setSearch("")
+                      setRoleFilter("All")
+                      setStatusFilter("All")
+                      setCurrentPage(1)
+                    }}
+                    className="h-6 rounded-full border border-dashed border-pup-maroon/30 px-3 text-[10px] font-black text-pup-maroon uppercase hover:bg-red-50 hover:text-pup-darkMaroon"
+                  >
+                    CLEAR ALL FILTERS
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <CardContent className="flex min-h-0 flex-1 flex-col bg-white p-6">
               <div className="flex-1 overflow-x-auto overflow-y-auto rounded-brand border border-gray-200">
                 <table className="min-w-full text-sm">
@@ -518,16 +615,35 @@ export default function StaffDirectoryTab({
                       paginatedStaff.map((s) => {
                         const isCurrentUser = s.id === currentUserId
                         const active = formatLastActive(s.last_active)
+                        const isActive = s.status === "Active"
+                        const isArchived = s.status === "Archived"
                         return (
                           <tr
                             key={s.id}
-                            className={`group transition-colors hover:bg-gray-50 ${isCurrentUser ? "bg-red-50/40" : ""}`}
+                            className={cn(
+                              "group transition-colors hover:bg-gray-50",
+                              isCurrentUser && "bg-red-50/40",
+                              isArchived && "opacity-60 grayscale-[0.3]"
+                            )}
                           >
                             <td className="p-3">
                               <div className="flex items-center gap-3 py-1">
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-xs font-black text-pup-maroon shadow-xs transition-transform group-hover:scale-105">
+                                <div
+                                  className={cn(
+                                    "relative flex h-9 w-9 shrink-0 items-center justify-center rounded-full border text-xs font-black shadow-xs transition-all group-hover:scale-110",
+                                    isActive
+                                      ? "border-emerald-200 bg-emerald-50 text-emerald-700 ring-2 ring-emerald-100/50 ring-offset-1"
+                                      : "border-red-100 bg-red-50 text-pup-maroon"
+                                  )}
+                                >
                                   {s.fname[0]}
                                   {s.lname[0]}
+                                  {isActive && (
+                                    <span className="absolute -top-0.5 -right-0.5 flex h-3 w-3">
+                                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75"></span>
+                                      <span className="relative inline-flex h-3 w-3 rounded-full border-2 border-white bg-emerald-500"></span>
+                                    </span>
+                                  )}
                                 </div>
                                 <div className="min-w-0">
                                   <div className="flex items-center gap-2 text-sm font-bold text-gray-900">
@@ -572,32 +688,39 @@ export default function StaffDirectoryTab({
                               )}
                             </td>
                             <td className="p-3">
-                              {s.status === "Active" ? (
+                              {isActive ? (
                                 <Badge
                                   variant="outline"
                                   className="flex w-max items-center gap-1.5 rounded-full border-green-200 bg-green-50 px-2 py-1 text-[10px] font-bold text-green-700 uppercase shadow-xs"
                                 >
                                   <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500"></div>
-                                  {s.status}
+                                  Online
                                 </Badge>
                               ) : (
                                 <Badge
                                   variant="outline"
-                                  className="rounded-full border-gray-200 bg-gray-50 px-2 py-1 text-[10px] font-bold text-gray-500 uppercase shadow-xs"
+                                  className={cn(
+                                    "rounded-full px-2 py-1 text-[10px] font-bold uppercase shadow-xs",
+                                    isArchived 
+                                      ? "border-gray-300 bg-gray-100 text-gray-600" 
+                                      : "border-gray-200 bg-gray-50 text-gray-500"
+                                  )}
                                 >
-                                  {s.status === "Inactive"
-                                    ? "Archived"
-                                    : s.status}
+                                  {s.status === "Inactive" ? "Offline" : s.status}
                                 </Badge>
                               )}
                             </td>
                             <td className="p-3 font-medium text-gray-600">
-                              <div className="font-mono text-[11px]">
-                                {active.date}
+                              <div className="font-mono text-[11px] text-gray-900">
+                                {active.relative ? (
+                                  <span className="font-bold text-emerald-600 tracking-tight lowercase">{active.relative}</span>
+                                ) : (
+                                  active.date
+                                )}
                               </div>
-                              {active.time && (
+                              {(active.time || active.relative) && (
                                 <div className="text-[10px] opacity-70">
-                                  {active.time}
+                                  {active.relative ? active.date : active.time}
                                 </div>
                               )}
                             </td>
@@ -613,7 +736,7 @@ export default function StaffDirectoryTab({
                                     className="h-9 rounded-brand border-gray-300 px-3 text-xs font-bold text-gray-700 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon"
                                   >
                                     <i className="ph-bold ph-user-circle mr-1.5"></i>
-                                    ACCOUNT
+                                    MY ACCOUNT
                                   </Button>
                                 ) : (
                                   <>
@@ -663,39 +786,57 @@ export default function StaffDirectoryTab({
               </div>
 
               {filteredStaff.length > 0 && (
-                <div className="mt-4 flex shrink-0 items-center justify-between">
-                  <div className="flex items-center gap-4 text-xs font-medium text-gray-500">
-                    <span>
-                      {(displayPage - 1) * itemsPerPage + 1}-
-                      {Math.min(displayPage * itemsPerPage, filteredStaff.length)}{" "}
-                      of{" "}
-                      <strong className="text-gray-900">
-                        {filteredStaff.length.toLocaleString()}
-                      </strong>{" "}
-                      entries
-                    </span>
+                <div className="-mx-6 mt-4 -mb-6 flex items-center justify-between border-t border-gray-100 bg-gray-50/50 p-4 px-6">
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-4 text-xs font-medium text-gray-500">
+                      <span>
+                        {(displayPage - 1) * itemsPerPage + 1}-
+                        {Math.min(
+                          displayPage * itemsPerPage,
+                          filteredStaff.length
+                        )}{" "}
+                        of{" "}
+                        <strong className="text-gray-900">
+                          {filteredStaff.length.toLocaleString()}
+                        </strong>{" "}
+                        entries
+                      </span>
 
-                    <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
-                      <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase">
-                        Rows:
-                      </label>
-                      <select
-                        className="h-8 rounded-brand border border-gray-300 bg-white px-2 py-1 text-xs font-bold text-gray-700 shadow-sm transition-colors focus:border-pup-maroon focus:ring-2 focus:ring-pup-maroon focus:outline-none"
-                        value={itemsPerPage}
-                        onChange={(e) => {
-                          setItemsPerPage(Number(e.target.value))
-                          setCurrentPage(1)
-                        }}
-                      >
-                        <option value={10}>10</option>
-                        <option value={20}>20</option>
-                        <option value={50}>50</option>
-                        <option value={100}>100</option>
-                      </select>
+                      <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase">
+                          Rows:
+                        </span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <select
+                                className="h-7 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-1 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none"
+                                value={itemsPerPage}
+                                onChange={(e) => {
+                                  setItemsPerPage(Number(e.target.value))
+                                  setCurrentPage(1)
+                                }}
+                              >
+                                <option value={10}>10</option>
+                                <option value={20}>20</option>
+                                <option value={50}>50</option>
+                                <option value={100}>100</option>
+                                <option value={200}>200</option>
+                              </select>
+                            </TooltipTrigger>
+                            <TooltipContent
+                              side="top"
+                              className="rounded-brand"
+                            >
+                              Items per page
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"

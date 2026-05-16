@@ -27,11 +27,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import PageHeader from "@/components/shared/PageHeader";
 
 const STATUS_OPTIONS = [
   "Pending",
   "Ready",
-  "Done",
+  "Completed",
   "Cancelled",
 ];
 
@@ -313,66 +314,160 @@ export default function DocumentRequestsTab({
 
   return (
     <div className="flex flex-col h-full min-h-0 gap-4 animate-fade-in font-inter">
-      {loading ? (
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
-          <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0">
-            <div className="p-4 bg-gray-50/50 border-b border-gray-200 flex flex-col lg:flex-row gap-3 lg:items-end">
-              <div className="flex-1 space-y-2">
-                <Skeleton className="h-3 w-12" />
-                <Skeleton className="h-10 w-full rounded-brand" />
+      <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm">
+        <PageHeader
+          icon="ph-tray"
+          title="Document Service Requests"
+          description="Manage and process alumni requests for official university records."
+          actions={
+            !loading && !error && (
+              <Button
+                type="button"
+                className="bg-pup-maroon hover:bg-red-900 font-bold shrink-0"
+                onClick={() => setCreateOpen(true)}
+              >
+                <i className="ph-bold ph-plus mr-1.5"></i>
+                NEW REQUEST
+              </Button>
+            )
+          }
+        />
+        
+        {!loading && !error && (
+          <div className="p-4 bg-gray-50/50 border-b border-gray-200 flex flex-col lg:flex-row gap-3 lg:items-end">
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-gray-700 uppercase">
+                  Search
+                </label>
               </div>
-              <div className="w-full sm:w-48 space-y-2">
-                <Skeleton className="h-3 w-12" />
-                <Skeleton className="h-10 w-full rounded-brand" />
+              <div className="relative">
+                <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <Input
+                  className="h-10 pl-10 rounded-brand border-gray-300 bg-white text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon transition-colors"
+                  placeholder="Student no., name, document type…"
+                  value={q}
+                  onChange={(e) => {
+                    setQ(e.target.value);
+                    setPage(1);
+                  }}
+                />
               </div>
-              <Skeleton className="h-10 w-32 rounded-brand" />
             </div>
-            <div className="p-6 flex-1 flex flex-col space-y-4">
-              <div className="border border-gray-100 rounded-brand overflow-hidden">
-                <Skeleton className="h-10 w-full rounded-none" />
-                <div className="divide-y divide-gray-100">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="p-4 flex items-center justify-between">
-                      <div className="space-y-2 flex-1">
-                        <Skeleton className="h-4 w-1/4" />
-                        <Skeleton className="h-3 w-1/3" />
-                      </div>
-                      <Skeleton className="h-6 w-20 rounded-full" />
+            <div className="w-full sm:w-48">
+              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+                Status
+              </label>
+              <select
+                className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+                value={statusFilter}
+                onChange={(e) => {
+                  setStatusFilter(e.target.value);
+                  setPage(1);
+                }}
+              >
+                <option value="">All</option>
+                {STATUS_OPTIONS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        )}
+
+        {/* Active Filter Chips Row */}
+        {!loading && !error && (q !== "" || statusFilter !== "") && (
+          <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">Active Filters:</span>
+              {q && (
+                <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon uppercase">
+                  Search: {q}
+                  <button
+                    onClick={() => { setQ(""); setPage(1); }}
+                    className="ml-1 hover:text-pup-darkMaroon transition-colors"
+                  >
+                    <i className="ph-bold ph-x text-[8px]"></i>
+                  </button>
+                </div>
+              )}
+              {statusFilter && (
+                <div className="flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 uppercase">
+                  Status: {statusFilter}
+                  <button
+                    onClick={() => { setStatusFilter(""); setPage(1); }}
+                    className="ml-1 hover:text-blue-800 transition-colors"
+                  >
+                    <i className="ph-bold ph-x text-[8px]"></i>
+                  </button>
+                </div>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setQ("");
+                  setStatusFilter("");
+                  setPage(1);
+                }}
+                className="h-6 rounded-full border border-dashed border-pup-maroon/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase"
+              >
+                CLEAR ALL FILTERS
+              </Button>
+            </div>
+          </div>
+        )}
+
+        <CardContent className="flex min-h-0 flex-1 flex-col p-6">
+          {loading ? (
+            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
+              <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0">
+                <div className="p-6 flex-1 flex flex-col space-y-4">
+                  <div className="border border-gray-100 rounded-brand overflow-hidden">
+                    <Skeleton className="h-10 w-full rounded-none" />
+                    <div className="divide-y divide-gray-100">
+                      {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <div key={i} className="p-4 flex items-center justify-between">
+                          <div className="space-y-2 flex-1">
+                            <Skeleton className="h-4 w-1/4" />
+                            <Skeleton className="h-3 w-1/3" />
+                          </div>
+                          <Skeleton className="h-6 w-20 rounded-full" />
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                  </div>
+                </div>
+              </div>
+              <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0">
+                <div className="p-4 border-b border-gray-100 bg-gray-50/80">
+                  <Skeleton className="h-3 w-24" />
+                </div>
+                <div className="p-6 space-y-6">
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-5 w-3/4" />
+                    <Skeleton className="h-3 w-1/2" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-5 w-1/2" />
+                  </div>
+                  <Skeleton className="h-32 w-full rounded-brand" />
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-10 w-full rounded-brand" />
+                  </div>
+                  <div className="space-y-2">
+                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-20 w-full rounded-brand" />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-          <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0">
-            <div className="p-4 border-b border-gray-100 bg-gray-50/80">
-              <Skeleton className="h-3 w-24" />
-            </div>
-            <div className="p-6 space-y-6">
-              <div className="space-y-2">
-                <Skeleton className="h-3 w-16" />
-                <Skeleton className="h-5 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
-              </div>
-              <div className="space-y-2">
-                <Skeleton className="h-3 w-24" />
-                <Skeleton className="h-5 w-1/2" />
-              </div>
-              <Skeleton className="h-32 w-full rounded-brand" />
-              <div className="space-y-2">
-                <Skeleton className="h-3 w-16" />
-                <Skeleton className="h-10 w-full rounded-brand" />
-              </div>
-              <div className="space-y-2">
-                <Skeleton className="h-3 w-16" />
-                <Skeleton className="h-20 w-full rounded-brand" />
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : error ? (
-        <Card className="flex-1 bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col">
-          <CardContent className="p-6 flex-1 flex flex-col min-h-0">
+          ) : error ? (
             <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
@@ -384,353 +479,290 @@ export default function DocumentRequestsTab({
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
-          <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0">
-            <div className="p-4 bg-gray-50/50 border-b border-gray-200 flex flex-col lg:flex-row gap-3 lg:items-end">
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-bold text-gray-700 uppercase">
-                    Search
-                  </label>
-                  {(q !== "" || statusFilter !== "") && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setQ("");
-                        setStatusFilter("");
-                        setPage(1);
-                      }}
-                      className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
-                    >
-                      CLEAR ALL
-                    </Button>
+          ) : (
+            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
+              <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0">
+                <div className="p-6 flex-1 flex flex-col min-h-0">
+                  <div className="flex-1 overflow-y-auto overflow-x-auto border border-gray-200 rounded-brand">
+                    <table className="min-w-full text-sm">
+                      <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
+                        <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
+                          <th className="p-3 font-bold w-16">ID</th>
+                          <th className="p-3 font-bold">Student</th>
+                          <th className="p-3 font-bold">Document</th>
+                          <th className="p-3 font-bold">Status</th>
+                          <th className="p-3 font-bold text-right">Created</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200">
+                        {rows.length === 0 ? (
+                          <tr className="border-0 hover:bg-transparent">
+                            <td colSpan={5} className="p-0 border-0">
+                              <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+                                <EmptyHeader className="flex flex-col items-center gap-0">
+                                  <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                                    <i className="ph-duotone ph-tray text-3xl text-pup-maroon"></i>
+                                  </EmptyMedia>
+                                  <EmptyTitle className="text-lg font-bold text-gray-900">No document requests yet</EmptyTitle>
+                                  <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                                    Create a request when an alumnus asks for a record.
+                                    Track status and use the storage map to pull the
+                                    physical drawer.
+                                  </EmptyDescription>
+                                </EmptyHeader>
+                              </Empty>
+                            </td>
+                          </tr>
+                        ) : (
+                          rows.map((r) => (
+                            <tr
+                              key={r.id}
+                              className={`cursor-pointer hover:bg-gray-50 transition-colors ${
+                                selectedId === r.id ? "bg-red-50/60" : ""
+                              }`}
+                              onClick={() => openDetail(r.id)}
+                            >
+                              <td className="p-3 font-mono text-xs text-gray-500">
+                                #{r.id}
+                              </td>
+                              <td className="p-3">
+                                <div className="font-bold text-gray-900">
+                                  {r.student_name || "—"}
+                                </div>
+                                <div className="font-mono text-[11px] text-gray-500">
+                                  {r.student_no}
+                                </div>
+                              </td>
+                              <td className="p-3 font-medium text-gray-800">
+                                {r.doc_type}
+                              </td>
+                              <td className="p-3">
+                                <span
+                                  className={`inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full border ${statusBadgeClass(r.status)}`}
+                                >
+                                  {r.status}
+                                </span>
+                              </td>
+                              <td className="p-3 text-right text-[11px] font-mono text-gray-500 whitespace-nowrap">
+                                {formatPHDateTime(r.created_at)}
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+                {total > 0 ? (
+                  <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
+                    <div className="flex items-center gap-4 text-xs font-medium text-gray-500">
+                      <span>
+                        {(page - 1) * itemsPerPage + 1}-
+                        {Math.min(page * itemsPerPage, total)} of{" "}
+                        <strong className="text-gray-900">
+                          {total.toLocaleString()}
+                        </strong>{" "}
+                        entries
+                      </span>
+
+                      <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase">
+                          Rows:
+                        </span>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <select
+                                className="h-7 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-1 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none"
+                                value={itemsPerPage}
+                                onChange={handleItemsPerPageChange}
+                              >
+                                <option value={10}>10</option>
+                                <option value={20}>20</option>
+                                <option value={50}>50</option>
+                                <option value={100}>100</option>
+                                <option value={200}>200</option>
+                              </select>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="rounded-brand">
+                              Items per page
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={page <= 1}
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                      >
+                        <i className="ph-bold ph-caret-left mr-1"></i> PREV
+                      </Button>
+                      <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-2 text-[11px] font-bold text-gray-700 shadow-xs focus-within:border-pup-maroon focus-within:ring-1 focus-within:ring-pup-maroon">
+                        <input
+                          type="text"
+                          className="w-6 bg-transparent text-center focus:outline-none"
+                          value={jumpPage}
+                          onChange={(e) => setJumpPage(e.target.value)}
+                          onKeyDown={handleJumpPage}
+                          onBlur={handleJumpPage}
+                        />
+                        <span className="mx-0.5 text-gray-400">/</span>
+                        <span>{totalPages}</span>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={page >= totalPages}
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                      >
+                        NEXT <i className="ph-bold ph-caret-right ml-1"></i>
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0">
+                <div className="p-4 border-b border-gray-100 bg-gray-50/80 flex items-center justify-between">
+                  <div className="text-xs font-bold uppercase tracking-wider text-gray-500">
+                    Request detail
+                  </div>
+                  {hasEdits && (
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-[10px] font-black text-gray-500 hover:text-gray-700 uppercase"
+                        onClick={handleResetEdits}
+                        disabled={saving}
+                      >
+                        RESET
+                      </Button>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="h-7 px-3 text-[10px] font-black bg-pup-maroon hover:bg-red-900 text-white uppercase shadow-sm"
+                        onClick={handleManualSave}
+                        disabled={saving}
+                      >
+                        {saving ? "SAVING..." : "SAVE CHANGES"}
+                      </Button>
+                    </div>
                   )}
                 </div>
-                <div className="relative">
-                  <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                  <Input
-                    className="h-10 pl-10 rounded-brand border-gray-300 bg-white text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon transition-colors"
-                    placeholder="Student no., name, document type…"
-                    value={q}
-                    onChange={(e) => {
-                      setQ(e.target.value);
-                      setPage(1);
-                    }}
-                  />
-                </div>
-              </div>
-              <div className="w-full sm:w-48">
-                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                  Status
-                </label>
-                <select
-                  className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
-                  value={statusFilter}
-                  onChange={(e) => {
-                    setStatusFilter(e.target.value);
-                    setPage(1);
-                  }}
-                >
-                  <option value="">All</option>
-                  {STATUS_OPTIONS.map((s) => (
-                    <option key={s} value={s}>
-                      {s}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <Button
-                type="button"
-                className="bg-pup-maroon hover:bg-red-900 font-bold shrink-0"
-                onClick={() => setCreateOpen(true)}
-              >
-                <i className="ph-bold ph-plus mr-1.5"></i>
-                NEW REQUEST
-              </Button>
-            </div>
-            <div className="p-6 flex-1 flex flex-col min-h-0">
-              <div className="flex-1 overflow-y-auto overflow-x-auto border border-gray-200 rounded-brand">
-                <table className="min-w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                    <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
-                      <th className="p-3 font-bold w-16">ID</th>
-                      <th className="p-3 font-bold">Student</th>
-                      <th className="p-3 font-bold">Document</th>
-                      <th className="p-3 font-bold">Status</th>
-                      <th className="p-3 font-bold text-right">Created</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200">
-                    {rows.length === 0 ? (
-                      <tr className="border-0 hover:bg-transparent">
-                        <td colSpan={5} className="p-0 border-0">
-                          <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
-                            <EmptyHeader className="flex flex-col items-center gap-0">
-                              <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                                <i className="ph-duotone ph-tray text-3xl text-pup-maroon"></i>
-                              </EmptyMedia>
-                              <EmptyTitle className="text-lg font-bold text-gray-900">No document requests yet</EmptyTitle>
-                              <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                                Create a request when an alumnus asks for a record.
-                                Track status and use the storage map to pull the
-                                physical drawer.
-                              </EmptyDescription>
-                            </EmptyHeader>
-                          </Empty>
-                        </td>
-                      </tr>
-                    ) : (
-                      rows.map((r) => (
-                        <tr
-                          key={r.id}
-                          className={`cursor-pointer hover:bg-gray-50 transition-colors ${
-                            selectedId === r.id ? "bg-red-50/60" : ""
-                          }`}
-                          onClick={() => openDetail(r.id)}
+                <div className="p-4 flex-1 overflow-auto flex flex-col">
+                  {!selectedId && (
+                    <Empty className="flex-1 flex flex-col items-center justify-center text-center text-gray-500 border-0">
+                      <EmptyHeader className="flex flex-col items-center gap-0">
+                        <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
+                          <i className="ph-duotone ph-file-text text-3xl text-pup-maroon"></i>
+                        </EmptyMedia>
+                        <EmptyTitle className="text-lg font-bold text-gray-900">No Request Selected</EmptyTitle>
+                        <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-[240px]">
+                          Select a request from the list to see its details, notes, and physical storage location.
+                        </EmptyDescription>
+                      </EmptyHeader>
+                    </Empty>
+                  )}
+                  {selectedId && detailLoading && (
+                    <div className="space-y-3">
+                      <Skeleton className="h-6 w-3/4" />
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-full" />
+                    </div>
+                  )}
+                  {detail && !detailLoading && (
+                    <div className="space-y-4">
+                      <div>
+                        <div className="text-xs font-bold text-gray-500 uppercase">
+                          Student
+                        </div>
+                        <div className="font-bold text-gray-900">{detail.student_name}</div>
+                        <div className="font-mono text-xs text-gray-600">{detail.student_no}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-gray-500 uppercase">
+                          Document type
+                        </div>
+                        <div className="font-semibold text-gray-900">{detail.doc_type}</div>
+                      </div>
+
+                      <div className="rounded-brand border border-gray-200 p-3">
+                        <div className="text-xs font-bold text-gray-600 uppercase mb-1">
+                          Physical location
+                        </div>
+                        {studentForRequest ? (
+                          <div className="text-sm font-mono text-gray-800">
+                            Room {studentForRequest.room} · Cabinet {studentForRequest.cabinet}{" "}
+                            · Drawer {studentForRequest.drawer}
+                          </div>
+                        ) : (
+                          <div className="text-sm text-amber-800 font-medium">
+                            Student record not loaded — refresh data or check student no.
+                          </div>
+                        )}
+                        <Button
+                          type="button"
+                          className="mt-3 w-full bg-pup-maroon hover:bg-red-900 font-bold text-xs"
+                          disabled={!studentForRequest}
+                          onClick={() => {
+                            if (!studentForRequest) return;
+                            if (requestNeedsPhysicalVerification) {
+                              setFileWarningOpen(true);
+                              return;
+                            }
+                            onLocateOnMap(studentForRequest);
+                          }}
                         >
-                          <td className="p-3 font-mono text-xs text-gray-500">
-                            #{r.id}
-                          </td>
-                          <td className="p-3">
-                            <div className="font-bold text-gray-900">
-                              {r.student_name || "—"}
-                            </div>
-                            <div className="font-mono text-[11px] text-gray-500">
-                              {r.student_no}
-                            </div>
-                          </td>
-                          <td className="p-3 font-medium text-gray-800">
-                            {r.doc_type}
-                          </td>
-                          <td className="p-3">
-                            <span
-                              className={`inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full border ${statusBadgeClass(r.status)}`}
-                            >
-                              {r.status}
-                            </span>
-                          </td>
-                          <td className="p-3 text-right text-[11px] font-mono text-gray-500 whitespace-nowrap">
-                            {formatPHDateTime(r.created_at)}
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-            {total > 0 ? (
-              <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
-                <div className="flex items-center gap-4 text-xs font-medium text-gray-500">
-                  <span>
-                    {(page - 1) * itemsPerPage + 1}-
-                    {Math.min(page * itemsPerPage, total)} of{" "}
-                    <strong className="text-gray-900">
-                      {total.toLocaleString()}
-                    </strong>{" "}
-                    entries
-                  </span>
-
-                  <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase">
-                      Rows:
-                    </span>
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <select
-                            className="h-7 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-1 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none"
-                            value={itemsPerPage}
-                            onChange={handleItemsPerPageChange}
-                          >
-                            <option value={10}>10</option>
-                            <option value={20}>20</option>
-                            <option value={50}>50</option>
-                            <option value={100}>100</option>
-                            <option value={200}>200</option>
-                          </select>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="rounded-brand">
-                          Items per page
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={page <= 1}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
-                  >
-                    <i className="ph-bold ph-caret-left mr-1"></i> PREV
-                  </Button>
-                  <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-2 text-[11px] font-bold text-gray-700 shadow-xs focus-within:border-pup-maroon focus-within:ring-1 focus-within:ring-pup-maroon">
-                    <input
-                      type="text"
-                      className="w-6 bg-transparent text-center focus:outline-none"
-                      value={jumpPage}
-                      onChange={(e) => setJumpPage(e.target.value)}
-                      onKeyDown={handleJumpPage}
-                      onBlur={handleJumpPage}
-                    />
-                    <span className="mx-0.5 text-gray-400">/</span>
-                    <span>{totalPages}</span>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={page >= totalPages}
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
-                  >
-                    NEXT <i className="ph-bold ph-caret-right ml-1"></i>
-                  </Button>
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0">
-            <div className="p-4 border-b border-gray-100 bg-gray-50/80 flex items-center justify-between">
-              <div className="text-xs font-bold uppercase tracking-wider text-gray-500">
-                Request detail
-              </div>
-              {hasEdits && (
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-7 px-2 text-[10px] font-black text-gray-500 hover:text-gray-700 uppercase"
-                    onClick={handleResetEdits}
-                    disabled={saving}
-                  >
-                    RESET
-                  </Button>
-                  <Button
-                    variant="default"
-                    size="sm"
-                    className="h-7 px-3 text-[10px] font-black bg-pup-maroon hover:bg-red-900 text-white uppercase shadow-sm"
-                    onClick={handleManualSave}
-                    disabled={saving}
-                  >
-                    {saving ? "SAVING..." : "SAVE CHANGES"}
-                  </Button>
-                </div>
-              )}
-            </div>
-            <div className="p-4 flex-1 overflow-auto flex flex-col">
-              {!selectedId && (
-                <Empty className="flex-1 flex flex-col items-center justify-center text-center text-gray-500 border-0">
-                  <EmptyHeader className="flex flex-col items-center gap-0">
-                    <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                      <i className="ph-duotone ph-file-text text-3xl text-pup-maroon"></i>
-                    </EmptyMedia>
-                    <EmptyTitle className="text-lg font-bold text-gray-900">No Request Selected</EmptyTitle>
-                    <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-[240px]">
-                      Select a request from the list to see its details, notes, and physical storage location.
-                    </EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
-              )}
-              {selectedId && detailLoading && (
-                <div className="space-y-3">
-                  <Skeleton className="h-6 w-3/4" />
-                  <Skeleton className="h-4 w-full" />
-                  <Skeleton className="h-4 w-full" />
-                </div>
-              )}
-              {detail && !detailLoading && (
-                <div className="space-y-4">
-                  <div>
-                    <div className="text-xs font-bold text-gray-500 uppercase">
-                      Student
-                    </div>
-                    <div className="font-bold text-gray-900">{detail.student_name}</div>
-                    <div className="font-mono text-xs text-gray-600">{detail.student_no}</div>
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold text-gray-500 uppercase">
-                      Document type
-                    </div>
-                    <div className="font-semibold text-gray-900">{detail.doc_type}</div>
-                  </div>
-
-                  <div className="rounded-brand border border-gray-200 p-3">
-                    <div className="text-xs font-bold text-gray-600 uppercase mb-1">
-                      Physical location
-                    </div>
-                    {studentForRequest ? (
-                      <div className="text-sm font-mono text-gray-800">
-                        Room {studentForRequest.room} · Cabinet {studentForRequest.cabinet}{" "}
-                        · Drawer {studentForRequest.drawer}
+                          <i className="ph-bold ph-map-pin mr-2"></i>
+                          LOCATE ON STORAGE MAP
+                        </Button>
                       </div>
-                    ) : (
-                      <div className="text-sm text-amber-800 font-medium">
-                        Student record not loaded — refresh data or check student no.
+
+                      <div>
+                        <label className="text-xs font-bold text-gray-600 uppercase">
+                          Status
+                        </label>
+                        <select
+                          className="mt-1 h-10 w-full rounded-brand border border-gray-300 bg-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-pup-maroon"
+                          value={editStatus}
+                          disabled={saving}
+                          onChange={(e) => setEditStatus(e.target.value)}
+                        >
+                          {STATUS_OPTIONS.map((s) => (
+                            <option key={s} value={s}>
+                              {s}
+                            </option>
+                          ))}
+                        </select>
                       </div>
-                    )}
-                    <Button
-                      type="button"
-                      className="mt-3 w-full bg-pup-maroon hover:bg-red-900 font-bold text-xs"
-                      disabled={!studentForRequest}
-                      onClick={() => {
-                        if (!studentForRequest) return;
-                        if (requestNeedsPhysicalVerification) {
-                          setFileWarningOpen(true);
-                          return;
-                        }
-                        onLocateOnMap(studentForRequest);
-                      }}
-                    >
-                      <i className="ph-bold ph-map-pin mr-2"></i>
-                      LOCATE ON STORAGE MAP
-                    </Button>
-                  </div>
 
-                  <div>
-                    <label className="text-xs font-bold text-gray-600 uppercase">
-                      Status
-                    </label>
-                    <select
-                      className="mt-1 h-10 w-full rounded-brand border border-gray-300 bg-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-pup-maroon"
-                      value={editStatus}
-                      disabled={saving}
-                      onChange={(e) => setEditStatus(e.target.value)}
-                    >
-                      {STATUS_OPTIONS.map((s) => (
-                        <option key={s} value={s}>
-                          {s}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-bold text-gray-600 uppercase">
-                      Notes
-                    </label>
-                    <textarea
-                      className="mt-1 w-full min-h-[72px] rounded-brand border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-pup-maroon"
-                      value={editNotes}
-                      onChange={(e) => setEditNotes(e.target.value)}
-                    />
-                  </div>
+                      <div>
+                        <label className="text-xs font-bold text-gray-600 uppercase">
+                          Notes
+                        </label>
+                        <textarea
+                          className="mt-1 w-full min-h-[72px] rounded-brand border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-pup-maroon"
+                          value={editNotes}
+                          onChange={(e) => setEditNotes(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
-              )}
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">

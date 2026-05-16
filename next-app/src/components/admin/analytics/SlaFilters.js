@@ -18,8 +18,6 @@ export default function SlaFilters({
   isLoading,
   onRefresh,
 }) {
-  const hasActiveFilters = startDate !== "" || endDate !== ""
-
   const handleQuickRange = (range) => {
     const end = new Date()
     let start = new Date()
@@ -45,26 +43,11 @@ export default function SlaFilters({
       case "thisMonth":
         start.setDate(1)
         start.setHours(0, 0, 0, 0)
-        break
-      case "thisSemester":
-        // Approximate Semester logic (Jan-Jun, Jul-Dec)
-        const currentMonth = start.getMonth()
-        if (currentMonth < 6) {
-          start.setMonth(0, 1)
-        } else {
-          start.setMonth(6, 1)
-        }
-        start.setHours(0, 0, 0, 0)
-        break
+        break;
     }
 
     setStartDate(format(start, "yyyy-MM-dd"))
     setEndDate(format(end, "yyyy-MM-dd"))
-  }
-
-  const clearAllFilters = () => {
-    setStartDate("")
-    setEndDate("")
   }
 
   return (
@@ -78,36 +61,36 @@ export default function SlaFilters({
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleQuickRange("today")}
-                className="text-[9px] font-bold text-gray-500 uppercase hover:text-pup-maroon transition-colors"
+                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon"
               >
                 Today
               </button>
-              <span className="text-gray-300 text-[9px]">•</span>
+              <span className="text-[9px] text-gray-300">•</span>
+              <button
+                onClick={() => handleQuickRange("yesterday")}
+                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon"
+              >
+                Yesterday
+              </button>
+              <span className="text-[9px] text-gray-300">•</span>
               <button
                 onClick={() => handleQuickRange("last7")}
-                className="text-[9px] font-bold text-gray-500 uppercase hover:text-pup-maroon transition-colors"
+                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon"
               >
-                Last 7d
+                Last 7 Days
               </button>
-              <span className="text-gray-300 text-[9px]">•</span>
+              <span className="text-[9px] text-gray-300">•</span>
               <button
                 onClick={() => handleQuickRange("last30")}
-                className="text-[9px] font-bold text-gray-500 uppercase hover:text-pup-maroon transition-colors"
+                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon"
               >
-                Last 30d
-              </button>
-              <span className="text-gray-300 text-[9px]">•</span>
-              <button
-                onClick={() => handleQuickRange("thisSemester")}
-                className="text-[9px] font-bold text-gray-500 uppercase hover:text-pup-maroon transition-colors"
-              >
-                This Semester
+                Last 30 Days
               </button>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            <div className="w-44">
+            <div className="w-60">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -138,7 +121,7 @@ export default function SlaFilters({
               </Popover>
             </div>
             <span className="text-gray-400 text-xs font-bold">TO</span>
-            <div className="w-44">
+            <div className="w-60">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -168,37 +151,7 @@ export default function SlaFilters({
                 </PopoverContent>
               </Popover>
             </div>
-
-            {hasActiveFilters && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={clearAllFilters}
-                className="h-9 rounded-brand px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50"
-              >
-                <i className="ph-bold ph-x mr-1.5" />
-                RESET
-              </Button>
-            )}
           </div>
-        </div>
-
-        <div className="flex items-center gap-3">
-            <div className="flex flex-col items-end gap-1">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Dataset Sync</p>
-                <p className="text-[10px] font-medium text-gray-500">
-                    {hasActiveFilters ? "Filtering live analytics..." : "Showing cumulative data"}
-                </p>
-            </div>
-            <Button
-                variant="outline"
-                size="sm"
-                onClick={onRefresh}
-                disabled={isLoading}
-                className="h-10 w-10 shrink-0 border border-gray-300 bg-white p-0 text-gray-600 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 rounded-brand"
-            >
-                <i className={cn("ph-bold ph-arrows-clockwise text-sm", isLoading && "animate-spin")} />
-            </Button>
         </div>
       </div>
     </div>

@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Toggle } from "@/components/ui/toggle"
 import { format } from "date-fns"
+import { generateExportFilename } from "@/lib/exportHelpers"
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs"
 import {
@@ -143,7 +144,7 @@ export default function SystemConfigTab({
   })
 
   useEffect(() => {
-    // Reset selection states when view mode or sub-tab changes to avoid persisting 
+    // Reset selection states when view mode or sub-tab changes to avoid persisting
     // batch actions between unrelated records or categories
     const docCount = Object.values(selectedDocTypes).filter(Boolean).length;
     const courseCount = Object.values(selectedCourses).filter(Boolean).length;
@@ -159,7 +160,7 @@ export default function SystemConfigTab({
     setSelectedDocTypes({})
     setSelectedCourses({})
     setSelectedSections({})
-    
+
     loadAll()
   }, [showArchived, activeSubTab])
 
@@ -186,7 +187,7 @@ export default function SystemConfigTab({
         : tab === "course"
           ? setSortCourse
           : setSortSection
-          
+
     const defaultKey = tab === "doc" ? "name" : tab === "course" ? "code" : "name"
 
     setter((prev) => {
@@ -485,13 +486,12 @@ export default function SystemConfigTab({
   }
 
   // --- ACTIONS: Export Taxonomy ---
-  const downloadCsv = (filename, content) => {
+  const downloadCsv = (entityLabel, content) => {
     const blob = new Blob([content], { type: "text/csv;charset=utf-8;" })
     const link = document.createElement("a")
     const url = URL.createObjectURL(blob)
-    const timestamp = format(new Date(), "yyyy-MM-dd-HHmm")
-    const finalFilename = `PUP-TAXONOMY-${filename.toUpperCase().replace(".CSV", "").replace(/_/g, "-")}-${timestamp}.csv`
-    
+    const finalFilename = generateExportFilename("TAXONOMY", entityLabel, "csv")
+
     link.setAttribute("href", url)
     link.setAttribute("download", finalFilename)
     link.style.visibility = "hidden"
@@ -514,7 +514,7 @@ export default function SystemConfigTab({
     const csvContent = docTypes
       .map((dt) => `DocumentType,${escapeCsv(dt.name)},`)
       .join("\n")
-    downloadCsv("document_types.csv", headers + csvContent)
+    downloadCsv("DOCUMENT-TYPES", headers + csvContent)
     logAdminAction({
       action: "Export Taxonomy",
       details: `exported ${docTypes.length} document type configurations to CSV`,
@@ -531,7 +531,7 @@ export default function SystemConfigTab({
     const csvContent = courses
       .map((c) => `Course,${escapeCsv(c.name)},${escapeCsv(c.code)}`)
       .join("\n")
-    downloadCsv("degree_programs.csv", headers + csvContent)
+    downloadCsv("DEGREE-PROGRAMS", headers + csvContent)
     logAdminAction({
       action: "Export Taxonomy",
       details: `exported ${courses.length} degree program configurations to CSV`,
@@ -548,7 +548,7 @@ export default function SystemConfigTab({
     const csvContent = sections
       .map((s) => `Section,${escapeCsv(s.name)},${escapeCsv(s.course_code || "")}`)
       .join("\n")
-    downloadCsv("course_blocks.csv", headers + csvContent)
+    downloadCsv("COURSE-BLOCKS", headers + csvContent)
     logAdminAction({
       action: "Export Taxonomy",
       details: `exported ${sections.length} course block configurations to CSV`,
@@ -837,33 +837,6 @@ export default function SystemConfigTab({
       </div>
     )
   }
-
-  const archivedToggle = (
-    <div className="ml-auto inline-flex h-10 shrink-0 items-center rounded-lg border border-gray-200 bg-gray-100 p-1 shadow-sm">
-      <button
-        onClick={() => setShowArchived(false)}
-        className={`flex h-full items-center gap-2 rounded-md px-3 text-[10px] font-black tracking-widest uppercase transition-all ${
-          !showArchived
-            ? "bg-pup-maroon text-white shadow-md ring-1 ring-black/5"
-            : "text-gray-500 hover:text-gray-700"
-        }`}
-      >
-        <i className="ph-bold ph-check-circle text-xs"></i>
-        <span>Active Records</span>
-      </button>
-      <button
-        onClick={() => setShowArchived(true)}
-        className={`flex h-full items-center gap-2 rounded-md px-3 text-[10px] font-black tracking-widest uppercase transition-all ${
-          showArchived
-            ? "bg-amber-600 text-white shadow-md ring-1 ring-black/5"
-            : "text-gray-500 hover:text-gray-700"
-        }`}
-      >
-        <i className="ph-bold ph-archive text-xs"></i>
-        <span>Archive Vault</span>
-      </button>
-    </div>
-  )
 
   return (
     <TooltipProvider delayDuration={200}>

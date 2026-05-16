@@ -51,6 +51,48 @@ export function formatPHDateTimeParts(dateString) {
 }
 
 /**
+ * Returns a human-readable relative time string (e.g. "2 hours ago", "Yesterday")
+ * for dates within the last 48 hours.
+ */
+export function formatRelativeTime(dateString) {
+  if (!dateString) return { relative: "", date: "—", time: "" };
+  try {
+    let normalized = String(dateString);
+    if (!normalized.includes("T") && !normalized.includes("Z")) {
+      normalized = normalized.replace(" ", "T") + "Z";
+    }
+    const date = new Date(normalized);
+    if (isNaN(date.getTime())) return { relative: "", date: String(dateString), time: "" };
+
+    const parts = formatPHDateTimeParts(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now - date) / 1000);
+
+    // If date is in the future or more than 48 hours ago, return only parts
+    if (diffInSeconds < 0 || diffInSeconds > 172800) {
+      return { ...parts, relative: "" };
+    }
+
+    let relative = "";
+    if (diffInSeconds < 60) relative = "just now";
+    else if (diffInSeconds < 3600) {
+      const mins = Math.floor(diffInSeconds / 60);
+      relative = `${mins} ${mins === 1 ? "minute" : "minutes"} ago`;
+    } else if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      relative = `${hours} ${hours === 1 ? "hour" : "hours"} ago`;
+    } else {
+      const days = Math.floor(diffInSeconds / 86400);
+      relative = days === 1 ? "yesterday" : `${days} days ago`;
+    }
+    
+    return { ...parts, relative };
+  } catch {
+    return { relative: "", date: String(dateString), time: "" };
+  }
+}
+
+/**
  * Formats a decimal hour value (e.g. 12.5) into a human-readable duration (e.g. 12h 30m)
  */
 export function formatDurationHuman(decimalHours) {

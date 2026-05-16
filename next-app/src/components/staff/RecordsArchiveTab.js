@@ -4,7 +4,6 @@ import { useState, useEffect, useMemo } from "react"
 
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Card } from "@/components/ui/card"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -576,7 +575,7 @@ export default function RecordsArchiveTab({
                   </EmptyContent>
                 </Empty>
               ) : currentLevel !== "students" ? (
-                <div className="animate-fade-in grid grid-cols-2 gap-4 p-1 md:grid-cols-3 lg:grid-cols-4 lg:gap-5 xl:grid-cols-5">
+                <div className="animate-fade-in grid grid-cols-1 gap-4 p-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5">
                   {filteredExplorerItems.map((it, index) => (
                     <div
                       key={index}

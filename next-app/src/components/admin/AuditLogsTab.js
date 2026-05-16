@@ -8,6 +8,7 @@ import { formatPHDateTime } from "@/lib/timeFormat"
 import { format } from "date-fns"
 import { cn } from "@/lib/utils"
 import { generateAuditLogsPdf } from "@/lib/pdfGenerator"
+import { generateExportFilename } from "@/lib/exportHelpers"
 
 import StatCards from "./audit-logs/StatCards"
 import LogFilters from "./audit-logs/LogFilters"
@@ -58,13 +59,6 @@ export default function AuditLogsTab({
   useEffect(() => {
     setJumpPage(String(logPage))
   }, [logPage])
-
-  const getFileName = (type, ext) => {
-    const now = new Date();
-    const date = format(now, "yyyy-MM-dd");
-    const time = format(now, "HHmm");
-    return `PUP-AUDIT-LOGS-${type}-${date}-${time}.${ext}`;
-  }
 
   // Debounced Search
   useEffect(() => {
@@ -133,7 +127,7 @@ export default function AuditLogsTab({
         ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
       ].join("\n")
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
-      const fileName = getFileName("DATA", "csv");
+      const fileName = generateExportFilename("AUDIT-LOGS", "DATA", "csv")
       const link = document.createElement("a")
       const url = URL.createObjectURL(blob)
       link.setAttribute("href", url)
@@ -190,7 +184,7 @@ export default function AuditLogsTab({
   const handleDownloadFromPreview = () => {
     if (!pdfBlobUrl) return
     try {
-      const fileName = getFileName("REPORT", "pdf");
+      const fileName = generateExportFilename("AUDIT-LOGS", "REPORT", "pdf")
       const link = document.createElement("a")
       link.href = pdfBlobUrl
       link.setAttribute("download", fileName)
@@ -262,6 +256,76 @@ export default function AuditLogsTab({
               </div>
             }
           />
+
+          {/* Active Filter Chips Row */}
+          {(localSearch !== "" || logRoleFilter !== "All" || logSeverityFilter !== "All" || logStartDate !== "" || logEndDate !== "") && (
+            <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">Active Filters:</span>
+                {localSearch && (
+                  <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon">
+                    Search: {localSearch}
+                    <button
+                      onClick={() => { setLocalSearch(""); setLogSearch(""); setLogPage(1); }}
+                      className="ml-1 hover:text-pup-darkMaroon transition-colors"
+                    >
+                      <i className="ph-bold ph-x text-[8px]"></i>
+                    </button>
+                  </div>
+                )}
+                {logRoleFilter !== "All" && (
+                  <div className="flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600">
+                    Role: {logRoleFilter}
+                    <button
+                      onClick={() => { setLogRoleFilter("All"); setLogPage(1); }}
+                      className="ml-1 hover:text-blue-800 transition-colors"
+                    >
+                      <i className="ph-bold ph-x text-[8px]"></i>
+                    </button>
+                  </div>
+                )}
+                {logSeverityFilter !== "All" && (
+                  <div className="flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600">
+                    Severity: {logSeverityFilter}
+                    <button
+                      onClick={() => { setLogSeverityFilter("All"); setLogPage(1); }}
+                      className="ml-1 hover:text-amber-800 transition-colors"
+                    >
+                      <i className="ph-bold ph-x text-[8px]"></i>
+                    </button>
+                  </div>
+                )}
+                {(logStartDate || logEndDate) && (
+                  <div className="flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600">
+                    Range: {logStartDate || "..."} to {logEndDate || "..."}
+                    <button
+                      onClick={() => { setLogStartDate(""); setLogEndDate(""); setLogPage(1); }}
+                      className="ml-1 hover:text-emerald-800 transition-colors"
+                    >
+                      <i className="ph-bold ph-x text-[8px]"></i>
+                    </button>
+                  </div>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setLocalSearch("")
+                    setLogSearch("")
+                    setLogRoleFilter("All")
+                    setLogSeverityFilter("All")
+                    setLogStartDate("")
+                    setLogEndDate("")
+                    setLogPage(1)
+                  }}
+                  className="h-6 rounded-full border border-dashed border-pup-maroon/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
+                >
+                  CLEAR ALL FILTERS
+                </Button>
+              </div>
+            </div>
+          )}
+
           <LogFilters
             localSearch={localSearch}
             handleSearchChange={handleSearchChange}

@@ -385,10 +385,10 @@ export default function NotificationsTab({
                 </table>
               </div>
 
-              <div className="mt-4 flex items-center justify-between">
-                <div className="flex items-center gap-4 text-xs font-medium text-gray-500">
-                  {total > 0 && (
-                    <>
+              {total > 0 && (
+                <div className="-mx-6 mt-4 -mb-6 flex items-center justify-between border-t border-gray-100 bg-gray-50/50 p-4 px-6">
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-4 text-xs font-medium text-gray-500">
                       <span>
                         {offset + 1}-{Math.min(offset + itemsPerPage, total)}{" "}
                         of{" "}
@@ -436,12 +436,10 @@ export default function NotificationsTab({
                           </Tooltip>
                         </TooltipProvider>
                       </div>
-                    </>
-                  )}
-                </div>
+                    </div>
+                  </div>
 
-                {total > 0 && (
-                  <div className="flex items-center gap-2">
+                  <div className="flex shrink-0 items-center gap-2">
                     <Button
                       variant="outline"
                       size="sm"
@@ -475,8 +473,8 @@ export default function NotificationsTab({
                       NEXT <i className="ph-bold ph-caret-right ml-1"></i>
                     </Button>
                   </div>
-                )}
-              </div>
+                </div>
+              )}
             </>
           )}
         </CardContent>

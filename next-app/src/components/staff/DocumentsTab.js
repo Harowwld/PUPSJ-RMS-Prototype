@@ -10,7 +10,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { CardContent } from "../ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import {
@@ -21,6 +21,7 @@ import {
   EmptyMedia,
 } from "@/components/ui/empty";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import PageHeader from "@/components/shared/PageHeader";
 
 export default function DocumentsTab({
   docsForm,
@@ -130,9 +131,15 @@ export default function DocumentsTab({
   return (
     <div
       id="view-documents"
-      className="flex flex-col lg:flex-row w-full h-full gap-4 animate-fade-in font-inter"
+      className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter"
     >
-      <section className="flex-1 bg-white rounded-brand border border-gray-300 shadow-sm overflow-hidden flex flex-col">
+      <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm">
+        <PageHeader
+          icon="ph-files"
+          title="Digital Archives Explorer"
+          description="Browse and verify the university's digitized collection of student records."
+        />
+
         <div className="p-4 bg-gray-50/50 flex-none border-b border-gray-200">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
             <div className="lg:col-span-1">
@@ -140,26 +147,6 @@ export default function DocumentsTab({
                 <label className="block text-xs font-bold text-gray-700 uppercase">
                   Student No
                 </label>
-                {(docsForm.studentNo !== "" ||
-                  docsForm.studentName !== "" ||
-                  docsForm.docType !== "") && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      const cleared = {
-                        studentNo: "",
-                        studentName: "",
-                        docType: "",
-                      };
-                      setDocsForm(cleared);
-                      refreshDocuments(cleared);
-                    }}
-                    className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
-                  >
-                    CLEAR ALL
-                  </Button>
-                )}
               </div>
               <Input
                 className="h-10 font-mono bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
@@ -229,6 +216,72 @@ export default function DocumentsTab({
             </div>
           ) : null}
         </div>
+
+        {/* Active Filter Chips Row */}
+        {(docsForm.studentNo !== "" || docsForm.studentName !== "" || docsForm.docType !== "") && (
+          <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">Active Filters:</span>
+              {docsForm.studentNo && (
+                <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon uppercase">
+                  ID: {docsForm.studentNo}
+                  <button
+                    onClick={() => {
+                        const next = { ...docsForm, studentNo: "" };
+                        setDocsForm(next);
+                        refreshDocuments(next);
+                    }}
+                    className="ml-1 hover:text-pup-darkMaroon transition-colors"
+                  >
+                    <i className="ph-bold ph-x text-[8px]"></i>
+                  </button>
+                </div>
+              )}
+              {docsForm.studentName && (
+                <div className="flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 uppercase">
+                  Name: {docsForm.studentName}
+                  <button
+                    onClick={() => {
+                        const next = { ...docsForm, studentName: "" };
+                        setDocsForm(next);
+                        refreshDocuments(next);
+                    }}
+                    className="ml-1 hover:text-blue-800 transition-colors"
+                  >
+                    <i className="ph-bold ph-x text-[8px]"></i>
+                  </button>
+                </div>
+              )}
+              {docsForm.docType && (
+                <div className="flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 uppercase">
+                  Type: {docsForm.docType}
+                  <button
+                    onClick={() => {
+                        const next = { ...docsForm, docType: "" };
+                        setDocsForm(next);
+                        refreshDocuments(next);
+                    }}
+                    className="ml-1 hover:text-amber-800 transition-colors"
+                  >
+                    <i className="ph-bold ph-x text-[8px]"></i>
+                  </button>
+                </div>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const cleared = { studentNo: "", studentName: "", docType: "" };
+                  setDocsForm(cleared);
+                  refreshDocuments(cleared);
+                }}
+                className="h-6 rounded-full border border-dashed border-pup-maroon/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase"
+              >
+                CLEAR ALL FILTERS
+              </Button>
+            </div>
+          </div>
+        )}
 
         <CardContent className="p-6 flex-1 flex flex-col min-h-0">
           {docsLoading ? (
@@ -501,7 +554,7 @@ export default function DocumentsTab({
             </>
           )}
         </CardContent>
-      </section>
+      </Card>
 
       {/* DOCUMENT UPDATE MODAL */}
       <Dialog

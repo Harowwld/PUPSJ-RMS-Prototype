@@ -11,6 +11,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 import { formatPHDateTime, formatPHDateTimeParts } from "@/lib/timeFormat"
+import { generateExportFilename } from "@/lib/exportHelpers"
 import {
   Empty,
   EmptyHeader,
@@ -30,6 +31,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
+
+import PageHeader from "@/components/shared/PageHeader"
+import FloatingActionBar from "@/components/shared/FloatingActionBar"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column)
@@ -53,6 +57,8 @@ export default function DigitalRecordsReviewTab({
   onBulkApprove,
   onBulkDecline,
   onPreviewDocument,
+  showToast,
+  onLogAction,
 }) {
   const [searchQuery, setSearchQuery] = useState("")
   const [localSearch, setLocalSearch] = useState("")
@@ -140,11 +146,23 @@ export default function DigitalRecordsReviewTab({
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
       const link = document.createElement("a")
       const url = URL.createObjectURL(blob)
+      const fileName = generateExportFilename("DIGITAL-RECORDS", "REVIEW", "csv")
       link.setAttribute("href", url)
-      link.setAttribute("download", `PUP-DIGITAL-RECORDS-${format(new Date(), "yyyy-MM-dd-HHmm")}.csv`)
+      link.setAttribute("download", fileName)
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
+
+      showToast?.({
+        title: "Export Success",
+        description: `Dataset exported successfully as ${fileName}.`
+      })
+
+      onLogAction?.({
+        action: "Export Records",
+        details: `exported ${rows.length} digital records to CSV for administrative review`,
+        entityType: "Report"
+      })
     } catch (err) {
       console.error("[Export Error]", err)
     } finally {
@@ -275,6 +293,7 @@ export default function DigitalRecordsReviewTab({
 
   const stats = useMemo(() => {
     const today = new Date().toLocaleDateString("en-CA") // YYYY-MM-DD
+    const fortyEightHoursAgo = Date.now() - 48 * 60 * 60 * 1000
 
     const pending = records.filter((r) => r.approval_status === "Pending").length
     const approvedToday = records.filter(
@@ -285,6 +304,12 @@ export default function DigitalRecordsReviewTab({
       (r) =>
         r.approval_status === "Declined" && r.reviewed_at?.startsWith(today)
     ).length
+
+    const slaBreachRecords = records.filter(
+      (r) =>
+        r.approval_status === "Pending" &&
+        new Date(r.created_at).getTime() < fortyEightHoursAgo
+    )
 
     const reviewedRecords = records.filter(
       (r) => r.reviewed_at && r.created_at && r.approval_status !== "Pending"
@@ -304,6 +329,8 @@ export default function DigitalRecordsReviewTab({
       approvedToday,
       declinedToday,
       avgSlaHours: avgSlaHours.toFixed(1),
+      hasSlaBreach: slaBreachRecords.length > 0,
+      slaBreachCount: slaBreachRecords.length,
     }
   }, [records])
 
@@ -315,9 +342,34 @@ export default function DigitalRecordsReviewTab({
         <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-white p-5 shadow-sm transition-all hover:border-amber-500/30">
           <i className="ph-duotone ph-clock-countdown absolute -right-3 -bottom-3 rotate-12 text-6xl text-amber-500 opacity-5 transition-transform group-hover:scale-110" />
           <div className="relative z-10">
-            <p className="mb-1 text-[10px] font-black tracking-widest text-gray-400 uppercase">
-              Pending Reviews
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="mb-1 text-[10px] font-black tracking-widest text-gray-400 uppercase">
+                Pending Reviews
+              </p>
+              {stats.hasSlaBreach && !isLoading && (
+                <div className="flex items-center gap-1.5">
+                   <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                   </span>
+                   <TooltipProvider>
+                      <Tooltip delayDuration={300}>
+                        <TooltipTrigger asChild>
+                           <Badge className="bg-red-50 text-red-700 border-red-100 text-[8px] font-black px-1.5 py-0 h-4 uppercase tracking-tighter cursor-help">
+                              SLA Warning
+                           </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="bg-red-600 text-white border-red-500 max-w-[200px]">
+                           <p className="font-bold text-xs uppercase tracking-tight">SLA Breach Detected</p>
+                           <p className="text-[10px] font-medium opacity-90 leading-tight mt-0.5">
+                              {stats.slaBreachCount} {stats.slaBreachCount === 1 ? "record has" : "records have"} been pending for more than 48 hours.
+                           </p>
+                        </TooltipContent>
+                      </Tooltip>
+                   </TooltipProvider>
+                </div>
+              )}
+            </div>
             {isLoading ? (
               <Skeleton className="h-8 w-16" />
             ) : (
@@ -395,11 +447,43 @@ export default function DigitalRecordsReviewTab({
       </div>
 
       <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm">
-        {/* Filter Bar */}
-        <div className="flex-none border-b border-gray-200 bg-gray-50/50 p-4">
-          {/* Active Filter Chips */}
-          {(localSearch !== "" || statusFilter !== "All" || docTypeFilter !== "All" || dateFrom || dateTo) && (
-            <div className="mb-3 flex flex-wrap items-center gap-2">
+        <PageHeader
+          icon="ph-seal-check"
+          title="University Digital Repository"
+          description="Review and verify digitized student records submitted by registrar staff."
+          actions={
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleExportCSV}
+                disabled={isLoading || isExporting}
+                className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border-gray-300 text-[10px] font-bold text-gray-600 hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-50 shadow-sm transition-colors"
+              >
+                <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv"} text-base`}></i>
+                {isExporting ? "PREPARING..." : "EXPORT CSV"}
+              </Button>
+
+              <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4">
+                <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onRefresh}
+                    disabled={isLoading}
+                    className="flex h-10 w-28 items-center justify-center gap-2 rounded-brand border-gray-300 bg-white px-4 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-50"
+                >
+                    <i className={`ph-bold ph-arrows-clockwise ${isLoading ? "animate-spin" : ""} text-base`}></i>
+                    REFRESH
+                </Button>
+              </div>
+            </div>
+          }
+        />
+
+        {/* Active Filter Chips Row */}
+        {(localSearch !== "" || statusFilter !== "All" || docTypeFilter !== "All" || dateFrom || dateTo) && (
+          <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">Active Filters:</span>
               {localSearch && (
                 <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon">
@@ -462,8 +546,11 @@ export default function DigitalRecordsReviewTab({
                 CLEAR ALL FILTERS
               </Button>
             </div>
-          )}
+          </div>
+        )}
 
+        {/* Filter Bar */}
+        <div className="flex-none border-b border-gray-200 bg-gray-50/50 p-4">
           <div className="flex w-full flex-wrap items-end gap-3">
             {/* Search */}
             <div className="min-w-[400px] flex-1">
@@ -515,23 +602,49 @@ export default function DigitalRecordsReviewTab({
             <div className="flex min-w-[280px] flex-1 flex-col gap-1">
               <div className="flex items-center justify-between">
                 <label className="block text-xs font-bold text-gray-700 uppercase">Upload Date Range</label>
-                <div className="flex gap-1.5">
-                  {[{ label: "Today", days: 0 }, { label: "Last 7d", days: 7 }, { label: "Last 30d", days: 30 }].map(({ label, days }) => (
-                    <button
-                      key={label}
-                      onClick={() => {
-                        const end = new Date()
-                        const start = new Date()
-                        start.setDate(start.getDate() - days)
-                        start.setHours(0, 0, 0, 0)
-                        setDateFrom(format(start, "yyyy-MM-dd"))
-                        setDateTo(format(end, "yyyy-MM-dd"))
-                        setCurrentPage(1)
-                      }}
-                      className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon"
-                    >
-                      {label}
-                    </button>
+                <div className="flex items-center gap-1.5">
+                  {[
+                    { label: "Today", range: "today" },
+                    { label: "Yesterday", range: "yesterday" },
+                    { label: "Last 7 Days", range: "last7" },
+                    { label: "Last 30 Days", range: "last30" }
+                  ].map(({ label, range }, idx, arr) => (
+                    <div key={range} className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => {
+                          const end = new Date()
+                          let start = new Date()
+                          switch (range) {
+                            case "today":
+                              start.setHours(0, 0, 0, 0)
+                              break
+                            case "yesterday":
+                              start.setDate(start.getDate() - 1)
+                              start.setHours(0, 0, 0, 0)
+                              end.setDate(end.getDate() - 1)
+                              end.setHours(23, 59, 59, 999)
+                              break
+                            case "last7":
+                              start.setDate(start.getDate() - 7)
+                              start.setHours(0, 0, 0, 0)
+                              break
+                            case "last30":
+                              start.setDate(start.getDate() - 30)
+                              start.setHours(0, 0, 0, 0)
+                              break
+                          }
+                          setDateFrom(format(start, "yyyy-MM-dd"))
+                          setDateTo(format(end, "yyyy-MM-dd"))
+                          setCurrentPage(1)
+                        }}
+                        className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon"
+                      >
+                        {label}
+                      </button>
+                      {idx < arr.length - 1 && (
+                        <span className="text-[8px] text-gray-300 font-bold">•</span>
+                      )}
+                    </div>
                   ))}
                 </div>
               </div>
@@ -575,21 +688,6 @@ export default function DigitalRecordsReviewTab({
                   </PopoverContent>
                 </Popover>
               </div>
-            </div>
-
-            {/* Export CSV */}
-            <div className="w-36 shrink-0">
-              <label className="mb-1 block text-xs font-bold text-gray-700 uppercase opacity-0">Export</label>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportCSV}
-                disabled={sortedRecords.length === 0 || isExporting}
-                className="flex h-10 w-full items-center justify-center gap-1.5 rounded-brand border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-50"
-              >
-                <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv"} text-base`}></i>
-                {isExporting ? "PREPARING..." : "EXPORT CSV"}
-              </Button>
             </div>
           </div>
         </div>
@@ -723,6 +821,21 @@ export default function DigitalRecordsReviewTab({
                                   ? "No records match your search criteria. Try adjusting your filters."
                                   : "We couldn't find any digital records matching your current filter criteria."}
                               </EmptyDescription>
+                              {searchQuery && (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setLocalSearch("")
+                                    setSearchQuery("")
+                                    setCurrentPage(1)
+                                  }}
+                                  className="mt-6 flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 uppercase tracking-wide"
+                                >
+                                  <i className="ph-bold ph-arrow-counter-clockwise"></i>
+                                  CLEAR SEARCH
+                                </Button>
+                              )}
                             </EmptyHeader>
                           </Empty>
                         </td>
@@ -731,10 +844,17 @@ export default function DigitalRecordsReviewTab({
                       paginatedRecords.map((r) => {
                         const uploaded = formatPHDateTimeParts(r.created_at)
                         const isSelected = selectedIds.has(r.id)
+                        const fortyEightHoursAgo = Date.now() - 48 * 60 * 60 * 1000
+                        const isSlaBreached = r.approval_status === "Pending" && new Date(r.created_at).getTime() < fortyEightHoursAgo
+
                         return (
                           <tr
                             key={r.id}
-                            className={`transition-colors hover:bg-gray-50 ${isSelected ? "bg-red-50/30" : ""}`}
+                            className={cn(
+                              "transition-colors hover:bg-gray-50",
+                              isSelected && "bg-red-50/30",
+                              isSlaBreached && !isSelected && "bg-amber-50/10"
+                            )}
                           >
                             <td className="p-3 text-center">
                               <input
@@ -768,15 +888,32 @@ export default function DigitalRecordsReviewTab({
                               </span>
                             </td>
                             <td className="p-3">
-                              <Badge
-                                variant="outline"
-                                className={`${getStatusBadge(r.approval_status)} flex w-max items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase shadow-xs`}
-                              >
-                                <i
-                                  className={`ph-fill ${getStatusIcon(r.approval_status)}`}
-                                ></i>
-                                {r.approval_status || "Pending"}
-                              </Badge>
+                              <div className="flex items-center gap-2">
+                                <Badge
+                                  variant="outline"
+                                  className={`${getStatusBadge(r.approval_status)} flex w-max items-center gap-1.5 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase shadow-xs`}
+                                >
+                                  <i
+                                    className={`ph-fill ${getStatusIcon(r.approval_status)}`}
+                                  ></i>
+                                  {r.approval_status || "Pending"}
+                                </Badge>
+                                {isSlaBreached && (
+                                  <TooltipProvider>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <div className="flex h-5 w-5 animate-pulse items-center justify-center rounded-full bg-red-100 text-red-600 shadow-sm cursor-help">
+                                          <i className="ph-bold ph-warning-diamond text-[10px]"></i>
+                                        </div>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top" className="bg-red-600 text-white border-red-500">
+                                         <p className="text-[10px] font-bold uppercase tracking-tight">SLA Breach Detected</p>
+                                         <p className="text-[9px] font-medium opacity-90">Pending for over 48 hours.</p>
+                                      </TooltipContent>
+                                    </Tooltip>
+                                  </TooltipProvider>
+                                )}
+                              </div>
                             </td>
                             <td className="p-3 font-medium text-gray-600">
                               <div className="text-[11px]">
@@ -931,46 +1068,63 @@ export default function DigitalRecordsReviewTab({
 
       {/* Floating Bulk Action Bar */}
       {selectedIds.size > 0 && (
-        <div className="fixed right-0 bottom-6 left-0 z-50 flex justify-center px-4 animate-in slide-in-from-bottom-4 fade-in duration-300">
-          <div className="flex items-center gap-4 rounded-full border border-gray-300 bg-white p-2 pr-4 pl-6 shadow-2xl ring-1 ring-black/5 backdrop-blur-md">
-            <div className="flex items-center gap-3 border-r border-gray-200 pr-4">
-              <div className="flex h-6 w-6 items-center justify-center rounded-full bg-pup-maroon text-[10px] font-black text-white shadow-sm">
-                {selectedIds.size}
-              </div>
-              <span className="text-xs font-bold tracking-tight text-gray-700">
-                Selected Records
-              </span>
-            </div>
+        (() => {
+          const selectedRecords = paginatedRecords.filter((r) => selectedIds.has(r.id))
+          const allPending = selectedRecords.every((r) => r.approval_status === "Pending")
 
-            <div className="flex items-center gap-2">
-              <Button
-                size="sm"
-                onClick={handleBulkApprove}
-                className="h-9 rounded-full bg-green-600 px-4 text-xs font-bold text-white shadow-sm hover:bg-green-700 active:scale-95"
-              >
-                <i className="ph-bold ph-check mr-2"></i>
-                APPROVE SELECTED
-              </Button>
-              <Button
-                size="sm"
-                variant="destructive"
-                onClick={handleBulkDecline}
-                className="h-9 rounded-full bg-red-600 px-4 text-xs font-bold text-white shadow-sm hover:bg-red-700 active:scale-95"
-              >
-                <i className="ph-bold ph-x mr-2"></i>
-                DECLINE SELECTED
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedIds(new Set())}
-                className="h-9 rounded-full px-4 text-xs font-bold text-gray-500 hover:bg-gray-100 active:scale-95"
-              >
-                CANCEL
-              </Button>
-            </div>
-          </div>
-        </div>
+          if (allPending) {
+            return (
+              <FloatingActionBar
+                selectedCount={selectedIds.size}
+                onCancel={() => setSelectedIds(new Set())}
+                customContent={
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      onClick={handleBulkApprove}
+                      className="h-9 rounded-full bg-green-600 px-4 text-xs font-bold text-white shadow-sm hover:bg-green-700 active:scale-95"
+                    >
+                      <i className="ph-bold ph-check mr-2"></i>
+                      APPROVE SELECTED
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={handleBulkDecline}
+                      className="h-9 rounded-full bg-red-600 px-4 text-xs font-bold text-white shadow-sm hover:bg-red-700 active:scale-95"
+                    >
+                      <i className="ph-bold ph-x mr-2"></i>
+                      DECLINE SELECTED
+                    </Button>
+                  </div>
+                }
+              />
+            )
+          }
+
+          return (
+            <FloatingActionBar
+              selectedCount={selectedIds.size}
+              onCancel={() => setSelectedIds(new Set())}
+              customContent={
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-medium text-amber-700 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-200">
+                    <i className="ph-fill ph-warning-circle mr-1.5"></i>
+                    Selection contains reviewed records. Bulk actions disabled.
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setSelectedIds(new Set())}
+                    className="h-9 rounded-full px-4 text-xs font-bold text-gray-500 hover:bg-gray-100 active:scale-95"
+                  >
+                    CLEAR SELECTION
+                  </Button>
+                </div>
+              }
+            />
+          )
+        })()
       )}
     </div>
   )

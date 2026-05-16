@@ -194,7 +194,7 @@ export default function BulkImportTab({
                   download="PUP-TAXONOMY-IMPORT-TEMPLATE.csv"
                   className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-xs transition-all hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
                 >
-                  <i className="ph-bold ph-file-csv text-base"></i>
+                  <i className="ph-bold ph-download-simple text-base"></i>
                   Download Template
                 </a>
                 <button

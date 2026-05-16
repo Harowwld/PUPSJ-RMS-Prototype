@@ -81,13 +81,21 @@ export async function listBackups(filters = {}) {
   }
 
   if (startDate) {
-    conditions.push(`datetime(created_at) >= datetime(?)`);
-    params.push(`${startDate} 00:00:00`);
+    if (startDate.includes("T") || startDate.includes(":")) {
+      conditions.push(`datetime(created_at) >= datetime(?)`);
+    } else {
+      conditions.push(`date(created_at, 'localtime') >= date(?)`);
+    }
+    params.push(startDate);
   }
 
   if (endDate) {
-    conditions.push(`datetime(created_at) <= datetime(?)`);
-    params.push(`${endDate} 23:59:59`);
+    if (endDate.includes("T") || endDate.includes(":")) {
+      conditions.push(`datetime(created_at) <= datetime(?)`);
+    } else {
+      conditions.push(`date(created_at, 'localtime') <= date(?)`);
+    }
+    params.push(endDate);
   }
 
   if (conditions.length > 0) {
