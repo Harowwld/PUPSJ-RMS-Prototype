@@ -567,7 +567,7 @@ export default function RecordsArchiveTab({
                     <Button
                       type="button"
                       onClick={() => onSwitchView("upload")}
-                      className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-pup-maroon px-5 text-sm font-bold text-white shadow-sm transition-colors hover:bg-red-900"
+                      className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-5 text-sm font-bold text-white shadow-sm transition-colors"
                     >
                       <i className="ph-bold ph-upload-simple"></i> GO TO
                       REGISTER / UPLOAD

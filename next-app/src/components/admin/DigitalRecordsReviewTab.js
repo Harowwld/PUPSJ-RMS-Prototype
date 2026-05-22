@@ -955,7 +955,7 @@ export default function DigitalRecordsReviewTab({
                                       size="sm"
                                       variant="destructive"
                                       onClick={() => onDecline(r.id)}
-                                      className="h-9 rounded-brand bg-red-600 px-3 text-xs font-bold text-white shadow-sm hover:bg-red-700"
+                                      className="h-9 rounded-brand bg-linear-to-b from-red-600 to-red-800 border border-red-900 hover:from-red-500 hover:to-red-700 hover:shadow-md transition-all px-3 text-xs font-bold text-white shadow-sm"
                                     >
                                       <i className="ph-bold ph-x mr-1.5"></i>
                                       DECLINE

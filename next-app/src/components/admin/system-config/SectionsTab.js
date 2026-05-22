@@ -352,7 +352,7 @@ export default function SectionsTab({
               <Button
                 onClick={() => setIsAddSectionOpen(true)}
                 disabled={showArchived}
-                className="flex h-10 items-center gap-2 rounded-brand bg-pup-maroon px-5 font-bold text-white shadow-sm transition-all hover:bg-red-900 active:scale-95 disabled:opacity-50"
+                className="flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-5 font-bold text-white shadow-sm active:scale-95 disabled:opacity-50 transition-all"
               >
                 <i className="ph-bold ph-plus"></i>
                 <span className="hidden sm:inline uppercase">Add Course Block</span>
@@ -510,7 +510,7 @@ export default function SectionsTab({
                         size="sm"
                         disabled={!secCourseCode || !newSectionName.trim() || isQuickAddLoading}
                         onClick={() => addSection(null, { courseCode: secCourseCode, name: newSectionName })}
-                        className={`h-9 rounded-brand px-4 text-xs font-bold text-white shadow-sm transition-all active:scale-95 disabled:opacity-50 ${(secCourseCode || newSectionName.trim()) ? "bg-amber-600 hover:bg-amber-700" : "bg-pup-maroon hover:bg-red-900"}`}
+                        className={`h-9 rounded-brand px-4 text-xs font-bold text-white shadow-sm active:scale-95 disabled:opacity-50 ${(secCourseCode || newSectionName.trim()) ? "bg-amber-600 hover:bg-amber-700" : "bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md "} transition-all`}
                         >
                         {isQuickAddLoading ? (
                           <i className="ph-bold ph-spinner animate-spin"></i>
@@ -697,7 +697,7 @@ export default function SectionsTab({
                           ) : !showArchived && (
                             <Button
                               onClick={() => setIsAddSectionOpen(true)}
-                              className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-pup-maroon px-8 font-black tracking-widest text-white shadow-lg shadow-red-900/20 transition-all hover:bg-red-900 active:scale-95"
+                              className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-black tracking-widest text-white shadow-lg shadow-red-900/20 active:scale-95 transition-all"
                             >
                               <i className="ph-bold ph-plus text-lg"></i>
                               ADD COURSE BLOCK
@@ -890,7 +890,7 @@ export default function SectionsTab({
               </Button>
               <Button
                 type="submit"
-                className="flex h-11 items-center gap-2 rounded-brand bg-pup-maroon px-6 font-bold text-white shadow-sm hover:bg-red-900"
+                className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-bold text-white shadow-sm"
               >
                 <i className="ph-bold ph-check text-lg"></i>
                 CREATE BLOCK
@@ -980,7 +980,7 @@ export default function SectionsTab({
               </Button>
               <Button
                 type="submit"
-                className="flex h-11 items-center gap-2 rounded-brand bg-pup-maroon px-6 font-bold text-white shadow-sm hover:bg-red-900"
+                className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-bold text-white shadow-sm"
               >
                 <i className="ph-bold ph-check text-lg"></i>
                 SAVE CHANGES

@@ -522,7 +522,7 @@ export default function DocumentsTab({
                                       setUpdateFile(null);
                                       setUpdatePromptOpen(true);
                                     }}
-                                    className="px-3 bg-pup-maroon text-white font-bold text-xs hover:bg-red-900 transition-all"
+                                    className="px-3 bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white font-bold text-xs transition-all"
                                   >
                                     <i className="ph-bold ph-pencil-simple-line mr-1.5"></i>
                                     UPDATE
@@ -681,7 +681,7 @@ export default function DocumentsTab({
                 }
               }}
               disabled={updateSaving || !updateFile}
-              className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand"
+              className="h-11 px-6 bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white shadow-sm font-bold flex items-center gap-2 rounded-brand"
             >
               <i className="ph-bold ph-check text-lg"></i>
               {updateSaving ? "SAVING..." : "SAVE CHANGES"}
@@ -845,7 +845,7 @@ export default function DocumentsTab({
                 }
               }}
               disabled={editStudentSaving}
-              className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand"
+              className="h-11 px-6 bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white shadow-sm font-bold flex items-center gap-2 rounded-brand"
             >
               <i className="ph-bold ph-check text-lg"></i>
               {editStudentSaving ? "SAVING..." : "SAVE PROFILE"}

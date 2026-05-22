@@ -122,7 +122,7 @@ export function TOTPChallengeModal({
             <Button
               type="submit"
               disabled={isLoading || token.length !== 6}
-              className="flex h-11 items-center gap-2 rounded-brand bg-pup-maroon px-8 font-black tracking-widest text-white uppercase shadow-lg shadow-red-900/20 hover:bg-red-900"
+              className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 font-black tracking-widest text-white uppercase shadow-lg shadow-red-900/20"
             >
               {isLoading ? (
                 <>

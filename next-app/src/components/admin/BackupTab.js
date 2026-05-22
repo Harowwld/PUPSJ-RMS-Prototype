@@ -278,7 +278,7 @@ export default function BackupTab({
                       <Button
                         onClick={handleGenerateBackup}
                         disabled={localLoading.generating}
-                        className="flex h-9 items-center gap-2 rounded-brand bg-pup-maroon px-4 text-xs font-bold text-white shadow-sm transition-all hover:bg-red-900 active:scale-95"
+                        className="flex h-9 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-4 text-xs font-bold text-white shadow-sm active:scale-95 transition-all"
                       >
                         <i
                           className={`ph-bold ${localLoading.generating ? "ph-arrows-clockwise animate-spin" : "ph-download-simple"} text-sm`}

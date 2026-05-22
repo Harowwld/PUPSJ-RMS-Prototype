@@ -177,7 +177,7 @@ export default function SLAAnalyticsTab({
                 size="sm"
                 onClick={handlePreview}
                 disabled={loading || !data || isGeneratingPdf}
-                className="h-10 px-6 font-bold text-xs tracking-wide bg-pup-maroon text-white border border-pup-maroon shadow-sm hover:bg-red-900 active:scale-95 disabled:opacity-60 rounded-brand transition-all uppercase"
+                className="h-10 px-6 font-bold text-xs tracking-wide bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white border border-pup-maroon shadow-sm active:scale-95 disabled:opacity-60 rounded-brand uppercase transition-all"
               >
                 <i className={cn("ph-bold text-sm mr-2", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
                 {isGeneratingPdf ? "Generating..." : "Generate Report"}
@@ -397,7 +397,7 @@ export default function SLAAnalyticsTab({
             <Button
               onClick={handlePrint}
               disabled={!pdfBlobUrl}
-              className="flex h-11 items-center gap-2 bg-pup-maroon px-8 font-bold text-white shadow-sm hover:bg-red-900 rounded-brand transition-colors"
+              className="flex h-11 items-center gap-2 bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 font-bold text-white shadow-sm rounded-brand transition-colors"
             >
               <i className="ph-bold ph-printer text-lg"></i> FINALIZE AND PRINT
               REPORT

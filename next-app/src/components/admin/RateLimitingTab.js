@@ -350,7 +350,7 @@ export default function RateLimitingTab() {
         </h2>
         <button
           onClick={fetchData}
-          className="flex items-center gap-2 rounded-brand bg-pup-maroon px-4 py-2 text-sm text-white hover:bg-red-900"
+          className="flex items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-4 py-2 text-sm text-white"
         >
           <PhRefresh className="h-4 w-4" />
           Refresh

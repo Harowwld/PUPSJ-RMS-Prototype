@@ -90,7 +90,7 @@ export default function BulkImportTab({
           {/* Protocol card */}
           <Card className="flex flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm">
             <div className="flex items-center gap-4 rounded-t-brand border-b border-gray-100 bg-gray-50/50 px-6 py-5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-pup-maroon text-xs font-black text-white shadow-md shadow-red-900/20">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-xs font-black text-white shadow-md shadow-red-900/20">
                 1
               </div>
               <div>
@@ -175,7 +175,7 @@ export default function BulkImportTab({
           {/* Upload card */}
           <Card className="flex flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm">
             <div className="flex items-center gap-4 rounded-t-brand border-b border-gray-100 bg-gray-50/50 px-6 py-5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-pup-maroon text-xs font-black text-white shadow-md shadow-red-900/20">
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-xs font-black text-white shadow-md shadow-red-900/20">
                 2
               </div>
               <div>
@@ -407,7 +407,7 @@ export default function BulkImportTab({
                         size="sm"
                         disabled={!quickAdd.name}
                         onClick={handleQuickAdd}
-                        className="h-8 rounded-md bg-pup-maroon px-4 text-[10px] font-black text-white hover:bg-red-900"
+                        className="h-8 rounded-md bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-4 text-[10px] font-black text-white"
                       >
                         <i className="ph-bold ph-plus mr-1"></i> ADD ROW
                       </Button>
@@ -614,7 +614,7 @@ export default function BulkImportTab({
                 <Button
                   onClick={executeBulkImport}
                   disabled={importRows.filter((r) => !r.error && importSelected[r.index]).length === 0}
-                  className="h-10 rounded-brand bg-pup-maroon px-8 font-black tracking-widest text-white uppercase shadow-lg shadow-red-900/20 transition-all hover:bg-red-900 active:scale-95"
+                  className="h-10 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-black tracking-widest text-white uppercase shadow-lg shadow-red-900/20 active:scale-95 transition-all"
                 >
                   <i className="ph-bold ph-cloud-arrow-up mr-2 text-lg"></i>
                   Confirm & Import {importRows.filter((r) => !r.error && importSelected[r.index]).length} Records
@@ -681,7 +681,7 @@ export default function BulkImportTab({
             <div className="flex w-full max-w-[280px] flex-col gap-3">
               <Button
                 onClick={resetImport}
-                className="flex h-10 w-full items-center justify-center gap-2 rounded-brand bg-pup-maroon font-bold tracking-widest text-white uppercase shadow-md transition-all hover:bg-red-900 active:scale-95"
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md font-bold tracking-widest text-white uppercase shadow-md active:scale-95 transition-all"
               >
                 <i className="ph-bold ph-arrow-left text-base"></i>
                 Return to Imports

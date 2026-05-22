@@ -248,7 +248,7 @@ export default function AuditLogsTab({
                   size="sm"
                   onClick={handlePreviewPDF}
                   disabled={logTotal === 0 || isExporting}
-                  className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand bg-pup-maroon text-[10px] font-bold text-white hover:bg-red-900 active:scale-95 disabled:opacity-50 shadow-sm transition-all"
+                  className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-[10px] font-bold text-white active:scale-95 disabled:opacity-50 shadow-sm transition-all"
                 >
                   <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-pdf"} text-base`}></i>
                   {isExporting ? "GENERATING..." : "GENERATE PDF"}

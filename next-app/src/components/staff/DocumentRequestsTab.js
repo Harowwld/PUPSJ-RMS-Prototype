@@ -323,7 +323,7 @@ export default function DocumentRequestsTab({
             !loading && !error && (
               <Button
                 type="button"
-                className="bg-pup-maroon hover:bg-red-900 font-bold shrink-0"
+                className="bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all font-bold shrink-0"
                 onClick={() => setCreateOpen(true)}
               >
                 <i className="ph-bold ph-plus mr-1.5"></i>
@@ -649,7 +649,7 @@ export default function DocumentRequestsTab({
                       <Button
                         variant="default"
                         size="sm"
-                        className="h-7 px-3 text-[10px] font-black bg-pup-maroon hover:bg-red-900 text-white uppercase shadow-sm"
+                        className="h-7 px-3 text-[10px] font-black bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white uppercase shadow-sm"
                         onClick={handleManualSave}
                         disabled={saving}
                       >
@@ -711,7 +711,7 @@ export default function DocumentRequestsTab({
                         )}
                         <Button
                           type="button"
-                          className="mt-3 w-full bg-pup-maroon hover:bg-red-900 font-bold text-xs"
+                          className="mt-3 w-full bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all font-bold text-xs"
                           disabled={!studentForRequest}
                           onClick={() => {
                             if (!studentForRequest) return;
@@ -858,7 +858,7 @@ export default function DocumentRequestsTab({
               </Button>
               <Button
                 type="submit"
-                className="px-5 bg-pup-maroon text-white font-bold hover:bg-red-900 shadow-sm rounded-brand gap-2 flex items-center"
+                className="px-5 bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all font-bold shadow-sm rounded-brand gap-2 flex items-center"
                 disabled={submitting}
               >
                 <i className="ph-bold ph-plus-circle text-lg"></i>
@@ -922,7 +922,7 @@ export default function DocumentRequestsTab({
             {studentForRequest ? (
               <Button
                 type="button"
-                className="px-5 bg-pup-maroon text-white font-bold hover:bg-red-900 shadow-sm rounded-brand gap-2 flex items-center"
+                className="px-5 bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all font-bold shadow-sm rounded-brand gap-2 flex items-center"
                 onClick={() => {
                   setFileWarningOpen(false);
                   onLocateOnMap(studentForRequest);

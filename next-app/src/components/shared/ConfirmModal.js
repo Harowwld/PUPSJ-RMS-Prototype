@@ -140,8 +140,8 @@ export default function ConfirmModal({
               "h-11 px-6 text-sm font-bold shadow-sm rounded-brand gap-2 flex items-center",
               variant === "success" && "bg-green-600 hover:bg-green-700 text-white",
               variant === "warning" && "bg-amber-600 hover:bg-amber-700 text-white",
-              (v.confirmVariant === "default" && !["success", "warning"].includes(variant)) && "bg-pup-maroon hover:bg-red-900 text-white",
-              v.confirmVariant === "destructive" && "bg-red-600 hover:bg-red-700 text-white"
+              (v.confirmVariant === "default" && !["success", "warning"].includes(variant)) && "bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white",
+              v.confirmVariant === "destructive" && "bg-linear-to-b from-red-600 to-red-800 border border-red-900 hover:from-red-500 hover:to-red-700 hover:shadow-md transition-all text-white"
             )}
           >
             <i className={`${displayButtonIcon} text-lg`}></i>

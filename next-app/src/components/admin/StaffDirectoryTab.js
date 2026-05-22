@@ -36,16 +36,181 @@ import {
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import { cn } from "@/lib/utils"
+import React from "react"
+
+const StaffTableRow = React.memo(({ 
+  s, 
+  isCurrentUser, 
+  isSelected, 
+  active, 
+  isArchived, 
+  initials, 
+  toggleSelect, 
+  onEditUser, 
+  onRestoreUser, 
+  onDeleteUser, 
+  activeTab 
+}) => {
+  return (
+    <tr
+      onClick={(e) => !isCurrentUser && toggleSelect(s.id, e)}
+      className={cn(
+        "transition-colors hover:bg-gray-50",
+        !isCurrentUser && "cursor-pointer",
+        isCurrentUser && "bg-red-50/30",
+        isArchived && "opacity-75 grayscale-[0.2]",
+        isSelected && "bg-amber-50/40 dark:bg-amber-900/20"
+      )}
+    >
+      <td className="p-3 text-center">
+        <input
+          type="checkbox"
+          className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20"
+          checked={isSelected}
+          onChange={() => {}} // Controlled by tr onClick
+          disabled={isCurrentUser}
+        />
+      </td>
+      <td className="p-3">
+        <div className="flex items-center gap-3">
+          <div
+            className={cn(
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition-transform group-hover:scale-110",
+              isArchived
+                ? "border-gray-200 bg-gray-50 text-gray-500"
+                : "border-red-100 bg-red-50 text-pup-maroon shadow-sm"
+            )}
+          >
+            {initials}
+          </div>
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 text-sm font-bold text-gray-900">
+              <span className="truncate">
+                {s.fname} {s.lname}
+              </span>
+              {isCurrentUser && (
+                <Badge className="h-4 bg-pup-maroon text-[9px] font-black uppercase">
+                  You
+                </Badge>
+              )}
+            </div>
+            <div className="truncate text-xs font-medium text-gray-500">
+              {s.email}
+            </div>
+          </div>
+        </div>
+      </td>
+      <td className="p-3 text-[11px] font-bold text-gray-600">
+        {s.id}
+      </td>
+      <td className="p-3">
+        <Badge
+          variant="outline"
+          className={cn(
+            "rounded-full px-2.5 py-1 text-[10px] font-black uppercase shadow-xs",
+            s.role === "Admin" ||
+              s.role === "SuperAdmin"
+              ? "border-red-200 bg-red-50 text-pup-maroon"
+              : "border-amber-200 bg-amber-50 text-amber-700"
+          )}
+        >
+          {s.role}
+        </Badge>
+      </td>
+      <td className="p-3">
+        {s.totp_enabled ? (
+          <Badge className="gap-1 rounded-full border-emerald-200 bg-emerald-50 text-[10px] font-black text-emerald-700 uppercase shadow-xs">
+            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <i className="ph-bold ph-check-circle text-[10px]"></i>
+            ENABLED
+          </Badge>
+        ) : (
+          <Badge
+            variant="outline"
+            className="gap-1 rounded-full border-gray-200 bg-gray-50 text-[10px] font-black text-gray-500 uppercase shadow-xs"
+          >
+            <i className="ph-bold ph-warning-circle text-[10px]"></i>
+            DISABLED
+          </Badge>
+        )}
+      </td>
+      <td className="p-3">
+        <div className="text-[11px] font-bold text-gray-900 uppercase">
+          {active.relative || (active.date === "—" ? "Never active" : active.date)}
+        </div>
+        {active.relative && (
+          <div className="text-[10px] text-gray-500 opacity-70">
+            {active.date}
+          </div>
+        )}
+      </td>
+      <td className="p-3 text-right">
+        <div
+          className="flex items-center justify-end gap-1"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {isCurrentUser ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => (window.location.href = "/account")}
+              className="h-8 w-[210px] gap-2 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-black tracking-wider text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
+            >
+              <i className="ph-bold ph-user-circle text-base"></i>
+              MANAGE MY ACCOUNT
+            </Button>
+          ) : (
+            <div className="flex w-[210px] items-center gap-1">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEditUser(s.id)}
+                className="h-8 flex-1 gap-1.5 rounded-brand border-gray-300 bg-white px-0 text-[10px] font-black tracking-wider text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
+              >
+                <i className="ph-bold ph-pencil-simple text-base"></i>
+                EDIT
+              </Button>
+
+              {activeTab === "archived" ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onRestoreUser(s.id)}
+                  className="h-8 flex-1 gap-1.5 rounded-brand border-gray-300 bg-white px-0 text-[10px] font-black tracking-wider text-emerald-600 uppercase shadow-sm transition-colors hover:border-emerald-600 hover:bg-emerald-50/30 hover:text-emerald-700 active:scale-95"
+                >
+                  <i className="ph-bold ph-arrow-counter-clockwise text-base"></i>
+                  RESTORE
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onDeleteUser(s.id)}
+                  className="h-8 flex-1 gap-1.5 rounded-brand border-gray-300 bg-white px-0 text-[10px] font-black tracking-wider text-red-600 uppercase shadow-sm transition-colors hover:border-red-600 hover:bg-red-50/30 hover:text-red-700 active:scale-95"
+                >
+                  <i className="ph-bold ph-archive text-base"></i>
+                  ARCHIVE
+                </Button>
+              )}
+            </div>
+          )}
+        </div>
+      </td>
+    </tr>
+  )
+})
+
+StaffTableRow.displayName = "StaffTableRow"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column)
     return (
-      <i className="ph-bold ph-caret-up-down ml-1 text-[10px] opacity-30"></i>
+      <i className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-30"></i>
     )
   return sortOrder === "asc" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-[10px] text-pup-maroon"></i>
+    <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon"></i>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-[10px] text-pup-maroon"></i>
+    <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon"></i>
   )
 }
 
@@ -69,6 +234,11 @@ export default function StaffDirectoryTab({
 }) {
   const [activeTab, setActiveTab] = useState("active")
   const [localSearch, setLocalSearch] = useState("")
+
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [jumpPage, setJumpPage] = useState("1")
+  const [lastSelectedId, setLastSelectedId] = useState(null)
 
   // Sync local search with external search prop initially
   useEffect(() => {
@@ -125,10 +295,6 @@ export default function StaffDirectoryTab({
     }
   }, [staffData])
 
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(10)
-  const [jumpPage, setJumpPage] = useState("1")
-
   const [sortBy, setSortBy] = useState("fname")
   const [sortOrder, setSortOrder] = useState("asc")
 
@@ -183,26 +349,72 @@ export default function StaffDirectoryTab({
   // Clear selection when changing tabs or pages
   useEffect(() => {
     onSelectionChange(new Set())
+    setLastSelectedId(null)
   }, [activeTab, displayPage, onSelectionChange])
 
   const toggleSelectAll = (checked) => {
     if (checked) {
-      onSelectionChange(new Set(paginatedStaff.map((s) => s.id)))
+      onSelectionChange(
+        new Set(
+          paginatedStaff
+            .filter((s) => s.id !== currentUserId)
+            .map((s) => s.id)
+        )
+      )
     } else {
       onSelectionChange(new Set())
     }
+    setLastSelectedId(null)
   }
 
-  const toggleSelect = (id) => {
-    onSelectionChange((prev) => {
-      const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
+  const toggleSelect = (id, event) => {
+    const isSelected = selectedIds.has(id)
+
+    if (event?.shiftKey && lastSelectedId) {
+      if (isSelected) {
+        if (selectedIds.size > 1) {
+          // If Shift+Clicking an already selected item among multiple, deselect others
+          onSelectionChange(new Set([id]))
+          setLastSelectedId(id)
+        } else {
+          // If Shift+Clicking the ONLY selected item, deselect it completely
+          onSelectionChange(new Set())
+          setLastSelectedId(null)
+        }
+        return
       }
-      return next
-    })
+
+      // Normal Shift+Click Range Selection
+      const currentIdx = paginatedStaff.findIndex((s) => s.id === id)
+      const lastIdx = paginatedStaff.findIndex((s) => s.id === lastSelectedId)
+
+      if (currentIdx !== -1 && lastIdx !== -1) {
+        const start = Math.min(currentIdx, lastIdx)
+        const end = Math.max(currentIdx, lastIdx)
+        const idsInRange = paginatedStaff
+          .slice(start, end + 1)
+          .filter((s) => s.id !== currentUserId)
+          .map((s) => s.id)
+
+        const next = new Set(selectedIds)
+        idsInRange.forEach((rangeId) => next.add(rangeId))
+        
+        onSelectionChange(next)
+        setLastSelectedId(id)
+        return
+      }
+    }
+
+    // Plain Click: Additive Toggle
+    const next = new Set(selectedIds)
+    if (next.has(id)) {
+      next.delete(id)
+      if (lastSelectedId === id) setLastSelectedId(null)
+    } else {
+      next.add(id)
+      setLastSelectedId(id)
+    }
+    onSelectionChange(next)
   }
 
   const handleJumpPage = (e) => {
@@ -411,36 +623,34 @@ export default function StaffDirectoryTab({
                   </div>
 
                   {/* Integrated Summary Metrics Bar */}
-                  <div className="flex flex-wrap items-center gap-6 rounded-brand border border-gray-100 bg-gray-50/30 px-4 py-2 shadow-xs">
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-50 text-pup-maroon">
-                        <i className="ph-duotone ph-users-four text-base"></i>
+                  <div className="flex flex-wrap items-center gap-3">
+                    <div className="flex min-w-[150px] select-none cursor-default items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm transition-all hover:shadow-md">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50 text-pup-maroon shadow-xs">
+                        <i className="ph-duotone ph-users-four text-xl"></i>
                       </div>
                       <div>
-                        <p className="mb-0.5 text-[8px] leading-none font-black tracking-widest text-gray-400 uppercase">
+                        <p className="mb-1 text-[9px] leading-none font-black tracking-widest text-gray-400 uppercase">
                           Personnel
                         </p>
-                        <p className="text-xs leading-tight font-black text-gray-900">
+                        <p className="text-base leading-tight font-black text-gray-900">
                           {stats.total?.toLocaleString()}
                         </p>
                       </div>
                     </div>
 
-                    <div className="h-6 w-px bg-gray-200"></div>
-
-                    <div className="flex items-center gap-2.5">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-500">
-                        <i className="ph-duotone ph-shield-check text-base"></i>
+                    <div className="flex min-w-[180px] select-none cursor-default items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm transition-all hover:shadow-md">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-500 shadow-xs">
+                        <i className="ph-duotone ph-shield-check text-xl"></i>
                       </div>
                       <div>
-                        <p className="mb-0.5 text-[8px] leading-none font-black tracking-widest text-gray-400 uppercase">
+                        <p className="mb-1 text-[9px] leading-none font-black tracking-widest text-gray-400 uppercase">
                           2FA Adoption
                         </p>
                         <div className="flex items-center gap-1.5">
-                          <p className="text-xs leading-tight font-black text-gray-900">
+                          <p className="text-base leading-tight font-black text-gray-900">
                             {stats.authRate}%
                           </p>
-                          <span className="text-[9px] font-bold text-gray-400 opacity-70">
+                          <span className="text-[10px] font-bold text-gray-400 opacity-70">
                             ({stats.authCount} verified)
                           </span>
                         </div>
@@ -449,7 +659,7 @@ export default function StaffDirectoryTab({
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-x-auto overflow-y-auto rounded-brand border border-gray-200 bg-white shadow-xs">
+                <div className="flex-1 overflow-x-auto overflow-y-auto rounded-brand border border-gray-200 bg-white shadow-xs select-none">
                   <table className="min-w-full text-sm">
                     <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50">
                       <tr className="text-left text-xs tracking-wider text-gray-600 uppercase">
@@ -458,11 +668,16 @@ export default function StaffDirectoryTab({
                             type="checkbox"
                             className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20"
                             checked={
-                              paginatedStaff.length > 0 &&
-                              paginatedStaff.every((s) => selectedIds.has(s.id))
+                              paginatedStaff.some((s) => s.id !== currentUserId) &&
+                              paginatedStaff
+                                .filter((s) => s.id !== currentUserId)
+                                .every((s) => selectedIds.has(s.id))
                             }
                             onChange={(e) => toggleSelectAll(e.target.checked)}
-                            disabled={paginatedStaff.length === 0}
+                            disabled={
+                              paginatedStaff.length === 0 ||
+                              paginatedStaff.every((s) => s.id === currentUserId)
+                            }
                           />
                         </th>
                         <th className="p-3 font-bold">
@@ -575,192 +790,22 @@ export default function StaffDirectoryTab({
                           </td>
                         </tr>
                       ) : (
-                        paginatedStaff.map((s) => {
-                          const isCurrentUser = s.id === currentUserId
-                          const active = formatRelativeTime(s.last_active)
-                          const isArchived = s.status === "Archived"
-
-                          // Safe initials fallback
-                          const initials =
-                            `${s.fname?.[0] || ""}${s.lname?.[0] || ""}` || "?"
-
-                          return (
-                            <tr
-                              key={s.id}
-                              className={cn(
-                                "transition-colors hover:bg-gray-50",
-                                isCurrentUser && "bg-red-50/30",
-                                isArchived && "opacity-75 grayscale-[0.2]",
-                                selectedIds.has(s.id) && "bg-red-50/20"
-                              )}
-                            >
-                              <td className="p-3 text-center">
-                                <input
-                                  type="checkbox"
-                                  className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20"
-                                  checked={selectedIds.has(s.id)}
-                                  onChange={() => toggleSelect(s.id)}
-                                  disabled={isCurrentUser}
-                                />
-                              </td>
-                              <td className="p-3">
-                                <div className="flex items-center gap-3">
-                                  <div
-                                    className={cn(
-                                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition-transform group-hover:scale-110",
-                                      isArchived
-                                        ? "border-gray-200 bg-gray-50 text-gray-500"
-                                        : "border-red-100 bg-red-50 text-pup-maroon shadow-sm"
-                                    )}
-                                  >
-                                    {initials}
-                                  </div>
-                                  <div className="min-w-0">
-                                    <div className="flex items-center gap-2 text-sm font-bold text-gray-900">
-                                      <span className="truncate">
-                                        {s.fname} {s.lname}
-                                      </span>
-                                      {isCurrentUser && (
-                                        <Badge className="h-4 bg-pup-maroon text-[9px] font-black uppercase">
-                                          You
-                                        </Badge>
-                                      )}
-                                    </div>
-                                    <div className="truncate text-xs font-medium text-gray-500">
-                                      {s.email}
-                                    </div>
-                                  </div>
-                                </div>
-                              </td>
-                              <td className="p-3 text-[11px] font-bold text-gray-600">
-                                {s.id}
-                              </td>
-                              <td className="p-3">
-                                <Badge
-                                  variant="outline"
-                                  className={cn(
-                                    "rounded-full px-2.5 py-1 text-[10px] font-black uppercase shadow-xs",
-                                    s.role === "Admin" ||
-                                      s.role === "SuperAdmin"
-                                      ? "border-red-200 bg-red-50 text-pup-maroon"
-                                      : "border-amber-200 bg-amber-50 text-amber-700"
-                                  )}
-                                >
-                                  {s.role}
-                                </Badge>
-                              </td>
-                              <td className="p-3">
-                                {s.totp_enabled ? (
-                                  <Badge className="gap-1 rounded-full border-emerald-200 bg-emerald-50 text-[10px] font-black text-emerald-700 uppercase shadow-xs">
-                                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                                    <i className="ph-bold ph-check-circle text-[10px]"></i>
-                                    ENABLED
-                                  </Badge>
-                                ) : (
-                                  <Badge
-                                    variant="outline"
-                                    className="gap-1 rounded-full border-gray-200 bg-gray-50 text-[10px] font-black text-gray-500 uppercase shadow-xs"
-                                  >
-                                    <i className="ph-bold ph-warning-circle text-[10px]"></i>
-                                    DISABLED
-                                  </Badge>
-                                )}
-                              </td>
-                              <td className="p-3">
-                                <div className="text-[11px] font-bold text-gray-900">
-                                  {active.relative || active.date}
-                                </div>
-                                {active.relative && (
-                                  <div className="text-[10px] text-gray-500 opacity-70">
-                                    {active.date}
-                                  </div>
-                                )}
-                              </td>
-                              <td className="p-3 text-right">
-                                <div className="flex items-center justify-end gap-1">
-                                  {isCurrentUser ? (
-                                    <TooltipProvider>
-                                      <Tooltip>
-                                        <TooltipTrigger asChild>
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() =>
-                                              (window.location.href =
-                                                "/account")
-                                            }
-                                            className="h-8 w-8 rounded-brand text-gray-500 hover:bg-red-50 hover:text-pup-maroon"
-                                          >
-                                            <i className="ph-bold ph-user-circle text-lg"></i>
-                                          </Button>
-                                        </TooltipTrigger>
-                                        <TooltipContent side="top">
-                                          Manage My Account
-                                        </TooltipContent>
-                                      </Tooltip>
-                                    </TooltipProvider>
-                                  ) : (
-                                    <div className="flex items-center gap-1">
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger asChild>
-                                            <Button
-                                              variant="ghost"
-                                              size="icon"
-                                              onClick={() => onEditUser(s.id)}
-                                              className="h-8 w-8 rounded-brand text-gray-500 hover:bg-red-50 hover:text-pup-maroon"
-                                            >
-                                              <i className="ph-bold ph-pencil-simple text-lg"></i>
-                                            </Button>
-                                          </TooltipTrigger>
-                                          <TooltipContent side="top">
-                                            Edit Profile
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-
-                                      <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 rounded-brand text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-                                          >
-                                            <i className="ph-bold ph-dots-three-vertical text-lg"></i>
-                                          </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent
-                                          align="end"
-                                          className="w-48 rounded-xl border-gray-200 shadow-xl"
-                                        >
-                                          {activeTab === "archived" ? (
-                                            <DropdownMenuItem
-                                              onClick={() =>
-                                                onRestoreUser(s.id)
-                                              }
-                                              className="cursor-pointer gap-2 font-bold text-emerald-600 focus:bg-emerald-50 focus:text-emerald-700"
-                                            >
-                                              <i className="ph-bold ph-arrow-counter-clockwise text-base transition-colors"></i>
-                                              Restore Account
-                                            </DropdownMenuItem>
-                                          ) : (
-                                            <DropdownMenuItem
-                                              onClick={() => onDeleteUser(s.id)}
-                                              className="cursor-pointer gap-2 font-bold text-red-600 focus:bg-red-50 focus:text-red-700"
-                                            >
-                                              <i className="ph-bold ph-archive text-base transition-colors"></i>
-                                              Archive Account
-                                            </DropdownMenuItem>
-                                          )}
-                                        </DropdownMenuContent>
-                                      </DropdownMenu>
-                                    </div>
-                                  )}
-                                </div>
-                              </td>
-                            </tr>
-                          )
-                        })
+                        paginatedStaff.map((s) => (
+                          <StaffTableRow
+                            key={s.id}
+                            s={s}
+                            isCurrentUser={s.id === currentUserId}
+                            isSelected={selectedIds.has(s.id)}
+                            active={formatRelativeTime(s.last_active)}
+                            isArchived={s.status === "Archived"}
+                            initials={`${s.fname?.[0] || ""}${s.lname?.[0] || ""}` || "?"}
+                            toggleSelect={toggleSelect}
+                            onEditUser={onEditUser}
+                            onRestoreUser={onRestoreUser}
+                            onDeleteUser={onDeleteUser}
+                            activeTab={activeTab}
+                          />
+                        ))
                       )}
                     </tbody>
                   </table>
@@ -854,17 +899,16 @@ export default function StaffDirectoryTab({
         </div>
       )}
 
-      {/* Floating Bulk Action Bar */}
       {selectedIds.size > 0 && (
         <FloatingActionBar
           selectedCount={selectedIds.size}
-          onCancel={() => setSelectedIds(new Set())}
+          onCancel={() => onSelectionChange(new Set())}
           customContent={
             <div className="flex items-center gap-3">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setSelectedIds(new Set())}
+                onClick={() => onSelectionChange(new Set())}
                 className="h-9 px-4 text-xs font-bold text-gray-500 uppercase transition-colors hover:bg-red-50/30 hover:text-pup-maroon"
               >
                 DESELECT ALL
@@ -890,7 +934,7 @@ export default function StaffDirectoryTab({
                   onClick={() => {
                     onBulkArchive(Array.from(selectedIds))
                   }}
-                  className="flex h-10 items-center gap-2 rounded-xl bg-red-600 px-6 text-xs font-bold text-white uppercase shadow-lg shadow-red-600/20 transition-all hover:bg-red-700 active:scale-95"
+                  className="flex h-10 items-center gap-2 rounded-xl bg-linear-to-b from-red-600 to-red-800 border border-red-900 hover:from-red-500 hover:to-red-700 hover:shadow-md px-6 text-xs font-bold text-white uppercase shadow-lg shadow-red-600/20 active:scale-95 transition-all"
                 >
                   <i className="ph-bold ph-archive text-sm"></i>
                   ARCHIVE SELECTED

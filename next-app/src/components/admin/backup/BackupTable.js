@@ -159,7 +159,7 @@ export default function BackupTable({
                       ) : (
                         <Button
                           onClick={handleGenerateBackup}
-                          className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-pup-maroon px-6 text-xs font-bold text-white shadow-md transition-all hover:bg-red-900 active:scale-95"
+                          className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-6 text-xs font-bold text-white shadow-md active:scale-95 transition-all"
                         >
                           <i className="ph-bold ph-lightning"></i>
                           CREATE INITIAL SNAPSHOT

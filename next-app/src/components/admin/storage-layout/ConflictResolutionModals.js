@@ -250,7 +250,7 @@ const ConflictResolutionModals = memo(({
             <Button 
                 type="button" 
                 onClick={openApplyPreview}
-                className="h-11 bg-pup-maroon px-8 text-sm font-bold tracking-wide text-white uppercase hover:bg-red-900 shadow-sm rounded-brand"
+                className="h-11 bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 text-sm font-bold tracking-wide text-white uppercase shadow-sm rounded-brand"
             >
               Continue Reassignment
             </Button>
@@ -316,7 +316,7 @@ const ConflictResolutionModals = memo(({
             <Button 
                 type="button" 
                 onClick={applyTemplateWithMappings}
-                className="h-11 bg-pup-maroon px-8 text-sm font-bold tracking-wide text-white uppercase hover:bg-red-900 shadow-sm rounded-brand flex items-center gap-2"
+                className="h-11 bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 text-sm font-bold tracking-wide text-white uppercase shadow-sm rounded-brand flex items-center gap-2"
             >
               <i className="ph-bold ph-check text-lg"></i>
               Apply Template + Reassign

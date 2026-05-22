@@ -75,7 +75,7 @@ export default function SecurityQuestionsTab({
             <Button
               onClick={handleSaveSecurityQuestions}
               disabled={securitySaving}
-              className="flex h-10 w-full items-center gap-2 bg-pup-maroon px-6 font-bold text-white shadow-sm transition-all hover:bg-red-900 active:scale-95 sm:w-auto"
+              className="flex h-10 w-full items-center gap-2 bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-6 font-bold text-white shadow-sm active:scale-95 sm:w-auto transition-all"
             >
               <i className={`ph-bold ${securitySaving ? "ph-spinner animate-spin" : "ph-check"}`}></i>
               {securitySaving ? "SAVING..." : "SAVE QUESTIONS"}

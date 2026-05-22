@@ -369,7 +369,7 @@ export default function CoursesTab({
               <Button
                 onClick={() => setIsAddCourseOpen(true)}
                 disabled={showArchived}
-                className="flex h-10 items-center gap-2 rounded-brand bg-pup-maroon px-5 font-bold text-white shadow-sm transition-all hover:bg-red-900 active:scale-95 disabled:opacity-50"
+                className="flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-5 font-bold text-white shadow-sm active:scale-95 disabled:opacity-50 transition-all"
               >
                 <i className="ph-bold ph-plus"></i>
                 <span className="hidden uppercase sm:inline">
@@ -386,7 +386,7 @@ export default function CoursesTab({
             <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">Active Filters:</span>
               {localSearch && (
-                <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon uppercase">
+                <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-linear-to-br from-white to-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon uppercase">
                   Search: {localSearch}
                   <button
                     onClick={() => { setLocalSearch(""); setCourseSearch(""); setPageCourse(1); }}
@@ -535,7 +535,7 @@ export default function CoursesTab({
                                 name: newCourseName,
                               })
                             }
-                            className={`h-9 rounded-brand px-4 text-xs font-bold text-white shadow-sm transition-all active:scale-95 disabled:opacity-50 ${newCourseCode.trim() || newCourseName.trim() ? "bg-amber-600 hover:bg-amber-700" : "bg-pup-maroon hover:bg-red-900"}`}
+                            className={`h-9 rounded-brand px-4 text-xs font-bold text-white shadow-sm active:scale-95 disabled:opacity-50 ${newCourseCode.trim() || newCourseName.trim() ? "bg-amber-600 hover:bg-amber-700" : "bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md "} transition-all`}
                           >
                             {isQuickAddLoading ? (
                               <i className="ph-bold ph-spinner animate-spin"></i>
@@ -734,7 +734,7 @@ export default function CoursesTab({
                               !showArchived && (
                                 <Button
                                   onClick={() => setIsAddCourseOpen(true)}
-                                  className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-pup-maroon px-8 font-black tracking-widest text-white shadow-lg shadow-red-900/20 transition-all hover:bg-red-900 active:scale-95"
+                                  className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-black tracking-widest text-white shadow-lg shadow-red-900/20 active:scale-95 transition-all"
                                 >
                                   <i className="ph-bold ph-plus text-lg"></i>
                                   ADD DEGREE PROGRAM
@@ -980,7 +980,7 @@ export default function CoursesTab({
               </Button>
               <Button
                 type="submit"
-                className="flex h-11 items-center gap-2 rounded-brand bg-pup-maroon px-6 font-bold text-white shadow-sm hover:bg-red-900"
+                className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-bold text-white shadow-sm"
               >
                 <i className="ph-bold ph-check text-lg"></i>
                 CREATE PROGRAM
@@ -1123,7 +1123,7 @@ export default function CoursesTab({
               </Button>
               <Button
                 type="submit"
-                className="flex h-11 items-center gap-2 rounded-brand bg-pup-maroon px-6 font-bold text-white shadow-sm hover:bg-red-900"
+                className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-bold text-white shadow-sm"
               >
                 <i className="ph-bold ph-check text-lg"></i>
                 SAVE CHANGES

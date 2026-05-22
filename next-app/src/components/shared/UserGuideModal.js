@@ -229,7 +229,7 @@ export default function UserGuideModal({ open, onClose }) {
               </Button>
               <Button
                 onClick={onClose}
-                className="px-6 h-11 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 rounded-brand"
+                className="px-6 h-11 bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 rounded-brand"
               >
                 Acknowledge <i className="ph-bold ph-check ml-2"></i>
               </Button>

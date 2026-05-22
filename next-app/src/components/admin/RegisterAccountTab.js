@@ -414,7 +414,7 @@ export default function RegisterAccountTab({
                       <Button
                         type="submit"
                         disabled={isLoading}
-                        className="h-12 w-full gap-2 rounded-brand bg-pup-maroon px-16 text-xs font-black tracking-widest text-white uppercase shadow-lg transition-all hover:bg-red-900 active:scale-95 sm:w-auto"
+                        className="h-12 w-full gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-16 text-xs font-black tracking-widest text-white uppercase shadow-lg active:scale-95 sm:w-auto transition-all"
                       >
                         {isLoading ? (
                           <>
@@ -507,7 +507,7 @@ export default function RegisterAccountTab({
                 type="button"
                 disabled={countdown > 0 || isLoading}
                 onClick={handleConfirmAction}
-                className="h-10 flex-1 rounded-brand bg-pup-maroon text-[10px] font-black tracking-widest text-white uppercase shadow-lg transition-all hover:bg-red-900 disabled:opacity-50 sm:flex-none sm:px-10"
+                className="h-10 flex-1 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-[10px] font-black tracking-widest text-white uppercase shadow-lg disabled:opacity-50 sm:flex-none sm:px-10 transition-all"
               >
                 {countdown > 0 ? `CONFIRM (${countdown}s)` : "CONFIRM"}
               </Button>

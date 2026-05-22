@@ -965,7 +965,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
             <Button
               onClick={saveLayout}
               disabled={saving}
-              className="flex h-10 items-center gap-2 rounded-brand bg-pup-maroon px-8 font-black tracking-widest text-white uppercase shadow-lg transition-all hover:bg-red-900"
+              className="flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-black tracking-widest text-white uppercase shadow-lg transition-all"
             >
               <i
                 className={`ph-bold ${saving ? "ph-spinner animate-spin" : "ph-floppy-disk"} text-lg`}

@@ -296,9 +296,7 @@ export default function Home() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className={`w-full bg-pup-maroon text-white font-bold text-sm hover:bg-red-900 transition-all shadow-sm flex items-center justify-center gap-2 group mt-2 ${
-                    isLoading ? "opacity-75 cursor-not-allowed" : ""
-                  }`}
+                  className={`w-full bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white font-bold text-sm shadow-sm flex items-center justify-center gap-2 group mt-2 ${ isLoading ? "opacity-75 cursor-not-allowed" : "" } transition-all`}
                 >
                   {isLoading ? (
                     <>
@@ -350,7 +348,7 @@ export default function Home() {
                     <Button
                       type="submit"
                       disabled={forgotLoading}
-                      className="w-full bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
+                      className="w-full bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white font-bold shadow-sm rounded-brand"
                     >
                       {forgotLoading ? "Locating..." : "Next Step"}
                     </Button>
@@ -437,7 +435,7 @@ export default function Home() {
                     <Button
                       type="submit"
                       disabled={forgotLoading}
-                      className="w-full bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
+                      className="w-full bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white font-bold shadow-sm rounded-brand"
                     >
                       {forgotLoading ? "Resetting..." : "Reset Password"}
                     </Button>
@@ -502,7 +500,7 @@ export default function Home() {
               <Button
                 type="submit"
                 disabled={twoFactorLoading}
-                className="w-full h-11 bg-pup-maroon text-white font-black shadow-sm hover:bg-red-900 rounded-brand uppercase tracking-widest flex items-center justify-center gap-2"
+                className="w-full h-11 bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white font-black shadow-sm rounded-brand uppercase tracking-widest flex items-center justify-center gap-2"
               >
                 {twoFactorLoading ? (
                   <>
