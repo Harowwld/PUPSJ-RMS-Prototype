@@ -37,6 +37,7 @@ import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import { cn } from "@/lib/utils"
 import React from "react"
+import { Select } from "@/components/ui/select"
 
 const StaffTableRow = React.memo(({ 
   s, 
@@ -58,14 +59,14 @@ const StaffTableRow = React.memo(({
         "transition-colors hover:bg-gray-50",
         !isCurrentUser && "cursor-pointer",
         isCurrentUser && "bg-red-50/30",
-        isArchived && "opacity-75 grayscale-[0.2]",
+        isArchived && "bg-gray-50/50",
         isSelected && "bg-amber-50/40 dark:bg-amber-900/20"
       )}
     >
       <td className="p-3 text-center">
         <input
           type="checkbox"
-          className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20"
+          className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20"
           checked={isSelected}
           onChange={() => {}} // Controlled by tr onClick
           disabled={isCurrentUser}
@@ -100,7 +101,7 @@ const StaffTableRow = React.memo(({
           </div>
         </div>
       </td>
-      <td className="p-3 text-[11px] font-bold text-gray-600">
+      <td className="p-3 text-[11px] font-bold text-gray-600 whitespace-nowrap">
         {s.id}
       </td>
       <td className="p-3">
@@ -135,11 +136,17 @@ const StaffTableRow = React.memo(({
         )}
       </td>
       <td className="p-3">
-        <div className="text-[11px] font-bold text-gray-900 uppercase">
+        <div className={cn(
+          "flex items-center gap-1.5 text-[11px] font-bold uppercase",
+          !active.relative && active.date === "—" ? "text-gray-400 font-medium" : "text-gray-900"
+        )}>
+          {active.relative === "Active Now" && (
+            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse"></div>
+          )}
           {active.relative || (active.date === "—" ? "Never active" : active.date)}
         </div>
         {active.relative && (
-          <div className="text-[10px] text-gray-500 opacity-70">
+          <div className="text-[10px] text-gray-500 opacity-70 mt-0.5">
             {active.date}
           </div>
         )}
@@ -154,7 +161,7 @@ const StaffTableRow = React.memo(({
               variant="outline"
               size="sm"
               onClick={() => (window.location.href = "/account")}
-              className="h-8 w-[210px] gap-2 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-black tracking-wider text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
+              className="h-8 w-[210px] gap-2 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-wider text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
             >
               <i className="ph-bold ph-user-circle text-base"></i>
               MANAGE MY ACCOUNT
@@ -165,7 +172,7 @@ const StaffTableRow = React.memo(({
                 variant="outline"
                 size="sm"
                 onClick={() => onEditUser(s.id)}
-                className="h-8 flex-1 gap-1.5 rounded-brand border-gray-300 bg-white px-0 text-[10px] font-black tracking-wider text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
+                className="h-8 flex-1 gap-1.5 rounded-brand border border-gray-300 bg-white px-0 text-[10px] font-black tracking-wider text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
               >
                 <i className="ph-bold ph-pencil-simple text-base"></i>
                 EDIT
@@ -176,7 +183,7 @@ const StaffTableRow = React.memo(({
                   variant="outline"
                   size="sm"
                   onClick={() => onRestoreUser(s.id)}
-                  className="h-8 flex-1 gap-1.5 rounded-brand border-gray-300 bg-white px-0 text-[10px] font-black tracking-wider text-emerald-600 uppercase shadow-sm transition-colors hover:border-emerald-600 hover:bg-emerald-50/30 hover:text-emerald-700 active:scale-95"
+                  className="h-8 flex-1 gap-1.5 rounded-brand border border-gray-300 bg-white px-0 text-[10px] font-black tracking-wider text-emerald-600 uppercase shadow-sm transition-colors hover:border-emerald-600 hover:bg-emerald-50/30 hover:text-emerald-700 active:scale-95"
                 >
                   <i className="ph-bold ph-arrow-counter-clockwise text-base"></i>
                   RESTORE
@@ -186,7 +193,7 @@ const StaffTableRow = React.memo(({
                   variant="outline"
                   size="sm"
                   onClick={() => onDeleteUser(s.id)}
-                  className="h-8 flex-1 gap-1.5 rounded-brand border-gray-300 bg-white px-0 text-[10px] font-black tracking-wider text-red-600 uppercase shadow-sm transition-colors hover:border-red-600 hover:bg-red-50/30 hover:text-red-700 active:scale-95"
+                  className="h-8 flex-1 gap-1.5 rounded-brand border border-gray-300 bg-white px-0 text-[10px] font-black tracking-wider text-red-600 uppercase shadow-sm transition-colors hover:border-red-600 hover:bg-red-50/30 hover:text-red-700 active:scale-95"
                 >
                   <i className="ph-bold ph-archive text-base"></i>
                   ARCHIVE
@@ -442,6 +449,9 @@ export default function StaffDirectoryTab({
     [totalPages]
   )
 
+  const startItem = (displayPage - 1) * itemsPerPage + 1
+  const endItem = Math.min(displayPage * itemsPerPage, filteredStaff.length)
+
   return (
     <div
       className="animate-fade-in font-inter flex h-full w-full flex-col gap-4 focus:outline-none"
@@ -457,8 +467,8 @@ export default function StaffDirectoryTab({
                 key={i}
                 className="flex h-24 flex-col justify-center gap-3 rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
               >
-                <Skeleton className="h-3 w-24" />
-                <Skeleton className="h-8 w-16" />
+                <Skeleton className="h-4 w-28" />
+                <Skeleton className="h-10 w-20" />
               </div>
             ))}
           </div>
@@ -537,7 +547,7 @@ export default function StaffDirectoryTab({
                     variant="outline"
                     size="sm"
                     onClick={() => onExportData(sortedStaff)}
-                    className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
+                    className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
                   >
                     <i className="ph-bold ph-file-csv text-base"></i>
                     EXPORT CSV
@@ -545,7 +555,7 @@ export default function StaffDirectoryTab({
                   <Button
                     size="sm"
                     onClick={() => onSwitchView("create")}
-                    className="h-10 rounded-brand bg-pup-maroon px-5 text-xs font-bold text-white shadow-sm transition-all hover:bg-red-900 active:scale-95"
+                    className="h-10 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-5 text-xs font-bold text-white shadow-sm active:scale-95 transition-all"
                   >
                     <i className="ph-bold ph-user-plus mr-1.5"></i>
                     ADD PERSONNEL
@@ -560,64 +570,63 @@ export default function StaffDirectoryTab({
                 onValueChange={setActiveTab}
                 className="w-full"
               >
-                <div className="mb-6 flex shrink-0 flex-col items-center justify-between gap-4 sm:flex-row">
-                  <div className="flex items-center gap-4">
-                    <div className="inline-flex h-auto rounded-brand border border-gray-200/50 bg-gray-100/80 p-1 backdrop-blur-sm">
+                <div className="mb-6 flex shrink-0 select-none flex-col items-center justify-between gap-4 sm:flex-row">
+                  <div className="flex w-full items-center sm:w-auto">
+                    <div className="flex w-full cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100/80 p-0.5 backdrop-blur-sm sm:w-auto">
                       <button
                         type="button"
                         onClick={() => setActiveTab("active")}
-                        className={`flex items-center gap-2.5 rounded-brand px-5 py-2 text-sm font-bold transition-all duration-200 active:scale-95 ${
+                        className={`group flex h-11 w-full cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] sm:w-[240px] ${
                           activeTab === "active"
-                            ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
-                            : "text-gray-500 hover:bg-white/50 hover:text-gray-700"
+                            ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
+                            : "rounded-l-[calc(var(--radius)-2px)] rounded-r-none text-gray-500 hover:bg-white/50 hover:text-gray-700"
                         }`}
                       >
                         <i
-                          className={`ph-bold ph-users-three ${activeTab === "active" ? "" : "text-gray-400"}`}
+                          className={`ph-bold ph-users-three ${activeTab === "active" ? "" : "text-gray-400 group-hover:text-gray-600"}`}
                         ></i>
-                        <span>ACTIVE DIRECTORY</span>
-                        <Badge
-                          variant="secondary"
+                        <span className="whitespace-nowrap tracking-wide">ACTIVE DIRECTORY</span>
+                        <span
                           className={cn(
-                            "ml-1 h-4 px-1.5 text-[10px] font-bold",
+                            "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-black transition-all duration-300",
                             activeTab === "active"
-                              ? "bg-red-50 text-pup-maroon"
-                              : "bg-gray-200 text-gray-500"
+                              ? "bg-pup-maroon text-white shadow-sm ring-2 ring-red-50/50"
+                              : "bg-gray-200/60 text-gray-500 group-hover:bg-gray-200 group-hover:text-gray-700"
                           )}
                         >
                           {
                             staffData.filter((s) => s.status !== "Archived")
                               .length
                           }
-                        </Badge>
+                        </span>
                       </button>
+                      <div className="h-6 w-px bg-gray-200/50" />
                       <button
                         type="button"
                         onClick={() => setActiveTab("archived")}
-                        className={`flex items-center gap-2.5 rounded-brand px-5 py-2 text-sm font-bold transition-all duration-200 active:scale-95 ${
+                        className={`group flex h-11 w-full cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] sm:w-[240px] ${
                           activeTab === "archived"
-                            ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
-                            : "text-gray-500 hover:bg-white/50 hover:text-gray-700"
+                            ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
+                            : "rounded-r-[calc(var(--radius)-2px)] rounded-l-none text-gray-500 hover:bg-white/50 hover:text-gray-700"
                         }`}
                       >
                         <i
-                          className={`ph-bold ph-archive ${activeTab === "archived" ? "" : "text-gray-400"}`}
+                          className={`ph-bold ph-archive ${activeTab === "archived" ? "" : "text-gray-400 group-hover:text-gray-600"}`}
                         ></i>
-                        <span>ARCHIVE VAULT</span>
-                        <Badge
-                          variant="secondary"
+                        <span className="whitespace-nowrap tracking-wide">ARCHIVE VAULT</span>
+                        <span
                           className={cn(
-                            "ml-1 h-4 px-1.5 text-[10px] font-bold",
+                            "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-black transition-all duration-300",
                             activeTab === "archived"
-                              ? "bg-red-50 text-pup-maroon"
-                              : "bg-gray-200 text-gray-500"
+                              ? "bg-pup-maroon text-white shadow-sm ring-2 ring-red-50/50"
+                              : "bg-gray-200/60 text-gray-500 group-hover:bg-gray-200 group-hover:text-gray-700"
                           )}
                         >
                           {
                             staffData.filter((s) => s.status === "Archived")
                               .length
                           }
-                        </Badge>
+                        </span>
                       </button>
                     </div>
                   </div>
@@ -666,7 +675,7 @@ export default function StaffDirectoryTab({
                         <th className="w-12 p-3 text-center">
                           <input
                             type="checkbox"
-                            className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20"
+                            className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20"
                             checked={
                               paginatedStaff.some((s) => s.id !== currentUserId) &&
                               paginatedStaff
@@ -693,7 +702,7 @@ export default function StaffDirectoryTab({
                             />
                           </button>
                         </th>
-                        <th className="w-32 p-3 font-bold">
+                        <th className="w-32 p-3 font-bold whitespace-nowrap">
                           <button
                             onClick={() => handleSort("id")}
                             className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
@@ -725,7 +734,7 @@ export default function StaffDirectoryTab({
                             onClick={() => handleSort("last_active")}
                             className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
                           >
-                            Last Activity{" "}
+                            Last Login{" "}
                             <SortIndicator
                               column="last_active"
                               sortBy={sortBy}
@@ -769,7 +778,7 @@ export default function StaffDirectoryTab({
                                       setRoleFilter("All")
                                       setCurrentPage(1)
                                     }}
-                                    className="mt-4 flex items-center gap-2 rounded-brand border border-gray-300 px-4 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon sm:text-xs"
+                                    className="mt-4 flex items-center gap-2 rounded-brand border border-gray-300 px-4 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon sm:text-xs"
                                   >
                                     <i className="ph-bold ph-x-circle"></i>
                                     CLEAR ALL FILTERS
@@ -784,12 +793,11 @@ export default function StaffDirectoryTab({
                                       REGISTER NEW PERSONNEL
                                     </Button>
                                   )
-                                )}
-                              </EmptyHeader>
-                            </Empty>
-                          </td>
-                        </tr>
-                      ) : (
+                                  )}
+                                  </EmptyHeader>
+                                  </Empty>
+                                  </td>
+                                  </tr>                      ) : (
                         paginatedStaff.map((s) => (
                           <StaffTableRow
                             key={s.id}
@@ -812,85 +820,64 @@ export default function StaffDirectoryTab({
                 </div>
 
                 {filteredStaff.length > 0 && (
-                  <div className="-mx-6 mt-4 -mb-6 flex items-center justify-between rounded-b-brand border-t border-gray-100 bg-gray-50/50 p-4 px-6">
-                    <div className="flex items-center gap-6">
-                      <div className="flex items-center gap-4 text-xs font-medium text-gray-500">
+                  <div className="-mx-6 mt-4 -mb-6 flex items-center justify-between rounded-b-brand border-t border-gray-100 bg-white p-6 px-8">
+                    <div className="flex items-center gap-8 select-none cursor-default">
+                      <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest">
                         <span>
-                          Showing {(displayPage - 1) * itemsPerPage + 1}-
-                          {Math.min(
-                            displayPage * itemsPerPage,
-                            filteredStaff.length
-                          )}{" "}
-                          of{" "}
-                          <strong className="text-gray-900">
-                            {filteredStaff.length.toLocaleString()}
-                          </strong>
+                          Showing <strong className="text-gray-900">{paginatedStaff.length}</strong> out of{" "}
+                          <strong className="text-gray-900">{filteredStaff.length}</strong>{" "}
+                          {activeTab === "active" ? "Active" : "Archived"} Personnel
                         </span>
 
-                        <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
-                          <span className="text-[10px] font-bold text-gray-400 uppercase">
-                            Rows:
-                          </span>
-                          <select
-                            className="h-7 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-1 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none"
-                            value={itemsPerPage}
-                            onChange={(e) => {
-                              setItemsPerPage(Number(e.target.value))
-                              setCurrentPage(1)
-                            }}
-                          >
-                            <option value={10}>10</option>
-                            <option value={20}>20</option>
-                            <option value={50}>50</option>
-                          </select>
-                        </div>
+                        {filteredStaff.length > 10 && (
+                          <div className="flex items-center gap-3 border-l border-gray-200/50 pl-6">
+                            <span className="text-[10px] opacity-60">Rows:</span>
+                            <Select
+                              className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50"
+                              value={itemsPerPage}
+                              onChange={(e) => {
+                                setItemsPerPage(Number(e.target.value))
+                                setCurrentPage(1)
+                              }}
+                            >
+                              <option value={10}>10</option>
+                              <option value={20}>20</option>
+                              <option value={50}>50</option>
+                            </Select>
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    <div className="flex shrink-0 items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={displayPage <= 1}
-                        onClick={() =>
-                          setCurrentPage((p) => Math.max(1, p - 1))
-                        }
-                        className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
-                      >
-                        <i className="ph-bold ph-caret-left mr-1"></i>
-                        PREVIOUS
-                        <kbd className="ml-2 hidden rounded bg-gray-100 px-1.5 py-0.5 text-[9px] font-bold text-gray-400 sm:inline-block">
-                          ←
-                        </kbd>
-                      </Button>
-                      <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-2 text-[11px] font-bold text-gray-700 shadow-xs focus-within:border-pup-maroon focus-within:ring-1 focus-within:ring-pup-maroon">
-                        <input
-                          type="text"
-                          className="w-6 bg-transparent text-center focus:outline-none"
-                          value={jumpPage}
-                          onChange={(e) => setJumpPage(e.target.value)}
-                          onKeyDown={handleJumpPage}
-                          onBlur={handleJumpPage}
-                        />
-                        <span className="mx-0.5 text-gray-400">/</span>
-                        <span>{totalPages}</span>
+                    {totalPages > 1 && (
+                      <div className="flex shrink-0 items-center gap-3 select-none">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={displayPage <= 1}
+                          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                          className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                        >
+                          <i className="ph-bold ph-caret-left mr-2 text-base"></i>
+                          PREV
+                        </Button>
+                        
+                        <div className="flex h-9 min-w-[36px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm">
+                          {displayPage}
+                        </div>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={displayPage >= totalPages}
+                          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                          className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                        >
+                          NEXT
+                          <i className="ph-bold ph-caret-right ml-2 text-base"></i>
+                        </Button>
                       </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={displayPage >= totalPages}
-                        onClick={() =>
-                          setCurrentPage((p) => Math.min(totalPages, p + 1))
-                        }
-                        className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
-                      >
-                        NEXT
-                        <kbd className="mr-2 hidden rounded bg-gray-100 px-1.5 py-0.5 text-[9px] font-bold text-gray-400 sm:inline-block">
-                          →
-                        </kbd>
-                        <i className="ph-bold ph-caret-right ml-1"></i>
-                      </Button>
-                    </div>
+                    )}
                   </div>
                 )}
               </Tabs>
@@ -902,6 +889,7 @@ export default function StaffDirectoryTab({
       {selectedIds.size > 0 && (
         <FloatingActionBar
           selectedCount={selectedIds.size}
+          selectionStatus="Selected Personnel"
           onCancel={() => onSelectionChange(new Set())}
           customContent={
             <div className="flex items-center gap-3">
@@ -934,7 +922,7 @@ export default function StaffDirectoryTab({
                   onClick={() => {
                     onBulkArchive(Array.from(selectedIds))
                   }}
-                  className="flex h-10 items-center gap-2 rounded-xl bg-linear-to-b from-red-600 to-red-800 border border-red-900 hover:from-red-500 hover:to-red-700 hover:shadow-md px-6 text-xs font-bold text-white uppercase shadow-lg shadow-red-600/20 active:scale-95 transition-all"
+                  className="flex h-10 items-center gap-2 rounded-xl bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-6 text-xs font-black text-white uppercase shadow-lg shadow-red-900/20 active:scale-95 transition-all"
                 >
                   <i className="ph-bold ph-archive text-sm"></i>
                   ARCHIVE SELECTED

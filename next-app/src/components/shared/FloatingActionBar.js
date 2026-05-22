@@ -12,7 +12,7 @@ export default function FloatingActionBar({
   actionIcon,
   actionVariant = "danger", // danger or success
   selectionLabel = "Records Selected",
-  selectionStatus = "Batch In-Progress",
+  selectionStatus = "Items Selected",
   customContent,
 }) {
   const [mounted, setMounted] = useState(false)
@@ -53,10 +53,10 @@ export default function FloatingActionBar({
                 <Button
                   size="sm"
                   onClick={onAction}
-                  className={`flex h-10 items-center gap-2 rounded-xl px-6 text-xs font-bold uppercase text-white shadow-lg transition-all active:scale-95 ${
+                  className={`flex h-10 items-center gap-2 rounded-xl px-6 text-xs font-black uppercase text-white shadow-lg transition-all active:scale-95 ${
                     actionVariant === "success"
-                      ? "bg-emerald-600 shadow-emerald-600/20 hover:bg-emerald-700"
-                      : "bg-red-600 shadow-red-600/20 hover:bg-red-700"
+                      ? "bg-linear-to-b from-emerald-500 to-emerald-700 border-4 border-emerald-800 shadow-emerald-600/20 hover:from-emerald-400 hover:to-emerald-600"
+                      : "bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon shadow-red-900/20 hover:from-red-700 hover:to-red-900 hover:shadow-md"
                   }`}
                 >
                   {actionIcon && <i className={`ph-bold ${actionIcon} text-sm`}></i>}

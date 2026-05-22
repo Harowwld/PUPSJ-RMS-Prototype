@@ -87,7 +87,7 @@ const CabinetSidebar = memo(({
                 type="button"
                 variant="outline"
                 onClick={rotateSelectedCabinet}
-                className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-pup-maroon hover:bg-red-50/30"
+                className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-gray-300 hover:bg-red-50/30"
               >
                 <i className="ph-bold ph-arrow-clockwise mr-2 text-pup-maroon" />
                 ROTATE
@@ -96,7 +96,7 @@ const CabinetSidebar = memo(({
                 type="button"
                 variant="outline"
                 onClick={duplicateSelectedCabinet}
-                className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-pup-maroon hover:bg-red-50/30"
+                className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-gray-300 hover:bg-red-50/30"
               >
                 <i className="ph-bold ph-copy mr-2 text-pup-maroon" />
                 DUPLICATE
@@ -105,7 +105,7 @@ const CabinetSidebar = memo(({
                 type="button"
                 variant="outline"
                 onClick={() => setBulkConfirmOpen(true)}
-                className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-pup-maroon hover:bg-red-50/30 lg:col-span-2"
+                className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-gray-300 hover:bg-red-50/30 lg:col-span-2"
               >
                 <i className="ph-bold ph-trash mr-2 text-pup-maroon" />
                 REMOVE CABINET
@@ -169,7 +169,7 @@ const CabinetSidebar = memo(({
                       x: fromPct(val),
                     })
                   }}
-                  className="h-10 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
+                  className="h-10 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
                 />
               </div>
               <div>
@@ -189,7 +189,7 @@ const CabinetSidebar = memo(({
                       y: fromPct(val),
                     })
                   }}
-                  className="h-10 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
+                  className="h-10 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
                 />
               </div>
             </div>
@@ -212,7 +212,7 @@ const CabinetSidebar = memo(({
                       selectedCabinet.rect.h
                     )
                   }}
-                  className="h-10 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
+                  className="h-10 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
                 />
               </div>
               <div>
@@ -232,7 +232,7 @@ const CabinetSidebar = memo(({
                       fromPct(val)
                     )
                   }}
-                  className="h-10 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
+                  className="h-10 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
                 />
               </div>
             </div>

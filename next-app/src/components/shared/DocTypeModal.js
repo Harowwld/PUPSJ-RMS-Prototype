@@ -47,7 +47,7 @@ export default function DocTypeModal({
           </label>
           <Input
             type="text"
-            className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
+            className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
             placeholder="Enter new document type..."
             value={value}
             onChange={(e) => {
@@ -83,7 +83,7 @@ export default function DocTypeModal({
           <Button
             type="button"
             onClick={onSave}
-            className="h-11 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-5 font-bold text-white shadow-sm"
+            className="h-11 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-5 font-bold text-white shadow-sm"
             disabled={isLoading}
           >
             {isLoading ? "Saving..." : "Save"}

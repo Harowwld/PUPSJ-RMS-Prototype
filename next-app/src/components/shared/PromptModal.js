@@ -110,7 +110,7 @@ export default function PromptModal({
             )}
             {multiline ? (
               <textarea
-                className="flex h-24 min-h-[96px] w-full rounded-brand border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all placeholder:text-gray-400 focus:border-pup-maroon focus:ring-2 focus:ring-pup-maroon focus:outline-none"
+                className="flex h-24 min-h-[96px] w-full rounded-brand border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all placeholder:text-gray-400 focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon focus:outline-none"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
@@ -119,7 +119,7 @@ export default function PromptModal({
             ) : (
               <Input
                 type="text"
-                className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none shadow-sm"
+                className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none shadow-sm"
                 value={value}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
@@ -134,7 +134,7 @@ export default function PromptModal({
             type="button"
             variant="outline"
             onClick={onCancel}
-            className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 uppercase hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon shadow-sm transition-colors"
+            className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 uppercase hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon shadow-sm transition-colors"
             disabled={isLoading}
           >
             {cancelLabel}

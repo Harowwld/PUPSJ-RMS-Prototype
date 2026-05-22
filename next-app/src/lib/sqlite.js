@@ -1141,6 +1141,17 @@ export async function getDb() {
         }
       }
 
+      // Migration to version 19: Add index on students(status) for better filtering performance
+      if (schemaVersion < 19) {
+        try {
+          db.exec("CREATE INDEX IF NOT EXISTS idx_students_status ON students(status)");
+          db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '19')");
+          persistDb();
+        } catch (e) {
+          console.error("[DB] schema_version 19 migration (students status index):", e);
+        }
+      }
+
       try {
         db.exec("PRAGMA foreign_keys = ON");
       } catch (e) {

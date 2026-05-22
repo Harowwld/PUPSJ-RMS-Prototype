@@ -42,7 +42,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
                   variant="outline"
                   size="icon"
                   onClick={() => handleCopy(log.ip, "IP Address")}
-                  className="h-6 w-6 rounded-md border-gray-200 bg-gray-50 text-gray-400 hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon shadow-xs transition-all"
+                  className="h-6 w-6 rounded-md border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon shadow-xs transition-all"
                 >
                   <i className="ph-bold ph-copy text-[10px]"></i>
                 </Button>
@@ -83,7 +83,7 @@ export default function LogExpandedRow({ log, handleCopy }) {
                     variant="outline"
                     size="icon"
                     onClick={() => handleCopy(log.entityId, "Reference ID")}
-                    className="h-6 w-6 rounded-md border-gray-200 bg-gray-50 text-gray-400 hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon shadow-xs transition-all"
+                    className="h-6 w-6 rounded-md border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon shadow-xs transition-all"
                   >
                     <i className="ph-bold ph-copy text-[10px]"></i>
                   </Button>

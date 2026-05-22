@@ -190,7 +190,7 @@ export default function LogTable({
   return (
     <>
       <div
-        className={`overflow-x-auto rounded-brand transition-opacity duration-200 ${displayLogs.length === 0 ? "" : "border border-gray-200"} ${isLoading ? "opacity-50 pointer-events-none" : "opacity-100"}`}
+        className={`overflow-x-auto rounded-brand select-none transition-opacity duration-200 ${displayLogs.length === 0 ? "" : "border border-gray-200"} ${isLoading ? "opacity-50 pointer-events-none" : "opacity-100"}`}
       >
         <table className="min-w-full text-sm">
           <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50">
@@ -296,7 +296,7 @@ export default function LogTable({
                             setLogEndDate("")
                             setLogPage(1)
                           }}
-                          className="mt-4 flex items-center gap-2 rounded-brand border border-gray-300 px-4 text-[10px] font-bold text-gray-600 hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon sm:text-xs shadow-sm transition-colors"
+                          className="mt-4 flex items-center gap-2 rounded-brand border border-gray-300 px-4 text-[10px] font-bold text-gray-600 hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon sm:text-xs shadow-sm transition-colors"
                         >
                           <i className="ph-bold ph-x-circle"></i>
                           CLEAR ALL FILTERS
@@ -383,7 +383,7 @@ export default function LogTable({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-8 w-8 rounded-full border-gray-200 bg-gray-50 p-0 text-gray-500 hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon active:scale-95 shadow-xs transition-all"
+                                className="h-8 w-8 rounded-full border-gray-300 bg-gray-50 p-0 text-gray-500 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon active:scale-95 shadow-xs transition-all"
                                 onClick={() => setSelectedLog(log)}
                               >
                                 <i className="ph-bold ph-eye text-base"></i>

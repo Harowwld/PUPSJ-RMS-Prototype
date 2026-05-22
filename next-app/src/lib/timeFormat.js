@@ -55,7 +55,7 @@ export function formatPHDateTimeParts(dateString) {
  * for dates within the last 48 hours.
  */
 export function formatRelativeTime(dateString) {
-  if (!dateString) return { relative: "", date: "—", time: "" };
+  if (!dateString || dateString === "—") return { relative: "", date: "—", time: "" };
   try {
     let normalized = String(dateString);
     if (!normalized.includes("T") && !normalized.includes("Z")) {
@@ -66,16 +66,20 @@ export function formatRelativeTime(dateString) {
 
     const parts = formatPHDateTimeParts(dateString);
     const now = new Date();
-    const diffInSeconds = Math.floor((now - date) / 1000);
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
-    // If date is in the future or more than 48 hours ago, return only parts
-    if (diffInSeconds < 0 || diffInSeconds > 172800) {
+    // If date is slightly in the future (due to clock drift) or within 5 minutes, treat as 'Active Now'
+    if (diffInSeconds >= -30 && diffInSeconds < 300) {
+      return { ...parts, relative: "Active Now" };
+    }
+    
+    // If date is more than 30s in the future or more than 48 hours ago, return only parts
+    if (diffInSeconds < -30 || diffInSeconds > 172800) {
       return { ...parts, relative: "" };
     }
 
     let relative = "";
-    if (diffInSeconds < 60) relative = "just now";
-    else if (diffInSeconds < 3600) {
+    if (diffInSeconds < 3600) {
       const mins = Math.floor(diffInSeconds / 60);
       relative = `${mins} ${mins === 1 ? "minute" : "minutes"} ago`;
     } else if (diffInSeconds < 86400) {

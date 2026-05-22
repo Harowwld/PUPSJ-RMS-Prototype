@@ -92,7 +92,7 @@ export default function OCRPromptModal({
                   key={id}
                   className={`flex cursor-pointer items-start gap-3 rounded-brand border p-3 transition-colors ${
                     checked
-                      ? "border-pup-maroon bg-red-50/60"
+                      ? "border-gray-300 bg-red-50/60"
                       : "border-gray-200 bg-white hover:bg-gray-50"
                   }`}
                 >

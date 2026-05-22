@@ -72,7 +72,7 @@ export default function PageHeader({
                   <i className="ph-bold ph-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"></i>
                   <Input
                     placeholder={searchPlaceholder || "Search..."}
-                    className="h-10 rounded-brand border border-gray-300 bg-white pl-9 text-sm focus-visible:border-pup-maroon focus-visible:ring-pup-maroon"
+                    className="h-10 rounded-brand border border-gray-300 bg-white pl-9 text-sm focus-visible:border-gray-300 focus-visible:ring-pup-maroon"
                     value={searchValue || ""}
                     onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
                   />

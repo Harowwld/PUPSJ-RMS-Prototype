@@ -109,7 +109,7 @@ export default function RegisterAccountTab({
                   size="sm"
                   disabled={isLoading}
                   onClick={handleClearForm}
-                  className="h-10 rounded-brand border-gray-300 px-5 text-xs font-black tracking-widest text-gray-700 uppercase shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon"
+                  className="h-10 rounded-brand border-gray-300 px-5 text-xs font-black tracking-widest text-gray-700 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon"
                 >
                   <i className="ph-bold ph-arrow-counter-clockwise mr-1.5 text-sm"></i>
                   CLEAR FORM
@@ -141,7 +141,7 @@ export default function RegisterAccountTab({
                           required
                           ref={fnameRef}
                           disabled={isLoading}
-                          className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900"
+                          className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900"
                           placeholder="Juan"
                           value={createForm.fname}
                           onChange={(e) =>
@@ -160,7 +160,7 @@ export default function RegisterAccountTab({
                           type="text"
                           required
                           disabled={isLoading}
-                          className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900"
+                          className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900"
                           placeholder="Dela Cruz"
                           value={createForm.lname}
                           onChange={(e) =>
@@ -221,7 +221,7 @@ export default function RegisterAccountTab({
                             className={cn(
                               "flex h-12 w-full items-center justify-center rounded-brand border-2 text-[11px] font-black tracking-widest uppercase transition-all",
                               createForm.role === "Admin"
-                                ? "border-pup-maroon bg-red-50 text-pup-maroon shadow-sm"
+                                ? "border-gray-300 bg-red-50 text-pup-maroon shadow-sm"
                                 : "border-gray-200 text-gray-500 hover:border-red-200 hover:bg-red-50/30"
                             )}
                           >
@@ -282,7 +282,7 @@ export default function RegisterAccountTab({
                             required
                             disabled={isLoading}
                             className={cn(
-                              "h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900",
+                              "h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900",
                               lastAutoFilled.id &&
                                 "animate-pulse border-emerald-500 ring-2 ring-emerald-500/30"
                             )}
@@ -310,7 +310,7 @@ export default function RegisterAccountTab({
                                     setLastAutoFilled(prev => ({ ...prev, id: true }))
                                     setTimeout(() => setLastAutoFilled(prev => ({ ...prev, id: false })), 1000)
                                   }}
-                                  className="h-10 shrink-0 border-dashed border-pup-maroon/40 px-3 text-[10px] font-black tracking-widest text-pup-maroon uppercase hover:bg-red-50"
+                                  className="h-10 shrink-0 border-dashed border-gray-300/40 px-3 text-[10px] font-black tracking-widest text-pup-maroon uppercase hover:bg-red-50"
                                 >
                                   <i className="ph-bold ph-magic-wand mr-1.5 text-sm" />
                                   APPLY
@@ -363,7 +363,7 @@ export default function RegisterAccountTab({
                             required
                             disabled={isLoading}
                             className={cn(
-                              "h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900",
+                              "h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900",
                               lastAutoFilled.email &&
                                 "animate-pulse border-emerald-500 ring-2 ring-emerald-500/30"
                             )}
@@ -392,7 +392,7 @@ export default function RegisterAccountTab({
                                       setLastAutoFilled(prev => ({ ...prev, email: true }))
                                       setTimeout(() => setLastAutoFilled(prev => ({ ...prev, email: false })), 1000)
                                     }}
-                                    className="h-10 shrink-0 border-dashed border-pup-maroon/40 px-3 text-[10px] font-black tracking-widest text-pup-maroon uppercase hover:bg-red-50"
+                                    className="h-10 shrink-0 border-dashed border-gray-300/40 px-3 text-[10px] font-black tracking-widest text-pup-maroon uppercase hover:bg-red-50"
                                   >
                                     <i className="ph-bold ph-magic-wand mr-1.5 text-sm" />
                                     APPLY
@@ -414,7 +414,7 @@ export default function RegisterAccountTab({
                       <Button
                         type="submit"
                         disabled={isLoading}
-                        className="h-12 w-full gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-16 text-xs font-black tracking-widest text-white uppercase shadow-lg active:scale-95 sm:w-auto transition-all"
+                        className="h-12 w-full gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-16 text-xs font-black tracking-widest text-white uppercase shadow-lg active:scale-95 sm:w-auto transition-all"
                       >
                         {isLoading ? (
                           <>
@@ -507,7 +507,7 @@ export default function RegisterAccountTab({
                 type="button"
                 disabled={countdown > 0 || isLoading}
                 onClick={handleConfirmAction}
-                className="h-10 flex-1 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-[10px] font-black tracking-widest text-white uppercase shadow-lg disabled:opacity-50 sm:flex-none sm:px-10 transition-all"
+                className="h-10 flex-1 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-[10px] font-black tracking-widest text-white uppercase shadow-lg disabled:opacity-50 sm:flex-none sm:px-10 transition-all"
               >
                 {countdown > 0 ? `CONFIRM (${countdown}s)` : "CONFIRM"}
               </Button>

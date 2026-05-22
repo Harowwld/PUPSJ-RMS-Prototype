@@ -178,7 +178,7 @@ const ConflictResolutionModals = memo(({
                             onDragStart={() => setDragSourceKey(row.sourceKey)}
                             className={`mb-2 rounded-brand border px-2.5 py-2 text-xs font-black transition-all ${
                             reassignmentMode === "manual"
-                                ? "cursor-grab border-gray-300 bg-white hover:border-pup-maroon/40 shadow-sm"
+                                ? "cursor-grab border-gray-300 bg-white hover:border-gray-300/40 shadow-sm"
                                 : "border-gray-200 bg-gray-100 text-gray-400"
                             }`}
                             title={
@@ -222,7 +222,7 @@ const ConflictResolutionModals = memo(({
                                 }}
                                 className={`rounded-brand border px-3 py-2 text-left text-[11px] transition-all ${
                                     selected
-                                    ? "border-pup-maroon bg-red-50 font-black text-pup-maroon shadow-sm"
+                                    ? "border-gray-300 bg-red-50 font-black text-pup-maroon shadow-sm"
                                     : "border-gray-200 bg-white text-gray-600 font-medium hover:border-gray-300 hover:bg-gray-50"
                                 }`}
                                 >
@@ -250,7 +250,7 @@ const ConflictResolutionModals = memo(({
             <Button 
                 type="button" 
                 onClick={openApplyPreview}
-                className="h-11 bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 text-sm font-bold tracking-wide text-white uppercase shadow-sm rounded-brand"
+                className="h-11 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 text-sm font-black tracking-wide text-white uppercase shadow-sm rounded-brand"
             >
               Continue Reassignment
             </Button>
@@ -316,7 +316,7 @@ const ConflictResolutionModals = memo(({
             <Button 
                 type="button" 
                 onClick={applyTemplateWithMappings}
-                className="h-11 bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 text-sm font-bold tracking-wide text-white uppercase shadow-sm rounded-brand flex items-center gap-2"
+                className="h-11 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 text-sm font-black tracking-wide text-white uppercase shadow-sm rounded-brand flex items-center gap-2"
             >
               <i className="ph-bold ph-check text-lg"></i>
               Apply Template + Reassign

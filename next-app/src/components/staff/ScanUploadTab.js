@@ -31,6 +31,7 @@ import {
   EmptyMedia,
 } from "@/components/ui/empty"
 import PageHeader from "@/components/shared/PageHeader"
+import { Select } from "@/components/ui/select"
 
 export default function ScanUploadTab({
   loading,
@@ -289,7 +290,7 @@ export default function ScanUploadTab({
               onClick={() => {
                 if (uploadMode === "pdf") hf.refresh()
               }}
-              className="h-10 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon"
+              className="h-10 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon"
             >
               <i className="ph-bold ph-arrows-clockwise mr-1.5"></i>
               REFRESH
@@ -411,7 +412,7 @@ export default function ScanUploadTab({
                         variant="outline"
                         size="sm"
                         onClick={() => handleCsvFileSelect(null)}
-                        className="h-9 shrink-0 rounded-brand border-gray-300 px-4 text-[10px] font-black tracking-widest text-gray-700 uppercase shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon"
+                        className="h-9 shrink-0 rounded-brand border-gray-300 px-4 text-[10px] font-black tracking-widest text-gray-700 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon"
                       >
                         <i className="ph-bold ph-x-circle mr-1.5 text-xs" />
                         CLEAR FILE
@@ -509,7 +510,7 @@ export default function ScanUploadTab({
                                 {r.student.section}
                               </td>
                               <td className="p-1.5">
-                                <select
+                                <Select
                                   className="form-select h-8 w-14 rounded border-gray-200 px-1 py-0 text-[11px] font-bold"
                                   value={String(r.student.room || "")}
                                   onChange={(e) =>
@@ -525,10 +526,10 @@ export default function ScanUploadTab({
                                       {room}
                                     </option>
                                   ))}
-                                </select>
+                                </Select>
                               </td>
                               <td className="p-1.5">
-                                <select
+                                <Select
                                   className="form-select h-8 w-12 rounded border-gray-200 px-1 py-0 text-[11px] font-bold"
                                   value={String(r.student.cabinet || "")}
                                   onChange={(e) =>
@@ -547,10 +548,10 @@ export default function ScanUploadTab({
                                       {c}
                                     </option>
                                   ))}
-                                </select>
+                                </Select>
                               </td>
                               <td className="p-1.5">
-                                <select
+                                <Select
                                   className="form-select h-8 w-14 rounded border-gray-200 px-1 py-0 text-[11px] font-bold"
                                   value={String(r.student.drawer || "")}
                                   onChange={(e) =>
@@ -570,7 +571,7 @@ export default function ScanUploadTab({
                                       {d}
                                     </option>
                                   ))}
-                                </select>
+                                </Select>
                               </td>
                               <td className="p-1.5">
                                 {r.error ? (
@@ -597,8 +598,8 @@ export default function ScanUploadTab({
                       <div
                         className={`group flex h-full cursor-pointer items-center justify-center rounded-brand border-2 border-dashed p-12 transition-all ${
                           csvDropActive
-                            ? "border-pup-maroon bg-red-50 shadow-inner"
-                            : "border-gray-300 bg-gray-50 hover:border-pup-maroon hover:bg-red-50/50"
+                            ? "border-gray-300 bg-red-50 shadow-inner"
+                            : "border-gray-300 bg-gray-50 hover:border-gray-300 hover:bg-red-50/50"
                         }`}
                         onClick={() => csvInputRef.current?.click()}
                       >
@@ -629,7 +630,7 @@ export default function ScanUploadTab({
                   className={`group relative flex h-full min-h-[320px] w-full flex-col overflow-hidden rounded-brand border-2 border-dashed bg-gray-50 transition-all ${
                     fe.pdfFile
                       ? "border-orange-400 bg-orange-50/30 ring-2 ring-orange-400"
-                      : "border-gray-400 hover:border-pup-maroon hover:bg-red-50/50"
+                      : "border-gray-400 hover:border-gray-300 hover:bg-red-50/50"
                   } ${dropActive ? "bg-red-50" : ""}`}
                   onDragOver={(e) => {
                     e.preventDefault()
@@ -655,7 +656,7 @@ export default function ScanUploadTab({
                         <div className="flex items-center gap-2">
                           <button
                             type="button"
-                            className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-xs font-bold text-gray-800 hover:border-pup-maroon disabled:opacity-60"
+                            className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-xs font-bold text-gray-800 hover:border-gray-300 disabled:opacity-60"
                             disabled={hf.rows.length === 0 || hf.loading}
                             onClick={(e) => {
                               e.stopPropagation()
@@ -666,7 +667,7 @@ export default function ScanUploadTab({
                           </button>
                           <button
                             type="button"
-                            className="h-8 rounded-brand border border-gray-300 px-3 text-xs font-bold hover:border-pup-maroon"
+                            className="h-8 rounded-brand border border-gray-300 px-3 text-xs font-bold hover:border-gray-300"
                             onClick={(e) => {
                               e.stopPropagation()
                               hf.refresh()
@@ -690,7 +691,7 @@ export default function ScanUploadTab({
                             }}
                             className={`w-full rounded-brand border p-2.5 text-left transition-colors ${
                               hf.selected === row.id
-                                ? "border-pup-maroon bg-red-50/50"
+                                ? "border-gray-300 bg-red-50/50"
                                 : "border-transparent bg-gray-50 hover:bg-gray-100"
                             }`}
                           >
@@ -761,14 +762,14 @@ export default function ScanUploadTab({
                     <div className="flex shrink-0 items-center gap-2">
                       {(hf.ocrLoading || ocrLoading) && (
                         <span className="flex items-center gap-2 text-xs font-bold text-pup-maroon">
-                          <div className="h-3 w-3 animate-spin rounded-full border border-pup-maroon/20 border-t-pup-maroon" />
+                          <div className="h-3 w-3 animate-spin rounded-full border border-gray-300/20 border-t-pup-maroon" />
                           Running OCR…
                         </span>
                       )}
                       <div className="flex items-center gap-1.5 border-l border-gray-200 pl-2">
                         <button
                           type="button"
-                          className="flex h-8 w-8 items-center justify-center rounded-brand border border-gray-200 bg-white text-gray-600 shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon"
+                          className="flex h-8 w-8 items-center justify-center rounded-brand border border-gray-300 bg-white text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:text-pup-maroon"
                           onClick={() => setRotation((r) => r - 90)}
                           title="Rotate Left"
                         >
@@ -776,7 +777,7 @@ export default function ScanUploadTab({
                         </button>
                         <button
                           type="button"
-                          className="flex h-8 w-8 items-center justify-center rounded-brand border border-gray-200 bg-white text-gray-600 shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon"
+                          className="flex h-8 w-8 items-center justify-center rounded-brand border border-gray-300 bg-white text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:text-pup-maroon"
                           onClick={() => setRotation((r) => r + 90)}
                           title="Rotate Right"
                         >
@@ -837,7 +838,7 @@ export default function ScanUploadTab({
                     </div>
                     <div className="rounded-brand border border-gray-200 bg-white p-5 shadow-sm">
                       <div className="flex items-center justify-center gap-3">
-                        <div className="h-10 w-10 animate-spin rounded-full border-2 border-pup-maroon/20 border-t-pup-maroon"></div>
+                        <div className="h-10 w-10 animate-spin rounded-full border border-gray-300/20 border-t-pup-maroon"></div>
                         <i className="ph-duotone ph-scan animate-pulse text-3xl text-pup-maroon"></i>
                       </div>
                       <div className="mt-4 h-2 w-full overflow-hidden rounded bg-gray-100">
@@ -1024,7 +1025,7 @@ export default function ScanUploadTab({
                                 <button
                                   key={studentNo}
                                   type="button"
-                                  className="w-full border-b border-gray-100 px-3 py-2 text-left transition-colors last:border-b-0 hover:bg-red-50/50"
+                                  className="w-full border-b border-gray-300 px-3 py-2 text-left transition-colors last:border-b-0 hover:bg-red-50/50"
                                   onClick={() => onSelectExistingStudent?.(s)}
                                 >
                                   <div className="text-sm font-bold text-gray-900">
@@ -1049,7 +1050,7 @@ export default function ScanUploadTab({
                       >
                         Course / Program
                       </label>
-                      <select
+                      <Select
                         className={`form-select h-11 rounded-brand ${ring("course")} ${lockIdentity ? lockedField : ""}`}
                         value={newRec.course}
                         disabled={lockIdentity}
@@ -1068,7 +1069,7 @@ export default function ScanUploadTab({
                             {c.name}
                           </option>
                         ))}
-                      </select>
+                      </Select>
                     </div>
 
                     <div>
@@ -1079,7 +1080,7 @@ export default function ScanUploadTab({
                       >
                         Section
                       </label>
-                      <select
+                      <Select
                         className={`form-select h-11 rounded-brand ${ring("sectionPart")} ${lockIdentity ? lockedField : ""}`}
                         value={newRec.sectionPart}
                         onChange={(e) => {
@@ -1101,7 +1102,7 @@ export default function ScanUploadTab({
                             {sec.name}
                           </option>
                         ))}
-                      </select>
+                      </Select>
                     </div>
 
                     <div className="grid grid-cols-3 gap-5">
@@ -1109,7 +1110,7 @@ export default function ScanUploadTab({
                         <label className="mb-1.5 block text-xs font-bold text-gray-700 uppercase">
                           Room
                         </label>
-                        <select
+                        <Select
                           className={`form-select h-11 rounded-brand ${ring("room")}`}
                           value={String(newRec.room || "")}
                           onChange={(e) => {
@@ -1131,13 +1132,13 @@ export default function ScanUploadTab({
                               {r}
                             </option>
                           ))}
-                        </select>
+                        </Select>
                       </div>
                       <div>
                         <label className="mb-1.5 block text-xs font-bold text-gray-700 uppercase">
                           Cabinet
                         </label>
-                        <select
+                        <Select
                           className={`form-select h-11 rounded-brand ${ring("cabinet")}`}
                           value={newRec.cabinet}
                           onChange={(e) => {
@@ -1158,13 +1159,13 @@ export default function ScanUploadTab({
                               {c}
                             </option>
                           ))}
-                        </select>
+                        </Select>
                       </div>
                       <div>
                         <label className="mb-1.5 block text-xs font-bold text-gray-700 uppercase">
                           Drawer
                         </label>
-                        <select
+                        <Select
                           className={`form-select h-11 rounded-brand ${ring("drawer")}`}
                           value={String(newRec.drawer || "")}
                           onChange={(e) => {
@@ -1182,7 +1183,7 @@ export default function ScanUploadTab({
                               {d}
                             </option>
                           ))}
-                        </select>
+                        </Select>
                       </div>
                     </div>
 
@@ -1190,7 +1191,7 @@ export default function ScanUploadTab({
                       <label className="mb-1.5 block text-xs font-bold text-gray-700 uppercase">
                         Document Type
                       </label>
-                      <select
+                      <Select
                         className={`form-select h-11 rounded-brand ${ring("docType")}`}
                         value={newRec.docType}
                         onChange={(e) => {
@@ -1204,7 +1205,7 @@ export default function ScanUploadTab({
                             {t}
                           </option>
                         ))}
-                      </select>
+                      </Select>
                     </div>
 
                     <button
@@ -1284,7 +1285,7 @@ export default function ScanUploadTab({
                           <label className="mb-1.5 block text-xs font-bold tracking-wider text-gray-500 uppercase">
                             Room
                           </label>
-                          <select
+                          <Select
                             className="form-select h-11 rounded-brand text-sm"
                             value={csvBulkRoom}
                             onChange={(e) => setCsvBulkRoom(e.target.value)}
@@ -1295,14 +1296,14 @@ export default function ScanUploadTab({
                                 Room {r}
                               </option>
                             ))}
-                          </select>
+                          </Select>
                         </div>
 
                         <div>
                           <label className="mb-1.5 block text-xs font-bold tracking-wider text-gray-500 uppercase">
                             Cabinet
                           </label>
-                          <select
+                          <Select
                             className="form-select h-11 rounded-brand text-sm"
                             value={csvBulkCabinet}
                             onChange={(e) => setCsvBulkCabinet(e.target.value)}
@@ -1327,14 +1328,14 @@ export default function ScanUploadTab({
                                 </option>
                               ))
                             })()}
-                          </select>
+                          </Select>
                         </div>
 
                         <div>
                           <label className="mb-1.5 block text-xs font-bold tracking-wider text-gray-500 uppercase">
                             Drawer
                           </label>
-                          <select
+                          <Select
                             className="form-select h-11 rounded-brand text-sm"
                             value={csvBulkDrawer}
                             onChange={(e) => setCsvBulkDrawer(e.target.value)}
@@ -1364,7 +1365,7 @@ export default function ScanUploadTab({
                                 </option>
                               ))
                             })()}
-                          </select>
+                          </Select>
                         </div>
 
                         <div className="flex items-center gap-2 pt-1">
@@ -1383,7 +1384,7 @@ export default function ScanUploadTab({
                           <button
                             type="button"
                             onClick={() => setCsvSelected({})}
-                            className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-white text-[10px] font-black tracking-widest text-gray-700 uppercase transition-all hover:border-pup-maroon hover:text-pup-maroon disabled:opacity-40"
+                            className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-white text-[10px] font-black tracking-widest text-gray-700 uppercase transition-all hover:border-gray-300 hover:text-pup-maroon disabled:opacity-40"
                             disabled={
                               Object.values(csvSelected).filter(Boolean)
                                 .length === 0

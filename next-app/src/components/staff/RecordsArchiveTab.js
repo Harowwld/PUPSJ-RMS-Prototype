@@ -128,7 +128,7 @@ export default function RecordsArchiveTab({
         Occupied
       </div>
       <div className="flex items-center gap-1.5">
-        <div className="h-3 w-3 rounded-[2px] border-2 border-pup-maroon bg-red-50"></div>
+        <div className="h-3 w-3 rounded-[2px] border border-gray-300 bg-red-50"></div>
         Target
       </div>
     </div>
@@ -381,7 +381,7 @@ export default function RecordsArchiveTab({
                     ? "Search Archived ID..."
                     : "Search ID or Name..."
                 }
-                className="h-10 w-full rounded-brand border border-gray-300 bg-white pr-10 pl-10 text-sm font-medium text-gray-900 placeholder-gray-500 transition-all focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
+                className="h-10 w-full rounded-brand border border-gray-300 bg-white pr-10 pl-10 text-sm font-medium text-gray-900 placeholder-gray-500 transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
                 value={quickQuery}
                 onChange={(e) => setQuickQuery(e.target.value)}
               />
@@ -567,7 +567,7 @@ export default function RecordsArchiveTab({
                     <Button
                       type="button"
                       onClick={() => onSwitchView("upload")}
-                      className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-5 text-sm font-bold text-white shadow-sm transition-colors"
+                      className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-5 text-sm font-bold text-white shadow-sm transition-colors"
                     >
                       <i className="ph-bold ph-upload-simple"></i> GO TO
                       REGISTER / UPLOAD
@@ -629,7 +629,7 @@ export default function RecordsArchiveTab({
                   {filteredExplorerItems.map((row, index) => (
                     <div
                       key={index}
-                      className={`group relative flex cursor-pointer flex-col rounded-brand border border-gray-300 bg-white p-5 shadow-sm transition-all hover:border-pup-maroon hover:shadow-md ${showArchived ? "opacity-90" : ""}`}
+                      className={`group relative flex cursor-pointer flex-col rounded-brand border border-gray-300 bg-white p-5 shadow-sm transition-all hover:border-gray-300 hover:shadow-md ${showArchived ? "opacity-90" : ""}`}
                       onClick={() => onLocateStudent(row.student)}
                     >
                       <div className="mb-4 flex items-start gap-4">
@@ -770,7 +770,7 @@ export default function RecordsArchiveTab({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-8 rounded-brand border-gray-300 px-3 text-[10px] font-bold tracking-widest text-gray-600 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon"
+                                className="h-8 rounded-brand border-gray-300 px-3 text-[10px] font-bold tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon"
                               >
                                 <i className="ph-bold ph-magnifying-glass-plus mr-1.5 text-xs"></i>
                                 LOCATE

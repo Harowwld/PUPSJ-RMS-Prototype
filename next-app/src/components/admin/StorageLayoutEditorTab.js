@@ -23,6 +23,7 @@ import ConfirmModal from "@/components/shared/ConfirmModal"
 import CabinetCanvas from "./storage-layout/CabinetCanvas"
 import CabinetSidebar from "./storage-layout/CabinetSidebar"
 import ConflictResolutionModals from "./storage-layout/ConflictResolutionModals"
+import { Select } from "@/components/ui/select"
 
 // Utilities
 import {
@@ -794,7 +795,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                   Active Room
                 </label>
                 <div className="flex items-center gap-2">
-                  <select
+                  <Select
                     className="h-10 min-w-[200px] cursor-pointer rounded-brand border border-gray-300 bg-white pr-8 pl-3 text-sm font-bold text-gray-800 shadow-sm focus:ring-2 focus:ring-pup-maroon focus:outline-none"
                     value={String(activeRoomId ?? "")}
                     onChange={(e) => {
@@ -807,7 +808,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                         {r.name || `Room ${r.id}`}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                   <ButtonGroup className="h-10 shadow-sm">
                     <div data-slot="button">
                       <Tooltip>
@@ -889,7 +890,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                     type="button"
                     variant="outline"
                     onClick={addCabinet}
-                    className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-pup-maroon hover:bg-red-50/30"
+                    className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-gray-300 hover:bg-red-50/30"
                     disabled={!activeRoom}
                   >
                     <i className="ph-bold ph-plus-square mr-2 text-pup-maroon" />{" "}
@@ -897,7 +898,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                   </Button>
 
                   <div className="flex h-10 items-center overflow-hidden rounded-brand border border-gray-300 shadow-sm">
-                    <select
+                    <Select
                       className="h-full cursor-pointer border-r border-gray-300 bg-white px-3 text-sm font-bold text-gray-700 focus:outline-none"
                       value={selectedTemplateId}
                       onChange={(e) => setSelectedTemplateId(e.target.value)}
@@ -908,7 +909,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                           {tpl.name}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                     <Button
                       type="button"
                       variant="ghost"
@@ -965,7 +966,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
             <Button
               onClick={saveLayout}
               disabled={saving}
-              className="flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-black tracking-widest text-white uppercase shadow-lg transition-all"
+              className="flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-black tracking-widest text-white uppercase shadow-lg transition-all"
             >
               <i
                 className={`ph-bold ${saving ? "ph-spinner animate-spin" : "ph-floppy-disk"} text-lg`}
@@ -1023,8 +1024,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
         actionLabel="DELETE SELECTED"
         actionIcon="ph-trash"
         onAction={() => setBulkConfirmOpen(true)}
-        selectionLabel="Cabinets Selected"
-        selectionStatus="Bulk Layout Actions"
+        selectionStatus="Selected Cabinets"
       />
 
       <ConfirmModal

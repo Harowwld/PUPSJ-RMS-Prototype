@@ -116,7 +116,7 @@ export default function LogDetailSheet({
                           variant="outline"
                           size="icon"
                           onClick={() => onSearchSimilar(selectedLog.user)}
-                          className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon shadow-xs transition-all"
+                          className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon shadow-xs transition-all"
                         >
                           <i className="ph-bold ph-magnifying-glass text-xs"></i>
                         </Button>
@@ -164,7 +164,7 @@ export default function LogDetailSheet({
                           variant="outline"
                           size="icon"
                           onClick={() => handleCopy(selectedLog.details, "Event description")}
-                          className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon shadow-xs transition-all"
+                          className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon shadow-xs transition-all"
                         >
                           <i className="ph-bold ph-copy text-xs"></i>
                         </Button>
@@ -201,7 +201,7 @@ export default function LogDetailSheet({
                                 variant="outline"
                                 size="icon"
                                 onClick={() => handleCopy(selectedLog.entityId, "Entity ID")}
-                                className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon shadow-xs transition-all"
+                                className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon shadow-xs transition-all"
                               >
                                 <i className="ph-bold ph-copy text-xs"></i>
                               </Button>
@@ -242,7 +242,7 @@ export default function LogDetailSheet({
                             variant="outline"
                             size="icon"
                             onClick={() => onSearchSimilar(selectedLog.ip)}
-                            className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon shadow-xs transition-all"
+                            className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon shadow-xs transition-all"
                           >
                             <i className="ph-bold ph-magnifying-glass text-xs"></i>
                           </Button>
@@ -257,7 +257,7 @@ export default function LogDetailSheet({
                             variant="outline"
                             size="icon"
                             onClick={() => handleCopy(selectedLog.ip, "IP address")}
-                            className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon shadow-xs transition-all"
+                            className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon shadow-xs transition-all"
                           >
                             <i className="ph-bold ph-copy text-xs"></i>
                           </Button>
@@ -292,7 +292,7 @@ export default function LogDetailSheet({
               size="sm"
               disabled={!hasPrev}
               onClick={onPrev}
-              className="flex-1 h-10 rounded-brand border-gray-200 text-[10px] font-black tracking-widest text-gray-500 uppercase hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon disabled:opacity-30 transition-all"
+              className="flex-1 h-10 rounded-brand border-gray-300 text-[10px] font-black tracking-widest text-gray-500 uppercase hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon disabled:opacity-30 transition-all"
             >
               <i className="ph-bold ph-caret-left mr-2"></i>
               Previous Log
@@ -302,7 +302,7 @@ export default function LogDetailSheet({
               size="sm"
               disabled={!hasNext}
               onClick={onNext}
-              className="flex-1 h-10 rounded-brand border-gray-200 text-[10px] font-black tracking-widest text-gray-500 uppercase hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon disabled:opacity-30 transition-all"
+              className="flex-1 h-10 rounded-brand border-gray-300 text-[10px] font-black tracking-widest text-gray-500 uppercase hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon disabled:opacity-30 transition-all"
             >
               Next Log
               <i className="ph-bold ph-caret-right ml-2"></i>

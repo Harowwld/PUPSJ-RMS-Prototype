@@ -195,12 +195,25 @@ async function buildHealthData() {
     readDbSize(),
     readLastRestoration(),
   ]);
+
+  // Read memory usage
+  const totalMem = os.totalmem();
+  const freeMem = os.freemem();
+  const usedMem = totalMem - freeMem;
+  const memPercent = Math.round((usedMem / totalMem) * 100);
+
   return {
     cpu,
+    memory: {
+      percent: memPercent,
+      total: Math.round(totalMem / 1024 ** 3),
+      used: Math.round(usedMem / 1024 ** 3),
+    },
     disk,
     dbSize,
     lastRestorationAt,
     dbStatus: "Healthy",
+    integrityScore: 100, // Simulated score
     timestamp: new Date().toISOString(),
   };
 }

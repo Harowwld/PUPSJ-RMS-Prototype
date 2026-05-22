@@ -65,7 +65,7 @@ export default function BackupFilters({
             <Input
               type="text"
               placeholder="Filename, version..."
-              className="h-10 w-full rounded-brand border border-gray-300 bg-white pl-10 text-sm focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
+              className="h-10 w-full rounded-brand border border-gray-300 bg-white pl-10 text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
               value={localSearch}
               onChange={handleSearchChange}
             />

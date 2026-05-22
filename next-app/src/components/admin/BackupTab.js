@@ -60,7 +60,6 @@ export default function BackupTab({
   })
 
   const [selectedBackupIds, setSelectedBackupIds] = useState([])
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [sortBy, setSortBy] = useState("created_at")
   const [sortOrder, setSortOrder] = useState("DESC")
   const [page, setPage] = useState(1)
@@ -218,8 +217,9 @@ export default function BackupTab({
     <TooltipProvider delayDuration={200}>
       <div className="animate-fade-in font-inter flex min-h-full w-full flex-col gap-4 pb-8">
         {isLoading ? (
-          <div className="flex min-h-[600px] w-full items-stretch gap-4 overflow-hidden">
+          <div className="flex min-h-[600px] w-full items-stretch gap-5 overflow-hidden">
             <Skeleton className="h-full flex-1 rounded-brand" />
+            <Skeleton className="h-full w-[350px] rounded-brand" />
           </div>
         ) : error ? (
           <Card className="flex min-h-[400px] flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm">
@@ -240,45 +240,20 @@ export default function BackupTab({
             </CardContent>
           </Card>
         ) : (
-          <div className="relative flex min-h-[600px] w-full items-stretch gap-4">
-            {/* Health Drawer */}
-            <HealthSidebar
-              systemHealth={systemHealth}
-              lastBackupTime={lastBackupTime}
-              isSidebarOpen={isSidebarOpen}
-              onSidebarChange={setIsSidebarOpen}
-            />
-
+          <div className="relative flex min-h-[600px] w-full items-stretch gap-5">
             {/* MAIN CONTENT */}
             <Card className="flex h-fit min-h-[600px] w-full flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm">
               <PageHeader
                 icon="ph-hard-drives"
                 title="Encrypted Backup History"
                 description="Manage institutional snapshots and secure redundancy nodes."
-                leftAction={
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsSidebarOpen(true)}
-                        className={`h-11 w-11 shrink-0 rounded-xl border border-gray-200 bg-white text-pup-maroon shadow-sm transition-all hover:bg-gray-50`}
-                      >
-                        <i className="ph-bold ph-heartbeat text-lg"></i>
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="right">
-                      System Health Node
-                    </TooltipContent>
-                  </Tooltip>
-                }
                 actions={
                   <div className="flex items-center gap-2">
                     <div className="mr-2 flex items-center gap-2 border-r border-gray-200 pr-2">
                       <Button
                         onClick={handleGenerateBackup}
                         disabled={localLoading.generating}
-                        className="flex h-9 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-4 text-xs font-bold text-white shadow-sm active:scale-95 transition-all"
+                        className="flex h-9 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-4 text-xs font-black text-white shadow-sm active:scale-95 transition-all"
                       >
                         <i
                           className={`ph-bold ${localLoading.generating ? "ph-arrows-clockwise animate-spin" : "ph-download-simple"} text-sm`}
@@ -316,7 +291,7 @@ export default function BackupTab({
                       size="sm"
                       onClick={onRefresh}
                       disabled={isLoading}
-                      className="flex h-10 w-28 items-center justify-center gap-2 rounded-brand border-gray-300 bg-white px-4 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-50"
+                      className="flex h-10 w-28 items-center justify-center gap-2 rounded-brand border-gray-300 bg-white px-4 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-50"
                     >
                       <i className={`ph-bold ph-arrows-clockwise ${isLoading ? "animate-spin" : ""} text-base`}></i>
                       REFRESH
@@ -331,7 +306,7 @@ export default function BackupTab({
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">Active Filters:</span>
                     {localSearch && (
-                      <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon">
+                      <div className="flex items-center gap-1 rounded-full border border-gray-300/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon">
                         Search: {localSearch}
                         <button
                           onClick={() => { setLocalSearch(""); setBackupSearch(""); setPage(1); }}
@@ -362,7 +337,7 @@ export default function BackupTab({
                         setBackupEndDate("")
                         setPage(1)
                       }}
-                      className="h-6 rounded-full border border-dashed border-pup-maroon/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
+                      className="h-6 rounded-full border border-dashed border-gray-300/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
                     >
                       CLEAR ALL FILTERS
                     </Button>
@@ -422,11 +397,17 @@ export default function BackupTab({
                 />
               </CardContent>
             </Card>
+
+            <HealthSidebar
+              systemHealth={systemHealth}
+              lastBackupTime={lastBackupTime}
+            />
           </div>
         )}
 
         <FloatingActionBar
           selectedCount={selectedBackupIds.length}
+          selectionStatus="Selected Backups"
           onCancel={() => setSelectedBackupIds([])}
           onAction={() => onDeleteBackup(selectedBackupIds)}
           actionLabel="DELETE PERMANENTLY"

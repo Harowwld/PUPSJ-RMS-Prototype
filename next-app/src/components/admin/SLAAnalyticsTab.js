@@ -177,9 +177,9 @@ export default function SLAAnalyticsTab({
                 size="sm"
                 onClick={handlePreview}
                 disabled={loading || !data || isGeneratingPdf}
-                className="h-10 px-6 font-bold text-xs tracking-wide bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white border border-pup-maroon shadow-sm active:scale-95 disabled:opacity-60 rounded-brand uppercase transition-all"
+                className="h-10 px-6 font-black text-[10px] tracking-widest bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white shadow-lg shadow-red-900/20 active:scale-95 disabled:opacity-60 rounded-brand uppercase transition-all"
               >
-                <i className={cn("ph-bold text-sm mr-2", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
+                <i className={cn("ph-bold text-base mr-2", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
                 {isGeneratingPdf ? "Generating..." : "Generate Report"}
               </Button>
               <Button
@@ -188,7 +188,7 @@ export default function SLAAnalyticsTab({
                 size="sm"
                 onClick={handleCsvExport}
                 disabled={loading || !data || isExportingCsv}
-                className="h-10 px-4 font-bold text-xs tracking-wide border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 active:scale-95 rounded-brand transition-all uppercase"
+                className="h-10 px-4 font-bold text-xs tracking-wide border-gray-300 shadow-sm hover:border-gray-300 hover:bg-red-50/30 active:scale-95 rounded-brand transition-all uppercase"
               >
                 <i className={cn("ph-bold text-sm mr-2 text-pup-maroon", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
                 {isExportingCsv ? "Exporting..." : "Export CSV"}
@@ -210,7 +210,7 @@ export default function SLAAnalyticsTab({
                           size="sm"
                           onClick={handleRefresh}
                           disabled={loading}
-                          className="h-10 w-10 p-0 text-gray-600 bg-white border border-gray-300 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-90 rounded-brand"
+                          className="h-10 w-10 p-0 text-gray-600 bg-white border border-gray-300 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-90 rounded-brand"
                         >
                           <i
                             className={cn(
@@ -254,7 +254,7 @@ export default function SLAAnalyticsTab({
                   setStartDate("")
                   setEndDate("")
                 }}
-                className="h-6 rounded-full border border-dashed border-pup-maroon/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase"
+                className="h-6 rounded-full border border-dashed border-gray-300/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase"
               >
                 CLEAR ALL FILTERS
               </Button>
@@ -390,17 +390,16 @@ export default function SLAAnalyticsTab({
             <Button
               variant="outline"
               onClick={() => setReportOpen(false)}
-              className="h-11 px-6 font-bold border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 rounded-brand transition-colors"
+              className="h-11 px-6 font-bold border-gray-300 shadow-sm hover:border-gray-300 hover:bg-red-50/30 rounded-brand transition-colors"
             >
               CLOSE PREVIEW
             </Button>
             <Button
               onClick={handlePrint}
               disabled={!pdfBlobUrl}
-              className="flex h-11 items-center gap-2 bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 font-bold text-white shadow-sm rounded-brand transition-colors"
+              className="flex h-11 items-center gap-2 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 font-black text-white shadow-sm rounded-brand transition-colors"
             >
-              <i className="ph-bold ph-printer text-lg"></i> FINALIZE AND PRINT
-              REPORT
+              <i className="ph-bold ph-printer text-lg"></i> FINALIZE AND PRINT REPORT
             </Button>
           </div>
         </DialogContent>

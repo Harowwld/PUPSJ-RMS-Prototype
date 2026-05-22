@@ -87,9 +87,11 @@ function AdminPageContent() {
 
   const [systemHealth, setSystemHealth] = useState({
     cpu: 0,
+    memory: { percent: 0, total: 0, used: 0 },
     disk: { total: 0, free: 0, percent: 0 },
     dbSize: "0 KB",
     dbStatus: "Healthy",
+    integrityScore: 100,
   })
   const [backups, setBackups] = useState([])
   const [backupSearch, setBackupSearch] = useState("")
@@ -1714,13 +1716,13 @@ function AdminPageContent() {
               type="button"
               variant="outline"
               onClick={() => setDefaultPwOpen(false)}
-              className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-700 hover:bg-gray-50"
+              className="h-11 rounded-brand border border-gray-300 px-6 text-sm font-bold text-gray-700 hover:bg-gray-50"
             >
               Close
             </Button>
             <Button
               onClick={() => setDefaultPwOpen(false)}
-              className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-bold text-white shadow-sm"
+              className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-bold text-white shadow-sm"
             >
               <i className="ph-bold ph-check"></i>
               Acknowledge
