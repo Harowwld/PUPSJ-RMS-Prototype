@@ -411,10 +411,32 @@ function detectName(lines) {
         const c = stripTrailing(norm(colonM[1]));
         if (c && isPlausibleName(c)) return c;
       }
-      // Value on the NEXT line (common in scanned forms)
-      if (i + 1 < lines.length) {
-        const next = stripTrailing(norm(lines[i + 1]));
-        if (next && isPlausibleName(next) && !/^(NAME|STUDENT)/i.test(next)) return next;
+      
+      // Lookahead helper for multi-line name grids (e.g. Birth Certificates)
+      // Check up to 5 lines ahead for the actual values, skipping parenthesized sub-labels
+      for (let j = 1; j <= 5; j++) {
+        if (i + j >= lines.length) break;
+        const cand = stripTrailing(norm(lines[i + j]));
+        const candUpper = up(cand);
+        
+        // Skip sub-labels like "(First)", "(Middle)", "(Last)"
+        if (cand.startsWith("(") && cand.endsWith(")")) continue;
+        if (/\b(?:FIRST|MIDDLE|MIDDIE|LAST|SURNAME|GIVEN|FAMILY|NAME)\b/i.test(candUpper)) continue;
+        
+        if (cand && isPlausibleName(cand)) {
+          // If we matched the multi-line "1. NAME" Birth Certificate field,
+          // try to combine First, Middle, and Last name from successive lines.
+          const isBirthNameGrid = /^1\.?\s*NAME/i.test(upper) || (i > 0 && /^1\.?\s*NAME/i.test(up(lines[i-1])));
+          if (isBirthNameGrid && i + j + 2 < lines.length) {
+            const next1 = stripTrailing(norm(lines[i + j + 1]));
+            const next2 = stripTrailing(norm(lines[i + j + 2]));
+            if (next1 && next2 && !next1.startsWith("(") && !next2.startsWith("(")) {
+              // Format as: LAST, FIRST MIDDLE
+              return `${next2}, ${cand} ${next1}`;
+            }
+          }
+          return cand;
+        }
       }
     }
 
@@ -631,14 +653,38 @@ export async function scanPdfForSuggestion(payload) {
 export async function scanFileForSuggestion({ file, students, docTypes, rotation = 0 }) {
   if (!file) throw new Error("Missing file");
 
-  const worker = await getWorker();
   const mime = lo(file?.type);
   const isPdf = mime === "application/pdf" || /\.pdf$/i.test(file?.name ?? "");
   const isImg = mime.startsWith("image/");
   if (!isPdf && !isImg) throw new Error("Unsupported file type");
 
   // ── Extract raw text ──
-  const rawText = isPdf ? await ocrFromPdf(file, worker, rotation) : await ocrFromImage(file, worker, rotation);
+  let rawText = "";
+  let usedNative = false;
+
+  try {
+    const payload = new FormData();
+    payload.append("file", file);
+    const res = await fetch("/api/ingest/ocr", {
+      method: "POST",
+      body: payload,
+    });
+    if (res.ok) {
+      const data = await res.json().catch(() => null);
+      if (data?.ok && typeof data?.text === "string") {
+        rawText = data.text;
+        usedNative = true;
+        console.log("[OCR] Using Native macOS Apple Vision OCR (Lightning Fast!)");
+      }
+    }
+  } catch (e) {
+    console.warn("[OCR] Native Apple Vision OCR endpoint failed, falling back to Tesseract.js:", e);
+  }
+
+  if (!usedNative) {
+    const worker = await getWorker();
+    rawText = isPdf ? await ocrFromPdf(file, worker, rotation) : await ocrFromImage(file, worker, rotation);
+  }
 
    
   console.log("=== OCR RAW TEXT ===\n" + rawText + "\n====================");

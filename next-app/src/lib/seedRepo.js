@@ -80,6 +80,7 @@ export async function populateSampleData({ force = false } = {}) {
     "Certificate of Good Moral",
     "Form 137",
     "Certificate of Enrollment",
+    "Birth Certificate",
   ];
   for (const name of docTypes) {
     await dbRun("INSERT OR IGNORE INTO document_types (name, name_norm) VALUES (?, ?)", [
