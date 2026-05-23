@@ -177,6 +177,7 @@ export async function getDb() {
       ensureStaffNotificationStateTable();
       ensureRecoveryCodesTable();
       ensureSerialKeyColumn();
+      ensureBirthCertificateDocType();
       return currentDb;
     } catch (e) {
       // Database was closed externally
@@ -1163,6 +1164,7 @@ export async function getDb() {
       ensureStaffNotificationStateTable();
       ensureRecoveryCodesTable();
       ensureSerialKeyColumn();
+      ensureBirthCertificateDocType();
 
       initializing = null;
       return db;
@@ -1262,5 +1264,15 @@ function ensureSerialKeyColumn() {
     }
   } catch (e) {
     console.error("[DB] ensureSerialKeyColumn:", e);
+  }
+}
+
+function ensureBirthCertificateDocType() {
+  if (!db) return;
+  try {
+    db.exec("INSERT OR IGNORE INTO document_types (name, name_norm) VALUES ('Birth Certificate', 'birth certificate')");
+    persistDb();
+  } catch (e) {
+    console.error("[DB] ensureBirthCertificateDocType:", e);
   }
 }
