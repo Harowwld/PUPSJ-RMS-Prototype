@@ -318,6 +318,67 @@ function detectName(lines) {
     }
   }
 
+  // ── Strategy A2: Same-Line Parenthesized Name Components (Horizontal/Windows OCR layout) ──
+  // Catches lines like: "(First) RJ JACK 2 Female (Midd16) Registry NO. 2005-061 ooo (Last) FLORIDA"
+  // Restricted specifically to Windows clients to avoid interfering with pristine macOS Apple Vision OCR extraction layouts.
+  {
+    const isWindows = typeof window !== "undefined" && /windows|win32/i.test(window.navigator.userAgent || window.navigator.platform || "");
+    if (isWindows) {
+      for (const line of lines) {
+        const upperLine = up(line);
+        
+        // Skip parent/signatory/informant/official/template labels
+        if (/\b(?:MAIDEN|FATHER|MOTHER|PARENT|INFORMANT|REGISTRAR|ATTENDANT|PHYSICIAN|WITNESS|OFFICER|CLERK|ADMINISTRATOR|SECRETARY|PREPARED|STATISTICIAN|PRINTED|SIGNATURE|GENERIC|REPRESENTATIVE|GUARDIAN)\b/i.test(upperLine)) {
+          continue;
+        }
+        
+        // Skip if the line starts with a number that is not 1 (likely parent or other sections)
+        const numM = upperLine.match(/^(\d+)/);
+        if (numM && numM[1] !== "1" && numM[1] !== "01") {
+          continue;
+        }
+
+        if (upperLine.includes("(FIRST") || upperLine.includes("(LAST") || upperLine.includes("(MIDD")) {
+          const matches = [...line.matchAll(/\(([^)]+)\)\s*([^()]*)/g)];
+          if (matches.length > 0) {
+            let firstVal = "";
+            let middleVal = "";
+            let lastVal = "";
+
+            for (const m of matches) {
+              const label = up(m[1]).trim();
+              let val = m[2].trim();
+
+              // Clean up value: remove extra columns/fields recognized on same line
+              val = val
+                .replace(/\s*\b(FEMALE|MALE|SEX|REGISTRY|REG\.?|NO\.?|\d+)\b[\s\S]*/gi, "")
+                .trim();
+
+              // Strip trash punctuation/symbols
+              val = val.replace(/[^a-zA-Z\s.-]/g, "").trim();
+
+              if (label.includes("FIRST") || label.includes("F1RST") || label.includes("GIVEN")) {
+                if (isPlausibleNameComponent(val)) firstVal = val;
+              } else if (label.includes("MIDDLE") || label.includes("MIDD16") || label.includes("MIDDIE") || label.includes("MIDD")) {
+                if (isPlausibleNameComponent(val)) middleVal = val;
+              } else if (label.includes("LAST") || label.includes("SURNAME") || label.includes("FAMILY")) {
+                if (isPlausibleNameComponent(val)) lastVal = val;
+              }
+            }
+
+            if (firstVal && lastVal) {
+              const fullName = middleVal
+                ? `${lastVal}, ${firstVal} ${middleVal}`
+                : `${lastVal}, ${firstVal}`;
+              console.log(`[OCR Name Parser] Successfully extracted horizontal name components: ${fullName}`);
+              return fullName;
+            }
+          }
+        }
+      }
+    }
+  }
+
   // ── Strategy 1: "certify / certifies / certified that [Title] NAME" ──
   {
     const m = full.match(
