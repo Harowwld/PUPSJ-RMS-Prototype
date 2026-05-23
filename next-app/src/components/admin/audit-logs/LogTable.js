@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useState, useCallback } from "react"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -29,35 +29,184 @@ import LogPagination from "./LogPagination"
 
 function SortIndicator({ column, logSortBy, logSortOrder }) {
   if (logSortBy !== column)
-    return <i className="ph-bold ph-caret-up-down ml-1 opacity-30"></i>
+    return <i className="ph-bold ph-caret-up-down ml-1 opacity-20 transition-opacity group-hover:opacity-50"></i>
   return logSortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-pup-maroon"></i>
+    <i className="ph-bold ph-caret-up ml-1 text-pup-maroon animate-in fade-in zoom-in duration-300"></i>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-pup-maroon"></i>
+    <i className="ph-bold ph-caret-down ml-1 text-pup-maroon animate-in fade-in zoom-in duration-300"></i>
   )
 }
 
-function getSeverityColor(sev) {
+function getActionIcon(action) {
+  const act = String(action || "").toLowerCase()
+  if (act.includes("login")) return "ph-duotone ph-sign-in"
+  if (act.includes("logout")) return "ph-duotone ph-sign-out"
+  if (act.includes("create") || act.includes("add")) return "ph-duotone ph-plus-circle"
+  if (act.includes("delete") || act.includes("remove")) return "ph-duotone ph-trash"
+  if (act.includes("restore")) return "ph-duotone ph-arrow-counter-clockwise"
+  if (act.includes("update") || act.includes("edit")) return "ph-duotone ph-pencil-line"
+  if (act.includes("upload") || act.includes("ingest")) return "ph-duotone ph-cloud-arrow-up"
+  if (act.includes("download") || act.includes("export")) return "ph-duotone ph-download-simple"
+  if (act.includes("view") || act.includes("preview")) return "ph-duotone ph-eye"
+  if (act.includes("approve")) return "ph-duotone ph-check-circle"
+  if (act.includes("reject")) return "ph-duotone ph-x-circle"
+  if (act.includes("archive")) return "ph-duotone ph-archive"
+  if (act.includes("rotate") || act.includes("password")) return "ph-duotone ph-key"
+  if (act.includes("backup")) return "ph-duotone ph-database"
+  if (act.includes("security") || act.includes("auth")) return "ph-duotone ph-shield-check"
+  return "ph-duotone ph-activity"
+}
+
+function getSeverityConfig(sev) {
   switch (String(sev || "").toUpperCase()) {
     case "CRITICAL":
-      return "bg-red-100 text-red-700 border-red-200"
+      return {
+        bg: "bg-red-50",
+        text: "text-red-700",
+        border: "border-red-200",
+        dot: "bg-red-500",
+        icon: "ph-fill ph-warning-circle"
+      }
     case "WARNING":
-      return "bg-amber-100 text-amber-700 border-amber-200"
+      return {
+        bg: "bg-amber-50",
+        text: "text-amber-700",
+        border: "border-amber-200",
+        dot: "bg-amber-500",
+        icon: "ph-fill ph-warning"
+      }
     default:
-      return "bg-blue-100 text-blue-700 border-blue-200"
+      return {
+        bg: "bg-blue-50",
+        text: "text-blue-700",
+        border: "border-blue-200",
+        dot: "bg-blue-500",
+        icon: "ph-fill ph-info"
+      }
   }
 }
 
-function getSeverityTextColor(sev) {
-  switch (String(sev || "").toUpperCase()) {
-    case "CRITICAL":
-      return "text-red-600"
-    case "WARNING":
-      return "text-amber-600"
-    default:
-      return "text-blue-600"
-  }
-}
+const LogRow = React.memo(({
+  log,
+  isSelected,
+  isExpanded,
+  toggleRow,
+  setSelectedLog,
+  handleCopy,
+  cn
+}) => {
+  const sevConfig = getSeverityConfig(log.severity)
+  const uploaded = formatPHDateTimeParts(log.created_at || log.time)
+
+  return (
+    <React.Fragment>
+      <tr
+        className={cn(
+          "group border-l-2 border-transparent transition-all duration-200 hover:bg-gray-50/80 select-none",
+          isSelected && "border-pup-maroon bg-red-50/30",
+          isExpanded && "bg-gray-50/50"
+        )}
+        onDoubleClick={(e) => {
+          e.preventDefault();
+          toggleRow(log.id);
+        }}
+      >
+        <td className="p-4 text-center">
+          <button
+            onClick={() => toggleRow(log.id)}
+            className={cn(
+              "mx-auto flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 text-gray-400 transition-all hover:bg-pup-maroon hover:text-white",
+              isExpanded && "bg-pup-maroon text-white rotate-90"
+            )}
+          >
+            <i className="ph-bold ph-caret-right text-xs"></i>
+          </button>
+        </td>
+        <td className="p-4">
+          <div className="flex flex-col">
+            <span className="text-xs font-bold text-gray-900">
+              {uploaded.date}
+            </span>
+            <span className="text-[10px] font-medium text-gray-400">
+              {uploaded.time}
+            </span>
+          </div>
+        </td>
+        <td className="p-4">
+          <div className={cn(
+            "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-tight shadow-xs",
+            sevConfig.bg,
+            sevConfig.text,
+            sevConfig.border
+          )}>
+            <i className={cn(sevConfig.icon, "text-[10px]")}></i>
+            {log.severity}
+          </div>
+        </td>
+        <td className="p-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-500 font-black text-xs group-hover:bg-white group-hover:text-pup-maroon group-hover:shadow-sm transition-all">
+              {(log.user || "?").substring(0, 2).toUpperCase()}
+            </div>
+            <div className="flex flex-col overflow-hidden">
+              <span className="truncate text-xs font-bold text-gray-900">
+                {log.user}
+              </span>
+              <span className="text-[9px] font-black tracking-widest text-gray-400 uppercase">
+                {log.role}
+              </span>
+            </div>
+          </div>
+        </td>
+        <td className="p-4">
+          <div className="flex items-center gap-2.5">
+            <div className={cn(
+              "flex h-8 w-8 items-center justify-center rounded-lg transition-colors shadow-xs",
+              isSelected ? "bg-white text-pup-maroon" : "bg-gray-50 text-gray-500 group-hover:bg-white group-hover:text-pup-maroon"
+            )}>
+              <i className={cn(getActionIcon(log.action), "text-base")}></i>
+            </div>
+            <span className="text-xs font-bold tracking-tight text-gray-700 uppercase">
+              {log.action}
+            </span>
+          </div>
+        </td>
+        <td className="p-4">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <p className="line-clamp-1 max-w-[500px] text-xs font-medium leading-relaxed text-gray-500">
+                {log.details || "No known description"}
+              </p>
+            </TooltipTrigger>
+            <TooltipContent
+              side="top"
+              className="max-w-[400px] rounded-xl border-gray-200 bg-white/95 p-3 text-xs font-medium text-gray-700 shadow-2xl backdrop-blur-sm"
+            >
+              {log.details || "No known description"}
+            </TooltipContent>
+          </Tooltip>
+        </td>
+        <td className="p-4 text-center">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-9 w-9 rounded-xl border border-transparent hover:border-gray-200 hover:bg-white hover:text-pup-maroon hover:shadow-sm active:scale-95 transition-all"
+            onClick={() => setSelectedLog(log)}
+          >
+            <i className="ph-bold ph-eye text-lg"></i>
+          </Button>
+        </td>
+      </tr>
+      {isExpanded && (
+        <tr className="border-0 bg-gray-50/30">
+          <td colSpan={7} className="p-0">
+            <LogExpandedRow log={log} handleCopy={handleCopy} />
+          </td>
+        </tr>
+      )}
+    </React.Fragment>
+  )
+});
 
 export default function LogTable({
   isLoading,
@@ -93,12 +242,12 @@ export default function LogTable({
 }) {
   const [expandedRows, setExpandedRows] = useState({});
 
-  const toggleRow = (id) => {
+  const toggleRow = useCallback((id) => {
     setExpandedRows(prev => ({
       ...prev,
       [id]: !prev[id]
     }));
-  };
+  }, []);
 
   const handleItemsPerPageChange = (e) => {
     const value = Number(e.target.value)
@@ -121,45 +270,33 @@ export default function LogTable({
 
   if (isLoading && displayLogs.length === 0) {
     return (
-      <div className="animate-pulse">
-        <div className="overflow-x-auto rounded-brand border border-gray-100">
-          <table className="min-w-full text-sm">
+      <div className="animate-pulse space-y-4">
+        <div className="overflow-x-auto rounded-xl border border-gray-100 bg-white">
+          <table className="min-w-full">
             <thead className="bg-gray-50/50">
               <tr>
                 {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-                  <th key={i} className="p-3">
+                  <th key={i} className="p-4">
                     <Skeleton className="h-3 w-16" />
                   </th>
                 ))}
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {[1, 2, 3, 4, 5].map((row) => (
+              {[1, 2, 3, 4, 5, 6].map((row) => (
                 <tr key={row}>
-                  <td className="p-3">
-                    <Skeleton className="h-6 w-6 rounded-full" />
-                  </td>
-                  <td className="p-3">
-                    <Skeleton className="h-3 w-24" />
-                  </td>
-                  <td className="p-3">
-                    <Skeleton className="h-5 w-16 rounded-sm" />
-                  </td>
-                  <td className="p-3">
-                    <div className="space-y-1">
-                      <Skeleton className="h-3 w-20" />
-                      <Skeleton className="h-2 w-12" />
+                  <td className="p-4"><Skeleton className="h-6 w-6 rounded-full" /></td>
+                  <td className="p-4"><Skeleton className="h-3 w-24" /></td>
+                  <td className="p-4"><Skeleton className="h-6 w-20 rounded-full" /></td>
+                  <td className="p-4">
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-32" />
+                      <Skeleton className="h-2 w-16" />
                     </div>
                   </td>
-                  <td className="p-3">
-                    <Skeleton className="h-3 w-20" />
-                  </td>
-                  <td className="p-3">
-                    <Skeleton className="h-3 w-full" />
-                  </td>
-                  <td className="p-3">
-                    <Skeleton className="h-8 w-8 rounded-full" />
-                  </td>
+                  <td className="p-4"><Skeleton className="h-4 w-28" /></td>
+                  <td className="p-4"><Skeleton className="h-3 w-full" /></td>
+                  <td className="p-4 text-center"><Skeleton className="h-8 w-8 mx-auto rounded-full" /></td>
                 </tr>
               ))}
             </tbody>
@@ -171,258 +308,182 @@ export default function LogTable({
 
   if (error) {
     return (
-      <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500">
-        <EmptyHeader className="flex flex-col items-center gap-0">
-          <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
-            <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
-          </EmptyMedia>
-          <EmptyTitle className="text-lg font-bold text-gray-900">
-            Could not load report
+      <Empty className="flex h-[400px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-100 bg-gray-50/30 text-center">
+        <EmptyHeader className="flex flex-col items-center gap-2">
+          <div className="relative mb-4">
+            <div className="absolute inset-0 animate-ping rounded-full bg-red-100 opacity-20"></div>
+            <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full border border-red-100 bg-white shadow-xl">
+              <i className="ph-duotone ph-warning-circle text-4xl text-red-600" />
+            </EmptyMedia>
+          </div>
+          <EmptyTitle className="text-xl font-black text-gray-900">
+            System Log Error
           </EmptyTitle>
-          <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600">
+          <EmptyDescription className="max-w-md text-sm font-medium text-gray-500">
             {error}
           </EmptyDescription>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.reload()}
+            className="mt-6 rounded-full border-gray-200 font-bold hover:bg-gray-50"
+          >
+            <i className="ph-bold ph-arrows-clockwise mr-2"></i>
+            RETRY LOADING
+          </Button>
         </EmptyHeader>
       </Empty>
     )
   }
 
   return (
-    <>
+    <div className="space-y-0">
       <div
-        className={`overflow-x-auto rounded-brand select-none transition-opacity duration-200 ${displayLogs.length === 0 ? "" : "border border-gray-200"} ${isLoading ? "opacity-50 pointer-events-none" : "opacity-100"}`}
+        className={cn(
+          "overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300",
+          isLoading ? "opacity-60 grayscale-[0.2]" : "opacity-100"
+        )}
       >
-        <table className="min-w-full text-sm">
-          <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50">
-            <tr className="text-left text-xs tracking-wider text-gray-600 uppercase">
-              <th className="w-10 p-3 text-center">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button className="flex h-5 w-5 items-center justify-center rounded-full bg-gray-200 text-gray-500 transition-colors hover:bg-pup-maroon/10 hover:text-pup-maroon">
-                      <i className="ph-bold ph-info text-[10px]"></i>
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="right" className="rounded-brand max-w-[200px] text-[10px] font-bold leading-tight uppercase tracking-tight">
-                    Double-click any row to quickly expand details.
-                  </TooltipContent>
-                </Tooltip>
-              </th>
-              <th className="w-40 p-3 font-bold">
-                <button
-                  onClick={() => handleSort("created_at")}
-                  className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
-                >
-                  Timestamp{" "}
-                  <SortIndicator
-                    column="created_at"
-                    logSortBy={logSortBy}
-                    logSortOrder={logSortOrder}
-                  />
-                </button>
-              </th>
-              <th className="w-24 p-3 font-bold">
-                <button
-                  onClick={() => handleSort("severity")}
-                  className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
-                >
-                  Severity{" "}
-                  <SortIndicator
-                    column="severity"
-                    logSortBy={logSortBy}
-                    logSortOrder={logSortOrder}
-                  />
-                </button>
-              </th>
-              <th className="w-44 p-3 font-bold">
-                <button
-                  onClick={() => handleSort("actor")}
-                  className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
-                >
-                  User / Actor{" "}
-                  <SortIndicator
-                    column="actor"
-                    logSortBy={logSortBy}
-                    logSortOrder={logSortOrder}
-                  />
-                </button>
-              </th>
-              <th className="w-44 p-3 font-bold">
-                <button
-                  onClick={() => handleSort("action")}
-                  className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
-                >
-                  Action{" "}
-                  <SortIndicator
-                    column="action"
-                    logSortBy={logSortBy}
-                    logSortOrder={logSortOrder}
-                  />
-                </button>
-              </th>
-              <th className="p-3 font-bold">Rich Details</th>
-              <th className="w-20 p-3 text-center font-bold">Details</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {displayLogs.length === 0 ? (
-              <tr className="border-0 hover:bg-transparent">
-                <td colSpan={7} className="border-0 p-0">
-                  <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500">
-                    <EmptyHeader className="flex flex-col items-center gap-0">
-                      <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
-                        <i className="ph-duotone ph-list-magnifying-glass text-3xl text-pup-maroon"></i>
-                      </EmptyMedia>
-                      <EmptyTitle className="text-lg font-bold text-gray-900">
-                        No audit logs yet
-                      </EmptyTitle>
-                      <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600">
-                        We couldn&apos;t find any audit logs matching your search
-                        criteria.
-                      </EmptyDescription>
-                      {(localSearch !== "" ||
-                        logRoleFilter !== "All" ||
-                        logSeverityFilter !== "All" ||
-                        logStartDate !== "" ||
-                        logEndDate !== "") && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setLocalSearch("")
-                            setLogSearch("")
-                            setLogRoleFilter("All")
-                            setLogSeverityFilter("All")
-                            setLogStartDate("")
-                            setLogEndDate("")
-                            setLogPage(1)
-                          }}
-                          className="mt-4 flex items-center gap-2 rounded-brand border border-gray-300 px-4 text-[10px] font-bold text-gray-600 hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon sm:text-xs shadow-sm transition-colors"
-                        >
-                          <i className="ph-bold ph-x-circle"></i>
-                          CLEAR ALL FILTERS
-                        </Button>
-                      )}
-                    </EmptyHeader>
-                  </Empty>
-                </td>
+        <div className="overflow-x-auto">
+          <table className="min-w-full table-fixed text-sm">
+            <thead className="border-b border-gray-200 bg-gray-50/80 backdrop-blur-sm select-none">
+              <tr className="text-left text-[10px] font-black tracking-widest text-gray-400 uppercase">
+                <th className="w-[50px] p-4 text-center">
+                  <i className="ph-bold ph-hash"></i>
+                </th>
+                <th className="w-[180px] p-4">
+                  <button
+                    onClick={() => handleSort("created_at")}
+                    className="group flex items-center transition-colors hover:text-pup-maroon focus:outline-none"
+                  >
+                    Timestamp{" "}
+                    <SortIndicator
+                      column="created_at"
+                      logSortBy={logSortBy}
+                      logSortOrder={logSortOrder}
+                    />
+                  </button>
+                </th>
+                <th className="w-[120px] p-4">
+                  <button
+                    onClick={() => handleSort("severity")}
+                    className="group flex items-center transition-colors hover:text-pup-maroon focus:outline-none"
+                  >
+                    Severity{" "}
+                    <SortIndicator
+                      column="severity"
+                      logSortBy={logSortBy}
+                      logSortOrder={logSortOrder}
+                    />
+                  </button>
+                </th>
+                <th className="w-[200px] p-4">
+                  <button
+                    onClick={() => handleSort("actor")}
+                    className="group flex items-center transition-colors hover:text-pup-maroon focus:outline-none"
+                  >
+                    Actor{" "}
+                    <SortIndicator
+                      column="actor"
+                      logSortBy={logSortBy}
+                      logSortOrder={logSortOrder}
+                    />
+                  </button>
+                </th>
+                <th className="w-[220px] p-4">
+                  <button
+                    onClick={() => handleSort("action")}
+                    className="group flex items-center transition-colors hover:text-pup-maroon focus:outline-none"
+                  >
+                    Event / Action{" "}
+                    <SortIndicator
+                      column="action"
+                      logSortBy={logSortBy}
+                      logSortOrder={logSortOrder}
+                    />
+                  </button>
+                </th>
+                <th className="min-w-[300px] p-4">Description</th>
+                <th className="w-[80px] p-4 text-center">
+                   <i className="ph-bold ph-dots-three-outline"></i>
+                </th>
               </tr>
-            ) : (
-              displayLogs.map((log) => {
-                const isSelected = selectedLog?.id === log.id
-                const isExpanded = !!expandedRows[log.id]
-                const isCritical = String(log.severity || "").toUpperCase() === "CRITICAL"
-                const uploaded = formatPHDateTimeParts(log.created_at || log.time)
-
-                return (
-                  <React.Fragment key={log.id}>
-                    <tr
-                      className={cn(
-                        "group cursor-default transition-colors hover:bg-gray-50",
-                        isSelected && "bg-red-50/20",
-                        isCritical && !isSelected && "bg-red-50/50",
-                        isExpanded && "bg-gray-50/80"
-                      )}
-                      onDoubleClick={() => toggleRow(log.id)}
-                    >
-                      <td className="p-3 text-center">
-                        <button
-                          onClick={() => toggleRow(log.id)}
-                          className={cn(
-                            "flex h-6 w-6 items-center justify-center rounded-full text-gray-400 transition-all hover:bg-gray-200 hover:text-gray-600",
-                            isExpanded && "rotate-90 text-pup-maroon"
-                          )}
-                        >
-                          <i className="ph-bold ph-caret-right text-xs"></i>
-                        </button>
-                      </td>
-                      <td className="p-3 text-[10px] whitespace-nowrap text-gray-500 font-medium">
-                        {uploaded.date}
-                      </td>
-                      <td className="p-3">
-                        <Badge
-                          variant="outline"
-                          className={`rounded-sm border-0 px-1.5 py-0.5 text-[9px] font-black ${getSeverityColor(log.severity)}`}
-                        >
-                          {log.severity}
-                        </Badge>
-                      </td>
-                      <td className="p-3">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-bold whitespace-nowrap text-gray-900">
-                            {log.user}
-                          </span>
-                          <span className="text-[9px] font-black tracking-tighter text-gray-400 uppercase">
-                            {log.role}
-                          </span>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {displayLogs.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="p-0">
+                    <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                      <EmptyHeader className="flex flex-col items-center gap-0">
+                        <div className="relative mb-6">
+                          <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50"></div>
+                          <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3">
+                            <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300"></i>
+                          </EmptyMedia>
                         </div>
-                      </td>
-                      <td
-                        className={`p-3 text-xs font-bold tracking-tighter uppercase ${getSeverityTextColor(log.severity)}`}
-                      >
-                        {log.action}
-                      </td>
-                      <td className="p-3 text-xs leading-relaxed font-medium text-gray-600">
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="line-clamp-1 max-w-[600px]">
-                              {log.details}
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent
-                            side="top"
-                            className="max-w-[450px] rounded-brand text-xs leading-normal"
+                        <EmptyTitle className="text-xl font-black text-gray-900">
+                          No activity found
+                        </EmptyTitle>
+                        <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500">
+                          Try adjusting your search filters to find what you&apos;re looking for.
+                        </EmptyDescription>
+                        {(localSearch !== "" ||
+                          logRoleFilter !== "All" ||
+                          logSeverityFilter !== "All" ||
+                          logStartDate !== "" ||
+                          logEndDate !== "") && (
+                          <Button
+                            variant="ghost"
+                            onClick={() => {
+                              setLocalSearch("")
+                              setLogSearch("")
+                              setLogRoleFilter("All")
+                              setLogSeverityFilter("All")
+                              setLogStartDate("")
+                              setLogEndDate("")
+                              setLogPage(1)
+                            }}
+                            className="mt-6 font-bold text-pup-maroon hover:bg-red-50"
                           >
-                            {log.details}
-                          </TooltipContent>
-                        </Tooltip>
-                      </td>
-                      <td className="p-3 text-center">
-                        <div className="flex items-center justify-center transition-opacity">
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-8 w-8 rounded-full border-gray-300 bg-gray-50 p-0 text-gray-500 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon active:scale-95 shadow-xs transition-all"
-                                onClick={() => setSelectedLog(log)}
-                              >
-                                <i className="ph-bold ph-eye text-base"></i>
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="rounded-brand font-bold text-[10px] uppercase tracking-wider">
-                              View Log Details
-                            </TooltipContent>
-                          </Tooltip>
-                        </div>
-                      </td>
-                    </tr>
-                    {isExpanded && (
-                      <tr className="border-0 bg-gray-50/50">
-                        <td colSpan={7} className="p-0">
-                          <LogExpandedRow log={log} handleCopy={handleCopy} />
-                        </td>
-                      </tr>
-                    )}
-                  </React.Fragment>
-                )
-              })
-            )}
-          </tbody>
-        </table>
+                            RESET ALL FILTERS
+                          </Button>
+                        )}
+                      </EmptyHeader>
+                    </Empty>
+                  </td>
+                </tr>
+              ) : (
+                displayLogs.map((log) => (
+                  <LogRow
+                    key={log.id}
+                    log={log}
+                    isSelected={selectedLog?.id === log.id}
+                    isExpanded={!!expandedRows[log.id]}
+                    toggleRow={toggleRow}
+                    setSelectedLog={setSelectedLog}
+                    handleCopy={handleCopy}
+                    cn={cn}
+                  />
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
       {/* Pagination */}
-      <LogPagination
-        logTotal={logTotal}
-        logPage={logPage}
-        setLogPage={setLogPage}
-        itemsPerPage={itemsPerPage}
-        logsPerPage={logsPerPage}
-        handleItemsPerPageChange={handleItemsPerPageChange}
-        jumpPage={jumpPage}
-        setJumpPage={setJumpPage}
-        handleJumpPage={handleJumpPage}
-      />
-    </>
+      <div className="mt-4 px-2">
+        <LogPagination
+          logTotal={logTotal}
+          logPage={logPage}
+          setLogPage={setLogPage}
+          itemsPerPage={itemsPerPage}
+          logsPerPage={logsPerPage}
+          handleItemsPerPageChange={handleItemsPerPageChange}
+          jumpPage={jumpPage}
+          setJumpPage={setJumpPage}
+          handleJumpPage={handleJumpPage}
+        />
+      </div>
+    </div>
   )
 }

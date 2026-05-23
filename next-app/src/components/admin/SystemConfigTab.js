@@ -112,6 +112,11 @@ export default function SystemConfigTab({
   const [selectedSections, setSelectedSections] = useState({})
   const [itemsPerPage, setItemsPerPage] = useState(10)
 
+  // Last Selected Trackers for Shift+Click
+  const [lastSelectedDocId, setLastSelectedDocId] = useState(null)
+  const [lastSelectedCourseId, setLastSelectedCourseId] = useState(null)
+  const [lastSelectedSectionId, setLastSelectedSectionId] = useState(null)
+
   // Pagination States
   const [pageDoc, setPageDoc] = useState(1)
   const [pageCourse, setPageCourse] = useState(1)
@@ -268,13 +273,50 @@ export default function SystemConfigTab({
   }
 
   // Selection Handlers
-  const toggleDocTypeSelected = (id) => {
+  const toggleDocTypeSelected = (id, event) => {
+    const isSelected = !!selectedDocTypes[id]
+
+    if (event?.shiftKey && lastSelectedDocId) {
+      if (isSelected) {
+        const selectedCount = Object.values(selectedDocTypes).filter(Boolean).length
+        if (selectedCount > 1) {
+          setSelectedDocTypes({ [id]: true })
+          setLastSelectedDocId(id)
+        } else {
+          setSelectedDocTypes({})
+          setLastSelectedDocId(null)
+        }
+        return
+      }
+
+      const currentIdx = filteredDocTypes.findIndex((dt) => dt.id === id)
+      const lastIdx = filteredDocTypes.findIndex((dt) => dt.id === lastSelectedDocId)
+
+      if (currentIdx !== -1 && lastIdx !== -1) {
+        const start = Math.min(currentIdx, lastIdx)
+        const end = Math.max(currentIdx, lastIdx)
+        const itemsInRange = filteredDocTypes.slice(start, end + 1)
+
+        setSelectedDocTypes((prev) => {
+          const next = { ...prev }
+          itemsInRange.forEach((item) => {
+            next[item.id] = true
+          })
+          return next
+        })
+        setLastSelectedDocId(id)
+        return
+      }
+    }
+
     setSelectedDocTypes((prev) => ({ ...prev, [id]: !prev[id] }))
+    setLastSelectedDocId(id)
   }
 
   const toggleAllDocTypes = (checked) => {
     if (!checked) {
       setSelectedDocTypes({})
+      setLastSelectedDocId(null)
     } else {
       const next = {}
       filteredDocTypes.forEach((dt) => {
@@ -284,13 +326,50 @@ export default function SystemConfigTab({
     }
   }
 
-  const toggleCourseSelected = (id) => {
+  const toggleCourseSelected = (id, event) => {
+    const isSelected = !!selectedCourses[id]
+
+    if (event?.shiftKey && lastSelectedCourseId) {
+      if (isSelected) {
+        const selectedCount = Object.values(selectedCourses).filter(Boolean).length
+        if (selectedCount > 1) {
+          setSelectedCourses({ [id]: true })
+          setLastSelectedCourseId(id)
+        } else {
+          setSelectedCourses({})
+          setLastSelectedCourseId(null)
+        }
+        return
+      }
+
+      const currentIdx = filteredCourses.findIndex((c) => c.id === id)
+      const lastIdx = filteredCourses.findIndex((c) => c.id === lastSelectedCourseId)
+
+      if (currentIdx !== -1 && lastIdx !== -1) {
+        const start = Math.min(currentIdx, lastIdx)
+        const end = Math.max(currentIdx, lastIdx)
+        const itemsInRange = filteredCourses.slice(start, end + 1)
+
+        setSelectedCourses((prev) => {
+          const next = { ...prev }
+          itemsInRange.forEach((item) => {
+            next[item.id] = true
+          })
+          return next
+        })
+        setLastSelectedCourseId(id)
+        return
+      }
+    }
+
     setSelectedCourses((prev) => ({ ...prev, [id]: !prev[id] }))
+    setLastSelectedCourseId(id)
   }
 
   const toggleAllCourses = (checked) => {
     if (!checked) {
       setSelectedCourses({})
+      setLastSelectedCourseId(null)
     } else {
       const next = {}
       filteredCourses.forEach((c) => {
@@ -300,13 +379,50 @@ export default function SystemConfigTab({
     }
   }
 
-  const toggleSectionSelected = (id) => {
+  const toggleSectionSelected = (id, event) => {
+    const isSelected = !!selectedSections[id]
+
+    if (event?.shiftKey && lastSelectedSectionId) {
+      if (isSelected) {
+        const selectedCount = Object.values(selectedSections).filter(Boolean).length
+        if (selectedCount > 1) {
+          setSelectedSections({ [id]: true })
+          setLastSelectedSectionId(id)
+        } else {
+          setSelectedSections({})
+          setLastSelectedSectionId(null)
+        }
+        return
+      }
+
+      const currentIdx = filteredSections.findIndex((s) => s.id === id)
+      const lastIdx = filteredSections.findIndex((s) => s.id === lastSelectedSectionId)
+
+      if (currentIdx !== -1 && lastIdx !== -1) {
+        const start = Math.min(currentIdx, lastIdx)
+        const end = Math.max(currentIdx, lastIdx)
+        const itemsInRange = filteredSections.slice(start, end + 1)
+
+        setSelectedSections((prev) => {
+          const next = { ...prev }
+          itemsInRange.forEach((item) => {
+            next[item.id] = true
+          })
+          return next
+        })
+        setLastSelectedSectionId(id)
+        return
+      }
+    }
+
     setSelectedSections((prev) => ({ ...prev, [id]: !prev[id] }))
+    setLastSelectedSectionId(id)
   }
 
   const toggleAllSections = (checked) => {
     if (!checked) {
       setSelectedSections({})
+      setLastSelectedSectionId(null)
     } else {
       const next = {}
       filteredSections.forEach((s) => {

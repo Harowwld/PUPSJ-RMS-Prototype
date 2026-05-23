@@ -569,76 +569,98 @@ export default function CoursesTab({
                       <td className="p-3 px-6 text-right"></td>
                     </tr>
                   )}
-                  {filteredCourses.map((c) => (
-                    <tr
-                      key={c.id}
-                      className={`group transition-colors hover:bg-gray-50 ${c.status === "Archived" ? "opacity-75" : ""} ${selectedCourses[c.id] ? (showArchived ? "bg-emerald-50/20" : "bg-red-50/20") : ""}`}
-                    >
-                      <td className="p-3 px-6 text-center">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20"
-                          checked={!!selectedCourses[c.id]}
-                          onChange={() => toggleCourseSelected(c.id)}
-                          disabled={
-                            showArchived
-                              ? c.status !== "Archived"
-                              : c.status === "Archived"
-                          }
-                        />
-                      </td>
-                      <td className="p-3 px-6 font-black tracking-tight text-gray-900">
-                        {c.code}
-                      </td>
-                      <td className="p-3 px-6 font-medium text-gray-700">
-                        {c.name}
-                      </td>
-                      <td className="p-3 px-6 text-left">
-                        {c.status === "Archived" ? (
-                          <Badge
-                            variant="outline"
-                            className="border-red-200 bg-red-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-red-700 uppercase"
-                          >
-                            ARCHIVED
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className="border-green-200 bg-green-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-green-700 uppercase"
-                          >
-                            ACTIVE
-                          </Badge>
-                        )}
-                      </td>
-                      <td className="p-3 px-6 text-right">
-                        <div className="inline-flex items-center justify-end gap-2">
-                          {!showArchived && (
-                            <Button
+                  {filteredCourses.map((c) => {
+                    const isDisabled = showArchived
+                      ? c.status !== "Archived"
+                      : c.status === "Archived";
+                    
+                    return (
+                      <tr
+                        key={c.id}
+                        onClick={(e) => {
+                          if (!isDisabled) toggleCourseSelected(c.id, e);
+                        }}
+                        onDoubleClick={(e) => {
+                          e.preventDefault();
+                        }}
+                        className={`group transition-colors hover:bg-gray-50 select-none cursor-pointer ${
+                          c.status === "Archived" ? "opacity-75" : ""
+                        } ${
+                          selectedCourses[c.id]
+                            ? showArchived
+                              ? "bg-emerald-50/20"
+                              : "bg-red-50/20"
+                            : ""
+                        } ${isDisabled ? "cursor-not-allowed" : ""}`}
+                      >
+                        <td className="p-3 px-6 text-center">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20"
+                            checked={!!selectedCourses[c.id]}
+                            onChange={(e) => {
+                              // Prevent click from bubbling to tr
+                              e.stopPropagation();
+                              toggleCourseSelected(c.id);
+                            }}
+                            disabled={isDisabled}
+                          />
+                        </td>
+                        <td className="p-3 px-6 font-black tracking-tight text-gray-900">
+                          {c.code}
+                        </td>
+                        <td className="p-3 px-6 font-medium text-gray-700">
+                          {c.name}
+                        </td>
+                        <td className="p-3 px-6 text-left">
+                          {c.status === "Archived" ? (
+                            <Badge
                               variant="outline"
-                              size="sm"
-                              disabled={c.status === "Archived"}
-                              onClick={() => {
-                                setEditCourse({
-                                  id: c.id,
-                                  code: c.code,
-                                  name: c.name,
-                                })
-                                const currentBlocks = sections
-                                  .filter((s) => s.course_code === c.code)
-                                  .map((s) => s.name)
-                                setEditCourseBlocks(
-                                  currentBlocks.length > 0
-                                    ? currentBlocks
-                                    : [""]
-                                )
-                                setIsEditCourseOpen(true)
-                              }}
-                              className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                              className="border-red-200 bg-red-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-red-700 uppercase"
                             >
-                              <i className="ph-bold ph-pencil-simple text-xs"></i>
-                              EDIT
-                            </Button>
+                              ARCHIVED
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="border-green-200 bg-green-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-green-700 uppercase"
+                            >
+                              ACTIVE
+                            </Badge>
                           )}
+                        </td>
+                        <td className="p-3 px-6 text-right">
+                          <div 
+                            className="inline-flex items-center justify-end gap-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {!showArchived && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={c.status === "Archived"}
+                                onClick={() => {
+                                  setEditCourse({
+                                    id: c.id,
+                                    code: c.code,
+                                    name: c.name,
+                                  })
+                                  const currentBlocks = sections
+                                    .filter((s) => s.course_code === c.code)
+                                    .map((s) => s.name)
+                                  setEditCourseBlocks(
+                                    currentBlocks.length > 0
+                                      ? currentBlocks
+                                      : [""]
+                                  )
+                                  setIsEditCourseOpen(true)
+                                }}
+                                className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                              >
+                                <i className="ph-bold ph-pencil-simple text-xs"></i>
+                                EDIT
+                              </Button>
+                            )}
 
                           {c.status === "Archived" ? (
                             <Button
@@ -690,9 +712,9 @@ export default function CoursesTab({
                           )}
                         </div>
                       </td>
-                    </tr>
-                  ))}
-                  {filteredCourses.length === 0 && (
+                      </tr>
+                      );
+                      })}                  {filteredCourses.length === 0 && (
                     <tr className="border-0 hover:bg-transparent">
                       <td colSpan={5} className="border-0 p-0">
                         <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500">

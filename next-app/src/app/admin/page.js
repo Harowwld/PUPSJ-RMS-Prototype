@@ -60,7 +60,22 @@ function AdminPageContent() {
     create: true,
   })
 
-  const [view, setView] = useState("directory")
+  const validViews = [
+    "directory",
+    "create",
+    "review",
+    "digitization",
+    "request_analytics",
+    "storage_layout",
+    "system_data",
+    "system",
+    "logs",
+  ]
+  const initialView = validViews.includes(searchParams?.get("view"))
+    ? searchParams.get("view")
+    : "directory"
+
+  const [view, setView] = useState(initialView)
   const [viewLoading, setViewLoading] = useState({
     directory: false,
     logs: false,
@@ -177,6 +192,11 @@ function AdminPageContent() {
     studentNo: "",
     refId: "",
   })
+
+  // Unsaved Changes Protection
+  const [isStorageDirty, setIsStorageDirty] = useState(false)
+  const [pendingView, setPendingView] = useState(null)
+  const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false)
 
   const showToast = useCallback(
     (msg, typeOrIsError = false, autoHide = true) => {
@@ -448,7 +468,7 @@ function AdminPageContent() {
   )
 
   useEffect(() => {
-    const tab = String(searchParams?.get("tab") || "").trim()
+    const tab = String(searchParams?.get("view") || searchParams?.get("tab") || "").trim()
     const mine = searchParams?.get("mine") === "1"
     const allowedTabs = new Set([
       "directory",
@@ -460,6 +480,7 @@ function AdminPageContent() {
       "request_analytics",
       "system",
       "backup",
+      "storage_layout",
     ])
     if (allowedTabs.has(tab)) setView(tab)
     setLogsMineOnly(mine)
@@ -472,7 +493,9 @@ function AdminPageContent() {
         const res = await fetch("/api/auth/me")
         const json = await res.json().catch(() => null)
         if (!res.ok || !json?.ok) {
-          router.push("/")
+          if (res.status === 401) {
+            router.push("/")
+          }
           return
         }
         setAuthUser(json.data)
@@ -482,8 +505,8 @@ function AdminPageContent() {
           refreshStaff()
           refreshSystemHealth()
         }, 0)
-      } catch {
-        router.push("/")
+      } catch (err) {
+        console.error("[AdminPage] Profile fetch failed:", err)
       }
     })()
   }, [router, refreshStaff, refreshAuditLogs, refreshSystemHealth])
@@ -520,9 +543,19 @@ function AdminPageContent() {
     }
   }, [view, refreshReviewRecords])
 
-  const switchView = useCallback(
+  const performSwitchView = useCallback(
     (nextView) => {
+      if (nextView === "storage_layout") {
+        setIsStorageDirty(false)
+      }
       setView(nextView)
+      // Update URL without a full refresh
+      const params = new URLSearchParams(window.location.search)
+      params.set("view", nextView)
+      router.replace(`${window.location.pathname}?${params.toString()}`, {
+        scroll: false,
+      })
+
       if (nextView === "directory" && !loadedViewsRef.current.directory) {
         setTimeout(() => {
           refreshStaff()
@@ -547,8 +580,29 @@ function AdminPageContent() {
         }, 0)
       }
     },
-    [refreshAuditLogs, refreshBackups, refreshStaff, refreshReviewRecords]
+    [refreshAuditLogs, refreshBackups, refreshStaff, refreshReviewRecords, router]
   )
+
+  const switchView = useCallback(
+    (nextView) => {
+      if (isStorageDirty && view === "storage_layout") {
+        setPendingView(nextView)
+        setDiscardConfirmOpen(true)
+        return
+      }
+      performSwitchView(nextView)
+    },
+    [isStorageDirty, view, performSwitchView]
+  )
+
+  const confirmDiscardChanges = useCallback(() => {
+    setIsStorageDirty(false)
+    setDiscardConfirmOpen(false)
+    if (pendingView) {
+      performSwitchView(pendingView)
+      setPendingView(null)
+    }
+  }, [pendingView, performSwitchView])
 
   const reviewDocumentStatus = useCallback(
     async (id, approvalStatus, reviewNote = "") => {
@@ -737,6 +791,7 @@ function AdminPageContent() {
     } catch {
       /* ignore */
     }
+    localStorage.setItem("pup-logout", Date.now())
     router.push("/")
   }
 
@@ -1271,22 +1326,14 @@ function AdminPageContent() {
       iconClass: "ph-bold ph-seal-check",
     },
     {
-      type: "accordion",
-      key: "analytics",
-      label: "System Analytics",
-      iconClass: "ph-bold ph-chart-line-up",
-      children: [
-        {
-          key: "digitization",
-          label: "Compliance Analysis",
-          iconClass: "ph-bold ph-chart-bar",
-        },
-        {
-          key: "request_analytics",
-          label: "Request Analysis",
-          iconClass: "ph-bold ph-trend-up",
-        },
-      ],
+      key: "digitization",
+      label: "Compliance Analysis",
+      iconClass: "ph-bold ph-chart-bar",
+    },
+    {
+      key: "request_analytics",
+      label: "Request Analysis",
+      iconClass: "ph-bold ph-trend-up",
     },
 
     { type: "header", label: "System Configuration" },
@@ -1431,7 +1478,11 @@ function AdminPageContent() {
           )}
 
           {view === "storage_layout" && (
-            <StorageLayoutEditorTab showToast={showToast} />
+            <StorageLayoutEditorTab 
+              showToast={showToast} 
+              isDirty={isStorageDirty}
+              setIsDirty={setIsStorageDirty}
+            />
           )}
 
           {view === "review" && (
@@ -1515,6 +1566,20 @@ function AdminPageContent() {
       </div>
 
       <Footer />
+
+      <ConfirmModal
+        open={discardConfirmOpen}
+        title="Unsaved Changes"
+        message="You have unsaved layout modifications. Moving to another section will discard these changes."
+        confirmLabel="Discard Changes"
+        variant="warning"
+        onConfirm={confirmDiscardChanges}
+        onCancel={() => {
+          setDiscardConfirmOpen(false)
+          setPendingView(null)
+        }}
+        confirmClassName="bg-linear-to-b from-orange-700 to-orange-500 border-4 border-orange-900 hover:from-orange-600 hover:to-orange-800 text-white font-black uppercase tracking-widest text-[10px] h-11 px-8 rounded-xl shadow-lg shadow-orange-900/20 active:scale-95 transition-all"
+      />
 
       <EditUserModal
         open={editOpen}

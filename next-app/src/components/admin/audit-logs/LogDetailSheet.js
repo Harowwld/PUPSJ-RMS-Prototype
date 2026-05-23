@@ -163,7 +163,7 @@ export default function LogDetailSheet({
                         <Button
                           variant="outline"
                           size="icon"
-                          onClick={() => handleCopy(selectedLog.details, "Event description")}
+                          onClick={() => handleCopy(selectedLog.details || "No known description", "Event description")}
                           className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon shadow-xs transition-all"
                         >
                           <i className="ph-bold ph-copy text-xs"></i>
@@ -175,7 +175,7 @@ export default function LogDetailSheet({
                     </Tooltip>
                   </div>
                   <p className="text-sm leading-relaxed font-medium text-gray-700">
-                    {selectedLog.details}
+                    {selectedLog.details || "No known description"}
                   </p>
                 </div>
 

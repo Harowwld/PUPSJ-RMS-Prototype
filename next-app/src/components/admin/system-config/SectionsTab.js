@@ -539,68 +539,90 @@ export default function SectionsTab({
                     <td className="p-3 px-6 text-right"></td>
                   </tr>
                 )}
-                {filteredSections.map((sec) => (
-                  <tr
-                    key={sec.id}
-                    className={`group transition-colors hover:bg-gray-50 ${sec.status === "Archived" ? "opacity-75" : ""} ${selectedSections[sec.id] ? (showArchived ? "bg-emerald-50/20" : "bg-red-50/20") : ""}`}
-                  >
-                    <td className="p-3 px-6 text-center">
-                      <input
-                        type="checkbox"
-                        className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20"
-                        checked={!!selectedSections[sec.id]}
-                        onChange={() => toggleSectionSelected(sec.id)}
-                        disabled={
-                          showArchived
-                            ? sec.status !== "Archived"
-                            : sec.status === "Archived"
-                        }
-                      />
-                    </td>
-                    <td className="p-3 px-6 font-black text-gray-900">
-                      {sec.course_code || "—"}
-                    </td>
-                    <td className="p-3 px-6 font-medium text-gray-700">
-                      {sec.name}
-                    </td>
-                    <td className="p-3 px-6">
-                      {sec.status === "Archived" ? (
-                        <Badge
-                          variant="outline"
-                          className="border-red-200 bg-red-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-red-700 uppercase"
-                        >
-                          ARCHIVED
-                        </Badge>
-                      ) : (
-                        <Badge
-                          variant="outline"
-                          className="border-green-200 bg-green-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-green-700 uppercase"
-                        >
-                          ACTIVE
-                        </Badge>
-                      )}
-                    </td>
-                    <td className="p-3 px-6 text-right">
-                      <div className="inline-flex items-center justify-end gap-2">
-                        {!showArchived && (
-                          <Button
+                {filteredSections.map((sec) => {
+                  const isDisabled = showArchived
+                    ? sec.status !== "Archived"
+                    : sec.status === "Archived";
+                  
+                  return (
+                    <tr
+                      key={sec.id}
+                      onClick={(e) => {
+                        if (!isDisabled) toggleSectionSelected(sec.id, e);
+                      }}
+                      onDoubleClick={(e) => {
+                        e.preventDefault();
+                      }}
+                      className={`group transition-colors hover:bg-gray-50 select-none cursor-pointer ${
+                        sec.status === "Archived" ? "opacity-75" : ""
+                      } ${
+                        selectedSections[sec.id]
+                          ? showArchived
+                            ? "bg-emerald-50/20"
+                            : "bg-red-50/20"
+                          : ""
+                      } ${isDisabled ? "cursor-not-allowed" : ""}`}
+                    >
+                      <td className="p-3 px-6 text-center">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20"
+                          checked={!!selectedSections[sec.id]}
+                          onChange={(e) => {
+                            // Prevent click from bubbling to tr
+                            e.stopPropagation();
+                            toggleSectionSelected(sec.id);
+                          }}
+                          disabled={isDisabled}
+                        />
+                      </td>
+                      <td className="p-3 px-6 font-black text-gray-900">
+                        {sec.course_code || "—"}
+                      </td>
+                      <td className="p-3 px-6 font-medium text-gray-700">
+                        {sec.name}
+                      </td>
+                      <td className="p-3 px-6">
+                        {sec.status === "Archived" ? (
+                          <Badge
                             variant="outline"
-                            size="sm"
-                            disabled={sec.status === "Archived"}
-                            onClick={() => {
-                              setEditSection({
-                                id: sec.id,
-                                name: sec.name,
-                                courseCode: sec.course_code || "",
-                              })
-                              setIsEditSectionOpen(true)
-                            }}
-                            className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                            className="border-red-200 bg-red-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-red-700 uppercase"
                           >
-                            <i className="ph-bold ph-pencil-simple text-xs"></i>
-                            EDIT
-                          </Button>
+                            ARCHIVED
+                          </Badge>
+                        ) : (
+                          <Badge
+                            variant="outline"
+                            className="border-green-200 bg-green-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-green-700 uppercase"
+                          >
+                            ACTIVE
+                          </Badge>
                         )}
+                      </td>
+                      <td className="p-3 px-6 text-right">
+                        <div 
+                          className="inline-flex items-center justify-end gap-2"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {!showArchived && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={sec.status === "Archived"}
+                              onClick={() => {
+                                setEditSection({
+                                  id: sec.id,
+                                  name: sec.name,
+                                  courseCode: sec.course_code || "",
+                                })
+                                setIsEditSectionOpen(true)
+                              }}
+                              className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                            >
+                              <i className="ph-bold ph-pencil-simple text-xs"></i>
+                              EDIT
+                            </Button>
+                          )}
 
                         {sec.status === "Archived" ? (
                           <Button
@@ -658,10 +680,10 @@ export default function SectionsTab({
                           </Button>
                         )}
                       </div>
-                    </td>
-                  </tr>
-                ))}
-                {filteredSections.length === 0 && (
+                      </td>
+                      </tr>
+                      );
+                      })}                {filteredSections.length === 0 && (
                   <tr className="border-0 hover:bg-transparent">
                     <td colSpan={5} className="border-0 p-0">
                       <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500">

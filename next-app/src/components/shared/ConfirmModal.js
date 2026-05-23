@@ -19,11 +19,13 @@ export default function ConfirmModal({
   onConfirm,
   onCancel,
   isLoading = false,
+  disabled = false,
   variant = "danger",
   selectedItems = [],
   note,
   icon: customIcon,
   buttonIcon: customButtonIcon,
+  confirmClassName,
 }) {
   if (!open) return null;
 
@@ -43,6 +45,7 @@ export default function ConfirmModal({
       description: "text-gray-600",
       confirmVariant: "default",
       buttonIcon: "ph-bold ph-warning",
+      confirmStyle: "bg-linear-to-b from-orange-700 to-orange-500 border-4 border-orange-900 hover:from-orange-600 hover:to-orange-800 text-white shadow-lg shadow-orange-900/20",
     },
     success: {
       icon: "ph-duotone ph-arrow-counter-clockwise",
@@ -135,13 +138,14 @@ export default function ConfirmModal({
             type="button"
             variant={v.confirmVariant}
             onClick={onConfirm}
-            disabled={isLoading}
+            disabled={isLoading || disabled}
             className={cn(
-              "h-11 px-6 text-sm font-bold shadow-sm rounded-brand gap-2 flex items-center",
+              "h-11 px-6 text-sm font-bold shadow-sm rounded-brand gap-2 flex items-center transition-all active:scale-95",
               variant === "success" && "bg-green-600 hover:bg-green-700 text-white",
-              variant === "warning" && "bg-amber-600 hover:bg-amber-700 text-white",
-              (v.confirmVariant === "default" && !["success", "warning"].includes(variant)) && "bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white",
-              v.confirmVariant === "destructive" && "bg-linear-to-b from-red-600 to-red-800 border-[3px] border-red-900 hover:from-red-500 hover:to-red-700 hover:shadow-md transition-all text-white"
+              variant === "warning" && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white"),
+              (v.confirmVariant === "default" && !["success", "warning"].includes(variant)) && "bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white",
+              v.confirmVariant === "destructive" && "bg-linear-to-b from-red-600 to-red-800 border-[3px] border-red-900 hover:from-red-500 hover:to-red-700 hover:shadow-md text-white",
+              confirmClassName
             )}
           >
             <i className={`${displayButtonIcon} text-lg`}></i>

@@ -496,61 +496,83 @@ export default function DocTypesTab({
                       <td className="p-3 px-6 text-right"></td>
                     </tr>
                   )}
-                  {filteredDocTypes.map((dt) => (
-                    <tr
-                      key={dt.id}
-                      className={`group transition-colors hover:bg-gray-50 ${dt.status === "Archived" ? "opacity-75" : ""} ${selectedDocTypes[dt.id] ? (showArchived ? "bg-emerald-50/20" : "bg-red-50/20") : ""}`}
-                    >
-                      <td className="p-3 px-6 text-center">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20"
-                          checked={!!selectedDocTypes[dt.id]}
-                          onChange={() => toggleDocTypeSelected(dt.id)}
-                          disabled={
-                            showArchived
-                              ? dt.status !== "Archived"
-                              : dt.status === "Archived"
-                          }
-                        />
-                      </td>
-                      <td className="p-3 px-6 font-bold text-gray-900">
-                        {dt.name}
-                      </td>
-                      <td className="p-3 px-6">
-                        {dt.status === "Archived" ? (
-                          <Badge
-                            variant="outline"
-                            className="border-red-200 bg-red-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-red-700 uppercase"
-                          >
-                            ARCHIVED
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className="border-green-200 bg-green-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-green-700 uppercase"
-                          >
-                            ACTIVE
-                          </Badge>
-                        )}
-                      </td>
-                      <td className="p-3 px-6 text-right">
-                        <div className="inline-flex items-center justify-end gap-2">
-                          {!showArchived && (
-                            <Button
+                  {filteredDocTypes.map((dt) => {
+                    const isDisabled = showArchived
+                      ? dt.status !== "Archived"
+                      : dt.status === "Archived";
+                    
+                    return (
+                      <tr
+                        key={dt.id}
+                        onClick={(e) => {
+                          if (!isDisabled) toggleDocTypeSelected(dt.id, e);
+                        }}
+                        onDoubleClick={(e) => {
+                          e.preventDefault();
+                        }}
+                        className={`group transition-colors hover:bg-gray-50 select-none cursor-pointer ${
+                          dt.status === "Archived" ? "opacity-75" : ""
+                        } ${
+                          selectedDocTypes[dt.id]
+                            ? showArchived
+                              ? "bg-emerald-50/20"
+                              : "bg-red-50/20"
+                            : ""
+                        } ${isDisabled ? "cursor-not-allowed" : ""}`}
+                      >
+                        <td className="p-3 px-6 text-center">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20"
+                            checked={!!selectedDocTypes[dt.id]}
+                            onChange={(e) => {
+                              // Prevent click from bubbling to tr
+                              e.stopPropagation();
+                              toggleDocTypeSelected(dt.id);
+                            }}
+                            disabled={isDisabled}
+                          />
+                        </td>
+                        <td className="p-3 px-6 font-bold text-gray-900">
+                          {dt.name}
+                        </td>
+                        <td className="p-3 px-6">
+                          {dt.status === "Archived" ? (
+                            <Badge
                               variant="outline"
-                              size="sm"
-                              disabled={dt.status === "Archived"}
-                              onClick={() => {
-                                setEditDocType({ id: dt.id, name: dt.name })
-                                setIsEditDocTypeOpen(true)
-                              }}
-                              className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                              className="border-red-200 bg-red-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-red-700 uppercase"
                             >
-                              <i className="ph-bold ph-pencil-simple text-xs"></i>
-                              EDIT
-                            </Button>
+                              ARCHIVED
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="border-green-200 bg-green-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-green-700 uppercase"
+                            >
+                              ACTIVE
+                            </Badge>
                           )}
+                        </td>
+                        <td className="p-3 px-6 text-right">
+                          <div 
+                            className="inline-flex items-center justify-end gap-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {!showArchived && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={dt.status === "Archived"}
+                                onClick={() => {
+                                  setEditDocType({ id: dt.id, name: dt.name })
+                                  setIsEditDocTypeOpen(true)
+                                }}
+                                className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                              >
+                                <i className="ph-bold ph-pencil-simple text-xs"></i>
+                                EDIT
+                              </Button>
+                            )}
 
                           {dt.status === "Archived" ? (
                             <Button
@@ -603,7 +625,8 @@ export default function DocTypesTab({
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  );
+                })}
                   {filteredDocTypes.length === 0 && (
                     <tr className="border-0 hover:bg-transparent">
                       <td colSpan={4} className="border-0 p-0">

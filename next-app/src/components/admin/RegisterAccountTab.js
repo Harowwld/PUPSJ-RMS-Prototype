@@ -102,31 +102,27 @@ export default function RegisterAccountTab({
             icon="ph-user-plus"
             title="Account Registration"
             description="Provision new network credentials for registrar personnel and administrators."
-            actions={
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={isLoading}
-                  onClick={handleClearForm}
-                  className="h-10 rounded-brand border-gray-300 px-5 text-xs font-black tracking-widest text-gray-700 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon"
-                >
-                  <i className="ph-bold ph-arrow-counter-clockwise mr-1.5 text-sm"></i>
-                  CLEAR FORM
-                </Button>
-              </div>
-            }
           />
 
           <CardContent className="flex-1 overflow-y-auto bg-gray-50/50 p-6">
             <div className="mx-auto max-w-6xl space-y-6">
               {/* Main Registration Form */}
               <Card className="overflow-hidden rounded-brand border-gray-200 bg-white shadow-md">
-                <div className="border-b border-gray-100 bg-gray-50/50 p-5">
+                <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 p-5 px-8">
                   <h3 className="flex items-center gap-2 text-sm font-black tracking-widest text-gray-900 uppercase">
                     <i className="ph-bold ph-list-plus text-pup-maroon"></i>{" "}
                     Enrollment Form
                   </h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={isLoading}
+                    onClick={handleClearForm}
+                    className="h-9 rounded-xl border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon active:scale-95"
+                  >
+                    <i className="ph-bold ph-arrow-counter-clockwise mr-1.5 text-xs"></i>
+                    CLEAR FORM
+                  </Button>
                 </div>
                 <CardContent className="bg-white p-8">
                   <form onSubmit={handleOpenConfirm} className="space-y-8">

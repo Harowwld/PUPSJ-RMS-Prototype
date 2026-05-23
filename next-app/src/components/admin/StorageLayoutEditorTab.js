@@ -11,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton"
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { ROOM_TEMPLATES, getDefaultDoor } from "@/lib/storageLayoutDefaults"
@@ -24,6 +25,8 @@ import CabinetCanvas from "./storage-layout/CabinetCanvas"
 import CabinetSidebar from "./storage-layout/CabinetSidebar"
 import ConflictResolutionModals from "./storage-layout/ConflictResolutionModals"
 import { Select } from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
+import { cn } from "@/lib/utils"
 
 // Utilities
 import {
@@ -34,7 +37,7 @@ import {
   calculatePath,
 } from "@/lib/storageLayoutUtils"
 
-export default function StorageLayoutEditorTab({ showToast, error = null }) {
+export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty, error = null }) {
   const [layout, setLayout] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -44,7 +47,28 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
   const [activeRoomId, setActiveRoomId] = useState(null)
   const [selectedCabinetIds, setSelectedCabinetIds] = useState(new Set())
   const [selectedTemplateId, setSelectedTemplateId] = useState("grid-4x2")
+  const [saveConfirmOpen, setSaveConfirmOpen] = useState(false)
+  const [saveCountdown, setSaveCountdown] = useState(0)
   const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false)
+
+  useEffect(() => {
+    let timer
+    if (saveConfirmOpen) {
+      setSaveCountdown(3)
+      timer = setInterval(() => {
+        setSaveCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    } else {
+      setSaveCountdown(0)
+    }
+    return () => clearInterval(timer)
+  }, [saveConfirmOpen])
   const [deleteRoomConfirmOpen, setDeleteRoomConfirmOpen] = useState(false)
   const [resetRoomConfirmOpen, setResetRoomConfirmOpen] = useState(false)
   const [templateApplyConfirmOpen, setTemplateApplyConfirmOpen] = useState(false)
@@ -62,6 +86,8 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
   const [applyPreviewRows, setApplyPreviewRows] = useState([])
   const [applyReportOpen, setApplyReportOpen] = useState(false)
   const [applyReportRows, setApplyReportRows] = useState([])
+
+  const [selectionBox, setSelectionBox] = useState(null)
 
   const canvasRef = useRef(null)
   const dragRef = useRef(null)
@@ -198,7 +224,8 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
       rooms.sort((a, b) => a.id - b.id)
       return { ...prev, rooms }
     })
-  }, [])
+    setIsDirty?.(true)
+  }, [setIsDirty])
 
   const updateCabinet = useCallback((roomId, cabinetId, updater) => {
     if (cabinetId === "DOOR") {
@@ -220,7 +247,8 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
       })
       return { ...prev, rooms }
     })
-  }, [updateRoom])
+    setIsDirty?.(true)
+  }, [updateRoom, setIsDirty])
 
   function getNextRoomId(rooms) {
     const max = Math.max(0, ...(rooms || []).map((r) => Number(r.id) || 0))
@@ -244,6 +272,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
         rooms: [...prev.rooms, next].sort((a, b) => a.id - b.id),
       }
     })
+    // Explicitly NOT setting dirty for empty room addition per user request
     setSelectedCabinetIds(new Set())
     if (createdRoomId != null) {
       setActiveRoomId(createdRoomId)
@@ -277,6 +306,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
       const rooms = prev.rooms.filter((r) => r.id !== activeRoom.id)
       return { ...prev, rooms }
     })
+    setIsDirty?.(true)
     const fallback =
       layout.rooms.find((r) => r.id !== activeRoom.id)?.id || null
     setActiveRoomId(fallback)
@@ -516,10 +546,14 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
 
   const removeSelectedCabinet = useCallback(() => {
     if (!activeRoom || selectedCabinetIds.size === 0) return
-    updateRoom(activeRoom.id, (r) => ({
-      ...r,
-      cabinets: r.cabinets.filter((c) => !selectedCabinetIds.has(c.id)),
+    
+    const idsToRemove = Array.from(selectedCabinetIds)
+    
+    updateRoom(activeRoom.id, (room) => ({
+      ...room,
+      cabinets: room.cabinets.filter((c) => !idsToRemove.includes(c.id)),
     }))
+    
     setSelectedCabinetIds(new Set())
   }, [activeRoom, selectedCabinetIds, updateRoom])
 
@@ -549,7 +583,8 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
         const oT = b.rect.y
         const oB = b.rect.y + bEff.h
 
-        const buffer = 0.001
+        // Strict intersection check with minimal buffer
+        const buffer = 0.00001
         const intersects = !(
           tR <= oL + buffer ||
           tL >= oR - buffer ||
@@ -568,6 +603,11 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
   const collidingIds = useMemo(() => {
     return findCollisions(activeRoom)
   }, [activeRoom])
+
+  const hasAnyCollisions = useMemo(() => {
+    if (!layout?.rooms) return false
+    return layout.rooms.some((r) => findCollisions(r).size > 0)
+  }, [layout])
 
   const duplicateSelectedCabinet = useCallback(() => {
     if (!activeRoom || !selectedCabinet) return
@@ -658,6 +698,13 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
           y: clamp(dy, 0, 1),
         },
       }))
+    } else if (mode === "marquee") {
+      setSelectionBox({
+        x1: startX,
+        y1: startY,
+        x2: relX,
+        y2: relY,
+      })
     } else if (mode === "move") {
       const dx = relX - startX
       const dy = relY - startY
@@ -681,16 +728,47 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
 
   const handleCanvasPointerUp = useCallback((e) => {
     if (!dragRef.current) return
+    
+    const { mode } = dragRef.current
+
+    if (mode === "marquee" && selectionBox && activeRoom) {
+      const x1 = Math.min(selectionBox.x1, selectionBox.x2)
+      const x2 = Math.max(selectionBox.x1, selectionBox.x2)
+      const y1 = Math.min(selectionBox.y1, selectionBox.y2)
+      const y2 = Math.max(selectionBox.y1, selectionBox.y2)
+
+      const newlySelected = new Set()
+      activeRoom.cabinets.forEach((cab) => {
+        const eff = getCabinetEffectiveSize(cab)
+        const cx1 = cab.rect.x
+        const cx2 = cab.rect.x + eff.w
+        const cy1 = cab.rect.y
+        const cy2 = cab.rect.y + eff.h
+
+        // Check for intersection
+        const intersects = !(
+          cx2 < x1 || 
+          cx1 > x2 || 
+          cy2 < y1 || 
+          cy1 > y2
+        )
+        
+        if (intersects) newlySelected.add(cab.id)
+      })
+      setSelectedCabinetIds(newlySelected)
+    }
+
     dragRef.current = null
+    setSelectionBox(null)
     try {
       e.target.releasePointerCapture(e.pointerId)
     } catch {
       // ignore
     }
-  }, [])
+  }, [selectionBox, activeRoom])
 
   async function saveLayout() {
-    if (!layout) return
+    if (!layout || hasAnyCollisions) return
     setSaving(true)
     try {
       const res = await fetch("/api/storage-layout", {
@@ -700,6 +778,9 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
       })
       const json = await res.json()
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Save failed")
+      
+      setIsDirty?.(false)
+      setSaveConfirmOpen(false)
       showToast?.({
         title: "Layout Saved",
         description: "Your archive room mapping was successfully updated.",
@@ -786,18 +867,57 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
       <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm">
         <PageHeader
           icon="ph-layout"
-          title="Storage Layout Editor"
-          description="Design spatial distributions and organize cabinet placement for institutional efficiency."
-          filters={
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex flex-col gap-1">
-                <label className="ml-1 text-[10px] font-black tracking-widest text-gray-500 uppercase">
-                  Active Room
-                </label>
-                <div className="flex items-center gap-2">
+          title="Room Layout Editor"
+          description="Organize how cabinets are placed and arranged in your storage rooms."
+          actions={
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="inline-block">
+                    <Button
+                      onClick={saveLayout}
+                      disabled={saving || hasAnyCollisions}
+                      className="flex h-11 items-center gap-2 rounded-2xl bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-xl hover:-translate-y-0.5 px-8 font-black tracking-widest text-white uppercase shadow-lg shadow-red-900/20 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale"
+                    >
+                      <i
+                        className={`ph-bold ${saving ? "ph-spinner animate-spin" : "ph-floppy-disk"} text-lg`}
+                      />
+                      {saving ? "SAVING..." : "SAVE CHANGES"}
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                {hasAnyCollisions && (
+                  <TooltipContent side="bottom" className="max-w-xs rounded-xl border-red-200 bg-red-50 p-3 text-[10px] font-bold text-red-700 shadow-xl">
+                    <div className="flex items-center gap-2">
+                       <i className="ph-fill ph-warning-circle text-sm" />
+                       CANNOT SAVE: RESOLVE OVERLAPS
+                    </div>
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          }
+        />
+
+        {/* Integrated Toolbar */}
+        <div className="flex flex-wrap items-center justify-between gap-6 border-b border-gray-100 bg-gray-50/50 p-6 px-8">
+          {/* Room Selection Group */}
+          <div className="flex items-center gap-4">
+            <div className="flex flex-col gap-1.5">
+              <label className="ml-1 text-[10px] font-black tracking-widest text-gray-400 uppercase">
+                Current Room
+              </label>
+              <div className="flex items-center gap-2">
+                <div className="relative group">
+                  <i className={cn(
+                    "absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300",
+                    activeRoomId ? "ph-fill ph-door-open text-pup-maroon" : "ph-bold ph-door-open text-gray-400",
+                    "group-focus-within:text-pup-maroon"
+                  )} />
                   <Select
-                    className="h-10 min-w-[200px] cursor-pointer rounded-brand border border-gray-300 bg-white pr-8 pl-3 text-sm font-bold text-gray-800 shadow-sm focus:ring-2 focus:ring-pup-maroon focus:outline-none"
+                    className="h-11 min-w-[240px] cursor-pointer rounded-xl border border-gray-200 bg-white pl-12 pr-10 text-sm font-bold text-gray-800 shadow-xs transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 disabled:cursor-not-allowed disabled:opacity-50"
                     value={String(activeRoomId ?? "")}
+                    disabled={!layout?.rooms?.length}
                     onChange={(e) => {
                       const nextId = Number(e.target.value)
                       setActiveRoomId(Number.isFinite(nextId) ? nextId : null)
@@ -809,172 +929,164 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                       </option>
                     ))}
                   </Select>
-                  <ButtonGroup className="h-10 shadow-sm">
-                    <div data-slot="button">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button asChild
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={addRoom}
-                            className="h-10 w-10 text-pup-maroon hover:bg-red-50"
-                          >
-                            <div role="button" tabIndex={0}>
-                              <i className="ph-bold ph-plus" />
-                            </div>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">Add New Room</TooltipContent>
-                      </Tooltip>
-                    </div>
+                </div>
+                
+                <div className="flex h-11 items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-xs">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={addRoom}
+                        className="h-9 w-9 rounded-lg text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 active:scale-95"
+                      >
+                        <i className="ph-bold ph-plus-circle text-lg" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="font-bold text-[10px] uppercase">Add Room</TooltipContent>
+                  </Tooltip>
 
-                    <div data-slot="button">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button asChild
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={() => setDeleteRoomConfirmOpen(true)}
-                            className="h-10 w-10 text-gray-600 hover:bg-gray-100 hover:text-red-600"
-                            disabled={!activeRoom || activeRoomStudentCount > 0}
-                          >
-                            <div role="button" tabIndex={0}>
-                              <i className="ph-bold ph-trash" />
-                            </div>
-                          </Button>                      </TooltipTrigger>
-                        <TooltipContent side="bottom">
-                          Delete Active Room
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
+                  <Separator orientation="vertical" className="h-5 mx-0.5 bg-gray-100" />
 
-                    <div data-slot="button">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button asChild
-                            type="button"
-                            variant="outline"
-                            size="icon"
-                            onClick={() => setResetRoomConfirmOpen(true)}
-                            className="h-10 w-10 text-gray-600 hover:bg-gray-100 hover:text-amber-600"
-                            disabled={
-                              !activeRoom ||
-                              !(activeRoom.cabinets?.length > 0) ||
-                              activeRoomStudentCount > 0
-                            }
-                          >
-                            <div role="button" tabIndex={0}>
-                              <i className="ph-bold ph-arrow-counter-clockwise" />
-                            </div>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="bottom">
-                          Clear Room Layout
-                        </TooltipContent>
-                      </Tooltip>
-                    </div>
-                  </ButtonGroup>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setDeleteRoomConfirmOpen(true)}
+                        className="h-9 w-9 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 active:scale-95 disabled:opacity-20"
+                        disabled={!activeRoom || activeRoomStudentCount > 0}
+                      >
+                        <i className="ph-bold ph-trash text-lg" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="font-bold text-[10px] uppercase">Delete Room</TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => setResetRoomConfirmOpen(true)}
+                        className="h-9 w-9 rounded-lg text-gray-400 hover:bg-amber-50 hover:text-amber-600 active:scale-95 disabled:opacity-20"
+                        disabled={
+                          !activeRoom ||
+                          !(activeRoom.cabinets?.length > 0) ||
+                          activeRoomStudentCount > 0
+                        }
+                      >
+                        <i className="ph-bold ph-arrow-counter-clockwise text-lg" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="font-bold text-[10px] uppercase">Reset Room</TooltipContent>
+                  </Tooltip>
                 </div>
               </div>
+            </div>
+          </div>
 
-              <div className="h-10 w-px self-end bg-gray-200" />
+          {/* Core Tools Group */}
+          <div className="flex flex-wrap items-center gap-6">
+            {/* Add Cabinet Action */}
+            <div className="flex flex-col gap-1.5">
+              <label className="ml-1 text-[10px] font-black tracking-widest text-gray-400 uppercase">
+                Add Tools
+              </label>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addCabinet}
+                className="h-11 rounded-xl border border-gray-200 bg-white px-6 font-black text-[10px] tracking-widest text-gray-600 shadow-xs hover:border-gray-300 hover:bg-red-50/50 hover:text-pup-maroon transition-all active:scale-95"
+                disabled={!activeRoom}
+              >
+                <i className="ph-bold ph-plus-square mr-2 text-base" />
+                NEW CABINET
+              </Button>
+            </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="ml-1 text-[10px] font-black tracking-widest text-gray-500 uppercase">
-                  Editor Tools
-                </label>
-                <div className="flex items-center gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={addCabinet}
-                    className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-gray-300 hover:bg-red-50/30"
-                    disabled={!activeRoom}
+            <Separator orientation="vertical" className="hidden xl:block h-10 bg-gray-200" />
+
+            {/* Template Application */}
+            <div className="flex flex-col gap-1.5">
+              <label className="ml-1 text-[10px] font-black tracking-widest text-gray-400 uppercase">
+                Templates
+              </label>
+              <div className="flex h-11 items-center overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs focus-within:ring-2 focus-within:ring-pup-maroon/20 transition-all">
+                <Select
+                  className="h-full cursor-pointer border-r border-gray-100 bg-transparent px-4 text-xs font-bold text-gray-700 focus:outline-none"
+                  value={selectedTemplateId}
+                  onChange={(e) => setSelectedTemplateId(e.target.value)}
+                  disabled={!activeRoom}
+                >
+                  {ROOM_TEMPLATES.map((tpl) => (
+                    <option key={tpl.id} value={tpl.id}>
+                      {tpl.name}
+                    </option>
+                  ))}
+                </Select>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setTemplateApplyConfirmOpen(true)}
+                  className="h-full rounded-none bg-gray-50/50 px-5 text-[10px] font-black tracking-widest uppercase text-pup-maroon hover:bg-pup-maroon hover:text-white transition-all active:opacity-80"
+                  disabled={!activeRoom}
+                >
+                  USE
+                </Button>
+              </div>
+            </div>
+
+            <Separator orientation="vertical" className="hidden lg:block h-10 bg-gray-200" />
+
+            {/* Canvas Controls */}
+            <div className="flex flex-col gap-1.5">
+              <label className="ml-1 text-[10px] font-black tracking-widest text-gray-400 uppercase">
+                View Settings
+              </label>
+              <div className="flex h-11 items-center gap-4 rounded-xl border border-gray-200 bg-white px-5 shadow-xs">
+                <div className="flex items-center gap-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <i className={cn("ph-bold ph-grid-four text-lg transition-colors", showGrid ? "text-pup-maroon" : "text-gray-300")} />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-[9px] font-bold uppercase">Toggle Grid (G)</TooltipContent>
+                  </Tooltip>
+                  <span className="text-[10px] font-black tracking-widest text-gray-500 uppercase select-none">Grid</span>
+                  <div
+                    role="button" tabIndex={0}
+                    onClick={() => setShowGrid(!showGrid)}
+                    className={cn("relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-all duration-300", showGrid ? "bg-pup-maroon" : "bg-gray-200")}
                   >
-                    <i className="ph-bold ph-plus-square mr-2 text-pup-maroon" />{" "}
-                    ADD CABINET
-                  </Button>
-
-                  <div className="flex h-10 items-center overflow-hidden rounded-brand border border-gray-300 shadow-sm">
-                    <Select
-                      className="h-full cursor-pointer border-r border-gray-300 bg-white px-3 text-sm font-bold text-gray-700 focus:outline-none"
-                      value={selectedTemplateId}
-                      onChange={(e) => setSelectedTemplateId(e.target.value)}
-                      disabled={!activeRoom}
-                    >
-                      {ROOM_TEMPLATES.map((tpl) => (
-                        <option key={tpl.id} value={tpl.id}>
-                          {tpl.name}
-                        </option>
-                      ))}
-                    </Select>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={() => setTemplateApplyConfirmOpen(true)}
-                      className="h-full rounded-none bg-gray-50 px-4 text-xs font-black tracking-wider uppercase transition-colors hover:bg-pup-maroon hover:text-white"
-                      disabled={!activeRoom}
-                    >
-                      APPLY
-                    </Button>
+                    <span className={cn("inline-block h-3 w-3 transform rounded-full bg-white shadow-sm transition-transform duration-300", showGrid ? "translate-x-5" : "translate-x-1")} />
                   </div>
+                </div>
 
-                  <div className="flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-3 shadow-sm">
-                    <i
-                      className={`ph-bold ph-grid-four ${showGrid ? "text-pup-maroon" : "text-gray-400"}`}
-                    />
-                    <span className="text-[10px] font-black tracking-widest text-gray-500 uppercase">
-                      Grid
-                    </span>
-                    <div
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => setShowGrid(!showGrid)}
-                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none ${showGrid ? "bg-pup-maroon" : "bg-gray-200"}`}
-                    >
-                      <span
-                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${showGrid ? "translate-x-5" : "translate-x-1"}`}
-                      />
-                    </div>
-                  </div>
+                <Separator orientation="vertical" className="h-4 bg-gray-100" />
 
-                  <div className="flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-3 shadow-sm">
-                    <i
-                      className={`ph-bold ph-magnet-straight ${snapToGrid ? "text-pup-maroon" : "text-gray-400"}`}
-                    />
-                    <span className="text-[10px] font-black tracking-widest text-gray-500 uppercase">
-                      Snap
-                    </span>
-                    <div
-                      role="button"
-                      tabIndex={0}
-                      onClick={() => setSnapToGrid(!snapToGrid)}
-                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-colors focus:outline-none ${snapToGrid ? "bg-pup-maroon" : "bg-gray-200"}`}
-                    >
-                      <span
-                        className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${snapToGrid ? "translate-x-5" : "translate-x-1"}`}
-                      />
-                    </div>
+                <div className="flex items-center gap-2">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <i className={cn("ph-bold ph-magnet-straight text-lg transition-colors", snapToGrid ? "text-pup-maroon" : "text-gray-300")} />
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-[9px] font-bold uppercase">Toggle Snap (S)</TooltipContent>
+                  </Tooltip>
+                  <span className="text-[10px] font-black tracking-widest text-gray-500 uppercase select-none">Snap</span>
+                  <div
+                    role="button" tabIndex={0}
+                    onClick={() => setSnapToGrid(!snapToGrid)}
+                    className={cn("relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-all duration-300", snapToGrid ? "bg-pup-maroon" : "bg-gray-200")}
+                  >
+                    <span className={cn("inline-block h-3 w-3 transform rounded-full bg-white shadow-sm transition-transform duration-300", snapToGrid ? "translate-x-5" : "translate-x-1")} />
                   </div>
                 </div>
               </div>
             </div>
-          }
-          actions={
-            <Button
-              onClick={saveLayout}
-              disabled={saving}
-              className="flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-black tracking-widest text-white uppercase shadow-lg transition-all"
-            >
-              <i
-                className={`ph-bold ${saving ? "ph-spinner animate-spin" : "ph-floppy-disk"} text-lg`}
-              />
-              {saving ? "SAVING..." : "SAVE LAYOUT"}
-            </Button>
-          }
-        />
+          </div>
+        </div>
 
         <div className="relative min-h-0 flex-1 overflow-auto bg-white">
           <div className="grid grid-cols-1 gap-6 p-6 lg:grid-cols-3">
@@ -998,6 +1110,7 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
                 dragRef={dragRef}
                 updateSelectedRectFromNormalized={updateSelectedRectFromNormalized}
                 updateSelectedSizeNormalized={updateSelectedSizeNormalized}
+                selectionBox={selectionBox}
               />
             </div>
 
@@ -1030,13 +1143,13 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
       <ConfirmModal
         open={bulkConfirmOpen}
         onCancel={() => setBulkConfirmOpen(false)}
-        title={selectedCabinetIds.size > 1 ? "Delete Multiple Cabinets" : "Delete Cabinet"}
+        title={selectedCabinetIds.size > 1 ? "Delete Cabinets" : "Delete Cabinet"}
         message={selectedCabinetIds.size > 1 
-          ? `Permanently delete these ${selectedCabinetIds.size} cabinets? This will remove them from the room layout and cannot be undone.`
-          : `Permanently delete this cabinet? This will remove it from the room layout and cannot be undone.`
+          ? `Permanently delete these ${selectedCabinetIds.size} cabinets? This removes them from the room design.`
+          : `Permanently delete this cabinet? This removes it from the room design.`
         }
-        note="Changes are staged locally. You must click 'Save Layout' to finalize deletion."
-        confirmLabel="DELETE PERMANENTLY"
+        note="Changes are staged. Click 'Save Changes' to finalize."
+        confirmLabel="DELETE"
         variant="danger"
         icon="ph-duotone ph-trash"
         buttonIcon="ph-bold ph-trash"
@@ -1046,10 +1159,10 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
       <ConfirmModal
         open={deleteRoomConfirmOpen}
         onCancel={() => setDeleteRoomConfirmOpen(false)}
-        title="Delete Archive Room"
-        message={`Permanently remove Room ${activeRoom?.id}? All layout data for this room will be wiped.`}
-        note="Changes are staged locally. You must click 'Save Layout' to finalize deletion."
-        confirmLabel="DELETE ROOM"
+        title="Delete Room"
+        message={`Delete Room ${activeRoom?.id}? This will remove all cabinets inside.`}
+        note="Changes are staged. Click 'Save Changes' to finalize."
+        confirmLabel="DELETE"
         variant="danger"
         icon="ph-duotone ph-trash"
         buttonIcon="ph-bold ph-trash"
@@ -1062,10 +1175,10 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
       <ConfirmModal
         open={resetRoomConfirmOpen}
         onCancel={() => setResetRoomConfirmOpen(false)}
-        title="Clear Room Layout"
+        title="Reset Room"
         message={`Remove all cabinets from Room ${activeRoom?.id}?`}
-        note="Changes are staged locally. You must click 'Save Layout' to finalize deletion."
-        confirmLabel="CLEAR LAYOUT"
+        note="Changes are staged. Click 'Save Changes' to finalize."
+        confirmLabel="RESET"
         variant="warning"
         onConfirm={() => {
           resetActiveRoomCabinets()
@@ -1076,15 +1189,29 @@ export default function StorageLayoutEditorTab({ showToast, error = null }) {
       <ConfirmModal
         open={templateApplyConfirmOpen}
         onCancel={() => setTemplateApplyConfirmOpen(false)}
-        title="Apply Room Template"
-        message={`Overwrite the current layout of Room ${activeRoom?.id} with the selected template?`}
-        note="Changes are staged locally. You must click 'Save Layout' to finalize."
-        confirmLabel="APPLY TEMPLATE"
+        title="Use Template"
+        message={`Use this template for Room ${activeRoom?.id}? This replaces your current design.`}
+        note="Changes are staged. Click 'Save Changes' to finalize."
+        confirmLabel="USE TEMPLATE"
         variant="warning"
         onConfirm={() => {
           applyTemplateToActiveRoom()
           setTemplateApplyConfirmOpen(false)
         }}
+      />
+
+      <ConfirmModal
+        open={saveConfirmOpen}
+        onCancel={() => setSaveConfirmOpen(false)}
+        title="Save Layout Changes"
+        message="Are you sure you want to save the current room layout? This will update the physical mapping for all student records assigned to these rooms."
+        note="This is a system-wide update."
+        confirmLabel={saveCountdown > 0 ? `SAVE CHANGES (${saveCountdown})` : "SAVE CHANGES"}
+        disabled={saveCountdown > 0}
+        variant="primary"
+        icon="ph-duotone ph-floppy-disk"
+        buttonIcon="ph-bold ph-floppy-disk"
+        onConfirm={saveLayout}
       />
     </div>
   )

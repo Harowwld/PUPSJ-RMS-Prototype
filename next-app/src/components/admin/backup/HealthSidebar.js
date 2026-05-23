@@ -25,20 +25,20 @@ export default function HealthSidebar({
   return (
     <div className="w-[350px] shrink-0 flex flex-col gap-4 animate-in fade-in slide-in-from-right-4 duration-500">
       <Card className="flex flex-col border border-gray-200 bg-white shadow-sm h-full rounded-brand overflow-hidden">
-        <div className="px-6 py-10 border-b border-gray-100 bg-white">
-          <div className="border-l-4 border-pup-maroon pl-5">
-            <h3 className="text-xl font-black tracking-tighter text-gray-900 uppercase leading-none">
+        <div className="border-b border-gray-100 bg-gray-50/50 p-6">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon shadow-sm">
+              <i className="ph-duotone ph-pulse text-2xl"></i>
+            </div>
+            <h3 className="text-xl font-black tracking-tight text-gray-900 uppercase leading-none">
               System Health
             </h3>
-            <p className="text-[9px] font-black text-gray-400 mt-2 uppercase tracking-[0.3em]">
-              Node Diagnostics
-            </p>
           </div>
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
           {/* Main Critical Gauge: Storage */}
-          <div className="flex flex-col items-center py-4 bg-linear-to-b from-gray-50/50 to-white rounded-2xl border border-gray-100 p-5 shadow-xs">
+          <div className="flex flex-col items-center py-4 bg-linear-to-b from-gray-50/50 to-white rounded-2xl border border-gray-200 p-5 shadow-xs">
             <div
               className={`relative mx-auto flex aspect-[2/1] w-full max-w-[160px] items-end justify-center overflow-hidden rounded-t-full transition-all duration-500 ${isCritical ? "animate-pulse" : ""}`}
             >
@@ -46,23 +46,57 @@ export default function HealthSidebar({
                 className={`absolute inset-0 h-full w-full ${isCritical ? "drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" : ""}`}
                 viewBox="0 0 100 50"
               >
+                <defs>
+                  <linearGradient id="gaugeGreen" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#34d399" />
+                    <stop offset="100%" stopColor="#059669" />
+                  </linearGradient>
+                  <linearGradient id="gaugeAmber" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#fbbf24" />
+                    <stop offset="100%" stopColor="#ea580c" />
+                  </linearGradient>
+                  <linearGradient id="gaugeRed" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#ef4444" />
+                    <stop offset="100%" stopColor="#b91c1c" />
+                  </linearGradient>
+                </defs>
+                {/* Background base path */}
                 <path
-                  d="M 10 50 A 40 40 0 0 1 90 50"
+                  d="M 15 42 A 35 35 0 0 1 85 42"
                   fill="none"
                   stroke="#f1f5f9"
-                  strokeWidth="12"
+                  strokeWidth="10"
                   strokeLinecap="round"
                 />
+                {/* Progress Ring "Border" (Matches progress percentage) */}
                 <path
-                  d="M 10 50 A 40 40 0 0 1 90 50"
+                  d="M 15 42 A 35 35 0 0 1 85 42"
                   fill="none"
                   stroke="currentColor"
-                  strokeWidth="12"
+                  strokeWidth="14"
                   strokeLinecap="round"
-                  className={`${diskColorClass} transition-all duration-1000 ease-out`}
-                  strokeDasharray="125.66"
+                  className={cn(
+                    "transition-all duration-1000 ease-out",
+                    diskPercent >= 90 ? "text-red-800" : diskPercent >= 70 ? "text-amber-800" : "text-green-800"
+                  )}
+                  strokeDasharray="109.96"
                   strokeDashoffset={
-                    125.66 * (1 - diskPercent / 100)
+                    109.96 * (1 - diskPercent / 100)
+                  }
+                />
+                {/* Main Progress Ring */}
+                <path
+                  d="M 15 42 A 35 35 0 0 1 85 42"
+                  fill="none"
+                  stroke={
+                    diskPercent >= 90 ? "url(#gaugeRed)" : diskPercent >= 70 ? "url(#gaugeAmber)" : "url(#gaugeGreen)"
+                  }
+                  strokeWidth="10"
+                  strokeLinecap="round"
+                  className="transition-all duration-1000 ease-out"
+                  strokeDasharray="109.96"
+                  strokeDashoffset={
+                    109.96 * (1 - diskPercent / 100)
                   }
                 />
               </svg>
@@ -86,7 +120,7 @@ export default function HealthSidebar({
           </div>
 
           {/* Critical Resource Bars */}
-          <div className="space-y-5 px-1">
+          <div className="space-y-6 px-1">
             {/* Memory Usage */}
             <div className="space-y-2">
               <div className="flex justify-between text-[9px] font-black tracking-widest text-gray-500 uppercase">
@@ -96,9 +130,9 @@ export default function HealthSidebar({
                 </div>
                 <span className="text-gray-900">{systemHealth.memory?.percent || 0}%</span>
               </div>
-              <div className="h-2.5 w-full overflow-hidden rounded-full bg-gray-100 shadow-inner">
+              <div className="h-6 w-full overflow-hidden rounded-full bg-gray-100 shadow-inner border border-gray-200">
                 <div
-                  className="h-full rounded-full bg-linear-to-r from-blue-400 to-indigo-600 transition-all duration-1000"
+                  className="h-full rounded-full bg-linear-to-r from-blue-400 to-indigo-600 border-[3px] border-indigo-800 transition-all duration-1000"
                   style={{ width: `${systemHealth.memory?.percent || 0}%` }}
                 />
               </div>
@@ -113,11 +147,13 @@ export default function HealthSidebar({
                 </div>
                 <span className="text-gray-900">{systemHealth.cpu}%</span>
               </div>
-              <div className="h-2.5 w-full overflow-hidden rounded-full bg-gray-100 shadow-inner">
+              <div className="h-6 w-full overflow-hidden rounded-full bg-gray-100 shadow-inner border border-gray-200">
                 <div
                   className={cn(
-                    "h-full rounded-full transition-all duration-1000",
-                    systemHealth.cpu > 80 ? "bg-linear-to-r from-red-500 to-red-700" : "bg-linear-to-r from-amber-400 to-orange-500"
+                    "h-full rounded-full border-[3px] transition-all duration-1000",
+                    systemHealth.cpu > 80 
+                      ? "bg-linear-to-r from-red-500 to-red-700 border-red-800" 
+                      : "bg-linear-to-r from-amber-400 to-orange-500 border-amber-800"
                   )}
                   style={{ width: `${systemHealth.cpu}%` }}
                 />
@@ -133,9 +169,9 @@ export default function HealthSidebar({
                 </div>
                 <span className="text-emerald-600">{systemHealth.integrityScore}%</span>
               </div>
-              <div className="h-2.5 w-full overflow-hidden rounded-full bg-gray-100 shadow-inner">
+              <div className="h-6 w-full overflow-hidden rounded-full bg-gray-100 shadow-inner border border-gray-200">
                 <div
-                  className="h-full rounded-full bg-linear-to-r from-emerald-400 to-green-600 transition-all duration-1000"
+                  className="h-full rounded-full bg-linear-to-r from-emerald-400 to-green-600 border-[3px] border-emerald-800 transition-all duration-1000"
                   style={{ width: `${systemHealth.integrityScore}%` }}
                 />
               </div>

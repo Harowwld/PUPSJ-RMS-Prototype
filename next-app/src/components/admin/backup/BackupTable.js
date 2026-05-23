@@ -173,9 +173,13 @@ export default function BackupTable({
               sortedAndPaginatedBackups.map((b) => (
                 <tr
                   key={b.id}
-                  className={`group cursor-default transition-all hover:bg-gray-50/80 ${
+                  className={`group cursor-pointer transition-all hover:bg-gray-50/80 ${
                     selectedBackupIds.includes(b.id) ? "bg-red-50/20" : ""
                   }`}
+                  onClick={(e) => {
+                    if (e.target.closest("button") || e.target.closest("input")) return
+                    handleToggleRow(b.id)
+                  }}
                 >
                   <td className="p-3 text-center">
                     <input

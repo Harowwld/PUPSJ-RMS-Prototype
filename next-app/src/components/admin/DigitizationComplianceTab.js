@@ -155,14 +155,30 @@ export default function DigitizationComplianceTab({
 
   const firstLoadRef = useRef(true);
   useEffect(() => {
-    // Sync filters with URL
-    const params = new URLSearchParams(searchParams);
-    params.set("status", statusFilter);
-    if (courseFilter) params.set("course", courseFilter); else params.delete("course");
-    if (requireApproved) params.set("approved", "1"); else params.delete("approved");
+    const params = new URLSearchParams(window.location.search);
     
-    const newUrl = `${window.location.pathname}?${params.toString()}`;
-    window.history.replaceState(null, "", newUrl);
+    // Always enforce the correct view
+    const oldStatus = params.get("status") || "Active";
+    const oldCourse = params.get("course") || "";
+    const oldApproved = params.get("approved") || "0";
+    const currentView = params.get("view");
+
+    // Only update if something actually changed
+    const hasChanged = 
+        oldStatus !== statusFilter || 
+        oldCourse !== courseFilter || 
+        (oldApproved === "1") !== requireApproved ||
+        currentView !== "digitization";
+
+    if (hasChanged) {
+        params.set("view", "digitization");
+        params.set("status", statusFilter);
+        if (courseFilter) params.set("course", courseFilter); else params.delete("course");
+        if (requireApproved) params.set("approved", "1"); else params.delete("approved");
+        
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        router.replace(newUrl, { scroll: false });
+    }
 
     const delay = firstLoadRef.current ? 0 : 350;
     firstLoadRef.current = false;
@@ -170,7 +186,7 @@ export default function DigitizationComplianceTab({
       load();
     }, delay);
     return () => clearTimeout(id);
-  }, [statusFilter, courseFilter, requireApproved, load, searchParams]);
+  }, [statusFilter, courseFilter, requireApproved, load, router]);
 
   const summary = data?.summary;
   const meta = data?.meta;
@@ -348,7 +364,7 @@ export default function DigitizationComplianceTab({
   const hasActiveFilters = statusFilter !== "Active" || courseFilter !== "" || requireApproved || tableSearch !== "";
 
   return (
-    <div className="flex flex-col w-full h-full gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500 font-inter min-h-0">
+    <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter min-h-0">
       <Card className="flex-1 bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0">
         <PageHeader
           icon="ph-chart-pie"

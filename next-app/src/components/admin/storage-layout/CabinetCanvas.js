@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import {
@@ -13,6 +14,7 @@ import {
   SNAP_STEP,
 } from "@/lib/storageLayoutUtils"
 import { getDefaultDoor } from "@/lib/storageLayoutDefaults"
+import { cn } from "@/lib/utils"
 
 const CabinetCanvas = memo(({
   canvasRef,
@@ -32,7 +34,8 @@ const CabinetCanvas = memo(({
   setBulkConfirmOpen,
   dragRef,
   updateSelectedRectFromNormalized,
-  updateSelectedSizeNormalized
+  updateSelectedSizeNormalized,
+  selectionBox
 }) => {
   return (
     <div
@@ -46,6 +49,23 @@ const CabinetCanvas = memo(({
         // Deselect if clicking the background
         if (e.target === e.currentTarget) {
           setSelectedCabinetIds(new Set())
+
+          const box = canvasRef.current.getBoundingClientRect()
+          const relX = (e.clientX - box.left) / Math.max(1, box.width)
+          const relY = (e.clientY - box.top) / Math.max(1, box.height)
+
+          dragRef.current = {
+            pointerId: e.pointerId,
+            mode: "marquee",
+            startX: relX,
+            startY: relY,
+          }
+          
+          try {
+            e.currentTarget.setPointerCapture(e.pointerId)
+          } catch {
+            // ignore
+          }
         }
       }}
     >
@@ -61,6 +81,19 @@ const CabinetCanvas = memo(({
               linear-gradient(to bottom, rgba(148, 163, 184, 0.3) 1px, transparent 1px)
             `,
             backgroundSize: "2% 2%, 2% 2%, 10% 10%, 10% 10%",
+          }}
+        />
+      )}
+
+      {/* Marquee Selection Box */}
+      {selectionBox && (
+        <div 
+          className="pointer-events-none absolute border border-cyan-500 bg-cyan-500/10 z-50 ring-1 ring-white/50"
+          style={{
+            left: `${Math.min(selectionBox.x1, selectionBox.x2) * 100}%`,
+            top: `${Math.min(selectionBox.y1, selectionBox.y2) * 100}%`,
+            width: `${Math.abs(selectionBox.x2 - selectionBox.x1) * 100}%`,
+            height: `${Math.abs(selectionBox.y2 - selectionBox.y1) * 100}%`,
           }}
         />
       )}
@@ -185,12 +218,12 @@ const CabinetElement = memo(({
 }) => {
   return (
     <div
-      className={`absolute border-2 transition-all duration-75 ${
+      className={`absolute border-2 transition-all duration-75 rounded-sm ${
         isSelected
-          ? "z-10 border-cyan-500 bg-cyan-50/20 shadow-[0_0_0_4px_rgba(6,182,212,0.2)]"
+          ? "z-10 border-cyan-500 bg-cyan-100 shadow-[0_0_0_4px_rgba(6,182,212,0.2)]"
           : isConflict
             ? "z-10 border-red-600 bg-red-50/50 shadow-[0_0_0_4px_rgba(220,38,38,0.2)]"
-            : "border-slate-800 bg-white"
+            : "border-gray-500 bg-gray-100 shadow-sm"
       }`}
       style={{
         left: `${cab.rect.x * 100}%`,
@@ -304,23 +337,18 @@ const CabinetElement = memo(({
           </div>
         </div>
       )}
-      {eff.w >= 0.12 && eff.h >= 0.14 ? (
-        <>
-          <div className="absolute top-2 left-2 text-[10px] font-extrabold text-gray-600">
-            CAB-{cab.id}
-          </div>
-          <div className="absolute top-2 right-2 text-[10px] font-extrabold text-gray-500">
-            {rot === 90 ? "V" : "H"}
-          </div>
-          <div className="absolute right-2 bottom-2 left-2 text-[10px] font-bold text-gray-500">
-            {cab.drawerIds.length} drawers
-          </div>
-        </>
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-gray-700">
+      
+      {/* Precision Frame Overlay (Simulated Depth) */}
+      <div className="absolute inset-0 border border-white/20 pointer-events-none rounded-[1px]" />
+      <div className="absolute inset-[1px] border border-black/5 pointer-events-none rounded-[1px]" />
+
+      <div className="absolute inset-0 flex flex-col items-center justify-center p-2 pointer-events-none">
+        <span className="text-[10px] font-black text-gray-700 uppercase tracking-tighter">
           CAB-{cab.id}
-        </div>
-      )}
+        </span>
+        <div className="mt-1 h-[2px] w-1/3 bg-gray-400/50 rounded-full" />
+      </div>
+
       {isSelected ? (
         <Tooltip>
           <TooltipTrigger asChild>

@@ -1,6 +1,7 @@
 "use client"
 
 import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils"
 
 function Sparkline({ data, color = "#7A1E28" }) {
   if (!data || data.length === 0) return null;
@@ -42,129 +43,121 @@ function Sparkline({ data, color = "#7A1E28" }) {
 export default function StatCards({ isLoading, logStats }) {
   const trends = logStats?.trends || [];
   
+  const stats = [
+    {
+      label: "Total Events",
+      value: logStats?.totalLogs || 0,
+      sublabel: "Cumulative system logs",
+      icon: "ph-duotone ph-scroll",
+      color: "blue",
+      trendData: trends.map(t => t.total)
+    },
+    {
+      label: "Activity Today",
+      value: logStats?.logsToday || 0,
+      sublabel: "Events recorded today",
+      icon: "ph-duotone ph-calendar-check",
+      color: "emerald",
+      trendData: trends.map(t => t.total)
+    },
+    {
+      label: "Auth Attempts",
+      value: logStats?.authEvents || 0,
+      sublabel: "Logins & access events",
+      icon: "ph-duotone ph-fingerprint",
+      color: "amber",
+      trendData: trends.map(t => t.auth)
+    },
+    {
+      label: "Critical Alerts",
+      value: logStats?.criticalEvents || 0,
+      sublabel: "High-priority incidents",
+      icon: "ph-duotone ph-warning-octagon",
+      color: "red",
+      trendData: trends.map(t => t.critical)
+    }
+  ];
+
+  const getColorClasses = (color) => {
+    switch (color) {
+      case "blue": return { 
+        bg: "bg-blue-50/50", border: "border-blue-100", 
+        icon: "text-blue-600", text: "text-blue-900", 
+        sub: "text-blue-600/60", spark: "#2563EB" 
+      };
+      case "emerald": return { 
+        bg: "bg-emerald-50/50", border: "border-emerald-100", 
+        icon: "text-emerald-600", text: "text-emerald-900", 
+        sub: "text-emerald-700/60", spark: "#10B981" 
+      };
+      case "amber": return { 
+        bg: "bg-amber-50/50", border: "border-amber-100", 
+        icon: "text-amber-600", text: "text-amber-900", 
+        sub: "text-amber-700/60", spark: "#D97706" 
+      };
+      case "red": return { 
+        bg: "bg-red-50/50", border: "border-red-100", 
+        icon: "text-red-600", text: "text-red-900", 
+        sub: "text-red-700/60", spark: "#EF4444" 
+      };
+      default: return {};
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-      <div className="group relative overflow-hidden rounded-xl border border-blue-100 bg-blue-50/50 p-5 shadow-sm transition-all hover:border-blue-200">
-        <i className="ph-duotone ph-scroll absolute -right-3 -bottom-3 rotate-12 text-6xl text-blue-600 opacity-5 transition-transform group-hover:scale-110" />
-        <div className="relative z-10">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="mb-1 text-[10px] font-black tracking-widest text-blue-600/60 uppercase">
-                Total Logs
-              </p>
-              {isLoading || !logStats ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <h3 className="text-2xl font-black tracking-tight text-blue-900">
-                  {logStats.totalLogs.toLocaleString()}
-                </h3>
-              )}
-            </div>
-            {!isLoading && trends.length > 0 && (
-              <div className="mt-1">
-                <Sparkline data={trends.map(t => t.total)} color="#2563EB" />
-              </div>
+      {stats.map((stat, i) => {
+        const classes = getColorClasses(stat.color);
+        return (
+          <div 
+            key={i} 
+            className={cn(
+              "group relative overflow-hidden rounded-2xl border p-5 shadow-xs transition-all duration-300 hover:shadow-md",
+              classes.bg,
+              classes.border
             )}
-          </div>
-          {!isLoading && logStats && (
-            <p className="mt-0.5 text-[10px] font-medium text-blue-600/70">
-              Cumulative system events
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="group relative overflow-hidden rounded-xl border border-emerald-100 bg-emerald-50/50 p-5 shadow-sm transition-all hover:border-emerald-200">
-        <i className="ph-duotone ph-calendar-check absolute -right-3 -bottom-3 rotate-12 text-6xl text-emerald-600 opacity-5 transition-transform group-hover:scale-110" />
-        <div className="relative z-10">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="mb-1 text-[10px] font-black tracking-widest text-emerald-700/60 uppercase">
-                Logs Today
-              </p>
-              {isLoading || !logStats ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <h3 className="text-2xl font-black tracking-tight text-emerald-900">
-                  {logStats.logsToday.toLocaleString()}
-                </h3>
-              )}
-            </div>
-            {!isLoading && trends.length > 0 && (
-              <div className="mt-1">
-                <Sparkline data={trends.map(t => t.total)} color="#10B981" />
+          >
+            {/* Background Decorative Icon */}
+            <i className={cn(
+              stat.icon, 
+              "absolute -right-4 -bottom-4 rotate-12 text-7xl opacity-5 transition-transform duration-500 group-hover:scale-125 group-hover:rotate-0"
+            )} />
+            
+            <div className="relative z-10">
+              <div className="flex items-start justify-between">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-black/5">
+                  <i className={cn(stat.icon, "text-xl", classes.icon)} />
+                </div>
+                {!isLoading && stat.trendData.length > 0 && (
+                  <div className="mt-1 opacity-60 transition-opacity group-hover:opacity-100">
+                    <Sparkline data={stat.trendData} color={classes.spark} />
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-          {!isLoading && logStats && (
-            <p className="mt-0.5 text-[10px] font-medium text-emerald-700/70">
-              System events recorded today
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="group relative overflow-hidden rounded-xl border border-amber-100 bg-amber-50/50 p-5 shadow-sm transition-all hover:border-amber-200">
-        <i className="ph-duotone ph-fingerprint absolute -right-3 -bottom-3 rotate-12 text-6xl text-amber-600 opacity-5 transition-transform group-hover:scale-110" />
-        <div className="relative z-10">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="mb-1 text-[10px] font-black tracking-widest text-amber-700/60 uppercase">
-                Auth Events
-              </p>
-              {isLoading || !logStats ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <h3 className="text-2xl font-black tracking-tight text-amber-900">
-                  {logStats.authEvents.toLocaleString()}
-                </h3>
-              )}
-            </div>
-            {!isLoading && trends.length > 0 && (
-              <div className="mt-1">
-                <Sparkline data={trends.map(t => t.auth)} color="#D97706" />
+              
+              <div className="mt-4">
+                <p className={cn("text-[10px] font-black tracking-widest uppercase", classes.sub)}>
+                  {stat.label}
+                </p>
+                {isLoading || !logStats ? (
+                  <Skeleton className="mt-1 h-8 w-24" />
+                ) : (
+                  <div className="flex items-baseline gap-1">
+                    <h3 className={cn("text-2xl font-black tracking-tight", classes.text)}>
+                      {stat.value.toLocaleString()}
+                    </h3>
+                  </div>
+                )}
+                {!isLoading && (
+                  <p className={cn("mt-1 text-[10px] font-bold opacity-70", classes.sub)}>
+                    {stat.sublabel}
+                  </p>
+                )}
               </div>
-            )}
-          </div>
-          {!isLoading && logStats && (
-            <p className="mt-0.5 text-[10px] font-medium text-amber-700/70">
-              Logins and access attempts
-            </p>
-          )}
-        </div>
-      </div>
-
-      <div className="group relative overflow-hidden rounded-xl border border-red-100 bg-red-50/50 p-5 shadow-sm transition-all hover:border-red-200">
-        <i className="ph-duotone ph-warning-octagon absolute -right-3 -bottom-3 rotate-12 text-6xl text-red-600 opacity-5 transition-transform group-hover:scale-110" />
-        <div className="relative z-10">
-          <div className="flex items-start justify-between">
-            <div>
-              <p className="mb-1 text-[10px] font-black tracking-widest text-red-700/60 uppercase">
-                Critical Events
-              </p>
-              {isLoading || !logStats ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <h3
-                  className={`text-2xl font-black tracking-tight ${logStats.criticalEvents > 0 ? "text-red-700" : "text-red-900"}`}
-                >
-                  {logStats.criticalEvents.toLocaleString()}
-                </h3>
-              )}
             </div>
-            {!isLoading && trends.length > 0 && (
-              <div className="mt-1">
-                <Sparkline data={trends.map(t => t.critical)} color="#EF4444" />
-              </div>
-            )}
           </div>
-          {!isLoading && logStats && (
-            <p className="mt-0.5 text-[10px] font-medium text-red-700/70">
-              High-priority security alerts
-            </p>
-          )}
-        </div>
-      </div>
+        );
+      })}
     </div>
-  )
+  );
 }

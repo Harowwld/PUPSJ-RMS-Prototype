@@ -45,33 +45,35 @@ export default function BackupPagination({
         </div>
       </div>
 
-      <div className="flex shrink-0 items-center gap-2 select-none">
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page <= 1}
-          onClick={() => setPage((p) => p - 1)}
-          className="h-9 rounded-brand border-gray-200 bg-white px-4 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon active:scale-95 disabled:opacity-20"
-        >
-          <i className="ph-bold ph-caret-left mr-2 text-base"></i>
-          PREV
-        </Button>
-        
-        <div className="flex h-9 min-w-[36px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm">
-          {page}
-        </div>
+      {totalPages > 1 && (
+        <div className="flex shrink-0 items-center gap-2 select-none">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page <= 1}
+            onClick={() => setPage((p) => p - 1)}
+            className="h-9 rounded-brand border-gray-200 bg-white px-4 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon active:scale-95 disabled:opacity-20"
+          >
+            <i className="ph-bold ph-caret-left mr-2 text-base"></i>
+            PREV
+          </Button>
+          
+          <div className="flex h-9 min-w-[36px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm">
+            {page}
+          </div>
 
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={page >= totalPages}
-          onClick={() => setPage((p) => p + 1)}
-          className="h-9 rounded-brand border-gray-200 bg-white px-4 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon active:scale-95 disabled:opacity-20"
-        >
-          NEXT
-          <i className="ph-bold ph-caret-right ml-2 text-base"></i>
-        </Button>
-      </div>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={page >= totalPages}
+            onClick={() => setPage((p) => p + 1)}
+            className="h-9 rounded-brand border-gray-200 bg-white px-4 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon active:scale-95 disabled:opacity-20"
+          >
+            NEXT
+            <i className="ph-bold ph-caret-right ml-2 text-base"></i>
+          </Button>
+        </div>
+      )}
     </div>
   )
 }

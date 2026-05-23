@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
+import { isAdminRole, isStaffRole } from "@/lib/roleUtils"
 
 /**
  * Higher-order component that protects routes requiring authentication
@@ -51,8 +52,8 @@ export function AuthGuard({ allowedRoles = [], children, redirectTo = "/" }) {
 
         const user = json.data
 
-        // Check if user is active
-        if (user.status !== "Active") {
+        // Check if user is active (case-insensitive for safety)
+        if (String(user.status || "").toLowerCase() !== "active") {
           console.log("[AuthGuard] Inactive user access attempt:", user.status)
           router.push(redirectTo)
           return
@@ -61,9 +62,21 @@ export function AuthGuard({ allowedRoles = [], children, redirectTo = "/" }) {
         // Check role requirements
         if (allowedRoles.length > 0) {
           const userRole = String(user.role || "").toLowerCase()
-          const hasRequiredRole = allowedRoles.some(
-            (role) => String(role).toLowerCase() === userRole
-          )
+          
+          let hasRequiredRole = false
+          if (allowedRoles.includes("Admin")) {
+            if (isAdminRole(userRole)) hasRequiredRole = true
+          }
+          if (!hasRequiredRole && allowedRoles.includes("Staff")) {
+            if (isStaffRole(userRole)) hasRequiredRole = true
+          }
+          
+          // Fallback to strict array comparison if not explicitly handled
+          if (!hasRequiredRole) {
+            hasRequiredRole = allowedRoles.some(
+              (role) => String(role).toLowerCase() === userRole
+            )
+          }
 
           if (!hasRequiredRole) {
             console.log("[AuthGuard] Insufficient role privileges:", {
@@ -72,7 +85,7 @@ export function AuthGuard({ allowedRoles = [], children, redirectTo = "/" }) {
             })
 
             // Redirect staff to appropriate page if they try to access admin
-            if (userRole.includes("staff") && allowedRoles.includes("Admin")) {
+            if (isStaffRole(userRole) && allowedRoles.includes("Admin")) {
               router.push("/staff")
               return
             }
