@@ -93,6 +93,10 @@ export default function ScanUploadTab({
   setRotation,
 }) {
   const [clearInboxOpen, setClearInboxOpen] = useState(false)
+  const [pendingDroppedFile, setPendingDroppedFile] = useState(null)
+  const [confirmDropOpen, setConfirmDropOpen] = useState(false)
+  const [windowDragActive, setWindowDragActive] = useState(false)
+
   const fe = uploadFieldErrors || {}
   const ring = (key) =>
     fe[key] ? "ring-2 ring-orange-400 border-orange-400" : ""
@@ -189,6 +193,131 @@ export default function ScanUploadTab({
     },
   })
 
+  useEffect(() => {
+    if (uploadMode !== "pdf" || (!uploadedFile && !hf.selectedRow)) return
+
+    let dragCounter = 0
+
+    const handleDragEnter = (e) => {
+      e.preventDefault()
+      dragCounter++
+      if (dragCounter === 1) {
+        setWindowDragActive(true)
+      }
+    }
+
+    const handleDragLeave = (e) => {
+      e.preventDefault()
+      dragCounter--
+      if (dragCounter === 0) {
+        setWindowDragActive(false)
+      }
+    }
+
+    const handleDragOver = (e) => {
+      e.preventDefault()
+    }
+
+    const handleDrop = (e) => {
+      e.preventDefault()
+      dragCounter = 0
+      setWindowDragActive(false)
+      setDropActive(false)
+    }
+
+    window.addEventListener("dragenter", handleDragEnter)
+    window.addEventListener("dragleave", handleDragLeave)
+    window.addEventListener("dragover", handleDragOver)
+    window.addEventListener("drop", handleDrop)
+
+    return () => {
+      window.removeEventListener("dragenter", handleDragEnter)
+      window.removeEventListener("dragleave", handleDragLeave)
+      window.removeEventListener("dragover", handleDragOver)
+      window.removeEventListener("drop", handleDrop)
+    }
+  }, [uploadMode, uploadedFile, hf.selectedRow, setDropActive])
+
+  const [pdfPreviewDataUrl, setPdfPreviewDataUrl] = useState(null)
+  const [pdfRendering, setPdfRendering] = useState(false)
+
+  useEffect(() => {
+    let active = true
+    const file = uploadedFile
+    const selectedRow = hf.selectedRow
+    const previewUrl = hf.previewUrl
+
+    const mime = selectedRow ? hf.previewMime : file?.type
+    const isPdf =
+      mime === "application/pdf" ||
+      (!mime &&
+        (file?.name?.toLowerCase()?.endsWith(".pdf") ||
+          selectedRow?.original_filename?.toLowerCase()?.endsWith(".pdf")))
+
+    if (!isPdf) {
+      setPdfPreviewDataUrl(null)
+      setPdfRendering(false)
+      return
+    }
+
+    const renderPdfToImage = async () => {
+      setPdfRendering(true)
+      try {
+        let data
+        if (selectedRow && previewUrl) {
+          const res = await fetch(previewUrl)
+          if (!res.ok) throw new Error("Failed to fetch PDF file")
+          data = await res.arrayBuffer()
+        } else if (file) {
+          data = await file.arrayBuffer()
+        }
+
+        if (!data || !active) return
+
+        const pdfjs = await import("pdfjs-dist/build/pdf.mjs")
+        pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.mjs"
+
+        const loadingTask = pdfjs.getDocument({ data })
+        const pdf = await loadingTask.promise
+        if (!active) return
+
+        const page = await pdf.getPage(1)
+        if (!active) return
+
+        const viewport = page.getViewport({ scale: 1.5 })
+        const canvas = document.createElement("canvas")
+        const context = canvas.getContext("2d")
+        canvas.height = viewport.height
+        canvas.width = viewport.width
+
+        const renderContext = {
+          canvasContext: context,
+          viewport: viewport,
+        }
+
+        await page.render(renderContext).promise
+        if (!active) return
+
+        const dataUrl = canvas.toDataURL("image/png")
+        if (active) {
+          setPdfPreviewDataUrl(dataUrl)
+          setPdfRendering(false)
+        }
+      } catch (err) {
+        console.error("Failed to render PDF preview:", err)
+        if (active) {
+          setPdfRendering(false)
+        }
+      }
+    }
+
+    renderPdfToImage()
+
+    return () => {
+      active = false
+    }
+  }, [uploadedFile, hf.selectedRow, hf.previewUrl, hf.previewMime])
+
   const handlePdfFileSelect = (file) => {
     if (!file) return
     hf.clearIngestSelection()
@@ -214,7 +343,12 @@ export default function ScanUploadTab({
     if (!isPdf && !isImg) {
       return
     }
-    handlePdfFileSelect(f)
+    if (uploadedFile) {
+      setPendingDroppedFile(f)
+      setConfirmDropOpen(true)
+    } else {
+      handlePdfFileSelect(f)
+    }
   }
 
   const normalizedTypedName = String(newRec?.name || "")
@@ -369,6 +503,25 @@ export default function ScanUploadTab({
                 onCancel={() => setClearInboxOpen(false)}
                 isLoading={hf.loading}
                 variant="danger"
+              />
+
+              <ConfirmModal
+                open={confirmDropOpen}
+                title="Replace loaded document?"
+                message="An existing document is already loaded in the preview area. Are you sure you want to replace it with the new file?"
+                confirmLabel="REPLACE FILE"
+                onConfirm={() => {
+                  if (pendingDroppedFile) {
+                    handlePdfFileSelect(pendingDroppedFile)
+                  }
+                  setPendingDroppedFile(null)
+                  setConfirmDropOpen(false)
+                }}
+                onCancel={() => {
+                  setPendingDroppedFile(null)
+                  setConfirmDropOpen(false)
+                }}
+                variant="warning"
               />
 
               <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
@@ -749,7 +902,20 @@ export default function ScanUploadTab({
 
               {/* Unified Preview Overlay (for both Scanner Inbox and Manual Drops) */}
               {uploadMode === "pdf" && (hf.selectedRow || uploadedFile) ? (
-                <div className="absolute inset-0 z-10 flex flex-col overflow-hidden rounded-brand bg-white">
+                <div
+                  className={`absolute inset-0 z-10 flex flex-col overflow-hidden rounded-brand bg-white border-2 border-dashed transition-all duration-200 ${
+                    dropActive ? "border-pup-maroon bg-red-50/60" : "border-transparent"
+                  }`}
+                  onDragOver={(e) => {
+                    e.preventDefault()
+                    setDropActive(true)
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault()
+                    setDropActive(false)
+                  }}
+                  onDrop={onPdfDrop}
+                >
                   <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-4 py-2.5">
                     <div className="min-w-0">
                       <div className="text-[10px] font-black tracking-widest text-gray-400 uppercase">
@@ -799,17 +965,17 @@ export default function ScanUploadTab({
                       </div>
                     </div>
                   </div>
-                  <div className="min-h-0 flex-1 overflow-hidden bg-gray-100">
+                  <div className="min-h-0 flex-1 overflow-hidden bg-gray-100 relative">
                     {(() => {
                       const url = hf.selectedRow ? hf.previewUrl : manualPreviewUrl
                       const mime = hf.selectedRow ? hf.previewMime : uploadedFile?.type
                       const isImg = String(mime || "").startsWith("image/")
 
-                      if (isImg) {
+                      if (isImg || pdfPreviewDataUrl) {
                         return (
-                          <div className="relative flex h-full w-full items-center justify-center p-4">
+                          <div className="relative flex h-full w-full items-center justify-center p-4 animate-fade-in">
                             <img
-                              src={url}
+                              src={isImg ? url : pdfPreviewDataUrl}
                               alt="Preview"
                               className="max-h-full max-w-full rounded-md object-contain shadow-2xl transition-transform duration-300"
                               draggable="false"
@@ -818,15 +984,55 @@ export default function ScanUploadTab({
                           </div>
                         )
                       }
+
+                      if (pdfRendering) {
+                        return (
+                          <div className="flex h-full w-full flex-col items-center justify-center bg-gray-100 p-8">
+                            <div className="h-10 w-10 animate-spin rounded-full border border-gray-300/20 border-t-pup-maroon mb-3" />
+                            <div className="text-xs font-bold text-gray-500 uppercase tracking-widest animate-pulse">
+                              Generating PDF Preview…
+                            </div>
+                          </div>
+                        )
+                      }
+
                       return (
-                        <iframe
-                          title="preview"
-                          src={url}
-                          className="h-full w-full border-0 transition-transform duration-300"
-                          style={{ transform: `rotate(${rotation}deg)` }}
-                        />
+                        <div className="flex h-full w-full items-center justify-center bg-gray-100 p-8 text-xs font-bold text-gray-400">
+                          PREVIEW NOT AVAILABLE
+                        </div>
                       )
                     })()}
+
+                    {windowDragActive && (
+                      <div
+                        className="absolute inset-0 z-30 flex items-center justify-center bg-red-50/70 border-4 border-dashed border-pup-maroon animate-fade-in"
+                        onDragOver={(e) => {
+                          e.preventDefault()
+                          setDropActive(true)
+                        }}
+                        onDragLeave={(e) => {
+                          e.preventDefault()
+                          setDropActive(false)
+                        }}
+                        onDrop={(e) => {
+                          setWindowDragActive(false)
+                          setDropActive(false)
+                          onPdfDrop(e)
+                        }}
+                      >
+                        <div className="flex flex-col items-center justify-center p-6 bg-white/95 rounded-2xl border border-gray-100 shadow-xl max-w-xs text-center pointer-events-none animate-scale-up">
+                          <div className="w-14 h-14 rounded-full bg-red-50 border border-red-100 flex items-center justify-center mb-3">
+                            <i className="ph-duotone ph-file-arrow-up text-2xl text-pup-maroon"></i>
+                          </div>
+                          <p className="text-sm font-bold text-gray-900 leading-tight">
+                            Drop file here to replace preview
+                          </p>
+                          <p className="text-xs font-medium text-gray-500 mt-1">
+                            Requires confirmation
+                          </p>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               ) : null}

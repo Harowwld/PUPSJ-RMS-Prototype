@@ -51,6 +51,7 @@ function statusUi(status) {
 export default function NotificationsTab({
   onPreviewDocument,
   onUnreadChange,
+  onRescan,
 }) {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
@@ -353,27 +354,31 @@ export default function NotificationsTab({
                             </td>
                             <td className="p-3">
                               <div className="flex flex-wrap justify-end gap-2">
-                                {n.approval_status === "Declined" ? (
-                                  <span className="inline-flex h-9 items-center rounded-brand border border-gray-200 bg-gray-50 px-3 text-xs font-bold text-gray-400">
-                                    <i className="ph-bold ph-file-x mr-1.5"></i>
-                                    File Removed
-                                  </span>
-                                ) : (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() =>
+                                    onPreviewDocument?.(
+                                      n.doc_type,
+                                      n.student_name,
+                                      n.student_no,
+                                      n.id
+                                    )
+                                  }
+                                  className="h-9 rounded-brand border-gray-300 px-3 text-xs font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon"
+                                >
+                                  <i className="ph-bold ph-eye mr-1.5"></i>
+                                  VIEW
+                                </Button>
+                                {n.approval_status === "Declined" && onRescan && (
                                   <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={() =>
-                                      onPreviewDocument?.(
-                                        n.doc_type,
-                                        n.student_name,
-                                        n.student_no,
-                                        n.id
-                                      )
-                                    }
-                                    className="h-9 rounded-brand border-gray-300 px-3 text-xs font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon"
+                                    onClick={() => onRescan(n.student_no, n.doc_type, n.id, n.original_filename, n.mime_type)}
+                                    className="h-9 rounded-brand border-pup-maroon/30 hover:border-pup-maroon bg-white text-pup-maroon px-3 text-xs font-bold shadow-sm transition-all hover:bg-red-50"
                                   >
-                                    <i className="ph-bold ph-eye mr-1.5"></i>
-                                    VIEW
+                                    <i className="ph-bold ph-arrow-counter-clockwise mr-1.5"></i>
+                                    RE-SCAN
                                   </Button>
                                 )}
                               </div>

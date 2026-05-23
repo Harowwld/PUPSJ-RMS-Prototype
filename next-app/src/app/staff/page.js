@@ -1442,6 +1442,37 @@ function StaffPageContent() {
                 });
                 setPreviewOpen(true);
               }}
+              onRescan={async (studentNo, docType, docId, filename, mimeType) => {
+                const s = students.find((x) => String(x.studentNo || x.student_no || "").trim().toUpperCase() === String(studentNo || "").trim().toUpperCase());
+                if (s) {
+                  applyStudentToPdfForm(s, docType);
+                  setUploadStudentIsExisting(true);
+                } else {
+                  setNewRec((p) => ({
+                    ...p,
+                    studentNo: studentNo || "",
+                    docType: docType || "",
+                  }));
+                  setUploadStudentIsExisting(false);
+                }
+                clearAllUploadFieldErrors();
+                setView("upload");
+
+                if (docId) {
+                  try {
+                    const res = await fetch(`/api/documents/${docId}`);
+                    if (res.ok) {
+                      const blob = await res.blob();
+                      const file = new File([blob], filename || "document.pdf", {
+                        type: mimeType || "application/pdf",
+                      });
+                      setUploadedFile(file);
+                    }
+                  } catch (err) {
+                    console.error("Failed to preload rejected document for rescan:", err);
+                  }
+                }
+              }}
             />
           </TabsContent>
         </main>
