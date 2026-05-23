@@ -57,7 +57,7 @@ async function getWorker() {
       langPath: "/tesseract",
     });
     await worker.setParameters({
-      tessedit_pageseg_mode: "6",
+      tessedit_pageseg_mode: "3", // Fully automatic page segmentation (better for forms/transcripts)
       preserve_interword_spaces: "1",
     });
     return worker;
@@ -312,6 +312,7 @@ const BLACKLIST = new Set([
   "ATTENDING", "PHYSICIAN", "INFORMANT", "SIGNATURE", "CIVIL", "CHURCH",
   "PROVINCE", "MUNICIPALITY", "MOTHER", "FATHER", "CHILD", "SCHOOL",
   "EDUCATION", "UNIVERSITY", "POLYTECHNIC", "SN",
+  "STATISTICIAN", "PRINTED", "GENERIC", "OFFICIAL", "REPRESENTATIVE", "GUARDIAN",
 ]);
 
 function isPlausibleName(s) {
@@ -368,6 +369,24 @@ function detectName(lines) {
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
     const upper = up(line);
+
+    // Skip fields that belong to parents/signatories/non-student entities in standard PH certificates (e.g. Field 6, 13)
+    const numM = upper.match(/^(\d+)/);
+    if (numM && numM[1] !== "1" && numM[1] !== "01") {
+      if (/\bNAME\b/i.test(upper)) {
+        continue;
+      }
+    }
+
+    // Skip placeholder templates like [Name] or (Name)
+    if (/[\[(].*NAME.*[\])]/i.test(upper)) {
+      continue;
+    }
+
+    // Skip parent/signatory/official/template labels
+    if (/\b(?:MAIDEN|FATHER|MOTHER|PARENT|INFORMANT|REGISTRAR|ATTENDANT|PHYSICIAN|WITNESS|OFFICER|CLERK|ADMINISTRATOR|SECRETARY|PREPARED|STATISTICIAN|PRINTED|SIGNATURE|GENERIC|REPRESENTATIVE|GUARDIAN)\b/i.test(upper)) {
+      continue;
+    }
 
     // 3a — "STUDENT NAME:" label (highest priority)
     if (/\bSTUDENT\s+NAME\b/i.test(upper)) {
@@ -429,8 +448,11 @@ function detectName(lines) {
   // ── Strategy 5: raw ALL-CAPS "LASTNAME, FIRSTNAME" line ──
   for (const line of lines) {
     const t = line.trim();
-    if (/^[A-Z\s.'-]+,\s*[A-Z\s.'-]+$/.test(t) && t === up(t)) {
-      if (isPlausibleName(t)) return t;
+    // Allow trailing columns separated by 3 or more spaces (common in tabular scans)
+    const m = t.match(/^([A-Z\s.'-]+,\s*[A-Z\s.'-]+)(?:\s{3,}|$)/);
+    if (m?.[1]) {
+      const nameCand = m[1].trim();
+      if (isPlausibleName(nameCand)) return nameCand;
     }
   }
 
@@ -476,15 +498,79 @@ export function normalizeExtractedName(raw) {
 
 // ─── 6. STUDENT MATCHING ────────────────────────────────────────────────────
 
+/** Regex matching PUP Student Number format allowing common OCR replacements for digits */
+const STUDENT_NO_PATTERN = /\b[0-9OILTZEGSB]{4}[-\s]?[0-9OILTZEGSB]{5}[-\s]?[A-Z]{2}[-\s]?[0-9OILTZEGSB]\b/gi;
+
+function sanitizeStudentNoCandidate(s) {
+  const clean = s.toUpperCase().replace(/[\s-]/g, "");
+  if (clean.length !== 12) return null;
+  
+  let yyyy = clean.slice(0, 4);
+  let nnnnn = clean.slice(4, 9);
+  const aa = clean.slice(9, 11);
+  let d = clean.slice(11);
+  
+  const mapToDigit = (str) => {
+    return str
+      .replace(/O/g, "0")
+      .replace(/I/g, "1")
+      .replace(/L/g, "1")
+      .replace(/T/g, "1")
+      .replace(/Z/g, "2")
+      .replace(/S/g, "5")
+      .replace(/G/g, "6")
+      .replace(/B/g, "8");
+  };
+  
+  yyyy = mapToDigit(yyyy);
+  nnnnn = mapToDigit(nnnnn);
+  d = mapToDigit(d);
+  
+  if (/^\d{4}$/.test(yyyy) && /^\d{5}$/.test(nnnnn) && /^[A-Z]{2}$/.test(aa) && /^\d$/.test(d)) {
+    return `${yyyy}-${nnnnn}-${aa}-${d}`;
+  }
+  return null;
+}
+
+export function detectStudentNo(rawText) {
+  if (!rawText) return null;
+  const matches = rawText.match(STUDENT_NO_PATTERN);
+  if (!matches) return null;
+  for (const m of matches) {
+    const sanitized = sanitizeStudentNoCandidate(m);
+    if (sanitized) return sanitized;
+  }
+  return null;
+}
+
 function normNameMatch(v) {
   return lo(v).replace(/[.,''\u2019`]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function stripMiddleInitial(normalizedName) {
+  const words = normalizedName.split(/\s+/);
+  if (words.length > 2 && words[words.length - 1].length === 1) {
+    return words.slice(0, words.length - 1).join(" ");
+  }
+  return normalizedName;
 }
 
 export function findStudentsByOcrName(ocrName, students) {
   if (!ocrName || !Array.isArray(students)) return [];
   const o = normNameMatch(ocrName);
   if (o.length < 2) return [];
-  return students.filter((s) => normNameMatch(s?.name || s?.Name || "") === o);
+  
+  // 1. Exact normalized match
+  const exact = students.filter((s) => normNameMatch(s?.name || s?.Name || "") === o);
+  if (exact.length > 0) return exact;
+  
+  // 2. Fuzzy match stripping middle initial (if unique)
+  const oStripped = stripMiddleInitial(o);
+  const strippedMatches = students.filter((s) => {
+    const dbNorm = normNameMatch(s?.name || s?.Name || "");
+    return stripMiddleInitial(dbNorm) === oStripped;
+  });
+  return strippedMatches;
 }
 
 export function findStudentsInText(rawText, students) {
@@ -507,6 +593,13 @@ export function findStudentsInText(rawText, students) {
     if (name.includes(",")) {
       const [last, first] = name.split(",").map((x) => x.trim());
       if (first && last && hay.includes(`${first} ${last}`)) { matches.push(s); continue; }
+      
+      // Reversed without middle initial: "FIRSTNAME LASTNAME" ↔ "LASTNAME, FIRSTNAME INITIAL"
+      const firstStripped = stripMiddleInitial(lo(first)).toUpperCase();
+      if (firstStripped && last && hay.includes(`${firstStripped} ${last}`)) {
+        matches.push(s);
+        continue;
+      }
     }
   }
   return matches;
@@ -558,22 +651,38 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
   // ── Detect doc type ──
   const docType = detectDocType(rawText, docTypes);
 
-  // ── Detect name ──
-  const extractedName = detectName(lines);
+  // ── Detect student number ──
+  const extractedStudentNo = detectStudentNo(rawText);
+  let matchedStudent = null;
+  let nameMatchesByName = [];
 
-  // ── Match against student roster ──
-  let nameMatchesByName =
-    extractedName && Array.isArray(students)
-      ? findStudentsByOcrName(extractedName, students)
-      : [];
-
-  // Fallback: full-text fuzzy scan
-  if (nameMatchesByName.length === 0 && Array.isArray(students)) {
-    const fuzzy = findStudentsInText(rawText, students);
-    if (fuzzy.length > 0) nameMatchesByName = fuzzy;
+  if (extractedStudentNo && Array.isArray(students)) {
+    matchedStudent = students.find((s) => {
+      const dbNo = String(s?.studentNo || s?.student_no || "").trim().toUpperCase();
+      return dbNo === extractedStudentNo;
+    });
+    if (matchedStudent) {
+      nameMatchesByName = [matchedStudent];
+    }
   }
 
-  const matchedStudent = nameMatchesByName.length === 1 ? nameMatchesByName[0] : null;
+  // ── Detect name (as fallback if student number did not match) ──
+  const extractedName = matchedStudent ? "" : detectName(lines);
+
+  if (!matchedStudent) {
+    nameMatchesByName =
+      extractedName && Array.isArray(students)
+        ? findStudentsByOcrName(extractedName, students)
+        : [];
+
+    // Fallback: full-text fuzzy scan
+    if (nameMatchesByName.length === 0 && Array.isArray(students)) {
+      const fuzzy = findStudentsInText(rawText, students);
+      if (fuzzy.length > 0) nameMatchesByName = fuzzy;
+    }
+
+    matchedStudent = nameMatchesByName.length === 1 ? nameMatchesByName[0] : null;
+  }
 
   // ── Build final suggested name ──
   let suggestedName = matchedStudent
