@@ -780,11 +780,11 @@ export default function ScanUploadTab({
                 </div>
               ) : (
                 <div
-                  className={`group relative flex h-full min-h-[320px] w-full flex-col overflow-hidden rounded-brand border-2 border-dashed bg-gray-50 transition-all ${
+                  className={`group relative flex h-full min-h-[320px] w-full flex-col overflow-hidden rounded-brand border border-dashed bg-gray-50/50 transition-all ${
                     fe.pdfFile
                       ? "border-orange-400 bg-orange-50/30 ring-2 ring-orange-400"
-                      : "border-gray-400 hover:border-gray-300 hover:bg-red-50/50"
-                  } ${dropActive ? "bg-red-50" : ""}`}
+                      : "border-gray-300 hover:border-pup-maroon/40 hover:bg-red-50/10"
+                  } ${dropActive ? "bg-red-50/50 border-pup-maroon/40" : ""}`}
                   onDragOver={(e) => {
                     e.preventDefault()
                     setDropActive(true)
@@ -903,8 +903,8 @@ export default function ScanUploadTab({
               {/* Unified Preview Overlay (for both Scanner Inbox and Manual Drops) */}
               {uploadMode === "pdf" && (hf.selectedRow || uploadedFile) ? (
                 <div
-                  className={`absolute inset-0 z-10 flex flex-col overflow-hidden rounded-brand bg-white border-2 border-dashed transition-all duration-200 ${
-                    dropActive ? "border-pup-maroon bg-red-50/60" : "border-transparent"
+                  className={`absolute inset-0 z-10 flex flex-col overflow-hidden rounded-brand bg-white border transition-all duration-200 ${
+                    dropActive ? "border-pup-maroon ring-2 ring-pup-maroon/20 bg-red-50/30" : "border-gray-200"
                   }`}
                   onDragOver={(e) => {
                     e.preventDefault()
@@ -1005,7 +1005,7 @@ export default function ScanUploadTab({
 
                     {windowDragActive && (
                       <div
-                        className="absolute inset-0 z-30 flex items-center justify-center bg-red-50/70 border-4 border-dashed border-pup-maroon animate-fade-in"
+                        className="absolute inset-0 z-30 flex items-center justify-center bg-pup-maroon/[0.04] backdrop-blur-md border border-pup-maroon/20 rounded-brand animate-fade-in"
                         onDragOver={(e) => {
                           e.preventDefault()
                           setDropActive(true)
@@ -1020,15 +1020,15 @@ export default function ScanUploadTab({
                           onPdfDrop(e)
                         }}
                       >
-                        <div className="flex flex-col items-center justify-center p-6 bg-white/95 rounded-2xl border border-gray-100 shadow-xl max-w-xs text-center pointer-events-none animate-scale-up">
+                        <div className="flex flex-col items-center justify-center p-6 bg-white/95 rounded-2xl border border-gray-200/80 shadow-2xl max-w-xs text-center pointer-events-none animate-scale-up">
                           <div className="w-14 h-14 rounded-full bg-red-50 border border-red-100 flex items-center justify-center mb-3">
-                            <i className="ph-duotone ph-file-arrow-up text-2xl text-pup-maroon"></i>
+                            <i className="ph-duotone ph-file-arrow-up text-2xl text-pup-maroon animate-bounce"></i>
                           </div>
                           <p className="text-sm font-bold text-gray-900 leading-tight">
                             Drop file here to replace preview
                           </p>
-                          <p className="text-xs font-medium text-gray-500 mt-1">
-                            Requires confirmation
+                          <p className="text-[11px] font-bold text-pup-maroon mt-1.5 uppercase tracking-wider">
+                            Requires Confirmation
                           </p>
                         </div>
                       </div>
