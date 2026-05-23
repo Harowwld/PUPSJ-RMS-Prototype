@@ -87,9 +87,11 @@ function AdminPageContent() {
 
   const [systemHealth, setSystemHealth] = useState({
     cpu: 0,
+    memory: { percent: 0, total: 0, used: 0 },
     disk: { total: 0, free: 0, percent: 0 },
     dbSize: "0 KB",
     dbStatus: "Healthy",
+    integrityScore: 100,
   })
   const [backups, setBackups] = useState([])
   const [backupSearch, setBackupSearch] = useState("")
@@ -100,7 +102,9 @@ function AdminPageContent() {
 
   const [search, setSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState("All")
-  const [statusFilter, setStatusFilter] = useState("All")
+  const [selectedStaffIds, setSelectedStaffIds] = useState(new Set())
+  const [bulkArchiveOpen, setBulkArchiveOpen] = useState(false)
+  const [bulkArchiveLoading, setBulkArchiveLoading] = useState(false)
 
   const [createForm, setCreateForm] = useState({
     id: "",
@@ -110,6 +114,7 @@ function AdminPageContent() {
     email: "",
     status: "Active",
   })
+  const [createLoading, setCreateLoading] = useState(false)
 
   const [editOpen, setEditOpen] = useState(false)
   const [editOriginalId, setEditOriginalId] = useState("")
@@ -737,6 +742,8 @@ function AdminPageContent() {
 
   const handleCreate = async (e, totpToken = null) => {
     if (e && e.preventDefault) e.preventDefault()
+    if (createLoading) return
+    setCreateLoading(true)
     const section = createForm.role === "Admin" ? "Administrative" : "Records"
     const headers = { "Content-Type": "application/json" }
     if (typeof totpToken === "string") {
@@ -790,6 +797,8 @@ function AdminPageContent() {
     } catch (err) {
       if (typeof totpToken === "string") throw err
       showToast({ title: "Creation Failed", description: err.message }, true)
+    } finally {
+      setCreateLoading(false)
     }
   }
 
@@ -925,6 +934,75 @@ function AdminPageContent() {
       showToast({ title: "Account Archival Failed", description: err.message || "An error occurred while attempting to archive the personnel record." }, true)
     } finally {
       setDeleteLoading(false)
+    }
+  }
+
+  const handleBulkArchive = () => {
+    setBulkArchiveOpen(true)
+  }
+
+  const confirmBulkArchive = async (token = null) => {
+    if (bulkArchiveLoading) return
+    setBulkArchiveLoading(true)
+
+    const totpToken = typeof token === "string" ? token : null
+    const headers = { "Content-Type": "application/json" }
+    if (totpToken) headers["x-totp-token"] = totpToken
+
+    try {
+      let successCount = 0
+      let failCount = 0
+      const idsToArchive = Array.from(selectedStaffIds)
+
+      for (const id of idsToArchive) {
+        if (id === authUser?.id) {
+          failCount++
+          continue
+        }
+
+        const res = await fetch(`/api/staff/${id}`, {
+          method: "DELETE",
+          headers,
+        })
+        const json = await res.json()
+
+        if (res.status === 403 && json?.requiresTOTP && !totpToken) {
+          setBulkArchiveLoading(false)
+          await executeWithTOTP(
+            (t) => confirmBulkArchive(t),
+            "Bulk Archive Staff",
+            true
+          )
+          return
+        }
+
+        if (res.ok && json.ok) {
+          setStaffData((prev) => prev.map((s) => (s.id === id ? json.data : s)))
+          successCount++
+        } else {
+          failCount++
+        }
+      }
+
+      showToast({
+        title: "Bulk Archival Complete",
+        description: `Successfully moved ${successCount} personnel record(s) to the archive vault. ${failCount > 0 ? `${failCount} records could not be archived.` : ""}`,
+      })
+      setBulkArchiveOpen(false)
+      setSelectedStaffIds(new Set())
+    } catch (err) {
+      if (totpToken) throw err
+      showToast(
+        {
+          title: "Bulk Archival Failed",
+          description:
+            err.message ||
+            "An unexpected error occurred during batch processing.",
+        },
+        true
+      )
+    } finally {
+      setBulkArchiveLoading(false)
     }
   }
 
@@ -1127,17 +1205,33 @@ function AdminPageContent() {
     })
   }
 
-  const exportData = () => {
+  const exportData = (filteredData) => {
     try {
-      let csv = "ID,First Name,Last Name,Role,Status,Email\n"
-      staffData.forEach((s) => {
-        csv += `${s.id},${s.fname},${s.lname},${s.role},${s.status},${s.email}\n`
-      })
+      const dataToExport = filteredData || staffData
+      const headers = ["ID", "First Name", "Last Name", "Role", "Status", "Email"]
+      const csvRows = dataToExport.map((s) => [
+        s.id,
+        s.fname || "—",
+        s.lname || "—",
+        s.role || "—",
+        s.status || "—",
+        s.email || "—"
+      ])
+      const csvContent = [
+        headers.join(","),
+        ...csvRows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
+      ].join("\n")
+      
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+      const url = URL.createObjectURL(blob)
       const link = document.createElement("a")
       const fileName = generateExportFilename("STAFF-DIRECTORY", "DATA", "csv")
-      link.setAttribute("href", encodeURI("data:text/csv;charset=utf-8," + csv))
+      link.setAttribute("href", url)
       link.setAttribute("download", fileName)
+      document.body.appendChild(link)
       link.click()
+      document.body.removeChild(link)
+      URL.revokeObjectURL(url)
 
       showToast({
         title: "Export Success",
@@ -1146,7 +1240,7 @@ function AdminPageContent() {
 
       logAdminAction({
         action: "Export Personnel List",
-        details: `exported ${staffData.length} staff records to CSV`,
+        details: `exported ${dataToExport.length} staff records to CSV`,
         entityType: "Report"
       })
     } catch (err) {
@@ -1241,8 +1335,8 @@ function AdminPageContent() {
               setSearch={setSearch}
               roleFilter={roleFilter}
               setRoleFilter={setRoleFilter}
-              statusFilter={statusFilter}
-              setStatusFilter={setStatusFilter}
+              selectedIds={selectedStaffIds}
+              onSelectionChange={setSelectedStaffIds}
               onEditUser={(id) => {
                 const u = staffData.find((s) => s.id === id)
                 if (!u) return
@@ -1271,6 +1365,7 @@ function AdminPageContent() {
                   setDeleteOpen(true)
                 }
               }}
+              onBulkArchive={handleBulkArchive}
               onExportData={exportData}
               onSwitchView={switchView}
             />
@@ -1280,6 +1375,7 @@ function AdminPageContent() {
             <RegisterAccountTab
               createForm={createForm}
               setCreateForm={setCreateForm}
+              isLoading={createLoading}
               onResetForm={() =>
                 setCreateForm({
                   id: "",
@@ -1527,6 +1623,32 @@ function AdminPageContent() {
         multiline
       />
 
+      <ConfirmModal
+        open={bulkArchiveOpen}
+        title="Batch Archive Personnel"
+        message={`Move ${selectedStaffIds.size} personnel profiles to the archive vault? This will revoke their system access immediately.`}
+        confirmLabel="Archive Selected"
+        selectedItems={Array.from(selectedStaffIds).map((id) => {
+          const s = staffData.find((x) => x.id === id)
+          return s ? `${s.fname} ${s.lname}` : id
+        })}
+        onConfirm={() => {
+          if (authUser?.totp_enabled) {
+            executeWithTOTP(
+              (token) => confirmBulkArchive(token),
+              "Bulk Archive Staff",
+              true
+            )
+          } else {
+            confirmBulkArchive()
+          }
+        }}
+        onCancel={() => {
+          setBulkArchiveOpen(false)
+        }}
+        isLoading={bulkArchiveLoading}
+      />
+
       <PDFPreviewModal
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
@@ -1594,13 +1716,13 @@ function AdminPageContent() {
               type="button"
               variant="outline"
               onClick={() => setDefaultPwOpen(false)}
-              className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-700 hover:bg-gray-50"
+              className="h-11 rounded-brand border border-gray-300 px-6 text-sm font-bold text-gray-700 hover:bg-gray-50"
             >
               Close
             </Button>
             <Button
               onClick={() => setDefaultPwOpen(false)}
-              className="flex h-11 items-center gap-2 rounded-brand bg-pup-maroon px-6 font-bold text-white shadow-sm hover:bg-red-900"
+              className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-bold text-white shadow-sm"
             >
               <i className="ph-bold ph-check"></i>
               Acknowledge

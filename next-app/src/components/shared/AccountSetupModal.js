@@ -284,7 +284,7 @@ export default function AccountSetupModal({ authUser }) {
                   <Button
                     type="submit"
                     disabled={pwLoading}
-                    className="h-11 bg-pup-maroon px-6 text-xs font-bold tracking-widest text-white uppercase shadow-sm transition-colors hover:bg-red-900"
+                    className="h-11 bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 text-xs font-bold tracking-widest text-white uppercase shadow-sm transition-colors"
                   >
                     {pwLoading
                       ? "Saving..."
@@ -363,7 +363,7 @@ export default function AccountSetupModal({ authUser }) {
                     disabled={
                       secLoading || secSubmitting || questions.length === 0
                     }
-                    className="h-11 bg-pup-maroon px-6 text-xs font-bold tracking-widest text-white uppercase shadow-sm transition-colors hover:bg-red-900"
+                    className="h-11 bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 text-xs font-bold tracking-widest text-white uppercase shadow-sm transition-colors"
                   >
                     {secSubmitting ? "Saving..." : "Complete Setup & Enter"}
                   </Button>

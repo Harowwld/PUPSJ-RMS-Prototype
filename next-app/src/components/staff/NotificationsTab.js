@@ -23,6 +23,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import PageHeader from "@/components/shared/PageHeader"
+import { Select } from "@/components/ui/select"
 
 function statusUi(status) {
   const s = String(status || "Pending")
@@ -167,7 +168,7 @@ export default function NotificationsTab({
                 variant="outline"
                 size="sm"
                 onClick={load}
-                className="h-10 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon"
+                className="h-10 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon"
               >
                 <i className="ph-bold ph-arrows-clockwise mr-1.5"></i>
                 REFRESH
@@ -177,7 +178,7 @@ export default function NotificationsTab({
                 size="sm"
                 disabled={unreadCount <= 0}
                 onClick={markAllRead}
-                className="h-10 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon"
+                className="h-10 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon"
               >
                 <i className="ph-bold ph-checks mr-1.5"></i>
                 MARK ALL AS READ
@@ -369,7 +370,7 @@ export default function NotificationsTab({
                                         n.id
                                       )
                                     }
-                                    className="h-9 rounded-brand border-gray-300 px-3 text-xs font-bold text-gray-700 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon"
+                                    className="h-9 rounded-brand border-gray-300 px-3 text-xs font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon"
                                   >
                                     <i className="ph-bold ph-eye mr-1.5"></i>
                                     VIEW
@@ -415,7 +416,7 @@ export default function NotificationsTab({
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <select
+                              <Select
                                 className="h-7 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-1 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none"
                                 value={itemsPerPage}
                                 onChange={handleItemsPerPageChange}
@@ -425,7 +426,7 @@ export default function NotificationsTab({
                                 <option value={50}>50</option>
                                 <option value={100}>100</option>
                                 <option value={200}>200</option>
-                              </select>
+                              </Select>
                             </TooltipTrigger>
                             <TooltipContent
                               side="top"
@@ -445,11 +446,11 @@ export default function NotificationsTab({
                       size="sm"
                       disabled={displayPage <= 1}
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                      className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
                     >
                       <i className="ph-bold ph-caret-left mr-1"></i> PREV
                     </Button>
-                    <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-2 text-[11px] font-bold text-gray-700 shadow-xs focus-within:border-pup-maroon focus-within:ring-1 focus-within:ring-pup-maroon">
+                    <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-2 text-[11px] font-bold text-gray-700 shadow-xs focus-within:border-gray-300 focus-within:ring-1 focus-within:ring-pup-maroon">
                       <input
                         type="text"
                         className="w-6 bg-transparent text-center focus:outline-none"
@@ -468,7 +469,7 @@ export default function NotificationsTab({
                       onClick={() =>
                         setPage((p) => Math.min(totalPages, p + 1))
                       }
-                      className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                      className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
                     >
                       NEXT <i className="ph-bold ph-caret-right ml-1"></i>
                     </Button>

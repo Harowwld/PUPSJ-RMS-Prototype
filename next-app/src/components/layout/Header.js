@@ -95,7 +95,7 @@ export default function Header({ authUser, onLogout, children }) {
 
         <div className="ml-4">
           <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-            <DropdownMenuTrigger className="group flex items-center gap-3 rounded-brand border border-gray-200 bg-white/90 px-3 py-1.5 shadow-xs transition-all hover:border-pup-maroon/40 hover:bg-red-50/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pup-maroon">
+            <DropdownMenuTrigger className="group flex items-center gap-3 rounded-brand border border-gray-200 bg-white/90 px-3 py-1.5 shadow-xs transition-all hover:border-gray-300/40 hover:bg-red-50/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pup-maroon">
               <div className="h-9 w-9 shrink-0 rounded-brand bg-gray-100 flex items-center justify-center text-xs font-semibold text-gray-700">
                 {initials}
               </div>

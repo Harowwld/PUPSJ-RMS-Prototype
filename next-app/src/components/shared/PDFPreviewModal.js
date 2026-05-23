@@ -125,7 +125,7 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
               href={`/api/documents/${docId}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex h-11 items-center rounded-brand border border-pup-maroon bg-white px-6 text-sm font-bold tracking-wide text-pup-maroon uppercase shadow-sm transition-colors hover:bg-red-50"
+              className="inline-flex h-11 items-center rounded-brand border border-gray-300 bg-white px-6 text-sm font-bold tracking-wide text-pup-maroon uppercase shadow-sm transition-colors hover:bg-red-50"
             >
               <i className="ph-bold ph-arrow-square-out mr-2 text-lg"></i>
               Open Full View

@@ -80,8 +80,8 @@ export default function DefaultPasswordModal({
                 onClick={handleCopy}
                 className={`absolute top-1/2 right-3 flex -translate-y-1/2 items-center gap-1.5 rounded-brand px-3 py-1.5 text-xs font-bold transition-all ${
                   copied
-                    ? "border border-green-200 bg-green-100 text-green-700"
-                    : "border border-red-200 bg-white text-pup-maroon shadow-sm hover:bg-red-50"
+                    ? "border-2 border-green-200 bg-green-100 text-green-700"
+                    : "border-2 border-red-200 bg-white text-pup-maroon shadow-sm hover:bg-red-50"
                 }`}
               >
                 <i
@@ -108,7 +108,7 @@ export default function DefaultPasswordModal({
           </Button>
           <Button
             onClick={onClose}
-            className="flex h-11 items-center gap-2 rounded-brand bg-pup-maroon px-6 font-bold text-white shadow-sm hover:bg-red-900"
+            className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-bold text-white shadow-sm"
           >
             <i className="ph-bold ph-check text-lg"></i>
             I&apos;ve Recorded This

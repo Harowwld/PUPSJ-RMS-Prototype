@@ -106,7 +106,7 @@ const CabinetCanvas = memo(({
         <div className="relative flex h-12 w-12 items-center justify-center">
           <div className="absolute bottom-0 left-0 h-full w-[3px] bg-pup-maroon" />
           <div className="absolute bottom-0 left-0 h-[3px] w-full bg-slate-400 group-hover:bg-slate-600" />
-          <div className="absolute inset-0 rounded-tr-full border-t-2 border-r-2 border-pup-maroon/30 group-hover:border-pup-maroon/60" />
+          <div className="absolute inset-0 rounded-tr-full border-t-2 border-r-2 border-gray-300/30 group-hover:border-gray-300/60" />
 
           <div className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 rounded bg-slate-900 px-2 py-1 text-[10px] font-black tracking-widest whitespace-nowrap text-white uppercase opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
             ENTRANCE
@@ -327,7 +327,7 @@ const CabinetElement = memo(({
             <div
               role="button"
               tabIndex={0}
-              className="absolute -right-1.5 -bottom-1.5 flex h-5 w-5 cursor-se-resize items-center justify-center rounded-sm border border-pup-maroon bg-white leading-none text-pup-maroon shadow"
+              className="absolute -right-1.5 -bottom-1.5 flex h-5 w-5 cursor-se-resize items-center justify-center rounded-sm border border-gray-300 bg-white leading-none text-pup-maroon shadow"
               onPointerDown={(e) => {
                 if (!canvasRef.current) return
                 e.preventDefault()

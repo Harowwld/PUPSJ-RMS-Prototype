@@ -239,16 +239,17 @@ export default function AuditLogsTab({
                   size="sm"
                   onClick={handleDownloadCSV}
                   disabled={logTotal === 0 || isExporting}
-                  className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border-gray-300 text-[10px] font-bold text-gray-600 hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-50 shadow-sm transition-colors"
+                  className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border-gray-300 text-[10px] font-bold text-gray-600 hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-50 shadow-sm transition-colors"
                 >
                   <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv"} text-base`}></i>
                   {isExporting ? "PREPARING..." : "EXPORT CSV"}
                 </Button>
                 <Button
+                  variant="default"
                   size="sm"
                   onClick={handlePreviewPDF}
                   disabled={logTotal === 0 || isExporting}
-                  className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand bg-pup-maroon text-[10px] font-bold text-white hover:bg-red-900 active:scale-95 disabled:opacity-50 shadow-sm transition-all"
+                  className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-[10px] font-black text-white active:scale-95 disabled:opacity-50 shadow-lg shadow-red-900/20 transition-all"
                 >
                   <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-pdf"} text-base`}></i>
                   {isExporting ? "GENERATING..." : "GENERATE PDF"}
@@ -263,7 +264,7 @@ export default function AuditLogsTab({
               <div className="flex flex-wrap items-center gap-2">
                 <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">Active Filters:</span>
                 {localSearch && (
-                  <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon">
+                  <div className="flex items-center gap-1 rounded-full border border-gray-300/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon">
                     Search: {localSearch}
                     <button
                       onClick={() => { setLocalSearch(""); setLogSearch(""); setLogPage(1); }}
@@ -318,7 +319,7 @@ export default function AuditLogsTab({
                     setLogEndDate("")
                     setLogPage(1)
                   }}
-                  className="h-6 rounded-full border border-dashed border-pup-maroon/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
+                  className="h-6 rounded-full border border-dashed border-gray-300/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
                 >
                   CLEAR ALL FILTERS
                 </Button>

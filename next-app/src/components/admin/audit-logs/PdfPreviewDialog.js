@@ -114,14 +114,14 @@ export default function PdfPreviewDialog({
           <Button
             variant="outline"
             onClick={() => setPdfPreviewOpen(false)}
-            className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 uppercase hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon shadow-sm transition-colors"
+            className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 uppercase hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon shadow-sm transition-colors"
           >
             Cancel Preview
           </Button>
           <Button
             onClick={handleDownloadFromPreview}
             disabled={!pdfBlobUrl}
-            className="flex h-11 items-center gap-2 rounded-brand bg-pup-maroon px-6 text-sm font-bold tracking-wide text-white uppercase shadow-sm hover:bg-red-900 disabled:opacity-50"
+            className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 text-sm font-black tracking-wide text-white uppercase shadow-sm disabled:opacity-50"
           >
             <i className="ph-bold ph-download-simple text-lg"></i>
             Download Report

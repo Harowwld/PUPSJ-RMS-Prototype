@@ -75,7 +75,7 @@ export default function SecurityQuestionsTab({
             <Button
               onClick={handleSaveSecurityQuestions}
               disabled={securitySaving}
-              className="flex h-10 w-full items-center gap-2 bg-pup-maroon px-6 font-bold text-white shadow-sm transition-all hover:bg-red-900 active:scale-95 sm:w-auto"
+              className="flex h-10 w-full items-center gap-2 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-6 font-black text-white shadow-sm active:scale-95 sm:w-auto transition-all"
             >
               <i className={`ph-bold ${securitySaving ? "ph-spinner animate-spin" : "ph-check"}`}></i>
               {securitySaving ? "SAVING..." : "SAVE QUESTIONS"}
@@ -139,7 +139,7 @@ export default function SecurityQuestionsTab({
                     <Input
                       type="text"
                       placeholder="e.g. What was the name of your first elementary school?"
-                      className={`h-12 rounded-brand border bg-white text-sm shadow-xs transition-all focus-visible:border-pup-maroon focus-visible:ring-pup-maroon ${
+                      className={`h-12 rounded-brand border bg-white text-sm shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-pup-maroon ${
                         q && q.trim().length > 0 && (q.trim().length < 10 || new Set(q.toLowerCase().replace(/\s/g, "")).size < 5)
                           ? "border-amber-200 focus-visible:border-amber-500 focus-visible:ring-amber-500"
                           : "border-gray-300"
@@ -157,7 +157,7 @@ export default function SecurityQuestionsTab({
                 {visibleCount < 5 && (
                   <button
                     onClick={handleAddQuestion}
-                    className="flex w-fit items-center gap-2 rounded-lg border border-dashed border-gray-300 bg-gray-50/50 px-4 py-3 text-xs font-bold text-gray-500 transition-all hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon"
+                    className="flex w-fit items-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50/50 px-4 py-3 text-xs font-bold text-gray-500 transition-all hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon"
                   >
                     <i className="ph-bold ph-plus"></i>
                     ADD ANOTHER QUESTION

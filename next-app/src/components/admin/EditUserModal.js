@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import { Select } from "@/components/ui/select"
 
 export default function EditUserModal({
   open,
@@ -48,7 +49,7 @@ export default function EditUserModal({
                 <Input
                   type="text"
                   required
-                  className="h-11 rounded-brand border border-gray-300 bg-white font-mono text-sm focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
+                  className="h-11 rounded-brand border border-gray-300 bg-white font-mono text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
                   placeholder="e.g. 2023-001"
                   value={editForm.id}
                   onChange={(e) =>
@@ -60,9 +61,9 @@ export default function EditUserModal({
                 <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 uppercase">
                   System Role <span className="text-pup-maroon">*</span>
                 </label>
-                <select
+                <Select
                   required
-                  className="h-11 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:border-pup-maroon focus:ring-2 focus:ring-pup-maroon focus:outline-none"
+                  className="h-11 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon focus:outline-none"
                   value={editForm.role}
                   onChange={(e) =>
                     setEditForm((f) => ({ ...f, role: e.target.value }))
@@ -73,7 +74,7 @@ export default function EditUserModal({
                   </option>
                   <option value="Admin">Admin</option>
                   <option value="Staff">Staff</option>
-                </select>
+                </Select>
               </div>
             </div>
 
@@ -85,7 +86,7 @@ export default function EditUserModal({
                 <Input
                   type="text"
                   required
-                  className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
+                  className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
                   placeholder="Juan"
                   value={editForm.fname}
                   onChange={(e) =>
@@ -100,7 +101,7 @@ export default function EditUserModal({
                 <Input
                   type="text"
                   required
-                  className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
+                  className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
                   placeholder="Dela Cruz"
                   value={editForm.lname}
                   onChange={(e) =>
@@ -137,7 +138,7 @@ export default function EditUserModal({
             <Button
               type="submit"
               disabled={isLoading}
-              className="flex h-11 items-center gap-2 rounded-brand bg-pup-maroon px-6 font-bold text-white shadow-sm hover:bg-red-900"
+              className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-black text-white shadow-sm"
             >
               <i className="ph-bold ph-floppy-disk"></i>
               {isLoading ? "Saving Changes..." : "Save Changes"}

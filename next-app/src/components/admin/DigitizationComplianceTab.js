@@ -42,6 +42,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import PageHeader from "@/components/shared/PageHeader";
+import { Select } from "@/components/ui/select"
 
 export default function DigitizationComplianceTab({
   showToast,
@@ -361,9 +362,9 @@ export default function DigitizationComplianceTab({
                 size="sm"
                 onClick={handlePreview}
                 disabled={loading || !data || isGeneratingPdf}
-                className="h-10 px-6 font-bold text-xs tracking-wide bg-pup-maroon text-white border border-pup-maroon shadow-sm hover:bg-red-900 active:scale-95 disabled:opacity-60 rounded-brand transition-all uppercase"
+                className="h-10 px-6 font-black text-[10px] tracking-widest bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white shadow-lg shadow-red-900/20 active:scale-95 disabled:opacity-60 rounded-brand uppercase transition-all"
               >
-                <i className={cn("ph-bold text-sm mr-2", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
+                <i className={cn("ph-bold text-base mr-2", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
                 {isGeneratingPdf ? "Generating..." : "Generate Report"}
               </Button>
               <Button
@@ -372,7 +373,7 @@ export default function DigitizationComplianceTab({
                 size="sm"
                 onClick={downloadCsv}
                 disabled={loading || !data || isExportingCsv}
-                className="h-10 px-4 font-bold text-xs tracking-wide border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 active:scale-95 rounded-brand transition-all uppercase"
+                className="h-10 px-4 font-bold text-xs tracking-wide border-gray-300 shadow-sm hover:border-gray-300 hover:bg-red-50/30 active:scale-95 rounded-brand transition-all uppercase"
               >
                 <i className={cn("ph-bold text-sm mr-2 text-pup-maroon", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
                 {isExportingCsv ? "Exporting..." : "Export CSV"}
@@ -394,7 +395,7 @@ export default function DigitizationComplianceTab({
                           size="sm"
                           onClick={load}
                           disabled={loading}
-                          className="h-10 w-10 p-0 text-gray-600 bg-white border border-gray-300 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-90 rounded-brand"
+                          className="h-10 w-10 p-0 text-gray-600 bg-white border border-gray-300 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-90 rounded-brand"
                         >
                           <i
                             className={cn(
@@ -456,7 +457,7 @@ export default function DigitizationComplianceTab({
                     </div>
                 )}
                 {tableSearch && (
-                    <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon uppercase">
+                    <div className="flex items-center gap-1 rounded-full border border-gray-300/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon uppercase">
                     Search: {tableSearch}
                     <button
                         onClick={() => setTableSearch("")}
@@ -470,7 +471,7 @@ export default function DigitizationComplianceTab({
                     variant="ghost"
                     size="sm"
                     onClick={handleClearAll}
-                    className="h-6 rounded-full border border-dashed border-pup-maroon/30 px-3 text-[10px] font-black text-pup-maroon transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase"
+                    className="h-6 rounded-full border-2 border-dashed border-gray-300/30 px-3 text-[10px] font-black text-pup-maroon transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase"
                 >
                     CLEAR ALL FILTERS
                 </Button>
@@ -485,23 +486,23 @@ export default function DigitizationComplianceTab({
                 <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-widest">
                     Student Status
                 </label>
-                <select
-                  className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-pup-maroon/20 focus:border-pup-maroon hover:border-gray-400"
+                <Select
+                  className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-pup-maroon/20 focus:border-gray-300 hover:border-gray-400"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
                   <option value="Active">Active</option>
                   <option value="All">All</option>
                   <option value="Inactive">Inactive</option>
-                </select>
+                </Select>
               </div>
               <div>
                 <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-widest">
                   Course
                 </label>
                 <div className="relative">
-                  <select
-                    className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-pup-maroon/20 focus:border-pup-maroon hover:border-gray-400 disabled:opacity-60"
+                  <Select
+                    className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-pup-maroon/20 focus:border-gray-300 hover:border-gray-400 disabled:opacity-60"
                     value={courseFilter}
                     onChange={(e) => setCourseFilter(e.target.value)}
                     disabled={coursesLoading}
@@ -513,7 +514,7 @@ export default function DigitizationComplianceTab({
                         {c.name ? ` — ${c.name}` : ""}
                       </option>
                     ))}
-                  </select>
+                  </Select>
                   {coursesLoading && (
                     <div className="absolute right-8 top-1/2 -translate-y-1/2">
                       <i className="ph-bold ph-spinner animate-spin text-gray-400" />
@@ -529,7 +530,7 @@ export default function DigitizationComplianceTab({
                   className={cn(
                     "h-10 px-4 gap-2 rounded-brand border border-gray-300 font-bold text-[10px] uppercase tracking-wider transition-all select-none w-full sm:w-auto",
                     "hover:bg-gray-50 hover:text-gray-700 hover:border-gray-400",
-                    "data-[state=on]:bg-pup-maroon data-[state=on]:text-white data-[state=on]:border-pup-maroon data-[state=on]:shadow-md"
+                    "data-[state=on]:bg-pup-maroon data-[state=on]:text-white data-[state=on]:border-gray-300 data-[state=on]:shadow-md"
                   )}
                 >
                   <i
@@ -584,7 +585,7 @@ export default function DigitizationComplianceTab({
                   variant="outline" 
                   size="sm" 
                   onClick={load}
-                  className="mt-6 flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 uppercase tracking-wide" 
+                  className="mt-6 flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 uppercase tracking-wide" 
                 >
                   <i className="ph-bold ph-arrows-clockwise"></i>
                   Retry Connection
@@ -756,7 +757,7 @@ export default function DigitizationComplianceTab({
                         <Input
                         type="text"
                         placeholder="Search by program code..."
-                        className="h-10 w-full rounded-brand border border-gray-300 bg-white pl-10 text-sm focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none placeholder:text-gray-400 placeholder:font-normal"
+                        className="h-10 w-full rounded-brand border border-gray-300 bg-white pl-10 text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none placeholder:text-gray-400 placeholder:font-normal"
                         value={tableSearch}
                         onChange={(e) => setTableSearch(e.target.value)}
                         />
@@ -857,7 +858,7 @@ export default function DigitizationComplianceTab({
                                 variant="outline" 
                                 size="sm" 
                                 onClick={handleClearAll}
-                                className="mt-4 flex items-center gap-2 rounded-brand border border-gray-300 px-4 text-[10px] font-bold text-gray-600 hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon sm:text-xs shadow-sm transition-colors"
+                                className="mt-4 flex items-center gap-2 rounded-brand border border-gray-300 px-4 text-[10px] font-bold text-gray-600 hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon sm:text-xs shadow-sm transition-colors"
                             >
                                 <i className="ph-bold ph-x-circle"></i>
                                 CLEAR ALL FILTERS
@@ -959,14 +960,14 @@ export default function DigitizationComplianceTab({
             <Button
               variant="outline"
               onClick={() => setReportOpen(false)}
-              className="h-11 px-6 font-bold border-gray-300 shadow-sm hover:border-pup-maroon hover:bg-red-50/30 rounded-brand transition-colors"
+              className="h-11 px-6 font-bold border-gray-300 shadow-sm hover:border-gray-300 hover:bg-red-50/30 rounded-brand transition-colors"
             >
               CLOSE PREVIEW
             </Button>
             <Button
               onClick={handlePrint}
               disabled={!pdfBlobUrl}
-              className="flex h-11 items-center gap-2 bg-pup-maroon px-8 font-bold text-white shadow-sm hover:bg-red-900 rounded-brand transition-colors"
+              className="flex h-11 items-center gap-2 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 font-black text-white shadow-sm rounded-brand transition-colors"
             >
               <i className="ph-bold ph-printer text-lg"></i> FINALIZE AND PRINT REPORT
             </Button>

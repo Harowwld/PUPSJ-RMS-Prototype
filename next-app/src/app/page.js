@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { Select } from "@/components/ui/select"
 
 export default function Home() {
   const router = useRouter();
@@ -240,7 +241,7 @@ export default function Home() {
                     <Input
                       type="text"
                       id="username"
-                      className="pl-10 bg-white border border-pup-border rounded-brand text-sm focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                      className="pl-10 bg-white border border-pup-border rounded-brand text-sm focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300"
                       placeholder="e.g. admin@pup.edu.ph"
                       required
                       autoFocus
@@ -271,7 +272,7 @@ export default function Home() {
                     <Input
                       type={showPassword ? "text" : "password"}
                       id="password"
-                      className="pl-10 pr-10 bg-white border border-pup-border rounded-brand text-sm focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                      className="pl-10 pr-10 bg-white border border-pup-border rounded-brand text-sm focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300"
                       placeholder="••••••••"
                       required
                       value={password}
@@ -296,9 +297,7 @@ export default function Home() {
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className={`w-full bg-pup-maroon text-white font-bold text-sm hover:bg-red-900 transition-all shadow-sm flex items-center justify-center gap-2 group mt-2 ${
-                    isLoading ? "opacity-75 cursor-not-allowed" : ""
-                  }`}
+                  className={`w-full bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white font-bold text-sm shadow-sm flex items-center justify-center gap-2 group mt-2 ${ isLoading ? "opacity-75 cursor-not-allowed" : "" } transition-all`}
                 >
                   {isLoading ? (
                     <>
@@ -339,7 +338,7 @@ export default function Home() {
                     <Input
                       type="text"
                       placeholder="e.g. admin or professional.email@pup.edu.ph"
-                      className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                      className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300"
                       value={forgotIdentifier}
                       onChange={(e) => setForgotIdentifier(e.target.value)}
                       autoFocus
@@ -350,7 +349,7 @@ export default function Home() {
                     <Button
                       type="submit"
                       disabled={forgotLoading}
-                      className="w-full bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
+                      className="w-full bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white font-bold shadow-sm rounded-brand"
                     >
                       {forgotLoading ? "Locating..." : "Next Step"}
                     </Button>
@@ -377,7 +376,7 @@ export default function Home() {
 
                   <div className="p-3 bg-gray-50 border border-gray-200 rounded-brand">
                     <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Select Security Question</p>
-                    <select
+                    <Select
                       className="form-select h-11 w-full bg-white border border-gray-300 rounded-brand text-sm px-3 py-2 font-bold text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon"
                       value={forgotQuestionId || ""}
                       onChange={(e) => setForgotQuestionId(Number(e.target.value))}
@@ -385,7 +384,7 @@ export default function Home() {
                       {forgotQuestions.map(q => (
                         <option key={q.id} value={q.id}>{q.question}</option>
                       ))}
-                    </select>
+                    </Select>
                   </div>
 
                   <div>
@@ -395,7 +394,7 @@ export default function Home() {
                     <Input
                       type="password"
                       placeholder="Answer"
-                      className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                      className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300"
                       value={forgotAnswer}
                       onChange={(e) => setForgotAnswer(e.target.value)}
                       autoFocus
@@ -411,7 +410,7 @@ export default function Home() {
                       <Input
                         type="password"
                         placeholder="Min. 6 chars"
-                        className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                        className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300"
                         value={forgotNewPassword}
                         onChange={(e) => setForgotNewPassword(e.target.value)}
                         required
@@ -425,7 +424,7 @@ export default function Home() {
                       <Input
                         type="password"
                         placeholder="Confirm"
-                        className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                        className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300"
                         value={forgotConfirmPassword}
                         onChange={(e) => setForgotConfirmPassword(e.target.value)}
                         required
@@ -437,7 +436,7 @@ export default function Home() {
                     <Button
                       type="submit"
                       disabled={forgotLoading}
-                      className="w-full bg-pup-maroon text-white font-bold shadow-sm hover:bg-red-900 rounded-brand"
+                      className="w-full bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white font-bold shadow-sm rounded-brand"
                     >
                       {forgotLoading ? "Resetting..." : "Reset Password"}
                     </Button>
@@ -490,7 +489,7 @@ export default function Home() {
               <Input
                 type="text"
                 placeholder="000000, Recovery Code, or Serial Key"
-                className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon text-center tracking-widest font-black h-12 text-lg"
+                className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 text-center tracking-widest font-black h-12 text-lg"
                 value={twoFactorCode}
                 onChange={(e) => setTwoFactorCode(e.target.value)}
                 autoFocus
@@ -502,7 +501,7 @@ export default function Home() {
               <Button
                 type="submit"
                 disabled={twoFactorLoading}
-                className="w-full h-11 bg-pup-maroon text-white font-black shadow-sm hover:bg-red-900 rounded-brand uppercase tracking-widest flex items-center justify-center gap-2"
+                className="w-full h-11 bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white font-black shadow-sm rounded-brand uppercase tracking-widest flex items-center justify-center gap-2"
               >
                 {twoFactorLoading ? (
                   <>

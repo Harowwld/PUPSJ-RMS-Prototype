@@ -28,6 +28,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import PageHeader from "@/components/shared/PageHeader";
+import { Select } from "@/components/ui/select"
 
 const STATUS_OPTIONS = [
   "Pending",
@@ -323,7 +324,7 @@ export default function DocumentRequestsTab({
             !loading && !error && (
               <Button
                 type="button"
-                className="bg-pup-maroon hover:bg-red-900 font-bold shrink-0"
+                className="bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all font-bold shrink-0"
                 onClick={() => setCreateOpen(true)}
               >
                 <i className="ph-bold ph-plus mr-1.5"></i>
@@ -344,7 +345,7 @@ export default function DocumentRequestsTab({
               <div className="relative">
                 <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                 <Input
-                  className="h-10 pl-10 rounded-brand border-gray-300 bg-white text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon transition-colors"
+                  className="h-10 pl-10 rounded-brand border-gray-300 bg-white text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 transition-colors"
                   placeholder="Student no., name, document type…"
                   value={q}
                   onChange={(e) => {
@@ -358,8 +359,8 @@ export default function DocumentRequestsTab({
               <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
                 Status
               </label>
-              <select
-                className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+              <Select
+                className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 transition-colors"
                 value={statusFilter}
                 onChange={(e) => {
                   setStatusFilter(e.target.value);
@@ -372,7 +373,7 @@ export default function DocumentRequestsTab({
                     {s}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           </div>
         )}
@@ -383,7 +384,7 @@ export default function DocumentRequestsTab({
             <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">Active Filters:</span>
               {q && (
-                <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon uppercase">
+                <div className="flex items-center gap-1 rounded-full border border-gray-300/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon uppercase">
                   Search: {q}
                   <button
                     onClick={() => { setQ(""); setPage(1); }}
@@ -412,7 +413,7 @@ export default function DocumentRequestsTab({
                   setStatusFilter("");
                   setPage(1);
                 }}
-                className="h-6 rounded-full border border-dashed border-pup-maroon/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase"
+                className="h-6 rounded-full border border-dashed border-gray-300/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase"
               >
                 CLEAR ALL FILTERS
               </Button>
@@ -572,7 +573,7 @@ export default function DocumentRequestsTab({
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <select
+                              <Select
                                 className="h-7 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-1 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none"
                                 value={itemsPerPage}
                                 onChange={handleItemsPerPageChange}
@@ -582,7 +583,7 @@ export default function DocumentRequestsTab({
                                 <option value={50}>50</option>
                                 <option value={100}>100</option>
                                 <option value={200}>200</option>
-                              </select>
+                              </Select>
                             </TooltipTrigger>
                             <TooltipContent side="top" className="rounded-brand">
                               Items per page
@@ -599,11 +600,11 @@ export default function DocumentRequestsTab({
                         size="sm"
                         disabled={page <= 1}
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                        className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
                       >
                         <i className="ph-bold ph-caret-left mr-1"></i> PREV
                       </Button>
-                      <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-2 text-[11px] font-bold text-gray-700 shadow-xs focus-within:border-pup-maroon focus-within:ring-1 focus-within:ring-pup-maroon">
+                      <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-2 text-[11px] font-bold text-gray-700 shadow-xs focus-within:border-gray-300 focus-within:ring-1 focus-within:ring-pup-maroon">
                         <input
                           type="text"
                           className="w-6 bg-transparent text-center focus:outline-none"
@@ -621,7 +622,7 @@ export default function DocumentRequestsTab({
                         size="sm"
                         disabled={page >= totalPages}
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                        className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                        className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
                       >
                         NEXT <i className="ph-bold ph-caret-right ml-1"></i>
                       </Button>
@@ -649,7 +650,7 @@ export default function DocumentRequestsTab({
                       <Button
                         variant="default"
                         size="sm"
-                        className="h-7 px-3 text-[10px] font-black bg-pup-maroon hover:bg-red-900 text-white uppercase shadow-sm"
+                        className="h-7 px-3 text-[10px] font-black bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white uppercase shadow-sm"
                         onClick={handleManualSave}
                         disabled={saving}
                       >
@@ -711,7 +712,7 @@ export default function DocumentRequestsTab({
                         )}
                         <Button
                           type="button"
-                          className="mt-3 w-full bg-pup-maroon hover:bg-red-900 font-bold text-xs"
+                          className="mt-3 w-full bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all font-bold text-xs"
                           disabled={!studentForRequest}
                           onClick={() => {
                             if (!studentForRequest) return;
@@ -731,7 +732,7 @@ export default function DocumentRequestsTab({
                         <label className="text-xs font-bold text-gray-600 uppercase">
                           Status
                         </label>
-                        <select
+                        <Select
                           className="mt-1 h-10 w-full rounded-brand border border-gray-300 bg-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-pup-maroon"
                           value={editStatus}
                           disabled={saving}
@@ -742,7 +743,7 @@ export default function DocumentRequestsTab({
                               {s}
                             </option>
                           ))}
-                        </select>
+                        </Select>
                       </div>
 
                       <div>
@@ -786,7 +787,7 @@ export default function DocumentRequestsTab({
                   Student number
                 </label>
                 <Input
-                  className="mt-1.5 font-mono uppercase bg-white border-gray-300 rounded-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  className="mt-1.5 font-mono uppercase bg-white border-gray-300 rounded-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300"
                   value={createStudentNo}
                   onChange={(e) => setCreateStudentNo(e.target.value)}
                   placeholder="202X-XXXXX-MN-0"
@@ -800,7 +801,7 @@ export default function DocumentRequestsTab({
                         <button
                           key={sn}
                           type="button"
-                          className="w-full text-left px-3 py-2 border-b last:border-b-0 border-gray-100 hover:bg-red-50/50 transition-colors group"
+                          className="w-full text-left px-3 py-2 border-b last:border-b-0 border-gray-300 hover:bg-red-50/50 transition-colors group"
                           onClick={() => {
                             setCreateStudentNo(sn);
                           }}
@@ -821,8 +822,8 @@ export default function DocumentRequestsTab({
                 <label className="text-xs font-bold text-gray-700 uppercase">
                   Document type
                 </label>
-                <select
-                  className="mt-1.5 h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                <Select
+                  className="mt-1.5 h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300"
                   value={createDocType}
                   onChange={(e) => setCreateDocType(e.target.value)}
                   required
@@ -833,14 +834,14 @@ export default function DocumentRequestsTab({
                       {dt}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div>
                 <label className="text-xs font-bold text-gray-700 uppercase">
                   Notes (optional)
                 </label>
                 <textarea
-                  className="mt-1.5 w-full min-h-[72px] rounded-brand border border-gray-300 p-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  className="mt-1.5 w-full min-h-[72px] rounded-brand border border-gray-300 p-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300"
                   value={createNotes}
                   onChange={(e) => setCreateNotes(e.target.value)}
                   placeholder="Requester name, contact, purpose…"
@@ -858,7 +859,7 @@ export default function DocumentRequestsTab({
               </Button>
               <Button
                 type="submit"
-                className="px-5 bg-pup-maroon text-white font-bold hover:bg-red-900 shadow-sm rounded-brand gap-2 flex items-center"
+                className="px-5 bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all font-bold shadow-sm rounded-brand gap-2 flex items-center"
                 disabled={submitting}
               >
                 <i className="ph-bold ph-plus-circle text-lg"></i>
@@ -922,7 +923,7 @@ export default function DocumentRequestsTab({
             {studentForRequest ? (
               <Button
                 type="button"
-                className="px-5 bg-pup-maroon text-white font-bold hover:bg-red-900 shadow-sm rounded-brand gap-2 flex items-center"
+                className="px-5 bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all font-bold shadow-sm rounded-brand gap-2 flex items-center"
                 onClick={() => {
                   setFileWarningOpen(false);
                   onLocateOnMap(studentForRequest);

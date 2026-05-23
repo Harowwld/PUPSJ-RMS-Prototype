@@ -477,7 +477,7 @@ function AccountPageContent() {
                 const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
                 router.push(path);
               }}
-              className="px-6 h-10 font-black uppercase tracking-widest text-xs border-gray-300 hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-sm flex items-center gap-2 shrink-0 rounded-brand"
+              className="px-6 h-10 font-black uppercase tracking-widest text-xs border-gray-300 hover:border-gray-300 hover:text-pup-maroon transition-all shadow-sm flex items-center gap-2 shrink-0 rounded-brand"
             >
               <i className="ph-bold ph-arrow-left"></i>
               Return to Dashboard
@@ -627,7 +627,7 @@ function AccountPageContent() {
                       <Button
                         type="submit"
                         disabled={profileLoading}
-                        className="h-11 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+                        className="h-11 px-8 bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
                       >
                         {profileLoading ? (
                           <i className="ph-bold ph-spinner animate-spin"></i>
@@ -722,7 +722,7 @@ function AccountPageContent() {
                         <Button
                           type="submit"
                           disabled={pwLoading}
-                          className="h-11 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+                          className="h-11 px-8 bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
                         >
                           {pwLoading ? (
                             <i className="ph-bold ph-spinner animate-spin"></i>
@@ -837,7 +837,7 @@ function AccountPageContent() {
                         <Button
                           type="submit"
                           disabled={secLoading || globalQuestions.length === 0}
-                          className="h-11 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+                          className="h-11 px-8 bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
                         >
                           {secLoading ? (
                             <i className="ph-bold ph-spinner animate-spin"></i>
@@ -908,7 +908,7 @@ function AccountPageContent() {
                           <Button
                             onClick={disableTOTP}
                             disabled={totpLoading || totpToken.length !== 6}
-                            className="h-11 px-8 bg-red-600 hover:bg-red-700 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+                            className="h-11 px-8 bg-linear-to-b from-red-600 to-red-800 border-[3px] border-red-900 hover:from-red-500 hover:to-red-700 hover:shadow-md transition-all text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
                           >
                             {totpLoading ? (
                               <i className="ph-bold ph-spinner animate-spin"></i>
@@ -933,7 +933,7 @@ function AccountPageContent() {
                               onClick={generateNewRecoveryCodes}
                               disabled={totpLoading}
                               variant="outline"
-                              className="h-9 px-4 font-bold text-xs uppercase tracking-widest border-gray-300 hover:border-pup-maroon hover:text-pup-maroon rounded-brand"
+                              className="h-9 px-4 font-bold text-xs uppercase tracking-widest border-gray-300 hover:border-gray-300 hover:text-pup-maroon rounded-brand"
                             >
                               {totpLoading ? (
                                 <i className="ph-bold ph-spinner animate-spin mr-2"></i>
@@ -1010,7 +1010,7 @@ function AccountPageContent() {
                           <Button
                             onClick={verifyTOTP}
                             disabled={totpLoading || totpToken.length !== 6}
-                            className="h-11 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+                            className="h-11 px-8 bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
                           >
                             {totpLoading ? (
                               <i className="ph-bold ph-spinner animate-spin"></i>
@@ -1035,7 +1035,7 @@ function AccountPageContent() {
                           <Button
                             onClick={startTOTPSetup}
                             disabled={totpLoading}
-                            className="h-11 px-8 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
+                            className="h-11 px-8 bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-2 rounded-brand"
                           >
                             {totpLoading ? (
                               <i className="ph-bold ph-spinner animate-spin"></i>
@@ -1095,7 +1095,7 @@ function AccountPageContent() {
               </div>
               <Button 
                 onClick={() => setShowRecoveryCodesDialog(false)}
-                className="w-full h-11 bg-pup-maroon hover:bg-red-900 text-white font-black uppercase tracking-widest rounded-brand"
+                className="w-full h-11 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white font-black uppercase tracking-widest rounded-brand"
               >
                 I Have Saved These Codes
               </Button>

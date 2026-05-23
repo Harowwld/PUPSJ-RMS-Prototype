@@ -151,7 +151,7 @@ export default function BackupTable({
                         <Button
                           variant="outline"
                           onClick={onClearFilters}
-                          className="mt-4 flex h-9 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
+                          className="mt-4 flex h-9 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
                         >
                           <i className="ph-bold ph-x-circle"></i>
                           CLEAR ALL FILTERS
@@ -159,7 +159,7 @@ export default function BackupTable({
                       ) : (
                         <Button
                           onClick={handleGenerateBackup}
-                          className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-pup-maroon px-6 text-xs font-bold text-white shadow-md transition-all hover:bg-red-900 active:scale-95"
+                          className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-6 text-xs font-black text-white shadow-md active:scale-95 transition-all"
                         >
                           <i className="ph-bold ph-lightning"></i>
                           CREATE INITIAL SNAPSHOT
@@ -269,7 +269,7 @@ export default function BackupTable({
                               className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[10px] font-black tracking-tight uppercase shadow-sm transition-all active:scale-95 disabled:opacity-50 ${
                                 b.status_external === "Failed"
                                   ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
-                                  : "border-pup-maroon/30 bg-white text-pup-maroon hover:bg-red-50"
+                                  : "border-gray-300/30 bg-white text-pup-maroon hover:bg-red-50"
                               }`}
                             >
                               <i
@@ -305,7 +305,7 @@ export default function BackupTable({
                         variant="outline"
                         size="sm"
                         onClick={() => onDownloadBackup(b.id, b.filename)}
-                        className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
+                        className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
                       >
                         <i className="ph-bold ph-file-zip text-xs"></i>
                         DOWNLOAD

@@ -1,5 +1,4 @@
 import { dbAll, dbGet } from "./sqlite.js";
-import { listDocuments } from "./documentsRepo.js";
 import { listDocTypes } from "./docTypesRepo.js";
 
 function buildDocQualifiesSql(requireApproved) {
@@ -15,7 +14,8 @@ function buildStudentWhere({ studentStatus, courseCode }) {
 
   const cc = String(courseCode || "").trim().toUpperCase();
   if (cc) {
-    filters.push("upper(trim(s.course_code)) = ?");
+    // Direct comparison uses the index on course_code
+    filters.push("s.course_code = ?");
     params.push(cc);
   }
 
@@ -39,8 +39,6 @@ export async function getDigitizationComplianceSummary({
   courseCode,
   requireApproved = false,
 } = {}) {
-  await listDocuments({ limit: 1 });
-
   // 1. Get all doc types currently configured in the system
   const allDocTypes = await listDocTypes();
   const expectedCountPerStudent = allDocTypes.length;
@@ -48,21 +46,23 @@ export async function getDigitizationComplianceSummary({
   const docQualifies = buildDocQualifiesSql(Boolean(requireApproved));
   const { where, params } = buildStudentWhere({ studentStatus, courseCode });
 
-  // 2. Fetch students and their unique document counts
+  // 2. Fetch students and their unique document counts using an optimized JOIN
+  // This avoids the O(N*M) correlated subquery bottleneck by grouping documents first.
   const students = await dbAll(
     `
     SELECT
       s.student_no,
       s.course_code,
       s.year_level,
-      (
-        SELECT COUNT(DISTINCT d.doc_type)
-        FROM documents d
-        WHERE d.student_no = s.student_no
-          AND ${docQualifies}
-          AND d.doc_type IN (${allDocTypes.length ? allDocTypes.map(() => "?").join(",") : "NULL"})
-      ) AS actual_count
+      COALESCE(d_counts.actual_count, 0) AS actual_count
     FROM students s
+    LEFT JOIN (
+      SELECT student_no, COUNT(DISTINCT doc_type) AS actual_count
+      FROM documents d
+      WHERE ${docQualifies}
+        AND d.doc_type IN (${allDocTypes.length ? allDocTypes.map(() => "?").join(",") : "NULL"})
+      GROUP BY student_no
+    ) d_counts ON s.student_no = d_counts.student_no
     ${where}
     `,
     [...(allDocTypes.length ? allDocTypes : []), ...params]

@@ -10,6 +10,7 @@ import {
 import { Calendar } from "@/components/ui/calendar"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
+import { Select } from "@/components/ui/select"
 
 export default function LogFilters({
   localSearch,
@@ -85,7 +86,7 @@ export default function LogFilters({
             <Input
               type="text"
               placeholder="User, action, details..."
-              className="h-10 w-full rounded-brand border border-gray-300 bg-white pl-10 text-sm focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
+              className="h-10 w-full rounded-brand border border-gray-300 bg-white pl-10 text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
               value={localSearch}
               onChange={handleSearchChange}
             />
@@ -213,8 +214,8 @@ export default function LogFilters({
           <label className="mb-1 block text-xs font-bold text-gray-700 uppercase">
             Role
           </label>
-          <select
-            className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:border-pup-maroon focus:ring-2 focus:ring-pup-maroon focus:outline-none"
+          <Select
+            className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon focus:outline-none"
             value={logRoleFilter}
             onChange={handleRoleChange}
           >
@@ -222,7 +223,7 @@ export default function LogFilters({
             <option value="Admin">Admin</option>
             <option value="Staff">Staff</option>
             <option value="System">System</option>
-          </select>
+          </Select>
         </div>
 
         {/* Severity Filter */}
@@ -230,8 +231,8 @@ export default function LogFilters({
           <label className="mb-1 block text-xs font-bold text-gray-700 uppercase">
             Severity
           </label>
-          <select
-            className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:border-pup-maroon focus:ring-2 focus:ring-pup-maroon focus:outline-none"
+          <Select
+            className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon focus:outline-none"
             value={logSeverityFilter}
             onChange={handleSeverityChange}
           >
@@ -239,7 +240,7 @@ export default function LogFilters({
             <option value="INFO">Info</option>
             <option value="WARNING">Warning</option>
             <option value="CRITICAL">Critical</option>
-          </select>
+          </Select>
         </div>
       </div>
     </div>

@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { formatPHDateTime } from "@/lib/timeFormat";
+import { Select } from "@/components/ui/select"
 
 export default function AccountActivityPage() {
   const router = useRouter();
@@ -146,7 +147,7 @@ export default function AccountActivityPage() {
           <Button
             variant="outline"
             onClick={() => router.push("/account")}
-            className="h-11 px-6 font-black uppercase tracking-widest text-xs border-gray-300 hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-sm flex items-center gap-2 shrink-0 rounded-brand group"
+            className="h-11 px-6 font-black uppercase tracking-widest text-xs border-gray-300 hover:border-gray-300 hover:text-pup-maroon transition-all shadow-sm flex items-center gap-2 shrink-0 rounded-brand group"
           >
             <i className="ph-bold ph-arrow-left transition-transform group-hover:-translate-x-1"></i>
             Return to Account
@@ -155,7 +156,7 @@ export default function AccountActivityPage() {
 
         {/* Stat Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm relative overflow-hidden group hover:border-pup-maroon/30 transition-all">
+          <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm relative overflow-hidden group hover:border-gray-300/30 transition-all">
             <i className="ph-duotone ph-list-numbers absolute -right-3 -bottom-3 text-6xl opacity-5 text-pup-maroon rotate-12 group-hover:scale-110 transition-transform" />
             <div className="relative z-10">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Activity</p>
@@ -172,7 +173,7 @@ export default function AccountActivityPage() {
             </div>
           </div>
 
-          <div className="bg-[#fdf6f6] rounded-xl p-5 border border-[#7a1e28]/10 shadow-sm relative overflow-hidden group hover:border-pup-maroon/30 transition-all">
+          <div className="bg-[#fdf6f6] rounded-xl p-5 border border-[#7a1e28]/10 shadow-sm relative overflow-hidden group hover:border-gray-300/30 transition-all">
             <i className="ph-duotone ph-calendar-check absolute -right-3 -bottom-3 text-6xl opacity-10 text-pup-maroon rotate-12 group-hover:scale-110 transition-transform" />
             <div className="relative z-10">
               <p className="text-[10px] font-black text-[#9e5a62] uppercase tracking-widest mb-1">Actions Today</p>
@@ -189,7 +190,7 @@ export default function AccountActivityPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm relative overflow-hidden group hover:border-pup-maroon/30 transition-all">
+          <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm relative overflow-hidden group hover:border-gray-300/30 transition-all">
             <i className="ph-duotone ph-fingerprint absolute -right-3 -bottom-3 text-6xl opacity-5 text-pup-maroon rotate-12 group-hover:scale-110 transition-transform" />
             <div className="relative z-10">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Auth Events</p>
@@ -206,7 +207,7 @@ export default function AccountActivityPage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm relative overflow-hidden group hover:border-pup-maroon/30 transition-all">
+          <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm relative overflow-hidden group hover:border-gray-300/30 transition-all">
             <i className="ph-duotone ph-warning-octagon absolute -right-3 -bottom-3 text-6xl opacity-5 text-red-600 rotate-12 group-hover:scale-110 transition-transform" />
             <div className="relative z-10">
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Critical Events</p>
@@ -252,7 +253,7 @@ export default function AccountActivityPage() {
                   <Input
                     type="text"
                     placeholder="Search by action, details, entity, or IP..."
-                    className="pl-10 h-10 w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon transition-colors"
+                    className="pl-10 h-10 w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-gray-300 transition-colors"
                     value={search}
                     onChange={(e) => {
                       setSearch(e.target.value);
@@ -266,8 +267,8 @@ export default function AccountActivityPage() {
                 <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
                   Severity
                 </label>
-                <select
-                  className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                <Select
+                  className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300"
                   value={severityFilter}
                   onChange={(e) => {
                     setSeverityFilter(e.target.value);
@@ -278,15 +279,15 @@ export default function AccountActivityPage() {
                   <option value="INFO">INFO</option>
                   <option value="WARNING">WARNING</option>
                   <option value="CRITICAL">CRITICAL</option>
-                </select>
+                </Select>
               </div>
 
               <div className="lg:col-span-2">
                 <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
                   Items
                 </label>
-                <select
-                  className="h-10 w-full rounded-brand border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                <Select
+                  className="h-10 w-full rounded-brand border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300"
                   value={perPage}
                   onChange={(e) => {
                     setPerPage(Number(e.target.value));
@@ -297,7 +298,7 @@ export default function AccountActivityPage() {
                   <option value={20}>20</option>
                   <option value={50}>50</option>
                   <option value={100}>100</option>
-                </select>
+                </Select>
               </div>
             </div>
           </div>
@@ -398,34 +399,33 @@ export default function AccountActivityPage() {
             </div>
 
             {total > 0 ? (
-              <div className="mt-4 flex items-center justify-between">
-                <div className="text-xs font-medium text-gray-500">
-                  Showing {(displayPage - 1) * perPage + 1}-
-                  {Math.min(displayPage * perPage, total)} of{" "}
-                  <strong className="text-gray-900">{total.toLocaleString()}</strong>{" "}
-                  activity entries
+              <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-6">
+                <div className="text-[11px] font-black text-gray-400 uppercase tracking-widest select-none cursor-default">
+                  Showing <strong className="text-gray-900">{displayRows.length}</strong> out of <strong className="text-gray-900">{total.toLocaleString()}</strong> Activity Entries
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 select-none">
                   <Button
                     variant="outline"
                     size="sm"
                     disabled={displayPage <= 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="h-8 text-xs font-bold text-gray-600"
+                    className="h-9 rounded-brand border-gray-200 bg-white px-4 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon active:scale-95 disabled:opacity-20"
                   >
-                    <i className="ph-bold ph-caret-left"></i> PREVIOUS
+                    <i className="ph-bold ph-caret-left mr-2 text-base"></i>
+                    PREV
                   </Button>
-                  <div className="px-3 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-md h-8 flex items-center justify-center min-w-12 shadow-sm">
-                    {displayPage} / {totalPages}
+                  <div className="flex h-9 min-w-[36px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm">
+                    {displayPage}
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
                     disabled={displayPage >= totalPages}
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    className="h-8 text-xs font-bold text-gray-600"
+                    className="h-9 rounded-brand border-gray-200 bg-white px-4 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon active:scale-95 disabled:opacity-20"
                   >
-                    NEXT <i className="ph-bold ph-caret-right"></i>
+                    NEXT
+                    <i className="ph-bold ph-caret-right ml-2 text-base"></i>
                   </Button>
                 </div>
               </div>

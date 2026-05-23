@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/empty";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import PageHeader from "@/components/shared/PageHeader";
+import { Select } from "@/components/ui/select"
 
 export default function DocumentsTab({
   docsForm,
@@ -149,7 +150,7 @@ export default function DocumentsTab({
                 </label>
               </div>
               <Input
-                className="h-10 font-mono bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+                className="h-10 font-mono bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 transition-colors"
                 value={docsForm.studentNo}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -169,7 +170,7 @@ export default function DocumentsTab({
                 Student Name
               </label>
               <Input
-                className="h-10 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+                className="h-10 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 transition-colors"
                 value={docsForm.studentName}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -187,8 +188,8 @@ export default function DocumentsTab({
               <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
                 Document Type
               </label>
-              <select
-                className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon transition-colors"
+              <Select
+                className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 transition-colors"
                 value={docsForm.docType}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -206,7 +207,7 @@ export default function DocumentsTab({
                     {t}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           </div>
 
@@ -223,7 +224,7 @@ export default function DocumentsTab({
             <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">Active Filters:</span>
               {docsForm.studentNo && (
-                <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon uppercase">
+                <div className="flex items-center gap-1 rounded-full border border-gray-300/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon uppercase">
                   ID: {docsForm.studentNo}
                   <button
                     onClick={() => {
@@ -275,7 +276,7 @@ export default function DocumentsTab({
                   setDocsForm(cleared);
                   refreshDocuments(cleared);
                 }}
-                className="h-6 rounded-full border border-dashed border-pup-maroon/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase"
+                className="h-6 rounded-full border border-dashed border-gray-300/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase"
               >
                 CLEAR ALL FILTERS
               </Button>
@@ -366,7 +367,7 @@ export default function DocumentsTab({
                     </div>
                     <Button
                       onClick={openEditStudent}
-                      className="bg-white border border-gray-300 text-gray-700 hover:text-pup-maroon hover:border-pup-maroon font-bold text-xs px-4 h-9 shadow-sm"
+                      className="bg-white border border-gray-300 text-gray-700 hover:text-pup-maroon hover:border-gray-300 font-bold text-xs px-4 h-9 shadow-sm"
                     >
                       <i className="ph-bold ph-user-circle-gear mr-2 text-sm"></i>
                       MANAGE PROFILE
@@ -500,7 +501,7 @@ export default function DocumentsTab({
                                         r.doc.id,
                                       )
                                     }
-                                    className="px-3 font-bold text-xs border-gray-300 text-gray-700 hover:border-pup-maroon transition-all"
+                                    className="px-3 font-bold text-xs border-gray-300 text-gray-700 hover:border-gray-300 transition-all"
                                   >
                                     <i className="ph-bold ph-eye mr-1.5"></i>
                                     VIEW
@@ -522,7 +523,7 @@ export default function DocumentsTab({
                                       setUpdateFile(null);
                                       setUpdatePromptOpen(true);
                                     }}
-                                    className="px-3 bg-pup-maroon text-white font-bold text-xs hover:bg-red-900 transition-all"
+                                    className="px-3 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white font-bold text-xs transition-all"
                                   >
                                     <i className="ph-bold ph-pencil-simple-line mr-1.5"></i>
                                     UPDATE
@@ -543,12 +544,16 @@ export default function DocumentsTab({
               </div>
 
               <div className="mt-4 flex items-center">
-                <div className="text-xs text-gray-500 font-medium">
+                <div className="text-[11px] font-black text-gray-400 uppercase tracking-widest">
                   {docsForm.studentNo.trim() ||
                   docsForm.studentName.trim() ||
-                  docsForm.docType.trim()
-                    ? `Showing ${docsRows.length} documents`
-                    : ""}
+                  docsForm.docType.trim() ? (
+                    <span>
+                      <strong className="text-gray-900">{docsRows.length}</strong> Documents Found
+                    </span>
+                  ) : (
+                    ""
+                  )}
                 </div>
               </div>
             </>
@@ -615,8 +620,8 @@ export default function DocumentsTab({
                 }}
                 className={`w-full rounded-brand border-2 border-dashed px-4 py-6 text-left transition-colors ${
                   isDragActive
-                    ? "border-pup-maroon bg-red-50/40"
-                    : "border-gray-300 bg-white hover:border-pup-maroon/60"
+                    ? "border-gray-300 bg-red-50/40"
+                    : "border-gray-300 bg-white hover:border-gray-300/60"
                 }`}
               >
                 <div className="flex items-start gap-3">
@@ -681,7 +686,7 @@ export default function DocumentsTab({
                 }
               }}
               disabled={updateSaving || !updateFile}
-              className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand"
+              className="h-11 px-6 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white shadow-sm font-bold flex items-center gap-2 rounded-brand"
             >
               <i className="ph-bold ph-check text-lg"></i>
               {updateSaving ? "SAVING..." : "SAVE CHANGES"}
@@ -722,28 +727,28 @@ export default function DocumentsTab({
                   value={editStudentForm.name}
                   onChange={e => setEditStudentForm(p => ({ ...p, name: e.target.value.toUpperCase() }))}
                   placeholder="LAST NAME, FIRST NAME"
-                  className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-gray-300"
                   required
                 />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Degree Program <span className="text-pup-maroon">*</span></label>
-                <select
-                  className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                <Select
+                  className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300"
                   value={editStudentForm.courseCode}
                   onChange={e => setEditStudentForm(p => ({ ...p, courseCode: e.target.value }))}
                   required
                 >
                   <option value="" disabled>Select Program...</option>
                   {courses.map(c => <option key={c.code} value={c.code}>{c.code} - {c.name}</option>)}
-                </select>
+                </Select>
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Section <span className="text-pup-maroon">*</span></label>
                 <Input
                   value={editStudentForm.section}
                   onChange={e => setEditStudentForm(p => ({ ...p, section: e.target.value }))}
-                  className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-pup-maroon"
+                  className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-gray-300"
                   required
                 />
               </div>
@@ -753,8 +758,8 @@ export default function DocumentsTab({
               <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100 pb-1">Physical Location</h4>
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Room Number <span className="text-pup-maroon">*</span></label>
-                <select
-                  className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                <Select
+                  className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300"
                   value={String(editStudentForm.room || "")}
                   onChange={(e) => {
                     const nextRoom = e.target.value ? parseInt(e.target.value, 10) : "";
@@ -766,12 +771,12 @@ export default function DocumentsTab({
                   {roomOptions.map((r) => (
                     <option key={r} value={r}>Room {r}</option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Cabinet ID <span className="text-pup-maroon">*</span></label>
-                <select
-                  className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                <Select
+                  className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300"
                   value={editStudentForm.cabinet}
                   onChange={(e) => setEditStudentForm((p) => ({ ...p, cabinet: e.target.value, drawer: "" }))}
                   disabled={!editStudentForm.room}
@@ -781,12 +786,12 @@ export default function DocumentsTab({
                   {mergeSelectedCabinetId(editStudentForm.room, editStudentForm.cabinet).map((c) => (
                     <option key={c} value={c}>Cabinet {c}</option>
                   ))}
-                </select>
+                </Select>
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">Drawer Number <span className="text-pup-maroon">*</span></label>
-                <select
-                  className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon"
+                <Select
+                  className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300"
                   value={String(editStudentForm.drawer || "")}
                   onChange={(e) => setEditStudentForm((p) => ({ ...p, drawer: e.target.value }))}
                   disabled={!editStudentForm.cabinet}
@@ -796,7 +801,7 @@ export default function DocumentsTab({
                   {mergeSelectedDrawerId(editStudentForm.room, editStudentForm.cabinet, editStudentForm.drawer).map((d) => (
                     <option key={d} value={d}>Drawer {d}</option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               <div className="pt-4">
@@ -845,7 +850,7 @@ export default function DocumentsTab({
                 }
               }}
               disabled={editStudentSaving}
-              className="h-11 px-6 bg-pup-maroon text-white hover:bg-red-900 shadow-sm font-bold flex items-center gap-2 rounded-brand"
+              className="h-11 px-6 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white shadow-sm font-bold flex items-center gap-2 rounded-brand"
             >
               <i className="ph-bold ph-check text-lg"></i>
               {editStudentSaving ? "SAVING..." : "SAVE PROFILE"}

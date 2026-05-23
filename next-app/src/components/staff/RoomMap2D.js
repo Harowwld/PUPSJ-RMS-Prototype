@@ -42,7 +42,7 @@ export default function RoomMap2D({
           {/* Floor plan door quadrant symbol */}
           <div className="absolute bottom-0 left-0 h-[2px] w-full rounded-full bg-gray-400 transition-colors group-hover:bg-gray-600" />
           <div className="absolute bottom-0 left-0 h-full w-[2px] rounded-full bg-pup-maroon transition-all" />
-          <div className="absolute inset-0 rounded-tr-full border-t-2 border-r-2 border-pup-maroon/20 transition-colors group-hover:border-pup-maroon/40" />
+          <div className="absolute inset-0 rounded-tr-full border-t-2 border-r-2 border-gray-300/20 transition-colors group-hover:border-gray-300/40" />
 
           {/* Subtle Label */}
           <div className="pointer-events-none absolute -top-6 left-1/2 z-10 -translate-x-1/2 rounded bg-gray-900 px-1.5 py-0.5 text-[9px] font-black tracking-widest whitespace-nowrap text-white uppercase opacity-0 shadow-lg transition-opacity group-hover:opacity-100">

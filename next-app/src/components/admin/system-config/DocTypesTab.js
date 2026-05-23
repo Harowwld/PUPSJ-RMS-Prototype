@@ -27,6 +27,7 @@ import {
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import { Card } from "@/components/ui/card"
+import { Select } from "@/components/ui/select"
 import {
   Dialog,
   DialogContent,
@@ -308,23 +309,19 @@ export default function DocTypesTab({
           }
           actions={
             <div className="flex items-center gap-2">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="outline"
-                    onClick={handleExportDocTypes}
-                    className="flex h-10 w-10 items-center justify-center rounded-brand border border-gray-300 bg-white p-0 text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
-                  >
-                    <i className="ph-bold ph-file-csv text-base"></i>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top">Export to CSV</TooltipContent>
-              </Tooltip>
+              <Button
+                variant="outline"
+                onClick={handleExportDocTypes}
+                className="flex h-10 items-center justify-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
+              >
+                <i className="ph-bold ph-file-csv text-base"></i>
+                EXPORT CSV
+              </Button>
 
               <Button
                 onClick={() => setIsAddDocTypeOpen(true)}
                 disabled={showArchived}
-                className="flex h-10 items-center gap-2 rounded-brand bg-pup-maroon px-5 font-bold text-white shadow-sm transition-all hover:bg-red-900 active:scale-95 disabled:opacity-50"
+                className="flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-5 font-bold text-white shadow-sm active:scale-95 disabled:opacity-50 transition-all"
               >
                 <i className="ph-bold ph-plus"></i>
                 <span className="hidden uppercase sm:inline">
@@ -341,7 +338,7 @@ export default function DocTypesTab({
             <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">Active Filters:</span>
               {localSearch && (
-                <div className="flex items-center gap-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon uppercase">
+                <div className="flex items-center gap-1 rounded-full border border-gray-300/20 bg-linear-to-br from-white to-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon uppercase">
                   Search: {localSearch}
                   <button
                     onClick={() => { setLocalSearch(""); setDocSearch(""); setPageDoc(1); }}
@@ -371,7 +368,7 @@ export default function DocTypesTab({
                   setShowArchived(false)
                   setPageDoc(1)
                 }}
-                className="h-6 rounded-full border border-dashed border-pup-maroon/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase"
+                className="h-6 rounded-full border border-dashed border-gray-300/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase"
               >
                 CLEAR ALL FILTERS
               </Button>
@@ -456,7 +453,7 @@ export default function DocTypesTab({
                                 addDocType(null, newDocTypeName)
                               }
                             }}
-                            className={`h-9 flex-1 rounded-brand border-gray-300 bg-white text-sm transition-all focus-visible:ring-pup-maroon ${newDocTypeName.trim() ? "border-amber-400 ring-2 ring-amber-100" : "focus-visible:border-pup-maroon"}`}
+                            className={`h-9 flex-1 rounded-brand border-gray-300 bg-white text-sm transition-all focus-visible:ring-pup-maroon ${newDocTypeName.trim() ? "border-amber-400 ring-2 ring-amber-100" : "focus-visible:border-gray-300"}`}
                           />
                           <Button
                             size="sm"
@@ -464,7 +461,7 @@ export default function DocTypesTab({
                               !newDocTypeName.trim() || isQuickAddLoading
                             }
                             onClick={() => addDocType(null, newDocTypeName)}
-                            className={`h-9 rounded-brand px-4 text-xs font-bold text-white shadow-sm transition-all active:scale-95 disabled:opacity-50 ${newDocTypeName.trim() ? "bg-amber-600 hover:bg-amber-700" : "bg-pup-maroon hover:bg-red-900"}`}
+                            className={`h-9 rounded-brand px-4 text-xs font-bold text-white shadow-sm active:scale-95 disabled:opacity-50 ${newDocTypeName.trim() ? "bg-amber-600 hover:bg-amber-700" : "bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md "} transition-all`}
                           >
                             {isQuickAddLoading ? (
                               <i className="ph-bold ph-spinner animate-spin"></i>
@@ -548,7 +545,7 @@ export default function DocTypesTab({
                                 setEditDocType({ id: dt.id, name: dt.name })
                                 setIsEditDocTypeOpen(true)
                               }}
-                              className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                              className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
                             >
                               <i className="ph-bold ph-pencil-simple text-xs"></i>
                               EDIT
@@ -637,7 +634,7 @@ export default function DocTypesTab({
                                   setDocSearch("")
                                   setLocalSearch("")
                                 }}
-                                className="mt-4 flex h-9 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
+                                className="mt-4 flex h-9 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
                               >
                                 <i className="ph-bold ph-arrow-counter-clockwise"></i>
                                 CLEAR SEARCH
@@ -646,7 +643,7 @@ export default function DocTypesTab({
                               !showArchived && (
                                 <Button
                                   onClick={() => setIsAddDocTypeOpen(true)}
-                                  className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-pup-maroon px-8 font-black tracking-widest text-white shadow-lg shadow-red-900/20 transition-all hover:bg-red-900 active:scale-95"
+                                  className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-black tracking-widest text-white shadow-lg shadow-red-900/20 active:scale-95 transition-all"
                                 >
                                   <i className="ph-bold ph-plus text-lg"></i>
                                   ADD DOCUMENT TYPE
@@ -664,99 +661,68 @@ export default function DocTypesTab({
           </div>
         </div>
 
-        <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50/50 p-4 px-6">
-          <div className="flex items-center gap-6">
-            {filteredDocTypesFull.length > 0 && (
-              <div className="flex items-center gap-4 text-xs font-medium text-gray-500">
+        {filteredDocTypesFull.length > 0 && (
+          <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8">
+            <div className="flex items-center gap-8 select-none cursor-default">
+              <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest">
                 <span>
-                  {(pageDoc - 1) * itemsPerPage + 1}-
-                  {Math.min(
-                    pageDoc * itemsPerPage,
-                    filteredDocTypesFull.length
-                  )}{" "}
-                  of{" "}
-                  <strong className="text-gray-900">
-                    {filteredDocTypesFull.length.toLocaleString()}
-                  </strong>{" "}
-                  entries
+                  Showing <strong className="text-gray-900">{filteredDocTypes.length}</strong> out of{" "}
+                  <strong className="text-gray-900">{filteredDocTypesFull.length}</strong>{" "}
+                  {showArchived ? "Archived" : "Active"} Types
                 </span>
 
-                <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase">
-                    Rows:
-                  </span>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <select
-                          className="h-7 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-1 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none"
-                          value={itemsPerPage}
-                          onChange={handleItemsPerPageChange}
-                        >
-                          <option value={10}>10</option>
-                          <option value={20}>20</option>
-                          <option value={50}>50</option>
-                          <option value={100}>100</option>
-                          <option value={200}>200</option>
-                        </select>
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="rounded-brand">
-                        Items per page
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                {filteredDocTypesFull.length > 10 && (
+                  <div className="flex items-center gap-3 border-l border-gray-200/50 pl-6">
+                    <span className="text-[10px] opacity-60">Rows:</span>
+                    <Select
+                      className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50"
+                      value={itemsPerPage}
+                      onChange={handleItemsPerPageChange}
+                    >
+                      <option value={10}>10</option>
+                      <option value={20}>20</option>
+                      <option value={50}>50</option>
+                      <option value={100}>100</option>
+                    </Select>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {Math.ceil(filteredDocTypesFull.length / itemsPerPage) > 1 && (
+              <div className="flex shrink-0 items-center gap-2 select-none">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pageDoc <= 1}
+                  onClick={() => setPageDoc((p) => p - 1)}
+                  className="h-9 rounded-brand border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                >
+                  <i className="ph-bold ph-caret-left mr-2 text-base"></i> PREV
+                </Button>
+                
+                <div className="flex h-9 min-w-[36px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm">
+                  {pageDoc}
                 </div>
+
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={pageDoc >= Math.ceil(filteredDocTypesFull.length / itemsPerPage)}
+                  onClick={() => setPageDoc((p) => p + 1)}
+                  className="h-9 rounded-brand border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                >
+                  NEXT <i className="ph-bold ph-caret-right ml-2 text-base"></i>
+                </Button>
               </div>
             )}
           </div>
-
-          {filteredDocTypesFull.length > 0 && (
-            <div className="flex shrink-0 items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={pageDoc <= 1}
-                onClick={() => setPageDoc((p) => p - 1)}
-                className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
-              >
-                <i className="ph-bold ph-caret-left mr-1"></i> PREV
-              </Button>
-              <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-2 text-[11px] font-bold text-gray-700 shadow-xs focus-within:border-pup-maroon focus-within:ring-1 focus-within:ring-pup-maroon">
-                <input
-                  type="text"
-                  className="w-6 bg-transparent text-center focus:outline-none"
-                  value={jumpPage}
-                  onChange={(e) => setJumpPage(e.target.value)}
-                  onKeyDown={handleJumpPage}
-                  onBlur={handleJumpPage}
-                />
-                <span className="mx-0.5 text-gray-400">/</span>
-                <span>
-                  {Math.max(
-                    1,
-                    Math.ceil(filteredDocTypesFull.length / itemsPerPage)
-                  )}
-                </span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={
-                  pageDoc >=
-                  Math.ceil(filteredDocTypesFull.length / itemsPerPage)
-                }
-                onClick={() => setPageDoc((p) => p + 1)}
-                className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
-              >
-                NEXT <i className="ph-bold ph-caret-right ml-1"></i>
-              </Button>
-            </div>
-          )}
-        </div>
+        )}
       </Card>
 
       <FloatingActionBar
         selectedCount={selectedCount}
+        selectionStatus="Selected Document Types"
         onCancel={() => toggleAllDocTypes(false)}
         onAction={handleBulkAction}
         actionLabel={showArchived ? "RESTORE SELECTED" : "ARCHIVE SELECTED"}
@@ -796,7 +762,7 @@ export default function DocTypesTab({
               <Input
                 type="text"
                 placeholder="e.g. Honorable Dismissal"
-                className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-pup-maroon focus-visible:ring-pup-maroon"
+                className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-pup-maroon"
                 value={newDocTypeName}
                 onChange={(e) => setNewDocTypeName(e.target.value)}
                 required
@@ -810,13 +776,13 @@ export default function DocTypesTab({
                   setIsAddDocTypeOpen(false)
                   setNewDocTypeName("")
                 }}
-                className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon"
+                className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon"
               >
                 CANCEL
               </Button>
               <Button
                 type="submit"
-                className="flex h-11 items-center gap-2 rounded-brand bg-pup-maroon px-6 font-bold text-white shadow-sm hover:bg-red-900"
+                className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-black text-white shadow-sm"
               >
                 <i className="ph-bold ph-check text-lg"></i>
                 CREATE TYPE
@@ -856,7 +822,7 @@ export default function DocTypesTab({
               </label>
               <Input
                 type="text"
-                className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-pup-maroon focus-visible:ring-pup-maroon"
+                className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-pup-maroon"
                 value={editDocType.name}
                 onChange={(e) =>
                   setEditDocType((prev) => ({
@@ -875,13 +841,13 @@ export default function DocTypesTab({
                   setIsEditDocTypeOpen(false)
                   setEditDocType({ id: null, name: "" })
                 }}
-                className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon"
+                className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon"
               >
                 CANCEL
               </Button>
               <Button
                 type="submit"
-                className="flex h-11 items-center gap-2 rounded-brand bg-pup-maroon px-6 font-bold text-white shadow-sm hover:bg-red-900"
+                className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-black text-white shadow-sm"
               >
                 <i className="ph-bold ph-check text-lg"></i>
                 SAVE CHANGES

@@ -350,7 +350,7 @@ export default function RateLimitingTab() {
         </h2>
         <button
           onClick={fetchData}
-          className="flex items-center gap-2 rounded-brand bg-pup-maroon px-4 py-2 text-sm text-white hover:bg-red-900"
+          className="flex items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-4 py-2 text-sm font-black text-white"
         >
           <PhRefresh className="h-4 w-4" />
           Refresh
@@ -370,7 +370,7 @@ export default function RateLimitingTab() {
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 border-b-2 px-1 py-4 text-sm font-medium ${
                 activeTab === tab.id
-                  ? "border-pup-maroon text-pup-maroon"
+                  ? "border-gray-300 text-pup-maroon"
                   : "border-transparent text-gray-500 hover:text-gray-700"
               }`}
             >
@@ -384,7 +384,7 @@ export default function RateLimitingTab() {
       {/* Tab Content */}
       {loading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-pup-maroon"></div>
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-300"></div>
         </div>
       ) : (
         <>
