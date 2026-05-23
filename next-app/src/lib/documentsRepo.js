@@ -240,14 +240,7 @@ export async function declineDocumentAndRemoveFile(id, { reviewedBy, reviewNote 
   const existing = await getDocumentById(id);
   if (!existing) return null;
 
-  // Keep DB row for review/history, but remove the physical file.
-  const absPath = path.join(getUploadsDir(), existing.storage_filename);
-  try {
-    fs.unlinkSync(absPath);
-  } catch {
-    // ignore missing file
-  }
-
+  // Keep DB row and preserve the physical file for previewing and re-scanning
   await dbRun(
     `UPDATE documents
      SET approval_status = 'Declined',

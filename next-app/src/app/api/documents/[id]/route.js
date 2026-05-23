@@ -149,7 +149,7 @@ export async function PATCH(req, ctx) {
         return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
       }
       await writeAuditLog(req, `Review Document`, { 
-        details: `declined digital record for student '${declined.student_name}' (Document: ${declined.doc_type}) and purged associated binary file from storage${reviewNote ? `. Reason: ${reviewNote}` : ""}`,
+        details: `declined digital record for student '${declined.student_name}' (Document: ${declined.doc_type})${reviewNote ? `. Reason: ${reviewNote}` : ""}`,
         severity: "WARNING",
         entity_type: "Document",
         entity_id: id

@@ -12,8 +12,6 @@
  */
 
 // ─── Singleton state ────────────────────────────────────────────────────────
-let _workerPromise = null;
-let _langOk = false;
 let _nlpPromise = null;
 
 // ─── Tiny helpers ───────────────────────────────────────────────────────────
@@ -33,96 +31,10 @@ function up(v) {
   return String(v ?? "").toUpperCase();
 }
 
-// ─── 1. TESSERACT WORKER ───────────────────────────────────────────────────
-
-async function getWorker() {
-  if (_workerPromise) return _workerPromise;
-
-  _workerPromise = (async () => {
-    // One-time check that the language data is served
-    if (!_langOk) {
-      const r = await fetch("/tesseract/eng.traineddata.gz", {
-        method: "HEAD",
-        cache: "no-store",
-      }).catch(() => null);
-      if (!r?.ok) throw new Error("Missing /tesseract/eng.traineddata.gz");
-      _langOk = true;
-    }
-
-    const Tesseract = await import("tesseract.js");
-
-    const worker = await Tesseract.createWorker("eng", 1, {
-      workerPath: "/tesseract/worker.min.js",
-      corePath: "/tesseract",
-      langPath: "/tesseract",
-    });
-    await worker.setParameters({
-      tessedit_pageseg_mode: "6",
-      preserve_interword_spaces: "1",
-    });
-    return worker;
-  })().catch((e) => {
-    _workerPromise = null;
-    throw e;
-  });
-
-  return _workerPromise;
-}
+// ─── 1. TESSERACT WORKER REMOVED (NATIVE SYSTEM OCR IS USED EXCLUSIVELY) ───
 
 export async function warmupOcrWorker() {
-  await getWorker();
-}
-
-// ─── 2. TEXT EXTRACTION (PDF / Image → string) ─────────────────────────────
-
-async function ocrFromPdf(file, worker, rotation = 0) {
-  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.mjs";
-
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const pdf = await pdfjs.getDocument({
-    data: bytes,
-    useWorkerFetch: false,
-    isEvalSupported: true,
-    disableFontFace: false,
-    disableStream: true,
-    disableRange: true,
-    disableAutoFetch: true,
-    disableWorker: true,
-  }).promise;
-
-  const page = await pdf.getPage(1);
-  const vp = page.getViewport({ scale: 3.0, rotation: (page.rotate + rotation) % 360 });
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) throw new Error("Canvas init failed");
-  canvas.width = Math.max(1, Math.floor(vp.width));
-  canvas.height = Math.max(1, Math.floor(vp.height));
-  await page.render({ canvasContext: ctx, viewport: vp }).promise;
-
-  return String((await worker.recognize(canvas))?.data?.text ?? "");
-}
-
-async function ocrFromImage(file, worker, rotation = 0) {
-  const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) throw new Error("Canvas init failed");
-
-  const angle = (rotation % 360 + 360) % 360;
-  if (angle === 90 || angle === 270) {
-    canvas.width = bmp.height;
-    canvas.height = bmp.width;
-  } else {
-    canvas.width = bmp.width;
-    canvas.height = bmp.height;
-  }
-
-  ctx.translate(canvas.width / 2, canvas.height / 2);
-  ctx.rotate((angle * Math.PI) / 180);
-  ctx.drawImage(bmp, -bmp.width / 2, -bmp.height / 2);
-
-  return String((await worker.recognize(canvas))?.data?.text ?? "");
+  // Platform-native OCR executes entirely on-demand via the server
 }
 
 // ─── 3. DOCUMENT-TYPE DETECTION ────────────────────────────────────────────
@@ -312,6 +224,7 @@ const BLACKLIST = new Set([
   "ATTENDING", "PHYSICIAN", "INFORMANT", "SIGNATURE", "CIVIL", "CHURCH",
   "PROVINCE", "MUNICIPALITY", "MOTHER", "FATHER", "CHILD", "SCHOOL",
   "EDUCATION", "UNIVERSITY", "POLYTECHNIC", "SN",
+  "STATISTICIAN", "PRINTED", "GENERIC", "OFFICIAL", "REPRESENTATIVE", "GUARDIAN",
 ]);
 
 function isPlausibleName(s) {
@@ -328,6 +241,15 @@ function isPlausibleName(s) {
   return true;
 }
 
+function isPlausibleNameComponent(s) {
+  const u = up(s).trim();
+  if (u.length < 2 || u.length > 30) return false;
+  if (/\d/.test(u)) return false;
+  if (/[#$@*]/.test(u)) return false; // Avoid junk
+  for (const b of BLACKLIST) if (u === b || u.includes(" " + b) || u.includes(b + " ")) return false;
+  return true;
+}
+
 /** Remove trailing same-line field noise (PSA/DepEd forms). */
 function stripTrailing(s) {
   return s
@@ -341,6 +263,121 @@ function stripTrailing(s) {
 
 function detectName(lines) {
   const full = lines.join(" ");
+
+  // ── Strategy A: Scattered Child Name Components (e.g., PSA Birth Certificates) ──
+  // If the document has separate "Last Name", "First Name", and "Middle Name" labels
+  // scattered across different lines, we can reconstruct the full name.
+  {
+    let extractedFirst = "";
+    let extractedMiddle = "";
+    let extractedLast = "";
+
+    for (let i = 0; i < lines.length; i++) {
+      const normLine = up(lines[i].trim()).replace(/\s+/g, " ");
+
+      if (normLine === "LAST NAME" || normLine === "SURNAME" || normLine === "FAMILY NAME") {
+        for (let j = 1; j <= 2; j++) {
+          if (i + j >= lines.length) break;
+          const val = stripTrailing(norm(lines[i + j]));
+          if (val && isPlausibleNameComponent(val) && !/^(LAST|FIRST|MIDDLE|NAME|SEX|PLACE|DATE|TYPE|MAIDEN|CITIZENSHIP|RELIGION|AGE|RESIDENCE)/i.test(val)) {
+            extractedLast = val;
+            break;
+          }
+        }
+      }
+
+      if (normLine === "FIRST NAME" || normLine === "GIVEN NAME") {
+        for (let j = 1; j <= 2; j++) {
+          if (i + j >= lines.length) break;
+          const val = stripTrailing(norm(lines[i + j]));
+          if (val && isPlausibleNameComponent(val) && !/^(LAST|FIRST|MIDDLE|NAME|SEX|PLACE|DATE|TYPE|MAIDEN|CITIZENSHIP|RELIGION|AGE|RESIDENCE)/i.test(val)) {
+            extractedFirst = val;
+            break;
+          }
+        }
+      }
+
+      if (normLine === "MIDDLE NAME") {
+        for (let j = 1; j <= 2; j++) {
+          if (i + j >= lines.length) break;
+          const val = stripTrailing(norm(lines[i + j]));
+          if (val && isPlausibleNameComponent(val) && !/^(LAST|FIRST|MIDDLE|NAME|SEX|PLACE|DATE|TYPE|MAIDEN|CITIZENSHIP|RELIGION|AGE|RESIDENCE)/i.test(val)) {
+            extractedMiddle = val;
+            break;
+          }
+        }
+      }
+    }
+
+    if (extractedFirst && extractedLast) {
+      const fullName = extractedMiddle
+        ? `${extractedLast}, ${extractedFirst} ${extractedMiddle}`
+        : `${extractedLast}, ${extractedFirst}`;
+      console.log(`[OCR Name Parser] Successfully reconstructed scattered child name components: ${fullName}`);
+      return fullName;
+    }
+  }
+
+  // ── Strategy A2: Same-Line Parenthesized Name Components (Horizontal/Windows OCR layout) ──
+  // Catches lines like: "(First) RJ JACK 2 Female (Midd16) Registry NO. 2005-061 ooo (Last) FLORIDA"
+  // Restricted specifically to Windows clients to avoid interfering with pristine macOS Apple Vision OCR extraction layouts.
+  {
+    const isWindows = typeof window !== "undefined" && /windows|win32/i.test(window.navigator.userAgent || window.navigator.platform || "");
+    if (isWindows) {
+      for (const line of lines) {
+        const upperLine = up(line);
+        
+        // Skip parent/signatory/informant/official/template labels
+        if (/\b(?:MAIDEN|FATHER|MOTHER|PARENT|INFORMANT|REGISTRAR|ATTENDANT|PHYSICIAN|WITNESS|OFFICER|CLERK|ADMINISTRATOR|SECRETARY|PREPARED|STATISTICIAN|PRINTED|SIGNATURE|GENERIC|REPRESENTATIVE|GUARDIAN)\b/i.test(upperLine)) {
+          continue;
+        }
+        
+        // Skip if the line starts with a number that is not 1 (likely parent or other sections)
+        const numM = upperLine.match(/^(\d+)/);
+        if (numM && numM[1] !== "1" && numM[1] !== "01") {
+          continue;
+        }
+
+        if (upperLine.includes("(FIRST") || upperLine.includes("(LAST") || upperLine.includes("(MIDD")) {
+          const matches = [...line.matchAll(/\(([^)]+)\)\s*([^()]*)/g)];
+          if (matches.length > 0) {
+            let firstVal = "";
+            let middleVal = "";
+            let lastVal = "";
+
+            for (const m of matches) {
+              const label = up(m[1]).trim();
+              let val = m[2].trim();
+
+              // Clean up value: remove extra columns/fields recognized on same line
+              val = val
+                .replace(/\s*\b(FEMALE|MALE|SEX|REGISTRY|REG\.?|NO\.?|\d+)\b[\s\S]*/gi, "")
+                .trim();
+
+              // Strip trash punctuation/symbols
+              val = val.replace(/[^a-zA-Z\s.-]/g, "").trim();
+
+              if (label.includes("FIRST") || label.includes("F1RST") || label.includes("GIVEN")) {
+                if (isPlausibleNameComponent(val)) firstVal = val;
+              } else if (label.includes("MIDDLE") || label.includes("MIDD16") || label.includes("MIDDIE") || label.includes("MIDD")) {
+                if (isPlausibleNameComponent(val)) middleVal = val;
+              } else if (label.includes("LAST") || label.includes("SURNAME") || label.includes("FAMILY")) {
+                if (isPlausibleNameComponent(val)) lastVal = val;
+              }
+            }
+
+            if (firstVal && lastVal) {
+              const fullName = middleVal
+                ? `${lastVal}, ${firstVal} ${middleVal}`
+                : `${lastVal}, ${firstVal}`;
+              console.log(`[OCR Name Parser] Successfully extracted horizontal name components: ${fullName}`);
+              return fullName;
+            }
+          }
+        }
+      }
+    }
+  }
 
   // ── Strategy 1: "certify / certifies / certified that [Title] NAME" ──
   {
@@ -369,6 +406,24 @@ function detectName(lines) {
     const line = lines[i].trim();
     const upper = up(line);
 
+    // Skip fields that belong to parents/signatories/non-student entities in standard PH certificates (e.g. Field 6, 13)
+    const numM = upper.match(/^(\d+)/);
+    if (numM && numM[1] !== "1" && numM[1] !== "01") {
+      if (/\bNAME\b/i.test(upper)) {
+        continue;
+      }
+    }
+
+    // Skip placeholder templates like [Name] or (Name)
+    if (/[\[(].*NAME.*[\])]/i.test(upper)) {
+      continue;
+    }
+
+    // Skip parent/signatory/official/template labels
+    if (/\b(?:MAIDEN|FATHER|MOTHER|PARENT|INFORMANT|REGISTRAR|ATTENDANT|PHYSICIAN|WITNESS|OFFICER|CLERK|ADMINISTRATOR|SECRETARY|PREPARED|STATISTICIAN|PRINTED|SIGNATURE|GENERIC|REPRESENTATIVE|GUARDIAN)\b/i.test(upper)) {
+      continue;
+    }
+
     // 3a — "STUDENT NAME:" label (highest priority)
     if (/\bSTUDENT\s+NAME\b/i.test(upper)) {
       // Same-line value after colon
@@ -392,10 +447,32 @@ function detectName(lines) {
         const c = stripTrailing(norm(colonM[1]));
         if (c && isPlausibleName(c)) return c;
       }
-      // Value on the NEXT line (common in scanned forms)
-      if (i + 1 < lines.length) {
-        const next = stripTrailing(norm(lines[i + 1]));
-        if (next && isPlausibleName(next) && !/^(NAME|STUDENT)/i.test(next)) return next;
+      
+      // Lookahead helper for multi-line name grids (e.g. Birth Certificates)
+      // Check up to 5 lines ahead for the actual values, skipping parenthesized sub-labels
+      for (let j = 1; j <= 5; j++) {
+        if (i + j >= lines.length) break;
+        const cand = stripTrailing(norm(lines[i + j]));
+        const candUpper = up(cand);
+        
+        // Skip sub-labels like "(First)", "(Middle)", "(Last)"
+        if (cand.startsWith("(") && cand.endsWith(")")) continue;
+        if (/\b(?:FIRST|MIDDLE|MIDDIE|LAST|SURNAME|GIVEN|FAMILY|NAME)\b/i.test(candUpper)) continue;
+        
+        if (cand && isPlausibleName(cand)) {
+          // If we matched the multi-line "1. NAME" Birth Certificate field,
+          // try to combine First, Middle, and Last name from successive lines.
+          const isBirthNameGrid = /^1\.?\s*NAME/i.test(upper) || (i > 0 && /^1\.?\s*NAME/i.test(up(lines[i-1])));
+          if (isBirthNameGrid && i + j + 2 < lines.length) {
+            const next1 = stripTrailing(norm(lines[i + j + 1]));
+            const next2 = stripTrailing(norm(lines[i + j + 2]));
+            if (next1 && next2 && !next1.startsWith("(") && !next2.startsWith("(")) {
+              // Format as: LAST, FIRST MIDDLE
+              return `${next2}, ${cand} ${next1}`;
+            }
+          }
+          return cand;
+        }
       }
     }
 
@@ -429,8 +506,11 @@ function detectName(lines) {
   // ── Strategy 5: raw ALL-CAPS "LASTNAME, FIRSTNAME" line ──
   for (const line of lines) {
     const t = line.trim();
-    if (/^[A-Z\s.'-]+,\s*[A-Z\s.'-]+$/.test(t) && t === up(t)) {
-      if (isPlausibleName(t)) return t;
+    // Allow trailing columns separated by 3 or more spaces (common in tabular scans)
+    const m = t.match(/^([A-Z\s.'-]+,\s*[A-Z\s.'-]+)(?:\s{3,}|$)/);
+    if (m?.[1]) {
+      const nameCand = m[1].trim();
+      if (isPlausibleName(nameCand)) return nameCand;
     }
   }
 
@@ -476,15 +556,79 @@ export function normalizeExtractedName(raw) {
 
 // ─── 6. STUDENT MATCHING ────────────────────────────────────────────────────
 
+/** Regex matching PUP Student Number format allowing common OCR replacements for digits */
+const STUDENT_NO_PATTERN = /\b[0-9OILTZEGSB]{4}[-\s]?[0-9OILTZEGSB]{5}[-\s]?[A-Z]{2}[-\s]?[0-9OILTZEGSB]\b/gi;
+
+function sanitizeStudentNoCandidate(s) {
+  const clean = s.toUpperCase().replace(/[\s-]/g, "");
+  if (clean.length !== 12) return null;
+  
+  let yyyy = clean.slice(0, 4);
+  let nnnnn = clean.slice(4, 9);
+  const aa = clean.slice(9, 11);
+  let d = clean.slice(11);
+  
+  const mapToDigit = (str) => {
+    return str
+      .replace(/O/g, "0")
+      .replace(/I/g, "1")
+      .replace(/L/g, "1")
+      .replace(/T/g, "1")
+      .replace(/Z/g, "2")
+      .replace(/S/g, "5")
+      .replace(/G/g, "6")
+      .replace(/B/g, "8");
+  };
+  
+  yyyy = mapToDigit(yyyy);
+  nnnnn = mapToDigit(nnnnn);
+  d = mapToDigit(d);
+  
+  if (/^\d{4}$/.test(yyyy) && /^\d{5}$/.test(nnnnn) && /^[A-Z]{2}$/.test(aa) && /^\d$/.test(d)) {
+    return `${yyyy}-${nnnnn}-${aa}-${d}`;
+  }
+  return null;
+}
+
+export function detectStudentNo(rawText) {
+  if (!rawText) return null;
+  const matches = rawText.match(STUDENT_NO_PATTERN);
+  if (!matches) return null;
+  for (const m of matches) {
+    const sanitized = sanitizeStudentNoCandidate(m);
+    if (sanitized) return sanitized;
+  }
+  return null;
+}
+
 function normNameMatch(v) {
   return lo(v).replace(/[.,''\u2019`]/g, " ").replace(/\s+/g, " ").trim();
+}
+
+function stripMiddleInitial(normalizedName) {
+  const words = normalizedName.split(/\s+/);
+  if (words.length > 2 && words[words.length - 1].length === 1) {
+    return words.slice(0, words.length - 1).join(" ");
+  }
+  return normalizedName;
 }
 
 export function findStudentsByOcrName(ocrName, students) {
   if (!ocrName || !Array.isArray(students)) return [];
   const o = normNameMatch(ocrName);
   if (o.length < 2) return [];
-  return students.filter((s) => normNameMatch(s?.name || s?.Name || "") === o);
+  
+  // 1. Exact normalized match
+  const exact = students.filter((s) => normNameMatch(s?.name || s?.Name || "") === o);
+  if (exact.length > 0) return exact;
+  
+  // 2. Fuzzy match stripping middle initial (if unique)
+  const oStripped = stripMiddleInitial(o);
+  const strippedMatches = students.filter((s) => {
+    const dbNorm = normNameMatch(s?.name || s?.Name || "");
+    return stripMiddleInitial(dbNorm) === oStripped;
+  });
+  return strippedMatches;
 }
 
 export function findStudentsInText(rawText, students) {
@@ -507,6 +651,13 @@ export function findStudentsInText(rawText, students) {
     if (name.includes(",")) {
       const [last, first] = name.split(",").map((x) => x.trim());
       if (first && last && hay.includes(`${first} ${last}`)) { matches.push(s); continue; }
+      
+      // Reversed without middle initial: "FIRSTNAME LASTNAME" ↔ "LASTNAME, FIRSTNAME INITIAL"
+      const firstStripped = stripMiddleInitial(lo(first)).toUpperCase();
+      if (firstStripped && last && hay.includes(`${firstStripped} ${last}`)) {
+        matches.push(s);
+        continue;
+      }
     }
   }
   return matches;
@@ -538,14 +689,45 @@ export async function scanPdfForSuggestion(payload) {
 export async function scanFileForSuggestion({ file, students, docTypes, rotation = 0 }) {
   if (!file) throw new Error("Missing file");
 
-  const worker = await getWorker();
   const mime = lo(file?.type);
   const isPdf = mime === "application/pdf" || /\.pdf$/i.test(file?.name ?? "");
   const isImg = mime.startsWith("image/");
   if (!isPdf && !isImg) throw new Error("Unsupported file type");
 
   // ── Extract raw text ──
-  const rawText = isPdf ? await ocrFromPdf(file, worker, rotation) : await ocrFromImage(file, worker, rotation);
+  let rawText = "";
+  let usedNative = false;
+  let ocrErrorMsg = "";
+
+  try {
+    const payload = new FormData();
+    payload.append("file", file);
+    const res = await fetch("/api/ingest/ocr", {
+      method: "POST",
+      body: payload,
+    });
+    const data = await res.json().catch(() => null);
+    if (res.ok && data?.ok && typeof data?.text === "string") {
+      rawText = data.text;
+      usedNative = true;
+      console.log("[OCR] Using platform-native offline OCR (Lightning Fast!)");
+    } else {
+      ocrErrorMsg = data?.error || `Server returned status ${res.status}`;
+    }
+  } catch (e) {
+    ocrErrorMsg = e.message || String(e);
+    console.warn("[OCR] Platform-native offline OCR endpoint failed:", e);
+  }
+
+  if (!usedNative) {
+    throw new Error(
+      `Native offline OCR extraction failed.\n` +
+      `Details: ${ocrErrorMsg}\n\n` +
+      `Please ensure the native OCR binaries are compiled inside next-app/bin/:\n` +
+      `- For macOS: swiftc -O scripts/apple-vision-ocr/ocr.swift -o bin/apple-vision-ocr\n` +
+      `- For Windows: Run scripts\\windows-media-ocr\\build.bat (requires .NET 8.0+ SDK)`
+    );
+  }
 
    
   console.log("=== OCR RAW TEXT ===\n" + rawText + "\n====================");
@@ -558,22 +740,38 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
   // ── Detect doc type ──
   const docType = detectDocType(rawText, docTypes);
 
-  // ── Detect name ──
-  const extractedName = detectName(lines);
+  // ── Detect student number ──
+  const extractedStudentNo = detectStudentNo(rawText);
+  let matchedStudent = null;
+  let nameMatchesByName = [];
 
-  // ── Match against student roster ──
-  let nameMatchesByName =
-    extractedName && Array.isArray(students)
-      ? findStudentsByOcrName(extractedName, students)
-      : [];
-
-  // Fallback: full-text fuzzy scan
-  if (nameMatchesByName.length === 0 && Array.isArray(students)) {
-    const fuzzy = findStudentsInText(rawText, students);
-    if (fuzzy.length > 0) nameMatchesByName = fuzzy;
+  if (extractedStudentNo && Array.isArray(students)) {
+    matchedStudent = students.find((s) => {
+      const dbNo = String(s?.studentNo || s?.student_no || "").trim().toUpperCase();
+      return dbNo === extractedStudentNo;
+    });
+    if (matchedStudent) {
+      nameMatchesByName = [matchedStudent];
+    }
   }
 
-  const matchedStudent = nameMatchesByName.length === 1 ? nameMatchesByName[0] : null;
+  // ── Detect name (as fallback if student number did not match) ──
+  const extractedName = matchedStudent ? "" : detectName(lines);
+
+  if (!matchedStudent) {
+    nameMatchesByName =
+      extractedName && Array.isArray(students)
+        ? findStudentsByOcrName(extractedName, students)
+        : [];
+
+    // Fallback: full-text fuzzy scan
+    if (nameMatchesByName.length === 0 && Array.isArray(students)) {
+      const fuzzy = findStudentsInText(rawText, students);
+      if (fuzzy.length > 0) nameMatchesByName = fuzzy;
+    }
+
+    matchedStudent = nameMatchesByName.length === 1 ? nameMatchesByName[0] : null;
+  }
 
   // ── Build final suggested name ──
   let suggestedName = matchedStudent
