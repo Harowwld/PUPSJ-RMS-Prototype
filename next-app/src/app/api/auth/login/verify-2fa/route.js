@@ -6,12 +6,12 @@ import {
   getStaffDisplayName, 
   hashPasswordForStorage,
   verifySerialKey
-} from "../../../../lib/staffRepo";
-import { getSessionCookieName, verifySessionToken, signSessionToken } from "../../../../lib/jwt";
-import { verifyTOTP, decryptSecret } from "../../../../lib/totp";
-import { createSession } from "../../../../lib/sessionStore";
-import { broadcastToAdmins } from "../../../../pages/api/socket";
-import { writeAuditLog } from "../../../../lib/auditLogRequest";
+} from "@/lib/staffRepo";
+import { getSessionCookieName, verifySessionToken, signSessionToken } from "@/lib/jwt";
+import { verifyTOTP, decryptSecret } from "@/lib/totp";
+import { createSession } from "@/lib/sessionStore";
+import { broadcastToAdmins } from "@/pages/api/socket";
+import { writeAuditLog } from "@/lib/auditLogRequest";
 
 export const runtime = "nodejs";
 

@@ -12,8 +12,6 @@
  */
 
 // ─── Singleton state ────────────────────────────────────────────────────────
-let _workerPromise = null;
-let _langOk = false;
 let _nlpPromise = null;
 
 // ─── Tiny helpers ───────────────────────────────────────────────────────────
@@ -33,96 +31,10 @@ function up(v) {
   return String(v ?? "").toUpperCase();
 }
 
-// ─── 1. TESSERACT WORKER ───────────────────────────────────────────────────
-
-async function getWorker() {
-  if (_workerPromise) return _workerPromise;
-
-  _workerPromise = (async () => {
-    // One-time check that the language data is served
-    if (!_langOk) {
-      const r = await fetch("/tesseract/eng.traineddata.gz", {
-        method: "HEAD",
-        cache: "no-store",
-      }).catch(() => null);
-      if (!r?.ok) throw new Error("Missing /tesseract/eng.traineddata.gz");
-      _langOk = true;
-    }
-
-    const Tesseract = await import("tesseract.js");
-
-    const worker = await Tesseract.createWorker("eng", 1, {
-      workerPath: "/tesseract/worker.min.js",
-      corePath: "/tesseract",
-      langPath: "/tesseract",
-    });
-    await worker.setParameters({
-      tessedit_pageseg_mode: "3", // Fully automatic page segmentation (better for forms/transcripts)
-      preserve_interword_spaces: "1",
-    });
-    return worker;
-  })().catch((e) => {
-    _workerPromise = null;
-    throw e;
-  });
-
-  return _workerPromise;
-}
+// ─── 1. TESSERACT WORKER REMOVED (NATIVE SYSTEM OCR IS USED EXCLUSIVELY) ───
 
 export async function warmupOcrWorker() {
-  await getWorker();
-}
-
-// ─── 2. TEXT EXTRACTION (PDF / Image → string) ─────────────────────────────
-
-async function ocrFromPdf(file, worker, rotation = 0) {
-  const pdfjs = await import("pdfjs-dist/legacy/build/pdf.mjs");
-  pdfjs.GlobalWorkerOptions.workerSrc = "/pdfjs/pdf.worker.min.mjs";
-
-  const bytes = new Uint8Array(await file.arrayBuffer());
-  const pdf = await pdfjs.getDocument({
-    data: bytes,
-    useWorkerFetch: false,
-    isEvalSupported: true,
-    disableFontFace: false,
-    disableStream: true,
-    disableRange: true,
-    disableAutoFetch: true,
-    disableWorker: true,
-  }).promise;
-
-  const page = await pdf.getPage(1);
-  const vp = page.getViewport({ scale: 3.0, rotation: (page.rotate + rotation) % 360 });
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) throw new Error("Canvas init failed");
-  canvas.width = Math.max(1, Math.floor(vp.width));
-  canvas.height = Math.max(1, Math.floor(vp.height));
-  await page.render({ canvasContext: ctx, viewport: vp }).promise;
-
-  return String((await worker.recognize(canvas))?.data?.text ?? "");
-}
-
-async function ocrFromImage(file, worker, rotation = 0) {
-  const bmp = await createImageBitmap(file, { imageOrientation: "from-image" });
-  const canvas = document.createElement("canvas");
-  const ctx = canvas.getContext("2d", { willReadFrequently: true });
-  if (!ctx) throw new Error("Canvas init failed");
-
-  const angle = (rotation % 360 + 360) % 360;
-  if (angle === 90 || angle === 270) {
-    canvas.width = bmp.height;
-    canvas.height = bmp.width;
-  } else {
-    canvas.width = bmp.width;
-    canvas.height = bmp.height;
-  }
-
-  ctx.translate(canvas.width / 2, canvas.height / 2);
-  ctx.rotate((angle * Math.PI) / 180);
-  ctx.drawImage(bmp, -bmp.width / 2, -bmp.height / 2);
-
-  return String((await worker.recognize(canvas))?.data?.text ?? "");
+  // Platform-native OCR executes entirely on-demand via the server
 }
 
 // ─── 3. DOCUMENT-TYPE DETECTION ────────────────────────────────────────────
@@ -329,6 +241,15 @@ function isPlausibleName(s) {
   return true;
 }
 
+function isPlausibleNameComponent(s) {
+  const u = up(s).trim();
+  if (u.length < 2 || u.length > 30) return false;
+  if (/\d/.test(u)) return false;
+  if (/[#$@*]/.test(u)) return false; // Avoid junk
+  for (const b of BLACKLIST) if (u === b || u.includes(" " + b) || u.includes(b + " ")) return false;
+  return true;
+}
+
 /** Remove trailing same-line field noise (PSA/DepEd forms). */
 function stripTrailing(s) {
   return s
@@ -342,6 +263,60 @@ function stripTrailing(s) {
 
 function detectName(lines) {
   const full = lines.join(" ");
+
+  // ── Strategy A: Scattered Child Name Components (e.g., PSA Birth Certificates) ──
+  // If the document has separate "Last Name", "First Name", and "Middle Name" labels
+  // scattered across different lines, we can reconstruct the full name.
+  {
+    let extractedFirst = "";
+    let extractedMiddle = "";
+    let extractedLast = "";
+
+    for (let i = 0; i < lines.length; i++) {
+      const normLine = up(lines[i].trim()).replace(/\s+/g, " ");
+
+      if (normLine === "LAST NAME" || normLine === "SURNAME" || normLine === "FAMILY NAME") {
+        for (let j = 1; j <= 2; j++) {
+          if (i + j >= lines.length) break;
+          const val = stripTrailing(norm(lines[i + j]));
+          if (val && isPlausibleNameComponent(val) && !/^(LAST|FIRST|MIDDLE|NAME|SEX|PLACE|DATE|TYPE|MAIDEN|CITIZENSHIP|RELIGION|AGE|RESIDENCE)/i.test(val)) {
+            extractedLast = val;
+            break;
+          }
+        }
+      }
+
+      if (normLine === "FIRST NAME" || normLine === "GIVEN NAME") {
+        for (let j = 1; j <= 2; j++) {
+          if (i + j >= lines.length) break;
+          const val = stripTrailing(norm(lines[i + j]));
+          if (val && isPlausibleNameComponent(val) && !/^(LAST|FIRST|MIDDLE|NAME|SEX|PLACE|DATE|TYPE|MAIDEN|CITIZENSHIP|RELIGION|AGE|RESIDENCE)/i.test(val)) {
+            extractedFirst = val;
+            break;
+          }
+        }
+      }
+
+      if (normLine === "MIDDLE NAME") {
+        for (let j = 1; j <= 2; j++) {
+          if (i + j >= lines.length) break;
+          const val = stripTrailing(norm(lines[i + j]));
+          if (val && isPlausibleNameComponent(val) && !/^(LAST|FIRST|MIDDLE|NAME|SEX|PLACE|DATE|TYPE|MAIDEN|CITIZENSHIP|RELIGION|AGE|RESIDENCE)/i.test(val)) {
+            extractedMiddle = val;
+            break;
+          }
+        }
+      }
+    }
+
+    if (extractedFirst && extractedLast) {
+      const fullName = extractedMiddle
+        ? `${extractedLast}, ${extractedFirst} ${extractedMiddle}`
+        : `${extractedLast}, ${extractedFirst}`;
+      console.log(`[OCR Name Parser] Successfully reconstructed scattered child name components: ${fullName}`);
+      return fullName;
+    }
+  }
 
   // ── Strategy 1: "certify / certifies / certified that [Title] NAME" ──
   {
@@ -661,6 +636,7 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
   // ── Extract raw text ──
   let rawText = "";
   let usedNative = false;
+  let ocrErrorMsg = "";
 
   try {
     const payload = new FormData();
@@ -669,21 +645,27 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
       method: "POST",
       body: payload,
     });
-    if (res.ok) {
-      const data = await res.json().catch(() => null);
-      if (data?.ok && typeof data?.text === "string") {
-        rawText = data.text;
-        usedNative = true;
-        console.log("[OCR] Using Native macOS Apple Vision OCR (Lightning Fast!)");
-      }
+    const data = await res.json().catch(() => null);
+    if (res.ok && data?.ok && typeof data?.text === "string") {
+      rawText = data.text;
+      usedNative = true;
+      console.log("[OCR] Using platform-native offline OCR (Lightning Fast!)");
+    } else {
+      ocrErrorMsg = data?.error || `Server returned status ${res.status}`;
     }
   } catch (e) {
-    console.warn("[OCR] Native Apple Vision OCR endpoint failed, falling back to Tesseract.js:", e);
+    ocrErrorMsg = e.message || String(e);
+    console.warn("[OCR] Platform-native offline OCR endpoint failed:", e);
   }
 
   if (!usedNative) {
-    const worker = await getWorker();
-    rawText = isPdf ? await ocrFromPdf(file, worker, rotation) : await ocrFromImage(file, worker, rotation);
+    throw new Error(
+      `Native offline OCR extraction failed.\n` +
+      `Details: ${ocrErrorMsg}\n\n` +
+      `Please ensure the native OCR binaries are compiled inside next-app/bin/:\n` +
+      `- For macOS: swiftc -O scripts/apple-vision-ocr/ocr.swift -o bin/apple-vision-ocr\n` +
+      `- For Windows: Run scripts\\windows-media-ocr\\build.bat (requires .NET 8.0+ SDK)`
+    );
   }
 
    

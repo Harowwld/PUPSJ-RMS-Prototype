@@ -19,10 +19,10 @@ export async function POST(req) {
     return createAuthErrorResponse(error || "Authentication required", 401);
   }
 
-  // Ensure this is macOS, fallback otherwise
-  if (os.platform() !== "darwin") {
+  // Ensure this is macOS or Windows
+  if (os.platform() !== "darwin" && os.platform() !== "win32") {
     return NextResponse.json(
-      { ok: false, error: "Native Apple Vision OCR is only supported on macOS." },
+      { ok: false, error: "Native offline OCR is only supported on macOS and Windows." },
       { status: 400 }
     );
   }
