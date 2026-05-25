@@ -11,8 +11,8 @@ export async function GET(req) {
     const includeArchived = searchParams.get("includeArchived") === "true";
     const sections = await listSections({ includeArchived });
     const scoped = courseCode
-      ? sections.filter((s) => String(s.course_code || "").toUpperCase() === courseCode)
-      : sections;
+      ? (sections || []).filter((s) => s && String(s.course_code || "").toUpperCase() === courseCode)
+      : (sections || []);
     return NextResponse.json({ ok: true, data: scoped });
   } catch (error) {
     return NextResponse.json(
@@ -35,15 +35,21 @@ export async function POST(req) {
     }
 
     const newSection = await createSection(name, courseCode);
+    
+    // Defensive property access for audit logging
+    const safeId = newSection && typeof newSection === 'object' ? newSection.id : "NEW";
+
     await writeAuditLog(req, `Create Course Block`, { 
       details: `created new course section block '${name}' assigned to academic program '${courseCode}'`,
       entity_type: "Section",
-      entity_id: newSection.id
+      entity_id: safeId
     });
-    return NextResponse.json({ ok: true, data: newSection });
+    
+    return NextResponse.json({ ok: true, data: newSection }, { status: 201 });
   } catch (error) {
+    const msg = String(error?.message || "Unknown Error");
     return NextResponse.json(
-      { ok: false, error: error.message },
+      { ok: false, error: msg },
       { status: 400 }
     );
   }
@@ -66,7 +72,7 @@ export async function PUT(req) {
     }
 
     const updated = await updateSection(id, name, courseCode, status);
-    // Log specifically if we're toggling status
+    
     if (status) {
        await writeAuditLog(req, `${status === "Active" ? "Restore" : "Archive"} Course Block`, { 
          details: `${status === "Active" ? "restored" : "archived"} section block identifier '${name}' (Program: ${courseCode})`,
@@ -105,7 +111,7 @@ export async function DELETE(req) {
     }
 
     const sections = await listSections({ includeArchived: true });
-    const target = sections.find(s => String(s.id) === String(id));
+    const target = (sections || []).find(s => s && String(s.id) === String(id));
 
     if (restore) {
       const { restoreSection } = await import("../../../lib/sectionsRepo");

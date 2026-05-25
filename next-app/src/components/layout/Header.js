@@ -83,6 +83,9 @@ export default function Header({ authUser, onLogout, children }) {
       if (e.key === "pup-logout") {
         setShowSessionExpired(true);
       }
+      if (e.key === "pup-session-recovered") {
+        setShowSessionExpired(false);
+      }
     };
     window.addEventListener("storage", handleStorageChange);
     return () => window.removeEventListener("storage", handleStorageChange);
@@ -103,13 +106,17 @@ export default function Header({ authUser, onLogout, children }) {
     <header className="bg-white border-b border-gray-300 flex-none z-20 shadow-sm">
       <AccountSetupModal authUser={authUser} />
       <div className="w-full px-4 h-16 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <i className="ph-bold ph-bank text-3xl text-pup-maroon"></i>
+        <div 
+          className="flex items-center gap-3 cursor-pointer group/logo active:scale-95 transition-transform select-none"
+          onClick={handleMainDashboardClick}
+          onDoubleClick={(e) => e.preventDefault()}
+        >
+          <i className="ph-bold ph-bank text-3xl text-pup-maroon transition-colors group-hover/logo:text-pup-darkMaroon"></i>
           <div className="leading-tight">
-            <h1 className="font-bold text-xl text-pup-maroon tracking-tight">
+            <h1 className="font-bold text-xl text-pup-maroon tracking-tight transition-colors group-hover/logo:text-pup-darkMaroon">
               PUP E-MANAGE
             </h1>
-            <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold">
+            <p className="text-[10px] text-gray-500 uppercase tracking-widest font-bold group-hover/logo:text-gray-600 transition-colors">
               Student Record Keeping
             </p>
           </div>

@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
+import { cn } from "@/lib/utils"
 
 export default function AccountSetupModal({ authUser }) {
   const [open, setOpen] = useState(false)
@@ -26,6 +27,7 @@ export default function AccountSetupModal({ authUser }) {
   const [pwConfirm, setPwConfirm] = useState("")
   const [pwLoading, setPwLoading] = useState(false)
   const [pwError, setPwError] = useState("")
+  const [showPw, setShowPw] = useState({ current: false, next: false, confirm: false })
 
   // Security state
   const [questions, setQuestions] = useState([])
@@ -71,6 +73,10 @@ export default function AccountSetupModal({ authUser }) {
     }
     if (pwNext !== pwConfirm) {
       setPwError("New passwords do not match")
+      return
+    }
+    if (pwNext === pwCurrent) {
+      setPwError("New password cannot be the same as the current password")
       return
     }
     if (pwNext.length < 6) {
@@ -238,46 +244,73 @@ export default function AccountSetupModal({ authUser }) {
                       {pwError}
                     </div>
                   )}
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase">
-                      Current Password{" "}
-                      <span className="text-pup-maroon">*</span>
-                    </label>
-                    <Input
-                      type="password"
-                      className="h-11 rounded-brand border-gray-300 bg-gray-50 text-sm font-bold text-gray-900 focus-visible:ring-pup-maroon"
-                      value={pwCurrent}
-                      onChange={(e) => setPwCurrent(e.target.value)}
-                      placeholder="e.g. pupstaff"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase">
-                      New Password <span className="text-pup-maroon">*</span>
-                    </label>
-                    <Input
-                      type="password"
-                      className="h-11 rounded-brand border-gray-300 bg-gray-50 text-sm font-bold text-gray-900 focus-visible:ring-pup-maroon"
-                      value={pwNext}
-                      onChange={(e) => setPwNext(e.target.value)}
-                      placeholder="Min. 6 characters"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase">
-                      Confirm New Password{" "}
-                      <span className="text-pup-maroon">*</span>
-                    </label>
-                    <Input
-                      type="password"
-                      className="h-11 rounded-brand border-gray-300 bg-gray-50 text-sm font-bold text-gray-900 focus-visible:ring-pup-maroon"
-                      value={pwConfirm}
-                      onChange={(e) => setPwConfirm(e.target.value)}
-                      placeholder="Must match new password"
-                      required
-                    />
+                  <div className="space-y-4">
+                    <div>
+                      <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase">
+                        Current Password <span className="text-pup-maroon">*</span>
+                      </label>
+                      <div className="relative group">
+                        <Input
+                          type={showPw.current ? "text" : "password"}
+                          className="h-11 rounded-brand border-gray-300 bg-gray-50 pr-10 text-sm font-bold text-gray-900 focus-visible:ring-pup-maroon"
+                          value={pwCurrent}
+                          onChange={(e) => setPwCurrent(e.target.value)}
+                          placeholder="e.g. pupstaff"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPw(prev => ({ ...prev, current: !prev.current }))}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon transition-colors"
+                        >
+                          <i className={cn("ph-bold", showPw.current ? "ph-eye-slash" : "ph-eye")}></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase">
+                        New Password <span className="text-pup-maroon">*</span>
+                      </label>
+                      <div className="relative group">
+                        <Input
+                          type={showPw.next ? "text" : "password"}
+                          className="h-11 rounded-brand border-gray-300 bg-gray-50 pr-10 text-sm font-bold text-gray-900 focus-visible:ring-pup-maroon"
+                          value={pwNext}
+                          onChange={(e) => setPwNext(e.target.value)}
+                          placeholder="Min. 6 characters"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPw(prev => ({ ...prev, next: !prev.next }))}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon transition-colors"
+                        >
+                          <i className={cn("ph-bold", showPw.next ? "ph-eye-slash" : "ph-eye")}></i>
+                        </button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase">
+                        Confirm New Password <span className="text-pup-maroon">*</span>
+                      </label>
+                      <div className="relative group">
+                        <Input
+                          type={showPw.confirm ? "text" : "password"}
+                          className="h-11 rounded-brand border-gray-300 bg-gray-50 pr-10 text-sm font-bold text-gray-900 focus-visible:ring-pup-maroon"
+                          value={pwConfirm}
+                          onChange={(e) => setPwConfirm(e.target.value)}
+                          placeholder="Must match new password"
+                          required
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPw(prev => ({ ...prev, confirm: !prev.confirm }))}
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon transition-colors"
+                        >
+                          <i className={cn("ph-bold", showPw.confirm ? "ph-eye-slash" : "ph-eye")}></i>
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <div className="flex shrink-0 justify-end border-t border-gray-100 bg-gray-50 p-5">

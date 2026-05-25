@@ -160,6 +160,11 @@ export default function Home() {
         }
 
         const role = String(json?.data?.role || "");
+        
+        // Signal other tabs to clear "Session Expired" modal
+        localStorage.setItem("pup-session-recovered", Date.now().toString());
+        localStorage.removeItem("pup-logout");
+
         if (role === "Admin") {
           router.push("/admin");
           return;
@@ -197,6 +202,10 @@ export default function Home() {
 
       toast.success("Verification Successful", { description: "Logging you in..." });
       
+      // Signal other tabs to clear "Session Expired" modal
+      localStorage.setItem("pup-session-recovered", Date.now().toString());
+      localStorage.removeItem("pup-logout");
+
       const role = String(json?.data?.role || "");
       if (role === "Admin") {
         router.push("/admin");

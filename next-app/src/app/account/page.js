@@ -31,6 +31,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import PageHeader from "@/components/shared/PageHeader";
 import { formatPHDateTime } from "@/lib/timeFormat";
+import { cn } from "@/lib/utils";
 
 function AccountPageContent() {
   const router = useRouter();
@@ -50,6 +51,7 @@ function AccountPageContent() {
   const [pwConfirm, setPwConfirm] = useState("");
   const [pwLoading, setPwLoading] = useState(false);
   const [pwError, setPwError] = useState("");
+  const [showPw, setShowPw] = useState({ current: false, next: false, confirm: false });
 
   // Security Form State
   const [globalQuestions, setGlobalQuestions] = useState([]);
@@ -193,6 +195,10 @@ function AccountPageContent() {
     }
     if (pwNext !== pwConfirm) {
       setPwError("New passwords do not match.");
+      return;
+    }
+    if (pwNext === pwCurrent) {
+      setPwError("New password cannot be the same as the current password.");
       return;
     }
     if (pwNext.length < 6) {
@@ -689,14 +695,23 @@ function AccountPageContent() {
                           <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1">
                             Current Password
                           </label>
-                          <Input
-                            type="password"
-                            className="h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900"
-                            placeholder="Type your old password"
-                            value={pwCurrent}
-                            onChange={(e) => setPwCurrent(e.target.value)}
-                            required
-                          />
+                          <div className="relative group">
+                            <Input
+                              type={showPw.current ? "text" : "password"}
+                              className="h-12 rounded-xl border border-gray-200 bg-white pr-10 pl-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900"
+                              placeholder="Type your old password"
+                              value={pwCurrent}
+                              onChange={(e) => setPwCurrent(e.target.value)}
+                              required
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPw(prev => ({ ...prev, current: !prev.current }))}
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon transition-colors"
+                            >
+                              <i className={cn("ph-bold", showPw.current ? "ph-eye-slash" : "ph-eye")}></i>
+                            </button>
+                          </div>
                         </div>
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -704,27 +719,45 @@ function AccountPageContent() {
                             <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1">
                               New Password
                             </label>
-                            <Input
-                              type="password"
-                              className="h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900"
-                              placeholder="Create a strong password"
-                              value={pwNext}
-                              onChange={(e) => setPwNext(e.target.value)}
-                              required
-                            />
+                            <div className="relative group">
+                              <Input
+                                type={showPw.next ? "text" : "password"}
+                                className="h-12 rounded-xl border border-gray-200 bg-white pr-10 pl-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900"
+                                placeholder="Create a strong password"
+                                value={pwNext}
+                                onChange={(e) => setPwNext(e.target.value)}
+                                required
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPw(prev => ({ ...prev, next: !prev.next }))}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon transition-colors"
+                              >
+                                <i className={cn("ph-bold", showPw.next ? "ph-eye-slash" : "ph-eye")}></i>
+                              </button>
+                            </div>
                           </div>
                           <div className="space-y-2">
                             <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1">
                               Confirm Password
                             </label>
-                            <Input
-                              type="password"
-                              className="h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900"
-                              placeholder="Match new password"
-                              value={pwConfirm}
-                              onChange={(e) => setPwConfirm(e.target.value)}
-                              required
-                            />
+                            <div className="relative group">
+                              <Input
+                                type={showPw.confirm ? "text" : "password"}
+                                className="h-12 rounded-xl border border-gray-200 bg-white pr-10 pl-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900"
+                                placeholder="Match new password"
+                                value={pwConfirm}
+                                onChange={(e) => setPwConfirm(e.target.value)}
+                                required
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPw(prev => ({ ...prev, confirm: !prev.confirm }))}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon transition-colors"
+                              >
+                                <i className={cn("ph-bold", showPw.confirm ? "ph-eye-slash" : "ph-eye")}></i>
+                              </button>
+                            </div>
                           </div>
                         </div>
                       </div>

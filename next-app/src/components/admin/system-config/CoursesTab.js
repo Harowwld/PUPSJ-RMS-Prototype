@@ -546,7 +546,7 @@ export default function CoursesTab({
                                   : "ADD"}
                               </>
                             )}
-                          </Button>{" "}
+                          </Button>
                         </div>
                       </td>
                       <td className="p-3 px-6">
@@ -712,9 +712,9 @@ export default function CoursesTab({
                           )}
                         </div>
                       </td>
-                      </tr>
-                      );
-                      })}                  {filteredCourses.length === 0 && (
+                    </tr>
+                  )})}
+                  {filteredCourses.length === 0 && (
                     <tr className="border-0 hover:bg-transparent">
                       <td colSpan={5} className="border-0 p-0">
                         <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500">

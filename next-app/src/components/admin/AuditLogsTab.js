@@ -252,7 +252,7 @@ export default function AuditLogsTab({
                   className="flex h-11 px-5 items-center justify-center gap-2 rounded-2xl bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-xl hover:-translate-y-0.5 text-[11px] font-black text-white active:scale-95 disabled:opacity-50 shadow-lg shadow-red-900/20 transition-all"
                 >
                   <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-pdf"} text-base`}></i>
-                  {isExporting ? "GENERATING..." : "GENERATE PDF REPORT"}
+                  {isExporting ? "GENERATING..." : "GENERATE REPORT"}
                 </Button>
               </div>
             }

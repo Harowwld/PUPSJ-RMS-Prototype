@@ -96,16 +96,6 @@ export default function SystemConfigTab({
   const [sections, setSections] = useState([])
   const [selectedCourseFilter, setSelectedCourseFilter] = useState("")
 
-  // Security Questions State
-  const [securityQuestions, setSecurityQuestions] = useState([
-    "",
-    "",
-    "",
-    "",
-    "",
-  ])
-  const [securitySaving, setSecuritySaving] = useState(false)
-
   // Table Selection States
   const [selectedDocTypes, setSelectedDocTypes] = useState({})
   const [selectedCourses, setSelectedCourses] = useState({})
@@ -137,6 +127,10 @@ export default function SystemConfigTab({
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [importing, setImporting] = useState(false)
+
+  // Security Questions State
+  const [securityQuestions, setSecurityQuestions] = useState(["", "", "", "", ""])
+  const [securitySaving, setSecuritySaving] = useState(false)
 
   // Confirmation Modal
   const [confirmOpen, setConfirmOpen] = useState(false)
@@ -1010,6 +1004,20 @@ export default function SystemConfigTab({
               </button>
               <button
                 type="button"
+                onClick={() => setActiveSubTab("security-questions")}
+                className={`flex items-center gap-2.5 rounded-brand px-5 py-2 text-sm font-bold transition-all duration-200 active:scale-95 ${
+                  activeSubTab === "security-questions"
+                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
+                    : "text-gray-500 hover:bg-white/50 hover:text-gray-700"
+                }`}
+              >
+                <i
+                  className={`ph-bold ph-shield-check ${activeSubTab === "security-questions" ? "" : "text-gray-400"}`}
+                ></i>
+                <span>SECURITY QUESTIONS</span>
+              </button>
+              <button
+                type="button"
                 onClick={() => setActiveSubTab("bulk-import")}
                 className={`flex items-center gap-2.5 rounded-brand px-5 py-2 text-sm font-bold transition-all duration-200 active:scale-95 ${
                   activeSubTab === "bulk-import"
@@ -1021,20 +1029,6 @@ export default function SystemConfigTab({
                   className={`ph-bold ph-upload-simple ${activeSubTab === "bulk-import" ? "" : "text-gray-400"}`}
                 ></i>
                 <span>IMPORTS</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveSubTab("security-questions")}
-                className={`flex items-center gap-2.5 rounded-brand px-5 py-2 text-sm font-bold transition-all duration-200 active:scale-95 ${
-                  activeSubTab === "security-questions"
-                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
-                    : "text-gray-500 hover:bg-white/50 hover:text-gray-700"
-                }`}
-              >
-                <i
-                  className={`ph-bold ph-lock-key ${activeSubTab === "security-questions" ? "" : "text-gray-400"}`}
-                ></i>
-                <span>SECURITY</span>
               </button>
             </div>
           </div>
@@ -1139,6 +1133,18 @@ export default function SystemConfigTab({
             </TabsContent>
 
             <TabsContent
+              value="security-questions"
+              className="m-0 flex flex-col border-0 focus-visible:ring-0"
+            >
+              <SecurityQuestionsTab
+                securityQuestions={securityQuestions}
+                setSecurityQuestions={setSecurityQuestions}
+                securitySaving={securitySaving}
+                handleSaveSecurityQuestions={handleSaveSecurityQuestions}
+              />
+            </TabsContent>
+
+            <TabsContent
               value="bulk-import"
               className="m-0 flex flex-col border-0 bg-gray-50/50 focus-visible:ring-0"
             >
@@ -1160,19 +1166,6 @@ export default function SystemConfigTab({
                 onUpdateRow={handleUpdateImportRow}
                 onAddRow={handleManualAddRow}
                 courses={courses}
-              />
-            </TabsContent>
-
-            <TabsContent
-              value="security-questions"
-              className="m-0 flex flex-col border-0 focus-visible:ring-0"
-            >
-              <SecurityQuestionsTab
-                loading={loading}
-                securityQuestions={securityQuestions}
-                setSecurityQuestions={setSecurityQuestions}
-                securitySaving={securitySaving}
-                handleSaveSecurityQuestions={handleSaveSecurityQuestions}
               />
             </TabsContent>
           </Card>

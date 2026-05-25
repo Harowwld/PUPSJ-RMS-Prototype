@@ -7,97 +7,114 @@
  * - w,h are width/height
  */
 
+// Grid Constants
+const GX = 0.025; // 1 horizontal unit
+const GY = 0.04;  // 1 vertical unit
+
 export const ROOM_TEMPLATES = [
-  { id: "grid-4x2", name: "Grid 4x2", cabinets: buildGridCabinets({ cols: 4, rows: 2, gap: 0.04 }) },
-  { id: "grid-3x3", name: "Grid 3x3", cabinets: buildGridCabinets({ cols: 3, rows: 3, gap: 0.04 }) },
-  { id: "grid-3x2", name: "Grid 3x2", cabinets: buildGridCabinets({ cols: 3, rows: 2, gap: 0.04 }) },
+  { id: "grid-4x2", name: "Grid 4x2", cabinets: buildGridCabinets({ cols: 4, rows: 2 }) },
+  { id: "grid-3x3", name: "Grid 3x3", cabinets: buildGridCabinets({ cols: 3, rows: 3 }) },
+  { id: "grid-3x2", name: "Grid 3x2", cabinets: buildGridCabinets({ cols: 3, rows: 2 }) },
   { id: "u-shape", name: "U-Shape Layout", cabinets: buildUShapeLayout() },
   { id: "rev-u-shape", name: "Reversed U-Shape", cabinets: buildUShapeLayout({ reversed: true }) },
 ];
 
 export function getDefaultDoor() {
-  return { x: 0.05, y: 0.96, w: 0.08, h: 0.03, rotation: 0 };
+  // Aligned to grid: x=2 units, y=24 units, w=3 units, h=1 unit
+  return { x: GX * 2, y: GY * 24, w: GX * 3, h: GY, rotation: 0 };
 }
 
 function buildGridCabinets({
   cols = 4,
   rows = 2,
-  gap = 0.02,
-  centerAisle = false,
 } = {}) {
-  const w = 0.08;
-  const h = 0.12;
+  const w = GX * 3; // 3 units wide (0.075)
+  const h = GY * 3; // 3 units high (0.12)
+  const gapX = GX;  // 1 unit gap
+  const gapY = GY;  // 1 unit gap
 
-  const totalW = cols * w + (cols - 1) * gap;
-  const totalH = rows * h + (rows - 1) * gap;
+  const totalWUnits = cols * 3 + (cols - 1);
+  const totalHUnits = rows * 3 + (rows - 1);
 
-  const startX = (1 - totalW) / 2;
-  const startY = (1 - totalH) / 2;
+  // Calculate starting grid units (centered)
+  const startXUnits = Math.floor((40 - totalWUnits) / 2);
+  const startYUnits = Math.floor((25 - totalHUnits) / 2);
 
-  const count = cols * rows;
   const cabinets = [];
   let cabIdx = 0;
 
-  for (let idx = 0; idx < count; idx++) {
-    const col = idx % cols;
-    const row = Math.floor(idx / cols);
-
-    // Skip the absolute center if centerAisle is requested (only for 3x3)
-    if (centerAisle && cols === 3 && rows === 3 && col === 1 && row === 1) {
-      continue;
+  for (let row = 0; row < rows; row++) {
+    for (let col = 0; col < cols; col++) {
+      const cabChar = String.fromCharCode(65 + (cabIdx++));
+      cabinets.push({
+        id: `${cabChar}`,
+        rect: {
+          x: (startXUnits + col * 4) * GX,
+          y: (startYUnits + row * 4) * GY,
+          w,
+          h,
+        },
+        rotation: 0,
+        drawerIds: [1, 2, 3, 4],
+      });
     }
-
-    const cabChar = String.fromCharCode(65 + (cabIdx++)); // Sequential naming
-    cabinets.push({
-      id: `CAB-${cabChar}`,
-      rect: {
-        x: startX + col * (w + gap),
-        y: startY + row * (h + gap),
-        w,
-        h,
-      },
-      rotation: 0,
-      drawerIds: [1, 2, 3, 4],
-    });
   }
   return cabinets;
 }
 
 function buildUShapeLayout({ reversed = false } = {}) {
   const cabinets = [];
-  const cabW = 0.08;
-  const cabH = 0.12;
-  const margin = 0.05;
+  const w = GX * 3; // 3 units
+  const h = GY * 3; // 3 units
   let cabIdx = 0;
 
-  const getNextId = () => `CAB-${String.fromCharCode(65 + cabIdx++)}`;
+  const getNextId = () => `${String.fromCharCode(65 + cabIdx++)}`;
 
-  // Left column
+  // Left column (4 cabinets)
+  // Start at x=2 units, y=2 units
   for (let i = 0; i < 4; i++) {
     cabinets.push({
       id: getNextId(),
-      rect: { x: margin, y: margin + i * (cabH + 0.02), w: cabW, h: cabH },
+      rect: { 
+        x: GX * 2, 
+        y: (2 + i * 4) * GY, 
+        w, 
+        h 
+      },
       rotation: 0,
       drawerIds: [1, 2, 3, 4],
     });
   }
 
-  // Bottom row (the base of the U)
-  const baseY = reversed ? margin : 1 - margin - cabH;
+  // Base of the U (horizontal row, 5 cabinets)
+  // Base y is either top (2 units) or bottom (20 units)
+  const baseYUnits = reversed ? 2 : 20;
+  // Start X is after the left column + 1 gap unit = 2 + 3 + 1 = 6 units
   for (let i = 0; i < 5; i++) {
     cabinets.push({
       id: getNextId(),
-      rect: { x: margin + cabW + 0.02 + i * (cabW + 0.02), y: baseY, w: cabW, h: cabH },
+      rect: { 
+        x: (6 + i * 4) * GX, 
+        y: baseYUnits * GY, 
+        w, 
+        h 
+      },
       rotation: 0,
       drawerIds: [1, 2, 3, 4],
     });
   }
 
-  // Right column
+  // Right column (4 cabinets)
+  // X is 40 - 2 (margin) - 3 (width) = 35 units
   for (let i = 0; i < 4; i++) {
     cabinets.push({
       id: getNextId(),
-      rect: { x: 1 - margin - cabW, y: margin + i * (cabH + 0.02), w: cabW, h: cabH },
+      rect: { 
+        x: GX * 35, 
+        y: (2 + i * 4) * GY, 
+        w, 
+        h 
+      },
       rotation: 0,
       drawerIds: [1, 2, 3, 4],
     });
@@ -107,7 +124,7 @@ function buildUShapeLayout({ reversed = false } = {}) {
 }
 
 export function buildDefaultStorageLayout() {
-  const roomIds = Array.from({ length: 10 }, (_, i) => i + 1); // 1..10
+  const roomIds = Array.from({ length: 10 }, (_, i) => i + 1);
 
   const rooms = roomIds.map((roomId) => {
     return {

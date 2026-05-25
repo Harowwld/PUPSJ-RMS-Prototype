@@ -39,8 +39,6 @@ function PDFFrame({ docId }) {
 export default function PDFPreviewModal({ open, onClose, preview }) {
   const [isFullscreen, setIsFullscreen] = useState(false)
 
-  if (!open) return null
-
   const docId = preview?.docId
 
   return (
@@ -69,10 +67,10 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
               </div>
               <div className="min-w-0">
                 <DialogTitle className="text-left text-xl leading-none font-black tracking-tight text-gray-900">
-                  Document Preview: {preview.docType}
+                  Document Preview: {preview?.docType || "Loading..."}
                 </DialogTitle>
                 <p className="mt-1.5 text-left text-sm font-medium text-gray-500">
-                  Reviewing digitized record for {preview.studentName}. Ensure all
+                  Reviewing digitized record for {preview?.studentName || "student"}. Ensure all
                   identifiers and data are clearly legible.
                 </p>
               </div>

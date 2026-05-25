@@ -625,8 +625,7 @@ export default function DocTypesTab({
                         </div>
                       </td>
                     </tr>
-                  );
-                })}
+                  )})}
                   {filteredDocTypes.length === 0 && (
                     <tr className="border-0 hover:bg-transparent">
                       <td colSpan={4} className="border-0 p-0">

@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useMemo, useRef, useEffect } from "react";
 
 export default function ConfirmModal({
   open,
@@ -26,8 +27,21 @@ export default function ConfirmModal({
   icon: customIcon,
   buttonIcon: customButtonIcon,
   confirmClassName,
+  verificationValue = "",
+  verificationTarget = "",
+  onVerificationChange,
 }) {
-  if (!open) return null;
+  const inputRefs = [useRef(), useRef(), useRef(), useRef()];
+
+  // Reset and focus when modal opens
+  useEffect(() => {
+    if (open && verificationTarget) {
+      onVerificationChange?.("");
+      setTimeout(() => {
+        inputRefs[0].current?.focus();
+      }, 350); // Wait for fade-in animation
+    }
+  }, [open, verificationTarget]);
 
   const variantClasses = {
     danger: {
@@ -69,9 +83,34 @@ export default function ConfirmModal({
   const displayIcon = customIcon || v.icon;
   const displayButtonIcon = customButtonIcon || v.buttonIcon;
 
+  const isVerificationEnabled = !!verificationTarget;
+  const isVerified = !isVerificationEnabled || verificationValue === verificationTarget;
+
+  const handleInputChange = (index, val) => {
+    const newVal = val.replace(/\D/g, "").slice(-1);
+    if (!newVal && val !== "") return; // only digits
+
+    const valueArray = verificationValue.split("");
+    while (valueArray.length < 4) valueArray.push("");
+    valueArray[index] = newVal;
+    
+    const finalString = valueArray.join("").slice(0, 4);
+    onVerificationChange?.(finalString);
+
+    if (newVal && index < 3) {
+      inputRefs[index + 1].current?.focus();
+    }
+  };
+
+  const handleKeyDown = (index, e) => {
+    if (e.key === "Backspace" && !verificationValue[index] && index > 0) {
+      inputRefs[index - 1].current?.focus();
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
-      <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
         <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50 min-w-0">
           <div className="flex items-start gap-4 w-full">
             <div className={`w-12 h-12 rounded-full border flex items-center justify-center shrink-0 ${v.iconWrap}`}>
@@ -96,33 +135,76 @@ export default function ConfirmModal({
           </div>
         </DialogHeader>
 
-        {selectedItems.length > 0 && (
-          <div className="p-6 bg-white min-w-0">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
-              Selected Items ({selectedItems.length})
-            </p>
-            <div className="relative w-full">
-              <div className="max-h-32 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50/50 p-2 space-y-1 custom-scrollbar pb-6 w-full">
-                {selectedItems.map((item, idx) => (
-                  <div
-                    key={idx}
-                    className="flex items-center gap-2 px-2 py-1.5 rounded bg-white border border-gray-100 shadow-sm overflow-hidden w-full"
-                  >
-                    <div className={`w-1.5 h-1.5 shrink-0 rounded-full ${variant === "success" ? "bg-emerald-500" : (variant === "warning" ? "bg-amber-500" : "bg-red-500")}`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="truncate text-[11px] font-bold text-gray-700">
-                        {item}
-                      </p>
+        <div className="p-6 space-y-5 bg-white min-w-0">
+          {selectedItems.length > 0 && (
+            <div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                Selected Items ({selectedItems.length})
+              </p>
+              <div className="relative w-full">
+                <div className="max-h-32 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50/50 p-2 space-y-1 custom-scrollbar pb-6 w-full">
+                  {selectedItems.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-2 px-2 py-1.5 rounded bg-white border border-gray-100 shadow-sm overflow-hidden w-full"
+                    >
+                      <div className={`w-1.5 h-1.5 shrink-0 rounded-full ${variant === "success" ? "bg-emerald-500" : (variant === "warning" ? "bg-amber-500" : "bg-red-500")}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate text-[11px] font-bold text-gray-700">
+                          {item}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
+                {selectedItems.length > 3 && (
+                  <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-50/50 to-transparent pointer-events-none rounded-b-lg z-10" />
+                )}
               </div>
-              {selectedItems.length > 3 && (
-                <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-50/50 to-transparent pointer-events-none rounded-b-lg z-10" />
-              )}
             </div>
-          </div>
-        )}
+          )}
+
+          {isVerificationEnabled && (
+            <div className="rounded-xl border border-red-100 bg-red-50/30 p-5 shadow-xs">
+              <div className="flex flex-col items-center gap-5">
+                <div className="text-center">
+                  <label className="mb-2 block text-[9px] font-black tracking-widest text-red-800/60 uppercase">
+                    Security Authorization Code
+                  </label>
+                  <div className="flex h-12 items-center justify-center rounded-xl border-2 border-dashed border-red-200 bg-white px-8 font-mono text-2xl font-black tracking-[0.5em] text-red-700 shadow-inner">
+                    {verificationTarget}
+                  </div>
+                </div>
+
+                <div className="w-full">
+                  <label className="mb-3 block text-center text-[9px] font-black tracking-widest text-red-800/60 uppercase">
+                    Input Matching Digits
+                  </label>
+                  <div className="flex justify-center gap-3">
+                    {[0, 1, 2, 3].map((i) => (
+                      <input
+                        key={i}
+                        ref={inputRefs[i]}
+                        type="text"
+                        maxLength={1}
+                        inputMode="numeric"
+                        className="h-16 w-14 rounded-xl border-2 border-red-200 bg-white text-center font-mono text-3xl font-black text-gray-900 shadow-sm transition-all focus:scale-105 focus:border-red-500 focus:ring-4 focus:ring-red-100 focus:outline-none caret-transparent"
+                        placeholder="0"
+                        value={verificationValue[i] || ""}
+                        onChange={(e) => handleInputChange(i, e.target.value)}
+                        onKeyDown={(e) => handleKeyDown(i, e)}
+                        autoFocus={i === 0}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <p className="mt-5 text-[10px] font-bold text-red-700/70 text-center leading-tight">
+                For security, please enter the code shown above to enable the deletion button.
+              </p>
+            </div>
+          )}
+        </div>
 
         <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
           <Button
@@ -138,13 +220,13 @@ export default function ConfirmModal({
             type="button"
             variant={v.confirmVariant}
             onClick={onConfirm}
-            disabled={isLoading || disabled}
+            disabled={isLoading || disabled || !isVerified}
             className={cn(
-              "h-11 px-6 text-sm font-bold shadow-sm rounded-brand gap-2 flex items-center transition-all active:scale-95",
+              "h-11 px-6 text-sm font-black shadow-sm rounded-brand gap-2 flex items-center transition-all active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
               variant === "success" && "bg-green-600 hover:bg-green-700 text-white",
               variant === "warning" && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white"),
-              (v.confirmVariant === "default" && !["success", "warning"].includes(variant)) && "bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white",
-              v.confirmVariant === "destructive" && "bg-linear-to-b from-red-600 to-red-800 border-[3px] border-red-900 hover:from-red-500 hover:to-red-700 hover:shadow-md text-white",
+              v.confirmVariant === "destructive" && "bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white",
+              (v.confirmVariant === "default" && !["success", "warning"].includes(variant)) && "bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white",
               confirmClassName
             )}
           >

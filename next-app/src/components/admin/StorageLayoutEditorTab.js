@@ -27,6 +27,10 @@ import ConflictResolutionModals from "./storage-layout/ConflictResolutionModals"
 import { Select } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
 import { cn } from "@/lib/utils"
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog"
 
 // Utilities
 import {
@@ -38,6 +42,7 @@ import {
 } from "@/lib/storageLayoutUtils"
 
 export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty, error = null }) {
+  // 1. BASE STATE
   const [layout, setLayout] = useState(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -51,24 +56,6 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   const [saveCountdown, setSaveCountdown] = useState(0)
   const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false)
 
-  useEffect(() => {
-    let timer
-    if (saveConfirmOpen) {
-      setSaveCountdown(3)
-      timer = setInterval(() => {
-        setSaveCountdown((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer)
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
-    } else {
-      setSaveCountdown(0)
-    }
-    return () => clearInterval(timer)
-  }, [saveConfirmOpen])
   const [deleteRoomConfirmOpen, setDeleteRoomConfirmOpen] = useState(false)
   const [resetRoomConfirmOpen, setResetRoomConfirmOpen] = useState(false)
   const [templateApplyConfirmOpen, setTemplateApplyConfirmOpen] = useState(false)
@@ -87,12 +74,74 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   const [applyReportOpen, setApplyReportOpen] = useState(false)
   const [applyReportRows, setApplyReportRows] = useState([])
 
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [shouldRenderModal, setShouldRenderModal] = useState(false)
+
+  const toggleMaximize = useCallback(() => {
+    if (isModalOpen) {
+      setIsModalOpen(false)
+      setTimeout(() => setShouldRenderModal(false), 300)
+    } else {
+      setShouldRenderModal(true)
+      setIsModalOpen(true)
+    }
+  }, [isModalOpen])
+
   const [selectionBox, setSelectionBox] = useState(null)
+  const [history, setHistory] = useState([])
+  const [clipboard, setClipboard] = useState(null)
 
   const canvasRef = useRef(null)
   const dragRef = useRef(null)
-  const MIN_SIZE = 0.02
 
+  const MIN_SIZE = 0.025
+  const CABINET_ASPECT_RATIO = 1.6666666666666667 // 0.125 / 0.075 to match 5x3 grid units
+
+  // 2. CORE UTILITY FUNCTIONS (Updaters)
+  const updateRoom = useCallback((roomId, updater) => {
+    setLayout((prev) => {
+      if (!prev) return prev
+      const rooms = prev.rooms.map((r) => (r.id === roomId ? updater(r) : r))
+      rooms.sort((a, b) => a.id - b.id)
+      return { ...prev, rooms }
+    })
+    setIsDirty?.(true)
+  }, [setIsDirty])
+
+  const updateCabinet = useCallback((roomId, cabinetId, updater) => {
+    if (cabinetId === "DOOR") {
+      updateRoom(roomId, (r) => ({
+        ...r,
+        door: updater(r.door),
+      }))
+      return
+    }
+    setLayout((prev) => {
+      if (!prev) return prev
+      const rooms = prev.rooms.map((r) => {
+        if (r.id !== roomId) return r
+        const cabinets = r.cabinets.map((c) => {
+          if (c.id !== cabinetId) return c
+          return updater(c)
+        })
+        return { ...r, cabinets }
+      })
+      return { ...prev, rooms }
+    })
+    setIsDirty?.(true)
+  }, [updateRoom, setIsDirty])
+
+  const pushHistory = useCallback((currentLayout) => {
+    if (!currentLayout) return
+    setHistory((prev) => {
+      // Don't push if it's the same as the last state
+      const last = prev[prev.length - 1]
+      if (last && JSON.stringify(last) === JSON.stringify(currentLayout)) return prev
+      return [...prev.slice(-19), JSON.parse(JSON.stringify(currentLayout))]
+    })
+  }, [])
+
+  // 3. DERIVED STATE
   const activeRoom = useMemo(() => {
     if (!layout || activeRoomId == null) return null
     return layout.rooms.find((r) => r.id === activeRoomId) || null
@@ -116,6 +165,285 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     }
     return activeRoom.cabinets.find((c) => c.id === id) || null
   }, [activeRoom, selectedCabinetIds])
+
+  // 4. HIGH-LEVEL CALLBACKS (Undo, Copy, Paste, Add/Remove)
+  const undo = useCallback(() => {
+    if (history.length === 0) return
+    const prev = history[history.length - 1]
+    setHistory((h) => h.slice(0, -1))
+    setLayout(prev)
+    setIsDirty?.(true)
+  }, [history, setIsDirty])
+
+  const copyCabinets = useCallback(() => {
+    if (!activeRoom || selectedCabinetIds.size === 0) return
+    const cabs = activeRoom.cabinets.filter(c => selectedCabinetIds.has(c.id))
+    setClipboard(JSON.parse(JSON.stringify(cabs)))
+  }, [activeRoom, selectedCabinetIds])
+
+  const pasteCabinets = useCallback(() => {
+    if (!activeRoom || !clipboard) return
+    pushHistory(layout)
+
+    const existingIds = new Set(activeRoom.cabinets.map(c => c.id))
+    const getNextId = (currentSet) => {
+      let counter = 0
+      while (true) {
+        const id = String.fromCharCode(65 + (counter % 26)) + (counter >= 26 ? Math.floor(counter / 26) : "")
+        if (!currentSet.has(id)) return id
+        counter++
+      }
+    }
+
+    const newCabinets = clipboard.map(c => {
+      const id = getNextId(existingIds)
+      existingIds.add(id)
+      return {
+        ...c,
+        id,
+        rect: {
+          ...c.rect,
+          x: snapValue(c.rect.x + 0.05, true, 'x'),
+          y: snapValue(c.rect.y + 0.05, true, 'y')
+        }
+      }
+    })
+
+    updateRoom(activeRoom.id, (r) => ({
+      ...r,
+      cabinets: [...r.cabinets, ...newCabinets].sort((a, b) =>
+        String(a.id).localeCompare(String(b.id))
+      ),
+    }))
+
+    setSelectedCabinetIds(new Set(newCabinets.map(c => c.id)))
+  }, [activeRoom, clipboard, layout, pushHistory, updateRoom])
+
+  const addCabinet = useCallback(() => {
+    if (!activeRoom) return
+    pushHistory(layout)
+    const existing = new Set(activeRoom.cabinets.map((c) => c.id))
+    let id = ""
+    let counter = 0
+    while (true) {
+      id = String.fromCharCode(65 + (counter % 26)) + (counter >= 26 ? Math.floor(counter / 26) : "")
+      if (!existing.has(id)) break
+      counter++
+    }
+    const cab = {
+      id,
+      rect: { x: 0.1, y: 0.1, w: 0.075, h: 0.125 }, 
+      rotation: 0,
+      drawerIds: [1, 2, 3, 4],
+    }
+    updateRoom(activeRoom.id, (r) => ({
+      ...r,
+      cabinets: [...r.cabinets, cab].sort((a, b) =>
+        String(a.id).localeCompare(String(b.id))
+      ),
+    }))
+    setSelectedCabinetIds(new Set([id]))
+  }, [activeRoom, layout, pushHistory, updateRoom])
+
+  const removeSelectedCabinet = useCallback(() => {
+    if (!activeRoom || selectedCabinetIds.size === 0) return
+    pushHistory(layout)
+    
+    const idsToRemove = Array.from(selectedCabinetIds)
+    
+    updateRoom(activeRoom.id, (room) => ({
+      ...room,
+      cabinets: room.cabinets.filter((c) => !idsToRemove.includes(c.id)),
+    }))
+    
+    setSelectedCabinetIds(new Set())
+  }, [activeRoom, selectedCabinetIds, layout, pushHistory, updateRoom])
+
+  const duplicateSelectedCabinet = useCallback(() => {
+    if (!activeRoom || !selectedCabinet) return
+    pushHistory(layout)
+    const existingIds = new Set(activeRoom.cabinets.map((c) => c.id))
+    let id = ""
+    let counter = 0
+    while (true) {
+      id = String.fromCharCode(65 + (counter % 26)) + (counter >= 26 ? Math.floor(counter / 26) : "")
+      if (!existingIds.has(id)) break
+      counter++
+    }
+    const eff = getCabinetEffectiveSize(selectedCabinet)
+    const foundX = clamp(selectedCabinet.rect.x + 0.05, 0, 1 - eff.w)
+    const foundY = clamp(selectedCabinet.rect.y + 0.05, 0, 1 - eff.h)
+    const newCab = {
+      ...selectedCabinet,
+      id,
+      rect: { ...selectedCabinet.rect, x: foundX, y: foundY },
+    }
+    updateRoom(activeRoom.id, (r) => ({
+      ...r,
+      cabinets: [...r.cabinets, newCab].sort((a, b) =>
+        String(a.id).localeCompare(String(b.id))
+      ),
+    }))
+    setSelectedCabinetIds(new Set([id]))
+  }, [activeRoom, selectedCabinet, layout, pushHistory, updateRoom])
+
+  const addDrawerToSelected = useCallback(() => {
+    if (!activeRoom || !selectedCabinet || selectedCabinet.isDoor) return
+    const ids = selectedCabinet.drawerIds || []
+    const nextId = (Math.max(0, ...ids.map(Number)) || 0) + 1
+    updateCabinet(activeRoom.id, selectedCabinet.id, (c) => ({
+      ...c,
+      drawerIds: [...(c.drawerIds || []), nextId],
+    }))
+  }, [activeRoom, selectedCabinet, updateCabinet])
+
+  const removeDrawerFromSelected = useCallback(() => {
+    if (!activeRoom || !selectedCabinet || selectedCabinet.isDoor) return
+    const ids = selectedCabinet.drawerIds || []
+    if (ids.length <= 1) return
+    updateCabinet(activeRoom.id, selectedCabinet.id, (c) => ({
+      ...c,
+      drawerIds: (c.drawerIds || []).slice(0, -1),
+    }))
+  }, [activeRoom, selectedCabinet, updateCabinet])
+
+  const updateSelectedRectFromNormalized = useCallback((nextRect) => {
+    if (!activeRoom || !selectedCabinet) return
+    updateCabinet(activeRoom.id, selectedCabinet.id, (c) =>
+      clampToRoom({ ...c, rect: nextRect })
+    )
+  }, [activeRoom, selectedCabinet, updateCabinet])
+
+  const updateSelectedSizeNormalized = useCallback((nw, nh) => {
+    if (!activeRoom || !selectedCabinet) return
+    const w = Math.max(MIN_SIZE, nw)
+    const h = w * CABINET_ASPECT_RATIO 
+    updateCabinet(activeRoom.id, selectedCabinet.id, (c) =>
+      clampToRoom({ ...c, rect: { ...c.rect, w, h } })
+    )
+  }, [activeRoom, selectedCabinet, updateCabinet, CABINET_ASPECT_RATIO])
+
+  // 5. EVENT HANDLERS
+  const handleCanvasPointerMove = useCallback((e) => {
+    if (!dragRef.current || !activeRoom) return
+    const container = e.currentTarget
+    if (!container) return
+
+    const box = container.getBoundingClientRect()
+    const relX = (e.clientX - box.left) / Math.max(1, box.width)
+    const relY = (e.clientY - box.top) / Math.max(1, box.height)
+
+    const { mode, startX, startY, initialPositions } = dragRef.current
+
+    if (mode === "door") {
+      const dx = snapValue(relX, snapToGrid, 'x')
+      const dy = snapValue(relY, snapToGrid, 'y')
+      updateRoom(activeRoom.id, (r) => ({
+        ...r,
+        door: {
+          ...r.door,
+          x: clamp(dx, 0, 1),
+          y: clamp(dy, 0, 1),
+        },
+      }))
+    } else if (mode === "marquee") {
+      setSelectionBox({
+        x1: startX,
+        y1: startY,
+        x2: relX,
+        y2: relY,
+      })
+    } else if (mode === "move") {
+      const dx = relX - startX
+      const dy = relY - startY
+      initialPositions.forEach((pos) => {
+        const nextX = snapValue(pos.x + dx, snapToGrid, 'x')
+        const nextY = snapValue(pos.y + dy, snapToGrid, 'y')
+        updateCabinet(activeRoom.id, pos.id, (c) =>
+          clampToRoom({ ...c, rect: { ...c.rect, x: nextX, y: nextY } })
+        )
+      })
+    } else if (mode === "resize" && selectedCabinet) {
+      const dw = relX - selectedCabinet.rect.x
+      const nw = snapValue(Math.max(MIN_SIZE, dw), snapToGrid, 'x')
+      const nh = nw * CABINET_ASPECT_RATIO 
+      updateCabinet(activeRoom.id, selectedCabinet.id, (c) =>
+        clampToRoom({ ...c, rect: { ...c.rect, w: nw, h: nh } })
+      )
+    }
+  }, [activeRoom, selectedCabinet, snapToGrid, updateCabinet, updateRoom, CABINET_ASPECT_RATIO])
+
+  const handleCanvasPointerUp = useCallback((e) => {
+    if (!dragRef.current) return
+    
+    const { mode } = dragRef.current
+
+    if (mode === "marquee" && selectionBox && activeRoom) {
+      const x1 = Math.min(selectionBox.x1, selectionBox.x2)
+      const x2 = Math.max(selectionBox.x1, selectionBox.x2)
+      const y1 = Math.min(selectionBox.y1, selectionBox.y2)
+      const y2 = Math.max(selectionBox.y1, selectionBox.y2)
+
+      const newlySelected = new Set()
+      activeRoom.cabinets.forEach((cab) => {
+        const eff = getCabinetEffectiveSize(cab)
+        const cx1 = cab.rect.x
+        const cx2 = cab.rect.x + eff.w
+        const cy1 = cab.rect.y
+        const cy2 = cab.rect.y + eff.h
+
+        const intersects = !(cx2 < x1 || cx1 > x2 || cy2 < y1 || cy1 > y2)
+        if (intersects) newlySelected.add(cab.id)
+      })
+      setSelectedCabinetIds(newlySelected)
+    }
+
+    dragRef.current = null
+    setSelectionBox(null)
+    try {
+      e.target.releasePointerCapture(e.pointerId)
+    } catch {
+      // ignore
+    }
+  }, [selectionBox, activeRoom])
+
+  // 6. LIFE CYCLE / EFFECTS
+  useEffect(() => {
+    let timer
+    if (saveConfirmOpen) {
+      setSaveCountdown(3)
+      timer = setInterval(() => {
+        setSaveCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(timer)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    } else {
+      setSaveCountdown(0)
+    }
+    return () => clearInterval(timer)
+  }, [saveConfirmOpen])
+
+  useEffect(() => {
+    if (!activeRoom) {
+      if (selectedCabinetIds.size > 0) {
+        setSelectedCabinetIds(new Set())
+      }
+    } else {
+      const validIds = new Set()
+      for (const id of selectedCabinetIds) {
+        if (activeRoom.cabinets.some((c) => c.id === id) || id === "DOOR") {
+          validIds.add(id)
+        }
+      }
+      if (validIds.size !== selectedCabinetIds.size) {
+        setSelectedCabinetIds(validIds)
+      }
+    }
+  }, [activeRoom, selectedCabinetIds.size])
 
   const [activePath, setActivePath] = useState(null)
   const [simulationMode, setSimulationMode] = useState(false)
@@ -189,7 +517,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         setStudentRoomUsage(map)
         setStudentDrawerUsage(drawerMap)
       } catch {
-        // silent; server-side save validation still protects integrity
+        // silent
       }
     })()
   }, [])
@@ -198,369 +526,6 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     if (!activeRoom) return 0
     return Number(studentRoomUsage.get(Number(activeRoom.id)) || 0)
   }, [activeRoom, studentRoomUsage])
-
-  useEffect(() => {
-    if (!activeRoom) {
-      if (selectedCabinetIds.size > 0) {
-        setSelectedCabinetIds(new Set())
-      }
-    } else {
-      const validIds = new Set()
-      for (const id of selectedCabinetIds) {
-        if (activeRoom.cabinets.some((c) => c.id === id) || id === "DOOR") {
-          validIds.add(id)
-        }
-      }
-      if (validIds.size !== selectedCabinetIds.size) {
-        setSelectedCabinetIds(validIds)
-      }
-    }
-  }, [activeRoom, selectedCabinetIds.size])
-
-  const updateRoom = useCallback((roomId, updater) => {
-    setLayout((prev) => {
-      if (!prev) return prev
-      const rooms = prev.rooms.map((r) => (r.id === roomId ? updater(r) : r))
-      rooms.sort((a, b) => a.id - b.id)
-      return { ...prev, rooms }
-    })
-    setIsDirty?.(true)
-  }, [setIsDirty])
-
-  const updateCabinet = useCallback((roomId, cabinetId, updater) => {
-    if (cabinetId === "DOOR") {
-      updateRoom(roomId, (r) => ({
-        ...r,
-        door: updater(r.door),
-      }))
-      return
-    }
-    setLayout((prev) => {
-      if (!prev) return prev
-      const rooms = prev.rooms.map((r) => {
-        if (r.id !== roomId) return r
-        const cabinets = r.cabinets.map((c) => {
-          if (c.id !== cabinetId) return c
-          return updater(c)
-        })
-        return { ...r, cabinets }
-      })
-      return { ...prev, rooms }
-    })
-    setIsDirty?.(true)
-  }, [updateRoom, setIsDirty])
-
-  function getNextRoomId(rooms) {
-    const max = Math.max(0, ...(rooms || []).map((r) => Number(r.id) || 0))
-    return max + 1
-  }
-
-  function addRoom() {
-    let createdRoomId = null
-    setLayout((prev) => {
-      if (!prev) return prev
-      const nextId = getNextRoomId(prev.rooms)
-      createdRoomId = nextId
-      const next = {
-        id: nextId,
-        name: `Room ${nextId}`,
-        cabinets: [],
-        door: getDefaultDoor(),
-      }
-      return {
-        ...prev,
-        rooms: [...prev.rooms, next].sort((a, b) => a.id - b.id),
-      }
-    })
-    // Explicitly NOT setting dirty for empty room addition per user request
-    setSelectedCabinetIds(new Set())
-    if (createdRoomId != null) {
-      setActiveRoomId(createdRoomId)
-    }
-  }
-
-  function removeActiveRoom() {
-    if (!layout || !activeRoom) return
-    if (activeRoomStudentCount > 0) {
-      showToast?.(
-        {
-          title: "Cannot Remove Room",
-          description: `Room ${activeRoom.id} has ${activeRoomStudentCount} student record(s) still assigned.`,
-        },
-        true
-      )
-      return
-    }
-    if (activeRoom.cabinets?.length) {
-      showToast?.(
-        {
-          title: "Cannot Remove Room",
-          description: "Remove all cabinets first before deleting a room.",
-        },
-        true
-      )
-      return
-    }
-    setLayout((prev) => {
-      if (!prev) return prev
-      const rooms = prev.rooms.filter((r) => r.id !== activeRoom.id)
-      return { ...prev, rooms }
-    })
-    setIsDirty?.(true)
-    const fallback =
-      layout.rooms.find((r) => r.id !== activeRoom.id)?.id || null
-    setActiveRoomId(fallback)
-    setSelectedCabinetIds(new Set())
-  }
-
-  function resetActiveRoomCabinets() {
-    if (!layout || !activeRoom) return
-    if (activeRoomStudentCount > 0) {
-      showToast?.(
-        {
-          title: "Cannot Reset Room",
-          description: `Room ${activeRoom.id} has ${activeRoomStudentCount} student record(s) still assigned.`,
-        },
-        true
-      )
-      return
-    }
-    if (!activeRoom.cabinets?.length) {
-      showToast?.({
-        title: "Nothing to Reset",
-        description: "This room has no cabinet layout to clear.",
-      })
-      return
-    }
-    updateRoom(activeRoom.id, (r) => ({
-      ...r,
-      cabinets: [],
-    }))
-    setSelectedCabinetIds(new Set())
-    showToast?.({
-      title: "Room Layout Cleared",
-      description: "All cabinets removed. Please click 'Save Layout' to finalize the changes.",
-    })
-  }
-
-  function applyTemplateToActiveRoom() {
-    if (!activeRoom) return
-    const tpl = ROOM_TEMPLATES.find((t) => t.id === selectedTemplateId)
-    if (!tpl) return
-    const targetLocKeys = new Set()
-    const targetOpts = []
-    for (const c of tpl.cabinets || []) {
-      for (const d of c.drawerIds || []) {
-        const key = `${activeRoom.id}|${c.id}|${Number(d)}`
-        targetLocKeys.add(key)
-        targetOpts.push({
-          key,
-          label: `Room ${activeRoom.id} / Cabinet ${c.id} / Drawer ${Number(d)}`,
-        })
-      }
-    }
-    const conflicts = []
-    for (const c of activeRoom.cabinets || []) {
-      for (const d of c.drawerIds || []) {
-        const sourceKey = `${activeRoom.id}|${c.id}|${Number(d)}`
-        const usedCount = Number(studentDrawerUsage.get(sourceKey) || 0)
-        if (usedCount <= 0) continue
-        if (targetLocKeys.has(sourceKey)) continue
-        conflicts.push({
-          sourceKey,
-          sourceLabel: `Room ${activeRoom.id} / Cabinet ${c.id} / Drawer ${Number(d)}`,
-          count: usedCount,
-        })
-      }
-    }
-    if (conflicts.length > 0) {
-      const nextDraft = {}
-      for (const c of conflicts) {
-        nextDraft[c.sourceKey] = ""
-      }
-      setTemplateConflictRows(conflicts)
-      setTemplateTargetOptions(targetOpts)
-      setTemplateMappingDraft(nextDraft)
-      setTemplateApplyPayload({
-        roomId: activeRoom.id,
-        templateId: tpl.id,
-      })
-      setReassignmentMode("")
-      setDragSourceKey("")
-      setTemplateConflictOpen(true)
-      return
-    }
-    updateRoom(activeRoom.id, (r) => ({
-      ...r,
-      cabinets: (tpl.cabinets || []).map((c) => ({
-        ...c,
-        rect: { ...c.rect },
-      })),
-      door: tpl.door ? { ...tpl.door } : r.door,
-    }))
-    setSelectedCabinetIds(new Set())
-    showToast?.({
-      title: "Template Applied",
-      description: `Layout for Room ${activeRoom.id} updated successfully.`,
-    })
-  }
-
-  function buildAutoMappings() {
-    const nextDraft = {}
-    const targets = [...templateTargetOptions]
-    for (const row of templateConflictRows) {
-      if (targets.length > 0) {
-        const t = targets.shift()
-        nextDraft[row.sourceKey] = t.key
-      } else {
-        nextDraft[row.sourceKey] = ""
-      }
-    }
-    return nextDraft
-  }
-
-  function openApplyPreview() {
-    const hasMissing = templateConflictRows.some(
-      (r) => !templateMappingDraft[r.sourceKey]
-    )
-    if (hasMissing) {
-      showToast?.(
-        {
-          title: "Incomplete Mapping",
-          description: "Please assign a target drawer for all conflicts.",
-        },
-        true
-      )
-      return
-    }
-    const rows = templateConflictRows.map((r) => {
-      const targetKey = templateMappingDraft[r.sourceKey]
-      const targetOpt = templateTargetOptions.find((o) => o.key === targetKey)
-      return {
-        fromKey: r.sourceKey,
-        fromLabel: r.sourceLabel,
-        toKey: targetKey,
-        toLabel: targetOpt?.label || "Unknown",
-        count: r.count,
-      }
-    })
-    setApplyPreviewRows(rows)
-    setApplyPreviewOpen(true)
-  }
-
-  async function applyTemplateWithMappings() {
-    if (
-      !layout ||
-      !templateApplyPayload?.roomId ||
-      !templateApplyPayload?.templateId
-    ) {
-      showToast?.(
-        {
-          title: "Apply Failed",
-          description:
-            "Missing template apply context. Try applying the template again.",
-        },
-        true
-      )
-      return
-    }
-
-    const tpl = ROOM_TEMPLATES.find((t) => t.id === templateApplyPayload.templateId)
-    if (!tpl) return
-
-    // Build the proposed layout for the active room
-    const nextRooms = layout.rooms.map((r) => {
-      if (r.id !== templateApplyPayload.roomId) return r
-      return {
-        ...r,
-        cabinets: (tpl.cabinets || []).map((c) => ({
-          ...c,
-          rect: { ...c.rect },
-        })),
-        door: tpl.door ? { ...tpl.door } : r.door,
-      }
-    })
-    const nextLayout = { ...layout, rooms: nextRooms }
-
-    const reassignments = applyPreviewRows.map((r) => ({
-      fromKey: r.fromKey,
-      toKey: r.toKey,
-    }))
-
-    setSaving(true)
-    try {
-      const res = await fetch("/api/storage-layout", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          layout: nextLayout,
-          reassignments,
-          skipUsageCheck: true,
-        }),
-      })
-      const json = await res.json()
-      if (!res.ok || !json?.ok) throw new Error(json?.error || "Apply failed")
-
-      setLayout(json.data)
-      setTemplateConflictOpen(false)
-      setApplyPreviewOpen(false)
-      setApplyReportRows(json.movedBreakdown || [])
-      setApplyReportOpen(true)
-      showToast?.({
-        title: "Template Applied",
-        description: `Template applied with reassignment. ${json.movedCount || 0} student record(s) moved.`,
-      })
-    } catch (err) {
-      showToast?.(
-        { title: "Apply Failed", description: err.message },
-        true
-      )
-    } finally {
-      setSaving(false)
-    }
-  }
-
-  const addCabinet = useCallback(() => {
-    if (!activeRoom) return
-    const baseId = `CAB-${(activeRoom.cabinets?.length || 0) + 1}`
-    let id = baseId
-    const existing = new Set(activeRoom.cabinets.map((c) => c.id))
-    let counter = 1
-    while (existing.has(id)) {
-      id = `${baseId}-${counter++}`
-    }
-    const cab = {
-      id,
-      rect: { x: 0.1, y: 0.1, w: 0.1, h: 0.1 },
-      rotation: 0,
-      drawerIds: [1, 2, 3, 4],
-    }
-    updateRoom(activeRoom.id, (r) => ({
-      ...r,
-      cabinets: [...r.cabinets, cab].sort((a, b) =>
-        String(a.id).localeCompare(String(b.id))
-      ),
-    }))
-    setSelectedCabinetIds(new Set([id]))
-  }, [activeRoom, updateRoom])
-
-  const removeSelectedCabinet = useCallback(() => {
-    if (!activeRoom || selectedCabinetIds.size === 0) return
-    
-    const idsToRemove = Array.from(selectedCabinetIds)
-    
-    updateRoom(activeRoom.id, (room) => ({
-      ...room,
-      cabinets: room.cabinets.filter((c) => !idsToRemove.includes(c.id)),
-    }))
-    
-    setSelectedCabinetIds(new Set())
-  }, [activeRoom, selectedCabinetIds, updateRoom])
-
-  function bulkDeleteCabinets() {
-    removeSelectedCabinet()
-    setBulkConfirmOpen(false)
-  }
 
   // Helper to find all pairs of colliding cabinets in a room
   const findCollisions = (room) => {
@@ -583,7 +548,6 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         const oT = b.rect.y
         const oB = b.rect.y + bEff.h
 
-        // Strict intersection check with minimal buffer
         const buffer = 0.00001
         const intersects = !(
           tR <= oL + buffer ||
@@ -609,164 +573,6 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     return layout.rooms.some((r) => findCollisions(r).size > 0)
   }, [layout])
 
-  const duplicateSelectedCabinet = useCallback(() => {
-    if (!activeRoom || !selectedCabinet) return
-    const baseId = `CAB-${(activeRoom.cabinets?.length || 0) + 1}`
-    let id = baseId
-    const existingIds = new Set(activeRoom.cabinets.map((c) => c.id))
-    let counter = 1
-    while (existingIds.has(id)) {
-      id = `${baseId}-${counter++}`
-    }
-    const eff = getCabinetEffectiveSize(selectedCabinet)
-    const foundX = clamp(selectedCabinet.rect.x + 0.05, 0, 1 - eff.w)
-    const foundY = clamp(selectedCabinet.rect.y + 0.05, 0, 1 - eff.h)
-    const newCab = {
-      ...selectedCabinet,
-      id,
-      rect: { ...selectedCabinet.rect, x: foundX, y: foundY },
-    }
-    updateRoom(activeRoom.id, (r) => ({
-      ...r,
-      cabinets: [...r.cabinets, newCab].sort((a, b) =>
-        String(a.id).localeCompare(String(b.id))
-      ),
-    }))
-    setSelectedCabinetIds(new Set([id]))
-  }, [activeRoom, selectedCabinet, updateRoom])
-
-  const rotateSelectedCabinet = useCallback(() => {
-    if (!activeRoom || !selectedCabinet) return
-    const nextRot = Number(selectedCabinet.rotation) === 90 ? 0 : 90
-    updateCabinet(activeRoom.id, selectedCabinet.id, (c) =>
-      clampToRoom({ ...c, rotation: nextRot })
-    )
-  }, [activeRoom, selectedCabinet, updateCabinet])
-
-  const addDrawerToSelected = useCallback(() => {
-    if (!activeRoom || !selectedCabinet || selectedCabinet.isDoor) return
-    const ids = selectedCabinet.drawerIds || []
-    const nextId = (Math.max(0, ...ids.map(Number)) || 0) + 1
-    updateCabinet(activeRoom.id, selectedCabinet.id, (c) => ({
-      ...c,
-      drawerIds: [...(c.drawerIds || []), nextId],
-    }))
-  }, [activeRoom, selectedCabinet, updateCabinet])
-
-  const removeDrawerFromSelected = useCallback(() => {
-    if (!activeRoom || !selectedCabinet || selectedCabinet.isDoor) return
-    const ids = selectedCabinet.drawerIds || []
-    if (ids.length <= 1) return
-    updateCabinet(activeRoom.id, selectedCabinet.id, (c) => ({
-      ...c,
-      drawerIds: (c.drawerIds || []).slice(0, -1),
-    }))
-  }, [activeRoom, selectedCabinet, updateCabinet])
-
-  const updateSelectedRectFromNormalized = useCallback((nextRect) => {
-    if (!activeRoom || !selectedCabinet) return
-    updateCabinet(activeRoom.id, selectedCabinet.id, (c) =>
-      clampToRoom({ ...c, rect: nextRect })
-    )
-  }, [activeRoom, selectedCabinet, updateCabinet])
-
-  const updateSelectedSizeNormalized = useCallback((nw, nh) => {
-    if (!activeRoom || !selectedCabinet) return
-    const w = Math.max(MIN_SIZE, nw)
-    const h = Math.max(MIN_SIZE, nh)
-    updateCabinet(activeRoom.id, selectedCabinet.id, (c) =>
-      clampToRoom({ ...c, rect: { ...c.rect, w, h } })
-    )
-  }, [activeRoom, selectedCabinet, updateCabinet])
-
-  const handleCanvasPointerMove = useCallback((e) => {
-    if (!dragRef.current || !activeRoom || !canvasRef.current) return
-    const box = canvasRef.current.getBoundingClientRect()
-    const relX = (e.clientX - box.left) / Math.max(1, box.width)
-    const relY = (e.clientY - box.top) / Math.max(1, box.height)
-
-    const { mode, startX, startY, initialPositions } = dragRef.current
-
-    if (mode === "door") {
-      const dx = snapValue(relX, snapToGrid)
-      const dy = snapValue(relY, snapToGrid)
-      updateRoom(activeRoom.id, (r) => ({
-        ...r,
-        door: {
-          ...r.door,
-          x: clamp(dx, 0, 1),
-          y: clamp(dy, 0, 1),
-        },
-      }))
-    } else if (mode === "marquee") {
-      setSelectionBox({
-        x1: startX,
-        y1: startY,
-        x2: relX,
-        y2: relY,
-      })
-    } else if (mode === "move") {
-      const dx = relX - startX
-      const dy = relY - startY
-      initialPositions.forEach((pos) => {
-        const nextX = snapValue(pos.x + dx, snapToGrid)
-        const nextY = snapValue(pos.y + dy, snapToGrid)
-        updateCabinet(activeRoom.id, pos.id, (c) =>
-          clampToRoom({ ...c, rect: { ...c.rect, x: nextX, y: nextY } })
-        )
-      })
-    } else if (mode === "resize" && selectedCabinet) {
-      const dw = relX - selectedCabinet.rect.x
-      const dh = relY - selectedCabinet.rect.y
-      const nw = snapValue(Math.max(MIN_SIZE, dw), snapToGrid)
-      const nh = snapValue(Math.max(MIN_SIZE, dh), snapToGrid)
-      updateCabinet(activeRoom.id, selectedCabinet.id, (c) =>
-        clampToRoom({ ...c, rect: { ...c.rect, w: nw, h: nh } })
-      )
-    }
-  }, [activeRoom, selectedCabinet, snapToGrid, updateCabinet, updateRoom])
-
-  const handleCanvasPointerUp = useCallback((e) => {
-    if (!dragRef.current) return
-    
-    const { mode } = dragRef.current
-
-    if (mode === "marquee" && selectionBox && activeRoom) {
-      const x1 = Math.min(selectionBox.x1, selectionBox.x2)
-      const x2 = Math.max(selectionBox.x1, selectionBox.x2)
-      const y1 = Math.min(selectionBox.y1, selectionBox.y2)
-      const y2 = Math.max(selectionBox.y1, selectionBox.y2)
-
-      const newlySelected = new Set()
-      activeRoom.cabinets.forEach((cab) => {
-        const eff = getCabinetEffectiveSize(cab)
-        const cx1 = cab.rect.x
-        const cx2 = cab.rect.x + eff.w
-        const cy1 = cab.rect.y
-        const cy2 = cab.rect.y + eff.h
-
-        // Check for intersection
-        const intersects = !(
-          cx2 < x1 || 
-          cx1 > x2 || 
-          cy2 < y1 || 
-          cy1 > y2
-        )
-        
-        if (intersects) newlySelected.add(cab.id)
-      })
-      setSelectedCabinetIds(newlySelected)
-    }
-
-    dragRef.current = null
-    setSelectionBox(null)
-    try {
-      e.target.releasePointerCapture(e.pointerId)
-    } catch {
-      // ignore
-    }
-  }, [selectionBox, activeRoom])
-
   async function saveLayout() {
     if (!layout || hasAnyCollisions) return
     setSaving(true)
@@ -786,10 +592,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         description: "Your archive room mapping was successfully updated.",
       })
     } catch (err) {
-      showToast?.(
-        { title: "Save Failed", description: err.message },
-        true
-      )
+      showToast?.({ title: "Save Failed", description: err.message }, true)
     } finally {
       setSaving(false)
     }
@@ -797,7 +600,6 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Don't trigger if user is typing in an input/select
       if (
         e.target.tagName === "INPUT" ||
         e.target.tagName === "TEXTAREA" ||
@@ -808,20 +610,205 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       }
 
       const key = e.key.toLowerCase()
-      if (key === "s") {
+      const ctrl = e.ctrlKey || e.metaKey
+
+      if (ctrl && key === "z") {
+        e.preventDefault()
+        undo()
+      } else if (ctrl && key === "c") {
+        e.preventDefault()
+        copyCabinets()
+      } else if (ctrl && key === "v") {
+        e.preventDefault()
+        pasteCabinets()
+      } else if (key === "backspace" || key === "delete") {
+        if (selectedCabinetIds.size > 0) {
+          e.preventDefault()
+          pushHistory(layout)
+          removeSelectedCabinet()
+        }
+      } else if (key === "s") {
         setSnapToGrid((prev) => !prev)
       } else if (key === "g") {
         setShowGrid((prev) => !prev)
-      } else if (key === "r") {
-        if (selectedCabinetIds.size > 0) {
-          rotateSelectedCabinet()
-        }
       }
     }
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [selectedCabinetIds, rotateSelectedCabinet])
+  }, [
+    selectedCabinetIds,
+    undo,
+    copyCabinets,
+    pasteCabinets,
+    layout,
+    pushHistory,
+    removeSelectedCabinet
+  ])
+
+  // Template / Bulk logic
+  function bulkDeleteCabinets() {
+    removeSelectedCabinet()
+    setBulkConfirmOpen(false)
+  }
+
+  function addRoom() {
+    let createdRoomId = null
+    setLayout((prev) => {
+      if (!prev) return prev
+      const max = Math.max(0, ...(prev.rooms || []).map((r) => Number(r.id) || 0))
+      const nextId = max + 1
+      createdRoomId = nextId
+      const next = {
+        id: nextId,
+        name: `Room ${nextId}`,
+        cabinets: [],
+        door: getDefaultDoor(),
+      }
+      return {
+        ...prev,
+        rooms: [...prev.rooms, next].sort((a, b) => a.id - b.id),
+      }
+    })
+    setSelectedCabinetIds(new Set())
+    if (createdRoomId != null) {
+      setActiveRoomId(createdRoomId)
+    }
+  }
+
+  function removeActiveRoom() {
+    if (!layout || !activeRoom) return
+    if (activeRoomStudentCount > 0) {
+      showToast?.({ title: "Cannot Remove", description: `Room ${activeRoom.id} is occupied.` }, true)
+      return
+    }
+    if (activeRoom.cabinets?.length) {
+      showToast?.({ title: "Cannot Remove", description: "Clear room first." }, true)
+      return
+    }
+    setLayout((prev) => {
+      if (!prev) return prev
+      const rooms = prev.rooms.filter((r) => r.id !== activeRoom.id)
+      return { ...prev, rooms }
+    })
+    setIsDirty?.(true)
+    const fallback = layout.rooms.find((r) => r.id !== activeRoom.id)?.id || null
+    setActiveRoomId(fallback)
+    setSelectedCabinetIds(new Set())
+  }
+
+  function resetActiveRoomCabinets() {
+    if (!layout || !activeRoom) return
+    if (activeRoomStudentCount > 0) {
+      showToast?.({ title: "Cannot Reset", description: `Room ${activeRoom.id} is occupied.` }, true)
+      return
+    }
+    updateRoom(activeRoom.id, (r) => ({ ...r, cabinets: [] }))
+    setSelectedCabinetIds(new Set())
+  }
+
+  function applyTemplateToActiveRoom() {
+    if (!activeRoom) return
+    const tpl = ROOM_TEMPLATES.find((t) => t.id === selectedTemplateId)
+    if (!tpl) return
+    pushHistory(layout)
+    const targetLocKeys = new Set()
+    const targetOpts = []
+    for (const c of tpl.cabinets || []) {
+      for (const d of c.drawerIds || []) {
+        const key = `${activeRoom.id}|${c.id}|${Number(d)}`
+        targetLocKeys.add(key)
+        targetOpts.push({ key, label: `Room ${activeRoom.id} / Cab ${c.id} / Dr ${d}` })
+      }
+    }
+    const conflicts = []
+    for (const c of activeRoom.cabinets || []) {
+      for (const d of c.drawerIds || []) {
+        const sourceKey = `${activeRoom.id}|${c.id}|${Number(d)}`
+        const usedCount = Number(studentDrawerUsage.get(sourceKey) || 0)
+        if (usedCount <= 0 || targetLocKeys.has(sourceKey)) continue
+        conflicts.push({ sourceKey, sourceLabel: `Room ${activeRoom.id} / Cab ${c.id} / Dr ${d}`, count: usedCount })
+      }
+    }
+    if (conflicts.length > 0) {
+      const nextDraft = {}
+      for (const c of conflicts) nextDraft[c.sourceKey] = ""
+      setTemplateConflictRows(conflicts)
+      setTemplateTargetOptions(targetOpts)
+      setTemplateMappingDraft(nextDraft)
+      setTemplateApplyPayload({ roomId: activeRoom.id, templateId: tpl.id })
+      setTemplateConflictOpen(true)
+      return
+    }
+    updateRoom(activeRoom.id, (r) => ({
+      ...r,
+      cabinets: (tpl.cabinets || []).map((c) => ({ ...c })),
+      door: tpl.door ? { ...tpl.door } : r.door,
+    }))
+    setSelectedCabinetIds(new Set())
+  }
+
+  function buildAutoMappings() {
+    const nextDraft = {}
+    const targets = [...templateTargetOptions]
+    for (const row of templateConflictRows) {
+      if (targets.length > 0) {
+        const t = targets.shift()
+        nextDraft[row.sourceKey] = t.key
+      } else {
+        nextDraft[row.sourceKey] = ""
+      }
+    }
+    return nextDraft
+  }
+
+  function openApplyPreview() {
+    const hasMissing = templateConflictRows.some(r => !templateMappingDraft[r.sourceKey])
+    if (hasMissing) {
+      showToast?.({ title: "Incomplete Mapping", description: "Assign all conflicts." }, true)
+      return
+    }
+    const rows = templateConflictRows.map(r => {
+      const targetKey = templateMappingDraft[r.sourceKey]
+      const targetOpt = templateTargetOptions.find(o => o.key === targetKey)
+      return { fromKey: r.sourceKey, fromLabel: r.sourceLabel, toKey: targetKey, toLabel: targetOpt?.label || "Unknown", count: r.count }
+    })
+    setApplyPreviewRows(rows)
+    setApplyPreviewOpen(true)
+  }
+
+  async function applyTemplateWithMappings() {
+    if (!layout || !templateApplyPayload) return
+    const tpl = ROOM_TEMPLATES.find(t => t.id === templateApplyPayload.templateId)
+    if (!tpl) return
+
+    const nextRooms = layout.rooms.map(r => {
+      if (r.id !== templateApplyPayload.roomId) return r
+      return { ...r, cabinets: (tpl.cabinets || []).map(c => ({ ...c })), door: tpl.door ? { ...tpl.door } : r.door }
+    })
+    const nextLayout = { ...layout, rooms: nextRooms }
+    const reassignments = applyPreviewRows.map(r => ({ fromKey: r.fromKey, toKey: r.toKey }))
+
+    setSaving(true)
+    try {
+      const res = await fetch("/api/storage-layout", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ layout: nextLayout, reassignments, skipUsageCheck: true }),
+      })
+      const json = await res.json()
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Apply failed")
+      setLayout(json.data)
+      setTemplateConflictOpen(false)
+      setApplyPreviewOpen(false)
+      setApplyReportRows(json.movedBreakdown || [])
+      setApplyReportOpen(true)
+    } catch (err) {
+      showToast?.({ title: "Apply Failed", description: err.message }, true)
+    } finally {
+      setSaving(false)
+    }
+  }
 
   if (loading && !layout) {
     return (
@@ -839,6 +826,167 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   }
 
   if (!layout) return null
+
+  const renderToolbar = (maximized) => (
+    <div className={cn(
+      "flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 bg-gray-50/80 backdrop-blur-md select-none",
+      maximized ? "p-4 px-6" : "p-6 px-8"
+    )}>
+      <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-1">
+            <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase">Current Room</label>
+            <div className="flex items-center gap-2">
+              <div className="relative group">
+                <i className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 transition-all duration-300", activeRoomId ? "ph-fill ph-door-open text-pup-maroon" : "ph-bold ph-door-open text-gray-400", "group-focus-within:text-pup-maroon")} />
+                <Select
+                  className="h-10 min-w-[200px] cursor-pointer rounded-xl border border-gray-200 bg-white pl-10 pr-10 text-sm font-bold text-gray-800 shadow-xs transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20"
+                  value={String(activeRoomId ?? "")}
+                  disabled={!layout?.rooms?.length}
+                  onChange={(e) => setActiveRoomId(Number(e.target.value))}
+                >
+                  {layout.rooms.map((r) => (
+                    <option key={r.id} value={String(r.id)}>{r.name || `Room ${r.id}`}</option>
+                  ))}
+                </Select>
+              </div>
+              <div className="flex h-10 items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-xs">
+                <Button type="button" variant="ghost" size="icon" onClick={addRoom} className="h-8 w-8 rounded-lg text-emerald-600 hover:bg-emerald-50"><i className="ph-bold ph-plus-circle text-lg" /></Button>
+                <Separator orientation="vertical" className="h-4 mx-0.5 bg-gray-100" />
+                <Button type="button" variant="ghost" size="icon" onClick={() => setDeleteRoomConfirmOpen(true)} className="h-8 w-8 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600" disabled={!activeRoom || activeRoomStudentCount > 0}><i className="ph-bold ph-trash text-lg" /></Button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase">Add Tools</label>
+          <Button type="button" variant="outline" onClick={addCabinet} className="h-10 rounded-xl border border-gray-200 bg-white px-5 font-black text-[10px] tracking-widest text-gray-600 shadow-xs hover:text-pup-maroon active:scale-95" disabled={!activeRoom}><i className="ph-bold ph-plus-square mr-2 text-base" />NEW CABINET</Button>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-6">
+        <div className="flex flex-col gap-1">
+          <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase">Templates</label>
+          <div className="flex h-10 items-center overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
+            <Select className="h-full cursor-pointer border-r border-gray-100 bg-transparent px-4 text-xs font-bold text-gray-700 focus:outline-none" value={selectedTemplateId} onChange={(e) => setSelectedTemplateId(e.target.value)} disabled={!activeRoom}>
+              {ROOM_TEMPLATES.map((tpl) => <option key={tpl.id} value={tpl.id}>{tpl.name}</option>)}
+            </Select>
+            <Button type="button" variant="ghost" onClick={() => setTemplateApplyConfirmOpen(true)} className="h-full rounded-none bg-gray-50/50 px-4 text-[10px] font-black tracking-widest uppercase text-pup-maroon hover:bg-pup-maroon hover:text-white" disabled={!activeRoom}>USE</Button>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-1">
+          <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase">View Settings</label>
+          <div className="flex h-10 items-center gap-4 rounded-xl border border-gray-200 bg-white px-4 shadow-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] font-black tracking-widest text-gray-500 uppercase">Grid</span>
+              <div role="button" tabIndex={0} onClick={() => setShowGrid(!showGrid)} className={cn("relative inline-flex h-4 w-8 items-center rounded-full transition-all duration-300", showGrid ? "bg-pup-maroon" : "bg-gray-200")}>
+                <span className={cn("inline-block h-2.5 w-2.5 transform rounded-full bg-white transition-transform duration-300", showGrid ? "translate-x-4.5" : "translate-x-1")} />
+              </div>
+            </div>
+            <Separator orientation="vertical" className="h-3.5 bg-gray-100" />
+            <div className="flex items-center gap-2">
+              <span className="text-[9px] font-black tracking-widest text-gray-500 uppercase">Snap</span>
+              <div role="button" tabIndex={0} onClick={() => setSnapToGrid(!snapToGrid)} className={cn("relative inline-flex h-4 w-8 items-center rounded-full transition-all duration-300", snapToGrid ? "bg-pup-maroon" : "bg-gray-200")}>
+                <span className={cn("inline-block h-2.5 w-2.5 transform rounded-full bg-white transition-transform duration-300", snapToGrid ? "translate-x-4.5" : "translate-x-1")} />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {maximized && (
+          <div className="flex items-center gap-2 pl-4 border-l border-gray-100">
+            <Button
+              onClick={saveLayout}
+              disabled={saving || hasAnyCollisions}
+              className="flex h-10 items-center gap-2 rounded-xl bg-linear-to-b from-red-800 to-pup-maroon border-2 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 px-6 text-[10px] font-black tracking-widest text-white uppercase shadow-md active:scale-95 transition-all disabled:opacity-30 disabled:grayscale"
+            >
+              <i className={`ph-bold ${saving ? "ph-spinner animate-spin" : "ph-floppy-disk"} text-base`} />
+              {saving ? "SAVING..." : "SAVE CHANGES"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={toggleMaximize}
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-300 bg-white text-gray-600 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon active:scale-95"
+              title="Exit Focus Mode"
+            >
+              <i className="ph-bold ph-corners-in text-lg" />
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  const renderEditorContent = (maximized) => (
+    <div className={cn("flex h-full w-full flex-col overflow-hidden bg-white", maximized ? "pt-8" : "")}>
+      {!maximized && (
+        <PageHeader
+          icon="ph-layout"
+          title="Room Layout Editor"
+          description="Organize how cabinets are placed and arranged in your storage rooms."
+          actions={
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                onClick={toggleMaximize}
+                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-300 bg-white text-gray-600 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon active:scale-95"
+                title="Enter Focus Mode"
+              >
+                <i className="ph-bold ph-corners-out text-lg" />
+              </Button>
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <div className="inline-block">
+                      <Button
+                        onClick={saveLayout}
+                        disabled={saving || hasAnyCollisions}
+                        className="flex h-11 items-center gap-2 rounded-2xl bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-xl hover:-translate-y-0.5 px-8 font-black tracking-widest text-white uppercase shadow-lg shadow-red-900/20 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale"
+                      >
+                        <i className={`ph-bold ${saving ? "ph-spinner animate-spin" : "ph-floppy-disk"} text-lg`} />
+                        {saving ? "SAVING..." : "SAVE CHANGES"}
+                      </Button>
+                    </div>
+                  </TooltipTrigger>
+                  {hasAnyCollisions && (
+                    <TooltipContent side="bottom" className="max-w-xs rounded-xl border-red-200 bg-red-50 p-3 text-[10px] font-bold text-red-700 shadow-xl">
+                      <div className="flex items-center gap-2">
+                         <i className="ph-fill ph-warning-circle text-sm" />
+                         CANNOT SAVE: RESOLVE OVERLAPS
+                      </div>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+          }
+        />
+      )}
+
+      {renderToolbar(maximized)}
+
+      <div className="relative min-h-0 flex-1 overflow-auto">
+        <div className={cn(
+          "grid grid-cols-1 gap-6 h-full",
+          maximized ? "p-0 lg:grid-cols-4" : "p-6 lg:grid-cols-3"
+        )}>
+          <div className={cn(maximized ? "lg:col-span-3 border-r border-gray-100 h-full" : "lg:col-span-2")}>
+            <CabinetCanvas 
+              canvasRef={canvasRef} activeRoom={activeRoom} selectedCabinetIds={selectedCabinetIds} selectedCabinet={selectedCabinet} collidingIds={collidingIds} activePath={activePath} simulationMode={simulationMode} snapToGrid={snapToGrid} showGrid={showGrid} handleCanvasPointerMove={handleCanvasPointerMove} handleCanvasPointerUp={handleCanvasPointerUp} setSelectedCabinetIds={setSelectedCabinetIds} duplicateSelectedCabinet={duplicateSelectedCabinet} setBulkConfirmOpen={setBulkConfirmOpen} dragRef={dragRef} updateSelectedRectFromNormalized={updateSelectedRectFromNormalized} updateSelectedSizeNormalized={updateSelectedSizeNormalized} selectionBox={selectionBox} pushHistory={pushHistory} layout={layout} isModalOpen={maximized}
+            />
+          </div>
+          <div className={cn(maximized ? "lg:col-span-1 p-6" : "lg:col-span-1")}>
+            <CabinetSidebar 
+              selectedCabinetIds={selectedCabinetIds} selectedCabinet={selectedCabinet} duplicateSelectedCabinet={duplicateSelectedCabinet} setBulkConfirmOpen={setBulkConfirmOpen} removeDrawerFromSelected={removeDrawerFromSelected} addDrawerToSelected={addDrawerToSelected} updateSelectedRectFromNormalized={updateSelectedRectFromNormalized} updateSelectedSizeNormalized={updateSelectedSizeNormalized}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  )
 
   return (
     <div className="animate-fade-in flex h-full w-full flex-col gap-4">
@@ -864,355 +1012,29 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         applyTemplateWithMappings={applyTemplateWithMappings}
       />
 
-      <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm">
-        <PageHeader
-          icon="ph-layout"
-          title="Room Layout Editor"
-          description="Organize how cabinets are placed and arranged in your storage rooms."
-          actions={
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="inline-block">
-                    <Button
-                      onClick={saveLayout}
-                      disabled={saving || hasAnyCollisions}
-                      className="flex h-11 items-center gap-2 rounded-2xl bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-xl hover:-translate-y-0.5 px-8 font-black tracking-widest text-white uppercase shadow-lg shadow-red-900/20 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale"
-                    >
-                      <i
-                        className={`ph-bold ${saving ? "ph-spinner animate-spin" : "ph-floppy-disk"} text-lg`}
-                      />
-                      {saving ? "SAVING..." : "SAVE CHANGES"}
-                    </Button>
-                  </div>
-                </TooltipTrigger>
-                {hasAnyCollisions && (
-                  <TooltipContent side="bottom" className="max-w-xs rounded-xl border-red-200 bg-red-50 p-3 text-[10px] font-bold text-red-700 shadow-xl">
-                    <div className="flex items-center gap-2">
-                       <i className="ph-fill ph-warning-circle text-sm" />
-                       CANNOT SAVE: RESOLVE OVERLAPS
-                    </div>
-                  </TooltipContent>
-                )}
-              </Tooltip>
-            </TooltipProvider>
-          }
-        />
+      {shouldRenderModal && (
+        <Dialog open={isModalOpen} onOpenChange={toggleMaximize}>
+          <DialogContent 
+            hideClose
+            className="h-[90vh] w-[98vw] max-w-none sm:max-w-[98vw] rounded-[32px] border border-gray-200 bg-white p-0 shadow-2xl overflow-hidden ring-1 ring-black/5"
+          >
+            {renderEditorContent(true)}
+          </DialogContent>
+        </Dialog>
+      )}
 
-        {/* Integrated Toolbar */}
-        <div className="flex flex-wrap items-center justify-between gap-6 border-b border-gray-100 bg-gray-50/50 p-6 px-8">
-          {/* Room Selection Group */}
-          <div className="flex items-center gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="ml-1 text-[10px] font-black tracking-widest text-gray-400 uppercase">
-                Current Room
-              </label>
-              <div className="flex items-center gap-2">
-                <div className="relative group">
-                  <i className={cn(
-                    "absolute left-4 top-1/2 -translate-y-1/2 transition-all duration-300",
-                    activeRoomId ? "ph-fill ph-door-open text-pup-maroon" : "ph-bold ph-door-open text-gray-400",
-                    "group-focus-within:text-pup-maroon"
-                  )} />
-                  <Select
-                    className="h-11 min-w-[240px] cursor-pointer rounded-xl border border-gray-200 bg-white pl-12 pr-10 text-sm font-bold text-gray-800 shadow-xs transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 disabled:cursor-not-allowed disabled:opacity-50"
-                    value={String(activeRoomId ?? "")}
-                    disabled={!layout?.rooms?.length}
-                    onChange={(e) => {
-                      const nextId = Number(e.target.value)
-                      setActiveRoomId(Number.isFinite(nextId) ? nextId : null)
-                    }}
-                  >
-                    {layout.rooms.map((r) => (
-                      <option key={r.id} value={String(r.id)}>
-                        {r.name || `Room ${r.id}`}
-                      </option>
-                    ))}
-                  </Select>
-                </div>
-                
-                <div className="flex h-11 items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-xs">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={addRoom}
-                        className="h-9 w-9 rounded-lg text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 active:scale-95"
-                      >
-                        <i className="ph-bold ph-plus-circle text-lg" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="font-bold text-[10px] uppercase">Add Room</TooltipContent>
-                  </Tooltip>
+      {!isModalOpen && (
+        <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm p-0 gap-0">
+          {renderEditorContent(false)}
+        </Card>
+      )}
 
-                  <Separator orientation="vertical" className="h-5 mx-0.5 bg-gray-100" />
+      <FloatingActionBar selectedCount={selectedCabinetIds.size} onCancel={() => setSelectedCabinetIds(new Set())} actionLabel="DELETE SELECTED" actionIcon="ph-trash" onAction={() => setBulkConfirmOpen(true)} selectionStatus="Selected Cabinets" />
 
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setDeleteRoomConfirmOpen(true)}
-                        className="h-9 w-9 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 active:scale-95 disabled:opacity-20"
-                        disabled={!activeRoom || activeRoomStudentCount > 0}
-                      >
-                        <i className="ph-bold ph-trash text-lg" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="font-bold text-[10px] uppercase">Delete Room</TooltipContent>
-                  </Tooltip>
-
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => setResetRoomConfirmOpen(true)}
-                        className="h-9 w-9 rounded-lg text-gray-400 hover:bg-amber-50 hover:text-amber-600 active:scale-95 disabled:opacity-20"
-                        disabled={
-                          !activeRoom ||
-                          !(activeRoom.cabinets?.length > 0) ||
-                          activeRoomStudentCount > 0
-                        }
-                      >
-                        <i className="ph-bold ph-arrow-counter-clockwise text-lg" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="font-bold text-[10px] uppercase">Reset Room</TooltipContent>
-                  </Tooltip>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Core Tools Group */}
-          <div className="flex flex-wrap items-center gap-6">
-            {/* Add Cabinet Action */}
-            <div className="flex flex-col gap-1.5">
-              <label className="ml-1 text-[10px] font-black tracking-widest text-gray-400 uppercase">
-                Add Tools
-              </label>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={addCabinet}
-                className="h-11 rounded-xl border border-gray-200 bg-white px-6 font-black text-[10px] tracking-widest text-gray-600 shadow-xs hover:border-gray-300 hover:bg-red-50/50 hover:text-pup-maroon transition-all active:scale-95"
-                disabled={!activeRoom}
-              >
-                <i className="ph-bold ph-plus-square mr-2 text-base" />
-                NEW CABINET
-              </Button>
-            </div>
-
-            <Separator orientation="vertical" className="hidden xl:block h-10 bg-gray-200" />
-
-            {/* Template Application */}
-            <div className="flex flex-col gap-1.5">
-              <label className="ml-1 text-[10px] font-black tracking-widest text-gray-400 uppercase">
-                Templates
-              </label>
-              <div className="flex h-11 items-center overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs focus-within:ring-2 focus-within:ring-pup-maroon/20 transition-all">
-                <Select
-                  className="h-full cursor-pointer border-r border-gray-100 bg-transparent px-4 text-xs font-bold text-gray-700 focus:outline-none"
-                  value={selectedTemplateId}
-                  onChange={(e) => setSelectedTemplateId(e.target.value)}
-                  disabled={!activeRoom}
-                >
-                  {ROOM_TEMPLATES.map((tpl) => (
-                    <option key={tpl.id} value={tpl.id}>
-                      {tpl.name}
-                    </option>
-                  ))}
-                </Select>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => setTemplateApplyConfirmOpen(true)}
-                  className="h-full rounded-none bg-gray-50/50 px-5 text-[10px] font-black tracking-widest uppercase text-pup-maroon hover:bg-pup-maroon hover:text-white transition-all active:opacity-80"
-                  disabled={!activeRoom}
-                >
-                  USE
-                </Button>
-              </div>
-            </div>
-
-            <Separator orientation="vertical" className="hidden lg:block h-10 bg-gray-200" />
-
-            {/* Canvas Controls */}
-            <div className="flex flex-col gap-1.5">
-              <label className="ml-1 text-[10px] font-black tracking-widest text-gray-400 uppercase">
-                View Settings
-              </label>
-              <div className="flex h-11 items-center gap-4 rounded-xl border border-gray-200 bg-white px-5 shadow-xs">
-                <div className="flex items-center gap-2">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <i className={cn("ph-bold ph-grid-four text-lg transition-colors", showGrid ? "text-pup-maroon" : "text-gray-300")} />
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="text-[9px] font-bold uppercase">Toggle Grid (G)</TooltipContent>
-                  </Tooltip>
-                  <span className="text-[10px] font-black tracking-widest text-gray-500 uppercase select-none">Grid</span>
-                  <div
-                    role="button" tabIndex={0}
-                    onClick={() => setShowGrid(!showGrid)}
-                    className={cn("relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-all duration-300", showGrid ? "bg-pup-maroon" : "bg-gray-200")}
-                  >
-                    <span className={cn("inline-block h-3 w-3 transform rounded-full bg-white shadow-sm transition-transform duration-300", showGrid ? "translate-x-5" : "translate-x-1")} />
-                  </div>
-                </div>
-
-                <Separator orientation="vertical" className="h-4 bg-gray-100" />
-
-                <div className="flex items-center gap-2">
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <i className={cn("ph-bold ph-magnet-straight text-lg transition-colors", snapToGrid ? "text-pup-maroon" : "text-gray-300")} />
-                    </TooltipTrigger>
-                    <TooltipContent side="bottom" className="text-[9px] font-bold uppercase">Toggle Snap (S)</TooltipContent>
-                  </Tooltip>
-                  <span className="text-[10px] font-black tracking-widest text-gray-500 uppercase select-none">Snap</span>
-                  <div
-                    role="button" tabIndex={0}
-                    onClick={() => setSnapToGrid(!snapToGrid)}
-                    className={cn("relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full transition-all duration-300", snapToGrid ? "bg-pup-maroon" : "bg-gray-200")}
-                  >
-                    <span className={cn("inline-block h-3 w-3 transform rounded-full bg-white shadow-sm transition-transform duration-300", snapToGrid ? "translate-x-5" : "translate-x-1")} />
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="relative min-h-0 flex-1 overflow-auto bg-white">
-          <div className="grid grid-cols-1 gap-6 p-6 lg:grid-cols-3">
-            <div className="lg:col-span-2">
-              <CabinetCanvas 
-                canvasRef={canvasRef}
-                activeRoom={activeRoom}
-                selectedCabinetIds={selectedCabinetIds}
-                selectedCabinet={selectedCabinet}
-                collidingIds={collidingIds}
-                activePath={activePath}
-                simulationMode={simulationMode}
-                snapToGrid={snapToGrid}
-                showGrid={showGrid}
-                handleCanvasPointerMove={handleCanvasPointerMove}
-                handleCanvasPointerUp={handleCanvasPointerUp}
-                setSelectedCabinetIds={setSelectedCabinetIds}
-                rotateSelectedCabinet={rotateSelectedCabinet}
-                duplicateSelectedCabinet={duplicateSelectedCabinet}
-                setBulkConfirmOpen={setBulkConfirmOpen}
-                dragRef={dragRef}
-                updateSelectedRectFromNormalized={updateSelectedRectFromNormalized}
-                updateSelectedSizeNormalized={updateSelectedSizeNormalized}
-                selectionBox={selectionBox}
-              />
-            </div>
-
-            <div className="lg:col-span-1">
-              <CabinetSidebar 
-                selectedCabinetIds={selectedCabinetIds}
-                selectedCabinet={selectedCabinet}
-                rotateSelectedCabinet={rotateSelectedCabinet}
-                duplicateSelectedCabinet={duplicateSelectedCabinet}
-                setBulkConfirmOpen={setBulkConfirmOpen}
-                removeDrawerFromSelected={removeDrawerFromSelected}
-                addDrawerToSelected={addDrawerToSelected}
-                updateSelectedRectFromNormalized={updateSelectedRectFromNormalized}
-                updateSelectedSizeNormalized={updateSelectedSizeNormalized}
-              />
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      <FloatingActionBar
-        selectedCount={selectedCabinetIds.size}
-        onCancel={() => setSelectedCabinetIds(new Set())}
-        actionLabel="DELETE SELECTED"
-        actionIcon="ph-trash"
-        onAction={() => setBulkConfirmOpen(true)}
-        selectionStatus="Selected Cabinets"
-      />
-
-      <ConfirmModal
-        open={bulkConfirmOpen}
-        onCancel={() => setBulkConfirmOpen(false)}
-        title={selectedCabinetIds.size > 1 ? "Delete Cabinets" : "Delete Cabinet"}
-        message={selectedCabinetIds.size > 1 
-          ? `Permanently delete these ${selectedCabinetIds.size} cabinets? This removes them from the room design.`
-          : `Permanently delete this cabinet? This removes it from the room design.`
-        }
-        note="Changes are staged. Click 'Save Changes' to finalize."
-        confirmLabel="DELETE"
-        variant="danger"
-        icon="ph-duotone ph-trash"
-        buttonIcon="ph-bold ph-trash"
-        onConfirm={bulkDeleteCabinets}
-      />
-
-      <ConfirmModal
-        open={deleteRoomConfirmOpen}
-        onCancel={() => setDeleteRoomConfirmOpen(false)}
-        title="Delete Room"
-        message={`Delete Room ${activeRoom?.id}? This will remove all cabinets inside.`}
-        note="Changes are staged. Click 'Save Changes' to finalize."
-        confirmLabel="DELETE"
-        variant="danger"
-        icon="ph-duotone ph-trash"
-        buttonIcon="ph-bold ph-trash"
-        onConfirm={() => {
-          removeActiveRoom()
-          setDeleteRoomConfirmOpen(false)
-        }}
-      />
-
-      <ConfirmModal
-        open={resetRoomConfirmOpen}
-        onCancel={() => setResetRoomConfirmOpen(false)}
-        title="Reset Room"
-        message={`Remove all cabinets from Room ${activeRoom?.id}?`}
-        note="Changes are staged. Click 'Save Changes' to finalize."
-        confirmLabel="RESET"
-        variant="warning"
-        onConfirm={() => {
-          resetActiveRoomCabinets()
-          setResetRoomConfirmOpen(false)
-        }}
-      />
-
-      <ConfirmModal
-        open={templateApplyConfirmOpen}
-        onCancel={() => setTemplateApplyConfirmOpen(false)}
-        title="Use Template"
-        message={`Use this template for Room ${activeRoom?.id}? This replaces your current design.`}
-        note="Changes are staged. Click 'Save Changes' to finalize."
-        confirmLabel="USE TEMPLATE"
-        variant="warning"
-        onConfirm={() => {
-          applyTemplateToActiveRoom()
-          setTemplateApplyConfirmOpen(false)
-        }}
-      />
-
-      <ConfirmModal
-        open={saveConfirmOpen}
-        onCancel={() => setSaveConfirmOpen(false)}
-        title="Save Layout Changes"
-        message="Are you sure you want to save the current room layout? This will update the physical mapping for all student records assigned to these rooms."
-        note="This is a system-wide update."
-        confirmLabel={saveCountdown > 0 ? `SAVE CHANGES (${saveCountdown})` : "SAVE CHANGES"}
-        disabled={saveCountdown > 0}
-        variant="primary"
-        icon="ph-duotone ph-floppy-disk"
-        buttonIcon="ph-bold ph-floppy-disk"
-        onConfirm={saveLayout}
-      />
+      <ConfirmModal open={bulkConfirmOpen} onCancel={() => setBulkConfirmOpen(false)} title="Delete" message="Delete selected cabinets?" confirmLabel="DELETE" variant="danger" onConfirm={bulkDeleteCabinets} />
+      <ConfirmModal open={deleteRoomConfirmOpen} onCancel={() => setDeleteRoomConfirmOpen(false)} title="Delete Room" message="Delete this room?" confirmLabel="DELETE" variant="danger" onConfirm={() => { removeActiveRoom(); setDeleteRoomConfirmOpen(false); }} />
+      <ConfirmModal open={resetRoomConfirmOpen} onCancel={() => setResetRoomConfirmOpen(false)} title="Reset Room" message="Clear layout?" confirmLabel="RESET" variant="warning" onConfirm={() => { resetActiveRoomCabinets(); setResetRoomConfirmOpen(false); }} />
+      <ConfirmModal open={templateApplyConfirmOpen} onCancel={() => setTemplateApplyConfirmOpen(false)} title="Use Template" message="Apply template?" confirmLabel="USE" variant="warning" onConfirm={() => { applyTemplateToActiveRoom(); setTemplateApplyConfirmOpen(false); }} />
     </div>
   )
 }

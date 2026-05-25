@@ -635,30 +635,30 @@ export default function DigitizationComplianceTab({
                   </div>
                 </div>
 
-                {/* Total Students — Light Card */}
-                <div className="group relative overflow-hidden rounded-xl border border-[#7a1e28]/15 bg-[#fdf6f6] p-5 shadow-sm transition-all">
-                  <i className="ph-duotone ph-users-three pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-[#7a1e28] opacity-10" />
+                {/* Total Students — Blue Card */}
+                <div className="group relative overflow-hidden rounded-xl border border-blue-200 bg-blue-50/50 p-5 shadow-sm transition-all hover:shadow-md">
+                  <i className="ph-duotone ph-users-three pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-blue-600 opacity-10" />
                   <div className="relative z-10">
-                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-[#9e5a62] uppercase">
+                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-blue-600 uppercase">
                       <i className="ph-bold ph-users-three" /> Total Students
                     </div>
-                    <div className="text-3xl font-black text-[#7a1e28]">
+                    <div className="text-3xl font-black text-blue-900">
                       {summary?.totalStudents?.toLocaleString?.() ?? summary?.totalStudents}
                     </div>
-                    <div className="mt-1 text-[10px] font-medium text-[#b07078]">
+                    <div className="mt-1 text-[10px] font-medium text-blue-600/80">
                       Enrolled Students
                     </div>
                   </div>
                 </div>
 
-                {/* Fully Digitized — Light Card */}
-                <div className="group relative overflow-hidden rounded-xl border border-[#7a1e28]/15 bg-[#fdf6f6] p-5 shadow-sm transition-all">
-                  <i className="ph-duotone ph-check-square-offset pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-[#7a1e28] opacity-10" />
+                {/* Fully Digitized — Yellow Card */}
+                <div className="group relative overflow-hidden rounded-xl border border-amber-200 bg-amber-50/50 p-5 shadow-sm transition-all hover:shadow-md">
+                  <i className="ph-duotone ph-check-square-offset pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-amber-600 opacity-10" />
                   <div className="relative z-10">
-                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-[#9e5a62] uppercase">
+                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-amber-600 uppercase">
                       <i className="ph-bold ph-check-square-offset" /> Fully Digitized
                     </div>
-                    <div className="text-3xl font-black text-[#7a1e28]">
+                    <div className="text-3xl font-black text-amber-900">
                       {summary?.digitizedStudents?.toLocaleString?.() ?? summary?.digitizedStudents}
                     </div>
                     <div className="mt-1 text-[10px] font-bold text-emerald-600 flex items-center gap-1.5">
@@ -667,23 +667,23 @@ export default function DigitizationComplianceTab({
                   </div>
                 </div>
 
-                {/* Archive Health — Light Card with SLA-style Tooltip */}
-                <div className="group relative overflow-hidden rounded-xl border border-[#7a1e28]/15 bg-[#fdf6f6] p-5 shadow-sm transition-all">
-                  <i className="ph-duotone ph-shield-check pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-[#7a1e28] opacity-10" />
+                {/* Archive Health — Green Card with SLA-style Tooltip */}
+                <div className="group relative overflow-hidden rounded-xl border border-emerald-200 bg-emerald-50/50 p-5 shadow-sm transition-all hover:shadow-md">
+                  <i className="ph-duotone ph-shield-check pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-emerald-600 opacity-10" />
                   <div className="relative z-10">
-                    <div className="mb-1 flex items-center gap-2 text-[10px] font-bold tracking-widest text-[#9e5a62] uppercase">
+                    <div className="mb-1 flex items-center gap-2 text-[10px] font-bold tracking-widest text-emerald-600 uppercase">
                       <i className="ph-bold ph-shield-check" /> Archive Health
                       <TooltipProvider>
                         <Tooltip delayDuration={300}>
                           <TooltipTrigger asChild>
-                            <i className="ph-bold ph-info text-sm text-[#7a1e28] transition-opacity hover:opacity-70 cursor-pointer" />
+                            <i className="ph-bold ph-info text-sm text-emerald-600 transition-opacity hover:opacity-70 cursor-pointer" />
                           </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-[240px] border-[#7a1e28]/20 bg-[#7a1e28] p-3 text-white">
+                          <TooltipContent side="top" className="max-w-[240px] border-emerald-200 bg-emerald-900 p-3 text-white">
                             <p className="font-bold leading-tight text-xs mb-1">Health Thresholds:</p>
                             <ul className="space-y-1 text-[10px] font-medium opacity-90">
-                              <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500" /> 95%+ Excellent</li>
-                              <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-blue-500" /> 80%+ Healthy</li>
-                              <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-500" /> Below 80% Warning</li>
+                              <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-400" /> 95%+ Excellent</li>
+                              <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-blue-400" /> 80%+ Healthy</li>
+                              <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-400" /> Below 80% Warning</li>
                             </ul>
                           </TooltipContent>
                         </Tooltip>
@@ -691,20 +691,20 @@ export default function DigitizationComplianceTab({
                     </div>
                     <div className="mt-1">
                       {summary?.percentDigitized >= 95 ? (
-                        <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 font-black text-[10px] uppercase tracking-wider px-2 py-1">
+                        <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 font-black text-[10px] uppercase tracking-wider px-2 py-1">
                           Excellent
                         </Badge>
                       ) : summary?.percentDigitized >= 80 ? (
-                        <Badge className="bg-blue-50 text-blue-700 border-blue-200 font-black text-[10px] uppercase tracking-wider px-2 py-1">
+                        <Badge className="bg-blue-100 text-blue-800 border-blue-200 font-black text-[10px] uppercase tracking-wider px-2 py-1">
                           Healthy
                         </Badge>
                       ) : (
-                        <Badge className="bg-amber-50 text-amber-700 border-amber-200 font-black text-[10px] uppercase tracking-wider px-2 py-1">
+                        <Badge className="bg-amber-100 text-amber-800 border-amber-200 font-black text-[10px] uppercase tracking-wider px-2 py-1">
                           Action Needed
                         </Badge>
                       )}
                     </div>
-                    <div className="mt-2 text-[10px] font-medium text-[#b07078]">
+                    <div className="mt-2 text-[10px] font-medium text-emerald-700/80">
                       Compliance rating
                     </div>
                   </div>
@@ -903,14 +903,9 @@ export default function DigitizationComplianceTab({
           setReportOpen(open)
         }}
       >
-        <DialogContent 
-          hideClose={isFullscreenPreview}
-          className={cn(
-            "flex flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out font-inter",
-            isFullscreenPreview 
-                ? "fixed h-screen w-screen max-w-none sm:max-w-none m-0 rounded-none z-[100] left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] sm:w-screen sm:h-screen" 
-                : "h-[90vh] w-[96vw] max-w-[96vw] xl:max-w-[1200px] rounded-brand"
-        )}>
+        <DialogContent
+          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out font-inter xl:max-w-[1200px] rounded-brand"
+        >
           <DialogHeader className="shrink-0 border-b border-gray-100 bg-gray-50/50 p-6">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
@@ -926,21 +921,8 @@ export default function DigitizationComplianceTab({
                   </p>
                 </div>
               </div>
-
-              <div className={cn("flex items-center gap-2", !isFullscreenPreview && "mr-8")}>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
-                    className="h-10 gap-2 rounded-brand border-gray-300 bg-white font-bold text-gray-700 hover:bg-gray-50 active:scale-95 shadow-sm"
-                >
-                    <i className={cn("ph-bold", isFullscreenPreview ? "ph-corners-in" : "ph-corners-out")} />
-                    {isFullscreenPreview ? "EXIT FULL SCREEN" : "FULL SCREEN"}
-                </Button>
-              </div>
             </div>
           </DialogHeader>
-
           <div className="relative flex-1 overflow-hidden bg-gray-100">
             {pdfBlobUrl ? (
               <div className="relative h-full w-full">

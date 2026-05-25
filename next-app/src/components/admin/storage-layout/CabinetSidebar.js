@@ -45,7 +45,7 @@ const CabinetSidebar = memo(({
               {selectedCabinetIds.size > 1
                 ? `${selectedCabinetIds.size} cabinets selected`
                 : selectedCabinet
-                  ? `CAB-${selectedCabinet.id}`
+                  ? (selectedCabinet.id.startsWith("CAB-") ? selectedCabinet.id : `CAB-${selectedCabinet.id}`)
                   : "Select a cabinet on the map"}
             </CardDescription>
           </div>
@@ -82,16 +82,7 @@ const CabinetSidebar = memo(({
           </Empty>
         ) : (
           <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={rotateSelectedCabinet}
-                className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-gray-300 hover:bg-red-50/30"
-              >
-                <i className="ph-bold ph-arrow-clockwise mr-2 text-pup-maroon" />
-                ROTATE
-              </Button>
+            <div className="grid grid-cols-1 gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -105,7 +96,7 @@ const CabinetSidebar = memo(({
                 type="button"
                 variant="outline"
                 onClick={() => setBulkConfirmOpen(true)}
-                className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-gray-300 hover:bg-red-50/30 lg:col-span-2"
+                className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-gray-300 hover:bg-red-50/30"
               >
                 <i className="ph-bold ph-trash mr-2 text-pup-maroon" />
                 REMOVE CABINET
@@ -216,23 +207,14 @@ const CabinetSidebar = memo(({
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold tracking-wide text-gray-700 uppercase">
+                <label className="mb-1 block text-xs font-bold tracking-wide text-gray-700 uppercase opacity-50">
                   Height (%)
                 </label>
                 <Input
                   type="number"
-                  step="1"
+                  disabled
                   value={toPct(selectedCabinet.rect.h)}
-                  onChange={(e) => {
-                    if (e.target.value === "") return
-                    const val = Number(e.target.value)
-                    if (!Number.isFinite(val)) return
-                    updateSelectedSizeNormalized(
-                      selectedCabinet.rect.w,
-                      fromPct(val)
-                    )
-                  }}
-                  className="h-10 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
+                  className="h-10 rounded-brand border border-gray-300 bg-gray-50 text-sm opacity-50 cursor-not-allowed"
                 />
               </div>
             </div>

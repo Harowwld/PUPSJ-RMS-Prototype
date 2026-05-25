@@ -682,10 +682,9 @@ export default function SectionsTab({
                       </div>
                       </td>
                       </tr>
-                      );
-                      })}                {filteredSections.length === 0 && (
-                  <tr className="border-0 hover:bg-transparent">
-                    <td colSpan={5} className="border-0 p-0">
+                      )})}
+                      {filteredSections.length === 0 && (
+                      <tr className="border-0 hover:bg-transparent">                    <td colSpan={5} className="border-0 p-0">
                       <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500">
                         <EmptyHeader className="flex flex-col items-center gap-0">
                           <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">

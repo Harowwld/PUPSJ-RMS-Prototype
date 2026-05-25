@@ -98,7 +98,7 @@ export default function BackupTab({
   }
 
   const handleSelectAll = (checked) => {
-    setSelectedBackupIds(checked ? backups.map((b) => b.id) : [])
+    setSelectedBackupIds(checked ? backups.filter(b => b).map((b) => b.id) : [])
   }
 
   const handleToggleRow = (id) => {
@@ -108,7 +108,7 @@ export default function BackupTab({
   }
 
   const sortedAndPaginatedBackups = useMemo(() => {
-    let result = [...backups]
+    let result = backups.filter(b => b)
     result.sort((a, b) => {
       let valA, valB
       if (sortBy === "size_bytes") {
@@ -178,7 +178,7 @@ export default function BackupTab({
   }
 
   const handleDownloadBackup = (id, filename) => {
-    const backup = backups.find(b => b.id === id)
+    const backup = backups.find(b => b?.id === id)
     onDownloadBackup(backup || { id, filename })
     showToast({
       title: "Download Initiated",

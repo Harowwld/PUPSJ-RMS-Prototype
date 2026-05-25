@@ -102,18 +102,20 @@ const LogRow = React.memo(({
     <React.Fragment>
       <tr
         className={cn(
-          "group border-l-2 border-transparent transition-all duration-200 hover:bg-gray-50/80 select-none",
-          isSelected && "border-pup-maroon bg-red-50/30",
+          "group border-l-2 border-transparent transition-all duration-200 hover:bg-gray-50/80 select-none cursor-pointer",
+          isSelected && "border-amber-400 bg-amber-50/40",
           isExpanded && "bg-gray-50/50"
         )}
-        onDoubleClick={(e) => {
-          e.preventDefault();
+        onClick={() => {
           toggleRow(log.id);
         }}
       >
         <td className="p-4 text-center">
           <button
-            onClick={() => toggleRow(log.id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleRow(log.id);
+            }}
             className={cn(
               "mx-auto flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 text-gray-400 transition-all hover:bg-pup-maroon hover:text-white",
               isExpanded && "bg-pup-maroon text-white rotate-90"
@@ -191,7 +193,10 @@ const LogRow = React.memo(({
             variant="ghost"
             size="icon"
             className="h-9 w-9 rounded-xl border border-transparent hover:border-gray-200 hover:bg-white hover:text-pup-maroon hover:shadow-sm active:scale-95 transition-all"
-            onClick={() => setSelectedLog(log)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedLog(log);
+            }}
           >
             <i className="ph-bold ph-eye text-lg"></i>
           </Button>

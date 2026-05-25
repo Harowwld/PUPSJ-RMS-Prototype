@@ -10,7 +10,7 @@ export async function listSections({ includeArchived = false } = {}) {
      ORDER BY s.name ASC`,
     []
   );
-  return rows;
+  return rows || [];
 }
 
 export async function createSection(nameRaw, courseCodeRaw) {
@@ -20,6 +20,7 @@ export async function createSection(nameRaw, courseCodeRaw) {
   if (!name) throw new Error("Missing section name");
   const safeCode = courseCode || "UNKN";
 
+  // Ensure course exists
   const course = await dbGet("SELECT code FROM courses WHERE code = ?", [safeCode]);
   if (!course) {
     if (safeCode === "UNKN") {
@@ -29,18 +30,36 @@ export async function createSection(nameRaw, courseCodeRaw) {
     }
   }
 
+  // Existence check
   const existing = await dbGet("SELECT id FROM sections WHERE name = ? AND COALESCE(course_code, 'UNKN') = ?", [name, safeCode]);
   if (existing) throw new Error("Section name already exists for this degree program");
 
+  // Insert
   const res = await dbRun("INSERT INTO sections (name, course_code, status) VALUES (?, ?, 'Active')", [name, safeCode]);
 
-  return await dbGet(
+  if (!res || res.lastInsertRowid === null || res.lastInsertRowid === undefined) {
+    throw new Error("Failed to insert course block: No ID returned from database");
+  }
+
+  // Retrieve with synthetic fallback to prevent null pointer crashes in logging
+  const created = await dbGet(
     `SELECT s.*, c.name as course_name
      FROM sections s
      LEFT JOIN courses c ON c.code = s.course_code
      WHERE s.id = ?`,
     [res.lastInsertRowid]
   );
+
+  if (!created) {
+    return {
+      id: res.lastInsertRowid,
+      name,
+      course_code: safeCode,
+      status: "Active"
+    };
+  }
+
+  return created;
 }
 
 export async function updateSection(id, nameRaw, courseCodeRaw, status = "Active") {

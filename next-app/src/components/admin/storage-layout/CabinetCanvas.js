@@ -11,7 +11,8 @@ import {
 import {
   getCabinetEffectiveSize,
   toPct,
-  SNAP_STEP,
+  SNAP_STEP_X,
+  SNAP_STEP_Y,
 } from "@/lib/storageLayoutUtils"
 import { getDefaultDoor } from "@/lib/storageLayoutDefaults"
 import { cn } from "@/lib/utils"
@@ -29,19 +30,25 @@ const CabinetCanvas = memo(({
   handleCanvasPointerMove,
   handleCanvasPointerUp,
   setSelectedCabinetIds,
-  rotateSelectedCabinet,
   duplicateSelectedCabinet,
   setBulkConfirmOpen,
   dragRef,
   updateSelectedRectFromNormalized,
   updateSelectedSizeNormalized,
-  selectionBox
+  selectionBox,
+  pushHistory,
+  layout,
+  isModalOpen = false
 }) => {
   return (
     <div
       ref={canvasRef}
-      className="relative w-full overflow-hidden border border-gray-300 bg-[#f8fafc] shadow-inner"
-      style={{ aspectRatio: "16 / 10" }}
+      data-slot="storage-canvas"
+      className={cn(
+        "relative w-full overflow-hidden border border-gray-300 bg-[#f8fafc] shadow-inner transition-all duration-300",
+        isModalOpen ? "h-full" : ""
+      )}
+      style={!isModalOpen ? { aspectRatio: "16 / 10" } : {}}
       onPointerMove={handleCanvasPointerMove}
       onPointerUp={handleCanvasPointerUp}
       onPointerCancel={handleCanvasPointerUp}
@@ -50,7 +57,10 @@ const CabinetCanvas = memo(({
         if (e.target === e.currentTarget) {
           setSelectedCabinetIds(new Set())
 
-          const box = canvasRef.current.getBoundingClientRect()
+          const container = e.currentTarget
+          if (!container) return
+
+          const box = container.getBoundingClientRect()
           const relX = (e.clientX - box.left) / Math.max(1, box.width)
           const relY = (e.clientY - box.top) / Math.max(1, box.height)
 
@@ -76,11 +86,9 @@ const CabinetCanvas = memo(({
           style={{
             backgroundImage: `
               linear-gradient(to right, rgba(148, 163, 184, 0.1) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(148, 163, 184, 0.1) 1px, transparent 1px),
-              linear-gradient(to right, rgba(148, 163, 184, 0.3) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(148, 163, 184, 0.3) 1px, transparent 1px)
+              linear-gradient(to bottom, rgba(148, 163, 184, 0.1) 1px, transparent 1px)
             `,
-            backgroundSize: "2% 2%, 2% 2%, 10% 10%, 10% 10%",
+            backgroundSize: "2.5% 4%, 2.5% 4%",
           }}
         />
       )}
@@ -125,6 +133,7 @@ const CabinetCanvas = memo(({
         onPointerDown={(e) => {
           e.preventDefault()
           e.stopPropagation()
+          pushHistory(layout)
           dragRef.current = {
             pointerId: e.pointerId,
             mode: "door",
@@ -167,8 +176,8 @@ const CabinetCanvas = memo(({
             </div>
           </div>
         )}
-        <div className="rounded bg-slate-800/40 px-2 py-1 font-mono text-[9px] text-slate-200">
-          GRID: {toPct(SNAP_STEP)}%
+        <div className="rounded bg-slate-800/40 px-2 py-1 font-mono text-[9px] text-slate-200 uppercase tracking-tighter">
+          GRID: {toPct(SNAP_STEP_X)}% x {toPct(SNAP_STEP_Y)}%
         </div>
       </div>
 
@@ -188,12 +197,13 @@ const CabinetCanvas = memo(({
             rot={rot}
             selectedCabinetIds={selectedCabinetIds}
             setSelectedCabinetIds={setSelectedCabinetIds}
-            rotateSelectedCabinet={rotateSelectedCabinet}
             duplicateSelectedCabinet={duplicateSelectedCabinet}
             setBulkConfirmOpen={setBulkConfirmOpen}
             activeRoom={activeRoom}
             canvasRef={canvasRef}
             dragRef={dragRef}
+            pushHistory={pushHistory}
+            layout={layout}
           />
         )
       })}
@@ -209,12 +219,13 @@ const CabinetElement = memo(({
   rot,
   selectedCabinetIds,
   setSelectedCabinetIds,
-  rotateSelectedCabinet,
   duplicateSelectedCabinet,
   setBulkConfirmOpen,
   activeRoom,
   canvasRef,
-  dragRef
+  dragRef,
+  pushHistory,
+  layout
 }) => {
   return (
     <div
@@ -233,9 +244,13 @@ const CabinetElement = memo(({
         userSelect: "none",
       }}
       onPointerDown={(e) => {
-        if (!canvasRef.current) return
+        const container = e.currentTarget.closest('[data-slot="storage-canvas"]')
+        if (!container) return
+
         e.preventDefault()
         e.stopPropagation()
+
+        pushHistory(layout)
 
         const isMulti = e.ctrlKey || e.metaKey
         let next = new Set(selectedCabinetIds)
@@ -249,7 +264,7 @@ const CabinetElement = memo(({
         }
         setSelectedCabinetIds(next)
 
-        const box = canvasRef.current.getBoundingClientRect()
+        const box = container.getBoundingClientRect()
         const relX =
           (e.clientX - box.left) / Math.max(1, box.width)
         const relY =
@@ -284,23 +299,6 @@ const CabinetElement = memo(({
           onPointerDown={(e) => e.stopPropagation()}
         >
           <div className="flex items-center gap-1 rounded-full border border-gray-200 bg-white p-1 shadow-xl">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-pup-maroon"
-                  onClick={rotateSelectedCabinet}
-                >
-                  <i className="ph-bold ph-arrow-clockwise text-sm" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top">Rotate</TooltipContent>
-            </Tooltip>
-
-            <div className="h-4 w-px bg-gray-200" />
-
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -344,7 +342,7 @@ const CabinetElement = memo(({
 
       <div className="absolute inset-0 flex flex-col items-center justify-center p-2 pointer-events-none">
         <span className="text-[10px] font-black text-gray-700 uppercase tracking-tighter">
-          CAB-{cab.id}
+          {cab.id.startsWith("CAB-") ? cab.id : `CAB-${cab.id}`}
         </span>
         <div className="mt-1 h-[2px] w-1/3 bg-gray-400/50 rounded-full" />
       </div>
@@ -357,9 +355,11 @@ const CabinetElement = memo(({
               tabIndex={0}
               className="absolute -right-1.5 -bottom-1.5 flex h-5 w-5 cursor-se-resize items-center justify-center rounded-sm border border-gray-300 bg-white leading-none text-pup-maroon shadow"
               onPointerDown={(e) => {
-                if (!canvasRef.current) return
+                const container = e.currentTarget.closest('[data-slot="storage-canvas"]')
+                if (!container) return
                 e.preventDefault()
                 e.stopPropagation()
+                pushHistory(layout)
                 setSelectedCabinetIds(new Set([cab.id]))
                 dragRef.current = {
                   pointerId: e.pointerId,

@@ -170,163 +170,156 @@ export default function BackupTable({
                 </td>
               </tr>
             ) : (
-              sortedAndPaginatedBackups.map((b) => (
-                <tr
-                  key={b.id}
-                  className={`group cursor-pointer transition-all hover:bg-gray-50/80 ${
-                    selectedBackupIds.includes(b.id) ? "bg-red-50/20" : ""
-                  }`}
-                  onClick={(e) => {
-                    if (e.target.closest("button") || e.target.closest("input")) return
-                    handleToggleRow(b.id)
-                  }}
-                >
-                  <td className="p-3 text-center">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-pup-maroon focus:ring-pup-maroon"
-                      checked={selectedBackupIds.includes(b.id)}
-                      onChange={() => handleToggleRow(b.id)}
-                    />
-                  </td>
-                  <td className="max-w-[280px] p-3 text-xs font-bold text-pup-maroon">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="block w-full truncate">
-                          {b.filename}
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        side="right"
-                        className="max-w-[400px] rounded-brand break-all"
-                      >
+              sortedAndPaginatedBackups.map((b) => {
+                if (!b) return null;
+                return (
+                  <tr
+                    key={b.id}
+                    className={`group cursor-pointer transition-all hover:bg-gray-50/80 select-none ${
+                      selectedBackupIds.includes(b.id) ? "bg-red-50/20" : ""
+                    }`}
+                    onClick={(e) => {
+                      if (e.target.closest("button") || e.target.closest("input")) return
+                      handleToggleRow(b.id)
+                    }}
+                  >
+                    <td className="p-3 text-center">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-pup-maroon focus:ring-pup-maroon"
+                        checked={selectedBackupIds.includes(b.id)}
+                        onChange={() => handleToggleRow(b.id)}
+                      />
+                    </td>
+                    <td className="max-w-[280px] p-3 text-xs font-bold text-pup-maroon">
+                      <span className="block w-full truncate">
                         {b.filename}
-                      </TooltipContent>
-                    </Tooltip>
-                  </td>
-                  <td className="p-3 text-center text-xs font-black text-gray-700">
-                    {formatBytes(b.size_bytes)}
-                  </td>
-                  <td className="p-3 text-[11px] font-medium whitespace-nowrap text-gray-500">
-                    {formatPHDateTime(b.created_at)}
-                  </td>
-                  <td className="p-3">
-                    <div className="flex min-w-[140px] items-center gap-2">
-                      {/* Local Node */}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div
-                            className={`flex items-center gap-1.5 rounded-md border px-2 py-1 shadow-sm transition-all ${
-                              b.status_local === "Success"
-                                ? "border-green-200 bg-green-50/50 text-green-700"
-                                : "border-gray-200 bg-gray-50 text-gray-500"
-                            }`}
-                          >
-                            <i
-                              className={`ph-bold ph-hard-drive text-xs ${
+                      </span>
+                    </td>
+                    <td className="p-3 text-center text-xs font-black text-gray-700">
+                      {formatBytes(b.size_bytes)}
+                    </td>
+                    <td className="p-3 text-[11px] font-medium whitespace-nowrap text-gray-500">
+                      {formatPHDateTime(b.created_at)}
+                    </td>
+                    <td className="p-3">
+                      <div className="flex min-w-[140px] items-center gap-2">
+                        {/* Local Node */}
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div
+                              className={`flex items-center gap-1.5 rounded-md border px-2 py-1 shadow-sm transition-all ${
                                 b.status_local === "Success"
-                                  ? "text-green-600"
-                                  : "text-gray-400"
-                              }`}
-                            ></i>
-                            <span className="text-[10px] font-black tracking-tighter uppercase">
-                              Local
-                            </span>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent className="rounded-brand">
-                          <div className="text-xs font-bold">Local Storage</div>
-                          <div className="text-[10px] opacity-80">
-                            {b.status_local === "Success"
-                              ? "Backup secured on this server"
-                              : "Failed / Pending"}
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-
-                      {/* External Node */}
-                      {b.status_external === "Success" ? (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <div className="flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50/50 px-2 py-1 text-blue-700 shadow-sm transition-all">
-                              <i className="ph-bold ph-hard-drives text-xs text-blue-600"></i>
-                              <span className="text-[10px] font-black tracking-tighter uppercase">
-                                External
-                              </span>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent className="rounded-brand">
-                            <div className="text-xs font-bold">
-                              External Storage
-                            </div>
-                            <div className="text-[10px] opacity-80">
-                              Verified on secondary drive
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      ) : (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={() => handleSyncExternal(b.id)}
-                              disabled={localLoading.syncingId === b.id}
-                              className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[10px] font-black tracking-tight uppercase shadow-sm transition-all active:scale-95 disabled:opacity-50 ${
-                                b.status_external === "Failed"
-                                  ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
-                                  : "border-gray-300/30 bg-white text-pup-maroon hover:bg-red-50"
+                                  ? "border-green-200 bg-green-50/50 text-green-700"
+                                  : "border-gray-200 bg-gray-50 text-gray-500"
                               }`}
                             >
                               <i
-                                className={`ph-bold ${
-                                  localLoading.syncingId === b.id
-                                    ? "ph-arrows-clockwise animate-spin"
-                                    : b.status_external === "Failed"
-                                      ? "ph-warning-circle"
-                                      : "ph-share-network"
-                                } text-xs`}
+                                className={`ph-bold ph-hard-drive text-xs ${
+                                  b.status_local === "Success"
+                                    ? "text-green-600"
+                                    : "text-gray-400"
+                                }`}
                               ></i>
-                              <span>
-                                {localLoading.syncingId === b.id
-                                  ? localLoading.syncStatus || "..."
-                                  : b.status_external === "Failed"
-                                    ? "RETRY SYNC"
-                                    : "SYNC"}
+                              <span className="text-[10px] font-black tracking-tighter uppercase">
+                                Local
                               </span>
-                            </button>
+                            </div>
                           </TooltipTrigger>
                           <TooltipContent className="rounded-brand">
-                            {b.status_external === "Failed" 
-                              ? `Previous attempt failed. Click to retry institutional redundancy sync.`
-                              : "Distribute snapshot to external node"}
+                            <div className="text-xs font-bold">Local Storage</div>
+                            <div className="text-[10px] opacity-80">
+                              {b.status_local === "Success"
+                                ? "Backup secured on this server"
+                                : "Failed / Pending"}
+                            </div>
                           </TooltipContent>
                         </Tooltip>
-                      )}
-                    </div>
-                  </td>
-                  <td className="p-3 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onDownloadBackup(b.id, b.filename)}
-                        className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
-                      >
-                        <i className="ph-bold ph-file-zip text-xs"></i>
-                        DOWNLOAD
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onDeleteBackup(b.id)}
-                        className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700 active:scale-95"
-                      >
-                        <i className="ph-bold ph-trash text-xs"></i>
-                        DELETE
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+
+                        {/* External Node */}
+                        {b.status_external === "Success" ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50/50 px-2 py-1 text-blue-700 shadow-sm transition-all">
+                                <i className="ph-bold ph-hard-drives text-xs text-blue-600"></i>
+                                <span className="text-[10px] font-black tracking-tighter uppercase">
+                                  External
+                                </span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent className="rounded-brand">
+                              <div className="text-xs font-bold">
+                                External Storage
+                              </div>
+                              <div className="text-[10px] opacity-80">
+                                Verified on secondary drive
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => handleSyncExternal(b.id)}
+                                disabled={localLoading.syncingId === b.id}
+                                className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[10px] font-black tracking-tight uppercase shadow-sm transition-all active:scale-95 disabled:opacity-50 ${
+                                  b.status_external === "Failed"
+                                    ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
+                                    : "border-gray-300/30 bg-white text-pup-maroon hover:bg-red-50"
+                                }`}
+                              >
+                                <i
+                                  className={`ph-bold ${
+                                    localLoading.syncingId === b.id
+                                      ? "ph-arrows-clockwise animate-spin"
+                                      : b.status_external === "Failed"
+                                        ? "ph-warning-circle"
+                                        : "ph-share-network"
+                                  } text-xs`}
+                                ></i>
+                                <span>
+                                  {localLoading.syncingId === b.id
+                                    ? localLoading.syncStatus || "..."
+                                    : b.status_external === "Failed"
+                                      ? "RETRY SYNC"
+                                      : "SYNC"}
+                                </span>
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent className="rounded-brand">
+                              {b.status_external === "Failed" 
+                                ? `Previous attempt failed. Click to retry institutional redundancy sync.`
+                                : "Distribute snapshot to external node"}
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-3 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onDownloadBackup(b.id, b.filename)}
+                          className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
+                        >
+                          <i className="ph-bold ph-file-zip text-xs"></i>
+                          DOWNLOAD
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onDeleteBackup(b.id)}
+                          className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700 active:scale-95"
+                        >
+                          <i className="ph-bold ph-trash text-xs"></i>
+                          DELETE
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>

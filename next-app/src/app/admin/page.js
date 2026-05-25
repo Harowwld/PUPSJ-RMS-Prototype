@@ -152,6 +152,8 @@ function AdminPageContent() {
   const [backupDeleteOpen, setBackupDeleteOpen] = useState(false)
   const [backupDeleteLoading, setBackupDeleteLoading] = useState(false)
   const [backupDeleteTypedText, setBackupDeleteTypedText] = useState("")
+  const [backupDeleteVerificationTarget, setBackupDeleteVerificationTarget] = useState("")
+  const [backupDeleteVerificationValue, setBackupDeleteVerificationValue] = useState("")
 
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false)
   const [restoreFile, setRestoreFile] = useState(null)
@@ -1092,13 +1094,18 @@ function AdminPageContent() {
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to create backup")
 
-      if (json.data?.id) {
-        const link = document.createElement("a")
-        link.href = `/api/system/backup/download?id=${json.data.id}`
-        link.download = json.data.filename
-        link.click()
+      // Await refresh to ensure table updates before UI completes
+      await refreshBackups()
+
+      if (json?.data?.id) {
+        // Trigger download with a slight delay to avoid interrupting table refresh state
+        setTimeout(() => {
+          const link = document.createElement("a")
+          link.href = `/api/system/backup/download?id=${json?.data?.id}`
+          link.download = json?.data?.filename || "backup.zip.enc"
+          link.click()
+        }, 1000)
       }
-      refreshBackups()
       return json
     })()
 
@@ -1107,9 +1114,9 @@ function AdminPageContent() {
       success: (json) => {
         return (
           <div className="flex flex-col gap-1">
-            <p className="text-sm font-semibold">Snapshot Created</p>
+            <p className="text-sm font-semibold text-emerald-700">Backup Successful</p>
             <p className="text-xs font-normal">
-              Archive '{json?.data?.filename || "backup package"}' is ready.
+              Archive '{json?.data?.filename || "backup package"}' has been secured.
             </p>
           </div>
         )
@@ -1126,6 +1133,8 @@ function AdminPageContent() {
         )
       },
     })
+    
+    return promise
   }
 
   const syncExternal = async (id) => {
@@ -1160,6 +1169,8 @@ function AdminPageContent() {
         </div>
       ),
     })
+
+    return promise
   }
 
   const confirmDeleteBackup = async () => {
@@ -1184,10 +1195,10 @@ function AdminPageContent() {
         throw new Error(json?.error || "Failed to delete backup(s)")
 
       showToast({
-        title: isBulk ? "Backups Removed" : "Backup Removed",
+        title: isBulk ? "Bulk Deletion Successful" : "Deletion Successful",
         description: isBulk
-          ? `Successfully removed ${json.deletedCount} backup archives.`
-          : "The selected backup has been permanently deleted.",
+          ? `Successfully removed ${json.deletedCount} backup archives from the system.`
+          : "The selected backup archive has been permanently removed.",
       })
       setBackupDeleteOpen(false)
       refreshBackups()
@@ -1532,9 +1543,9 @@ function AdminPageContent() {
               onSimulateBackup={() => simulateBackup()}
               onSyncExternal={syncExternal}
               onDownloadBackup={(b) => {
-                const id = typeof b === "object" ? b.id : b
+                const id = b && typeof b === "object" ? b.id : b
                 const filename =
-                  typeof b === "object" ? b.filename : "backup.zip.enc"
+                  b && typeof b === "object" ? b.filename : "backup.zip.enc"
                 const link = document.createElement("a")
                 link.href = `/api/system/backup/download?id=${id}`
                 link.download = filename
@@ -1544,6 +1555,9 @@ function AdminPageContent() {
                 const ids = Array.isArray(id) ? id : [id]
                 const targets = backups.filter((x) => ids.includes(x.id))
                 if (targets.length > 0) {
+                  const randomCode = Math.floor(1000 + Math.random() * 9000).toString()
+                  setBackupDeleteVerificationTarget(randomCode)
+                  setBackupDeleteVerificationValue("")
                   setBackupDeleteTargets(targets)
                   setBackupDeleteTypedText("")
                   setBackupDeleteOpen(true)
@@ -1615,7 +1629,7 @@ function AdminPageContent() {
         onCancel={() => setRestoreOpen(false)}
       />
 
-      <PromptModal
+      <ConfirmModal
         open={backupDeleteOpen}
         title={
           backupDeleteTargets.length > 1
@@ -1627,17 +1641,15 @@ function AdminPageContent() {
             ? `You are about to permanently remove ${backupDeleteTargets.length} backup archives from the local server. This action is irreversible.`
             : `You are about to permanently remove the following backup archive from the local server. This action is irreversible.`
         }
-        itemsList={backupDeleteTargets.map((t) => t.filename)}
-        inputLabel="Please type 'DELETE' to confirm deletion"
-        value={backupDeleteTypedText}
-        onChange={setBackupDeleteTypedText}
+        selectedItems={backupDeleteTargets.map((t) => t?.filename || "Unknown")}
         onConfirm={confirmDeleteBackup}
         onCancel={() => setBackupDeleteOpen(false)}
-        confirmLabel="Delete Permanently"
-        placeholder="Type 'DELETE' to authorize..."
+        confirmLabel={backupDeleteTargets.length > 1 ? "Bulk Delete" : "Delete Permanently"}
         isLoading={backupDeleteLoading}
-        confirmDisabled={backupDeleteTypedText !== "DELETE"}
         variant="danger"
+        verificationTarget={backupDeleteVerificationTarget}
+        verificationValue={backupDeleteVerificationValue}
+        onVerificationChange={setBackupDeleteVerificationValue}
       />
 
       <ConfirmModal

@@ -36,13 +36,8 @@ export default function PdfPreviewDialog({
       }}
     >
       <DialogContent 
-        hideClose={isFullscreenPreview}
-        className={cn(
-          "flex flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out",
-          isFullscreenPreview 
-              ? "fixed h-screen w-screen max-w-none sm:max-w-none m-0 rounded-none z-[100] left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] sm:w-screen sm:h-screen" 
-              : "h-[90vh] w-[96vw] max-w-[96vw] xl:max-w-[1400px] rounded-brand"
-      )}>
+        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out xl:max-w-[1400px] rounded-brand"
+      >
         <DialogHeader className="shrink-0 border-b border-gray-100 bg-gray-50/50 p-6">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
@@ -58,18 +53,6 @@ export default function PdfPreviewDialog({
                   and severity levels are correctly captured.
                 </p>
               </div>
-            </div>
-
-            <div className={cn("flex items-center gap-2", !isFullscreenPreview && "mr-8")}>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
-                    className="h-10 gap-2 rounded-brand border-gray-300 bg-white font-bold text-gray-700 hover:bg-gray-50 active:scale-95 shadow-sm"
-                >
-                    <i className={cn("ph-bold", isFullscreenPreview ? "ph-corners-in" : "ph-corners-out")} />
-                    {isFullscreenPreview ? "EXIT FULL SCREEN" : "FULL SCREEN"}
-                </Button>
             </div>
           </div>
         </DialogHeader>

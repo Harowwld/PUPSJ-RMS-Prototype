@@ -13,12 +13,12 @@ export async function listDocTypes({ includeArchived = false } = {}) {
     `SELECT name FROM document_types ${where} ORDER BY name COLLATE NOCASE ASC`,
     []
   );
-  return rows.map((r) => String(r.name));
+  return (rows || []).map((r) => String(r?.name || ""));
 }
 
 export async function listAllDocTypes({ includeArchived = false } = {}) {
   const where = includeArchived ? "" : "WHERE status = 'Active'";
-  return await dbAll(`SELECT id, name, name_norm, status, created_at FROM document_types ${where} ORDER BY name COLLATE NOCASE ASC`, []);
+  return await dbAll(`SELECT id, name, name_norm, status, created_at FROM document_types ${where} ORDER BY name COLLATE NOCASE ASC`, []) || [];
 }
 
 export async function createDocTypeFull(nameRaw) {
@@ -26,14 +26,35 @@ export async function createDocTypeFull(nameRaw) {
   if (!name) throw new Error("Missing name");
 
   const nameNorm = normalizeDocTypeKey(name);
+  
+  // 1. Strict existence check
   const existing = await dbGet("SELECT id FROM document_types WHERE name_norm = ?", [nameNorm]);
   if (existing) throw new Error("Document type already exists");
 
+  // 2. Perform insertion
   const res = await dbRun("INSERT INTO document_types (name, name_norm, status) VALUES (?, ?, 'Active')", [
     name,
     nameNorm,
   ]);
-  return await dbGet("SELECT * FROM document_types WHERE id = ?", [res.lastInsertRowid]);
+  
+  if (!res || res.lastInsertRowid === null || res.lastInsertRowid === undefined) {
+    throw new Error("Failed to insert document type: No ID returned from database");
+  }
+
+  // 3. Retrieve the created object with fallback
+  const created = await dbGet("SELECT * FROM document_types WHERE id = ?", [res.lastInsertRowid]);
+  
+  if (!created) {
+    // If retrieval fails but insert succeeded, return a synthetic object so logging doesn't crash
+    return {
+      id: res.lastInsertRowid,
+      name,
+      name_norm: nameNorm,
+      status: "Active"
+    };
+  }
+  
+  return created;
 }
 
 export async function updateDocType(id, nameRaw, status = "Active") {
@@ -69,20 +90,5 @@ export async function deleteDocType(id) {
 }
 
 export async function createDocType(nameRaw) {
-  const name = String(nameRaw || "").trim();
-  if (!name) throw new Error("Missing name");
-
-  const nameNorm = normalizeDocTypeKey(name);
-  const existing = await dbGet(
-    "SELECT name FROM document_types WHERE name_norm = ?",
-    [nameNorm]
-  );
-  if (existing?.name) return String(existing.name);
-
-  await dbRun("INSERT INTO document_types (name, name_norm) VALUES (?, ?)", [
-    name,
-    nameNorm,
-  ]);
-  const row = await dbGet("SELECT name FROM document_types WHERE name_norm = ?", [nameNorm]);
-  return row?.name ? String(row.name) : name;
+  return await createDocTypeFull(nameRaw);
 }
