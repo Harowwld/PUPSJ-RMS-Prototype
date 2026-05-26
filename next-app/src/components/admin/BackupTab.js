@@ -222,8 +222,8 @@ export default function BackupTab({
           <Card className="flex h-fit min-h-[600px] w-full flex-1 flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm">
             <PageHeader
               icon="ph-hard-drives"
-              title="Encrypted Backup History"
-              description="Manage institutional snapshots and secure redundancy nodes."
+              title="Backup Records"
+              description="Manage system archives and secure copies."
               actions={
                 <div className="flex items-center gap-2">
                   <div className="mr-2 flex items-center gap-2 border-r border-gray-200 pr-2">
@@ -237,7 +237,7 @@ export default function BackupTab({
                       ></i>
                       {localLoading.generating
                         ? localLoading.generatingStatus || "WORKING..."
-                        : "CREATE SNAPSHOT"}
+                        : "CREATE BACKUP"}
                     </Button>
                     <Button
                       variant="outline"
@@ -253,7 +253,7 @@ export default function BackupTab({
                       ></i>{" "}
                       {localLoading.uploading
                         ? "READING FILE..."
-                        : "RESTORE IMAGE"}
+                        : "RESTORE BACKUP"}
                     </Button>
                     <input
                       ref={restoreFileRef}

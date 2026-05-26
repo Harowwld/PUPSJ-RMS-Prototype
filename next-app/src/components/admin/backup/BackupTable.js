@@ -310,7 +310,7 @@ export default function BackupTable({
                           variant="outline"
                           size="sm"
                           onClick={() => onDeleteBackup(b.id)}
-                          className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700 active:scale-95"
+                          className="flex h-8 items-center gap-1.5 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-wider text-red-600 shadow-sm transition-colors hover:border-red-600 hover:bg-red-50/30 hover:text-red-700 active:scale-95"
                         >
                           <i className="ph-bold ph-trash text-xs"></i>
                           DELETE

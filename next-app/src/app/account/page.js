@@ -533,14 +533,14 @@ function AccountPageContent() {
                   className="flex items-center justify-start gap-3 w-full px-4 py-3.5 rounded-xl text-sm font-bold transition-all data-[state=active]:bg-red-50 data-[state=active]:text-pup-maroon data-[state=active]:shadow-sm text-gray-500 hover:bg-gray-50 hover:text-gray-900 border-0"
                 >
                   <i className="ph-bold ph-identification-card text-xl"></i>
-                  Personal Info
+                  Profile
                 </TabsTrigger>
                 <TabsTrigger
                   value="security"
                   className="flex items-center justify-start gap-3 w-full px-4 py-3.5 rounded-xl text-sm font-bold transition-all data-[state=active]:bg-red-50 data-[state=active]:text-pup-maroon data-[state=active]:shadow-sm text-gray-500 hover:bg-gray-50 hover:text-gray-900 border-0"
                 >
                   <i className="ph-bold ph-shield-star text-xl"></i>
-                  Security
+                  Security Settings
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -563,15 +563,15 @@ function AccountPageContent() {
               <Card className="rounded-2xl border-gray-200 shadow-sm overflow-hidden bg-white">
                 <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-8">
                   <div className="flex items-center gap-5">
-                    <div className="w-14 h-14 rounded-2xl bg-white border-2 border-gray-100 flex items-center justify-center text-pup-maroon shadow-md shrink-0">
+                      <div className="w-14 h-14 rounded-2xl bg-white border-2 border-gray-100 flex items-center justify-center text-pup-maroon shadow-md shrink-0">
                       <i className="ph-duotone ph-user-focus text-3xl"></i>
                     </div>
                     <div>
                       <CardTitle className="text-2xl font-black text-gray-900 tracking-tight">
-                        Personal Info
+                        Profile
                       </CardTitle>
                       <CardDescription className="font-medium text-gray-500 text-sm mt-1">
-                        Update your name as it appears in the system.
+                        Manage your profile name.
                       </CardDescription>
                     </div>
                   </div>
@@ -647,7 +647,7 @@ function AccountPageContent() {
                         ) : (
                           <i className="ph-bold ph-floppy-disk text-xl"></i>
                         )}
-                        {profileLoading ? "Saving..." : "Save Changes"}
+                        {profileLoading ? "Saving..." : "Save"}
                       </Button>
                     </div>
                   </form>
@@ -666,10 +666,10 @@ function AccountPageContent() {
                       </div>
                       <div>
                         <CardTitle className="text-2xl font-black text-gray-900 tracking-tight">
-                          Password
+                          Account Access
                         </CardTitle>
                         <CardDescription className="font-medium text-gray-500 text-sm mt-1">
-                          Update your system password regularly.
+                          Update your sign-in details.
                           {authUser?.password_last_changed && (
                             <span className="flex items-center gap-1.5 mt-2 text-[10px] text-pup-maroon font-black uppercase tracking-wider bg-red-50/50 w-fit px-2 py-0.5 rounded border border-red-100">
                               <i className="ph-bold ph-calendar"></i>

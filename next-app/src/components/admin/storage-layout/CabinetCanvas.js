@@ -22,7 +22,6 @@ const CabinetCanvas = memo(({
   activeRoom,
   selectedCabinetIds,
   selectedCabinet,
-  rotateSelectedCabinet,
   collidingIds,
   activePath,
   simulationMode,
@@ -179,35 +178,6 @@ const CabinetCanvas = memo(({
           )}>
             ENTRANCE
           </span>
-
-          {selectedCabinetIds.has("DOOR") && (
-            <div
-              className="absolute bottom-full left-1/2 z-50 mb-3 -translate-x-1/2"
-              onPointerDown={(e) => e.stopPropagation()}
-            >
-              <div className="flex items-center gap-1 rounded-full border border-gray-200 bg-white p-1 shadow-xl animate-scale-in">
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-pup-maroon"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        rotateSelectedCabinet();
-                      }}
-                    >
-                      <i className="ph-bold ph-arrow-clockwise text-sm" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    Rotate Entrance
-                  </TooltipContent>
-                </Tooltip>
-              </div>
-            </div>
-          )}
         </div>
       </div>
 

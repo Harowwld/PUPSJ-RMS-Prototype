@@ -61,7 +61,7 @@ export default function LogDetailSheet({
             </div>
             <div className="min-w-0">
               <SheetTitle className="text-left text-xl font-black leading-none tracking-tight text-gray-900">
-                Audit Log Record
+                Log Entry
               </SheetTitle>
               <SheetDescription className="mt-1.5 text-left text-sm font-medium text-gray-500">
                 System Event ID:{" "}

@@ -231,10 +231,9 @@ export default function AuditLogsTab({
         <Card className="rounded-[2rem] border border-gray-200 bg-white/80 shadow-2xl shadow-gray-200/50 backdrop-blur-xl overflow-hidden">
           <PageHeader
             icon="ph-shield-check"
-            title="Security Audit Logs"
+            title="Audit Logs"
             description="Trace system activities, security events, and administrative actions with precision."
-            actions={
-              <div className="flex items-center gap-2">
+            actions={              <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"

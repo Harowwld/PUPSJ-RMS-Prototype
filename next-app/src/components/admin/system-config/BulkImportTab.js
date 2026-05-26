@@ -96,10 +96,10 @@ export default function BulkImportTab({
               </div>
               <div>
                 <h3 className="text-base leading-none font-black tracking-tight text-gray-900 uppercase">
-                  Ingestion Protocol
+                  Import Instructions
                 </h3>
                 <p className="mt-1 text-[10px] font-bold tracking-wider text-gray-400 uppercase">
-                  System Taxonomy Rules
+                  Data Categories
                 </p>
               </div>
             </div>
@@ -206,24 +206,25 @@ export default function BulkImportTab({
 
           {/* Upload card - Adjusted for the new grid layout */}
           <Card className="flex flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm lg:col-span-7 xl:col-span-8">
-            <div className="flex items-center gap-4 rounded-t-brand border-b border-gray-100 bg-gray-50/50 px-6 py-5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-xs font-black text-white shadow-md shadow-red-900/20">
-                2
+            <div className="flex items-center gap-4 border-b border-gray-100 bg-gray-50/50 px-6 py-5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon shadow-sm">
+                <i className="ph-duotone ph-cloud-arrow-up text-xl"></i>
               </div>
               <div>
-                <h3 className="text-base leading-none font-black tracking-tight text-gray-900">
+                <h3 className="text-base leading-none font-black tracking-tight text-gray-900 uppercase">
                   Transmission
                 </h3>
-                <p className="mt-1.5 text-[10px] font-medium tracking-wider text-gray-500 uppercase">
+                <p className="mt-1 text-[10px] font-bold tracking-wider text-gray-400 uppercase">
                   Select or drop your structured data
                 </p>
               </div>
             </div>
+            
             <CardContent className="flex flex-1 flex-col p-6">
               <div className="mb-6 flex flex-wrap items-center gap-3">
                 <a
                   href="data:text/csv;charset=utf-8,Category,Name,Code%0ADocumentType,Transcript of Records,%0ADocumentType,Diploma,%0ACourse,Bachelor of Science in IT,BSIT%0ACourse,Bachelor of Science in Accountancy,BSA%0ASection,Block 1,BSIT%0ASection,Section 1,BSA"
-                  download="PUP-TAXONOMY-IMPORT-TEMPLATE.csv"
+                  download="PUP-IMPORT-TEMPLATE.csv"
                   className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-xs transition-all hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
                 >
                   <i className="ph-bold ph-download-simple text-base"></i>
@@ -282,35 +283,34 @@ export default function BulkImportTab({
           </Card>
         </div>
       ) : importStatus === "preview" ? (
-        <div className="animate-in fade-in slide-in-from-bottom-2 flex flex-1 flex-col gap-4 duration-300">
-          <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+      <div className="animate-in fade-in slide-in-from-bottom-2 flex flex-1 flex-col gap-4 duration-300">
+        <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+          <div className="flex items-center gap-4">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={resetImport}
+              className="h-9 shrink-0 rounded-brand border-gray-300 px-3 text-gray-600 transition-all hover:border-gray-300 hover:text-pup-maroon active:scale-95"
+            >
+              <i className="ph-bold ph-arrow-left mr-2"></i> BACK
+            </Button>
             <div className="flex items-center gap-4">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={resetImport}
-                className="h-9 shrink-0 rounded-brand border-gray-300 px-3 text-gray-600 transition-all hover:border-gray-300 hover:text-pup-maroon active:scale-95"
-              >
-                <i className="ph-bold ph-arrow-left mr-2"></i> BACK
-              </Button>
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon shadow-sm">
-                  <i className="ph-duotone ph-table text-2xl"></i>
-                </div>
-                <div>
-                  <h3 className="text-lg leading-none font-black tracking-tight text-gray-900">
-                    CSV Ingestion Preview
-                  </h3>
-                  <div className="mt-1.5 text-xs leading-tight font-medium text-gray-500">
-                    <div className="flex items-center gap-1.5 font-bold text-gray-800">
-                      <i className="ph-bold ph-file-csv text-sm text-pup-maroon" />
-                      {importFile?.name || "Taxonomy Data"}
-                    </div>
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon shadow-sm">
+                <i className="ph-duotone ph-table text-2xl"></i>
+              </div>
+              <div>
+                <h3 className="text-lg leading-none font-black tracking-tight text-gray-900">
+                  Import Preview
+                </h3>
+                <div className="mt-1.5 text-xs leading-tight font-medium text-gray-500">
+                  <div className="flex items-center gap-1.5 font-bold text-gray-800">
+                    <i className="ph-bold ph-file-csv text-sm text-pup-maroon" />
+                    {importFile?.name || "Records Data"}
                   </div>
                 </div>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+          </div>            <div className="flex items-center gap-3">
               <div className="flex items-center gap-4 rounded-full border border-gray-200 bg-white px-3 py-1.5 shadow-sm">
                 <span className="border-r border-gray-100 pr-4 text-[10px] font-black tracking-widest text-gray-400 uppercase">
                   Summary
@@ -663,9 +663,9 @@ export default function BulkImportTab({
               <i className="ph-duotone ph-database absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-3xl text-pup-maroon"></i>
             </div>
             <div>
-              <h3 className="text-xl font-black text-gray-900">Committing Taxonomy</h3>
+              <h3 className="text-xl font-black text-gray-900">Adding Records</h3>
               <p className="mt-2 text-sm font-medium text-gray-500">
-                Writing validated entries to the system repository. Please do not close the window.
+                Writing validated entries to the system. Please do not close the window.
               </p>
             </div>
           </div>
@@ -683,10 +683,10 @@ export default function BulkImportTab({
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-2xl font-black tracking-tight text-gray-900">Ingestion Complete</h3>
+              <h3 className="text-2xl font-black tracking-tight text-gray-900">Import Complete</h3>
               <p className="text-sm leading-relaxed font-medium text-gray-500">
-                The batch taxonomy has been successfully merged into the{" "}
-                <span className="font-bold text-pup-maroon">system repository</span>. All records are
+                The batch of records has been successfully merged into the{" "}
+                <span className="font-bold text-pup-maroon">system</span>. All records are
                 now active.
               </p>
             </div>

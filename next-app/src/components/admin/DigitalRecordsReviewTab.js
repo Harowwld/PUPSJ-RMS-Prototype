@@ -342,11 +342,11 @@ export default function DigitalRecordsReviewTab({
       {/* Stat Cards */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {/* Pending Card */}
-        <div className="group relative overflow-hidden rounded-xl border border-blue-100 bg-blue-50/50 p-5 shadow-sm transition-all hover:border-blue-200">
-          <i className="ph-duotone ph-clock-countdown absolute -right-3 -bottom-3 rotate-12 text-6xl text-blue-600 opacity-5 transition-transform group-hover:scale-110" />
+        <div className="group relative overflow-hidden rounded-xl border border-blue-950 bg-linear-to-br from-blue-800 to-blue-950 p-5 shadow-sm transition-all hover:shadow-md">
+          <i className="ph-duotone ph-clock-countdown pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
           <div className="relative z-10">
             <div className="flex items-center justify-between">
-              <p className="mb-1 text-[10px] font-black tracking-widest text-blue-600/60 uppercase">
+              <p className="mb-1 text-[10px] font-black tracking-widest text-blue-200 uppercase">
                 Pending
               </p>
               {stats.hasSlaBreach && !isLoading && (
@@ -358,7 +358,7 @@ export default function DigitalRecordsReviewTab({
                    <TooltipProvider>
                       <Tooltip delayDuration={300}>
                         <TooltipTrigger asChild>
-                           <Badge className="bg-red-50 text-red-700 border-red-100 text-[8px] font-black px-1.5 py-0 h-4 uppercase tracking-tighter cursor-help">
+                           <Badge className="bg-red-500 text-white border-0 text-[8px] font-black px-1.5 py-0 h-4 uppercase tracking-tighter cursor-help">
                               SLA Warning
                            </Badge>
                         </TooltipTrigger>
@@ -376,71 +376,71 @@ export default function DigitalRecordsReviewTab({
             {isLoading ? (
               <Skeleton className="h-8 w-16" />
             ) : (
-              <h3 className="text-2xl font-black tracking-tight text-blue-900">
+              <h3 className="text-3xl font-black text-white">
                 {stats.pending.toLocaleString()}
               </h3>
             )}
-            <p className="mt-0.5 text-[10px] font-medium text-blue-600/70">
+            <p className="mt-0.5 text-[10px] font-medium text-blue-200/80">
               Awaiting decision
             </p>
           </div>
         </div>
 
         {/* Approved Today */}
-        <div className="group relative overflow-hidden rounded-xl border border-emerald-100 bg-emerald-50/50 p-5 shadow-sm transition-all hover:border-emerald-200">
-          <i className="ph-duotone ph-check-circle absolute -right-3 -bottom-3 rotate-12 text-6xl text-emerald-600 opacity-5 transition-transform group-hover:scale-110" />
+        <div className="group relative overflow-hidden rounded-xl border border-emerald-950 bg-linear-to-br from-emerald-800 to-emerald-950 p-5 shadow-sm transition-all hover:shadow-md">
+          <i className="ph-duotone ph-check-circle pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
           <div className="relative z-10">
-            <p className="mb-1 text-[10px] font-black tracking-widest text-emerald-700/60 uppercase">
+            <p className="mb-1 text-[10px] font-black tracking-widest text-emerald-100 uppercase">
               Approved
             </p>
             {isLoading ? (
               <Skeleton className="h-8 w-16" />
             ) : (
-              <h3 className="text-2xl font-black tracking-tight text-emerald-900">
+              <h3 className="text-3xl font-black text-white">
                 {stats.approvedToday.toLocaleString()}
               </h3>
             )}
-            <p className="mt-0.5 text-[10px] font-medium text-emerald-700/70">
+            <p className="mt-0.5 text-[10px] font-medium text-emerald-100/80">
               Processed today
             </p>
           </div>
         </div>
 
         {/* Declined Today */}
-        <div className="group relative overflow-hidden rounded-xl border border-red-100 bg-red-50/50 p-5 shadow-sm transition-all hover:border-red-200">
-          <i className="ph-duotone ph-x-circle absolute -right-3 -bottom-3 rotate-12 text-6xl text-red-600 opacity-5 transition-transform group-hover:scale-110" />
+        <div className="group relative overflow-hidden rounded-xl border border-red-950 bg-linear-to-br from-red-700 to-red-950 p-5 shadow-sm transition-all hover:shadow-md">
+          <i className="ph-duotone ph-x-circle pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
           <div className="relative z-10">
-            <p className="mb-1 text-[10px] font-black tracking-widest text-red-600/60 uppercase">
+            <p className="mb-1 text-[10px] font-black tracking-widest text-red-200 uppercase">
               Declined
             </p>
             {isLoading ? (
               <Skeleton className="h-8 w-16" />
             ) : (
-              <h3 className="text-2xl font-black tracking-tight text-red-900">
+              <h3 className="text-3xl font-black text-white">
                 {stats.declinedToday.toLocaleString()}
               </h3>
             )}
-            <p className="mt-0.5 text-[10px] font-medium text-red-600/70">
+            <p className="mt-0.5 text-[10px] font-medium text-red-200/80">
               Returned today
             </p>
           </div>
         </div>
 
         {/* SLA Card */}
-        <div className="group relative overflow-hidden rounded-xl border border-amber-100 bg-amber-50/50 p-5 shadow-sm transition-all hover:border-amber-200">
-          <i className="ph-duotone ph-timer absolute -right-3 -bottom-3 rotate-12 text-6xl text-amber-600 opacity-5 transition-transform group-hover:scale-110" />
+        <div className="group relative overflow-hidden rounded-xl border border-amber-950 bg-linear-to-br from-amber-700 to-amber-950 p-5 shadow-sm transition-all hover:shadow-md">
+          <i className="ph-duotone ph-timer pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
           <div className="relative z-10">
-            <p className="mb-1 text-[10px] font-black tracking-widest text-amber-700/60 uppercase">
+            <p className="mb-1 text-[10px] font-black tracking-widest text-amber-100 uppercase">
               Avg. Time
             </p>
             {isLoading ? (
               <Skeleton className="h-8 w-24" />
             ) : (
-              <h3 className="text-2xl font-black tracking-tight text-amber-900">
+              <h3 className="text-3xl font-black text-white">
                 {stats.avgSlaHours}h
               </h3>
             )}
-            <p className="mt-0.5 text-[10px] font-medium text-amber-700/70">
+            <p className="mt-0.5 text-[10px] font-medium text-amber-100/80">
               Mean review duration
             </p>
           </div>

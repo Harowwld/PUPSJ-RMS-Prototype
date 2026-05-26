@@ -89,9 +89,15 @@ function buildUShapeLayout({ reversed = false } = {}) {
   // Base of the U (horizontal row, 5 cabinets)
   // Base y is either top (1 unit) or bottom (21 units)
   const baseYUnits = reversed ? 1 : 21;
-  // Center the 5 cabinets: 5 * 3 (width) + 4 * 1 (gap) = 19 units total.
-  // Room is 40 units wide. (40 - 19) / 2 = 10.5. We'll use 10 or 11. Let's start at 10.5.
-  const startXUnits = 10.5;
+  // Room is 40 units wide. 5 cabinets (3 units wide each) + 4 gaps (1 unit each) = 19 units total.
+  // (40 - 19) / 2 = 10.5. To align with grid, use 10.5, but maybe 10 is better for grid?
+  // Actually, to make them perfectly aligned, we should keep it at 10.5 but let's re-verify math.
+  // 3 * 5 = 15. 4 gaps * 1 = 4. 15 + 4 = 19. (40 - 19) / 2 = 10.5.
+  // Let's use 10.5 to keep centered, but wait, GX is 0.025.
+  // Let's align all to integers for perfection. 
+  // 5 cabinets at x = 10, 14, 18, 22, 26? 26 + 3 = 29. 40 - 29 = 11. 
+  // Let's use 11.
+  const startXUnits = 11;
   for (let i = 0; i < 5; i++) {
     cabinets.push({
       id: getNextId(),

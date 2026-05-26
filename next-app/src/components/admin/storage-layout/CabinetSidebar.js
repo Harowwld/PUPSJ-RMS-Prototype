@@ -23,7 +23,6 @@ import { toPct, fromPct } from "@/lib/storageLayoutUtils"
 const CabinetSidebar = memo(({
   selectedCabinetIds,
   selectedCabinet,
-  rotateSelectedCabinet,
   duplicateSelectedCabinet,
   setBulkConfirmOpen,
   removeDrawerFromSelected,
@@ -92,15 +91,7 @@ const CabinetSidebar = memo(({
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-2">
               {selectedCabinet.isDoor ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={rotateSelectedCabinet}
-                  className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-gray-300 hover:bg-red-50/30"
-                >
-                  <i className="ph-bold ph-arrow-clockwise mr-2 text-pup-maroon" />
-                  ROTATE ENTRANCE
-                </Button>
+                null
               ) : (
                 <>
                   <Button

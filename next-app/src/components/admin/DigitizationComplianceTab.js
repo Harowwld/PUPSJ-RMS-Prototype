@@ -617,21 +617,21 @@ export default function DigitizationComplianceTab({
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
 
                 {/* Completeness Card */}
-                <div className="group relative overflow-hidden rounded-xl border border-[#5c1520] bg-[#7a1e28] p-5 shadow-sm transition-all">
+                <div className="group relative overflow-hidden rounded-xl border border-red-950 bg-linear-to-br from-red-700 to-red-950 p-5 shadow-sm transition-all">
                   <i className="ph-duotone ph-chart-pie pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-20" />
                   <div className="relative z-10">
-                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-[#f7c9ce] uppercase">
+                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-red-200 uppercase">
                       <i className="ph-bold ph-chart-pie" /> Completeness
                     </div>
                     <div className="text-3xl font-black text-white">
                       {summary?.percentDigitized != null ? `${summary.percentDigitized}%` : "0%"}
                     </div>
-                    <div className="mt-1 text-[10px] font-medium text-[#f7c9ce]/80">
+                    <div className="mt-1 text-[10px] font-medium text-red-200/80">
                       Overall record health
                     </div>
                     <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-black/20">
                       <div
-                        className="h-full bg-emerald-400 transition-all duration-1000 ease-out"
+                        className="h-full bg-linear-to-r from-emerald-400 to-emerald-500 transition-all duration-1000 ease-out"
                         style={{ width: `${progressWidth}%` }}
                       />
                     </div>
@@ -639,7 +639,7 @@ export default function DigitizationComplianceTab({
                 </div>
 
                 {/* Total Students — Dark Blue Card */}
-                <div className="group relative overflow-hidden rounded-xl border border-blue-950 bg-blue-900 p-5 shadow-sm transition-all hover:shadow-md">
+                <div className="group relative overflow-hidden rounded-xl border border-blue-950 bg-linear-to-br from-blue-800 to-blue-950 p-5 shadow-sm transition-all hover:shadow-md">
                   <i className="ph-duotone ph-users-three pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
                   <div className="relative z-10">
                     <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-blue-200 uppercase">
@@ -655,7 +655,7 @@ export default function DigitizationComplianceTab({
                 </div>
 
                 {/* Fully Digitized — Dark Amber Card */}
-                <div className="group relative overflow-hidden rounded-xl border border-amber-950 bg-amber-800 p-5 shadow-sm transition-all hover:shadow-md">
+                <div className="group relative overflow-hidden rounded-xl border border-amber-950 bg-linear-to-br from-amber-700 to-amber-950 p-5 shadow-sm transition-all hover:shadow-md">
                   <i className="ph-duotone ph-check-square-offset pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
                   <div className="relative z-10">
                     <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-amber-100 uppercase">
@@ -671,7 +671,7 @@ export default function DigitizationComplianceTab({
                 </div>
 
                 {/* Archive Health — Dark Green Card */}
-                <div className="group relative overflow-hidden rounded-xl border border-emerald-950 bg-emerald-900 p-5 shadow-sm transition-all hover:shadow-md">
+                <div className="group relative overflow-hidden rounded-xl border border-emerald-950 bg-linear-to-br from-emerald-800 to-emerald-950 p-5 shadow-sm transition-all hover:shadow-md">
                   <i className="ph-duotone ph-shield-check pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
                   <div className="relative z-10">
                     <div className="mb-1 flex items-center gap-2 text-[10px] font-bold tracking-widest text-emerald-100 uppercase">
@@ -726,7 +726,7 @@ export default function DigitizationComplianceTab({
                 <div
                   className={cn(
                     "h-full shadow-sm transition-all duration-1000 ease-out",
-                    summary?.percentDigitized >= 95 ? "bg-emerald-500" : summary?.percentDigitized >= 80 ? "bg-pup-maroon" : "bg-amber-500"
+                    summary?.percentDigitized >= 95 ? "bg-linear-to-r from-emerald-400 to-emerald-600" : summary?.percentDigitized >= 80 ? "bg-linear-to-r from-red-700 to-pup-maroon" : "bg-linear-to-r from-amber-400 to-amber-600"
                   )}
                   style={{ width: `${progressWidth}%` }}
                 />
@@ -849,7 +849,7 @@ export default function DigitizationComplianceTab({
                                   <div
                                     className={cn(
                                       "h-full transition-all duration-700",
-                                      row.percent >= 90 ? "bg-emerald-500" : "bg-pup-maroon"
+                                      row.percent >= 90 ? "bg-linear-to-r from-emerald-400 to-emerald-600" : "bg-linear-to-r from-red-700 to-pup-maroon"
                                     )}
                                     style={{ width: `${Math.min(100, row.percent || 0)}%` }}
                                   />

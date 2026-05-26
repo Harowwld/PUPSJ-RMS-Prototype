@@ -74,19 +74,6 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   const [applyReportOpen, setApplyReportOpen] = useState(false)
   const [applyReportRows, setApplyReportRows] = useState([])
 
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [shouldRenderModal, setShouldRenderModal] = useState(false)
-
-  const toggleMaximize = useCallback(() => {
-    if (isModalOpen) {
-      setIsModalOpen(false)
-      setTimeout(() => setShouldRenderModal(false), 300)
-    } else {
-      setShouldRenderModal(true)
-      setIsModalOpen(true)
-    }
-  }, [isModalOpen])
-
   const [selectionBox, setSelectionBox] = useState(null)
   const [history, setHistory] = useState([])
   const [clipboard, setClipboard] = useState(null)
@@ -298,25 +285,6 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       drawerIds: [...(c.drawerIds || []), nextId],
     }))
   }, [activeRoom, selectedCabinet, updateCabinet])
-
-  const rotateSelectedCabinet = useCallback(() => {
-    if (!activeRoom || !selectedCabinet) return
-    // Only allow rotation for the entrance (DOOR)
-    if (!selectedCabinet.isDoor) {
-      showToast?.({
-        title: "Constraint applied",
-        description: "Cabinets are fixed in orientation. Only the entrance can be rotated.",
-      })
-      return
-    }
-
-    pushHistory(layout)
-    const currentRot = Number(selectedCabinet.rotation) || 0
-    const nextRot = currentRot + 90
-    updateCabinet(activeRoom.id, selectedCabinet.id, (c) =>
-      clampToRoom({ ...c, rotation: nextRot })
-    )
-  }, [activeRoom, selectedCabinet, layout, pushHistory, updateCabinet, showToast])
 
   const removeDrawerFromSelected = useCallback(() => {
     if (!activeRoom || !selectedCabinet || selectedCabinet.isDoor) return
@@ -894,10 +862,10 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
 
   if (!layout) return null
 
-  const renderToolbar = (maximized) => (
+  const renderToolbar = () => (
     <div className={cn(
       "flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 bg-gray-50/80 backdrop-blur-md select-none",
-      maximized ? "p-4 px-6" : "p-6 px-8"
+      "p-6 px-8"
     )}>
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-4">
@@ -961,93 +929,58 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
             </div>
           </div>
         </div>
-
-        {maximized && (
-          <div className="flex items-center gap-2 pl-4 border-l border-gray-100">
-            <Button
-              onClick={saveLayout}
-              disabled={saving || hasAnyCollisions}
-              className="flex h-10 items-center gap-2 rounded-xl bg-linear-to-b from-red-800 to-pup-maroon border-2 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 px-6 text-[10px] font-black tracking-widest text-white uppercase shadow-md active:scale-95 transition-all disabled:opacity-30 disabled:grayscale"
-            >
-              <i className={`ph-bold ${saving ? "ph-spinner animate-spin" : "ph-floppy-disk"} text-base`} />
-              {saving ? "SAVING..." : "SAVE CHANGES"}
-            </Button>
-            <Button
-              variant="outline"
-              onClick={toggleMaximize}
-              className="flex h-10 w-10 items-center justify-center rounded-xl border border-gray-300 bg-white text-gray-600 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon active:scale-95"
-              title="Exit Focus Mode"
-            >
-              <i className="ph-bold ph-corners-in text-lg" />
-            </Button>
-          </div>
-        )}
       </div>
     </div>
   )
 
-  const renderEditorContent = (maximized) => (
-    <div className={cn("flex h-full w-full flex-col overflow-hidden bg-white select-none", maximized ? "pt-8" : "")}>
-      {!maximized && (
-        <PageHeader
-          icon="ph-layout"
-          title="Room Layout Editor"
-          description="Organize how cabinets are placed and arranged in your storage rooms."
-          actions={
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={toggleMaximize}
-                className="flex h-11 w-11 items-center justify-center rounded-2xl border border-gray-300 bg-white text-gray-600 shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon active:scale-95"
-                title="Enter Focus Mode"
-              >
-                <i className="ph-bold ph-corners-out text-lg" />
-              </Button>
-
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="inline-block">
-                      <Button
-                        onClick={saveLayout}
-                        disabled={saving || hasAnyCollisions}
-                        className="flex h-11 items-center gap-2 rounded-2xl bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-xl hover:-translate-y-0.5 px-8 font-black tracking-widest text-white uppercase shadow-lg shadow-red-900/20 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale"
-                      >
-                        <i className={`ph-bold ${saving ? "ph-spinner animate-spin" : "ph-floppy-disk"} text-lg`} />
-                        {saving ? "SAVING..." : "SAVE CHANGES"}
-                      </Button>
+  const renderEditorContent = () => (
+    <div className="flex h-full w-full flex-col overflow-hidden bg-white select-none">
+      <PageHeader
+        icon="ph-layout"
+        title="Storage Layout Editor"
+        description="Organize how cabinets are placed and arranged in your storage rooms."
+        actions={
+          <div className="flex items-center gap-2">
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="inline-block">
+                    <Button
+                      onClick={saveLayout}
+                      disabled={saving || hasAnyCollisions}
+                      className="flex h-11 items-center gap-2 rounded-2xl bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-xl hover:-translate-y-0.5 px-8 font-black tracking-widest text-white uppercase shadow-lg shadow-red-900/20 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale"
+                    >
+                      <i className={`ph-bold ${saving ? "ph-spinner animate-spin" : "ph-floppy-disk"} text-lg`} />
+                      {saving ? "SAVING..." : "SAVE"}
+                    </Button>
+                  </div>
+                </TooltipTrigger>
+                {hasAnyCollisions && (
+                  <TooltipContent side="bottom" className="max-w-xs rounded-xl border-red-200 bg-red-50 p-3 text-[10px] font-bold text-red-700 shadow-xl">
+                    <div className="flex items-center gap-2">
+                       <i className="ph-fill ph-warning-circle text-sm" />
+                       CANNOT SAVE: RESOLVE OVERLAPS
                     </div>
-                  </TooltipTrigger>
-                  {hasAnyCollisions && (
-                    <TooltipContent side="bottom" className="max-w-xs rounded-xl border-red-200 bg-red-50 p-3 text-[10px] font-bold text-red-700 shadow-xl">
-                      <div className="flex items-center gap-2">
-                         <i className="ph-fill ph-warning-circle text-sm" />
-                         CANNOT SAVE: RESOLVE OVERLAPS
-                      </div>
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
-            </div>
-          }
-        />
-      )}
+                  </TooltipContent>
+                )}
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        }
+      />
 
-      {renderToolbar(maximized)}
+      {renderToolbar()}
 
       <div className="relative min-h-0 flex-1 overflow-auto">
-        <div className={cn(
-          "grid grid-cols-1 gap-6 h-full",
-          maximized ? "p-0 lg:grid-cols-4" : "p-6 lg:grid-cols-3"
-        )}>
-          <div className={cn(maximized ? "lg:col-span-3 border-r border-gray-100 h-full" : "lg:col-span-2")}>
+        <div className="grid grid-cols-1 gap-6 h-full p-6 lg:grid-cols-3">
+          <div className="lg:col-span-2">
             <CabinetCanvas 
-              canvasRef={canvasRef} activeRoom={activeRoom} selectedCabinetIds={selectedCabinetIds} selectedCabinet={selectedCabinet} rotateSelectedCabinet={rotateSelectedCabinet} collidingIds={collidingIds} activePath={activePath} simulationMode={simulationMode} snapToGrid={snapToGrid} showGrid={showGrid} handleCanvasPointerMove={handleCanvasPointerMove} handleCanvasPointerUp={handleCanvasPointerUp} setSelectedCabinetIds={setSelectedCabinetIds} duplicateSelectedCabinet={duplicateSelectedCabinet} setBulkConfirmOpen={setBulkConfirmOpen} dragRef={dragRef} updateSelectedRectFromNormalized={updateSelectedRectFromNormalized} updateSelectedSizeNormalized={updateSelectedSizeNormalized} selectionBox={selectionBox} pushHistory={pushHistory} layout={layout} isModalOpen={maximized}
+              canvasRef={canvasRef} activeRoom={activeRoom} selectedCabinetIds={selectedCabinetIds} selectedCabinet={selectedCabinet} collidingIds={collidingIds} activePath={activePath} simulationMode={simulationMode} snapToGrid={snapToGrid} showGrid={showGrid} handleCanvasPointerMove={handleCanvasPointerMove} handleCanvasPointerUp={handleCanvasPointerUp} setSelectedCabinetIds={setSelectedCabinetIds} duplicateSelectedCabinet={duplicateSelectedCabinet} setBulkConfirmOpen={setBulkConfirmOpen} dragRef={dragRef} updateSelectedRectFromNormalized={updateSelectedRectFromNormalized} updateSelectedSizeNormalized={updateSelectedSizeNormalized} selectionBox={selectionBox} pushHistory={pushHistory} layout={layout} isModalOpen={false}
             />
           </div>
-          <div className={cn(maximized ? "lg:col-span-1 p-6" : "lg:col-span-1", "select-none")}>
+          <div className="lg:col-span-1 select-none">
             <CabinetSidebar 
-              selectedCabinetIds={selectedCabinetIds} selectedCabinet={selectedCabinet} rotateSelectedCabinet={rotateSelectedCabinet} duplicateSelectedCabinet={duplicateSelectedCabinet} setBulkConfirmOpen={setBulkConfirmOpen} removeDrawerFromSelected={removeDrawerFromSelected} addDrawerToSelected={addDrawerToSelected} updateSelectedRectFromNormalized={updateSelectedRectFromNormalized} updateSelectedSizeNormalized={updateSelectedSizeNormalized}
+              selectedCabinetIds={selectedCabinetIds} selectedCabinet={selectedCabinet} duplicateSelectedCabinet={duplicateSelectedCabinet} setBulkConfirmOpen={setBulkConfirmOpen} removeDrawerFromSelected={removeDrawerFromSelected} addDrawerToSelected={addDrawerToSelected} updateSelectedRectFromNormalized={updateSelectedRectFromNormalized} updateSelectedSizeNormalized={updateSelectedSizeNormalized}
             />
           </div>
         </div>
@@ -1079,22 +1012,9 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         applyTemplateWithMappings={applyTemplateWithMappings}
       />
 
-      {shouldRenderModal && (
-        <Dialog open={isModalOpen} onOpenChange={toggleMaximize}>
-          <DialogContent 
-            hideClose
-            className="h-[90vh] w-[98vw] max-w-none sm:max-w-[98vw] rounded-[32px] border border-gray-200 bg-white p-0 shadow-2xl overflow-hidden ring-1 ring-black/5"
-          >
-            {renderEditorContent(true)}
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {!isModalOpen && (
-        <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm p-0 gap-0">
-          {renderEditorContent(false)}
-        </Card>
-      )}
+      <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm p-0 gap-0">
+        {renderEditorContent()}
+      </Card>
 
       <FloatingActionBar selectedCount={selectedCabinetIds.size} onCancel={() => setSelectedCabinetIds(new Set())} actionLabel="DELETE SELECTED" actionIcon="ph-trash" onAction={() => setBulkConfirmOpen(true)} selectionStatus="Selected Cabinets" />
 

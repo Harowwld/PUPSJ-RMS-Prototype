@@ -3,11 +3,11 @@
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
-function Sparkline({ data, color = "#7A1E28" }) {
+function Sparkline({ data, color = "#FFFFFF" }) {
   if (!data || data.length === 0) return null;
   
-  const width = 120;
-  const height = 40;
+  const width = 160; // Increased width
+  const height = 50; // Increased height
   const max = Math.max(...data, 1);
   const min = Math.min(...data);
   const range = max - min || 1;
@@ -16,18 +16,28 @@ function Sparkline({ data, color = "#7A1E28" }) {
     const x = (i / (data.length - 1)) * width;
     const y = height - ((val - min) / range) * height;
     return `${x},${y}`;
-  }).join(' ');
+  });
+
+  const pathData = `M ${points.join(" L ")}`;
+  const areaData = `${pathData} L ${width},${height} L 0,${height} Z`;
 
   return (
     <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
-      <polyline
+      {/* Area fill */}
+      <path
+        d={areaData}
+        fill={color}
+        className="opacity-10"
+      />
+      {/* Line */}
+      <path
+        d={pathData}
         fill="none"
         stroke={color}
         strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
-        points={points}
-        className="opacity-40"
+        className="opacity-70"
       />
       {/* End point dot */}
       <circle 
@@ -35,6 +45,7 @@ function Sparkline({ data, color = "#7A1E28" }) {
         cy={height - ((data[data.length-1] - min) / range) * height} 
         r="3" 
         fill={color}
+        className="opacity-100"
       />
     </svg>
   );
@@ -81,24 +92,24 @@ export default function StatCards({ isLoading, logStats }) {
   const getColorClasses = (color) => {
     switch (color) {
       case "blue": return { 
-        bg: "bg-blue-50/50", border: "border-blue-100", 
-        icon: "text-blue-600", text: "text-blue-900", 
-        sub: "text-blue-600/60", spark: "#2563EB" 
+        bg: "from-blue-800 to-blue-950", border: "border-blue-950", 
+        icon: "text-white", text: "text-white", 
+        sub: "text-blue-200", spark: "#BFDBFE" 
       };
       case "emerald": return { 
-        bg: "bg-emerald-50/50", border: "border-emerald-100", 
-        icon: "text-emerald-600", text: "text-emerald-900", 
-        sub: "text-emerald-700/60", spark: "#10B981" 
+        bg: "from-emerald-800 to-emerald-950", border: "border-emerald-950", 
+        icon: "text-white", text: "text-white", 
+        sub: "text-emerald-100", spark: "#A7F3D0" 
       };
       case "amber": return { 
-        bg: "bg-amber-50/50", border: "border-amber-100", 
-        icon: "text-amber-600", text: "text-amber-900", 
-        sub: "text-amber-700/60", spark: "#D97706" 
+        bg: "from-amber-700 to-amber-950", border: "border-amber-950", 
+        icon: "text-white", text: "text-white", 
+        sub: "text-amber-100", spark: "#FDE68A" 
       };
       case "red": return { 
-        bg: "bg-red-50/50", border: "border-red-100", 
-        icon: "text-red-600", text: "text-red-900", 
-        sub: "text-red-700/60", spark: "#EF4444" 
+        bg: "from-red-700 to-red-950", border: "border-red-950", 
+        icon: "text-white", text: "text-white", 
+        sub: "text-red-200", spark: "#FECACA" 
       };
       default: return {};
     }
@@ -112,46 +123,41 @@ export default function StatCards({ isLoading, logStats }) {
           <div 
             key={i} 
             className={cn(
-              "group relative overflow-hidden rounded-2xl border p-5 shadow-xs transition-all duration-300 hover:shadow-md",
+              "group relative overflow-hidden rounded-xl border p-5 shadow-sm transition-all duration-300 hover:shadow-md bg-linear-to-br",
               classes.bg,
               classes.border
             )}
           >
-            {/* Background Decorative Icon */}
-            <i className={cn(
-              stat.icon, 
-              "absolute -right-4 -bottom-4 rotate-12 text-7xl opacity-5 transition-transform duration-500 group-hover:scale-125 group-hover:rotate-0"
-            )} />
+            {/* Background Decorative Icon Removed */}
             
             <div className="relative z-10">
-              <div className="flex items-start justify-between">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-black/5">
-                  <i className={cn(stat.icon, "text-xl", classes.icon)} />
-                </div>
-                {!isLoading && stat.trendData.length > 0 && (
-                  <div className="mt-1 opacity-60 transition-opacity group-hover:opacity-100">
-                    <Sparkline data={stat.trendData} color={classes.spark} />
-                  </div>
-                )}
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 backdrop-blur-sm shadow-sm ring-1 ring-white/20 mb-4">
+                <i className={cn(stat.icon, "text-xl text-white")} />
               </div>
-              
-              <div className="mt-4">
-                <p className={cn("text-[10px] font-black tracking-widest uppercase", classes.sub)}>
-                  {stat.label}
-                </p>
-                {isLoading || !logStats ? (
-                  <Skeleton className="mt-1 h-8 w-24" />
-                ) : (
-                  <div className="flex items-baseline gap-1">
-                    <h3 className={cn("text-2xl font-black tracking-tight", classes.text)}>
+
+              <div className="flex items-end justify-between">
+                <div>
+                  <p className={cn("text-[10px] font-black tracking-widest uppercase", classes.sub)}>
+                    {stat.label}
+                  </p>
+                  {isLoading || !logStats ? (
+                    <Skeleton className="mt-1 h-8 w-24 bg-white/20" />
+                  ) : (
+                    <h3 className={cn("text-3xl font-black tracking-tight", classes.text)}>
                       {stat.value.toLocaleString()}
                     </h3>
+                  )}
+                  {!isLoading && (
+                    <p className={cn("mt-1 text-[10px] font-medium opacity-80", classes.sub)}>
+                      {stat.sublabel}
+                    </p>
+                  )}
+                </div>
+
+                {!isLoading && stat.trendData.length > 0 && (
+                  <div className="opacity-70 transition-opacity group-hover:opacity-100">
+                    <Sparkline data={stat.trendData} color={classes.spark} />
                   </div>
-                )}
-                {!isLoading && (
-                  <p className={cn("mt-1 text-[10px] font-bold opacity-70", classes.sub)}>
-                    {stat.sublabel}
-                  </p>
                 )}
               </div>
             </div>

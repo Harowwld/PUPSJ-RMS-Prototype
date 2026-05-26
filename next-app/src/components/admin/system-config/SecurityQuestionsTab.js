@@ -65,7 +65,7 @@ export default function SecurityQuestionsTab({
               </div>
               <div>
                 <CardTitle className="text-xl leading-none font-black tracking-tight text-gray-900">
-                  Global Security Questions
+                  SECURITY QUESTIONS
                 </CardTitle>
                 <CardDescription className="mt-1.5 text-sm font-medium text-gray-500">
                   Define verification challenges for personnel account recovery and setup.

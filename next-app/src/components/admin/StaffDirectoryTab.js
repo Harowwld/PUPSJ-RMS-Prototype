@@ -443,11 +443,11 @@ export default function StaffDirectoryTab({
 
   return (
     <div
-      className="font-inter flex h-full w-full flex-col gap-3 focus:outline-none animate-fade-up"
+      className="font-inter w-full gap-3 focus:outline-none animate-fade-up"
       onKeyDown={handleKeyDown}
       tabIndex={0}
     >
-      <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm">
+      <Card className="rounded-brand border border-gray-300 bg-white shadow-sm">
         <PageHeader
           icon="ph-users-three"
           title="Staff Directory"
@@ -476,7 +476,7 @@ export default function StaffDirectoryTab({
         />
 
         {isLoading ? (
-          <CardContent className="flex min-h-0 flex-1 flex-col p-6 pt-2">
+          <CardContent className="p-6 pt-2">
             {/* Tab & Toolbar Skeleton */}
             <div className="mb-6 flex flex-col gap-3">
               <Skeleton className="h-10 w-48 rounded-lg" />
@@ -487,7 +487,7 @@ export default function StaffDirectoryTab({
             </div>
 
             {/* Table Skeleton */}
-            <div className="flex-1 overflow-hidden rounded-brand border border-gray-200">
+            <div className="overflow-hidden rounded-brand border border-gray-200">
               <div className="h-10 border-b border-gray-200 bg-gray-50/50" />
               <div className="divide-y divide-gray-100">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -512,7 +512,7 @@ export default function StaffDirectoryTab({
             </div>
           </CardContent>
         ) : error ? (
-          <CardContent className="flex min-h-0 flex-1 flex-col p-6">
+          <CardContent className="p-6">
             <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
@@ -528,7 +528,7 @@ export default function StaffDirectoryTab({
             </Empty>
           </CardContent>
         ) : (
-          <CardContent className="font-inter flex min-h-0 flex-1 flex-col bg-white p-6 pt-4">
+          <CardContent className="font-inter bg-white p-6 pt-4">
             <Tabs
               value={activeTab}
               onValueChange={setActiveTab}
@@ -596,9 +596,9 @@ export default function StaffDirectoryTab({
               <TabsContent
                 value={activeTab}
                 key={activeTab}
-                className="flex flex-1 flex-col min-h-0 animate-fade-up outline-none"
+                className="outline-none"
               >
-                <div className="flex-1 overflow-x-auto overflow-y-auto rounded-brand border border-gray-200 bg-white shadow-xs select-none">
+                <div className="overflow-x-auto rounded-brand border border-gray-200 bg-white shadow-xs select-none">
                   <table className="min-w-full text-sm">
                     <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50">
                       <tr className="text-left text-xs tracking-wider text-gray-600 uppercase">
