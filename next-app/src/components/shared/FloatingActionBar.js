@@ -21,7 +21,7 @@ export default function FloatingActionBar({
     setMounted(true)
   }, [])
 
-  if (!mounted || selectedCount === 0) return null
+  if (!mounted || selectedCount <= 1) return null
 
   return createPortal(
     <div className="fixed bottom-10 left-1/2 z-[9999] -translate-x-1/2 animate-in fade-in slide-in-from-bottom-4 duration-300">

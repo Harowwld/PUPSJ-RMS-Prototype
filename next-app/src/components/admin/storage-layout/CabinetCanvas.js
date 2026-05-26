@@ -22,6 +22,7 @@ const CabinetCanvas = memo(({
   activeRoom,
   selectedCabinetIds,
   selectedCabinet,
+  rotateSelectedCabinet,
   collidingIds,
   activePath,
   simulationMode,
@@ -122,21 +123,41 @@ const CabinetCanvas = memo(({
         </svg>
       )}
 
-      {/* Orientation marker (Door Symbol) */}
+      {/* Orientation marker (Entrance Block) */}
       <div
-        className="group absolute z-2 cursor-move"
+        className={cn(
+          "group absolute z-20 cursor-move transition-all duration-200",
+          selectedCabinetIds.has("DOOR") ? "ring-2 ring-cyan-500 ring-offset-2 ring-offset-[#f8fafc] rounded-lg" : ""
+        )}
         style={{
           left: `${(activeRoom?.door?.x ?? getDefaultDoor().x) * 100}%`,
           top: `${(activeRoom?.door?.y ?? getDefaultDoor().y) * 100}%`,
-          transform: "translate(-50%, -50%)",
+          width: `${(activeRoom?.door?.w ?? 0.1) * 100}%`,
+          height: `${(activeRoom?.door?.h ?? 0.04) * 100}%`,
         }}
         onPointerDown={(e) => {
           e.preventDefault()
           e.stopPropagation()
           pushHistory(layout)
+          
+          // Select the door when clicked
+          setSelectedCabinetIds(new Set(["DOOR"]))
+
+          const container = e.currentTarget.closest('[data-slot="storage-canvas"]')
+          const box = container.getBoundingClientRect()
+          const relX = (e.clientX - box.left) / Math.max(1, box.width)
+          const relY = (e.clientY - box.top) / Math.max(1, box.height)
+
           dragRef.current = {
             pointerId: e.pointerId,
             mode: "door",
+            startX: relX,
+            startY: relY,
+            initialPositions: [{ 
+              id: "DOOR", 
+              x: activeRoom?.door?.x ?? 0, 
+              y: activeRoom?.door?.y ?? 0 
+            }]
           }
           try {
             e.currentTarget.setPointerCapture(e.pointerId)
@@ -145,14 +166,48 @@ const CabinetCanvas = memo(({
           }
         }}
       >
-        <div className="relative flex h-12 w-12 items-center justify-center">
-          <div className="absolute bottom-0 left-0 h-full w-[3px] bg-pup-maroon" />
-          <div className="absolute bottom-0 left-0 h-[3px] w-full bg-slate-400 group-hover:bg-slate-600" />
-          <div className="absolute inset-0 rounded-tr-full border-t-2 border-r-2 border-gray-300/30 group-hover:border-gray-300/60" />
-
-          <div className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 rounded bg-slate-900 px-2 py-1 text-[10px] font-black tracking-widest whitespace-nowrap text-white uppercase opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+        <div 
+          className="relative flex h-full w-full items-center justify-center rounded-sm bg-pup-maroon shadow-md transition-all duration-300"
+        >
+          {/* Inner Text Label - Dynamically Rotated and Flipped */}
+          <span className={cn(
+            "text-[9px] font-black tracking-widest text-white whitespace-nowrap transition-transform duration-300",
+            activeRoom?.door?.rotation === 0 && "rotate-0",
+            activeRoom?.door?.rotation === 180 && "rotate-0", // Opposite flip for bottom
+            activeRoom?.door?.rotation === 90 && "-rotate-90", // Opposite flip for right
+            activeRoom?.door?.rotation === 270 && "rotate-90"  // Opposite flip for left
+          )}>
             ENTRANCE
-          </div>
+          </span>
+
+          {selectedCabinetIds.has("DOOR") && (
+            <div
+              className="absolute bottom-full left-1/2 z-50 mb-3 -translate-x-1/2"
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-1 rounded-full border border-gray-200 bg-white p-1 shadow-xl animate-scale-in">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-pup-maroon"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        rotateSelectedCabinet();
+                      }}
+                    >
+                      <i className="ph-bold ph-arrow-clockwise text-sm" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    Rotate Entrance
+                  </TooltipContent>
+                </Tooltip>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

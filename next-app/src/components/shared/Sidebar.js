@@ -45,7 +45,7 @@ export default function Sidebar({ items, activeKey, onSelect }) {
   }
 
   return (
-    <aside className="z-10 hidden w-72 flex-shrink-0 flex-col gap-2 overflow-y-auto border-r border-gray-200 bg-white p-4 shadow-sm md:flex">
+    <aside className="z-10 hidden w-72 flex-shrink-0 flex-col gap-2 overflow-y-auto border-r border-gray-200 bg-white p-4 shadow-sm md:flex select-none">
       {items.map((item, idx) => {
         if (item.type === "header") {
           return (

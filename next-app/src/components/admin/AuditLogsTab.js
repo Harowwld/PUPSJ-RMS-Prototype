@@ -43,6 +43,7 @@ export default function AuditLogsTab({
   setLogSortOrder,
   showToast,
   onLogAction,
+  onRefresh,
 }) {
   const [localSearch, setLocalSearch] = useState(logSearch || "")
   const [itemsPerPage, setItemsPerPage] = useState(logsPerPage || 10)
@@ -222,7 +223,7 @@ export default function AuditLogsTab({
 
   return (
     <TooltipProvider delay={200}>
-      <div className="animate-fade-in font-inter flex w-full flex-col gap-6">
+      <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
         {/* Stat Cards */}
         <StatCards isLoading={isLoading} logStats={logStats} />
 
@@ -233,16 +234,16 @@ export default function AuditLogsTab({
             title="Security Audit Logs"
             description="Trace system activities, security events, and administrative actions with precision."
             actions={
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleDownloadCSV}
                   disabled={logTotal === 0 || isExporting}
-                  className="flex h-11 px-5 items-center justify-center gap-2 rounded-2xl border-gray-200 bg-white text-[11px] font-black text-gray-600 hover:bg-gray-50 hover:text-pup-maroon active:scale-95 disabled:opacity-50 shadow-sm transition-all"
+                  className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-50"
                 >
                   <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv"} text-base`}></i>
-                  {isExporting ? "PREPARING..." : "EXPORT CSV"}
+                  {isExporting ? "PREPARING..." : "EXPORT"}
                 </Button>
                 <Button
                   variant="default"
@@ -254,6 +255,19 @@ export default function AuditLogsTab({
                   <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-pdf"} text-base`}></i>
                   {isExporting ? "GENERATING..." : "GENERATE REPORT"}
                 </Button>
+
+                <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={onRefresh}
+                    disabled={isLoading}
+                    className="flex h-10 w-10 items-center justify-center rounded-brand border border-gray-300 bg-white p-0 text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-50"
+                    title="Refresh"
+                  >
+                    <i className={`ph-bold ph-arrows-clockwise ${isLoading ? "animate-spin inline-block" : ""} text-base`}></i>
+                  </Button>
+                </div>
               </div>
             }
           />

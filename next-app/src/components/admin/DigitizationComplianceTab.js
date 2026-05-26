@@ -59,6 +59,7 @@ export default function DigitizationComplianceTab({
   const [coursesLoading, setCoursesLoading] = useState(true);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [manualLoading, setManualLoading] = useState(false);
   const [error, setError] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
   const [pdfBlobUrl, setPdfPreviewUrl] = useState(null);
@@ -127,15 +128,16 @@ export default function DigitizationComplianceTab({
     return params.toString();
   }, [statusFilter, courseFilter, requireApproved]);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (isManual = false) => {
+    if (isManual) setManualLoading(true);
     setLoading(true);
     setError("");
     try {
       const qs = buildQueryString();
-      const res = await fetch(
-        `/api/analytics/digitization-compliance?${qs}`,
-        { cache: "no-store" }
-      );
+      const [res] = await Promise.all([
+        fetch(`/api/analytics/digitization-compliance?${qs}`, { cache: "no-store" }),
+        isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
+      ]);
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) {
         throw new Error(json?.error || "Failed to load compliance data");
@@ -150,6 +152,7 @@ export default function DigitizationComplianceTab({
       );
     } finally {
       setLoading(false);
+      setManualLoading(false);
     }
   }, [buildQueryString, showToast]);
 
@@ -364,12 +367,12 @@ export default function DigitizationComplianceTab({
   const hasActiveFilters = statusFilter !== "Active" || courseFilter !== "" || requireApproved || tableSearch !== "";
 
   return (
-    <div className="flex flex-col w-full h-full gap-4 animate-fade-in font-inter min-h-0">
+    <div className="flex flex-col w-full h-full gap-4 animate-fade-up font-inter min-h-0">
       <Card className="flex-1 bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0">
         <PageHeader
           icon="ph-chart-pie"
-          title="Digitization Compliance Analytics"
-          description="Monitoring of physical record digitization and archival completeness across programs."
+          title="Compliance Analysis"
+          description="Monitor digitization completeness."
           actions={
             <div className="flex items-center gap-2">
               <Button
@@ -381,7 +384,7 @@ export default function DigitizationComplianceTab({
                 className="h-10 px-6 font-black text-[10px] tracking-widest bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white shadow-lg shadow-red-900/20 active:scale-95 disabled:opacity-60 rounded-brand uppercase transition-all"
               >
                 <i className={cn("ph-bold text-base mr-2", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
-                {isGeneratingPdf ? "Generating..." : "Generate Report"}
+                {isGeneratingPdf ? "GENERATING..." : "GENERATE REPORT"}
               </Button>
               <Button
                 type="button"
@@ -389,10 +392,10 @@ export default function DigitizationComplianceTab({
                 size="sm"
                 onClick={downloadCsv}
                 disabled={loading || !data || isExportingCsv}
-                className="h-10 px-4 font-bold text-xs tracking-wide border-gray-300 shadow-sm hover:border-gray-300 hover:bg-red-50/30 active:scale-95 rounded-brand transition-all uppercase"
+                className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-50"
               >
-                <i className={cn("ph-bold text-sm mr-2 text-pup-maroon", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
-                {isExportingCsv ? "Exporting..." : "Export CSV"}
+                <i className={cn("ph-bold text-base", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
+                {isExportingCsv ? "PREPARING..." : "EXPORT"}
               </Button>
 
               <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4">
@@ -409,14 +412,14 @@ export default function DigitizationComplianceTab({
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={load}
+                          onClick={() => load(true)}
                           disabled={loading}
                           className="h-10 w-10 p-0 text-gray-600 bg-white border border-gray-300 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-90 rounded-brand"
                         >
                           <i
                             className={cn(
                               "ph-bold ph-arrows-clockwise text-sm",
-                              loading && "animate-spin"
+                              manualLoading && "animate-spin inline-block"
                             )}
                             aria-hidden
                           />
@@ -600,10 +603,10 @@ export default function DigitizationComplianceTab({
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={load}
+                  onClick={() => load(true)}
                   className="mt-6 flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 uppercase tracking-wide" 
                 >
-                  <i className="ph-bold ph-arrows-clockwise"></i>
+                  <i className={cn("ph-bold ph-arrows-clockwise", manualLoading && "animate-spin")}></i>
                   Retry Connection
                 </Button>
               </EmptyHeader>
@@ -613,18 +616,18 @@ export default function DigitizationComplianceTab({
               {/* Stats Cards - Avg Completeness first for hierarchy */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
 
-                {/* Avg. Completeness — Primary Accent Card */}
+                {/* Completeness Card */}
                 <div className="group relative overflow-hidden rounded-xl border border-[#5c1520] bg-[#7a1e28] p-5 shadow-sm transition-all">
                   <i className="ph-duotone ph-chart-pie pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-20" />
                   <div className="relative z-10">
                     <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-[#f7c9ce] uppercase">
-                      <i className="ph-bold ph-chart-pie" /> Avg. Completeness
+                      <i className="ph-bold ph-chart-pie" /> Completeness
                     </div>
                     <div className="text-3xl font-black text-white">
                       {summary?.percentDigitized != null ? `${summary.percentDigitized}%` : "0%"}
                     </div>
                     <div className="mt-1 text-[10px] font-medium text-[#f7c9ce]/80">
-                      Overall record health index
+                      Overall record health
                     </div>
                     <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-black/20">
                       <div
@@ -635,55 +638,55 @@ export default function DigitizationComplianceTab({
                   </div>
                 </div>
 
-                {/* Total Students — Blue Card */}
-                <div className="group relative overflow-hidden rounded-xl border border-blue-200 bg-blue-50/50 p-5 shadow-sm transition-all hover:shadow-md">
-                  <i className="ph-duotone ph-users-three pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-blue-600 opacity-10" />
+                {/* Total Students — Dark Blue Card */}
+                <div className="group relative overflow-hidden rounded-xl border border-blue-950 bg-blue-900 p-5 shadow-sm transition-all hover:shadow-md">
+                  <i className="ph-duotone ph-users-three pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
                   <div className="relative z-10">
-                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-blue-600 uppercase">
-                      <i className="ph-bold ph-users-three" /> Total Students
+                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-blue-200 uppercase">
+                      <i className="ph-bold ph-users-three" /> Students
                     </div>
-                    <div className="text-3xl font-black text-blue-900">
+                    <div className="text-3xl font-black text-white">
                       {summary?.totalStudents?.toLocaleString?.() ?? summary?.totalStudents}
                     </div>
-                    <div className="mt-1 text-[10px] font-medium text-blue-600/80">
-                      Enrolled Students
+                    <div className="mt-1 text-[10px] font-medium text-blue-200/80">
+                      Total Enrollment
                     </div>
                   </div>
                 </div>
 
-                {/* Fully Digitized — Yellow Card */}
-                <div className="group relative overflow-hidden rounded-xl border border-amber-200 bg-amber-50/50 p-5 shadow-sm transition-all hover:shadow-md">
-                  <i className="ph-duotone ph-check-square-offset pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-amber-600 opacity-10" />
+                {/* Fully Digitized — Dark Amber Card */}
+                <div className="group relative overflow-hidden rounded-xl border border-amber-950 bg-amber-800 p-5 shadow-sm transition-all hover:shadow-md">
+                  <i className="ph-duotone ph-check-square-offset pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
                   <div className="relative z-10">
-                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-amber-600 uppercase">
-                      <i className="ph-bold ph-check-square-offset" /> Fully Digitized
+                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-amber-100 uppercase">
+                      <i className="ph-bold ph-check-square-offset" /> Complete
                     </div>
-                    <div className="text-3xl font-black text-amber-900">
+                    <div className="text-3xl font-black text-white">
                       {summary?.digitizedStudents?.toLocaleString?.() ?? summary?.digitizedStudents}
                     </div>
-                    <div className="mt-1 text-[10px] font-bold text-emerald-600 flex items-center gap-1.5">
-                      <i className="ph-bold ph-trend-up" /> 100% Complete
+                    <div className="mt-1 text-[10px] font-bold text-white flex items-center gap-1.5">
+                      <i className="ph-bold ph-trend-up text-emerald-400" /> 100% Validated
                     </div>
                   </div>
                 </div>
 
-                {/* Archive Health — Green Card with SLA-style Tooltip */}
-                <div className="group relative overflow-hidden rounded-xl border border-emerald-200 bg-emerald-50/50 p-5 shadow-sm transition-all hover:shadow-md">
-                  <i className="ph-duotone ph-shield-check pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-emerald-600 opacity-10" />
+                {/* Archive Health — Dark Green Card */}
+                <div className="group relative overflow-hidden rounded-xl border border-emerald-950 bg-emerald-900 p-5 shadow-sm transition-all hover:shadow-md">
+                  <i className="ph-duotone ph-shield-check pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
                   <div className="relative z-10">
-                    <div className="mb-1 flex items-center gap-2 text-[10px] font-bold tracking-widest text-emerald-600 uppercase">
-                      <i className="ph-bold ph-shield-check" /> Archive Health
+                    <div className="mb-1 flex items-center gap-2 text-[10px] font-bold tracking-widest text-emerald-100 uppercase">
+                      <i className="ph-bold ph-shield-check" /> Health
                       <TooltipProvider>
                         <Tooltip delayDuration={300}>
                           <TooltipTrigger asChild>
-                            <i className="ph-bold ph-info text-sm text-emerald-600 transition-opacity hover:opacity-70 cursor-pointer" />
+                            <i className="ph-bold ph-info text-sm text-emerald-200 transition-opacity hover:opacity-70 cursor-pointer" />
                           </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-[240px] border-emerald-200 bg-emerald-900 p-3 text-white">
-                            <p className="font-bold leading-tight text-xs mb-1">Health Thresholds:</p>
+                          <TooltipContent side="top" className="max-w-[240px] border-emerald-800 bg-emerald-950 p-3 text-white">
+                            <p className="font-bold leading-tight text-xs mb-1">Status Thresholds:</p>
                             <ul className="space-y-1 text-[10px] font-medium opacity-90">
                               <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-400" /> 95%+ Excellent</li>
                               <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-blue-400" /> 80%+ Healthy</li>
-                              <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-400" /> Below 80% Warning</li>
+                              <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-400" /> Below 80% Action</li>
                             </ul>
                           </TooltipContent>
                         </Tooltip>
@@ -691,21 +694,21 @@ export default function DigitizationComplianceTab({
                     </div>
                     <div className="mt-1">
                       {summary?.percentDigitized >= 95 ? (
-                        <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 font-black text-[10px] uppercase tracking-wider px-2 py-1">
+                        <Badge className="bg-emerald-400 text-emerald-950 border-0 font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5">
                           Excellent
                         </Badge>
                       ) : summary?.percentDigitized >= 80 ? (
-                        <Badge className="bg-blue-100 text-blue-800 border-blue-200 font-black text-[10px] uppercase tracking-wider px-2 py-1">
+                        <Badge className="bg-blue-400 text-blue-950 border-0 font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5">
                           Healthy
                         </Badge>
                       ) : (
-                        <Badge className="bg-amber-100 text-amber-800 border-amber-200 font-black text-[10px] uppercase tracking-wider px-2 py-1">
-                          Action Needed
+                        <Badge className="bg-amber-400 text-amber-950 border-0 font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5">
+                          Warning
                         </Badge>
                       )}
                     </div>
-                    <div className="mt-2 text-[10px] font-medium text-emerald-700/80">
-                      Compliance rating
+                    <div className="mt-2 text-[10px] font-medium text-emerald-100/80">
+                      Overall Rating
                     </div>
                   </div>
                 </div>
@@ -713,13 +716,13 @@ export default function DigitizationComplianceTab({
 
               <div className="mb-2 flex items-center justify-between gap-2">
                 <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                  Overall System Completeness
+                  Digital Transformation Status
                 </span>
                 <span className="text-sm font-black text-gray-900 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100 shadow-sm">
                   {summary?.percentDigitized != null ? `${summary.percentDigitized}%` : "N/A"}
                 </span>
               </div>
-              <div className="h-4 w-full rounded-full bg-gray-100 border border-gray-200 overflow-hidden mb-8 shadow-inner">
+              <div className="h-4 w-full rounded-full bg-gray-100 overflow-hidden mb-8 shadow-inner">
                 <div
                   className={cn(
                     "h-full shadow-sm transition-all duration-1000 ease-out",
@@ -731,19 +734,19 @@ export default function DigitizationComplianceTab({
 
               <div className="flex flex-wrap gap-8 mb-8 bg-gray-50/50 p-6 rounded-2xl border border-gray-100 shadow-inner">
                 <div>
-                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Digitized Files</div>
-                  <div className="text-xl font-black text-gray-900 tracking-tight">{summary?.totalDigitizedDocsCount?.toLocaleString() || 0}</div>
+                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-center">Digitized</div>
+                  <div className="text-xl font-black text-gray-900 tracking-tight text-center">{summary?.totalDigitizedDocsCount?.toLocaleString() || 0}</div>
                 </div>
                 <div>
-                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Required Files</div>
-                  <div className="text-xl font-black text-gray-900 tracking-tight">{summary?.totalExpectedDocsCount?.toLocaleString() || 0}</div>
+                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-center">Required</div>
+                  <div className="text-xl font-black text-gray-900 tracking-tight text-center">{summary?.totalExpectedDocsCount?.toLocaleString() || 0}</div>
                 </div>
                 <div>
-                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Full Record Rate</div>
-                  <div className="text-xl font-black text-emerald-600 tracking-tight">{summary?.fullyDigitizedRate != null ? `${summary.fullyDigitizedRate}%` : "0%"}</div>
+                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-center">Efficiency</div>
+                  <div className="text-xl font-black text-emerald-600 tracking-tight text-center">{summary?.fullyDigitizedRate != null ? `${summary.fullyDigitizedRate}%` : "0%"}</div>
                 </div>
                 <div className="sm:ml-auto">
-                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 italic">Report Formula</div>
+                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 italic">Calculation Method</div>
                   <div className="text-[11px] font-medium text-gray-500 max-w-xs leading-relaxed">
                     {meta?.definitions?.expectedCountFormula}
                   </div>
@@ -755,11 +758,11 @@ export default function DigitizationComplianceTab({
                   <div className="flex items-center gap-3">
                     <div>
                         <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
-                        Academic Program Breakdown
+                        Program Breakdown
                         </h4>
                         <div className="flex items-center gap-2">
                             <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
-                                Total Programs: <span className="text-gray-900 font-bold">{sortedByCourse.length}</span>
+                                Total: <span className="text-gray-900 font-bold">{sortedByCourse.length}</span>
                             </span>
                         </div>
                     </div>
@@ -772,7 +775,7 @@ export default function DigitizationComplianceTab({
                         <i className="ph-bold ph-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"></i>
                         <Input
                         type="text"
-                        placeholder="Search by program code..."
+                        placeholder="Search program..."
                         className="h-10 w-full rounded-brand border border-gray-300 bg-white pl-10 text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none placeholder:text-gray-400 placeholder:font-normal"
                         value={tableSearch}
                         onChange={(e) => setTableSearch(e.target.value)}
@@ -799,7 +802,7 @@ export default function DigitizationComplianceTab({
                               onClick={() => handleSort("total")}
                               className="group mx-auto flex items-center gap-1.5 rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
                             >
-                              Students <SortIndicator column="total" />
+                              Total <SortIndicator column="total" />
                             </button>
                           </TableHead>
                           <TableHead className="py-4 px-6 text-center font-bold">
@@ -807,7 +810,7 @@ export default function DigitizationComplianceTab({
                               onClick={() => handleSort("digitized")}
                               className="group mx-auto flex items-center gap-1.5 rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
                             >
-                              Complete <SortIndicator column="digitized" />
+                              Done <SortIndicator column="digitized" />
                             </button>
                           </TableHead>
                           <TableHead className="py-4 px-6 text-right font-bold">
@@ -815,7 +818,7 @@ export default function DigitizationComplianceTab({
                               onClick={() => handleSort("percent")}
                               className="group ml-auto flex items-center gap-1.5 rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
                             >
-                              Completeness <SortIndicator column="percent" />
+                              Health <SortIndicator column="percent" />
                             </button>
                           </TableHead>
                         </TableRow>
@@ -842,7 +845,7 @@ export default function DigitizationComplianceTab({
                                 <span className="text-gray-900 font-black text-xs">
                                   {row.percent != null ? `${row.percent}%` : "0%"}
                                 </span>
-                                <div className="w-20 h-1.5 rounded-full bg-gray-100 overflow-hidden border border-gray-200 hidden sm:block shadow-inner">
+                                <div className="w-20 h-1.5 rounded-full bg-gray-100 overflow-hidden hidden sm:block shadow-inner">
                                   <div
                                     className={cn(
                                       "h-full transition-all duration-700",
@@ -863,11 +866,11 @@ export default function DigitizationComplianceTab({
                         <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
                           <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon" />
                         </EmptyMedia>
-                        <EmptyTitle className="text-lg font-bold text-gray-900">No program data</EmptyTitle>
+                        <EmptyTitle className="text-lg font-bold text-gray-900">No data found</EmptyTitle>
                         <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600">
                           {tableSearch 
-                            ? `No academic programs found matching "${tableSearch}".` 
-                            : "No student records available to analyze for compliance metrics."}
+                            ? `No results found for "${tableSearch}".` 
+                            : "No student records available to analyze."}
                         </EmptyDescription>
                         {hasActiveFilters && (
                             <Button 
@@ -914,10 +917,10 @@ export default function DigitizationComplianceTab({
                 </div>
                 <div className="min-w-0">
                   <DialogTitle className="text-left text-xl leading-none font-black tracking-tight text-gray-900">
-                    Formal Compliance Report
+                  Compliance Report
                   </DialogTitle>
                   <p className="mt-1.5 text-left text-sm font-medium text-gray-500">
-                    Filter: {statusFilter} | {courseFilter || "All"} {requireApproved && " | Approved Only"}
+                  Filter: {statusFilter} | {courseFilter || "All"} {requireApproved && " | Approved Only"}
                   </p>
                 </div>
               </div>
@@ -925,7 +928,19 @@ export default function DigitizationComplianceTab({
           </DialogHeader>
           <div className="relative flex-1 overflow-hidden bg-gray-100">
             {pdfBlobUrl ? (
-              <div className="relative h-full w-full">
+              <div className={cn("relative h-full w-full transition-all duration-300", isFullscreenPreview ? "fixed inset-0 z-[9999] bg-white" : "")}>
+                {isFullscreenPreview && (
+                  <div className="absolute top-4 right-4 z-[10000]">
+                    <Button
+                      variant="default"
+                      size="icon"
+                      onClick={() => setIsFullscreenPreview(false)}
+                      className="h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md border-0"
+                    >
+                      <i className="ph-bold ph-x text-lg"></i>
+                    </Button>
+                  </div>
+                )}
                 {!previewFrameReady && (
                   <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white p-10">
                     <div className="w-full max-w-2xl space-y-4">
@@ -947,28 +962,42 @@ export default function DigitizationComplianceTab({
                 <div className="flex flex-col items-center gap-4">
                   <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon" />
                   <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">
-                    Generating Report Preview...
+                    Generating...
                   </p>
                 </div>
               </div>
             )}
           </div>
 
-          <div className="flex shrink-0 justify-end gap-3 border-t border-gray-100 bg-white p-4">
+          <div className="flex shrink-0 justify-between items-center gap-3 border-t border-gray-100 bg-white p-4">
             <Button
               variant="outline"
-              onClick={() => setReportOpen(false)}
-              className="h-11 px-6 font-bold border-gray-300 shadow-sm hover:border-gray-300 hover:bg-red-50/30 rounded-brand transition-colors"
+              size="icon"
+              onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
+              className={cn(
+                "h-11 w-11 rounded-xl border border-gray-200 bg-white transition-all hover:bg-gray-50 shadow-sm",
+                isFullscreenPreview && "bg-pup-maroon text-white hover:bg-pup-darkMaroon border-pup-darkMaroon"
+              )}
             >
-              CLOSE PREVIEW
+              <i className={cn("ph-bold text-xl", isFullscreenPreview ? "ph-corners-in" : "ph-corners-out")}></i>
             </Button>
-            <Button
-              onClick={handlePrint}
-              disabled={!pdfBlobUrl}
-              className="flex h-11 items-center gap-2 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 font-black text-white shadow-sm rounded-brand transition-colors"
-            >
-              <i className="ph-bold ph-printer text-lg"></i> FINALIZE AND PRINT REPORT
-            </Button>
+
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setReportOpen(false)}
+                className="h-11 px-6 font-bold border-gray-300 shadow-sm hover:border-gray-300 hover:bg-red-50/30 rounded-brand transition-colors"
+              >
+                CLOSE
+              </Button>
+              <Button
+                onClick={handlePrint}
+                disabled={!pdfBlobUrl}
+                className="flex h-11 items-center gap-2 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 font-black text-white shadow-sm rounded-brand transition-colors"
+              >
+                <i className="ph-bold ph-floppy-disk text-lg"></i> SAVE TO DEVICE
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

@@ -28,7 +28,11 @@ export default function RateLimitingTab() {
   const fetchData = async () => {
     try {
       setLoading(true)
-      const response = await fetch("/api/admin/rate-limits")
+      const [response] = await Promise.all([
+        fetch("/api/admin/rate-limits"),
+        new Promise((resolve) => setTimeout(resolve, 600)), // Animation visible
+      ])
+      
       if (!response.ok) throw new Error("Failed to fetch rate limiting data")
 
       const result = await response.json()
@@ -343,17 +347,18 @@ export default function RateLimitingTab() {
   )
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-fade-up font-inter">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-900">
           Rate Limiting & Security
         </h2>
         <button
           onClick={fetchData}
-          className="flex items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-4 py-2 text-sm font-black text-white"
+          disabled={loading}
+          className="flex h-11 w-11 items-center justify-center rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all p-0 text-white disabled:opacity-50"
+          title="Refresh"
         >
-          <PhRefresh className="h-4 w-4" />
-          Refresh
+          <PhRefresh className={`h-5 w-5 ${loading ? "animate-spin" : ""}`} />
         </button>
       </div>
 

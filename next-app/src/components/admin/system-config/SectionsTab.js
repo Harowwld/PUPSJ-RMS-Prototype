@@ -339,13 +339,13 @@ export default function SectionsTab({
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
+                size="sm"
                 onClick={handleExportSections}
-                className="flex h-10 items-center justify-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
+                className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-white text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
               >
                 <i className="ph-bold ph-file-csv text-base"></i>
-                EXPORT CSV
+                EXPORT
               </Button>
-
               <Button
                 onClick={() => setIsAddSectionOpen(true)}
                 disabled={showArchived}
@@ -414,7 +414,7 @@ export default function SectionsTab({
           </div>
         )}
 
-        <div className="relative flex flex-1 flex-col overflow-hidden">
+        <div key={showArchived} className="relative flex flex-1 flex-col overflow-hidden animate-fade-up">
         {/* Archive Mode Overlay Pattern */}
         {showArchived && (
           <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center opacity-[0.03]">
@@ -684,8 +684,9 @@ export default function SectionsTab({
                       </tr>
                       )})}
                       {filteredSections.length === 0 && (
-                      <tr className="border-0 hover:bg-transparent">                    <td colSpan={5} className="border-0 p-0">
-                      <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500">
+                        <tr className="border-0 hover:bg-transparent">
+                          <td colSpan={5} className="border-0 p-0">
+                            <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500">
                         <EmptyHeader className="flex flex-col items-center gap-0">
                           <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
                             <i className="ph-duotone ph-list-numbers text-3xl text-pup-maroon"></i>

@@ -52,17 +52,18 @@ export default function SLAAnalyticsTab({
   const [endDate, setEndDate] = useState("")
   const [isFullscreenPreview, setIsFullscreenPreview] = useState(false)
 
-  const loadData = async () => {
-    setLoading(true)
+  const loadData = async (isManual = false) => {
+    if (isManual) setLoading(true)
     setError("")
     try {
       const params = new URLSearchParams()
       if (startDate) params.set("startDate", startDate)
       if (endDate) params.set("endDate", endDate)
       
-      const res = await fetch(`/api/analytics/document-requests?${params.toString()}`, {
-        cache: "no-store",
-      })
+      const [res] = await Promise.all([
+        fetch(`/api/analytics/document-requests?${params.toString()}`, { cache: "no-store" }),
+        isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
+      ])
       const json = await res.json().catch(() => null)
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to load SLA data")
@@ -79,7 +80,7 @@ export default function SLAAnalyticsTab({
   }, [startDate, endDate])
 
   const handleRefresh = () => {
-    loadData()
+    loadData(true)
   }
 
   // Safe variables
@@ -163,12 +164,12 @@ export default function SLAAnalyticsTab({
   const hasActiveFilters = startDate !== "" || endDate !== ""
 
   return (
-    <div className="animate-fade-in font-inter flex h-full min-h-0 w-full flex-col">
+    <div className="animate-fade-up font-inter flex h-full min-h-0 w-full flex-col">
       <Card className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm">
         <PageHeader
           icon="ph-chart-line-up"
-          title="Document Request SLA Analytics"
-          description="Service level agreements and turnaround metrics for alumni requests."
+          title="Request Analysis"
+          description="Monitor request metrics and turnaround times."
           actions={
             <div className="flex items-center gap-2">
               <Button
@@ -188,10 +189,10 @@ export default function SLAAnalyticsTab({
                 size="sm"
                 onClick={handleCsvExport}
                 disabled={loading || !data || isExportingCsv}
-                className="h-10 px-4 font-bold text-xs tracking-wide border-gray-300 shadow-sm hover:border-gray-300 hover:bg-red-50/30 active:scale-95 rounded-brand transition-all uppercase"
+                className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-50"
               >
-                <i className={cn("ph-bold text-sm mr-2 text-pup-maroon", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
-                {isExportingCsv ? "Exporting..." : "Export CSV"}
+                <i className={cn("ph-bold text-base", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
+                {isExportingCsv ? "PREPARING..." : "EXPORT"}
               </Button>
 
               <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4">
@@ -215,7 +216,7 @@ export default function SLAAnalyticsTab({
                           <i
                             className={cn(
                               "ph-bold ph-arrows-clockwise text-sm",
-                              loading && "animate-spin"
+                              loading && "animate-spin inline-block"
                             )}
                             aria-hidden
                           />
@@ -288,10 +289,10 @@ export default function SLAAnalyticsTab({
                   <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
                 </EmptyMedia>
                 <EmptyTitle className="text-lg font-bold text-gray-900">
-                  Could not load SLA analytics
+                  Data Unavailable
                 </EmptyTitle>
                 <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600">
-                  {error}
+                  {error || "Could not load request analytics."}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
@@ -328,10 +329,10 @@ export default function SLAAnalyticsTab({
                 </div>
                 <div className="min-w-0">
                     <DialogTitle className="text-left text-xl leading-none font-black tracking-tight text-gray-900">
-                    Formal SLA Compliance Report
+                    SLA Analytics Report
                     </DialogTitle>
                     <p className="mt-1.5 text-left text-sm font-medium text-gray-500">
-                    Reporting Period: {startDate || "Beginning"} to {endDate || "Present"}
+                    Period: {startDate || "All"} to {endDate || "Present"}
                     </p>
                 </div>
               </div>
@@ -340,7 +341,19 @@ export default function SLAAnalyticsTab({
 
           <div className="relative flex-1 overflow-hidden bg-gray-100">
             {pdfBlobUrl ? (
-              <div className="relative h-full w-full">
+              <div className={cn("relative h-full w-full transition-all duration-300", isFullscreenPreview ? "fixed inset-0 z-[9999] bg-white" : "")}>
+                {isFullscreenPreview && (
+                  <div className="absolute top-4 right-4 z-[10000]">
+                    <Button
+                      variant="default"
+                      size="icon"
+                      onClick={() => setIsFullscreenPreview(false)}
+                      className="h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md border-0"
+                    >
+                      <i className="ph-bold ph-x text-lg"></i>
+                    </Button>
+                  </div>
+                )}
                 {!previewFrameReady && (
                   <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white p-10">
                     <div className="w-full max-w-2xl space-y-4">
@@ -369,21 +382,35 @@ export default function SLAAnalyticsTab({
             )}
           </div>
 
-          <div className="flex shrink-0 justify-end gap-3 border-t border-gray-100 bg-white p-4">
+          <div className="flex shrink-0 justify-between items-center gap-3 border-t border-gray-100 bg-white p-4">
             <Button
               variant="outline"
-              onClick={() => setReportOpen(false)}
-              className="h-11 px-6 font-bold border-gray-300 shadow-sm hover:border-gray-300 hover:bg-red-50/30 rounded-brand transition-colors"
+              size="icon"
+              onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
+              className={cn(
+                "h-11 w-11 rounded-xl border border-gray-200 bg-white transition-all hover:bg-gray-50 shadow-sm",
+                isFullscreenPreview && "bg-pup-maroon text-white hover:bg-pup-darkMaroon border-pup-darkMaroon"
+              )}
             >
-              CLOSE PREVIEW
+              <i className={cn("ph-bold text-xl", isFullscreenPreview ? "ph-corners-in" : "ph-corners-out")}></i>
             </Button>
-            <Button
-              onClick={handlePrint}
-              disabled={!pdfBlobUrl}
-              className="flex h-11 items-center gap-2 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 font-black text-white shadow-sm rounded-brand transition-colors"
-            >
-              <i className="ph-bold ph-printer text-lg"></i> FINALIZE AND PRINT REPORT
-            </Button>
+
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setReportOpen(false)}
+                className="h-11 px-6 font-bold border-gray-300 shadow-sm hover:border-gray-300 hover:bg-red-50/30 rounded-brand transition-colors"
+              >
+                CLOSE PREVIEW
+              </Button>
+              <Button
+                onClick={handlePrint}
+                disabled={!pdfBlobUrl}
+                className="flex h-11 items-center gap-2 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 font-black text-white shadow-sm rounded-brand transition-colors"
+              >
+                <i className="ph-bold ph-floppy-disk text-lg"></i> SAVE TO DEVICE
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>

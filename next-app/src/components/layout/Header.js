@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import AccountSetupModal from "@/components/shared/AccountSetupModal";
 import { isAdminRole, getRoleLabel } from "@/lib/roleUtils";
+import { cn } from "@/lib/utils";
 
 export default function Header({ authUser, onLogout, children }) {
   const router = useRouter();
@@ -103,7 +104,7 @@ export default function Header({ authUser, onLogout, children }) {
   };
 
   return (
-    <header className="bg-white border-b border-gray-300 flex-none z-20 shadow-sm">
+    <header className="bg-white border-b border-gray-300 flex-none z-20 shadow-sm select-none">
       <AccountSetupModal authUser={authUser} />
       <div className="w-full px-4 h-16 flex items-center justify-between">
         <div 
@@ -128,19 +129,33 @@ export default function Header({ authUser, onLogout, children }) {
 
         <div className="ml-4">
           <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-            <DropdownMenuTrigger className="group flex items-center gap-3 rounded-brand border border-gray-200 bg-white/90 px-3 py-1.5 shadow-xs transition-all hover:border-gray-300/40 hover:bg-red-50/30 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pup-maroon">
-              <div className="h-9 w-9 shrink-0 rounded-brand bg-gray-100 flex items-center justify-center text-xs font-semibold text-gray-700">
+            <DropdownMenuTrigger className={cn(
+              "group flex items-center gap-3 rounded-brand border px-3 py-1.5 shadow-xs transition-all focus:outline-none",
+              menuOpen 
+                ? "border-pup-maroon bg-white ring-2 ring-red-50 shadow-sm" 
+                : "border-gray-200 bg-white/90 hover:border-gray-300/40 hover:bg-red-50/30"
+            )}>
+              <div className={cn(
+                "h-9 w-9 shrink-0 rounded-brand bg-gray-100 flex items-center justify-center text-xs font-semibold text-gray-700 transition-colors",
+                menuOpen && "bg-red-50 text-pup-maroon shadow-xs ring-1 ring-red-100"
+              )}>
                 {initials}
               </div>
               <div className="text-left hidden sm:block">
                 <p className="text-xs font-semibold text-gray-900 leading-tight truncate max-w-[160px]">
                   {authUser?.fname} {authUser?.lname}
                 </p>
-                <p className="text-[11px] font-medium text-pup-maroon/90 leading-tight">
+                <p className={cn(
+                  "text-[11px] font-medium text-gray-500 leading-tight transition-colors",
+                  menuOpen && "text-pup-maroon/90"
+                )}>
                   {authUser?.role || "User"}
                 </p>
               </div>
-              <i className={`ph-bold ph-caret-down text-gray-400 text-xs transition-transform duration-300 hidden sm:block ${menuOpen ? "rotate-180" : ""}`}></i>
+              <i className={cn(
+                "ph-bold ph-caret-down text-gray-400 text-xs transition-all duration-300 hidden sm:block",
+                menuOpen && "rotate-180 text-pup-maroon"
+              )}></i>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-80 rounded-2xl border border-gray-200 shadow-2xl p-2 bg-white/98 backdrop-blur-md">
               <DropdownMenuGroup>

@@ -59,7 +59,19 @@ export default function PdfPreviewDialog({
 
         <div className="relative flex flex-1 flex-col overflow-hidden bg-gray-100 p-0">
           {pdfBlobUrl ? (
-            <div className="relative min-h-0 min-w-0 flex-1">
+            <div className={cn("relative min-h-0 min-w-0 flex-1 transition-all duration-300", isFullscreenPreview ? "fixed inset-0 z-[9999] bg-white" : "")}>
+              {isFullscreenPreview && (
+                <div className="absolute top-4 right-4 z-[10000]">
+                  <Button
+                    variant="default"
+                    size="icon"
+                    onClick={() => setIsFullscreenPreview(false)}
+                    className="h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md border-0"
+                  >
+                    <i className="ph-bold ph-x text-lg"></i>
+                  </Button>
+                </div>
+              )}
               {!previewFrameReady && (
                 <div className="absolute inset-0 z-10 bg-white p-6">
                   <div className="space-y-4">
@@ -93,22 +105,36 @@ export default function PdfPreviewDialog({
           )}
         </div>
 
-        <div className="flex shrink-0 justify-end gap-3 border-t border-gray-100 bg-white p-4">
+        <div className="flex shrink-0 justify-between items-center gap-3 border-t border-gray-100 bg-white p-4">
           <Button
             variant="outline"
-            onClick={() => setPdfPreviewOpen(false)}
-            className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 uppercase hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon shadow-sm transition-colors"
+            size="icon"
+            onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
+            className={cn(
+              "h-11 w-11 rounded-xl border border-gray-200 bg-white transition-all hover:bg-gray-50 shadow-sm",
+              isFullscreenPreview && "bg-pup-maroon text-white hover:bg-pup-darkMaroon border-pup-darkMaroon"
+            )}
           >
-            Cancel Preview
+            <i className={cn("ph-bold text-xl", isFullscreenPreview ? "ph-corners-in" : "ph-corners-out")}></i>
           </Button>
-          <Button
-            onClick={handleDownloadFromPreview}
-            disabled={!pdfBlobUrl}
-            className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 text-sm font-black tracking-wide text-white uppercase shadow-sm disabled:opacity-50"
-          >
-            <i className="ph-bold ph-download-simple text-lg"></i>
-            Download Report
-          </Button>
+
+          <div className="flex items-center gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setPdfPreviewOpen(false)}
+              className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 uppercase hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon shadow-sm transition-colors"
+            >
+              Cancel Preview
+            </Button>
+            <Button
+              onClick={handleDownloadFromPreview}
+              disabled={!pdfBlobUrl}
+              className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 text-sm font-black tracking-wide text-white uppercase shadow-sm disabled:opacity-50"
+            >
+              <i className="ph-bold ph-floppy-disk text-lg"></i>
+              SAVE TO DEVICE
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

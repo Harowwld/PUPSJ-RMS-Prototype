@@ -85,96 +85,127 @@ export default function BulkImportTab({
   }
 
   return (
-    <div className="flex flex-col p-6 font-inter">
+    <div className="flex flex-col p-6 font-inter animate-fade-up">
       {importStatus === "idle" ? (
-        <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
-          {/* Protocol card */}
-          <Card className="flex flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm">
-            <div className="flex items-center gap-4 rounded-t-brand border-b border-gray-100 bg-gray-50/50 px-6 py-5">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-xs font-black text-white shadow-md shadow-red-900/20">
-                1
+        <div className="grid flex-1 grid-cols-1 gap-6 lg:grid-cols-12">
+          {/* Protocol card - Redesigned as a structured sidebar */}
+          <Card className="flex flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm lg:col-span-5 xl:col-span-4">
+            <div className="flex items-center gap-4 border-b border-gray-100 bg-gray-50/50 px-6 py-5">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon shadow-sm">
+                <i className="ph-duotone ph-book-open text-xl"></i>
               </div>
               <div>
-                <h3 className="text-base leading-none font-black tracking-tight text-gray-900">
+                <h3 className="text-base leading-none font-black tracking-tight text-gray-900 uppercase">
                   Ingestion Protocol
                 </h3>
-                <p className="mt-1.5 text-[10px] font-medium tracking-wider text-gray-500 uppercase">
-                  Standardized mapping for system taxonomy
+                <p className="mt-1 text-[10px] font-bold tracking-wider text-gray-400 uppercase">
+                  System Taxonomy Rules
                 </p>
               </div>
             </div>
-            <CardContent className="space-y-6 overflow-y-auto p-6">
-              <div className="space-y-3">
-                <div className="flex items-center gap-2 text-[10px] font-black tracking-[0.2em] text-gray-400 uppercase">
-                  <i className="ph-bold ph-columns text-pup-maroon" />
-                  Required Column Architecture
+            
+            <CardContent className="space-y-8 overflow-y-auto p-6 scrollbar-hide">
+              {/* architecture header */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-[10px] font-black tracking-[0.2em] text-gray-400 uppercase">
+                    1. Architecture
+                  </div>
+                  <div className="h-px flex-1 bg-gray-100 ml-4"></div>
                 </div>
-                <div className="grid grid-cols-3 gap-2.5">
+                
+                <div className="grid grid-cols-3 gap-2">
                   {["Category", "Name", "Code"].map((col) => (
                     <div
                       key={col}
-                      className="group flex flex-col gap-1 rounded-lg border border-gray-200 bg-gray-50 p-2.5 shadow-xs transition-colors hover:border-gray-300/30"
+                      className="group flex flex-col items-center gap-1 rounded-xl border border-gray-200 bg-gray-50/50 py-3 transition-all hover:border-pup-maroon/30 hover:bg-white"
                     >
                       <span className="text-[10px] font-black tracking-tighter text-gray-900 uppercase group-hover:text-pup-maroon">
                         {col}
                       </span>
-                      <span className="text-[9px] font-medium tracking-[0.1em] text-gray-400 uppercase">
-                        Strict Field
-                      </span>
+                      <div className="h-1 w-4 rounded-full bg-gray-200 group-hover:bg-pup-maroon/30"></div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              <div className="group relative overflow-hidden rounded-xl border border-gray-200 bg-gray-50 p-5 font-mono text-sm leading-relaxed text-gray-700 shadow-sm">
-                <div className="absolute top-0 right-0 p-3 opacity-10 transition-opacity group-hover:opacity-30">
-                  <i className="ph-bold ph-terminal-window text-4xl" />
+              {/* Data Mapping Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-[10px] font-black tracking-[0.2em] text-gray-400 uppercase">
+                    2. Data Mapping
+                  </div>
+                  <div className="h-px flex-1 bg-gray-100 ml-4"></div>
                 </div>
-                <div className="mb-2 flex items-center gap-2 text-[10px] font-black tracking-[0.15em] text-pup-maroon uppercase">
-                  <i className="ph-bold ph-code text-sm" /> CSV Data Mapping
+                
+                <div className="group relative overflow-hidden rounded-xl border border-red-100 bg-red-50/30 p-5 font-mono text-[11px] leading-relaxed text-gray-700 shadow-xs">
+                  <div className="absolute top-0 right-0 p-3 opacity-10 transition-opacity group-hover:opacity-30">
+                    <i className="ph-bold ph-file-csv text-4xl text-pup-maroon" />
+                  </div>
+                  <div className="mb-3 flex items-center gap-2 text-[9px] font-black tracking-[0.15em] text-pup-maroon/60 uppercase">
+                    <i className="ph-bold ph-code text-xs" /> CSV Structure Example
+                  </div>
+                  <span className="font-bold text-gray-900">Category,Name,Code</span>
+                  <br />
+                  <span className="text-gray-500">DocumentType,Transcript of Records,</span>
+                  <br />
+                  <span className="text-gray-500">Course,Bachelor of Science in IT,BSIT</span>
+                  <br />
+                  <span className="text-gray-500">Section,Block 1,BSIT</span>
                 </div>
-                <span className="font-bold text-gray-400">Category,Name,Code</span>
-                <br />
-                DocumentType,Transcript of Records,
-                <br />
-                Course,Bachelor of Science in IT,BSIT
-                <br />
-                Section,Block 1,BSIT
               </div>
 
-              <div className="grid grid-cols-1 gap-3">
-                {[
-                  {
-                    label: "DocumentType",
-                    desc: "Identifier code is optional. Only 'Name' is required.",
-                  },
-                  {
-                    label: "Course",
-                    desc: "Short code is required (e.g. BSIT, BSA) for record routing.",
-                  },
-                  {
-                    label: "Section",
-                    desc: "The 'Code' field MUST match an existing Degree Program code.",
-                  },
-                ].map((rule) => (
-                  <div
-                    key={rule.label}
-                    className="rounded-lg border border-l-2 border-gray-100 border-l-pup-maroon/20 bg-white p-3 transition-all hover:border-l-pup-maroon"
-                  >
-                    <div className="mb-1 text-[10px] font-black tracking-tight text-pup-maroon uppercase">
-                      {rule.label}
-                    </div>
-                    <div className="text-[11px] leading-snug font-medium text-gray-600">
-                      {rule.desc}
-                    </div>
+              {/* Logic Rules Section */}
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="text-[10px] font-black tracking-[0.2em] text-gray-400 uppercase">
+                    3. Taxonomy Logic
                   </div>
-                ))}
+                  <div className="h-px flex-1 bg-gray-100 ml-4"></div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2.5">
+                  {[
+                    {
+                      label: "DocumentType",
+                      desc: "ID code optional. Only 'Name' required.",
+                      icon: "ph-files",
+                    },
+                    {
+                      label: "Course",
+                      desc: "Short code required (e.g. BSIT, BSA).",
+                      icon: "ph-books",
+                    },
+                    {
+                      label: "Section",
+                      desc: "'Code' must match a degree program.",
+                      icon: "ph-list-numbers",
+                    },
+                  ].map((rule) => (
+                    <div
+                      key={rule.label}
+                      className="group flex items-start gap-3 rounded-xl border border-gray-100 bg-white p-3.5 shadow-xs transition-all hover:border-red-200 hover:shadow-md"
+                    >
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon border border-red-100 shadow-xs transition-transform group-hover:scale-110">
+                        <i className={`ph-bold ${rule.icon} text-base`}></i>
+                      </div>
+                      <div>
+                        <div className="mb-0.5 text-[10px] font-black tracking-tight text-gray-900 uppercase">
+                          {rule.label}
+                        </div>
+                        <div className="text-[11px] leading-tight font-medium text-gray-500">
+                          {rule.desc}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Upload card */}
-          <Card className="flex flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm">
+          {/* Upload card - Adjusted for the new grid layout */}
+          <Card className="flex flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm lg:col-span-7 xl:col-span-8">
             <div className="flex items-center gap-4 rounded-t-brand border-b border-gray-100 bg-gray-50/50 px-6 py-5">
               <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-xs font-black text-white shadow-md shadow-red-900/20">
                 2

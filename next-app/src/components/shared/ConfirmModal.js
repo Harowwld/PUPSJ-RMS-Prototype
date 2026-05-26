@@ -111,7 +111,10 @@ export default function ConfirmModal({
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
       <DialogContent className="sm:max-w-lg p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
-        <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50 min-w-0">
+        <DialogHeader className={cn(
+          "p-6 border-b border-gray-100 bg-gray-50/50 min-w-0",
+          (!selectedItems.length && !isVerificationEnabled) && "pb-5 border-b-0"
+        )}>
           <div className="flex items-start gap-4 w-full">
             <div className={`w-12 h-12 rounded-full border flex items-center justify-center shrink-0 ${v.iconWrap}`}>
               <i className={`${displayIcon} text-2xl`}></i>
@@ -135,78 +138,83 @@ export default function ConfirmModal({
           </div>
         </DialogHeader>
 
-        <div className="p-6 space-y-5 bg-white min-w-0">
-          {selectedItems.length > 0 && (
-            <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
-                Selected Items ({selectedItems.length})
-              </p>
-              <div className="relative w-full">
-                <div className="max-h-32 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50/50 p-2 space-y-1 custom-scrollbar pb-6 w-full">
-                  {selectedItems.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-2 px-2 py-1.5 rounded bg-white border border-gray-100 shadow-sm overflow-hidden w-full"
-                    >
-                      <div className={`w-1.5 h-1.5 shrink-0 rounded-full ${variant === "success" ? "bg-emerald-500" : (variant === "warning" ? "bg-amber-500" : "bg-red-500")}`} />
-                      <div className="flex-1 min-w-0">
-                        <p className="truncate text-[11px] font-bold text-gray-700">
-                          {item}
-                        </p>
+        {(selectedItems.length > 0 || isVerificationEnabled) && (
+          <div className="p-6 space-y-5 bg-white min-w-0">
+            {selectedItems.length > 0 && (
+              <div>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                  Selected Items ({selectedItems.length})
+                </p>
+                <div className="relative w-full">
+                  <div className="max-h-32 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50/50 p-2 space-y-1 custom-scrollbar pb-6 w-full">
+                    {selectedItems.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-2 px-2 py-1.5 rounded bg-white border border-gray-100 shadow-sm overflow-hidden w-full"
+                      >
+                        <div className={`w-1.5 h-1.5 shrink-0 rounded-full ${variant === "success" ? "bg-emerald-500" : (variant === "warning" ? "bg-amber-500" : "bg-red-500")}`} />
+                        <div className="flex-1 min-w-0">
+                          <p className="truncate text-[11px] font-bold text-gray-700">
+                            {item}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-                {selectedItems.length > 3 && (
-                  <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-50/50 to-transparent pointer-events-none rounded-b-lg z-10" />
-                )}
-              </div>
-            </div>
-          )}
-
-          {isVerificationEnabled && (
-            <div className="rounded-xl border border-red-100 bg-red-50/30 p-5 shadow-xs">
-              <div className="flex flex-col items-center gap-5">
-                <div className="text-center">
-                  <label className="mb-2 block text-[9px] font-black tracking-widest text-red-800/60 uppercase">
-                    Security Authorization Code
-                  </label>
-                  <div className="flex h-12 items-center justify-center rounded-xl border-2 border-dashed border-red-200 bg-white px-8 font-mono text-2xl font-black tracking-[0.5em] text-red-700 shadow-inner">
-                    {verificationTarget}
-                  </div>
-                </div>
-
-                <div className="w-full">
-                  <label className="mb-3 block text-center text-[9px] font-black tracking-widest text-red-800/60 uppercase">
-                    Input Matching Digits
-                  </label>
-                  <div className="flex justify-center gap-3">
-                    {[0, 1, 2, 3].map((i) => (
-                      <input
-                        key={i}
-                        ref={inputRefs[i]}
-                        type="text"
-                        maxLength={1}
-                        inputMode="numeric"
-                        className="h-16 w-14 rounded-xl border-2 border-red-200 bg-white text-center font-mono text-3xl font-black text-gray-900 shadow-sm transition-all focus:scale-105 focus:border-red-500 focus:ring-4 focus:ring-red-100 focus:outline-none caret-transparent"
-                        placeholder="0"
-                        value={verificationValue[i] || ""}
-                        onChange={(e) => handleInputChange(i, e.target.value)}
-                        onKeyDown={(e) => handleKeyDown(i, e)}
-                        autoFocus={i === 0}
-                      />
                     ))}
                   </div>
+                  {selectedItems.length > 3 && (
+                    <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-50/50 to-transparent pointer-events-none rounded-b-lg z-10" />
+                  )}
                 </div>
               </div>
-              <p className="mt-5 text-[10px] font-bold text-red-700/70 text-center leading-tight">
-                For security, please enter the code shown above to enable the deletion button.
-              </p>
-            </div>
-          )}
-        </div>
+            )}
 
-        <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5">
+            {isVerificationEnabled && (
+              <div className="rounded-xl border border-red-100 bg-red-50/30 p-5 shadow-xs">
+                <div className="flex flex-col items-center gap-5">
+                  <div className="text-center">
+                    <label className="mb-2 block text-[9px] font-black tracking-widest text-red-800/60 uppercase">
+                      Security Authorization Code
+                    </label>
+                    <div className="flex h-12 items-center justify-center rounded-xl border-2 border-dashed border-red-200 bg-white px-8 font-mono text-2xl font-black tracking-[0.5em] text-red-700 shadow-inner">
+                      {verificationTarget}
+                    </div>
+                  </div>
+
+                  <div className="w-full">
+                    <label className="mb-3 block text-center text-[9px] font-black tracking-widest text-red-800/60 uppercase">
+                      Input Matching Digits
+                    </label>
+                    <div className="flex justify-center gap-3">
+                      {[0, 1, 2, 3].map((i) => (
+                        <input
+                          key={i}
+                          ref={inputRefs[i]}
+                          type="text"
+                          maxLength={1}
+                          inputMode="numeric"
+                          className="h-16 w-14 rounded-xl border-2 border-red-200 bg-white text-center font-mono text-3xl font-black text-gray-900 shadow-sm transition-all focus:scale-105 focus:border-red-500 focus:ring-4 focus:ring-red-100 focus:outline-none caret-transparent"
+                          placeholder="0"
+                          value={verificationValue[i] || ""}
+                          onChange={(e) => handleInputChange(i, e.target.value)}
+                          onKeyDown={(e) => handleKeyDown(i, e)}
+                          autoFocus={i === 0}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <p className="mt-5 text-[10px] font-bold text-red-700/70 text-center leading-tight">
+                  For security, please enter the code shown above to enable the deletion button.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+
+        <div className={cn(
+          "p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5",
+          (!selectedItems.length && !isVerificationEnabled) && "pt-0 border-t-0"
+        )}>
           <Button
             type="button"
             variant="outline"

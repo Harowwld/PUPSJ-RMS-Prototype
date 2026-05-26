@@ -71,10 +71,10 @@ export default function NotificationsTab({
     setIsLoading(true)
     setError("")
     try {
-      const res = await fetch(
-        `/api/notifications?limit=${itemsPerPage}&offset=${offset}`,
-        { cache: "no-store" }
-      )
+      const [res] = await Promise.all([
+        fetch(`/api/notifications?limit=${itemsPerPage}&offset=${offset}`, { cache: "no-store" }),
+        new Promise((resolve) => setTimeout(resolve, 600)), // Animation visible
+      ])
       const json = await res.json().catch(() => null)
       if (!res.ok || !json?.ok) {
         throw new Error(json?.error || "Failed to load notifications")
@@ -169,10 +169,10 @@ export default function NotificationsTab({
                 variant="outline"
                 size="sm"
                 onClick={load}
-                className="h-10 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon"
+                className="h-10 w-10 p-0 rounded-brand border-gray-300 text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon"
+                title="Refresh"
               >
-                <i className="ph-bold ph-arrows-clockwise mr-1.5"></i>
-                REFRESH
+                <i className={`ph-bold ph-arrows-clockwise ${loading ? "animate-spin inline-block" : ""}`}></i>
               </Button>
               <Button
                 variant="outline"

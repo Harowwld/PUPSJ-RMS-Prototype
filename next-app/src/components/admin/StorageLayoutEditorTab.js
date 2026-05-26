@@ -94,15 +94,17 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   const canvasRef = useRef(null)
   const dragRef = useRef(null)
 
-  const MIN_SIZE = 0.025
-  const CABINET_ASPECT_RATIO = 1.6666666666666667 // 0.125 / 0.075 to match 5x3 grid units
+  const MIN_SIZE = 0.05 // 2 grid units (2 * 0.025)
+  const MAX_SIZE = 0.1  // 4 grid units (4 * 0.025)
+  const CABINET_ASPECT_RATIO = 1.6 // Match SNAP_STEP_Y / SNAP_STEP_X (0.04 / 0.025) to align with 2x2 to 4x4 grid limits
 
   // 2. CORE UTILITY FUNCTIONS (Updaters)
   const updateRoom = useCallback((roomId, updater) => {
     setLayout((prev) => {
       if (!prev) return prev
-      const rooms = prev.rooms.map((r) => (r.id === roomId ? updater(r) : r))
-      rooms.sort((a, b) => a.id - b.id)
+      const rooms = prev.rooms.map((r) => 
+        String(r.id) === String(roomId) ? { ...updater(r), id: r.id } : r
+      )
       return { ...prev, rooms }
     })
     setIsDirty?.(true)
@@ -119,9 +121,9 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     setLayout((prev) => {
       if (!prev) return prev
       const rooms = prev.rooms.map((r) => {
-        if (r.id !== roomId) return r
+        if (String(r.id) !== String(roomId)) return r
         const cabinets = r.cabinets.map((c) => {
-          if (c.id !== cabinetId) return c
+          if (String(c.id) !== String(cabinetId)) return c
           return updater(c)
         })
         return { ...r, cabinets }
@@ -144,7 +146,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   // 3. DERIVED STATE
   const activeRoom = useMemo(() => {
     if (!layout || activeRoomId == null) return null
-    return layout.rooms.find((r) => r.id === activeRoomId) || null
+    return layout.rooms.find((r) => String(r.id) === String(activeRoomId)) || null
   }, [layout, activeRoomId])
 
   const selectedCabinet = useMemo(() => {
@@ -157,13 +159,13 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         rect: {
           x: activeRoom.door?.x ?? 0,
           y: activeRoom.door?.y ?? 0,
-          w: activeRoom.door?.w ?? 0.08,
-          h: activeRoom.door?.h ?? 0.03,
+          w: activeRoom.door?.w ?? 0.1,
+          h: activeRoom.door?.h ?? 0.04,
         },
         rotation: activeRoom.door?.rotation ?? 0,
       }
     }
-    return activeRoom.cabinets.find((c) => c.id === id) || null
+    return activeRoom.cabinets.find((c) => String(c.id) === String(id)) || null
   }, [activeRoom, selectedCabinetIds])
 
   // 4. HIGH-LEVEL CALLBACKS (Undo, Copy, Paste, Add/Remove)
@@ -232,7 +234,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     }
     const cab = {
       id,
-      rect: { x: 0.1, y: 0.1, w: 0.075, h: 0.125 }, 
+      rect: { x: 0.1, y: 0.1, w: 0.075, h: 0.12 }, 
       rotation: 0,
       drawerIds: [1, 2, 3, 4],
     }
@@ -297,6 +299,25 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     }))
   }, [activeRoom, selectedCabinet, updateCabinet])
 
+  const rotateSelectedCabinet = useCallback(() => {
+    if (!activeRoom || !selectedCabinet) return
+    // Only allow rotation for the entrance (DOOR)
+    if (!selectedCabinet.isDoor) {
+      showToast?.({
+        title: "Constraint applied",
+        description: "Cabinets are fixed in orientation. Only the entrance can be rotated.",
+      })
+      return
+    }
+
+    pushHistory(layout)
+    const currentRot = Number(selectedCabinet.rotation) || 0
+    const nextRot = currentRot + 90
+    updateCabinet(activeRoom.id, selectedCabinet.id, (c) =>
+      clampToRoom({ ...c, rotation: nextRot })
+    )
+  }, [activeRoom, selectedCabinet, layout, pushHistory, updateCabinet, showToast])
+
   const removeDrawerFromSelected = useCallback(() => {
     if (!activeRoom || !selectedCabinet || selectedCabinet.isDoor) return
     const ids = selectedCabinet.drawerIds || []
@@ -316,12 +337,12 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
 
   const updateSelectedSizeNormalized = useCallback((nw, nh) => {
     if (!activeRoom || !selectedCabinet) return
-    const w = Math.max(MIN_SIZE, nw)
+    const w = clamp(nw, MIN_SIZE, MAX_SIZE)
     const h = w * CABINET_ASPECT_RATIO 
     updateCabinet(activeRoom.id, selectedCabinet.id, (c) =>
       clampToRoom({ ...c, rect: { ...c.rect, w, h } })
     )
-  }, [activeRoom, selectedCabinet, updateCabinet, CABINET_ASPECT_RATIO])
+  }, [activeRoom, selectedCabinet, updateCabinet, CABINET_ASPECT_RATIO, MIN_SIZE, MAX_SIZE])
 
   // 5. EVENT HANDLERS
   const handleCanvasPointerMove = useCallback((e) => {
@@ -336,15 +357,61 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     const { mode, startX, startY, initialPositions } = dragRef.current
 
     if (mode === "door") {
-      const dx = snapValue(relX, snapToGrid, 'x')
-      const dy = snapValue(relY, snapToGrid, 'y')
+      const dx = relX - startX
+      const dy = relY - startY
+      const rawX = snapValue(initialPositions[0].x + dx, snapToGrid, 'x')
+      const rawY = snapValue(initialPositions[0].y + dy, snapToGrid, 'y')
+
+      // Perimeter logic: Check which edge the cursor is closest to
+      const distTop = relY
+      const distBottom = 1 - relY
+      const distLeft = relX
+      const distRight = 1 - relX
+
+      const minDist = Math.min(distTop, distBottom, distLeft, distRight)
+
+      let finalX = rawX
+      let finalY = rawY
+      let finalRot = 0
+      let finalW = 0.1
+      let finalH = 0.04
+
+      if (minDist === distTop) {
+        finalY = 0
+        finalRot = 0
+        finalW = 0.1
+        finalH = 0.04
+        finalX = clamp(rawX, 0, 1 - 0.1)
+      } else if (minDist === distBottom) {
+        finalY = 1 - 0.04
+        finalRot = 180
+        finalW = 0.1
+        finalH = 0.04
+        finalX = clamp(rawX, 0, 1 - 0.1)
+      } else if (minDist === distLeft) {
+        finalX = 0
+        finalRot = 270
+        finalW = 0.025
+        finalH = 0.16
+        finalY = clamp(rawY, 0, 1 - 0.16)
+      } else if (minDist === distRight) {
+        finalX = 1 - 0.025
+        finalRot = 90
+        finalW = 0.025
+        finalH = 0.16
+        finalY = clamp(rawY, 0, 1 - 0.16)
+      }
+
       updateRoom(activeRoom.id, (r) => ({
         ...r,
         door: {
           ...r.door,
-          x: clamp(dx, 0, 1),
-          y: clamp(dy, 0, 1),
-        },
+          x: finalX,
+          y: finalY,
+          w: finalW,
+          h: finalH,
+          rotation: finalRot
+        }
       }))
     } else if (mode === "marquee") {
       setSelectionBox({
@@ -365,13 +432,13 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       })
     } else if (mode === "resize" && selectedCabinet) {
       const dw = relX - selectedCabinet.rect.x
-      const nw = snapValue(Math.max(MIN_SIZE, dw), snapToGrid, 'x')
+      const nw = snapValue(clamp(dw, MIN_SIZE, MAX_SIZE), snapToGrid, 'x')
       const nh = nw * CABINET_ASPECT_RATIO 
       updateCabinet(activeRoom.id, selectedCabinet.id, (c) =>
         clampToRoom({ ...c, rect: { ...c.rect, w: nw, h: nh } })
       )
     }
-  }, [activeRoom, selectedCabinet, snapToGrid, updateCabinet, updateRoom, CABINET_ASPECT_RATIO])
+  }, [activeRoom, selectedCabinet, snapToGrid, updateCabinet, updateRoom, CABINET_ASPECT_RATIO, MIN_SIZE, MAX_SIZE])
 
   const handleCanvasPointerUp = useCallback((e) => {
     if (!dragRef.current) return
@@ -846,7 +913,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
                   onChange={(e) => setActiveRoomId(Number(e.target.value))}
                 >
                   {layout.rooms.map((r) => (
-                    <option key={r.id} value={String(r.id)}>{r.name || `Room ${r.id}`}</option>
+                    <option key={`room-opt-${r.id}`} value={String(r.id)}>{r.name || `Room ${r.id}`}</option>
                   ))}
                 </Select>
               </div>
@@ -870,7 +937,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
           <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase">Templates</label>
           <div className="flex h-10 items-center overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
             <Select className="h-full cursor-pointer border-r border-gray-100 bg-transparent px-4 text-xs font-bold text-gray-700 focus:outline-none" value={selectedTemplateId} onChange={(e) => setSelectedTemplateId(e.target.value)} disabled={!activeRoom}>
-              {ROOM_TEMPLATES.map((tpl) => <option key={tpl.id} value={tpl.id}>{tpl.name}</option>)}
+              {ROOM_TEMPLATES.map((tpl) => <option key={`tpl-opt-${tpl.id}`} value={tpl.id}>{tpl.name}</option>)}
             </Select>
             <Button type="button" variant="ghost" onClick={() => setTemplateApplyConfirmOpen(true)} className="h-full rounded-none bg-gray-50/50 px-4 text-[10px] font-black tracking-widest uppercase text-pup-maroon hover:bg-pup-maroon hover:text-white" disabled={!activeRoom}>USE</Button>
           </div>
@@ -920,7 +987,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   )
 
   const renderEditorContent = (maximized) => (
-    <div className={cn("flex h-full w-full flex-col overflow-hidden bg-white", maximized ? "pt-8" : "")}>
+    <div className={cn("flex h-full w-full flex-col overflow-hidden bg-white select-none", maximized ? "pt-8" : "")}>
       {!maximized && (
         <PageHeader
           icon="ph-layout"
@@ -975,12 +1042,12 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         )}>
           <div className={cn(maximized ? "lg:col-span-3 border-r border-gray-100 h-full" : "lg:col-span-2")}>
             <CabinetCanvas 
-              canvasRef={canvasRef} activeRoom={activeRoom} selectedCabinetIds={selectedCabinetIds} selectedCabinet={selectedCabinet} collidingIds={collidingIds} activePath={activePath} simulationMode={simulationMode} snapToGrid={snapToGrid} showGrid={showGrid} handleCanvasPointerMove={handleCanvasPointerMove} handleCanvasPointerUp={handleCanvasPointerUp} setSelectedCabinetIds={setSelectedCabinetIds} duplicateSelectedCabinet={duplicateSelectedCabinet} setBulkConfirmOpen={setBulkConfirmOpen} dragRef={dragRef} updateSelectedRectFromNormalized={updateSelectedRectFromNormalized} updateSelectedSizeNormalized={updateSelectedSizeNormalized} selectionBox={selectionBox} pushHistory={pushHistory} layout={layout} isModalOpen={maximized}
+              canvasRef={canvasRef} activeRoom={activeRoom} selectedCabinetIds={selectedCabinetIds} selectedCabinet={selectedCabinet} rotateSelectedCabinet={rotateSelectedCabinet} collidingIds={collidingIds} activePath={activePath} simulationMode={simulationMode} snapToGrid={snapToGrid} showGrid={showGrid} handleCanvasPointerMove={handleCanvasPointerMove} handleCanvasPointerUp={handleCanvasPointerUp} setSelectedCabinetIds={setSelectedCabinetIds} duplicateSelectedCabinet={duplicateSelectedCabinet} setBulkConfirmOpen={setBulkConfirmOpen} dragRef={dragRef} updateSelectedRectFromNormalized={updateSelectedRectFromNormalized} updateSelectedSizeNormalized={updateSelectedSizeNormalized} selectionBox={selectionBox} pushHistory={pushHistory} layout={layout} isModalOpen={maximized}
             />
           </div>
-          <div className={cn(maximized ? "lg:col-span-1 p-6" : "lg:col-span-1")}>
+          <div className={cn(maximized ? "lg:col-span-1 p-6" : "lg:col-span-1", "select-none")}>
             <CabinetSidebar 
-              selectedCabinetIds={selectedCabinetIds} selectedCabinet={selectedCabinet} duplicateSelectedCabinet={duplicateSelectedCabinet} setBulkConfirmOpen={setBulkConfirmOpen} removeDrawerFromSelected={removeDrawerFromSelected} addDrawerToSelected={addDrawerToSelected} updateSelectedRectFromNormalized={updateSelectedRectFromNormalized} updateSelectedSizeNormalized={updateSelectedSizeNormalized}
+              selectedCabinetIds={selectedCabinetIds} selectedCabinet={selectedCabinet} rotateSelectedCabinet={rotateSelectedCabinet} duplicateSelectedCabinet={duplicateSelectedCabinet} setBulkConfirmOpen={setBulkConfirmOpen} removeDrawerFromSelected={removeDrawerFromSelected} addDrawerToSelected={addDrawerToSelected} updateSelectedRectFromNormalized={updateSelectedRectFromNormalized} updateSelectedSizeNormalized={updateSelectedSizeNormalized}
             />
           </div>
         </div>
@@ -989,7 +1056,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   )
 
   return (
-    <div className="animate-fade-in flex h-full w-full flex-col gap-4">
+    <div className="animate-fade-up font-inter flex h-full w-full flex-col gap-4">
       <ConflictResolutionModals 
         applyReportOpen={applyReportOpen}
         setApplyReportOpen={setApplyReportOpen}

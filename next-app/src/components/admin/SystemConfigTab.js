@@ -504,8 +504,8 @@ export default function SystemConfigTab({
     }
   }
 
-  async function loadAll() {
-    setLoading(true)
+  async function loadAll(isManual = false) {
+    if (isManual) setLoading(true)
     setError(null)
     try {
       const q = showArchived ? "includeArchived=true" : ""
@@ -515,6 +515,7 @@ export default function SystemConfigTab({
         fetch(`/api/courses${q ? "?" + q : ""}`),
         fetch(`/api/sections${q ? "?" + q : ""}`),
         fetch("/api/system/security-questions"),
+        isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
       ])
 
       const jDoc = await rDoc.json()
@@ -958,15 +959,15 @@ export default function SystemConfigTab({
           orientation="horizontal"
           className="flex min-h-0 flex-1 flex-col"
         >
-          <div className="flex shrink-0 flex-col items-center gap-4 sm:flex-row">
-            <div className="inline-flex h-auto rounded-brand border border-gray-200/50 bg-gray-100/80 p-1 backdrop-blur-sm">
+          <div className="flex shrink-0 flex-col items-center gap-4 sm:flex-row select-none">
+            <div className="inline-flex h-auto items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100/80 p-0.5 backdrop-blur-sm">
               <button
                 type="button"
                 onClick={() => setActiveSubTab("document-types")}
-                className={`flex items-center gap-2.5 rounded-brand px-5 py-2 text-sm font-bold transition-all duration-200 active:scale-95 ${
+                className={`flex h-11 min-w-[180px] items-center justify-center gap-3 px-6 text-sm font-bold transition-all duration-200 active:scale-95 ${
                   activeSubTab === "document-types"
-                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
-                    : "text-gray-500 hover:bg-white/50 hover:text-gray-700"
+                    ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5"
+                    : "rounded-l-[calc(var(--radius)-2px)] rounded-r-none text-gray-500 ring-1 ring-inset ring-transparent hover:bg-white/50 hover:text-gray-700"
                 }`}
               >
                 <i
@@ -977,10 +978,10 @@ export default function SystemConfigTab({
               <button
                 type="button"
                 onClick={() => setActiveSubTab("degree-programs")}
-                className={`flex items-center gap-2.5 rounded-brand px-5 py-2 text-sm font-bold transition-all duration-200 active:scale-95 ${
+                className={`flex h-11 min-w-[180px] items-center justify-center gap-3 rounded-none px-6 text-sm font-bold transition-all duration-200 active:scale-95 ${
                   activeSubTab === "degree-programs"
-                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
-                    : "text-gray-500 hover:bg-white/50 hover:text-gray-700"
+                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5"
+                    : "text-gray-500 ring-1 ring-inset ring-transparent hover:bg-white/50 hover:text-gray-700"
                 }`}
               >
                 <i
@@ -991,10 +992,10 @@ export default function SystemConfigTab({
               <button
                 type="button"
                 onClick={() => setActiveSubTab("course-blocks")}
-                className={`flex items-center gap-2.5 rounded-brand px-5 py-2 text-sm font-bold transition-all duration-200 active:scale-95 ${
+                className={`flex h-11 min-w-[180px] items-center justify-center gap-3 rounded-none px-6 text-sm font-bold transition-all duration-200 active:scale-95 ${
                   activeSubTab === "course-blocks"
-                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
-                    : "text-gray-500 hover:bg-white/50 hover:text-gray-700"
+                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5"
+                    : "text-gray-500 ring-1 ring-inset ring-transparent hover:bg-white/50 hover:text-gray-700"
                 }`}
               >
                 <i
@@ -1005,10 +1006,10 @@ export default function SystemConfigTab({
               <button
                 type="button"
                 onClick={() => setActiveSubTab("security-questions")}
-                className={`flex items-center gap-2.5 rounded-brand px-5 py-2 text-sm font-bold transition-all duration-200 active:scale-95 ${
+                className={`flex h-11 min-w-[180px] items-center justify-center gap-3 rounded-none px-6 text-sm font-bold transition-all duration-200 active:scale-95 ${
                   activeSubTab === "security-questions"
-                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
-                    : "text-gray-500 hover:bg-white/50 hover:text-gray-700"
+                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5"
+                    : "text-gray-500 ring-1 ring-inset ring-transparent hover:bg-white/50 hover:text-gray-700"
                 }`}
               >
                 <i
@@ -1019,10 +1020,10 @@ export default function SystemConfigTab({
               <button
                 type="button"
                 onClick={() => setActiveSubTab("bulk-import")}
-                className={`flex items-center gap-2.5 rounded-brand px-5 py-2 text-sm font-bold transition-all duration-200 active:scale-95 ${
+                className={`flex h-11 min-w-[180px] items-center justify-center gap-3 px-6 text-sm font-bold transition-all duration-200 active:scale-95 ${
                   activeSubTab === "bulk-import"
-                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
-                    : "text-gray-500 hover:bg-white/50 hover:text-gray-700"
+                    ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5"
+                    : "rounded-r-[calc(var(--radius)-2px)] rounded-l-none text-gray-500 ring-1 ring-inset ring-transparent hover:bg-white/50 hover:text-gray-700"
                 }`}
               >
                 <i

@@ -29,7 +29,10 @@ export function useHotFolderInbox({
     async ({ showLoading = true } = {}) => {
       if (showLoading) setLoading(true);
       try {
-        const res = await fetch("/api/ingest/hot-folder?limit=100", { cache: "no-store" });
+        const [res] = await Promise.all([
+          fetch("/api/ingest/hot-folder?limit=100", { cache: "no-store" }),
+          showLoading ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
+        ]);
         const json = await res.json().catch(() => null);
         if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to load ingest queue");
         setRows(Array.isArray(json.data?.rows) ? json.data.rows : []);

@@ -33,7 +33,7 @@ export default function PageHeader({
   extraChips, // Optional array of { label, value, onClear }
 }) {
   return (
-    <div className="border-b border-gray-100 bg-gray-50/50 p-6 rounded-t-brand">
+    <div className="border-b border-gray-100 bg-gray-50/50 p-6 rounded-t-brand select-none">
       <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
         <div className="flex items-center gap-4">
           {leftAction}

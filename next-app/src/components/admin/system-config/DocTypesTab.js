@@ -311,11 +311,12 @@ export default function DocTypesTab({
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
+                size="sm"
                 onClick={handleExportDocTypes}
-                className="flex h-10 items-center justify-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
+                className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-white text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
               >
                 <i className="ph-bold ph-file-csv text-base"></i>
-                EXPORT CSV
+                EXPORT
               </Button>
 
               <Button
@@ -376,7 +377,7 @@ export default function DocTypesTab({
           </div>
         )}
 
-        <div className="relative flex flex-1 flex-col overflow-hidden">
+        <div key={showArchived} className="relative flex flex-1 flex-col overflow-hidden animate-fade-up">
           {/* Archive Mode Overlay Pattern */}
           {showArchived && (
             <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center opacity-[0.03]">

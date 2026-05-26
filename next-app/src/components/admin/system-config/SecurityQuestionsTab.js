@@ -46,7 +46,7 @@ export default function SecurityQuestionsTab({
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col p-6 font-inter">
+    <div className="flex min-h-0 flex-1 flex-col p-6 font-inter animate-fade-up">
       {loading ? (
         <div className="space-y-4 rounded-brand border border-gray-300 bg-white p-6 shadow-sm">
           {[1, 2, 3, 4, 5].map((i) => (

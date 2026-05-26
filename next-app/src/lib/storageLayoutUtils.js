@@ -6,7 +6,7 @@ export function clamp(n, min, max) {
 export function getCabinetEffectiveSize(item) {
   const baseW = Number(item?.rect?.w ?? item?.w) || 0
   const baseH = Number(item?.rect?.h ?? item?.h) || 0
-  const rot = Number(item?.rotation) === 90 ? 90 : 0
+  const rot = Math.abs(Number(item?.rotation || 0)) % 180
   return rot === 90 ? { w: baseH, h: baseW } : { w: baseW, h: baseH }
 }
 

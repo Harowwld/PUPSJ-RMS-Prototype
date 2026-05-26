@@ -12,16 +12,16 @@ const GX = 0.025; // 1 horizontal unit
 const GY = 0.04;  // 1 vertical unit
 
 export const ROOM_TEMPLATES = [
-  { id: "grid-4x2", name: "Grid 4x2", cabinets: buildGridCabinets({ cols: 4, rows: 2 }) },
-  { id: "grid-3x3", name: "Grid 3x3", cabinets: buildGridCabinets({ cols: 3, rows: 3 }) },
-  { id: "grid-3x2", name: "Grid 3x2", cabinets: buildGridCabinets({ cols: 3, rows: 2 }) },
-  { id: "u-shape", name: "U-Shape Layout", cabinets: buildUShapeLayout() },
-  { id: "rev-u-shape", name: "Reversed U-Shape", cabinets: buildUShapeLayout({ reversed: true }) },
+  { id: "grid-4x2", name: "4x2", cabinets: buildGridCabinets({ cols: 4, rows: 2 }) },
+  { id: "grid-3x3", name: "3x3", cabinets: buildGridCabinets({ cols: 3, rows: 3 }) },
+  { id: "grid-3x2", name: "3x2", cabinets: buildGridCabinets({ cols: 3, rows: 2 }) },
+  { id: "u-shape", name: "U-Shape", cabinets: buildUShapeLayout() },
+  { id: "rev-u-shape", name: "Reversed U", cabinets: buildUShapeLayout({ reversed: true }) },
 ];
 
 export function getDefaultDoor() {
-  // Aligned to grid: x=2 units, y=24 units, w=3 units, h=1 unit
-  return { x: GX * 2, y: GY * 24, w: GX * 3, h: GY, rotation: 0 };
+  // Aligned to grid: 4x1 units (0.1 x 0.04)
+  return { x: GX * 2, y: GY * 24, w: GX * 4, h: GY, rotation: 0 };
 }
 
 function buildGridCabinets({
@@ -71,13 +71,13 @@ function buildUShapeLayout({ reversed = false } = {}) {
   const getNextId = () => `${String.fromCharCode(65 + cabIdx++)}`;
 
   // Left column (4 cabinets)
-  // Start at x=2 units, y=2 units
+  // Start at x=1 unit, y=1 unit
   for (let i = 0; i < 4; i++) {
     cabinets.push({
       id: getNextId(),
       rect: { 
-        x: GX * 2, 
-        y: (2 + i * 4) * GY, 
+        x: GX, 
+        y: (1 + i * 4) * GY, 
         w, 
         h 
       },
@@ -87,14 +87,16 @@ function buildUShapeLayout({ reversed = false } = {}) {
   }
 
   // Base of the U (horizontal row, 5 cabinets)
-  // Base y is either top (2 units) or bottom (20 units)
-  const baseYUnits = reversed ? 2 : 20;
-  // Start X is after the left column + 1 gap unit = 2 + 3 + 1 = 6 units
+  // Base y is either top (1 unit) or bottom (21 units)
+  const baseYUnits = reversed ? 1 : 21;
+  // Center the 5 cabinets: 5 * 3 (width) + 4 * 1 (gap) = 19 units total.
+  // Room is 40 units wide. (40 - 19) / 2 = 10.5. We'll use 10 or 11. Let's start at 10.5.
+  const startXUnits = 10.5;
   for (let i = 0; i < 5; i++) {
     cabinets.push({
       id: getNextId(),
       rect: { 
-        x: (6 + i * 4) * GX, 
+        x: (startXUnits + i * 4) * GX, 
         y: baseYUnits * GY, 
         w, 
         h 
@@ -105,13 +107,13 @@ function buildUShapeLayout({ reversed = false } = {}) {
   }
 
   // Right column (4 cabinets)
-  // X is 40 - 2 (margin) - 3 (width) = 35 units
+  // X is 40 - 1 (margin) - 3 (width) = 36 units
   for (let i = 0; i < 4; i++) {
     cabinets.push({
       id: getNextId(),
       rect: { 
-        x: GX * 35, 
-        y: (2 + i * 4) * GY, 
+        x: GX * 36, 
+        y: (1 + i * 4) * GY, 
         w, 
         h 
       },

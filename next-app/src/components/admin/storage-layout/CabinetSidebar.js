@@ -3,6 +3,7 @@
 import { memo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 import {
   Card,
   CardContent,
@@ -31,15 +32,22 @@ const CabinetSidebar = memo(({
   updateSelectedSizeNormalized
 }) => {
   return (
-    <Card className="overflow-hidden rounded-brand border border-gray-200 shadow-sm">
+    <Card className="overflow-hidden rounded-brand border border-gray-200 shadow-sm select-none">
       <CardHeader className="border-b border-gray-100 bg-gray-50/50 p-6">
         <div className="flex items-center gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon shadow-sm">
-            <i className="ph-duotone ph-archive text-2xl"></i>
+            <i className={cn(
+              "text-2xl",
+              selectedCabinetIds.size === 0 ? "ph-duotone ph-mouse-simple" :
+              selectedCabinetIds.size > 1 ? "ph-duotone ph-stack" :
+              selectedCabinet?.isDoor ? "ph-duotone ph-door-open" : "ph-duotone ph-archive"
+            )}></i>
           </div>
           <div>
             <CardTitle className="text-xl leading-none font-black tracking-tight text-gray-900">
-              Cabinet Details
+              {selectedCabinetIds.size === 0 ? "Selection Details" :
+               selectedCabinetIds.size > 1 ? "Group Selection" :
+               selectedCabinet?.isDoor ? "Entrance Details" : "Cabinet Details"}
             </CardTitle>
             <CardDescription className="mt-1.5 text-sm font-medium text-gray-500">
               {selectedCabinetIds.size > 1
@@ -83,64 +91,80 @@ const CabinetSidebar = memo(({
         ) : (
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={duplicateSelectedCabinet}
-                className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-gray-300 hover:bg-red-50/30"
-              >
-                <i className="ph-bold ph-copy mr-2 text-pup-maroon" />
-                DUPLICATE
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setBulkConfirmOpen(true)}
-                className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-gray-300 hover:bg-red-50/30"
-              >
-                <i className="ph-bold ph-trash mr-2 text-pup-maroon" />
-                REMOVE CABINET
-              </Button>
-            </div>
-
-            <div>
-              <div className="mb-2 text-xs font-bold tracking-wide text-gray-700 uppercase">
-                Drawer count
-              </div>
-              <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 p-1">
+              {selectedCabinet.isDoor ? (
                 <Button
                   type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 rounded-lg transition-all hover:bg-white hover:shadow-sm"
-                  onClick={removeDrawerFromSelected}
-                  disabled={
-                    (selectedCabinet.drawerIds || []).length <= 1
-                  }
+                  variant="outline"
+                  onClick={rotateSelectedCabinet}
+                  className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-gray-300 hover:bg-red-50/30"
                 >
-                  <i className="ph-bold ph-minus" />
+                  <i className="ph-bold ph-arrow-clockwise mr-2 text-pup-maroon" />
+                  ROTATE ENTRANCE
                 </Button>
+              ) : (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={duplicateSelectedCabinet}
+                    className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-gray-300 hover:bg-red-50/30"
+                  >
+                    <i className="ph-bold ph-copy mr-2 text-pup-maroon" />
+                    DUPLICATE
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setBulkConfirmOpen(true)}
+                    className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-gray-300 hover:bg-red-50/30"
+                  >
+                    <i className="ph-bold ph-trash mr-2 text-pup-maroon" />
+                    REMOVE CABINET
+                  </Button>
+                </>
+              )}
+            </div>
 
-                <div className="flex-1 text-center">
-                  <span className="text-lg font-black text-gray-900">
-                    {(selectedCabinet.drawerIds || []).length}
-                  </span>
-                  <span className="ml-2 text-xs font-bold tracking-tight text-gray-500 uppercase">
-                    Drawers
-                  </span>
+            {!selectedCabinet.isDoor && (
+              <div>
+                <div className="mb-2 text-xs font-bold tracking-wide text-gray-700 uppercase">
+                  Drawer count
                 </div>
+                <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 p-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 rounded-lg transition-all hover:bg-white hover:shadow-sm"
+                    onClick={removeDrawerFromSelected}
+                    disabled={
+                      (selectedCabinet.drawerIds || []).length <= 1
+                    }
+                  >
+                    <i className="ph-bold ph-minus" />
+                  </Button>
 
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-10 w-10 rounded-lg transition-all hover:bg-white hover:shadow-sm"
-                  onClick={addDrawerToSelected}
-                >
-                  <i className="ph-bold ph-plus" />
-                </Button>
+                  <div className="flex-1 text-center">
+                    <span className="text-lg font-black text-gray-900">
+                      {(selectedCabinet.drawerIds || []).length}
+                    </span>
+                    <span className="ml-2 text-xs font-bold tracking-tight text-gray-500 uppercase">
+                      Drawers
+                    </span>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="h-10 w-10 rounded-lg transition-all hover:bg-white hover:shadow-sm"
+                    onClick={addDrawerToSelected}
+                  >
+                    <i className="ph-bold ph-plus" />
+                  </Button>
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="grid grid-cols-2 gap-3">
               <div>

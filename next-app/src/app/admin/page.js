@@ -263,10 +263,13 @@ function AdminPageContent() {
     }
   }, [])
 
-  const refreshStaff = useCallback(async () => {
-    setViewLoading((prev) => ({ ...prev, directory: true }))
+  const refreshStaff = useCallback(async (isManual = false) => {
+    if (isManual) setViewLoading((prev) => ({ ...prev, directory: true }))
     try {
-      const res = await fetch("/api/staff?limit=500")
+      const [res] = await Promise.all([
+        fetch("/api/staff?limit=500"),
+        isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
+      ])
       const json = await res.json()
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to load staff")
@@ -279,8 +282,8 @@ function AdminPageContent() {
     }
   }, [showToast])
 
-  const refreshAuditLogs = useCallback(async () => {
-    setViewLoading((prev) => ({ ...prev, logs: true }))
+  const refreshAuditLogs = useCallback(async (isManual = false) => {
+    if (isManual) setViewLoading((prev) => ({ ...prev, logs: true }))
     try {
       const offset = (logPage - 1) * logsPerPage
       const mineQuery = logsMineOnly ? "&mine=1" : ""
@@ -300,9 +303,12 @@ function AdminPageContent() {
         : ""
       const sortQuery = `&sortBy=${encodeURIComponent(logSortBy)}&sortOrder=${encodeURIComponent(logSortOrder)}`
 
-      const resLogs = await fetch(
-        `/api/audit-logs?limit=${logsPerPage}&offset=${offset}&search=${encodeURIComponent(logSearch)}${mineQuery}${roleQuery}${sevQuery}${startQuery}${endQuery}${sortQuery}`
-      )
+      const [resLogs] = await Promise.all([
+        fetch(
+          `/api/audit-logs?limit=${logsPerPage}&offset=${offset}&search=${encodeURIComponent(logSearch)}${mineQuery}${roleQuery}${sevQuery}${startQuery}${endQuery}${sortQuery}`
+        ),
+        isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
+      ])
       const jsonLogs = await resLogs.json()
       if (!resLogs.ok || !jsonLogs?.ok)
         throw new Error(jsonLogs?.error || "Failed to load audit logs")
@@ -328,7 +334,7 @@ function AdminPageContent() {
     } catch (err) {
       // silent
     } finally {
-      setViewLoading((prev) => ({ ...prev, logs: false }))
+      if (isManual) setViewLoading((prev) => ({ ...prev, logs: false }))
     }
   }, [
     logPage,
@@ -367,8 +373,8 @@ function AdminPageContent() {
     }
   }, [])
 
-  const refreshBackups = useCallback(async () => {
-    setViewLoading((prev) => ({ ...prev, system: true, backup: true }))
+  const refreshBackups = useCallback(async (isManual = false) => {
+    if (isManual) setViewLoading((prev) => ({ ...prev, system: true, backup: true }))
     try {
       const searchQuery = backupSearch
         ? `&search=${encodeURIComponent(backupSearch)}`
@@ -380,12 +386,12 @@ function AdminPageContent() {
         ? `&endDate=${encodeURIComponent(backupEndDate)}`
         : ""
 
-      const res = await fetch(
-        `/api/system/backup?t=${Date.now()}${searchQuery}${startQuery}${endQuery}`,
-        {
+      const [res] = await Promise.all([
+        fetch(`/api/system/backup?t=${Date.now()}${searchQuery}${startQuery}${endQuery}`, {
           cache: "no-store",
-        }
-      )
+        }),
+        isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
+      ])
       const json = await res.json()
       if (res.ok && json?.ok) {
         setBackups(Array.isArray(json.data) ? json.data : [])
@@ -395,18 +401,21 @@ function AdminPageContent() {
     } catch (err) {
       console.error("Failed to refresh backups:", err)
     } finally {
-      setViewLoading((prev) => ({ ...prev, system: false, backup: false }))
+      if (isManual) setViewLoading((prev) => ({ ...prev, system: false, backup: false }))
     }
   }, [backupSearch, backupStartDate, backupEndDate])
 
-  const refreshReviewRecords = useCallback(async () => {
-    setViewLoading((prev) => ({ ...prev, review: true }))
+  const refreshReviewRecords = useCallback(async (isManual = false) => {
+    if (isManual) setViewLoading((prev) => ({ ...prev, review: true }))
     try {
       const approvalStatus =
         reviewStatusFilter === "All"
           ? ""
           : `&approvalStatus=${encodeURIComponent(reviewStatusFilter)}`
-      const res = await fetch(`/api/documents?limit=200${approvalStatus}`)
+      const [res] = await Promise.all([
+        fetch(`/api/documents?limit=200${approvalStatus}`),
+        isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
+      ])
       const json = await res.json()
       if (!res.ok || !json?.ok) {
         throw new Error(json?.error || "Failed to load review records")
@@ -414,15 +423,17 @@ function AdminPageContent() {
       setReviewRecords(Array.isArray(json.data) ? json.data : [])
       loadedViewsRef.current.review = true
     } catch (err) {
-      showToast(
-        {
-          title: "Digital Records Review Load Failed",
-          description: err?.message || "The system was unable to fetch digital records for review.",
-        },
-        true
-      )
+      if (isManual) {
+        showToast(
+          {
+            title: "Digital Records Review Load Failed",
+            description: err?.message || "The system was unable to fetch digital records for review.",
+          },
+          true
+        )
+      }
     } finally {
-      setViewLoading((prev) => ({ ...prev, review: false }))
+      if (isManual) setViewLoading((prev) => ({ ...prev, review: false }))
     }
   }, [reviewStatusFilter, showToast])
 
@@ -1426,6 +1437,7 @@ function AdminPageContent() {
               onBulkArchive={handleBulkArchive}
               onExportData={exportData}
               onSwitchView={switchView}
+              onRefresh={() => refreshStaff(true)}
             />
           )}
 
@@ -1475,6 +1487,7 @@ function AdminPageContent() {
               setLogSortOrder={setLogSortOrder}
               showToast={showToast}
               onLogAction={logAdminAction}
+              onRefresh={() => refreshAuditLogs(true)}
             />
           )}
 

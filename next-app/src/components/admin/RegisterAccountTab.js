@@ -100,8 +100,8 @@ export default function RegisterAccountTab({
         <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm">
           <PageHeader
             icon="ph-user-plus"
-            title="Account Registration"
-            description="Provision new network credentials for registrar personnel and administrators."
+            title="Register Account"
+            description="Create new user credentials for registrar personnel and administrators."
           />
 
           <CardContent className="flex-1 overflow-y-auto bg-gray-50/50 p-6">
@@ -111,17 +111,17 @@ export default function RegisterAccountTab({
                 <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50/50 p-5 px-8">
                   <h3 className="flex items-center gap-2 text-sm font-black tracking-widest text-gray-900 uppercase">
                     <i className="ph-bold ph-list-plus text-pup-maroon"></i>{" "}
-                    Enrollment Form
+                    Registration Form
                   </h3>
                   <Button
                     variant="outline"
                     size="sm"
                     disabled={isLoading}
                     onClick={handleClearForm}
-                    className="h-9 rounded-xl border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon active:scale-95"
+                    className="h-9 rounded-brand border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon active:scale-95"
                   >
                     <i className="ph-bold ph-arrow-counter-clockwise mr-1.5 text-xs"></i>
-                    CLEAR FORM
+                    RESET FORM
                   </Button>
                 </div>
                 <CardContent className="bg-white p-8">
@@ -172,7 +172,7 @@ export default function RegisterAccountTab({
                     {/* Part 2: Role Selection */}
                     <div className="space-y-3">
                       <label className="block text-[11px] font-black tracking-wider text-gray-600 uppercase">
-                        Assigned System Role
+                        Assigned Role
                       </label>
                       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div className="space-y-3">
@@ -196,15 +196,12 @@ export default function RegisterAccountTab({
                               <div className="flex items-center gap-2">
                                 <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-black tracking-tight text-amber-700 uppercase shadow-sm">
                                   <i className="ph-fill ph-user-gear mr-1 text-xs" />
-                                  Standard Access
+                                  Standard
                                 </span>
                                 <span className="text-[10px] font-bold text-gray-500">
-                                  Operational personnel account.
+                                  General operational access.
                                 </span>
                               </div>
-                              <p className="text-[10px] leading-relaxed font-medium text-gray-400">
-                                Can process documents, manage students, and view layouts.
-                              </p>
                             </div>
                           )}
                         </div>
@@ -232,12 +229,9 @@ export default function RegisterAccountTab({
                                   Full Control
                                 </span>
                                 <span className="text-[10px] font-bold text-gray-500">
-                                  High-privilege account.
+                                  Complete management access.
                                 </span>
                               </div>
-                              <p className="text-[10px] leading-relaxed font-medium text-gray-400">
-                                Can manage system configs, backups, audits, and user accounts.
-                              </p>
                             </div>
                           )}
                         </div>
@@ -269,7 +263,7 @@ export default function RegisterAccountTab({
                             </TooltipContent>
                           </Tooltip>
                           <label className="block text-[11px] font-black tracking-wider text-gray-600 uppercase">
-                            Employee Identification
+                            Employee ID
                           </label>
                         </div>
                         <div className="flex gap-2">
@@ -317,7 +311,7 @@ export default function RegisterAccountTab({
                                 sideOffset={8}
                                 className="rounded-[25px] border-red-900 bg-[#7a1e28] px-4 py-2 text-white shadow-xl"
                               >
-                                Apply Convention: {suggestedId}
+                                Apply suggested ID
                               </TooltipContent>
                             </Tooltip>
                           )}
@@ -344,13 +338,10 @@ export default function RegisterAccountTab({
                                   staff.[lastname]@pup.local
                                 </code>
                               </div>
-                              <p className="mt-2 text-[9px] font-medium text-red-100/70">
-                                Automatically derived from role and surname.
-                              </p>
                             </TooltipContent>
                           </Tooltip>
                           <label className="block text-[11px] font-black tracking-wider text-gray-600 uppercase">
-                            Institutional Email
+                            Email Address
                           </label>
                         </div>
                         <div className="flex gap-2">
@@ -399,7 +390,7 @@ export default function RegisterAccountTab({
                                   sideOffset={8}
                                   className="rounded-[25px] border-red-900 bg-[#7a1e28] px-4 py-2 text-white shadow-xl"
                                 >
-                                  Apply Policy: {suggestedEmail}
+                                  Apply suggested email
                                 </TooltipContent>
                               </Tooltip>
                             )}
@@ -415,12 +406,12 @@ export default function RegisterAccountTab({
                         {isLoading ? (
                           <>
                             <i className="ph-bold ph-circle-notch animate-spin text-lg"></i>
-                            REGISTERING...
+                            CREATING...
                           </>
                         ) : (
                           <>
                             <i className="ph-bold ph-user-circle-plus text-lg"></i>
-                            REGISTER ACCOUNT
+                            CREATE ACCOUNT
                           </>
                         )}
                       </Button>

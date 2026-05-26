@@ -4,13 +4,31 @@ import {
   Card,
   CardContent,
 } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { formatPHDateTime } from "@/lib/timeFormat"
 import { cn } from "@/lib/utils"
 
 export default function HealthSidebar({
   systemHealth,
   lastBackupTime,
+  isLoading = false,
 }) {
+  if (isLoading) {
+    return (
+      <div className="w-[350px] shrink-0 flex flex-col gap-4 animate-fade-up">
+        <Card className="flex flex-col border border-gray-200 bg-white shadow-sm h-full rounded-brand overflow-hidden p-6 space-y-6">
+           <Skeleton className="h-12 w-full rounded-xl" />
+           <Skeleton className="h-[180px] w-full rounded-2xl" />
+           <div className="space-y-4">
+              <Skeleton className="h-10 w-full rounded-full" />
+              <Skeleton className="h-10 w-full rounded-full" />
+              <Skeleton className="h-10 w-full rounded-full" />
+           </div>
+        </Card>
+      </div>
+    )
+  }
+
   const diskPercent = systemHealth?.disk?.percent || 0
   const isCritical = diskPercent > 95
 
@@ -65,24 +83,8 @@ export default function HealthSidebar({
                   d="M 15 42 A 35 35 0 0 1 85 42"
                   fill="none"
                   stroke="#f1f5f9"
-                  strokeWidth="10"
+                  strokeWidth="15"
                   strokeLinecap="round"
-                />
-                {/* Progress Ring "Border" (Matches progress percentage) */}
-                <path
-                  d="M 15 42 A 35 35 0 0 1 85 42"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="14"
-                  strokeLinecap="round"
-                  className={cn(
-                    "transition-all duration-1000 ease-out",
-                    diskPercent >= 90 ? "text-red-800" : diskPercent >= 70 ? "text-amber-800" : "text-green-800"
-                  )}
-                  strokeDasharray="109.96"
-                  strokeDashoffset={
-                    109.96 * (1 - diskPercent / 100)
-                  }
                 />
                 {/* Main Progress Ring */}
                 <path
@@ -91,7 +93,7 @@ export default function HealthSidebar({
                   stroke={
                     diskPercent >= 90 ? "url(#gaugeRed)" : diskPercent >= 70 ? "url(#gaugeAmber)" : "url(#gaugeGreen)"
                   }
-                  strokeWidth="10"
+                  strokeWidth="15"
                   strokeLinecap="round"
                   className="transition-all duration-1000 ease-out"
                   strokeDasharray="109.96"
@@ -132,7 +134,7 @@ export default function HealthSidebar({
               </div>
               <div className="h-6 w-full overflow-hidden rounded-full bg-gray-100 shadow-inner border border-gray-200">
                 <div
-                  className="h-full rounded-full bg-linear-to-r from-blue-400 to-indigo-600 border-[3px] border-indigo-800 transition-all duration-1000"
+                  className="h-full rounded-full bg-linear-to-r from-blue-400 to-indigo-600 transition-all duration-1000"
                   style={{ width: `${systemHealth.memory?.percent || 0}%` }}
                 />
               </div>
@@ -150,10 +152,10 @@ export default function HealthSidebar({
               <div className="h-6 w-full overflow-hidden rounded-full bg-gray-100 shadow-inner border border-gray-200">
                 <div
                   className={cn(
-                    "h-full rounded-full border-[3px] transition-all duration-1000",
+                    "h-full rounded-full transition-all duration-1000",
                     systemHealth.cpu > 80 
-                      ? "bg-linear-to-r from-red-500 to-red-700 border-red-800" 
-                      : "bg-linear-to-r from-amber-400 to-orange-500 border-amber-800"
+                      ? "bg-linear-to-r from-red-500 to-red-700" 
+                      : "bg-linear-to-r from-amber-400 to-orange-500"
                   )}
                   style={{ width: `${systemHealth.cpu}%` }}
                 />
@@ -171,7 +173,7 @@ export default function HealthSidebar({
               </div>
               <div className="h-6 w-full overflow-hidden rounded-full bg-gray-100 shadow-inner border border-gray-200">
                 <div
-                  className="h-full rounded-full bg-linear-to-r from-emerald-400 to-green-600 border-[3px] border-emerald-800 transition-all duration-1000"
+                  className="h-full rounded-full bg-linear-to-r from-emerald-400 to-green-600 transition-all duration-1000"
                   style={{ width: `${systemHealth.integrityScore}%` }}
                 />
               </div>

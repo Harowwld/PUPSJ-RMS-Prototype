@@ -39,6 +39,7 @@ function SortIndicator({ column, logSortBy, logSortOrder }) {
 
 function getActionIcon(action) {
   const act = String(action || "").toLowerCase()
+  if (act.includes("report") || act.includes("generate")) return "ph-duotone ph-file-pdf"
   if (act.includes("login")) return "ph-duotone ph-sign-in"
   if (act.includes("logout")) return "ph-duotone ph-sign-out"
   if (act.includes("create") || act.includes("add")) return "ph-duotone ph-plus-circle"
@@ -332,7 +333,7 @@ export default function LogTable({
             onClick={() => window.location.reload()}
             className="mt-6 rounded-full border-gray-200 font-bold hover:bg-gray-50"
           >
-            <i className="ph-bold ph-arrows-clockwise mr-2"></i>
+            <i className="ph-bold ph-arrows-clockwise mr-2 animate-spin"></i>
             RETRY LOADING
           </Button>
         </EmptyHeader>
