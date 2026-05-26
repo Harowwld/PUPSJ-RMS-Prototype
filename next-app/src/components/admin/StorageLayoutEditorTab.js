@@ -849,12 +849,12 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     return (
       <div className="flex flex-1 flex-col gap-8 p-10 animate-pulse">
         <div className="flex justify-between items-center">
-          <Skeleton className="h-10 w-64 rounded-xl" />
-          <Skeleton className="h-10 w-40 rounded-xl" />
+          <Skeleton className="h-10 w-64 rounded-xl dark:bg-muted" />
+          <Skeleton className="h-10 w-40 rounded-xl dark:bg-muted" />
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 flex-1">
-          <Skeleton className="lg:col-span-2 h-[600px] rounded-2xl" />
-          <Skeleton className="lg:col-span-1 h-[600px] rounded-2xl" />
+          <Skeleton className="lg:col-span-2 h-[600px] rounded-2xl dark:bg-muted" />
+          <Skeleton className="lg:col-span-1 h-[600px] rounded-2xl dark:bg-muted" />
         </div>
       </div>
     )
@@ -864,18 +864,18 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
 
   const renderToolbar = () => (
     <div className={cn(
-      "flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 bg-gray-50/80 backdrop-blur-md select-none",
+      "flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-muted/30 backdrop-blur-md select-none",
       "p-6 px-8"
     )}>
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-4">
           <div className="flex flex-col gap-1">
-            <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase">Current Room</label>
+            <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">Current Room</label>
             <div className="flex items-center gap-2">
               <div className="relative group">
-                <i className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 transition-all duration-300", activeRoomId ? "ph-fill ph-door-open text-pup-maroon" : "ph-bold ph-door-open text-gray-400", "group-focus-within:text-pup-maroon")} />
+                <i className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 transition-all duration-300", activeRoomId ? "ph-fill ph-door-open text-pup-maroon dark:text-primary dark:text-primary" : "ph-bold ph-door-open text-gray-400 dark:text-zinc-500", "group-focus-within:text-pup-maroon dark:text-primary")} />
                 <Select
-                  className="h-10 min-w-[200px] cursor-pointer rounded-xl border border-gray-200 bg-white pl-10 pr-10 text-sm font-bold text-gray-800 shadow-xs transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20"
+                  className="h-10 min-w-[200px] cursor-pointer rounded-xl border border-gray-200 bg-white pl-10 pr-10 text-sm font-bold text-gray-800 shadow-xs transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-100 dark:focus:border-zinc-700"
                   value={String(activeRoomId ?? "")}
                   disabled={!layout?.rooms?.length}
                   onChange={(e) => setActiveRoomId(Number(e.target.value))}
@@ -885,46 +885,46 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
                   ))}
                 </Select>
               </div>
-              <div className="flex h-10 items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-xs">
-                <Button type="button" variant="ghost" size="icon" onClick={addRoom} className="h-8 w-8 rounded-lg text-emerald-600 hover:bg-emerald-50"><i className="ph-bold ph-plus-circle text-lg" /></Button>
-                <Separator orientation="vertical" className="h-4 mx-0.5 bg-gray-100" />
-                <Button type="button" variant="ghost" size="icon" onClick={() => setDeleteRoomConfirmOpen(true)} className="h-8 w-8 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600" disabled={!activeRoom || activeRoomStudentCount > 0}><i className="ph-bold ph-trash text-lg" /></Button>
+              <div className="flex h-10 items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-xs dark:border-white/10 dark:bg-card">
+                <Button type="button" variant="ghost" size="icon" onClick={addRoom} className="h-8 w-8 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/30"><i className="ph-bold ph-plus-circle text-lg" /></Button>
+                <Separator orientation="vertical" className="h-4 mx-0.5 bg-gray-100 dark:bg-muted" />
+                <Button type="button" variant="ghost" size="icon" onClick={() => setDeleteRoomConfirmOpen(true)} className="h-8 w-8 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 dark:bg-red-950/30 dark:text-zinc-500" disabled={!activeRoom || activeRoomStudentCount > 0}><i className="ph-bold ph-trash text-lg" /></Button>
               </div>
             </div>
           </div>
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase">Add Tools</label>
-          <Button type="button" variant="outline" onClick={addCabinet} className="h-10 rounded-xl border border-gray-200 bg-white px-5 font-black text-[10px] tracking-widest text-gray-600 shadow-xs hover:text-pup-maroon active:scale-95" disabled={!activeRoom}><i className="ph-bold ph-plus-square mr-2 text-base" />NEW CABINET</Button>
+          <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">Add Tools</label>
+          <Button type="button" variant="outline" onClick={addCabinet} className="h-10 rounded-xl border border-gray-200 bg-white px-5 font-black text-[10px] tracking-widest text-gray-600 shadow-xs hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300" disabled={!activeRoom}><i className="ph-bold ph-plus-square mr-2 text-base" />NEW CABINET</Button>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-6">
         <div className="flex flex-col gap-1">
-          <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase">Templates</label>
-          <div className="flex h-10 items-center overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs">
-            <Select className="h-full cursor-pointer border-r border-gray-100 bg-transparent px-4 text-xs font-bold text-gray-700 focus:outline-none" value={selectedTemplateId} onChange={(e) => setSelectedTemplateId(e.target.value)} disabled={!activeRoom}>
+          <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">Templates</label>
+          <div className="flex h-10 items-center overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs dark:border-white/10 dark:bg-card">
+            <Select className="h-full cursor-pointer border-r border-gray-100 bg-transparent px-4 text-xs font-bold text-gray-700 focus:outline-none dark:border-white/10 dark:text-zinc-200" value={selectedTemplateId} onChange={(e) => setSelectedTemplateId(e.target.value)} disabled={!activeRoom}>
               {ROOM_TEMPLATES.map((tpl) => <option key={`tpl-opt-${tpl.id}`} value={tpl.id}>{tpl.name}</option>)}
             </Select>
-            <Button type="button" variant="ghost" onClick={() => setTemplateApplyConfirmOpen(true)} className="h-full rounded-none bg-gray-50/50 px-4 text-[10px] font-black tracking-widest uppercase text-pup-maroon hover:bg-pup-maroon hover:text-white" disabled={!activeRoom}>USE</Button>
+            <Button type="button" variant="ghost" onClick={() => setTemplateApplyConfirmOpen(true)} className="h-full rounded-none bg-gray-50 px-4 text-[10px] font-black tracking-widest uppercase text-pup-maroon dark:text-primary hover:bg-pup-maroon hover:text-white dark:bg-white/5 dark:text-primary" disabled={!activeRoom}>USE</Button>
           </div>
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase">View Settings</label>
-          <div className="flex h-10 items-center gap-4 rounded-xl border border-gray-200 bg-white px-4 shadow-xs">
+          <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">View Settings</label>
+          <div className="flex h-10 items-center gap-4 rounded-xl border border-gray-200 bg-white px-4 shadow-xs dark:border-white/10 dark:bg-card">
             <div className="flex items-center gap-2">
-              <span className="text-[9px] font-black tracking-widest text-gray-500 uppercase">Grid</span>
-              <div role="button" tabIndex={0} onClick={() => setShowGrid(!showGrid)} className={cn("relative inline-flex h-4 w-8 items-center rounded-full transition-all duration-300", showGrid ? "bg-pup-maroon" : "bg-gray-200")}>
-                <span className={cn("inline-block h-2.5 w-2.5 transform rounded-full bg-white transition-transform duration-300", showGrid ? "translate-x-4.5" : "translate-x-1")} />
+              <span className="text-[9px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">Grid</span>
+              <div role="button" tabIndex={0} onClick={() => setShowGrid(!showGrid)} className={cn("relative inline-flex h-4 w-8 items-center rounded-full transition-all duration-300", showGrid ? "bg-pup-maroon dark:bg-red-600" : "bg-gray-200 dark:bg-zinc-700")}>
+                <span className={cn("inline-block h-2.5 w-2.5 transform rounded-full bg-white dark:bg-card transition-transform duration-300", showGrid ? "translate-x-4.5" : "translate-x-1")} />
               </div>
             </div>
-            <Separator orientation="vertical" className="h-3.5 bg-gray-100" />
+            <Separator orientation="vertical" className="h-3.5 bg-gray-100 dark:bg-muted" />
             <div className="flex items-center gap-2">
-              <span className="text-[9px] font-black tracking-widest text-gray-500 uppercase">Snap</span>
-              <div role="button" tabIndex={0} onClick={() => setSnapToGrid(!snapToGrid)} className={cn("relative inline-flex h-4 w-8 items-center rounded-full transition-all duration-300", snapToGrid ? "bg-pup-maroon" : "bg-gray-200")}>
-                <span className={cn("inline-block h-2.5 w-2.5 transform rounded-full bg-white transition-transform duration-300", snapToGrid ? "translate-x-4.5" : "translate-x-1")} />
+              <span className="text-[9px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">Snap</span>
+              <div role="button" tabIndex={0} onClick={() => setSnapToGrid(!snapToGrid)} className={cn("relative inline-flex h-4 w-8 items-center rounded-full transition-all duration-300", snapToGrid ? "bg-pup-maroon dark:bg-red-600" : "bg-gray-200 dark:bg-zinc-700")}>
+                <span className={cn("inline-block h-2.5 w-2.5 transform rounded-full bg-white dark:bg-card transition-transform duration-300", snapToGrid ? "translate-x-4.5" : "translate-x-1")} />
               </div>
             </div>
           </div>
@@ -934,7 +934,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   )
 
   const renderEditorContent = () => (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-white select-none">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-white select-none dark:bg-card">
       <PageHeader
         icon="ph-layout"
         title="Storage Layout Editor"
@@ -948,7 +948,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
                     <Button
                       onClick={saveLayout}
                       disabled={saving || hasAnyCollisions}
-                      className="flex h-11 items-center gap-2 rounded-2xl bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-xl hover:-translate-y-0.5 px-8 font-black tracking-widest text-white uppercase shadow-lg shadow-red-900/20 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale"
+                      className="flex h-11 items-center gap-2 rounded-2xl bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-xl hover:-translate-y-0.5 px-8 font-black tracking-widest text-white uppercase shadow-lg shadow-red-900/20 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale dark:shadow-none"
                     >
                       <i className={`ph-bold ${saving ? "ph-spinner animate-spin" : "ph-floppy-disk"} text-lg`} />
                       {saving ? "SAVING..." : "SAVE"}
@@ -956,7 +956,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
                   </div>
                 </TooltipTrigger>
                 {hasAnyCollisions && (
-                  <TooltipContent side="bottom" className="max-w-xs rounded-xl border-red-200 bg-red-50 p-3 text-[10px] font-bold text-red-700 shadow-xl">
+                  <TooltipContent side="bottom" className="max-w-xs rounded-xl border-red-200 bg-red-50 p-3 text-[10px] font-bold text-red-700 shadow-xl dark:bg-red-950/30 dark:shadow-none">
                     <div className="flex items-center gap-2">
                        <i className="ph-fill ph-warning-circle text-sm" />
                        CANNOT SAVE: RESOLVE OVERLAPS
@@ -1012,7 +1012,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         applyTemplateWithMappings={applyTemplateWithMappings}
       />
 
-      <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm p-0 gap-0">
+      <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm p-0 gap-0 dark:border-white/10 dark:bg-card dark:shadow-none">
         {renderEditorContent()}
       </Card>
 
@@ -1025,3 +1025,5 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     </div>
   )
 }
+
+

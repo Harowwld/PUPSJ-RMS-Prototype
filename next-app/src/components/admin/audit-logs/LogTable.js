@@ -31,9 +31,9 @@ function SortIndicator({ column, logSortBy, logSortOrder }) {
   if (logSortBy !== column)
     return <i className="ph-bold ph-caret-up-down ml-1 opacity-20 transition-opacity group-hover:opacity-50"></i>
   return logSortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-pup-maroon animate-in fade-in zoom-in duration-300"></i>
+    <i className="ph-bold ph-caret-up ml-1 text-pup-maroon dark:text-primary animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-pup-maroon animate-in fade-in zoom-in duration-300"></i>
+    <i className="ph-bold ph-caret-down ml-1 text-pup-maroon dark:text-primary animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
   )
 }
 
@@ -62,25 +62,25 @@ function getSeverityConfig(sev) {
   switch (String(sev || "").toUpperCase()) {
     case "CRITICAL":
       return {
-        bg: "bg-red-50",
-        text: "text-red-700",
-        border: "border-red-200",
+        bg: "bg-red-50 dark:bg-red-900/20",
+        text: "text-red-700 dark:text-red-400",
+        border: "border-red-200 dark:border-red-900/30",
         dot: "bg-red-500",
         icon: "ph-fill ph-warning-circle"
       }
     case "WARNING":
       return {
-        bg: "bg-amber-50",
-        text: "text-amber-700",
-        border: "border-amber-200",
+        bg: "bg-amber-50 dark:bg-amber-900/20",
+        text: "text-amber-700 dark:text-amber-400",
+        border: "border-amber-200 dark:border-amber-900/30",
         dot: "bg-amber-500",
         icon: "ph-fill ph-warning"
       }
     default:
       return {
-        bg: "bg-blue-50",
-        text: "text-blue-700",
-        border: "border-blue-200",
+        bg: "bg-blue-50 dark:bg-blue-900/20",
+        text: "text-blue-700 dark:text-blue-400",
+        border: "border-blue-200 dark:border-blue-900/30",
         dot: "bg-blue-500",
         icon: "ph-fill ph-info"
       }
@@ -103,9 +103,9 @@ const LogRow = React.memo(({
     <React.Fragment>
       <tr
         className={cn(
-          "group border-l-2 border-transparent transition-all duration-200 hover:bg-gray-50/80 select-none cursor-pointer",
-          isSelected && "border-amber-400 bg-amber-50/40",
-          isExpanded && "bg-gray-50/50"
+          "group border-l-2 border-transparent transition-all duration-200 hover:bg-gray-50 dark:bg-card dark:hover:bg-white/5 select-none cursor-pointer",
+          isSelected && "border-amber-400 bg-amber-50 dark:bg-amber-950/40",
+          isExpanded && "bg-gray-50 dark:bg-white/8"
         )}
         onClick={() => {
           toggleRow(log.id);
@@ -118,8 +118,8 @@ const LogRow = React.memo(({
               toggleRow(log.id);
             }}
             className={cn(
-              "mx-auto flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 text-gray-400 transition-all hover:bg-pup-maroon hover:text-white",
-              isExpanded && "bg-pup-maroon text-white rotate-90"
+              "mx-auto flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-zinc-500 transition-all hover:bg-pup-maroon dark:hover:bg-red-600 hover:text-white",
+              isExpanded && "bg-pup-maroon dark:bg-red-600 text-white rotate-90"
             )}
           >
             <i className="ph-bold ph-caret-right text-xs"></i>
@@ -127,10 +127,10 @@ const LogRow = React.memo(({
         </td>
         <td className="p-4">
           <div className="flex flex-col">
-            <span className="text-xs font-bold text-gray-900">
+            <span className="text-xs font-bold text-gray-900 dark:text-zinc-50">
               {uploaded.date}
             </span>
-            <span className="text-[10px] font-medium text-gray-400">
+            <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-500">
               {uploaded.time}
             </span>
           </div>
@@ -148,14 +148,14 @@ const LogRow = React.memo(({
         </td>
         <td className="p-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-500 font-black text-xs group-hover:bg-white group-hover:text-pup-maroon group-hover:shadow-sm transition-all">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-500 font-black text-xs group-hover:bg-white group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 group-hover:shadow-sm transition-all dark:text-zinc-400 dark:bg-white/5 dark:shadow-none">
               {(log.user || "?").substring(0, 2).toUpperCase()}
             </div>
             <div className="flex flex-col overflow-hidden">
-              <span className="truncate text-xs font-bold text-gray-900">
+              <span className="truncate text-xs font-bold text-gray-900 dark:text-zinc-50">
                 {log.user}
               </span>
-              <span className="text-[9px] font-black tracking-widest text-gray-400 uppercase">
+              <span className="text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
                 {log.role}
               </span>
             </div>
@@ -165,11 +165,11 @@ const LogRow = React.memo(({
           <div className="flex items-center gap-2.5">
             <div className={cn(
               "flex h-8 w-8 items-center justify-center rounded-lg transition-colors shadow-xs",
-              isSelected ? "bg-white text-pup-maroon" : "bg-gray-50 text-gray-500 group-hover:bg-white group-hover:text-pup-maroon"
+              isSelected ? "bg-white dark:bg-muted text-pup-maroon dark:text-primary" : "bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-zinc-400 group-hover:bg-white dark:group-hover:bg-white/10 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:text-primary"
             )}>
               <i className={cn(getActionIcon(log.action), "text-base")}></i>
             </div>
-            <span className="text-xs font-bold tracking-tight text-gray-700 uppercase">
+            <span className="text-xs font-bold tracking-tight text-gray-700 uppercase dark:text-zinc-200">
               {log.action}
             </span>
           </div>
@@ -177,13 +177,13 @@ const LogRow = React.memo(({
         <td className="p-4">
           <Tooltip>
             <TooltipTrigger asChild>
-              <p className="line-clamp-1 max-w-[500px] text-xs font-medium leading-relaxed text-gray-500">
+              <p className="line-clamp-1 max-w-[500px] text-xs font-medium leading-relaxed text-gray-500 dark:text-zinc-400">
                 {log.details || "No known description"}
               </p>
             </TooltipTrigger>
             <TooltipContent
               side="top"
-              className="max-w-[400px] rounded-xl border-gray-200 bg-white/95 p-3 text-xs font-medium text-gray-700 shadow-2xl backdrop-blur-sm"
+              className="max-w-[400px] rounded-xl border-gray-200 bg-white p-3 text-xs font-medium text-gray-700 shadow-2xl backdrop-blur-sm dark:border-white/10 dark:bg-card/95 dark:text-zinc-200"
             >
               {log.details || "No known description"}
             </TooltipContent>
@@ -193,7 +193,7 @@ const LogRow = React.memo(({
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 rounded-xl border border-transparent hover:border-gray-200 hover:bg-white hover:text-pup-maroon hover:shadow-sm active:scale-95 transition-all"
+            className="h-9 w-9 rounded-xl border border-transparent hover:border-gray-200 hover:bg-white hover:text-pup-maroon dark:hover:text-red-500 hover:shadow-sm active:scale-95 transition-all dark:hover:border-white/10 dark:hover:bg-white/5 dark:bg-white/2 dark:text-primary dark:shadow-none"
             onClick={(e) => {
               e.stopPropagation();
               setSelectedLog(log);
@@ -204,7 +204,7 @@ const LogRow = React.memo(({
         </td>
       </tr>
       {isExpanded && (
-        <tr className="border-0 bg-gray-50/30">
+        <tr className="border-0 bg-gray-50 dark:bg-muted/30">
           <td colSpan={7} className="p-0">
             <LogExpandedRow log={log} handleCopy={handleCopy} />
           </td>
@@ -277,32 +277,32 @@ export default function LogTable({
   if (isLoading && displayLogs.length === 0) {
     return (
       <div className="animate-pulse space-y-4">
-        <div className="overflow-x-auto rounded-xl border border-gray-100 bg-white">
+        <div className="overflow-x-auto rounded-xl border border-gray-100 bg-white dark:border-white/10 dark:bg-card">
           <table className="min-w-full">
-            <thead className="bg-gray-50/50">
+            <thead className="bg-gray-50 dark:bg-zinc-900">
               <tr>
                 {[1, 2, 3, 4, 5, 6, 7].map((i) => (
                   <th key={i} className="p-4">
-                    <Skeleton className="h-3 w-16" />
+                    <Skeleton className="h-3 w-16 dark:bg-muted" />
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-white/10">
               {[1, 2, 3, 4, 5, 6].map((row) => (
                 <tr key={row}>
-                  <td className="p-4"><Skeleton className="h-6 w-6 rounded-full" /></td>
-                  <td className="p-4"><Skeleton className="h-3 w-24" /></td>
-                  <td className="p-4"><Skeleton className="h-6 w-20 rounded-full" /></td>
+                  <td className="p-4"><Skeleton className="h-6 w-6 rounded-full dark:bg-muted" /></td>
+                  <td className="p-4"><Skeleton className="h-3 w-24 dark:bg-muted" /></td>
+                  <td className="p-4"><Skeleton className="h-6 w-20 rounded-full dark:bg-muted" /></td>
                   <td className="p-4">
                     <div className="space-y-2">
-                      <Skeleton className="h-4 w-32" />
-                      <Skeleton className="h-2 w-16" />
+                      <Skeleton className="h-4 w-32 dark:bg-muted" />
+                      <Skeleton className="h-2 w-16 dark:bg-muted" />
                     </div>
                   </td>
-                  <td className="p-4"><Skeleton className="h-4 w-28" /></td>
-                  <td className="p-4"><Skeleton className="h-3 w-full" /></td>
-                  <td className="p-4 text-center"><Skeleton className="h-8 w-8 mx-auto rounded-full" /></td>
+                  <td className="p-4"><Skeleton className="h-4 w-28 dark:bg-muted" /></td>
+                  <td className="p-4"><Skeleton className="h-3 w-full dark:bg-muted" /></td>
+                  <td className="p-4 text-center"><Skeleton className="h-8 w-8 mx-auto rounded-full dark:bg-muted" /></td>
                 </tr>
               ))}
             </tbody>
@@ -314,24 +314,24 @@ export default function LogTable({
 
   if (error) {
     return (
-      <Empty className="flex h-[400px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-100 bg-gray-50/30 text-center">
+      <Empty className="flex h-[400px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-100 bg-gray-50 text-center dark:border-white/10 dark:bg-muted/30">
         <EmptyHeader className="flex flex-col items-center gap-2">
           <div className="relative mb-4">
             <div className="absolute inset-0 animate-ping rounded-full bg-red-100 opacity-20"></div>
-            <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full border border-red-100 bg-white shadow-xl">
+            <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full border border-red-100 bg-white shadow-xl dark:bg-card dark:shadow-none">
               <i className="ph-duotone ph-warning-circle text-4xl text-red-600" />
             </EmptyMedia>
           </div>
-          <EmptyTitle className="text-xl font-black text-gray-900">
+          <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
             System Log Error
           </EmptyTitle>
-          <EmptyDescription className="max-w-md text-sm font-medium text-gray-500">
+          <EmptyDescription className="max-w-md text-sm font-medium text-gray-500 dark:text-zinc-400">
             {error}
           </EmptyDescription>
           <Button 
             variant="outline" 
             onClick={() => window.location.reload()}
-            className="mt-6 rounded-full border-gray-200 font-bold hover:bg-gray-50"
+            className="mt-6 rounded-full border-gray-200 font-bold hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/10 dark:bg-card"
           >
             <i className="ph-bold ph-arrows-clockwise mr-2 animate-spin"></i>
             RETRY LOADING
@@ -344,22 +344,23 @@ export default function LogTable({
   return (
     <div className="space-y-0">
       <div
+        key={`${logPage}-${logSortBy}-${logSortOrder}-${itemsPerPage}`}
         className={cn(
-          "overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300",
-          isLoading ? "opacity-60 grayscale-[0.2]" : "opacity-100"
+          "overflow-hidden rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card shadow-sm dark:shadow-none transition-all duration-500 animate-fade-up",
+          isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
         )}
       >
         <div className="overflow-x-auto">
           <table className="min-w-full table-fixed text-sm">
-            <thead className="border-b border-gray-200 bg-gray-50/80 backdrop-blur-sm select-none">
-              <tr className="text-left text-[10px] font-black tracking-widest text-gray-400 uppercase">
+            <thead className="border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-zinc-900">
+              <tr className="text-left text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500 dark:border-white/10">
                 <th className="w-[50px] p-4 text-center">
-                  <i className="ph-bold ph-hash"></i>
+                  <i className="ph-bold ph-hash dark:text-zinc-500"></i>
                 </th>
                 <th className="w-[180px] p-4">
                   <button
                     onClick={() => handleSort("created_at")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon focus:outline-none"
+                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-primary"
                   >
                     Timestamp{" "}
                     <SortIndicator
@@ -372,7 +373,7 @@ export default function LogTable({
                 <th className="w-[120px] p-4">
                   <button
                     onClick={() => handleSort("severity")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon focus:outline-none"
+                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-primary"
                   >
                     Severity{" "}
                     <SortIndicator
@@ -385,7 +386,7 @@ export default function LogTable({
                 <th className="w-[200px] p-4">
                   <button
                     onClick={() => handleSort("actor")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon focus:outline-none"
+                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-primary"
                   >
                     Actor{" "}
                     <SortIndicator
@@ -398,7 +399,7 @@ export default function LogTable({
                 <th className="w-[220px] p-4">
                   <button
                     onClick={() => handleSort("action")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon focus:outline-none"
+                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-primary"
                   >
                     Event / Action{" "}
                     <SortIndicator
@@ -414,22 +415,22 @@ export default function LogTable({
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-gray-100 dark:divide-white/10">
               {displayLogs.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="p-0">
                     <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
                       <EmptyHeader className="flex flex-col items-center gap-0">
                         <div className="relative mb-6">
-                          <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50"></div>
-                          <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3">
-                            <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300"></i>
+                          <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                          <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                            <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
                           </EmptyMedia>
                         </div>
-                        <EmptyTitle className="text-xl font-black text-gray-900">
+                        <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
                           No activity found
                         </EmptyTitle>
-                        <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500">
+                        <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                           Try adjusting your search filters to find what you&apos;re looking for.
                         </EmptyDescription>
                         {(localSearch !== "" ||
@@ -448,7 +449,7 @@ export default function LogTable({
                               setLogEndDate("")
                               setLogPage(1)
                             }}
-                            className="mt-6 font-bold text-pup-maroon hover:bg-red-50"
+                            className="mt-6 font-bold text-pup-maroon dark:text-primary hover:bg-red-50 dark:text-primary dark:bg-red-950/30"
                           >
                             RESET ALL FILTERS
                           </Button>
@@ -493,3 +494,4 @@ export default function LogTable({
     </div>
   )
 }
+

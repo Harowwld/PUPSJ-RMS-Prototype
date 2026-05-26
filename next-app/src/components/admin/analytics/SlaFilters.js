@@ -51,38 +51,38 @@ export default function SlaFilters({
   }
 
   return (
-    <div className="border-b border-gray-200 bg-gray-50/30 p-4">
+    <div className="border-b border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-muted/30">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between gap-4">
-            <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase">
+            <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
               Filter by Period
             </label>
             <div className="flex items-center gap-2">
               <button
                 onClick={() => handleQuickRange("today")}
-                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon"
+                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500"
               >
                 Today
               </button>
-              <span className="text-[9px] text-gray-300">•</span>
+              <span className="text-[9px] text-gray-300 dark:text-zinc-600">•</span>
               <button
                 onClick={() => handleQuickRange("yesterday")}
-                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon"
+                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500"
               >
                 Yesterday
               </button>
-              <span className="text-[9px] text-gray-300">•</span>
+              <span className="text-[9px] text-gray-300 dark:text-zinc-600">•</span>
               <button
                 onClick={() => handleQuickRange("last7")}
-                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon"
+                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500"
               >
                 Last 7 Days
               </button>
-              <span className="text-[9px] text-gray-300">•</span>
+              <span className="text-[9px] text-gray-300 dark:text-zinc-600">•</span>
               <button
                 onClick={() => handleQuickRange("last30")}
-                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon"
+                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500"
               >
                 Last 30 Days
               </button>
@@ -96,11 +96,11 @@ export default function SlaFilters({
                   <Button
                     variant={"outline"}
                     className={cn(
-                      "h-9 w-full justify-start rounded-brand border-gray-300 text-left text-xs font-medium bg-white",
-                      !startDate && "text-gray-400"
+                      "h-9 w-full justify-start rounded-brand border-gray-300 dark:border-white/10 text-left text-xs font-medium bg-white dark:bg-card",
+                      !startDate && "text-gray-400 dark:text-zinc-500"
                     )}
                   >
-                    <i className="ph-bold ph-calendar-dots mr-2 text-base text-gray-400"></i>
+                    <i className="ph-bold ph-calendar-dots mr-2 text-base text-gray-400 dark:text-zinc-500"></i>
                     {startDate ? (
                       format(new Date(startDate), "MMM dd, yyyy")
                     ) : (
@@ -120,18 +120,18 @@ export default function SlaFilters({
                 </PopoverContent>
               </Popover>
             </div>
-            <span className="text-gray-400 text-xs font-bold">TO</span>
+            <span className="text-gray-400 text-xs font-bold dark:text-zinc-500">TO</span>
             <div className="w-60">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
                     variant={"outline"}
                     className={cn(
-                      "h-9 w-full justify-start rounded-brand border-gray-300 text-left text-xs font-medium bg-white",
-                      !endDate && "text-gray-400"
+                      "h-9 w-full justify-start rounded-brand border-gray-300 dark:border-white/10 text-left text-xs font-medium bg-white dark:bg-card",
+                      !endDate && "text-gray-400 dark:text-zinc-500"
                     )}
                   >
-                    <i className="ph-bold ph-calendar-dots mr-2 text-base text-gray-400"></i>
+                    <i className="ph-bold ph-calendar-dots mr-2 text-base text-gray-400 dark:text-zinc-500"></i>
                     {endDate ? (
                       format(new Date(endDate), "MMM dd, yyyy")
                     ) : (
@@ -157,3 +157,4 @@ export default function SlaFilters({
     </div>
   )
 }
+

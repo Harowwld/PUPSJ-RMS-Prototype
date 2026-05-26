@@ -29,6 +29,7 @@ import BackupPagination from "./backup/BackupPagination"
 import BackupFilters from "./backup/BackupFilters"
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
+import { RefreshButton } from "@/components/shared/RefreshButton"
 import { cn } from "@/lib/utils"
 
 export default function BackupTab({
@@ -219,18 +220,18 @@ export default function BackupTab({
       <div className="animate-fade-up font-inter flex min-h-full w-full flex-col gap-4 pb-8">
         <div className="relative flex min-h-[600px] w-full items-stretch gap-5">
           {/* MAIN CONTENT */}
-          <Card className="flex h-fit min-h-[600px] w-full flex-1 flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm">
+          <Card className="flex h-fit min-h-[600px] w-full flex-1 flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
             <PageHeader
               icon="ph-hard-drives"
               title="Backup Records"
               description="Manage system archives and secure copies."
               actions={
                 <div className="flex items-center gap-2">
-                  <div className="mr-2 flex items-center gap-2 border-r border-gray-200 pr-2">
+                  <div className="mr-2 flex items-center gap-2 border-r border-gray-200 pr-2 dark:border-white/10">
                     <Button
                       onClick={handleGenerateBackup}
                       disabled={localLoading.generating}
-                      className="flex h-9 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-4 text-xs font-black text-white shadow-sm active:scale-95 transition-all"
+                      className="flex h-9 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-4 text-xs font-black text-white shadow-sm active:scale-95 transition-all dark:shadow-none"
                     >
                       <i
                         className={`ph-bold ${localLoading.generating ? "ph-arrows-clockwise animate-spin" : "ph-download-simple"} text-sm`}
@@ -246,7 +247,7 @@ export default function BackupTab({
                         restoreFileRef.current.click()
                       }
                       disabled={localLoading.uploading}
-                      className="flex h-9 items-center gap-2 rounded-brand border-amber-300 bg-amber-50/30 px-4 text-xs font-bold text-amber-700 shadow-sm transition-colors hover:border-amber-500 hover:bg-amber-100/50 hover:text-amber-800 active:scale-95 disabled:opacity-50"
+                      className="flex h-9 items-center gap-2 rounded-brand border-amber-300 bg-amber-50 px-4 text-xs font-bold text-amber-700 shadow-sm transition-colors hover:border-amber-500 hover:bg-amber-100/50 hover:text-amber-800 active:scale-95 disabled:opacity-50 dark:bg-amber-950/30 dark:shadow-none"
                     >
                       <i
                         className={`ph-bold ${localLoading.uploading ? "ph-arrows-clockwise animate-spin" : "ph-arrow-counter-clockwise"} text-sm`}
@@ -264,51 +265,43 @@ export default function BackupTab({
                     />
                   </div>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onRefresh}
-                    disabled={isLoading}
-                    className="flex h-10 w-10 items-center justify-center rounded-brand border border-gray-300 bg-white p-0 text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-50"
-                    title="Refresh"
-                  >
-                    <i className={`ph-bold ph-arrows-clockwise ${isLoading ? "animate-spin inline-block" : ""} text-base`}></i>
-                  </Button>
+                  <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4 dark:border-white/10">
+                    <div className="flex flex-col items-end gap-1">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest dark:text-zinc-500">Dataset Sync</p>
+                      <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap dark:text-zinc-400">
+                        {isFilterActive ? "Filtering live records..." : "Showing cumulative data"}
+                      </p>
+                    </div>
+                    <RefreshButton 
+                      onRefresh={onRefresh} 
+                      isLoading={isLoading} 
+                      title="Refresh Backup Records"
+                    />
+                  </div>
                 </div>
               }
             />
 
             {isLoading ? (
-              <div className="flex flex-1 flex-col p-6 pt-2">
-                <div className="mb-6 flex flex-col gap-4">
-                  <Skeleton className="h-10 w-48 rounded-lg" />
-                  <div className="flex flex-wrap items-center gap-3">
-                    <Skeleton className="h-10 min-w-[200px] flex-1 rounded-brand" />
-                    <Skeleton className="h-10 w-40 rounded-brand" />
-                  </div>
-                </div>
-                <div className="flex-1 overflow-hidden rounded-brand border border-gray-200">
-                  <div className="h-10 border-b border-gray-200 bg-gray-50/50" />
-                  <div className="divide-y divide-gray-100">
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
-                      <div key={i} className="p-4">
-                        <Skeleton className="h-4 w-full" />
-                      </div>
-                    ))}
-                  </div>
+              <div className="flex h-full w-full flex-1 flex-col items-center justify-center bg-white p-10 dark:bg-card">
+                <div className="flex flex-col items-center gap-4">
+                  <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary dark:text-primary" />
+                  <p className="text-sm font-bold text-gray-500 uppercase tracking-widest dark:text-zinc-400">
+                    Loading...
+                  </p>
                 </div>
               </div>
             ) : error ? (
               <CardContent className="flex flex-1 flex-col items-center justify-center p-6">
-                <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500">
+                <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                   <EmptyHeader className="flex flex-col items-center gap-0">
-                    <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
-                      <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
+                    <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+                      <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary dark:text-primary" />
                     </EmptyMedia>
-                    <EmptyTitle className="text-lg font-bold text-gray-900">
+                    <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                       Could not load backups
                     </EmptyTitle>
-                    <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600">
+                    <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
                       {error}
                     </EmptyDescription>
                   </EmptyHeader>
@@ -320,13 +313,13 @@ export default function BackupTab({
                 {(localSearch !== "" ||
                   backupStartDate !== "" ||
                   backupEndDate !== "") && (
-                  <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300">
+                  <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+                      <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">
                         Active Filters:
                       </span>
                       {localSearch && (
-                        <div className="flex items-center gap-1 rounded-full border border-gray-300/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon">
+                        <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
                           Search: {localSearch}
                           <button
                             onClick={() => {
@@ -341,7 +334,7 @@ export default function BackupTab({
                         </div>
                       )}
                       {(backupStartDate || backupEndDate) && (
-                        <div className="flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600">
+                        <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
                           Range: {backupStartDate || "..."} to{" "}
                           {backupEndDate || "..."}
                           <button
@@ -366,7 +359,7 @@ export default function BackupTab({
                           setBackupEndDate("")
                           setPage(1)
                         }}
-                        className="h-6 rounded-full border border-dashed border-gray-300/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
+                        className="h-6 rounded-full border border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
                       >
                         CLEAR ALL FILTERS
                       </Button>
@@ -389,7 +382,7 @@ export default function BackupTab({
                   backupTotal={(backups || []).length}
                 />
 
-                <CardContent className="flex min-h-[400px] flex-1 flex-col bg-white p-5">
+                <CardContent className="flex min-h-[400px] flex-1 flex-col bg-white p-5 dark:bg-card">
                   <BackupTable
                     backups={backups}
                     sortedAndPaginatedBackups={sortedAndPaginatedBackups}
@@ -448,3 +441,5 @@ export default function BackupTab({
     </TooltipProvider>
   )
 }
+
+

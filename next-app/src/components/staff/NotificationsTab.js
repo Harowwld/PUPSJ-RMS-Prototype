@@ -23,6 +23,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import PageHeader from "@/components/shared/PageHeader"
+import { RefreshButton } from "@/components/shared/RefreshButton"
 import { Select } from "@/components/ui/select"
 
 function statusUi(status) {
@@ -37,13 +38,13 @@ function statusUi(status) {
   if (s === "Declined") {
     return {
       label: "Declined",
-      badge: "bg-red-50 text-red-700 border-red-200",
+      badge: "bg-red-50 dark:bg-red-950/20 text-red-700 border-red-200",
       icon: "ph-fill ph-x-circle",
     }
   }
   return {
     label: s || "Pending",
-    badge: "bg-amber-50 text-amber-700 border-amber-200",
+    badge: "bg-amber-50 dark:bg-amber-950/20 text-amber-700 border-amber-200",
     icon: "ph-fill ph-clock",
   }
 }
@@ -52,8 +53,10 @@ export default function NotificationsTab({
   onPreviewDocument,
   onUnreadChange,
   onRescan,
+  isLoading,
+  onRefresh,
 }) {
-  const [isLoading, setIsLoading] = useState(true)
+  const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState("")
   const [items, setItems] = useState([])
   const [total, setTotal] = useState(0)
@@ -68,13 +71,9 @@ export default function NotificationsTab({
   const offset = (displayPage - 1) * itemsPerPage
 
   const load = useCallback(async () => {
-    setIsLoading(true)
     setError("")
     try {
-      const [res] = await Promise.all([
-        fetch(`/api/notifications?limit=${itemsPerPage}&offset=${offset}`, { cache: "no-store" }),
-        new Promise((resolve) => setTimeout(resolve, 600)), // Animation visible
-      ])
+      const res = await fetch(`/api/notifications?limit=${itemsPerPage}&offset=${offset}`, { cache: "no-store" })
       const json = await res.json().catch(() => null)
       if (!res.ok || !json?.ok) {
         throw new Error(json?.error || "Failed to load notifications")
@@ -88,10 +87,20 @@ export default function NotificationsTab({
       onUnreadChange?.(Number(data.unreadCount || 0))
     } catch (e) {
       setError(e?.message || "Failed to load notifications")
-    } finally {
-      setIsLoading(false)
     }
   }, [offset, itemsPerPage, onUnreadChange])
+
+  // Refresh handler
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await load();
+      // Ensure visual feedback persists for a minimum duration
+      await new Promise((resolve) => setTimeout(resolve, 600));
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     setJumpPage(String(displayPage))
@@ -157,29 +166,27 @@ export default function NotificationsTab({
   }, [lastSeenReviewedAt])
 
   return (
-    <div className="animate-fade-in font-inter flex h-full w-full flex-col">
-      <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm">
+    <div className="animate-fade-up font-inter flex h-full w-full flex-col">
+      <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bell"
           title="System Notifications"
           description="Real-time updates on document review decisions and system alerts."
           actions={
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={load}
-                className="h-10 w-10 p-0 rounded-brand border-gray-300 text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon"
-                title="Refresh"
-              >
-                <i className={`ph-bold ph-arrows-clockwise ${loading ? "animate-spin inline-block" : ""}`}></i>
-              </Button>
+              <div className="flex flex-col items-end gap-1 mr-2">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest dark:text-zinc-500">Dataset Sync</p>
+                <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap dark:text-zinc-400">
+                  Showing real-time alerts
+                </p>
+              </div>
+              <RefreshButton onRefresh={handleRefresh} isLoading={isRefreshing} title="Refresh Notifications" />
               <Button
                 variant="outline"
                 size="sm"
                 disabled={unreadCount <= 0}
                 onClick={markAllRead}
-                className="h-10 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon"
+                className="h-10 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
               >
                 <i className="ph-bold ph-checks mr-1.5"></i>
                 MARK ALL AS READ
@@ -189,76 +196,44 @@ export default function NotificationsTab({
         />
         <CardContent className="flex min-h-0 flex-1 flex-col p-6">
           {isLoading ? (
-            <div className="flex flex-1 flex-col space-y-4">
-              <div className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200">
-                <Skeleton className="h-10 w-full rounded-none" />
-                <div className="flex-1 divide-y divide-gray-100">
-                  {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                    <div
-                      key={i}
-                      className="flex items-center justify-between p-4"
-                    >
-                      <div className="grid flex-1 grid-cols-1 gap-4 lg:grid-cols-8">
-                        <div className="flex items-center">
-                          <Skeleton className="h-6 w-20 rounded-full" />
-                        </div>
-                        <div className="hidden items-center lg:flex">
-                          <Skeleton className="h-4 w-24 font-mono" />
-                        </div>
-                        <div className="hidden items-center lg:flex">
-                          <Skeleton className="h-4 w-32" />
-                        </div>
-                        <div className="hidden items-center lg:flex">
-                          <Skeleton className="h-6 w-16 rounded-full" />
-                        </div>
-                        <div className="hidden flex-col items-center space-y-1 lg:flex">
-                          <Skeleton className="h-4 w-40" />
-                          <Skeleton className="h-2 w-24" />
-                        </div>
-                        <div className="hidden items-center lg:flex">
-                          <Skeleton className="h-4 w-24" />
-                        </div>
-                        <div className="hidden flex-col items-center space-y-1 lg:flex">
-                          <Skeleton className="h-3 w-16" />
-                          <Skeleton className="h-2 w-12" />
-                        </div>
-                        <div className="flex items-center justify-end">
-                          <Skeleton className="h-9 w-16 rounded-brand" />
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <div className="mt-4 flex items-center justify-between">
-                <Skeleton className="h-4 w-48" />
-                <div className="flex gap-2">
-                  <Skeleton className="h-8 w-20 rounded-brand" />
-                  <Skeleton className="h-8 w-12 rounded-brand" />
-                  <Skeleton className="h-8 w-20 rounded-brand" />
-                </div>
+            <div className="flex h-full w-full flex-1 flex-col items-center justify-center bg-white p-10 min-h-[400px] dark:bg-card">
+              <div className="flex flex-col items-center gap-4">
+                <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary dark:text-primary" />
+                <p className="text-sm font-bold text-gray-500 uppercase tracking-widest dark:text-zinc-400">
+                  Loading...
+                </p>
               </div>
             </div>
           ) : error ? (
-            <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500">
+            <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
-                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
+                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary dark:text-primary" />
                 </EmptyMedia>
-                <EmptyTitle className="text-lg font-bold text-gray-900">
+                <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                   Could not load notifications
                 </EmptyTitle>
-                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600">
+                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
                   {error}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
           ) : (
             <>
-              <div className="flex-1 overflow-x-auto overflow-y-auto rounded-brand border border-gray-200">
+              <div className="relative flex-1 overflow-x-auto overflow-y-auto rounded-brand border border-gray-200 dark:border-white/10">
+                {isRefreshing && (
+                  <div className="absolute inset-0 z-20 flex h-full w-full flex-col items-center justify-center bg-white p-10 dark:bg-card">
+                    <div className="flex flex-col items-center gap-4">
+                      <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary dark:text-primary" />
+                      <p className="text-sm font-bold text-gray-500 uppercase tracking-widest dark:text-zinc-400">
+                        Generating...
+                      </p>
+                    </div>
+                  </div>
+                )}
                 <table className="min-w-full text-sm">
-                  <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50">
-                    <tr className="text-left text-xs tracking-wider text-gray-600 uppercase">
+                  <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
+                    <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
                       <th className="p-3 font-bold">Decision</th>
                       <th className="p-3 font-bold">Student No</th>
                       <th className="p-3 font-bold">Name</th>
@@ -269,19 +244,19 @@ export default function NotificationsTab({
                       <th className="p-3 text-right font-bold">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200">
+                  <tbody className="divide-y divide-gray-200 dark:divide-white/10">
                     {items.length === 0 ? (
                       <tr className="border-0 hover:bg-transparent">
                         <td colSpan={8} className="border-0 p-0">
-                          <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500">
+                          <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                             <EmptyHeader className="flex flex-col items-center gap-0">
-                              <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
-                                <i className="ph-duotone ph-bell text-3xl text-pup-maroon"></i>
+                              <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+                                <i className="ph-duotone ph-bell text-3xl text-pup-maroon dark:text-primary dark:text-primary"></i>
                               </EmptyMedia>
-                              <EmptyTitle className="text-lg font-bold text-gray-900">
+                              <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                                 No notifications yet
                               </EmptyTitle>
-                              <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600">
+                              <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
                                 When admins approve or decline uploaded
                                 documents, updates will appear here.
                               </EmptyDescription>
@@ -300,9 +275,7 @@ export default function NotificationsTab({
                         return (
                           <tr
                             key={n.id}
-                            className={`transition-colors hover:bg-gray-50 ${
-                              isUnread ? "bg-red-50/40" : ""
-                            }`}
+                            className={`transition-colors hover:bg-gray-50 ${ isUnread ? "bg-red-50" : "" } dark:hover:bg-white/10 dark:bg-card`}
                           >
                             <td className="p-3">
                               <div className="flex items-center gap-2">
@@ -314,37 +287,37 @@ export default function NotificationsTab({
                                   {ui.label}
                                 </Badge>
                                 {isUnread ? (
-                                  <span className="animate-pulse text-[10px] font-extrabold tracking-widest text-pup-maroon uppercase">
+                                  <span className="animate-pulse text-[10px] font-extrabold tracking-widest text-pup-maroon dark:text-primary uppercase dark:text-primary">
                                     New
                                   </span>
                                 ) : null}
                               </div>
                             </td>
-                            <td className="p-3 font-mono font-bold text-gray-900">
+                            <td className="p-3 font-mono font-bold text-gray-900 dark:text-zinc-50">
                               {n.student_no}
                             </td>
-                            <td className="p-3 font-medium text-gray-800">
+                            <td className="p-3 font-medium text-gray-800 dark:text-zinc-100">
                               {n.student_name || "—"}
                             </td>
                             <td className="p-3">
-                              <span className="inline-flex items-center rounded-full border border-red-100 bg-red-50 px-2 py-1 text-xs font-bold text-pup-maroon">
+                              <span className="inline-flex items-center rounded-full border border-red-100 bg-red-50 px-2 py-1 text-xs font-bold text-pup-maroon dark:text-primary dark:bg-red-950/30 dark:text-primary">
                                 {n.doc_type}
                               </span>
                             </td>
-                            <td className="p-3 text-gray-700">
+                            <td className="p-3 text-gray-700 dark:text-zinc-200">
                               <div className="max-w-[200px] truncate text-sm font-medium">
                                 {n.original_filename}
                               </div>
                               {n.review_note && (
-                                <div className="mt-0.5 line-clamp-1 text-[11px] text-gray-500 italic">
+                                <div className="mt-0.5 line-clamp-1 text-[11px] text-gray-500 italic dark:text-zinc-400">
                                   Note: {n.review_note}
                                 </div>
                               )}
                             </td>
-                            <td className="p-3 font-medium text-gray-700">
+                            <td className="p-3 font-medium text-gray-700 dark:text-zinc-200">
                               {n.reviewed_by || "—"}
                             </td>
-                            <td className="p-3 font-medium text-gray-600">
+                            <td className="p-3 font-medium text-gray-600 dark:text-zinc-300">
                               <div className="font-mono text-[11px]">
                                 {reviewed.date}
                               </div>
@@ -365,7 +338,7 @@ export default function NotificationsTab({
                                       n.id
                                     )
                                   }
-                                  className="h-9 rounded-brand border-gray-300 px-3 text-xs font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon"
+                                  className="h-9 rounded-brand border-gray-300 px-3 text-xs font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
                                 >
                                   <i className="ph-bold ph-eye mr-1.5"></i>
                                   VIEW
@@ -375,7 +348,7 @@ export default function NotificationsTab({
                                     variant="outline"
                                     size="sm"
                                     onClick={() => onRescan(n.student_no, n.doc_type, n.id, n.original_filename, n.mime_type)}
-                                    className="h-9 rounded-brand border-pup-maroon/30 hover:border-pup-maroon bg-white text-pup-maroon px-3 text-xs font-bold shadow-sm transition-all hover:bg-red-50"
+                                    className="h-9 rounded-brand border-pup-maroon/30 hover:border-pup-maroon bg-white text-pup-maroon dark:text-primary px-3 text-xs font-bold shadow-sm transition-all hover:bg-red-50 dark:bg-card dark:text-primary dark:shadow-none"
                                   >
                                     <i className="ph-bold ph-arrow-counter-clockwise mr-1.5"></i>
                                     RE-SCAN
@@ -392,13 +365,13 @@ export default function NotificationsTab({
               </div>
 
               {total > 0 && (
-                <div className="-mx-6 mt-4 -mb-6 flex items-center justify-between border-t border-gray-100 bg-gray-50/50 p-4 px-6">
+                <div className="-mx-6 mt-4 -mb-6 flex items-center justify-between border-t border-gray-100 bg-gray-50 p-4 px-6 dark:border-white/10 dark:bg-white/5">
                   <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-4 text-xs font-medium text-gray-500">
+                    <div className="flex items-center gap-4 text-xs font-medium text-gray-500 dark:text-zinc-400">
                       <span>
                         {offset + 1}-{Math.min(offset + itemsPerPage, total)}{" "}
                         of{" "}
-                        <strong className="text-gray-900">
+                        <strong className="text-gray-900 dark:text-zinc-50">
                           {total.toLocaleString()}
                         </strong>{" "}
                         entries
@@ -406,7 +379,7 @@ export default function NotificationsTab({
                           <>
                             {" "}
                             •{" "}
-                            <strong className="text-pup-maroon">
+                            <strong className="text-pup-maroon dark:text-primary dark:text-primary">
                               {unreadCount.toLocaleString()}
                             </strong>{" "}
                             unread
@@ -414,15 +387,15 @@ export default function NotificationsTab({
                         ) : null}
                       </span>
 
-                      <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase">
+                      <div className="flex items-center gap-2 border-l border-gray-200 pl-4 dark:border-white/10">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase dark:text-zinc-500">
                           Rows:
                         </span>
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Select
-                                className="h-7 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-1 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none"
+                                className="h-7 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-1 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none dark:bg-card dark:text-zinc-200 dark:border-white/10"
                                 value={itemsPerPage}
                                 onChange={handleItemsPerPageChange}
                               >
@@ -451,11 +424,11 @@ export default function NotificationsTab({
                       size="sm"
                       disabled={displayPage <= 1}
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                      className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                     >
                       <i className="ph-bold ph-caret-left mr-1"></i> PREV
                     </Button>
-                    <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-2 text-[11px] font-bold text-gray-700 shadow-xs focus-within:border-gray-300 focus-within:ring-1 focus-within:ring-pup-maroon">
+                    <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-2 text-[11px] font-bold text-gray-700 shadow-xs focus-within:border-gray-300 focus-within:ring-1 focus-within:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-200">
                       <input
                         type="text"
                         className="w-6 bg-transparent text-center focus:outline-none"
@@ -464,7 +437,7 @@ export default function NotificationsTab({
                         onKeyDown={handleJumpPage}
                         onBlur={handleJumpPage}
                       />
-                      <span className="mx-0.5 text-gray-400">/</span>
+                      <span className="mx-0.5 text-gray-400 dark:text-zinc-500">/</span>
                       <span>{totalPages}</span>
                     </div>
                     <Button
@@ -474,7 +447,7 @@ export default function NotificationsTab({
                       onClick={() =>
                         setPage((p) => Math.min(totalPages, p + 1))
                       }
-                      className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                      className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                     >
                       NEXT <i className="ph-bold ph-caret-right ml-1"></i>
                     </Button>
@@ -488,3 +461,5 @@ export default function NotificationsTab({
     </div>
   )
 }
+
+

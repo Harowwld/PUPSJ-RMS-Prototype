@@ -45,7 +45,7 @@ const CabinetCanvas = memo(({
       ref={canvasRef}
       data-slot="storage-canvas"
       className={cn(
-        "relative w-full overflow-hidden border border-gray-300 bg-[#f8fafc] shadow-inner transition-all duration-300",
+        "relative w-full overflow-hidden border border-gray-300 dark:border-white/10 bg-[#f8fafc] dark:bg-zinc-800 shadow-inner dark:shadow-none transition-all duration-300",
         isModalOpen ? "h-full" : ""
       )}
       style={!isModalOpen ? { aspectRatio: "16 / 10" } : {}}
@@ -82,11 +82,11 @@ const CabinetCanvas = memo(({
       {/* AutoCAD-inspired precision grid */}
       {showGrid && (
         <div
-          className="pointer-events-none absolute inset-0"
+          className="pointer-events-none absolute inset-0 text-slate-400/20 dark:text-zinc-600/30"
           style={{
             backgroundImage: `
-              linear-gradient(to right, rgba(148, 163, 184, 0.1) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(148, 163, 184, 0.1) 1px, transparent 1px)
+              linear-gradient(to right, currentColor 1px, transparent 1px),
+              linear-gradient(to bottom, currentColor 1px, transparent 1px)
             `,
             backgroundSize: "2.5% 4%, 2.5% 4%",
           }}
@@ -166,7 +166,7 @@ const CabinetCanvas = memo(({
         }}
       >
         <div 
-          className="relative flex h-full w-full items-center justify-center rounded-sm bg-pup-maroon shadow-md transition-all duration-300"
+          className="relative flex h-full w-full items-center justify-center rounded-sm bg-pup-maroon shadow-md transition-all duration-300 dark:bg-red-600 dark:shadow-none"
         >
           {/* Inner Text Label - Dynamically Rotated and Flipped */}
           <span className={cn(
@@ -254,13 +254,14 @@ const CabinetElement = memo(({
 }) => {
   return (
     <div
-      className={`absolute border-2 transition-all duration-75 rounded-sm ${
-        isSelected
-          ? "z-10 border-cyan-500 bg-cyan-100 shadow-[0_0_0_4px_rgba(6,182,212,0.2)]"
-          : isConflict
-            ? "z-10 border-red-600 bg-red-50/50 shadow-[0_0_0_4px_rgba(220,38,38,0.2)]"
-            : "border-gray-500 bg-gray-100 shadow-sm"
-      }`}
+      className={cn(
+        "absolute border-2 transition-all duration-75 rounded-sm",
+        isSelected 
+          ? "z-10 border-cyan-500 bg-cyan-100 shadow-[0_0_0_4px_rgba(6,182,212,0.2)] dark:border-cyan-400 dark:bg-cyan-800 dark:shadow-[0_0_0_4px_rgba(34,211,238,0.2)]" 
+          : isConflict 
+            ? "border-red-600 bg-red-50 shadow-[0_0_0_4px_rgba(220,38,38,0.2)] dark:border-red-500 dark:bg-red-900/40 dark:shadow-[0_0_0_4px_rgba(239,68,68,0.2)]" 
+            : "border-gray-500 bg-gray-100 shadow-sm dark:border-zinc-500 dark:bg-zinc-400 dark:shadow-none"
+      )}
       style={{
         left: `${cab.rect.x * 100}%`,
         top: `${cab.rect.y * 100}%`,
@@ -323,14 +324,14 @@ const CabinetElement = memo(({
           className="animate-scale-in absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2"
           onPointerDown={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center gap-1 rounded-full border border-gray-200 bg-white p-1 shadow-xl">
+          <div className="flex items-center gap-1 rounded-full border border-gray-200 bg-white p-1 shadow-xl dark:border-white/10 dark:bg-card dark:shadow-none">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-pup-maroon"
+                  className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:bg-muted dark:hover:bg-white/10"
                   onClick={duplicateSelectedCabinet}
                 >
                   <i className="ph-bold ph-copy text-sm" />
@@ -341,7 +342,7 @@ const CabinetElement = memo(({
               </TooltipContent>
             </Tooltip>
 
-            <div className="h-4 w-px bg-gray-200" />
+            <div className="h-4 w-px bg-gray-200 dark:bg-zinc-700" />
 
             <Tooltip>
               <TooltipTrigger asChild>
@@ -349,7 +350,7 @@ const CabinetElement = memo(({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-red-600"
+                  className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-red-600 dark:text-zinc-200 dark:bg-muted dark:hover:bg-white/10"
                   onClick={() => setBulkConfirmOpen(true)}
                 >
                   <i className="ph-bold ph-trash text-sm" />
@@ -366,10 +367,16 @@ const CabinetElement = memo(({
       <div className="absolute inset-[1px] border border-black/5 pointer-events-none rounded-[1px]" />
 
       <div className="absolute inset-0 flex flex-col items-center justify-center p-2 pointer-events-none">
-        <span className="text-[10px] font-black text-gray-700 uppercase tracking-tighter">
+        <span className={cn(
+          "text-[10px] font-black text-gray-700 uppercase tracking-tighter dark:text-zinc-900",
+          isSelected && "dark:text-cyan-50"
+        )}>
           {cab.id.startsWith("CAB-") ? cab.id : `CAB-${cab.id}`}
         </span>
-        <div className="mt-1 h-[2px] w-1/3 bg-gray-400/50 rounded-full" />
+        <div className={cn(
+          "mt-1 h-[2px] w-1/3 bg-gray-400/50 rounded-full dark:bg-zinc-900/40",
+          isSelected && "dark:bg-cyan-50/40"
+        )} />
       </div>
 
       {isSelected ? (
@@ -378,7 +385,7 @@ const CabinetElement = memo(({
             <div
               role="button"
               tabIndex={0}
-              className="absolute -right-1.5 -bottom-1.5 flex h-5 w-5 cursor-se-resize items-center justify-center rounded-sm border border-gray-300 bg-white leading-none text-pup-maroon shadow"
+              className="absolute -right-1.5 -bottom-1.5 flex h-5 w-5 cursor-se-resize items-center justify-center rounded-sm border border-gray-300 bg-white leading-none text-pup-maroon dark:text-primary shadow dark:bg-card dark:text-primary dark:border-white/10"
               onPointerDown={(e) => {
                 const container = e.currentTarget.closest('[data-slot="storage-canvas"]')
                 if (!container) return
@@ -413,3 +420,4 @@ CabinetCanvas.displayName = "CabinetCanvas"
 CabinetElement.displayName = "CabinetElement"
 
 export default CabinetCanvas
+

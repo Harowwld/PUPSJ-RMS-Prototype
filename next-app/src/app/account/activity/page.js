@@ -45,21 +45,21 @@ function getSeverityConfig(sev) {
   switch (String(sev || "").toUpperCase()) {
     case "CRITICAL":
       return {
-        bg: "bg-red-50",
+        bg: "bg-red-50 dark:bg-red-950/30",
         text: "text-red-700",
         border: "border-red-200",
         icon: "ph-fill ph-warning-circle"
       };
     case "WARNING":
       return {
-        bg: "bg-amber-50",
+        bg: "bg-amber-50 dark:bg-amber-950/30",
         text: "text-amber-700",
         border: "border-amber-200",
         icon: "ph-fill ph-warning"
       };
     default:
       return {
-        bg: "bg-blue-50",
+        bg: "bg-blue-50 dark:bg-blue-950/30",
         text: "text-blue-700",
         border: "border-blue-200",
         icon: "ph-fill ph-info"
@@ -151,8 +151,8 @@ export default function AccountActivityPage() {
 
   if (loadingUser) {
     return (
-      <div className="min-h-screen bg-gray-50/50 animate-fade-in">
-        <div className="h-16 bg-white border-b border-gray-200" />
+      <div className="min-h-screen bg-gray-50 animate-fade-in dark:bg-white/5">
+        <div className="h-16 bg-white border-b border-gray-200 dark:bg-card dark:border-white/10" />
         <main className="max-w-[1200px] mx-auto p-8 space-y-8">
           <div className="flex flex-col gap-2">
             <Skeleton className="w-64 h-8" />
@@ -187,7 +187,7 @@ export default function AccountActivityPage() {
                   const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
                   router.push(path);
                 }}
-                className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-gray-300 bg-white hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-xs flex items-center gap-2 rounded-xl active:scale-95"
+                className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-gray-300 bg-white hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center gap-2 rounded-xl active:scale-95 dark:border-white/10 dark:bg-card"
               >
                 <i className="ph-bold ph-caret-left"></i>
                 Return to Dashboard
@@ -195,12 +195,12 @@ export default function AccountActivityPage() {
             }
           />
 
-          <Separator className="mt-8 bg-gray-200" />
+          <Separator className="mt-8 bg-gray-200 dark:bg-zinc-700" />
 
           {/* Stats Bar */}
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Total Activity - Blue */}
-            <div className="bg-blue-50 rounded-2xl p-6 border border-blue-100 shadow-sm relative overflow-hidden group hover:border-blue-200 transition-all">
+            <div className="bg-blue-50 rounded-2xl p-6 border border-blue-100 shadow-sm relative overflow-hidden group hover:border-blue-200 transition-all dark:bg-blue-950/30">
               <i className="ph-duotone ph-list-numbers absolute -right-3 -bottom-3 text-7xl opacity-10 text-blue-600 rotate-12 group-hover:scale-110 transition-transform" />
               <div className="relative z-10">
                 <p className="text-[10px] font-black text-blue-600/60 uppercase tracking-widest mb-1.5">Total Activity</p>
@@ -218,7 +218,7 @@ export default function AccountActivityPage() {
             </div>
 
             {/* Actions Today - Green */}
-            <div className="bg-emerald-50 rounded-2xl p-6 border border-emerald-100 shadow-sm relative overflow-hidden group hover:border-emerald-200 transition-all">
+            <div className="bg-emerald-50 rounded-2xl p-6 border border-emerald-100 shadow-sm relative overflow-hidden group hover:border-emerald-200 transition-all dark:bg-emerald-950/30">
               <i className="ph-duotone ph-calendar-check absolute -right-3 -bottom-3 text-7xl opacity-10 text-emerald-600 rotate-12 group-hover:scale-110 transition-transform" />
               <div className="relative z-10">
                 <p className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest mb-1.5">Actions Today</p>
@@ -236,7 +236,7 @@ export default function AccountActivityPage() {
             </div>
 
             {/* Auth History - Yellow/Amber */}
-            <div className="bg-amber-50 rounded-2xl p-6 border border-amber-100 shadow-sm relative overflow-hidden group hover:border-amber-200 transition-all">
+            <div className="bg-amber-50 rounded-2xl p-6 border border-amber-100 shadow-sm relative overflow-hidden group hover:border-amber-200 transition-all dark:bg-amber-950/30">
               <i className="ph-duotone ph-fingerprint absolute -right-3 -bottom-3 text-7xl opacity-10 text-amber-600 rotate-12 group-hover:scale-110 transition-transform" />
               <div className="relative z-10">
                 <p className="text-[10px] font-black text-amber-600/60 uppercase tracking-widest mb-1.5">Auth History</p>
@@ -254,7 +254,7 @@ export default function AccountActivityPage() {
             </div>
 
             {/* Security Level - Red */}
-            <div className="bg-red-50 rounded-2xl p-6 border border-red-100 shadow-sm relative overflow-hidden group hover:border-red-200 transition-all">
+            <div className="bg-red-50 rounded-2xl p-6 border border-red-100 shadow-sm relative overflow-hidden group hover:border-red-200 transition-all dark:bg-red-950/30">
               <i className="ph-duotone ph-warning-octagon absolute -right-3 -bottom-3 text-7xl opacity-10 text-red-600 rotate-12 group-hover:scale-110 transition-transform" />
               <div className="relative z-10">
                 <p className="text-[10px] font-black text-red-600/60 uppercase tracking-widest mb-1.5">Security Level</p>
@@ -272,13 +272,13 @@ export default function AccountActivityPage() {
             </div>
           </div>
 
-          <Card className="mt-8 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+          <Card className="mt-8 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden dark:bg-card dark:border-white/10">
             {/* Filter Bar */}
-            <div className="p-6 bg-gray-50/80 border-b border-gray-100">
+            <div className="p-6 bg-gray-50 border-b border-gray-100 dark:bg-muted/30 dark:border-white/10">
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
                 <div className="lg:col-span-6">
                   <div className="flex items-center justify-between mb-2 px-1">
-                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest dark:text-zinc-400">
                       Search Audit Trace
                     </label>
                     {(search !== "" || severityFilter !== "All") && (
@@ -290,18 +290,18 @@ export default function AccountActivityPage() {
                           setSeverityFilter("All");
                           setPage(1);
                         }}
-                        className="h-5 px-1.5 text-[9px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase tracking-tighter"
+                        className="h-5 px-1.5 text-[9px] font-black text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon uppercase tracking-tighter dark:bg-red-950/30"
                       >
                         Clear Filters
                       </Button>
                     )}
                   </div>
                   <div className="relative group">
-                    <i className="ph-bold ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-pup-maroon transition-colors"></i>
+                    <i className="ph-bold ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-pup-maroon transition-colors dark:text-zinc-500"></i>
                     <Input
                       type="text"
                       placeholder="Search by action, details, entity, or IP..."
-                      className="pl-11 h-12 w-full rounded-xl border border-gray-200 bg-white text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900"
+                      className="pl-11 h-12 w-full rounded-xl border border-gray-200 bg-white text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50"
                       value={search}
                       onChange={(e) => {
                         setSearch(e.target.value);
@@ -312,11 +312,11 @@ export default function AccountActivityPage() {
                 </div>
 
                 <div className="lg:col-span-4">
-                  <label className="block text-[10px] font-black text-gray-500 mb-2 uppercase tracking-widest ml-1">
+                  <label className="block text-[10px] font-black text-gray-500 mb-2 uppercase tracking-widest ml-1 dark:text-zinc-400">
                     Severity
                   </label>
                   <Select
-                    className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 shadow-xs outline-none transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20"
+                    className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 shadow-xs outline-none transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:focus:border-zinc-700"
                     value={severityFilter}
                     onChange={(e) => {
                       setSeverityFilter(e.target.value);
@@ -331,11 +331,11 @@ export default function AccountActivityPage() {
                 </div>
 
                 <div className="lg:col-span-2">
-                  <label className="block text-[10px] font-black text-gray-500 mb-2 uppercase tracking-widest ml-1">
+                  <label className="block text-[10px] font-black text-gray-500 mb-2 uppercase tracking-widest ml-1 dark:text-zinc-400">
                     Display
                   </label>
                   <Select
-                    className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 shadow-xs outline-none transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20"
+                    className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 shadow-xs outline-none transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:focus:border-zinc-700"
                     value={perPage}
                     onChange={(e) => {
                       setPerPage(Number(e.target.value));
@@ -354,8 +354,8 @@ export default function AccountActivityPage() {
             <CardContent className="p-0">
               <div className="overflow-x-auto select-none">
                 <table className="min-w-full">
-                  <thead className="bg-gray-50 border-b border-gray-100">
-                    <tr className="text-left text-[10px] font-black tracking-widest text-gray-400 uppercase">
+                  <thead className="bg-gray-50 border-b border-gray-100 dark:bg-zinc-900 dark:border-white/10">
+                    <tr className="text-left text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
                       <th className="p-4 px-6">Timestamp</th>
                       <th className="p-4 px-6">Severity</th>
                       <th className="p-4 px-6">Event / Action</th>
@@ -363,7 +363,7 @@ export default function AccountActivityPage() {
                       <th className="p-4 px-6 text-right">Identifier</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
+                  <tbody className="divide-y divide-gray-100 dark:divide-white/10">
                     {loading ? (
                       Array.from({ length: 10 }).map((_, idx) => (
                         <tr key={idx}>
@@ -378,11 +378,11 @@ export default function AccountActivityPage() {
                       <tr>
                         <td colSpan={5}>
                           <div className="flex h-[400px] flex-col items-center justify-center text-center">
-                            <div className="w-20 h-20 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center mb-6 shadow-xs">
-                              <i className="ph-duotone ph-clock-counter-clockwise text-4xl text-gray-300"></i>
+                            <div className="w-20 h-20 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center mb-6 shadow-xs dark:bg-card dark:border-white/10">
+                              <i className="ph-duotone ph-clock-counter-clockwise text-4xl text-gray-300 dark:text-zinc-600"></i>
                             </div>
-                            <h4 className="text-lg font-bold text-gray-900">Zero Activity Found</h4>
-                            <p className="text-sm font-medium text-gray-500 mt-1 max-w-sm">
+                            <h4 className="text-lg font-bold text-gray-900 dark:text-zinc-50">Zero Activity Found</h4>
+                            <p className="text-sm font-medium text-gray-500 mt-1 max-w-sm dark:text-zinc-400">
                               No events matching your current filters were detected in the audit log.
                             </p>
                           </div>
@@ -396,13 +396,13 @@ export default function AccountActivityPage() {
                         return (
                           <tr 
                             key={r.id} 
-                            className="group hover:bg-gray-50/80 transition-all duration-200 cursor-default"
+                            className="group hover:bg-gray-50 transition-all duration-200 cursor-default dark:hover:bg-white/10 dark:bg-background"
                             onDoubleClick={(e) => e.preventDefault()}
                           >
                             <td className="p-4 px-6">
                               <div className="flex flex-col">
-                                <span className="text-xs font-bold text-gray-900">{timeParts.date}</span>
-                                <span className="text-[10px] font-medium text-gray-400">{timeParts.time}</span>
+                                <span className="text-xs font-bold text-gray-900 dark:text-zinc-50">{timeParts.date}</span>
+                                <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-500">{timeParts.time}</span>
                               </div>
                             </td>
                             <td className="p-4 px-6">
@@ -416,40 +416,40 @@ export default function AccountActivityPage() {
                             </td>
                             <td className="p-4 px-6">
                               <div className="flex items-center gap-2.5">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-500 group-hover:bg-white group-hover:text-pup-maroon shadow-xs transition-colors">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-500 group-hover:bg-white group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 shadow-xs transition-colors dark:bg-zinc-800 dark:text-zinc-400 dark:group-hover:bg-white/5 dark:hover:bg-white/5">
                                   <i className={cn(getActionIcon(r.action), "text-base")}></i>
                                 </div>
-                                <span className="text-xs font-bold tracking-tight text-gray-700 uppercase">{r.action}</span>
+                                <span className="text-xs font-bold tracking-tight text-gray-700 uppercase dark:text-zinc-200">{r.action}</span>
                               </div>
                             </td>
                             <td className="p-4 px-6">
                               <div className="flex flex-col gap-1">
-                                <p className="text-xs font-medium text-gray-600 leading-relaxed max-w-[600px] line-clamp-2">
+                                <p className="text-xs font-medium text-gray-600 leading-relaxed max-w-[600px] line-clamp-2 dark:text-zinc-300">
                                   {r.details || "No known description"}
                                 </p>
                                 {(r.entity_type || r.entity_id) && (
                                   <div className="flex items-center gap-2 mt-1">
                                      {r.entity_type && (
-                                       <Badge variant="outline" className="text-[9px] font-black bg-gray-100 border-0 text-gray-500 uppercase h-4 px-1.5 rounded-sm">
+                                       <Badge variant="outline" className="text-[9px] font-black bg-gray-100 border-0 text-gray-500 uppercase h-4 px-1.5 rounded-sm dark:bg-zinc-800 dark:text-zinc-400">
                                          {r.entity_type}
                                        </Badge>
                                      )}
-                                     {r.entity_id && <span className="text-[9px] font-mono text-gray-400">#{r.entity_id}</span>}
+                                     {r.entity_id && <span className="text-[9px] font-mono text-gray-400 dark:text-zinc-500">#{r.entity_id}</span>}
                                   </div>
                                 )}
                               </div>
                             </td>
                             <td className="p-4 px-6 text-right">
                                <div className="flex flex-col items-end">
-                                  <span className="text-[10px] font-bold text-gray-700 font-mono tracking-tighter">{r.ip || "—"}</span>
+                                  <span className="text-[10px] font-bold text-gray-700 font-mono tracking-tighter dark:text-zinc-200">{r.ip || "—"}</span>
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <span className="text-[9px] font-medium text-gray-400 cursor-help flex items-center gap-1">
+                                      <span className="text-[9px] font-medium text-gray-400 cursor-help flex items-center gap-1 dark:text-zinc-500">
                                         <i className="ph-bold ph-desktop"></i>
                                         Device Info
                                       </span>
                                     </TooltipTrigger>
-                                    <TooltipContent side="left" className="max-w-[300px] bg-white border border-gray-200 p-3 rounded-xl shadow-2xl text-[10px] text-gray-600 font-medium">
+                                    <TooltipContent side="left" className="max-w-[300px] bg-white border border-gray-200 p-3 rounded-xl shadow-2xl text-[10px] text-gray-600 font-medium dark:bg-card dark:border-white/10 dark:text-zinc-300">
                                        {r.user_agent}
                                     </TooltipContent>
                                   </Tooltip>
@@ -465,9 +465,9 @@ export default function AccountActivityPage() {
 
               {/* Pagination */}
               {total > 0 && (
-                <div className="p-6 bg-gray-50/50 border-t border-gray-100 flex items-center justify-between">
-                  <div className="text-[11px] font-black text-gray-400 uppercase tracking-widest">
-                    Showing <strong className="text-gray-900">{rows.length}</strong> of <strong className="text-gray-900">{total.toLocaleString()}</strong> Activity Logs
+                <div className="p-6 bg-gray-50 border-t border-gray-100 flex items-center justify-between dark:bg-white/5 dark:border-white/10">
+                  <div className="text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
+                    Showing <strong className="text-gray-900 dark:text-zinc-50">{rows.length}</strong> of <strong className="text-gray-900 dark:text-zinc-50">{total.toLocaleString()}</strong> Activity Logs
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
@@ -475,12 +475,12 @@ export default function AccountActivityPage() {
                       size="sm"
                       disabled={displayPage <= 1 || loading}
                       onClick={() => setPage(p => Math.max(1, p - 1))}
-                      className="h-9 rounded-xl border-gray-300 bg-white px-4 text-[10px] font-black text-gray-600 uppercase shadow-xs transition-all hover:border-pup-maroon hover:text-pup-maroon disabled:opacity-30 active:scale-95"
+                      className="h-9 rounded-xl border-gray-300 bg-white px-4 text-[10px] font-black text-gray-600 uppercase shadow-xs transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 disabled:opacity-30 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300"
                     >
                       <i className="ph-bold ph-caret-left mr-2"></i>
                       Prev
                     </Button>
-                    <div className="h-9 min-w-[36px] flex items-center justify-center rounded-xl bg-white border border-gray-300 shadow-xs px-3 text-[11px] font-black text-gray-900 select-none">
+                    <div className="h-9 min-w-[36px] flex items-center justify-center rounded-xl bg-white border border-gray-300 shadow-xs px-3 text-[11px] font-black text-gray-900 select-none dark:bg-card dark:border-white/10 dark:text-zinc-50">
                       {displayPage}
                     </div>
                     <Button
@@ -488,7 +488,7 @@ export default function AccountActivityPage() {
                       size="sm"
                       disabled={displayPage >= totalPages || loading}
                       onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                      className="h-9 rounded-xl border-gray-300 bg-white px-4 text-[10px] font-black text-gray-600 uppercase shadow-xs transition-all hover:border-pup-maroon hover:text-pup-maroon disabled:opacity-30 active:scale-95"
+                      className="h-9 rounded-xl border-gray-300 bg-white px-4 text-[10px] font-black text-gray-600 uppercase shadow-xs transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 disabled:opacity-30 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300"
                     >
                       Next
                       <i className="ph-bold ph-caret-right ml-2"></i>

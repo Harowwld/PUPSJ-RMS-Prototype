@@ -60,26 +60,26 @@ export default function LogFilters({
   }
 
   return (
-    <div className="bg-white/50 border-b border-gray-100 p-4 backdrop-blur-md">
+    <div className="bg-white border-b border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
       <div className="flex w-full flex-wrap items-end gap-5">
         {/* Search */}
         <div className="min-w-[320px] flex-[1.5]">
           <div className="mb-1.5 flex items-center justify-between">
-            <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase">
+            <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
               Global Search
             </label>
-            <span className="text-[9px] font-bold text-pup-maroon/50">
+            <span className="text-[9px] font-bold text-pup-maroon dark:text-primary/50">
               {logTotal > 0 ? `${logTotal.toLocaleString()} MATCHES` : "NO RESULTS"}
             </span>
           </div>
           <div className="group relative">
             <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
-              <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon"></i>
+              <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500"></i>
             </div>
             <Input
               type="text"
               placeholder="Search by actor, action, or details..."
-              className="h-11 w-full rounded-xl border border-gray-200 bg-white pl-10.5 text-sm font-medium transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400"
+              className="h-11 w-full rounded-xl border border-gray-200 bg-white pl-10.5 text-sm font-medium transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-500"
               value={localSearch}
               onChange={handleSearchChange}
             />
@@ -89,7 +89,7 @@ export default function LogFilters({
         {/* Date Range Picker Section */}
         <div className="min-w-[400px] flex-[2]">
           <div className="mb-1.5 flex items-center justify-between">
-            <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase">
+            <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
               Time Period
             </label>
             <div className="flex items-center gap-2">
@@ -97,7 +97,7 @@ export default function LogFilters({
                 <button
                   key={range}
                   onClick={() => handleQuickRange(range)}
-                  className="rounded-md bg-gray-100 px-2 py-0.5 text-[9px] font-black text-gray-500 uppercase transition-all hover:bg-pup-maroon hover:text-white"
+                  className="rounded-md bg-gray-100 px-2 py-0.5 text-[9px] font-black text-gray-500 uppercase transition-all hover:bg-pup-maroon hover:text-white dark:text-zinc-400 dark:bg-muted"
                 >
                   {range.replace("last", "Last ")}
                 </button>
@@ -111,11 +111,11 @@ export default function LogFilters({
                   <Button
                     variant="outline"
                     className={cn(
-                      "h-11 w-full justify-start rounded-xl border-gray-200 bg-white text-left text-xs font-semibold shadow-xs transition-all hover:bg-gray-50",
-                      !logStartDate && "text-gray-400"
+                      "h-11 w-full justify-start rounded-xl border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-xs font-semibold shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card",
+                      !logStartDate && "text-gray-400 dark:text-zinc-500"
                     )}
                   >
-                    <i className="ph-bold ph-calendar-blank mr-2 text-base text-gray-400"></i>
+                    <i className="ph-bold ph-calendar-blank mr-2 text-base text-gray-400 dark:text-zinc-500"></i>
                     {logStartDate ? format(new Date(logStartDate), "MMM d, yyyy") : "Start Date"}
                   </Button>
                 </PopoverTrigger>
@@ -132,7 +132,7 @@ export default function LogFilters({
                 </PopoverContent>
               </Popover>
             </div>
-            <div className="flex items-center text-gray-300">
+            <div className="flex items-center text-gray-300 dark:text-zinc-600">
                <i className="ph-bold ph-arrow-right"></i>
             </div>
             <div className="flex-1">
@@ -141,11 +141,11 @@ export default function LogFilters({
                   <Button
                     variant="outline"
                     className={cn(
-                      "h-11 w-full justify-start rounded-xl border-gray-200 bg-white text-left text-xs font-semibold shadow-xs transition-all hover:bg-gray-50",
-                      !logEndDate && "text-gray-400"
+                      "h-11 w-full justify-start rounded-xl border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-xs font-semibold shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card",
+                      !logEndDate && "text-gray-400 dark:text-zinc-500"
                     )}
                   >
-                    <i className="ph-bold ph-calendar-blank mr-2 text-base text-gray-400"></i>
+                    <i className="ph-bold ph-calendar-blank mr-2 text-base text-gray-400 dark:text-zinc-500"></i>
                     {logEndDate ? format(new Date(logEndDate), "MMM d, yyyy") : "End Date"}
                   </Button>
                 </PopoverTrigger>
@@ -168,12 +168,12 @@ export default function LogFilters({
         {/* Quick Select Filters */}
         <div className="flex shrink-0 gap-3">
           <div className="w-28">
-            <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 uppercase">
+            <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
               Role
             </label>
             <div className="relative">
               <Select
-                className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 shadow-xs outline-none transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
+                className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 shadow-xs outline-none transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-200"
                 value={logRoleFilter}
                 onChange={handleRoleChange}
               >
@@ -186,12 +186,12 @@ export default function LogFilters({
           </div>
 
           <div className="w-32">
-            <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 uppercase">
+            <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
               Severity
             </label>
             <div className="relative">
               <Select
-                className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 shadow-xs outline-none transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5"
+                className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 shadow-xs outline-none transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-200"
                 value={logSeverityFilter}
                 onChange={handleSeverityChange}
               >
@@ -207,3 +207,4 @@ export default function LogFilters({
     </div>
   )
 }
+

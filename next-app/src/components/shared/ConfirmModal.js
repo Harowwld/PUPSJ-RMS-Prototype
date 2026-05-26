@@ -46,17 +46,17 @@ export default function ConfirmModal({
   const variantClasses = {
     danger: {
       icon: "ph-duotone ph-warning-circle",
-      iconWrap: "bg-red-50 border-red-100 text-red-600 shadow-sm",
-      title: "text-gray-900",
-      description: "text-gray-600",
+      iconWrap: "bg-red-50 dark:bg-red-950/30 border-red-100 text-red-600 shadow-sm",
+      title: "text-gray-900 dark:text-zinc-50",
+      description: "text-gray-600 dark:text-zinc-300",
       confirmVariant: "destructive",
       buttonIcon: "ph-bold ph-trash",
     },
     warning: {
       icon: "ph-duotone ph-warning",
-      iconWrap: "bg-amber-50 border-amber-100 text-amber-600 shadow-sm",
-      title: "text-gray-900",
-      description: "text-gray-600",
+      iconWrap: "bg-amber-50 dark:bg-amber-950/30 border-amber-100 text-amber-600 shadow-sm",
+      title: "text-gray-900 dark:text-zinc-50",
+      description: "text-gray-600 dark:text-zinc-300",
       confirmVariant: "default",
       buttonIcon: "ph-bold ph-warning",
       confirmStyle: "bg-linear-to-b from-orange-700 to-orange-500 border-4 border-orange-900 hover:from-orange-600 hover:to-orange-800 text-white shadow-lg shadow-orange-900/20",
@@ -64,16 +64,16 @@ export default function ConfirmModal({
     success: {
       icon: "ph-duotone ph-arrow-counter-clockwise",
       iconWrap: "bg-green-50 border-green-100 text-green-600 shadow-sm",
-      title: "text-gray-900",
-      description: "text-gray-600",
+      title: "text-gray-900 dark:text-zinc-50",
+      description: "text-gray-600 dark:text-zinc-300",
       confirmVariant: "default",
       buttonIcon: "ph-bold ph-check",
     },
     default: {
       icon: "ph-duotone ph-info",
-      iconWrap: "bg-blue-50 border-blue-100 text-blue-600 shadow-sm",
-      title: "text-gray-900",
-      description: "text-gray-600",
+      iconWrap: "bg-blue-50 dark:bg-blue-950/30 border-blue-100 text-blue-600 shadow-sm",
+      title: "text-gray-900 dark:text-zinc-50",
+      description: "text-gray-600 dark:text-zinc-300",
       confirmVariant: "default",
       buttonIcon: "ph-bold ph-check",
     },
@@ -110,9 +110,9 @@ export default function ConfirmModal({
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
-      <DialogContent className="sm:max-w-lg p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
+      <DialogContent className="sm:max-w-lg p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10">
         <DialogHeader className={cn(
-          "p-6 border-b border-gray-100 bg-gray-50/50 min-w-0",
+          "p-6 border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 min-w-0",
           (!selectedItems.length && !isVerificationEnabled) && "pb-5 border-b-0"
         )}>
           <div className="flex items-start gap-4 w-full">
@@ -127,7 +127,7 @@ export default function ConfirmModal({
                 {message}
               </DialogDescription>
               {note && (
-                <div className="mt-3 flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
+                <div className="mt-3 flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-950/30">
                   <i className="ph-bold ph-info text-amber-600 shrink-0" />
                   <p className="text-[11px] font-bold text-amber-700 leading-tight">
                     {note}
@@ -139,22 +139,22 @@ export default function ConfirmModal({
         </DialogHeader>
 
         {(selectedItems.length > 0 || isVerificationEnabled) && (
-          <div className="p-6 space-y-5 bg-white min-w-0">
+          <div className="p-6 space-y-5 bg-white min-w-0 dark:bg-card">
             {selectedItems.length > 0 && (
               <div>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 dark:text-zinc-500">
                   Selected Items ({selectedItems.length})
                 </p>
                 <div className="relative w-full">
-                  <div className="max-h-32 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50/50 p-2 space-y-1 custom-scrollbar pb-6 w-full">
+                  <div className="max-h-32 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-2 space-y-1 custom-scrollbar pb-6 w-full dark:border-white/10 dark:bg-white/5">
                     {selectedItems.map((item, idx) => (
                       <div
                         key={idx}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded bg-white border border-gray-100 shadow-sm overflow-hidden w-full"
+                        className="flex items-center gap-2 px-2 py-1.5 rounded bg-white border border-gray-100 shadow-sm overflow-hidden w-full dark:bg-card dark:border-white/10"
                       >
                         <div className={`w-1.5 h-1.5 shrink-0 rounded-full ${variant === "success" ? "bg-emerald-500" : (variant === "warning" ? "bg-amber-500" : "bg-red-500")}`} />
                         <div className="flex-1 min-w-0">
-                          <p className="truncate text-[11px] font-bold text-gray-700">
+                          <p className="truncate text-[11px] font-bold text-gray-700 dark:text-zinc-200">
                             {item}
                           </p>
                         </div>
@@ -169,13 +169,13 @@ export default function ConfirmModal({
             )}
 
             {isVerificationEnabled && (
-              <div className="rounded-xl border border-red-100 bg-red-50/30 p-5 shadow-xs">
+              <div className="rounded-xl border border-red-100 bg-red-50 p-5 shadow-xs dark:bg-red-950/30">
                 <div className="flex flex-col items-center gap-5">
                   <div className="text-center">
                     <label className="mb-2 block text-[9px] font-black tracking-widest text-red-800/60 uppercase">
                       Security Authorization Code
                     </label>
-                    <div className="flex h-12 items-center justify-center rounded-xl border-2 border-dashed border-red-200 bg-white px-8 font-mono text-2xl font-black tracking-[0.5em] text-red-700 shadow-inner">
+                    <div className="flex h-12 items-center justify-center rounded-xl border-2 border-dashed border-red-200 bg-white px-8 font-mono text-2xl font-black tracking-[0.5em] text-red-700 shadow-inner dark:bg-card dark:shadow-none">
                       {verificationTarget}
                     </div>
                   </div>
@@ -192,7 +192,7 @@ export default function ConfirmModal({
                           type="text"
                           maxLength={1}
                           inputMode="numeric"
-                          className="h-16 w-14 rounded-xl border-2 border-red-200 bg-white text-center font-mono text-3xl font-black text-gray-900 shadow-sm transition-all focus:scale-105 focus:border-red-500 focus:ring-4 focus:ring-red-100 focus:outline-none caret-transparent"
+                          className="h-16 w-14 rounded-xl border-2 border-red-200 bg-white text-center font-mono text-3xl font-black text-gray-900 shadow-sm transition-all focus:scale-105 focus:border-red-500 focus:ring-4 focus:ring-red-100 focus:outline-none caret-transparent dark:bg-card dark:text-zinc-50"
                           placeholder="0"
                           value={verificationValue[i] || ""}
                           onChange={(e) => handleInputChange(i, e.target.value)}
@@ -212,14 +212,14 @@ export default function ConfirmModal({
         )}
 
         <div className={cn(
-          "p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5",
+          "p-4 border-t border-gray-100 dark:border-white/10 bg-white dark:bg-card flex flex-col-reverse sm:flex-row sm:justify-end gap-2.5",
           (!selectedItems.length && !isVerificationEnabled) && "pt-0 border-t-0"
         )}>
           <Button
             type="button"
             variant="outline"
             onClick={onCancel}
-            className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 uppercase hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon shadow-sm transition-colors"
+            className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 uppercase hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:border-white/10 dark:text-zinc-300 dark:hover:border-zinc-700 dark:bg-red-950/30"
             disabled={isLoading}
           >
             {cancelLabel}
@@ -246,3 +246,4 @@ export default function ConfirmModal({
     </Dialog>
   );
 }
+

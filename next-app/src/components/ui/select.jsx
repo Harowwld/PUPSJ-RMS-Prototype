@@ -43,7 +43,7 @@ const Select = React.forwardRef(({ className, children, ...props }, ref) => {
         <i
           className={cn(
             "ph-bold ph-caret-down text-gray-400 text-xs transition-all duration-300",
-            isOpen ? "rotate-180 text-pup-maroon" : "group-focus-within/select:text-pup-maroon"
+            isOpen ? "rotate-180 text-pup-maroon dark:text-primary" : "group-focus-within/select:text-pup-maroon"
           )}
         ></i>
       </div>

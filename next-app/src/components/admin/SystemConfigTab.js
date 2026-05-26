@@ -261,7 +261,7 @@ export default function SystemConfigTab({
       )
     return (
       <i
-        className={`ph-bold ml-1 text-pup-maroon ${currentSort.direction === "asc" ? "ph-caret-up" : "ph-caret-down"}`}
+        className={`ph-bold ml-1 text-pup-maroon dark:text-primary ${currentSort.direction === "asc" ? "ph-caret-up" : "ph-caret-down"} dark:text-primary`}
       ></i>
     )
   }
@@ -917,8 +917,8 @@ export default function SystemConfigTab({
   /* if (loading && !docTypes.length) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-10 w-full max-w-md rounded-brand" />
-        <Skeleton className="h-[400px] w-full rounded-brand" />
+        <Skeleton className="h-10 w-full max-w-md rounded-brand dark:bg-muted" />
+        <Skeleton className="h-[400px] w-full rounded-brand dark:bg-muted" />
       </div>
     )
   } */
@@ -927,18 +927,18 @@ export default function SystemConfigTab({
 
   if (activeError) {
     return (
-      <div className="animate-fade-in font-inter flex w-full flex-col gap-4">
-        <Card className="flex flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm">
+      <div className="animate-fade-up font-inter flex w-full flex-col gap-4">
+        <Card className="flex flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
           <CardContent className="flex flex-col p-6">
-            <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500">
+            <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
-                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
+                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary dark:text-primary" />
                 </EmptyMedia>
-                <EmptyTitle className="text-lg font-bold text-gray-900">
+                <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                   Could not load configuration
                 </EmptyTitle>
-                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600">
+                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
                   {activeError}
                 </EmptyDescription>
               </EmptyHeader>
@@ -951,7 +951,7 @@ export default function SystemConfigTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="animate-fade-in font-inter flex w-full flex-col gap-4">
+      <div className="animate-fade-up font-inter flex w-full flex-col gap-4">
         <Tabs
           defaultValue="document-types"
           value={activeSubTab}
@@ -960,81 +960,61 @@ export default function SystemConfigTab({
           className="flex min-h-0 flex-1 flex-col"
         >
           <div className="flex shrink-0 flex-col items-center gap-4 sm:flex-row select-none">
-            <div className="inline-flex h-auto items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100/80 p-0.5 backdrop-blur-sm">
+            <div className="inline-flex h-auto items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 backdrop-blur-sm dark:border-white/10 dark:bg-muted/80">
               <button
                 type="button"
                 onClick={() => setActiveSubTab("document-types")}
-                className={`flex h-11 min-w-[180px] items-center justify-center gap-3 px-6 text-sm font-bold transition-all duration-200 active:scale-95 ${
-                  activeSubTab === "document-types"
-                    ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5"
-                    : "rounded-l-[calc(var(--radius)-2px)] rounded-r-none text-gray-500 ring-1 ring-inset ring-transparent hover:bg-white/50 hover:text-gray-700"
-                }`}
+                className={`flex h-11 min-w-[180px] items-center justify-center gap-3 px-6 text-sm font-bold transition-all duration-200 active:scale-95 ${ activeSubTab === "document-types" ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon dark:text-primary shadow-sm ring-1 ring-inset ring-black/5" : "text-gray-500 ring-transparent hover:bg-white hover:text-gray-700" } dark:bg-card dark:text-primary dark:shadow-none dark:hover:bg-white/5 dark:hover:text-zinc-200`}
               >
                 <i
-                  className={`ph-bold ph-files ${activeSubTab === "document-types" ? "" : "text-gray-400"}`}
+                  className={`ph-bold ph-files ${activeSubTab === "document-types" ? "" : "text-gray-400 dark:text-zinc-500"}`}
                 ></i>
                 <span>DOCUMENT TYPES</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveSubTab("degree-programs")}
-                className={`flex h-11 min-w-[180px] items-center justify-center gap-3 rounded-none px-6 text-sm font-bold transition-all duration-200 active:scale-95 ${
-                  activeSubTab === "degree-programs"
-                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5"
-                    : "text-gray-500 ring-1 ring-inset ring-transparent hover:bg-white/50 hover:text-gray-700"
-                }`}
+                className={`flex h-11 min-w-[180px] items-center justify-center gap-3 rounded-none px-6 text-sm font-bold transition-all duration-200 active:scale-95 ${ activeSubTab === "degree-programs" ? "bg-white text-pup-maroon dark:text-primary shadow-sm ring-1 ring-inset ring-black/5" : "text-gray-500 ring-transparent hover:bg-white hover:text-gray-700" } dark:bg-card dark:text-primary dark:shadow-none dark:hover:bg-white/5 dark:hover:text-zinc-200`}
               >
                 <i
-                  className={`ph-bold ph-books ${activeSubTab === "degree-programs" ? "" : "text-gray-400"}`}
+                  className={`ph-bold ph-books ${activeSubTab === "degree-programs" ? "" : "text-gray-400 dark:text-zinc-500"}`}
                 ></i>
                 <span>DEGREE PROGRAMS</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveSubTab("course-blocks")}
-                className={`flex h-11 min-w-[180px] items-center justify-center gap-3 rounded-none px-6 text-sm font-bold transition-all duration-200 active:scale-95 ${
-                  activeSubTab === "course-blocks"
-                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5"
-                    : "text-gray-500 ring-1 ring-inset ring-transparent hover:bg-white/50 hover:text-gray-700"
-                }`}
+                className={`flex h-11 min-w-[180px] items-center justify-center gap-3 rounded-none px-6 text-sm font-bold transition-all duration-200 active:scale-95 ${ activeSubTab === "course-blocks" ? "bg-white text-pup-maroon dark:text-primary shadow-sm ring-1 ring-inset ring-black/5" : "text-gray-500 ring-transparent hover:bg-white hover:text-gray-700" } dark:bg-card dark:text-primary dark:shadow-none dark:hover:bg-white/5 dark:hover:text-zinc-200`}
               >
                 <i
-                  className={`ph-bold ph-list-numbers ${activeSubTab === "course-blocks" ? "" : "text-gray-400"}`}
+                  className={`ph-bold ph-list-numbers ${activeSubTab === "course-blocks" ? "" : "text-gray-400 dark:text-zinc-500"}`}
                 ></i>
                 <span>COURSE BLOCKS</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveSubTab("security-questions")}
-                className={`flex h-11 min-w-[180px] items-center justify-center gap-3 rounded-none px-6 text-sm font-bold transition-all duration-200 active:scale-95 ${
-                  activeSubTab === "security-questions"
-                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5"
-                    : "text-gray-500 ring-1 ring-inset ring-transparent hover:bg-white/50 hover:text-gray-700"
-                }`}
+                className={`flex h-11 min-w-[180px] items-center justify-center gap-3 rounded-none px-6 text-sm font-bold transition-all duration-200 active:scale-95 ${ activeSubTab === "security-questions" ? "bg-white text-pup-maroon dark:text-primary shadow-sm ring-1 ring-inset ring-black/5" : "text-gray-500 ring-transparent hover:bg-white hover:text-gray-700" } dark:bg-card dark:text-primary dark:shadow-none dark:hover:bg-white/5 dark:hover:text-zinc-200`}
               >
                 <i
-                  className={`ph-bold ph-shield-check ${activeSubTab === "security-questions" ? "" : "text-gray-400"}`}
+                  className={`ph-bold ph-shield-check ${activeSubTab === "security-questions" ? "" : "text-gray-400 dark:text-zinc-500"}`}
                 ></i>
                 <span>SECURITY QUESTIONS</span>
               </button>
               <button
                 type="button"
                 onClick={() => setActiveSubTab("bulk-import")}
-                className={`flex h-11 min-w-[180px] items-center justify-center gap-3 px-6 text-sm font-bold transition-all duration-200 active:scale-95 ${
-                  activeSubTab === "bulk-import"
-                    ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5"
-                    : "rounded-r-[calc(var(--radius)-2px)] rounded-l-none text-gray-500 ring-1 ring-inset ring-transparent hover:bg-white/50 hover:text-gray-700"
-                }`}
+                className={`flex h-11 min-w-[180px] items-center justify-center gap-3 px-6 text-sm font-bold transition-all duration-200 active:scale-95 ${ activeSubTab === "bulk-import" ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon dark:text-primary shadow-sm ring-1 ring-inset ring-black/5" : "text-gray-500 ring-transparent hover:bg-white hover:text-gray-700" } dark:bg-card dark:text-primary dark:shadow-none dark:hover:bg-white/5 dark:hover:text-zinc-200`}
               >
                 <i
-                  className={`ph-bold ph-upload-simple ${activeSubTab === "bulk-import" ? "" : "text-gray-400"}`}
+                  className={`ph-bold ph-upload-simple ${activeSubTab === "bulk-import" ? "" : "text-gray-400 dark:text-zinc-500"}`}
                 ></i>
                 <span>IMPORTS</span>
               </button>
             </div>
           </div>
 
-          <Card className="relative mt-4 flex flex-col rounded-brand border border-gray-300 bg-white p-0 shadow-sm">
+          <Card className="relative mt-4 flex flex-col rounded-brand border border-gray-300 bg-white p-0 shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
             <TabsContent
               value="document-types"
               className="m-0 flex flex-col border-0 focus-visible:ring-0"
@@ -1147,7 +1127,7 @@ export default function SystemConfigTab({
 
             <TabsContent
               value="bulk-import"
-              className="m-0 flex flex-col border-0 bg-gray-50/50 focus-visible:ring-0"
+              className="m-0 flex flex-col border-0 bg-gray-50 focus-visible:ring-0 dark:bg-white/5"
             >
               <BulkImportTab
                 importStatus={importStatus}
@@ -1190,3 +1170,5 @@ export default function SystemConfigTab({
     </TooltipProvider>
   )
 }
+
+

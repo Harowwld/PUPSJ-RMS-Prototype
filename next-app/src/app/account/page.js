@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useTheme } from "next-themes";
 import Header from "@/components/layout/Header";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -28,6 +29,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { Select } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import PageHeader from "@/components/shared/PageHeader";
 import { formatPHDateTime } from "@/lib/timeFormat";
@@ -35,6 +37,7 @@ import { cn } from "@/lib/utils";
 
 function AccountPageContent() {
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
   const [authUser, setAuthUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -442,8 +445,8 @@ function AccountPageContent() {
 
   if (loading) {
     return (
-      <div className="h-screen flex flex-col bg-gray-50/50 animate-fade-in">
-        <header className="bg-white border-b border-gray-200 h-16 flex items-center px-4 shrink-0">
+      <div className="h-screen flex flex-col bg-gray-50 animate-fade-in dark:bg-white/5">
+        <header className="bg-white border-b border-gray-200 h-16 flex items-center px-4 shrink-0 dark:bg-card dark:border-white/10">
           <Skeleton className="w-10 h-10 rounded-full" />
           <Skeleton className="w-48 h-6 ml-3" />
         </header>
@@ -469,7 +472,7 @@ function AccountPageContent() {
   const isSuperAdmin = authUser?.role === "SuperAdmin";
   const roleBadgeColor = isSuperAdmin
     ? "bg-amber-100 text-amber-800 border-amber-200"
-    : "bg-red-50 text-pup-maroon border-red-100";
+    : "bg-red-50 dark:data-[state=active]:bg-red-500/10 text-pup-maroon dark:text-primary border-red-100";
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F9FAFB] font-inter selection:bg-pup-maroon selection:text-white">
@@ -487,7 +490,7 @@ function AccountPageContent() {
                 const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
                 router.push(path);
               }}
-              className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-gray-300 bg-white hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-xs flex items-center gap-2 rounded-xl"
+              className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-gray-300 bg-white hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center gap-2 rounded-xl dark:border-white/10 dark:bg-card"
             >
               <i className="ph-bold ph-caret-left"></i>
               Return to Dashboard
@@ -495,7 +498,7 @@ function AccountPageContent() {
           }
         />
 
-        <Separator className="mt-8 bg-gray-200" />
+        <Separator className="mt-8 bg-gray-200 dark:bg-zinc-700" />
 
         <div className="mt-8">
           <Tabs
@@ -506,18 +509,18 @@ function AccountPageContent() {
           >
           {/* Sidebar Navigation */}
           <aside className="space-y-6 lg:sticky lg:top-24">
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-              <div className="p-8 bg-linear-to-b from-gray-50 to-white border-b border-gray-100 flex flex-col items-center text-center">
+            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden dark:bg-card dark:border-white/10">
+              <div className="p-8 bg-linear-to-b from-gray-50 to-white border-b border-gray-100 flex flex-col items-center text-center dark:border-white/10">
                 <div className="relative group">
                   <div className="w-24 h-24 rounded-3xl bg-linear-to-br from-red-800 to-pup-maroon text-white flex items-center justify-center text-3xl font-black shadow-2xl shadow-red-900/30 mb-5 border-4 border-white rotate-3 group-hover:rotate-0 transition-transform duration-500">
                     {initials}
                   </div>
-                  <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-xl bg-white border-2 border-gray-100 flex items-center justify-center text-pup-maroon shadow-lg animate-bounce">
+                  <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-xl bg-white border-2 border-gray-100 flex items-center justify-center text-pup-maroon dark:text-primary shadow-lg animate-bounce dark:bg-card dark:border-white/10">
                     <i className="ph-fill ph-shield-check text-lg"></i>
                   </div>
                 </div>
                 
-                <h3 className="font-black text-gray-900 text-lg tracking-tight truncate w-full px-2">
+                <h3 className="font-black text-gray-900 text-lg tracking-tight truncate w-full px-2 dark:text-zinc-50">
                   {fname} {lname}
                 </h3>
                 <div
@@ -530,28 +533,35 @@ function AccountPageContent() {
               <TabsList className="p-2 w-full flex flex-col h-auto bg-transparent border-0 space-y-1">
                 <TabsTrigger
                   value="profile"
-                  className="flex items-center justify-start gap-3 w-full px-4 py-3.5 rounded-xl text-sm font-bold transition-all data-[state=active]:bg-red-50 data-[state=active]:text-pup-maroon data-[state=active]:shadow-sm text-gray-500 hover:bg-gray-50 hover:text-gray-900 border-0"
+                  className="flex items-center justify-start gap-3 w-full px-4 py-3.5 rounded-xl text-sm font-bold transition-all data-[state=active]:bg-red-50 data-[state=active]:text-pup-maroon dark:data-[state=active]:text-red-500 data-[state=active]:shadow-sm dark:data-[state=active]:shadow-none text-gray-500 hover:bg-gray-50 hover:text-gray-900 border-0 dark:data-[state=active]:bg-red-500/10 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-50"
                 >
                   <i className="ph-bold ph-identification-card text-xl"></i>
                   Profile
                 </TabsTrigger>
                 <TabsTrigger
                   value="security"
-                  className="flex items-center justify-start gap-3 w-full px-4 py-3.5 rounded-xl text-sm font-bold transition-all data-[state=active]:bg-red-50 data-[state=active]:text-pup-maroon data-[state=active]:shadow-sm text-gray-500 hover:bg-gray-50 hover:text-gray-900 border-0"
+                  className="flex items-center justify-start gap-3 w-full px-4 py-3.5 rounded-xl text-sm font-bold transition-all data-[state=active]:bg-red-50 data-[state=active]:text-pup-maroon dark:data-[state=active]:text-red-500 data-[state=active]:shadow-sm dark:data-[state=active]:shadow-none text-gray-500 hover:bg-gray-50 hover:text-gray-900 border-0 dark:data-[state=active]:bg-red-500/10 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-50"
                 >
                   <i className="ph-bold ph-shield-star text-xl"></i>
                   Security Settings
+                </TabsTrigger>
+                <TabsTrigger
+                  value="preferences"
+                  className="flex items-center justify-start gap-3 w-full px-4 py-3.5 rounded-xl text-sm font-bold transition-all data-[state=active]:bg-red-50 data-[state=active]:text-pup-maroon dark:data-[state=active]:text-red-500 data-[state=active]:shadow-sm dark:data-[state=active]:shadow-none text-gray-500 hover:bg-gray-50 hover:text-gray-900 border-0 dark:data-[state=active]:bg-red-500/10 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-50"
+                >
+                  <i className="ph-bold ph-palette text-xl"></i>
+                  System Preference
                 </TabsTrigger>
               </TabsList>
             </div>
 
             <div className="bg-pup-maroon/5 border-2 border-dashed border-pup-maroon/10 rounded-2xl p-6 relative overflow-hidden">
-               <i className="ph-fill ph-fingerprint absolute -right-4 -bottom-4 text-7xl text-pup-maroon/5 rotate-12"></i>
-               <div className="flex items-center gap-2 text-pup-maroon font-black text-[11px] uppercase tracking-widest mb-2">
+               <i className="ph-fill ph-fingerprint absolute -right-4 -bottom-4 text-7xl text-pup-maroon dark:text-primary/5 rotate-12"></i>
+               <div className="flex items-center gap-2 text-pup-maroon dark:text-primary font-black text-[11px] uppercase tracking-widest mb-2">
                   <i className="ph-bold ph-info"></i>
                   Security Note
                </div>
-               <p className="text-[12px] text-gray-600 font-medium leading-relaxed relative z-10">
+               <p className="text-[12px] text-gray-600 font-medium leading-relaxed relative z-10 dark:text-zinc-300">
                   Any changes to your account are encrypted and logged for system safety.
                </p>
             </div>
@@ -560,17 +570,17 @@ function AccountPageContent() {
           {/* Content Area */}
           <div className="min-w-0 space-y-8">
             <TabsContent value="profile" className="m-0 border-0 focus-visible:ring-0 animate-in fade-in slide-in-from-right-4 duration-500">
-              <Card className="rounded-2xl border-gray-200 shadow-sm overflow-hidden bg-white">
-                <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-8">
+              <Card className="rounded-2xl border-gray-200 shadow-sm overflow-hidden bg-white dark:border-white/10 dark:bg-card">
+                <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-8 dark:border-white/10">
                   <div className="flex items-center gap-5">
-                      <div className="w-14 h-14 rounded-2xl bg-white border-2 border-gray-100 flex items-center justify-center text-pup-maroon shadow-md shrink-0">
+                      <div className="w-14 h-14 rounded-2xl bg-white border-2 border-gray-100 flex items-center justify-center text-pup-maroon dark:text-primary shadow-md shrink-0 dark:bg-card dark:border-white/10">
                       <i className="ph-duotone ph-user-focus text-3xl"></i>
                     </div>
                     <div>
-                      <CardTitle className="text-2xl font-black text-gray-900 tracking-tight">
+                      <CardTitle className="text-2xl font-black text-gray-900 tracking-tight dark:text-zinc-50">
                         Profile
                       </CardTitle>
-                      <CardDescription className="font-medium text-gray-500 text-sm mt-1">
+                      <CardDescription className="font-medium text-gray-500 text-sm mt-1 dark:text-zinc-400">
                         Manage your profile name.
                       </CardDescription>
                     </div>
@@ -580,7 +590,7 @@ function AccountPageContent() {
                 <CardContent className="p-10">
                   <form onSubmit={submitProfile} className="space-y-10">
                     {profileError && (
-                      <div className="p-5 bg-red-50 border-2 border-red-100 text-red-700 text-sm font-bold rounded-xl flex items-center gap-4 animate-in shake-1">
+                      <div className="p-5 bg-red-50 border-2 border-red-100 text-red-700 text-sm font-bold rounded-xl flex items-center gap-4 animate-in shake-1 dark:data-[state=active]:bg-red-500/10">
                         <i className="ph-fill ph-warning-circle text-2xl"></i>
                         {profileError}
                       </div>
@@ -588,12 +598,12 @@ function AccountPageContent() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1">
+                        <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1 dark:text-zinc-400">
                           First Name
                         </label>
                         <Input
                           type="text"
-                          className="h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900"
+                          className="h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50"
                           placeholder="First Name"
                           value={fname}
                           onChange={(e) => setFname(e.target.value)}
@@ -601,12 +611,12 @@ function AccountPageContent() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1">
+                        <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1 dark:text-zinc-400">
                           Last Name
                         </label>
                         <Input
                           type="text"
-                          className="h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900"
+                          className="h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50"
                           placeholder="Last Name"
                           value={lname}
                           onChange={(e) => setLname(e.target.value)}
@@ -616,27 +626,27 @@ function AccountPageContent() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1">
+                      <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1 dark:text-zinc-400">
                         Email Address
                       </label>
                       <div className="relative group">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 group-focus-within:text-pup-maroon group-focus-within:bg-red-50 transition-colors">
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 rounded-lg bg-gray-100 flex items-center justify-center text-gray-400 group-focus-within:text-pup-maroon group-focus-within:bg-red-50 transition-colors dark:bg-zinc-800 dark:text-zinc-500">
                            <i className="ph-bold ph-envelope text-lg"></i>
                         </div>
                         <Input
                           type="email"
-                          className="h-14 pl-14 rounded-xl border border-gray-200 bg-gray-50/50 font-bold text-gray-500 cursor-not-allowed select-none border-dashed text-sm"
+                          className="h-14 pl-14 rounded-xl border border-gray-200 bg-gray-50 font-bold text-gray-500 cursor-not-allowed select-none border-dashed text-sm dark:border-white/10 dark:bg-white/5 dark:text-zinc-400"
                           value={username}
                           readOnly
                         />
                       </div>
-                      <p className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-3 ml-1">
+                      <p className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-3 ml-1 dark:text-zinc-500">
                         <i className="ph-bold ph-lock"></i>
                         Your email is managed by administrators and cannot be changed.
                       </p>
                     </div>
 
-                    <div className="pt-8 border-t border-gray-100 flex justify-end">
+                    <div className="pt-8 border-t border-gray-100 flex justify-end dark:border-white/10">
                       <Button
                         type="submit"
                         disabled={profileLoading}
@@ -658,20 +668,20 @@ function AccountPageContent() {
             <TabsContent value="security" className="m-0 border-0 focus-visible:ring-0 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="space-y-8">
                 {/* Password Rotation Card */}
-                <Card className="rounded-2xl border-gray-200 shadow-sm overflow-hidden bg-white">
-                  <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-8">
+                <Card className="rounded-2xl border-gray-200 shadow-sm overflow-hidden bg-white dark:border-white/10 dark:bg-card">
+                  <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-8 dark:border-white/10">
                     <div className="flex items-center gap-5">
-                      <div className="w-14 h-14 rounded-2xl bg-white border-2 border-gray-100 flex items-center justify-center text-pup-maroon shadow-md shrink-0">
+                      <div className="w-14 h-14 rounded-2xl bg-white border-2 border-gray-100 flex items-center justify-center text-pup-maroon dark:text-primary shadow-md shrink-0 dark:bg-card dark:border-white/10">
                         <i className="ph-duotone ph-key text-3xl"></i>
                       </div>
                       <div>
-                        <CardTitle className="text-2xl font-black text-gray-900 tracking-tight">
+                        <CardTitle className="text-2xl font-black text-gray-900 tracking-tight dark:text-zinc-50">
                           Account Access
                         </CardTitle>
-                        <CardDescription className="font-medium text-gray-500 text-sm mt-1">
+                        <CardDescription className="font-medium text-gray-500 text-sm mt-1 dark:text-zinc-400">
                           Update your sign-in details.
                           {authUser?.password_last_changed && (
-                            <span className="flex items-center gap-1.5 mt-2 text-[10px] text-pup-maroon font-black uppercase tracking-wider bg-red-50/50 w-fit px-2 py-0.5 rounded border border-red-100">
+                            <span className="flex items-center gap-1.5 mt-2 text-[10px] text-pup-maroon dark:text-primary font-black uppercase tracking-wider bg-red-50 w-fit px-2 py-0.5 rounded border border-red-100 dark:bg-red-950/50">
                               <i className="ph-bold ph-calendar"></i>
                               Last Updated: {formatPHDateTime(authUser.password_last_changed)}
                             </span>
@@ -684,7 +694,7 @@ function AccountPageContent() {
                   <CardContent className="p-10">
                     <form onSubmit={submitPassword} className="space-y-8">
                       {pwError && (
-                        <div className="p-5 bg-red-50 border-2 border-red-100 text-red-700 text-sm font-bold rounded-xl flex items-center gap-4 animate-in shake-1">
+                        <div className="p-5 bg-red-50 border-2 border-red-100 text-red-700 text-sm font-bold rounded-xl flex items-center gap-4 animate-in shake-1 dark:data-[state=active]:bg-red-500/10">
                           <i className="ph-fill ph-warning-circle text-2xl"></i>
                           {pwError}
                         </div>
@@ -692,13 +702,13 @@ function AccountPageContent() {
 
                       <div className="grid grid-cols-1 gap-8">
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1">
+                          <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1 dark:text-zinc-400">
                             Current Password
                           </label>
                           <div className="relative group">
                             <Input
                               type={showPw.current ? "text" : "password"}
-                              className="h-12 rounded-xl border border-gray-200 bg-white pr-10 pl-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900"
+                              className="h-12 rounded-xl border border-gray-200 bg-white pr-10 pl-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50"
                               placeholder="Type your old password"
                               value={pwCurrent}
                               onChange={(e) => setPwCurrent(e.target.value)}
@@ -707,7 +717,7 @@ function AccountPageContent() {
                             <button
                               type="button"
                               onClick={() => setShowPw(prev => ({ ...prev, current: !prev.current }))}
-                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon transition-colors"
+                              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500"
                             >
                               <i className={cn("ph-bold", showPw.current ? "ph-eye-slash" : "ph-eye")}></i>
                             </button>
@@ -716,13 +726,13 @@ function AccountPageContent() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                           <div className="space-y-2">
-                            <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1">
+                            <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1 dark:text-zinc-400">
                               New Password
                             </label>
                             <div className="relative group">
                               <Input
                                 type={showPw.next ? "text" : "password"}
-                                className="h-12 rounded-xl border border-gray-200 bg-white pr-10 pl-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900"
+                                className="h-12 rounded-xl border border-gray-200 bg-white pr-10 pl-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50"
                                 placeholder="Create a strong password"
                                 value={pwNext}
                                 onChange={(e) => setPwNext(e.target.value)}
@@ -731,20 +741,20 @@ function AccountPageContent() {
                               <button
                                 type="button"
                                 onClick={() => setShowPw(prev => ({ ...prev, next: !prev.next }))}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon transition-colors"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500"
                               >
                                 <i className={cn("ph-bold", showPw.next ? "ph-eye-slash" : "ph-eye")}></i>
                               </button>
                             </div>
                           </div>
                           <div className="space-y-2">
-                            <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1">
+                            <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1 dark:text-zinc-400">
                               Confirm Password
                             </label>
                             <div className="relative group">
                               <Input
                                 type={showPw.confirm ? "text" : "password"}
-                                className="h-12 rounded-xl border border-gray-200 bg-white pr-10 pl-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900"
+                                className="h-12 rounded-xl border border-gray-200 bg-white pr-10 pl-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50"
                                 placeholder="Match new password"
                                 value={pwConfirm}
                                 onChange={(e) => setPwConfirm(e.target.value)}
@@ -753,7 +763,7 @@ function AccountPageContent() {
                               <button
                                 type="button"
                                 onClick={() => setShowPw(prev => ({ ...prev, confirm: !prev.confirm }))}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon transition-colors"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500"
                               >
                                 <i className={cn("ph-bold", showPw.confirm ? "ph-eye-slash" : "ph-eye")}></i>
                               </button>
@@ -762,7 +772,7 @@ function AccountPageContent() {
                         </div>
                       </div>
 
-                      <div className="pt-8 border-t border-gray-100 flex justify-end">
+                      <div className="pt-8 border-t border-gray-100 flex justify-end dark:border-white/10">
                         <Button
                           type="submit"
                           disabled={pwLoading}
@@ -781,17 +791,17 @@ function AccountPageContent() {
                 </Card>
 
                 {/* Security Questions Card */}
-                <Card className="rounded-2xl border-gray-200 shadow-sm overflow-hidden bg-white">
-                  <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-8">
+                <Card className="rounded-2xl border-gray-200 shadow-sm overflow-hidden bg-white dark:border-white/10 dark:bg-card">
+                  <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-8 dark:border-white/10">
                     <div className="flex items-center gap-5">
-                      <div className="w-14 h-14 rounded-2xl bg-white border-2 border-gray-100 flex items-center justify-center text-pup-maroon shadow-md shrink-0">
+                      <div className="w-14 h-14 rounded-2xl bg-white border-2 border-gray-100 flex items-center justify-center text-pup-maroon dark:text-primary shadow-md shrink-0 dark:bg-card dark:border-white/10">
                         <i className="ph-duotone ph-shield-check text-3xl"></i>
                       </div>
                       <div>
-                        <CardTitle className="text-2xl font-black text-gray-900 tracking-tight">
+                        <CardTitle className="text-2xl font-black text-gray-900 tracking-tight dark:text-zinc-50">
                           Security Questions
                         </CardTitle>
-                        <CardDescription className="font-medium text-gray-500 text-sm mt-1">
+                        <CardDescription className="font-medium text-gray-500 text-sm mt-1 dark:text-zinc-400">
                           Set up questions to help recover your account.
                         </CardDescription>
                       </div>
@@ -801,21 +811,21 @@ function AccountPageContent() {
                   <CardContent className="p-10">
                     <form onSubmit={submitSecurity} className="space-y-8">
                       {secError && (
-                        <div className="p-5 bg-red-50 border-2 border-red-100 text-red-700 text-sm font-bold rounded-xl flex items-center gap-4 animate-in shake-1">
+                        <div className="p-5 bg-red-50 border-2 border-red-100 text-red-700 text-sm font-bold rounded-xl flex items-center gap-4 animate-in shake-1 dark:data-[state=active]:bg-red-500/10">
                           <i className="ph-fill ph-warning-circle text-2xl"></i>
                           {secError}
                         </div>
                       )}
 
                       {hasSetSecurity && (
-                        <div className="mb-8 p-6 bg-emerald-50/50 border border-emerald-100 rounded-2xl flex items-start gap-4">
-                           <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-emerald-600 shadow-sm shrink-0">
+                        <div className="mb-8 p-6 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-start gap-4 dark:bg-emerald-950/50">
+                           <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-emerald-600 shadow-sm shrink-0 dark:bg-card">
                               <i className="ph-fill ph-check-circle text-2xl"></i>
                            </div>
                            <div>
                               <h4 className="font-black text-emerald-900 text-sm">Security Questions Set</h4>
                               <p className="text-xs font-medium text-emerald-700 mt-1 leading-relaxed">
-                                 Your recovery questions are active. To update an answer, click the "Change" button next to the question.
+                                 Your recovery questions are active. To update an answer, click the &quot;Change&quot; button next to the question.
                               </p>
                            </div>
                         </div>
@@ -823,7 +833,7 @@ function AccountPageContent() {
 
                       <div className="space-y-8">
                         {globalQuestions.length === 0 ? (
-                          <div className="p-8 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200 text-gray-400 font-bold text-sm">
+                          <div className="p-8 text-center bg-gray-50 rounded-2xl border border-dashed border-gray-200 text-gray-400 font-bold text-sm dark:bg-card dark:border-white/10 dark:text-zinc-500">
                             <i className="ph-duotone ph-mask-sad text-4xl mb-3 block opacity-20"></i>
                             No recovery questions configured.
                           </div>
@@ -835,8 +845,8 @@ function AccountPageContent() {
                             return (
                               <div key={q.id} className="relative group">
                                 <div className="flex items-center justify-between mb-3 px-1">
-                                  <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase flex items-center gap-2">
-                                    <span className="w-5 h-5 rounded bg-gray-100 flex items-center justify-center text-[10px] text-gray-400 font-black">{idx + 1}</span>
+                                  <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase flex items-center gap-2 dark:text-zinc-400">
+                                    <span className="w-5 h-5 rounded bg-gray-100 flex items-center justify-center text-[10px] text-gray-400 font-black dark:bg-zinc-800 dark:text-zinc-500">{idx + 1}</span>
                                     {q.question}
                                   </label>
                                   {q.hasAnswer && (
@@ -852,11 +862,7 @@ function AccountPageContent() {
                                           });
                                         }
                                       }}
-                                      className={`text-[9px] font-black uppercase tracking-[0.15em] px-3 py-1 rounded-lg transition-all ${
-                                        isEditing 
-                                          ? "bg-gray-100 text-gray-600 hover:bg-gray-200" 
-                                          : "bg-red-50 text-pup-maroon hover:bg-pup-maroon hover:text-white"
-                                      }`}
+                                      className={`text-[9px] font-black uppercase tracking-[0.15em] px-3 py-1 rounded-lg transition-all ${ isEditing ? "bg-gray-100 text-gray-600 hover:bg-gray-200" : "bg-red-50 text-pup-maroon dark:text-primary hover:bg-pup-maroon hover:text-white" } dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700`}
                                     >
                                       {isEditing ? "Cancel" : "Change Answer"}
                                     </button>
@@ -867,14 +873,14 @@ function AccountPageContent() {
                                   {showInput ? (
                                     <Input
                                       type="text"
-                                      className="h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 animate-in fade-in slide-in-from-top-1 duration-300"
+                                      className="h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card dark:text-zinc-50"
                                       placeholder="Your secure answer"
                                       value={secAnswers[q.id] || ""}
                                       onChange={(e) => setSecAnswers({ ...secAnswers, [q.id]: e.target.value })}
                                       autoFocus={isEditing}
                                     />
                                   ) : (
-                                    <div className="h-12 flex items-center px-4 bg-gray-50/50 border border-gray-200 border-dashed rounded-xl text-sm font-bold text-gray-400 italic select-none">
+                                    <div className="h-12 flex items-center px-4 bg-gray-50 border border-gray-200 border-dashed rounded-xl text-sm font-bold text-gray-400 italic select-none dark:bg-white/5 dark:border-white/10 dark:text-zinc-500">
                                       <i className="ph-bold ph-circle-dashed mr-2 opacity-50"></i>
                                       Answer saved and encrypted.
                                     </div>
@@ -886,7 +892,7 @@ function AccountPageContent() {
                         )}
                       </div>
 
-                      <div className="pt-8 border-t border-gray-100 flex justify-end">
+                      <div className="pt-8 border-t border-gray-100 flex justify-end dark:border-white/10">
                         <Button
                           type="submit"
                           disabled={secLoading || globalQuestions.length === 0}
@@ -905,17 +911,17 @@ function AccountPageContent() {
                 </Card>
 
                 {/* 2FA Card */}
-                <Card className="rounded-2xl border-gray-200 shadow-sm overflow-hidden bg-white">
-                  <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-8">
+                <Card className="rounded-2xl border-gray-200 shadow-sm overflow-hidden bg-white dark:border-white/10 dark:bg-card">
+                  <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-8 dark:border-white/10">
                     <div className="flex items-center gap-5">
-                      <div className="w-14 h-14 rounded-2xl bg-white border-2 border-gray-100 flex items-center justify-center text-pup-maroon shadow-md shrink-0">
+                      <div className="w-14 h-14 rounded-2xl bg-white border-2 border-gray-100 flex items-center justify-center text-pup-maroon dark:text-primary shadow-md shrink-0 dark:bg-card dark:border-white/10">
                         <i className="ph-duotone ph-fingerprint text-3xl"></i>
                       </div>
                       <div>
-                        <CardTitle className="text-2xl font-black text-gray-900 tracking-tight">
+                        <CardTitle className="text-2xl font-black text-gray-900 tracking-tight dark:text-zinc-50">
                           Two-Factor Auth
                         </CardTitle>
-                        <CardDescription className="font-medium text-gray-500 text-sm mt-1">
+                        <CardDescription className="font-medium text-gray-500 text-sm mt-1 dark:text-zinc-400">
                           Add an extra layer of security to your account.
                         </CardDescription>
                       </div>
@@ -925,8 +931,8 @@ function AccountPageContent() {
                   <CardContent className="p-10">
                     {totpEnabled ? (
                       <div className="space-y-10">
-                        <div className="p-6 bg-emerald-50/50 border-2 border-emerald-100 rounded-2xl flex items-start gap-5">
-                          <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-emerald-600 shadow-md shrink-0">
+                        <div className="p-6 bg-emerald-50 border-2 border-emerald-100 rounded-2xl flex items-start gap-5 dark:bg-emerald-950/50">
+                          <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-emerald-600 shadow-md shrink-0 dark:bg-card">
                             <i className="ph-fill ph-check-circle text-3xl"></i>
                           </div>
                           <div>
@@ -937,15 +943,15 @@ function AccountPageContent() {
                           </div>
                         </div>
 
-                        <div className="bg-gray-50/50 rounded-2xl border border-gray-100 p-8 space-y-6">
+                        <div className="bg-gray-50 rounded-2xl border border-gray-100 p-8 space-y-6 dark:bg-white/5 dark:border-white/10">
                            <div className="space-y-2">
-                              <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1">
+                              <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1 dark:text-zinc-400">
                                 Turn Off Two-Factor Auth
                               </label>
                               <Input
                                 type="text"
                                 maxLength={6}
-                                className="h-16 rounded-xl border border-gray-200 bg-white text-center text-2xl font-black tracking-[0.5em] text-gray-900 shadow-inner transition-all focus-visible:border-red-500/20 focus-visible:ring-4 focus-visible:ring-red-500/5"
+                                className="h-16 rounded-xl border border-gray-200 bg-white text-center text-2xl font-black tracking-[0.5em] text-gray-900 shadow-inner transition-all focus-visible:border-red-500/20 focus-visible:ring-4 focus-visible:ring-red-500/5 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none"
                                 placeholder="000000"
                                 value={totpToken}
                                 onChange={(e) => setTotpToken(e.target.value.replace(/\D/g, "").slice(0, 6))}
@@ -968,11 +974,11 @@ function AccountPageContent() {
                            </div>
                         </div>
 
-                        <div className="pt-10 border-t border-gray-100">
+                        <div className="pt-10 border-t border-gray-100 dark:border-white/10">
                           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
                             <div>
-                              <h4 className="text-lg font-black text-gray-900 tracking-tight">Recovery Codes</h4>
-                              <p className="text-sm font-medium text-gray-500 mt-1">
+                              <h4 className="text-lg font-black text-gray-900 tracking-tight dark:text-zinc-50">Recovery Codes</h4>
+                              <p className="text-sm font-medium text-gray-500 mt-1 dark:text-zinc-400">
                                 {recoveryCodesCount > 0 
                                   ? `You have ${recoveryCodesCount} codes available.`
                                   : "You haven't set up recovery codes yet."}
@@ -982,7 +988,7 @@ function AccountPageContent() {
                               onClick={generateNewRecoveryCodes}
                               disabled={totpLoading}
                               variant="outline"
-                              className="h-11 px-6 font-black text-[10px] uppercase tracking-widest border-gray-300 hover:border-pup-maroon hover:text-pup-maroon bg-white rounded-xl shadow-xs transition-all flex items-center gap-2"
+                              className="h-11 px-6 font-black text-[10px] uppercase tracking-widest border-gray-300 hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 bg-white rounded-xl shadow-xs transition-all flex items-center gap-2 dark:border-white/10 dark:bg-card"
                             >
                               {totpLoading ? (
                                 <i className="ph-bold ph-spinner animate-spin"></i>
@@ -993,7 +999,7 @@ function AccountPageContent() {
                             </Button>
                           </div>
                           
-                          <div className="mt-6 p-5 bg-amber-50/50 border border-amber-100 rounded-xl flex items-start gap-3">
+                          <div className="mt-6 p-5 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-3 dark:bg-amber-950/50">
                             <i className="ph-fill ph-info text-xl mt-0.5 shrink-0 text-amber-600"></i>
                             <p className="text-[12px] text-amber-800 font-bold leading-relaxed">
                               Recovery codes allow you to access your account if you lose your phone. Keep them in a safe place.
@@ -1003,44 +1009,44 @@ function AccountPageContent() {
                       </div>
                     ) : totpStep === "setup" && totpSetupData ? (
                       <div className="space-y-8 animate-in zoom-in-95 duration-500">
-                        <div className="grid grid-cols-1 md:grid-cols-[1fr_250px] gap-8 bg-gray-50 rounded-2xl border border-gray-100 p-8 items-center">
+                        <div className="grid grid-cols-1 md:grid-cols-[1fr_250px] gap-8 bg-gray-50 rounded-2xl border border-gray-100 p-8 items-center dark:bg-card dark:border-white/10">
                           <div className="space-y-4">
-                            <h4 className="text-lg font-black text-gray-900 tracking-tight">Setup</h4>
-                            <p className="text-sm font-medium text-gray-600 leading-relaxed">
+                            <h4 className="text-lg font-black text-gray-900 tracking-tight dark:text-zinc-50">Setup</h4>
+                            <p className="text-sm font-medium text-gray-600 leading-relaxed dark:text-zinc-300">
                               Scan the QR code using your authenticator app (like Google Authenticator or Authy) to link your account.
                             </p>
                             
                             <div className="space-y-2 mt-4">
-                               <div className="bg-white px-4 py-3 rounded-xl border border-gray-200 flex flex-col gap-1.5 shadow-xs">
-                                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Secret Key</span>
-                                  <code className="text-sm font-black text-pup-maroon tracking-wider break-all">{totpSetupData.secret}</code>
+                               <div className="bg-white px-4 py-3 rounded-xl border border-gray-200 flex flex-col gap-1.5 shadow-xs dark:bg-card dark:border-white/10">
+                                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">Secret Key</span>
+                                  <code className="text-sm font-black text-pup-maroon dark:text-primary tracking-wider break-all">{totpSetupData.secret}</code>
                                </div>
-                               <div className="bg-white px-4 py-3 rounded-xl border border-gray-200 flex flex-col gap-1.5 shadow-xs">
-                                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest">Serial Key (Backup)</span>
-                                  <code className="text-sm font-black text-gray-900 tracking-wider break-all">{totpSetupData.serialKey}</code>
+                               <div className="bg-white px-4 py-3 rounded-xl border border-gray-200 flex flex-col gap-1.5 shadow-xs dark:bg-card dark:border-white/10">
+                                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">Serial Key (Backup)</span>
+                                  <code className="text-sm font-black text-gray-900 tracking-wider break-all dark:text-zinc-50">{totpSetupData.serialKey}</code>
                                </div>
                             </div>
                           </div>
                           <div className="flex flex-col items-center">
-                            <div className="bg-white p-4 rounded-2xl border-2 border-white shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-500">
+                            <div className="bg-white p-4 rounded-2xl border-2 border-white shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-500 dark:bg-card">
                               <img
                                 src={totpSetupData.qrCode}
                                 alt="TOTP QR Code"
                                 className="w-44 h-44"
                               />
                             </div>
-                            <span className="mt-4 text-[10px] font-black text-gray-400 uppercase tracking-widest">Scan QR Code</span>
+                            <span className="mt-4 text-[10px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">Scan QR Code</span>
                           </div>
                         </div>
 
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1">
+                          <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1 dark:text-zinc-400">
                             Enter Verification Code
                           </label>
                           <Input
                             type="text"
                             maxLength={6}
-                            className="h-16 rounded-xl border border-gray-200 bg-white text-center text-2xl font-black tracking-[0.5em] text-gray-900 shadow-inner transition-all focus-visible:border-pup-maroon/20 focus-visible:ring-4 focus-visible:ring-pup-maroon/5"
+                            className="h-16 rounded-xl border border-gray-200 bg-white text-center text-2xl font-black tracking-[0.5em] text-gray-900 shadow-inner transition-all focus-visible:border-pup-maroon/20 focus-visible:ring-4 focus-visible:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none"
                             placeholder="000000"
                             value={totpToken}
                             onChange={(e) => setTotpToken(e.target.value.replace(/\D/g, "").slice(0, 6))}
@@ -1049,18 +1055,18 @@ function AccountPageContent() {
                         </div>
 
                         {totpError && (
-                          <div className="p-5 bg-red-50 border-2 border-red-100 text-red-700 text-sm font-bold rounded-xl flex items-center gap-4 animate-in shake-1">
+                          <div className="p-5 bg-red-50 border-2 border-red-100 text-red-700 text-sm font-bold rounded-xl flex items-center gap-4 animate-in shake-1 dark:data-[state=active]:bg-red-500/10">
                             <i className="ph-fill ph-warning-circle text-2xl"></i>
                             {totpError}
                           </div>
                         )}
 
-                        <div className="pt-8 border-t border-gray-100 flex justify-end gap-4">
+                        <div className="pt-8 border-t border-gray-100 flex justify-end gap-4 dark:border-white/10">
                           <Button
                             onClick={cancelTOTPSetup}
                             disabled={totpLoading}
                             variant="outline"
-                            className="h-12 px-8 font-black uppercase tracking-widest text-[11px] border-gray-200 bg-white rounded-xl hover:bg-gray-50 transition-all shadow-xs"
+                            className="h-12 px-8 font-black uppercase tracking-widest text-[11px] border-gray-200 bg-white rounded-xl hover:bg-gray-50 transition-all shadow-xs dark:border-white/10 dark:bg-card dark:hover:bg-white/10"
                           >
                             Cancel
                           </Button>
@@ -1080,17 +1086,17 @@ function AccountPageContent() {
                       </div>
                     ) : (
                       <div className="space-y-8 animate-in fade-in duration-500">
-                        <div className="p-8 bg-gray-50/50 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center text-center">
-                          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-300 mb-4 border-2 border-white shadow-inner">
+                        <div className="p-8 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center text-center dark:bg-white/5 dark:border-white/10">
+                          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-300 mb-4 border-2 border-white shadow-inner dark:bg-zinc-800 dark:text-zinc-600 dark:shadow-none">
                             <i className="ph-bold ph-lock-key-open text-3xl"></i>
                           </div>
-                          <h4 className="font-black text-gray-900 text-lg tracking-tight">Two-Factor Auth is Off</h4>
-                          <p className="text-sm font-medium text-gray-500 mt-2 max-w-sm leading-relaxed">
-                            Your account doesn't have an extra layer of protection yet. Turn on 2FA to keep your account safe.
+                          <h4 className="font-black text-gray-900 text-lg tracking-tight dark:text-zinc-50">Two-Factor Auth is Off</h4>
+                          <p className="text-sm font-medium text-gray-500 mt-2 max-w-sm leading-relaxed dark:text-zinc-400">
+                            Your account doesn&apos;t have an extra layer of protection yet. Turn on 2FA to keep your account safe.
                           </p>
                         </div>
 
-                        <div className="pt-8 border-t border-gray-100 flex justify-center sm:justify-end">
+                        <div className="pt-8 border-t border-gray-100 flex justify-center sm:justify-end dark:border-white/10">
                           <Button
                             onClick={startTOTPSetup}
                             disabled={totpLoading}
@@ -1110,13 +1116,51 @@ function AccountPageContent() {
                 </Card>
               </div>
             </TabsContent>
+
+            <TabsContent value="preferences" className="m-0 border-0 focus-visible:ring-0 animate-in fade-in slide-in-from-right-4 duration-500">
+              <Card className="rounded-2xl border-gray-200 shadow-sm overflow-hidden bg-white dark:border-white/10 dark:bg-card">
+                <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-8 dark:border-white/10">
+                  <div className="flex items-center gap-5">
+                      <div className="w-14 h-14 rounded-2xl bg-white border-2 border-gray-100 flex items-center justify-center text-pup-maroon dark:text-primary shadow-md shrink-0 dark:bg-card dark:border-white/10">
+                      <i className="ph-duotone ph-palette text-3xl"></i>
+                    </div>
+                    <div>
+                      <CardTitle className="text-2xl font-black text-gray-900 tracking-tight dark:text-zinc-50">
+                        System Preference
+                      </CardTitle>
+                      <CardDescription className="font-medium text-gray-500 text-sm mt-1 dark:text-zinc-400">
+                        Customize how the system looks for you.
+                      </CardDescription>
+                    </div>
+                  </div>
+                </CardHeader>
+
+                <CardContent className="p-10">
+                   <div className="space-y-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1 dark:text-zinc-400">
+                          Theme
+                        </label>
+                        <Select value={theme} onChange={(e) => setTheme(e.target.value)}>
+                          <option value="system">System</option>
+                          <option value="light">Light</option>
+                          <option value="dark">Dark</option>
+                        </Select>
+                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-3 ml-1 dark:text-zinc-500">
+                           Choose your preferred color theme for the interface.
+                        </p>
+                      </div>
+                   </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
           </div>
         </Tabs>
         </div>
 
         {/* Recovery Codes Modal */}
         <Dialog open={showRecoveryCodesDialog} onOpenChange={setShowRecoveryCodesDialog}>
-          <DialogContent className="max-w-md rounded-2xl border-pup-border p-0 overflow-hidden bg-white shadow-2xl">
+          <DialogContent className="max-w-md rounded-2xl border-pup-border p-0 overflow-hidden bg-white shadow-2xl dark:bg-card">
             <div className="bg-linear-to-br from-red-800 to-pup-maroon p-8 text-white relative overflow-hidden">
                <i className="ph-fill ph-shield-key absolute -right-8 -bottom-8 text-[120px] text-white/5 rotate-12"></i>
                <DialogTitle className="text-2xl font-black tracking-tight relative z-10">Recovery Codes</DialogTitle>
@@ -1126,16 +1170,16 @@ function AccountPageContent() {
             </div>
             
             <div className="p-8 space-y-8">
-              <div className="bg-gray-50 p-6 rounded-2xl border-2 border-gray-100 shadow-inner grid grid-cols-2 gap-4">
+              <div className="bg-gray-50 p-6 rounded-2xl border-2 border-gray-100 shadow-inner grid grid-cols-2 gap-4 dark:bg-card dark:border-white/10 dark:shadow-none">
                 {recoveryCodes.map((code, idx) => (
-                  <div key={idx} className="font-mono text-sm font-black text-gray-700 flex items-center gap-3 bg-white p-2 rounded-lg border border-gray-100 shadow-xs">
-                    <span className="text-[10px] text-pup-maroon font-black bg-red-50 w-5 h-5 flex items-center justify-center rounded uppercase">{idx + 1}</span>
+                  <div key={idx} className="font-mono text-sm font-black text-gray-700 flex items-center gap-3 bg-white p-2 rounded-lg border border-gray-100 shadow-xs dark:text-zinc-200 dark:bg-card dark:border-white/10">
+                    <span className="text-[10px] text-pup-maroon dark:text-primary font-black bg-red-50 w-5 h-5 flex items-center justify-center rounded uppercase dark:data-[state=active]:bg-red-500/10">{idx + 1}</span>
                     <span className="tracking-widest">{code}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-3">
+              <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-3 dark:bg-amber-950/30">
                  <i className="ph-fill ph-warning text-xl text-amber-600 shrink-0"></i>
                  <p className="text-[11px] text-amber-900 font-bold leading-relaxed">
                     WARNING: These codes are for emergency use only. Each code can be used once. Save them somewhere safe.
@@ -1147,14 +1191,14 @@ function AccountPageContent() {
                   <Button 
                     onClick={copyRecoveryCodes}
                     variant="outline" 
-                    className="flex-1 h-12 font-black uppercase tracking-widest text-[10px] border-gray-300 rounded-xl hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-xs flex items-center justify-center gap-2"
+                    className="flex-1 h-12 font-black uppercase tracking-widest text-[10px] border-gray-300 rounded-xl hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center justify-center gap-2 dark:border-white/10"
                   >
                     <i className="ph-bold ph-copy text-lg"></i> Clipboard
                   </Button>
                   <Button 
                     onClick={downloadRecoveryCodes}
                     variant="outline" 
-                    className="flex-1 h-12 font-black uppercase tracking-widest text-[10px] border-gray-300 rounded-xl hover:border-pup-maroon hover:text-pup-maroon transition-all shadow-xs flex items-center justify-center gap-2"
+                    className="flex-1 h-12 font-black uppercase tracking-widest text-[10px] border-gray-300 rounded-xl hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center justify-center gap-2 dark:border-white/10"
                   >
                     <i className="ph-bold ph-download-simple text-lg"></i> Save File
                   </Button>

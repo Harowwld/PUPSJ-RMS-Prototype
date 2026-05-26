@@ -12,7 +12,7 @@ export default function SlaKpiCards({ total, slaHours, completionRate }) {
   return (
     <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
       {/* Completion Rate */}
-      <div className="group relative overflow-hidden rounded-xl border border-red-950 bg-linear-to-br from-red-700 to-red-950 p-5 shadow-sm transition-all">
+      <div className="group relative overflow-hidden rounded-xl border border-red-950 bg-linear-to-br from-red-700 to-red-950 p-5 shadow-sm transition-all dark:shadow-none">
         <i className="ph-duotone ph-check-circle pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-20" />
         <div className="relative z-10">
           <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-[#f7c9ce] uppercase">
@@ -26,7 +26,7 @@ export default function SlaKpiCards({ total, slaHours, completionRate }) {
           <div className="mt-1 text-[10px] font-medium text-[#f7c9ce]/80">
             Request fulfillment efficiency
           </div>
-          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-black/20">
+          <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/5">
             <div
               className="h-full bg-linear-to-r from-emerald-400 to-emerald-500"
               style={{ width: `${completionRate}%` }}
@@ -36,7 +36,7 @@ export default function SlaKpiCards({ total, slaHours, completionRate }) {
       </div>
 
       {/* Total Requests */}
-      <div className="group relative overflow-hidden rounded-xl border border-emerald-950 bg-linear-to-br from-emerald-800 to-emerald-950 p-5 shadow-sm transition-all hover:shadow-md">
+      <div className="group relative overflow-hidden rounded-xl border border-emerald-950 bg-linear-to-br from-emerald-800 to-emerald-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
         <i className="ph-duotone ph-envelope-open pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
         <div className="relative z-10">
           <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-emerald-200 uppercase">
@@ -52,7 +52,7 @@ export default function SlaKpiCards({ total, slaHours, completionRate }) {
       </div>
 
       {/* Avg. Turnaround */}
-      <div className="group relative overflow-hidden rounded-xl border border-blue-950 bg-linear-to-br from-blue-800 to-blue-950 p-5 shadow-sm transition-all hover:shadow-md">
+      <div className="group relative overflow-hidden rounded-xl border border-blue-950 bg-linear-to-br from-blue-800 to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
         <i className="ph-duotone ph-clock-countdown pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
         <div className="relative z-10">
           <div className="mb-1 flex items-center gap-2 text-[10px] font-bold tracking-widest text-blue-200 uppercase">
@@ -62,7 +62,7 @@ export default function SlaKpiCards({ total, slaHours, completionRate }) {
                 <TooltipTrigger asChild>
                   <i className="ph-bold ph-info text-sm text-blue-200 transition-opacity hover:opacity-70 cursor-pointer" />
                 </TooltipTrigger>
-                <TooltipContent side="top" className="max-w-[240px] border-blue-800 bg-blue-950 p-3 text-white shadow-xl">
+                <TooltipContent side="top" className="max-w-[240px] border-blue-800 bg-blue-950 p-3 text-white shadow-xl dark:shadow-none">
                   <p className="font-bold leading-tight text-xs">Standard SLA: 72 Hours</p>
                   <p className="mt-1 text-[10px] font-medium opacity-90 leading-relaxed">
                     Typical processing time for document requests is 3 to 5 business days.
@@ -82,3 +82,4 @@ export default function SlaKpiCards({ total, slaHours, completionRate }) {
     </div>
   )
 }
+

@@ -16,6 +16,7 @@ import LogTable from "./audit-logs/LogTable"
 import LogDetailSheet from "./audit-logs/LogDetailSheet"
 import PdfPreviewDialog from "./audit-logs/PdfPreviewDialog"
 import PageHeader from "@/components/shared/PageHeader"
+import { RefreshButton } from "@/components/shared/RefreshButton"
 
 export default function AuditLogsTab({
   displayLogs,
@@ -221,6 +222,8 @@ export default function AuditLogsTab({
     }
   }
 
+  const hasActiveFilters = localSearch !== "" || logRoleFilter !== "All" || logSeverityFilter !== "All" || logStartDate !== "" || logEndDate !== "";
+
   return (
     <TooltipProvider delay={200}>
       <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
@@ -228,18 +231,19 @@ export default function AuditLogsTab({
         <StatCards isLoading={isLoading} logStats={logStats} />
 
         {/* Main Table Card */}
-        <Card className="rounded-[2rem] border border-gray-200 bg-white/80 shadow-2xl shadow-gray-200/50 backdrop-blur-xl overflow-hidden">
+        <Card className="rounded-[2rem] border border-gray-200 bg-white shadow-2xl shadow-gray-200/50 backdrop-blur-xl overflow-hidden dark:border-white/10 dark:bg-card/80">
           <PageHeader
             icon="ph-shield-check"
             title="Audit Logs"
             description="Trace system activities, security events, and administrative actions with precision."
-            actions={              <div className="flex items-center gap-2">
+            actions={
+              <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleDownloadCSV}
                   disabled={logTotal === 0 || isExporting}
-                  className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-50"
+                  className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:text-zinc-300 dark:shadow-none dark:bg-red-950/30 dark:border-white/10"
                 >
                   <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv"} text-base`}></i>
                   {isExporting ? "PREPARING..." : "EXPORT"}
@@ -249,47 +253,48 @@ export default function AuditLogsTab({
                   size="sm"
                   onClick={handlePreviewPDF}
                   disabled={logTotal === 0 || isExporting}
-                  className="flex h-11 px-5 items-center justify-center gap-2 rounded-2xl bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-xl hover:-translate-y-0.5 text-[11px] font-black text-white active:scale-95 disabled:opacity-50 shadow-lg shadow-red-900/20 transition-all"
+                  className="flex h-11 px-5 items-center justify-center gap-2 rounded-2xl bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-xl hover:-translate-y-0.5 text-[11px] font-black text-white active:scale-95 disabled:opacity-50 shadow-lg shadow-red-900/20 transition-all dark:shadow-none"
                 >
                   <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-pdf"} text-base`}></i>
                   {isExporting ? "GENERATING..." : "GENERATE REPORT"}
                 </Button>
 
-                <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={onRefresh}
-                    disabled={isLoading}
-                    className="flex h-10 w-10 items-center justify-center rounded-brand border border-gray-300 bg-white p-0 text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-50"
-                    title="Refresh"
-                  >
-                    <i className={`ph-bold ph-arrows-clockwise ${isLoading ? "animate-spin inline-block" : ""} text-base`}></i>
-                  </Button>
+                <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4 dark:border-white/10">
+                  <div className="flex flex-col items-end gap-1">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest dark:text-zinc-500">Dataset Sync</p>
+                    <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap dark:text-zinc-400">
+                      {hasActiveFilters ? "Filtering live logs..." : "Showing cumulative data"}
+                    </p>
+                  </div>
+                  <RefreshButton 
+                    onRefresh={onRefresh} 
+                    isLoading={isLoading} 
+                    title="Refresh Audit Logs"
+                  />
                 </div>
               </div>
             }
           />
 
           {/* Active Filter Chips Row */}
-          {(localSearch !== "" || logRoleFilter !== "All" || logSeverityFilter !== "All" || logStartDate !== "" || logEndDate !== "") && (
-            <div className="flex-none border-b border-gray-100 bg-gray-50/30 px-6 py-4 animate-in fade-in slide-in-from-top-1 duration-500">
+          {hasActiveFilters && (
+            <div className="flex-none border-b border-gray-100 bg-gray-50 px-6 py-4 animate-in fade-in slide-in-from-top-1 duration-500 dark:border-white/10 dark:bg-muted/30">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-2 text-[10px] font-black tracking-widest text-gray-400 uppercase">Active Filters:</span>
+                <span className="mr-2 text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">Active Filters:</span>
                 {localSearch && (
-                  <div className="flex items-center gap-2 rounded-xl border border-pup-maroon/20 bg-pup-maroon/5 px-3 py-1.5 text-[10px] font-bold text-pup-maroon shadow-sm">
+                  <div className="flex items-center gap-2 rounded-xl border border-pup-maroon/20 bg-pup-maroon/5 px-3 py-1.5 text-[10px] font-bold text-pup-maroon dark:text-primary shadow-sm dark:text-primary dark:shadow-none">
                     <i className="ph-bold ph-magnifying-glass opacity-50"></i>
                     Search: {localSearch}
                     <button
                       onClick={() => { setLocalSearch(""); setLogSearch(""); setLogPage(1); }}
-                      className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-pup-maroon/10 hover:bg-pup-maroon hover:text-white transition-all"
+                      className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-pup-maroon/10 hover:bg-pup-maroon hover:text-white transition-all dark:bg-red-600"
                     >
                       <i className="ph-bold ph-x text-[8px]"></i>
                     </button>
                   </div>
                 )}
                 {logRoleFilter !== "All" && (
-                  <div className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-1.5 text-[10px] font-bold text-blue-600 shadow-sm">
+                  <div className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-1.5 text-[10px] font-bold text-blue-600 shadow-sm dark:bg-blue-950/30 dark:text-blue-400 dark:shadow-none">
                     <i className="ph-bold ph-user-gear opacity-50"></i>
                     Role: {logRoleFilter}
                     <button
@@ -301,7 +306,7 @@ export default function AuditLogsTab({
                   </div>
                 )}
                 {logSeverityFilter !== "All" && (
-                  <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-1.5 text-[10px] font-bold text-amber-600 shadow-sm">
+                  <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-1.5 text-[10px] font-bold text-amber-600 shadow-sm dark:bg-amber-950/30 dark:text-amber-400 dark:shadow-none">
                     <i className="ph-bold ph-warning-octagon opacity-50"></i>
                     Severity: {logSeverityFilter}
                     <button
@@ -313,7 +318,7 @@ export default function AuditLogsTab({
                   </div>
                 )}
                 {(logStartDate || logEndDate) && (
-                  <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[10px] font-bold text-emerald-600 shadow-sm">
+                  <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[10px] font-bold text-emerald-600 shadow-sm dark:bg-emerald-950/30 dark:text-emerald-400 dark:shadow-none">
                     <i className="ph-bold ph-calendar opacity-50"></i>
                     Range: {logStartDate || "..."} to {logEndDate || "..."}
                     <button
@@ -336,7 +341,7 @@ export default function AuditLogsTab({
                     setLogEndDate("")
                     setLogPage(1)
                   }}
-                  className="h-8 rounded-xl border border-dashed border-gray-300 px-4 text-[10px] font-black text-gray-500 hover:bg-red-50 hover:text-pup-maroon transition-all"
+                  className="h-8 rounded-xl border border-dashed border-gray-300 px-4 text-[10px] font-black text-gray-500 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 transition-all dark:text-zinc-400 dark:bg-red-950/30 dark:border-white/10"
                 >
                   CLEAR ALL FILTERS
                 </Button>
@@ -431,3 +436,5 @@ export default function AuditLogsTab({
     </TooltipProvider>
   )
 }
+
+

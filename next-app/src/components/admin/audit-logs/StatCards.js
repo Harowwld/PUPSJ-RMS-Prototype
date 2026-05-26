@@ -59,7 +59,6 @@ export default function StatCards({ isLoading, logStats }) {
       label: "Total Events",
       value: logStats?.totalLogs || 0,
       sublabel: "Cumulative system logs",
-      icon: "ph-duotone ph-scroll",
       color: "blue",
       trendData: trends.map(t => t.total)
     },
@@ -67,7 +66,6 @@ export default function StatCards({ isLoading, logStats }) {
       label: "Activity Today",
       value: logStats?.logsToday || 0,
       sublabel: "Events recorded today",
-      icon: "ph-duotone ph-calendar-check",
       color: "emerald",
       trendData: trends.map(t => t.total)
     },
@@ -75,7 +73,6 @@ export default function StatCards({ isLoading, logStats }) {
       label: "Auth Attempts",
       value: logStats?.authEvents || 0,
       sublabel: "Logins & access events",
-      icon: "ph-duotone ph-fingerprint",
       color: "amber",
       trendData: trends.map(t => t.auth)
     },
@@ -83,7 +80,6 @@ export default function StatCards({ isLoading, logStats }) {
       label: "Critical Alerts",
       value: logStats?.criticalEvents || 0,
       sublabel: "High-priority incidents",
-      icon: "ph-duotone ph-warning-octagon",
       color: "red",
       trendData: trends.map(t => t.critical)
     }
@@ -93,22 +89,22 @@ export default function StatCards({ isLoading, logStats }) {
     switch (color) {
       case "blue": return { 
         bg: "from-blue-800 to-blue-950", border: "border-blue-950", 
-        icon: "text-white", text: "text-white", 
+        text: "text-white", 
         sub: "text-blue-200", spark: "#BFDBFE" 
       };
       case "emerald": return { 
         bg: "from-emerald-800 to-emerald-950", border: "border-emerald-950", 
-        icon: "text-white", text: "text-white", 
+        text: "text-white", 
         sub: "text-emerald-100", spark: "#A7F3D0" 
       };
       case "amber": return { 
         bg: "from-amber-700 to-amber-950", border: "border-amber-950", 
-        icon: "text-white", text: "text-white", 
+        text: "text-white", 
         sub: "text-amber-100", spark: "#FDE68A" 
       };
       case "red": return { 
         bg: "from-red-700 to-red-950", border: "border-red-950", 
-        icon: "text-white", text: "text-white", 
+        text: "text-white", 
         sub: "text-red-200", spark: "#FECACA" 
       };
       default: return {};
@@ -123,7 +119,7 @@ export default function StatCards({ isLoading, logStats }) {
           <div 
             key={i} 
             className={cn(
-              "group relative overflow-hidden rounded-xl border p-5 shadow-sm transition-all duration-300 hover:shadow-md bg-linear-to-br",
+              "group relative overflow-hidden rounded-xl border p-5 shadow-sm dark:shadow-none transition-all duration-300 hover:shadow-md dark:shadow-none bg-linear-to-br",
               classes.bg,
               classes.border
             )}
@@ -131,17 +127,13 @@ export default function StatCards({ isLoading, logStats }) {
             {/* Background Decorative Icon Removed */}
             
             <div className="relative z-10">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 backdrop-blur-sm shadow-sm ring-1 ring-white/20 mb-4">
-                <i className={cn(stat.icon, "text-xl text-white")} />
-              </div>
-
               <div className="flex items-end justify-between">
                 <div>
                   <p className={cn("text-[10px] font-black tracking-widest uppercase", classes.sub)}>
                     {stat.label}
                   </p>
                   {isLoading || !logStats ? (
-                    <Skeleton className="mt-1 h-8 w-24 bg-white/20" />
+                    <Skeleton className="mt-1 h-8 w-24 bg-white dark:bg-muted" />
                   ) : (
                     <h3 className={cn("text-3xl font-black tracking-tight", classes.text)}>
                       {stat.value.toLocaleString()}
@@ -165,5 +157,6 @@ export default function StatCards({ isLoading, logStats }) {
         );
       })}
     </div>
-  );
+  )
 }
+

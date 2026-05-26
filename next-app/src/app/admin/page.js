@@ -1373,7 +1373,7 @@ function AdminPageContent() {
 
   if (loading) {
     return (
-      <div className="font-inter flex h-screen flex-col gap-4 overflow-hidden bg-gray-50 p-4">
+      <div className="font-inter flex h-screen flex-col gap-4 overflow-hidden bg-gray-50 p-4 transition-colors duration-300 dark:bg-background">
         <Skeleton className="h-16 w-full shrink-0 rounded-brand" />
         <div className="flex flex-1 gap-4">
           <Skeleton className="h-full w-[30%] rounded-brand" />
@@ -1384,7 +1384,7 @@ function AdminPageContent() {
   }
 
   return (
-    <div className="font-inter flex h-screen flex-col overflow-hidden bg-gray-50">
+    <div className="font-inter flex h-screen flex-col overflow-hidden bg-gray-50 transition-colors duration-300 dark:bg-background">
       <Header authUser={authUser} onLogout={handleLogout} />
 
       <div className="flex min-h-0 w-full flex-1">
@@ -1746,17 +1746,17 @@ function AdminPageContent() {
       />
 
       <Dialog open={defaultPwOpen} onOpenChange={setDefaultPwOpen}>
-        <DialogContent className="w-full max-w-2xl overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-2xl">
-          <DialogHeader className="border-b border-gray-100 bg-gray-50/50 p-6">
+        <DialogContent className="w-full max-w-2xl overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-white/10 dark:bg-card">
+          <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-primary/10">
                 <i className="ph-duotone ph-key text-2xl"></i>
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg leading-tight font-black tracking-tight text-gray-900">
+                <DialogTitle className="text-lg leading-tight font-black tracking-tight text-gray-900 dark:text-zinc-50">
                   Staff Account Created
                 </DialogTitle>
-                <DialogDescription className="mt-1.5 text-sm leading-relaxed font-medium text-gray-600">
+                <DialogDescription className="mt-1.5 text-sm leading-relaxed font-medium text-gray-600 dark:text-zinc-300">
                   System account configured successfully. Securely record the
                   following temporary credentials before closing this window.
                 </DialogDescription>
@@ -1765,16 +1765,16 @@ function AdminPageContent() {
           </DialogHeader>
 
           <div className="space-y-6 p-8">
-            <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-6 shadow-sm">
+            <div className="rounded-xl border border-amber-100 bg-amber-50 p-6 shadow-sm dark:bg-amber-950/50">
               <label className="mb-3 block text-[10px] font-black tracking-widest text-amber-900 uppercase opacity-60">
                 Temporary Password for{" "}
-                <span className="text-pup-maroon">
+                <span className="text-pup-maroon dark:text-primary">
                   {defaultPwUserLabel}
                 </span>
               </label>
 
-              <div className="group relative flex items-center justify-between rounded-lg border border-amber-200 bg-white p-4 shadow-inner transition-all hover:border-amber-300">
-                <code className="font-mono text-lg font-black tracking-tight text-gray-900">
+              <div className="group relative flex items-center justify-between rounded-lg border border-amber-200 bg-white p-4 shadow-inner transition-all hover:border-amber-300 dark:bg-white/5 dark:shadow-none">
+                <code className="font-mono text-lg font-black tracking-tight text-gray-900 dark:text-zinc-50">
                   {defaultReturnedPw}
                 </code>
 
@@ -1786,7 +1786,7 @@ function AdminPageContent() {
                     "h-10 gap-2 rounded-brand border-amber-200 px-4 font-black transition-all",
                     copied
                       ? "bg-emerald-500 text-white border-emerald-600 shadow-emerald-200"
-                      : "bg-white text-amber-900 hover:bg-amber-50 hover:border-amber-400"
+                      : "bg-white dark:bg-white/5 text-amber-900 hover:bg-amber-50 dark:hover:bg-white/5 hover:border-amber-400"
                   )}
                 >
                   <i className={cn("ph-bold", copied ? "ph-check-circle" : "ph-copy")} />
@@ -1794,19 +1794,19 @@ function AdminPageContent() {
                 </Button>
               </div>
 
-              <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200/50 bg-white/40 p-3 text-[10px] font-bold leading-relaxed text-amber-800/80">
+              <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200/50 bg-white p-3 text-[10px] font-bold leading-relaxed text-amber-800/80 dark:bg-white/5">
                 <i className="ph-fill ph-warning-circle text-sm text-amber-600 mt-0.5" />
                 This password is temporary and will expire after the first login. Please ensure the user receives this securely.
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end">
+          <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card">
             <Button
               type="button"
               variant="outline"
               onClick={() => setDefaultPwOpen(false)}
-              className="h-11 rounded-brand border border-gray-300 px-6 text-sm font-bold text-gray-700 hover:bg-gray-50"
+              className="h-11 rounded-brand border border-gray-300 px-6 text-sm font-bold text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/5 dark:bg-white/2"
             >
               Close
             </Button>
@@ -1838,7 +1838,7 @@ export default function AdminPage() {
     <AdminGuard>
       <Suspense
         fallback={
-          <div className="font-inter flex h-screen flex-col gap-4 overflow-hidden bg-gray-50 p-4">
+          <div className="font-inter flex h-screen flex-col gap-4 overflow-hidden bg-gray-50 p-4 dark:bg-background">
             <Skeleton className="h-16 w-full shrink-0 rounded-brand" />
             <div className="flex flex-1 gap-4">
               <Skeleton className="h-full w-[30%] rounded-brand" />

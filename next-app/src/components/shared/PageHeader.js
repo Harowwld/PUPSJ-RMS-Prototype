@@ -33,23 +33,23 @@ export default function PageHeader({
   extraChips, // Optional array of { label, value, onClear }
 }) {
   return (
-    <div className="border-b border-gray-100 bg-gray-50/50 p-6 rounded-t-brand select-none">
+    <div className="border-b border-gray-100 bg-gray-50 p-6 rounded-t-brand select-none transition-colors duration-300 dark:border-white/5 dark:bg-white/2">
       <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
         <div className="flex items-center gap-4">
           {leftAction}
           
           {icon && (
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon shadow-sm">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm transition-colors dark:border-white/10 dark:bg-white/5">
               <i className={`ph-duotone ${icon} text-2xl`}></i>
             </div>
           )}
           
           <div>
-            <CardTitle className="flex items-center gap-2 text-xl leading-none font-black tracking-tight text-gray-900 uppercase">
+            <CardTitle className="flex items-center gap-2 text-xl leading-none font-black tracking-tight text-gray-900 uppercase transition-colors dark:text-zinc-50">
               {title}
             </CardTitle>
             {description && (
-              <CardDescription className="mt-1.5 text-sm font-medium text-gray-500">
+              <CardDescription className="mt-1.5 text-sm font-medium text-gray-500 transition-colors dark:text-zinc-400">
                 {description}
               </CardDescription>
             )}
@@ -64,15 +64,15 @@ export default function PageHeader({
             {(onSearchChange || searchValue !== undefined) && (
               <div className="w-full sm:w-64">
                 <div className="mb-1 flex items-center justify-between">
-                  <label className="mb-1 block text-[10px] font-bold text-gray-700 uppercase tracking-wide">
+                  <label className="mb-1 block text-[10px] font-bold text-gray-700 uppercase tracking-wide transition-colors dark:text-zinc-200">
                     {searchLabel}
                   </label>
                 </div>
-                <div className="relative">
-                  <i className="ph-bold ph-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"></i>
+                <div className="relative transition-colors">
+                  <i className="ph-bold ph-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-gray-400 dark:text-zinc-500"></i>
                   <Input
                     placeholder={searchPlaceholder || "Search..."}
-                    className="h-10 rounded-brand border border-gray-300 bg-white pl-9 text-sm focus-visible:border-gray-300 focus-visible:ring-pup-maroon"
+                    className="h-10 rounded-brand border border-gray-300 bg-white pl-9 text-sm focus-visible:border-gray-300 focus-visible:ring-pup-maroon transition-all dark:border-white/10 dark:bg-white/5 dark:focus-visible:border-white/20 dark:focus-visible:ring-primary/20 dark:text-zinc-100"
                     value={searchValue || ""}
                     onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
                   />
@@ -92,3 +92,4 @@ export default function PageHeader({
     </div>
   )
 }
+

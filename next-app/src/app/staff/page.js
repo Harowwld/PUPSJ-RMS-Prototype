@@ -993,7 +993,7 @@ function StaffPageContent() {
 
   if (loading) {
     return (
-      <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4">
+      <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4 transition-colors duration-300 dark:bg-background">
         <Skeleton className="h-16 w-full rounded-brand shrink-0" />
         <div className="flex-1 flex gap-4">
           <Skeleton className="w-[30%] h-full rounded-brand" />
@@ -1004,7 +1004,7 @@ function StaffPageContent() {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gray-50 font-inter">
+    <div className="h-screen flex flex-col overflow-hidden bg-gray-50 font-inter transition-colors duration-300 dark:bg-background">
       <Header authUser={authUser} onLogout={handleLogout} />
 
       <Tabs
@@ -1523,7 +1523,7 @@ export default function StaffPage() {
     <StaffGuard>
       <Suspense
         fallback={
-          <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4">
+          <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4 dark:bg-background">
             <Skeleton className="h-16 w-full rounded-brand shrink-0" />
             <div className="flex-1 flex gap-4">
               <Skeleton className="w-[30%] h-full rounded-brand" />
