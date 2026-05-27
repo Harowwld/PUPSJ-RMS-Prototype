@@ -921,22 +921,15 @@ export default function DigitalRecordsReviewTab({
                             </td>
                             <td className="p-3 text-right">
                               <div className="flex items-center justify-end gap-3">
-                                {r.approval_status === "Declined" ? (
-                                  <span className="inline-flex h-10 items-center rounded-brand border border-gray-200 bg-gray-50 px-4 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:border-white/10 dark:bg-card dark:text-zinc-500">
-                                    <i className="ph-bold ph-file-x mr-2"></i>
-                                    Removed
-                                  </span>
-                                ) : (
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handlePreview(r)}
-                                    className="h-10 rounded-brand border-gray-300 px-4 text-xs font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
-                                  >
-                                    <i className="ph-bold ph-eye mr-2"></i>
-                                    VIEW
-                                  </Button>
-                                )}
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handlePreview(r)}
+                                  className="h-10 rounded-brand border-gray-300 px-4 text-xs font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+                                >
+                                  <i className="ph-bold ph-eye mr-2"></i>
+                                  VIEW
+                                </Button>
                                 {r.approval_status === "Pending" && (
                                   <>
                                     <Button
