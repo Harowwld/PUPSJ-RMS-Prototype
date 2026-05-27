@@ -35,6 +35,7 @@ const STATUS_OPTIONS = [
   "Ready",
   "Completed",
   "Cancelled",
+  "Shredded",
 ];
 
 function statusBadgeClass(status) {
@@ -42,6 +43,7 @@ function statusBadgeClass(status) {
   if (s === "DONE" || s === "COMPLETED") return "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 border-emerald-200";
   if (s === "CANCELLED") return "bg-gray-100 dark:bg-muted text-gray-600 dark:text-zinc-300 dark:text-zinc-400 border-gray-200 dark:border-white/10";
   if (s === "READY") return "bg-sky-50 text-sky-800 border-sky-200";
+  if (s === "SHREDDED") return "bg-rose-50 dark:bg-rose-950/20 text-rose-800 border-rose-200";
   if (s === "PROCESSING" || s === "INPROGRESS") return "bg-amber-50 dark:bg-amber-950/20 text-amber-900 border-amber-200";
   return "bg-red-50 dark:bg-red-950/20 text-pup-maroon dark:text-primary border-red-100";
 }
@@ -70,6 +72,9 @@ export default function DocumentRequestsTab({
   const [createNotes, setCreateNotes] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  const [studentSearch, setStudentSearch] = useState("");
+  const [selectedStudent, setSelectedStudent] = useState(null);
+
   const [selectedId, setSelectedId] = useState(null);
   const [detail, setDetail] = useState(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -83,19 +88,28 @@ export default function DocumentRequestsTab({
   const debouncedPageResetSkip = useRef(true);
   const autoLinkAttempted = useRef(new Set());
 
+  // Reset creation state on modal open/close
+  useEffect(() => {
+    if (!createOpen) {
+      setCreateStudentNo("");
+      setCreateDocType("");
+      setCreateNotes("");
+      setStudentSearch("");
+      setSelectedStudent(null);
+    }
+  }, [createOpen]);
+
   const studentSuggestions = useMemo(() => {
-    const val = createStudentNo.trim().toLowerCase();
+    const val = studentSearch.trim().toLowerCase();
     if (val.length < 2) return [];
     return students
       .filter((s) => {
-        const sn = String(s.studentNo || "").toLowerCase();
+        const sn = String(s.studentNo || s.student_no || "").toLowerCase();
         const nm = String(s.name || "").toLowerCase();
-        // Don't show if it's already an exact match
-        if (sn === val) return false;
         return sn.includes(val) || nm.includes(val);
       })
-      .slice(0, 4);
-  }, [createStudentNo, students]);
+      .slice(0, 5);
+  }, [studentSearch, students]);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQ(q.trim()), 350);
@@ -203,6 +217,21 @@ export default function DocumentRequestsTab({
     if (!availability) return true;
     return availability.status !== "uploaded";
   }, [availability]);
+
+  const retentionExpiryDate = useMemo(() => {
+    if (!detail || detail.status !== "Ready") return null;
+    const baseDate = new Date(detail.updated_at || detail.created_at);
+    if (isNaN(baseDate.getTime())) return null;
+    baseDate.setDate(baseDate.getDate() + 90);
+    return baseDate;
+  }, [detail]);
+
+  const daysRemaining = useMemo(() => {
+    if (!retentionExpiryDate) return null;
+    const now = new Date();
+    const diffTime = retentionExpiryDate.getTime() - now.getTime();
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }, [retentionExpiryDate]);
 
   const patchDetail = async (body, opts = {}) => {
     if (!detail?.id) return;
@@ -731,6 +760,29 @@ export default function DocumentRequestsTab({
                         </Button>
                       </div>
 
+                      {detail.status === "Ready" && retentionExpiryDate && (
+                        <div className="rounded-brand border border-amber-200 bg-amber-50/50 p-3 animate-in fade-in duration-200">
+                          <div className="flex gap-2">
+                            <i className="ph-bold ph-calendar-blank text-amber-700 text-lg shrink-0 mt-0.5 animate-pulse"></i>
+                            <div className="text-xs">
+                              <span className="font-bold text-amber-950 block uppercase tracking-wider text-[10px]">
+                                PUP ODRS Retention Policy
+                              </span>
+                              <span className="text-gray-600 block mt-0.5 leading-relaxed">
+                                According to the PUP Online Document Request System (ODRS) guidelines, unclaimed credentials are subject to **shredding** if not picked up within <strong className="text-gray-800">90 days</strong> of the release date.
+                              </span>
+                              <span className="text-amber-800 font-bold block mt-1.5 flex items-center gap-1.5">
+                                <i className="ph-bold ph-warning"></i>
+                                Shred Schedule: {retentionExpiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                                {daysRemaining !== null && (
+                                  <span className="text-gray-500 font-normal">({daysRemaining > 0 ? `${daysRemaining}d left` : "Expired"})</span>
+                                )}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       <div>
                         <label className="text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
                           Status
@@ -785,42 +837,98 @@ export default function DocumentRequestsTab({
           </DialogHeader>
           <form onSubmit={handleCreate}>
             <div className="p-6 space-y-4">
-              <div className="relative">
-                <label className="text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">
-                  Student number
-                </label>
-                <Input
-                  className="mt-1.5 font-mono uppercase bg-white border-gray-300 rounded-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 dark:bg-card dark:border-white/10"
-                  value={createStudentNo}
-                  onChange={(e) => setCreateStudentNo(e.target.value)}
-                  placeholder="202X-XXXXX-MN-0"
-                  required
-                />
-                {studentSuggestions.length > 0 && (
-                  <div className="absolute z-50 left-0 right-0 mt-1 rounded-brand border border-gray-200 bg-white overflow-hidden shadow-lg animate-in fade-in slide-in-from-top-1 duration-200 dark:border-white/10 dark:bg-card">
-                    {studentSuggestions.map((s) => {
-                      const sn = String(s?.studentNo || s?.student_no || "");
-                      return (
-                        <button
-                          key={sn}
-                          type="button"
-                          className="w-full text-left px-3 py-2 border-b last:border-b-0 border-gray-300 hover:bg-red-50 transition-colors group dark:bg-red-950/50 dark:border-white/10"
-                          onClick={() => {
-                            setCreateStudentNo(sn);
-                          }}
-                        >
-                          <div className="text-sm font-bold text-gray-900 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 transition-colors dark:text-zinc-50">
-                            {s?.name}
-                          </div>
-                          <div className="text-[10px] text-gray-500 font-mono dark:text-zinc-400">
-                            {sn}
-                          </div>
-                        </button>
-                      );
-                    })}
+              {selectedStudent ? (
+                <div className="rounded-brand border border-red-100 bg-red-50/50 p-4 relative animate-in fade-in zoom-in-95 duration-200 dark:border-white/10 dark:bg-red-950/20">
+                  <button
+                    type="button"
+                    className="absolute top-2.5 right-2.5 text-gray-400 hover:text-gray-600 transition-colors bg-white hover:bg-gray-100 border border-gray-200 rounded-full w-5 h-5 flex items-center justify-center shadow-xs dark:bg-zinc-800 dark:border-white/10 dark:text-zinc-300"
+                    onClick={() => {
+                      setSelectedStudent(null);
+                      setCreateStudentNo("");
+                    }}
+                  >
+                    <i className="ph-bold ph-x text-[10px]"></i>
+                  </button>
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-pup-maroon/10 text-pup-maroon flex items-center justify-center shrink-0 dark:bg-pup-maroon/20">
+                      <i className="ph-bold ph-user-focus text-lg"></i>
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <div className="font-bold text-gray-900 text-sm truncate dark:text-zinc-50">{selectedStudent.name}</div>
+                      <div className="font-mono text-xs text-gray-500 mt-0.5 dark:text-zinc-400">{selectedStudent.studentNo || selectedStudent.student_no}</div>
+                      <div className="text-[11px] text-gray-600 mt-1 flex flex-wrap gap-x-2 gap-y-0.5 dark:text-zinc-300">
+                        <span>Course: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.courseCode || selectedStudent.course_code || "—"}</strong></span>
+                        <span>Section: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.section || "—"}</strong></span>
+                        <span>Year: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.yearLevel || selectedStudent.year_level || "—"}</strong></span>
+                      </div>
+                      <div className="text-[11px] text-pup-maroon dark:text-red-500 font-semibold mt-2 flex items-center gap-1">
+                        <i className="ph-bold ph-archive-tray text-xs"></i>
+                        <span>Storage: Room {selectedStudent.room} · Cabinet {selectedStudent.cabinet} · Drawer {selectedStudent.drawer}</span>
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="relative">
+                    <label className="text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">
+                      Search Student (Name or Number)
+                    </label>
+                    <div className="relative mt-1.5">
+                      <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                      <Input
+                        className="pl-9 bg-white border-gray-300 rounded-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300"
+                        value={studentSearch}
+                        onChange={(e) => setStudentSearch(e.target.value)}
+                        placeholder="Type to search by student name or number..."
+                      />
+                    </div>
+                    {studentSuggestions.length > 0 && (
+                      <div className="absolute z-50 left-0 right-0 mt-1 rounded-brand border border-gray-200 bg-white overflow-hidden shadow-lg animate-in fade-in slide-in-from-top-1 duration-200">
+                        {studentSuggestions.map((s) => {
+                          const sn = String(s?.studentNo || s?.student_no || "");
+                          return (
+                            <button
+                              key={sn}
+                              type="button"
+                              className="w-full text-left px-3 py-2 border-b last:border-b-0 border-gray-100 hover:bg-red-50/50 transition-colors group flex flex-col gap-0.5"
+                              onClick={() => {
+                                setSelectedStudent(s);
+                                setCreateStudentNo(sn);
+                                setStudentSearch("");
+                              }}
+                            >
+                              <div className="text-sm font-bold text-gray-900 group-hover:text-pup-maroon transition-colors">
+                                {s?.name}
+                              </div>
+                              <div className="text-[10px] text-gray-500 font-mono flex items-center gap-1.5">
+                                <span>{sn}</span>
+                                <span className="text-gray-300">•</span>
+                                <span>{s?.courseCode || s?.course_code || "—"} - {s?.section || "—"}</span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold text-gray-700 uppercase">
+                        Or enter custom student number
+                      </label>
+                      <span className="text-[10px] text-gray-400 font-semibold">If student is not in database</span>
+                    </div>
+                    <Input
+                      className="mt-1.5 font-mono uppercase bg-white border-gray-300 rounded-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300"
+                      value={createStudentNo}
+                      onChange={(e) => setCreateStudentNo(e.target.value)}
+                      placeholder="202X-XXXXX-MN-0"
+                    />
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">
                   Document type
