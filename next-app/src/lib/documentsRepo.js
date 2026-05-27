@@ -61,9 +61,11 @@ export async function createDocument({
 }) {
   await ensureReviewColumns();
 
+  const cleanStudentNo = String(studentNo || "UNKNOWN").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
+  const cleanDocType = String(docType || "DOCUMENT").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
   const ext = path.extname(originalFilename || "").toLowerCase() || ".pdf";
   const storageFilename =
-    providedStorageFilename || `${Date.now()}-${crypto.randomBytes(8).toString("hex")}${ext}`;
+    providedStorageFilename || `${cleanStudentNo}_${cleanDocType}_${Date.now()}${ext}`;
   const absPath = path.join(getUploadsDir(), storageFilename);
   if (buffer) {
     fs.writeFileSync(absPath, buffer);
@@ -186,10 +188,10 @@ export async function replaceDocumentFile(
   const existing = await getDocumentById(id);
   if (!existing) return null;
 
+  const cleanStudentNo = String(existing.student_no || "UNKNOWN").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
+  const cleanDocType = String(existing.doc_type || "DOCUMENT").trim().toUpperCase().replace(/[^A-Z0-9-]/g, "_");
   const ext = path.extname(originalFilename || "").toLowerCase() || ".pdf";
-  const storageFilename = `${Date.now()}-${crypto
-    .randomBytes(8)
-    .toString("hex")}${ext}`;
+  const storageFilename = `${cleanStudentNo}_${cleanDocType}_${Date.now()}${ext}`;
   const absPath = path.join(getUploadsDir(), storageFilename);
   fs.writeFileSync(absPath, buffer);
 

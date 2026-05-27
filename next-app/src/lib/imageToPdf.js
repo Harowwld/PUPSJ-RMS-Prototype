@@ -97,3 +97,74 @@ export async function imageToPdf(imageFile) {
     type: "application/pdf",
   });
 }
+
+/**
+ * Convert multiple image Files to a single multi-page PDF File.
+ *
+ * @param {File[]} imageFiles — array of source images
+ * @returns {Promise<File>} — a new File with type "application/pdf"
+ */
+export async function mergeImagesToPdf(imageFiles) {
+  if (!imageFiles || imageFiles.length === 0) throw new Error("No files provided");
+
+  const { jsPDF } = await import("jspdf");
+  let doc = null;
+
+  for (let idx = 0; idx < imageFiles.length; idx++) {
+    const imageFile = imageFiles[idx];
+
+    // Load image as data URL
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error(`Failed to read image file: ${imageFile.name}`));
+      reader.readAsDataURL(imageFile);
+    });
+
+    // Get natural dimensions via an Image element
+    const img = await new Promise((resolve, reject) => {
+      const i = new Image();
+      i.onload = () => resolve(i);
+      i.onerror = () => reject(new Error(`Failed to decode image: ${imageFile.name}`));
+      i.src = dataUrl;
+    });
+
+    const imgW = img.naturalWidth;
+    const imgH = img.naturalHeight;
+    const landscape = imgW > imgH;
+    const orientation = landscape ? "landscape" : "portrait";
+
+    if (!doc) {
+      doc = new jsPDF({ orientation, unit: "mm", format: "a4" });
+    } else {
+      doc.addPage("a4", orientation);
+    }
+
+    // Page dimensions in mm
+    const pageW = doc.internal.pageSize.getWidth();
+    const pageH = doc.internal.pageSize.getHeight();
+
+    // Add a small margin (10mm each side)
+    const margin = 10;
+    const maxW = pageW - margin * 2;
+    const maxH = pageH - margin * 2;
+
+    const scale = Math.min(maxW / imgW, maxH / imgH);
+    const drawW = imgW * scale;
+    const drawH = imgH * scale;
+
+    const offsetX = margin + (maxW - drawW) / 2;
+    const offsetY = margin + (maxH - drawH) / 2;
+
+    const mime = String(imageFile.type || "").toLowerCase();
+    let format = "JPEG";
+    if (mime.includes("png")) format = "PNG";
+    else if (mime.includes("webp")) format = "WEBP";
+
+    doc.addImage(dataUrl, format, offsetX, offsetY, drawW, drawH);
+  }
+
+  const pdfBlob = doc.output("blob");
+  return new File([pdfBlob], "merged.pdf", { type: "application/pdf" });
+}
+

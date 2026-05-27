@@ -44,6 +44,11 @@ export default function ScanUploadTab({
   dropActive,
   setDropActive,
   uploadedFile,
+  uploadedFiles = [],
+  selectedQueuedFileIndex = 0,
+  setSelectedQueuedFileIndex,
+  onRemoveQueuedFile,
+  onReorderQueuedFiles,
   fileInputRef,
   onFileSelect,
   onClearFile,
@@ -352,10 +357,10 @@ export default function ScanUploadTab({
     }
   }, [uploadedFile, hf.selectedRow, hf.previewUrl, hf.previewMime])
 
-  const handlePdfFileSelect = (file) => {
-    if (!file) return
+  const handlePdfFileSelect = (files) => {
+    if (!files) return
     hf.clearIngestSelection()
-    onFileSelect(file)
+    onFileSelect(files)
   }
 
   const handleClearPdf = () => {
@@ -366,23 +371,21 @@ export default function ScanUploadTab({
   const onPdfDrop = (e) => {
     e.preventDefault()
     setDropActive(false)
-    const f = e.dataTransfer.files?.[0]
-    if (!f) return
-    const isPdf =
-      f.type === "application/pdf" ||
-      String(f.name || "")
-        .toLowerCase()
-        .endsWith(".pdf")
-    const isImg = String(f.type || "").startsWith("image/")
-    if (!isPdf && !isImg) {
-      return
-    }
-    if (uploadedFile) {
-      setPendingDroppedFile(f)
-      setConfirmDropOpen(true)
-    } else {
-      handlePdfFileSelect(f)
-    }
+    const files = e.dataTransfer.files
+    if (!files || files.length === 0) return
+
+    const validFiles = Array.from(files).filter(f => {
+      const isPdf =
+        f.type === "application/pdf" ||
+        String(f.name || "")
+          .toLowerCase()
+          .endsWith(".pdf")
+      const isImg = String(f.type || "").startsWith("image/")
+      return isPdf || isImg
+    })
+
+    if (validFiles.length === 0) return
+    handlePdfFileSelect(validFiles)
   }
 
   const normalizedTypedName = String(newRec?.name || "")
@@ -846,7 +849,10 @@ export default function ScanUploadTab({
                               e.stopPropagation()
                               // Fetch the file blob and set it as the uploaded file for direct submission
                               hf.openItem(row).then((file) => {
-                                if (file) onFileSelect(file, true)
+                                if (file) {
+                                  onFileSelect(file, true)
+                                  hf.clearIngestSelection()
+                                }
                               })
                             }}
                             className={`w-full rounded-brand border p-2.5 text-left transition-colors ${ hf.selected === row.id ? "border-gray-300 bg-red-50" : "border-transparent bg-gray-50 hover:bg-gray-100" } dark:border-white/10 dark:bg-red-950/50 dark:hover:bg-white/10`}
@@ -865,59 +871,20 @@ export default function ScanUploadTab({
                     </div>
                   ) : null}
 
-                  <div
-                    className="relative flex min-h-[200px] flex-1 cursor-pointer flex-col items-center justify-center p-6"
-                    onClick={() => {
-                      if (uploadedFile) return
-                      if (fileInputRef.current) fileInputRef.current.click()
-                    }}
-                  >
-                    <Empty className="pointer-events-none flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
-                      <EmptyHeader className="flex flex-col items-center gap-0">
-                        <EmptyMedia className="mb-4 flex h-20 w-20 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm transition-transform group-hover:scale-110 dark:border-white/10 dark:bg-card dark:shadow-none">
-                          <i className="ph-duotone ph-file-arrow-up text-4xl text-pup-maroon dark:text-primary"></i>
-                        </EmptyMedia>
-                        <EmptyTitle className="text-xl font-bold text-gray-900 dark:text-zinc-50">
-                          Drop Document or Image here
-                        </EmptyTitle>
-                        <EmptyDescription className="mt-2 text-sm font-medium text-gray-600 dark:text-zinc-300">
-                          or click to browse local files (PDF, JPG, PNG)
-                        </EmptyDescription>
-                        {hf.rows.length > 0 ? (
-                          <EmptyDescription className="mx-auto mt-4 max-w-xs text-xs font-medium text-gray-500 dark:text-zinc-400">
-                            This area still accepts manual drops and clicks even
-                            while the scanner inbox is shown above.
-                          </EmptyDescription>
-                        ) : null}
-                      </EmptyHeader>
-                    </Empty>
-
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      className="hidden"
-                      accept=".pdf,image/*"
-                      onChange={(e) => handlePdfFileSelect(e.target.files[0])}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Unified Preview Overlay (for both Scanner Inbox and Manual Drops) */}
-              {uploadMode === "pdf" && (hf.selectedRow || uploadedFile) ? (
-                <div
-                  className={`absolute inset-0 z-10 flex flex-col overflow-hidden rounded-brand bg-white border transition-all duration-200 ${ dropActive ? "border-pup-maroon ring-2 ring-pup-maroon/20 bg-red-50" : "border-gray-200" } dark:bg-card dark:border-white/10`}
-                  onDragOver={(e) => {
-                    e.preventDefault()
-                    setDropActive(true)
-                  }}
-                  onDragLeave={(e) => {
-                    e.preventDefault()
-                    setDropActive(false)
-                  }}
-                  onDrop={onPdfDrop}
-                >
-                  <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-4 py-2.5 dark:border-white/10 dark:bg-card">
+                  {uploadedFile ? (
+                    <div
+                      className={`relative flex-1 flex flex-col overflow-hidden rounded-brand bg-white border transition-all duration-200 ${ dropActive ? "border-pup-maroon ring-2 ring-pup-maroon/20 bg-red-50" : "border-gray-200" } dark:bg-card dark:border-white/10`}
+                      onDragOver={(e) => {
+                        e.preventDefault()
+                        setDropActive(true)
+                      }}
+                      onDragLeave={(e) => {
+                        e.preventDefault()
+                        setDropActive(false)
+                      }}
+                      onDrop={onPdfDrop}
+                    >
+                      <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-4 py-2.5 dark:border-white/10 dark:bg-card">
                     <div className="min-w-0">
                       <div className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
                         {hf.selectedRow ? "Scanner inbox preview" : "Document preview"}
@@ -966,15 +933,96 @@ export default function ScanUploadTab({
                       </div>
                     </div>
                   </div>
-                  <div className="min-h-0 flex-1 overflow-hidden bg-gray-100 relative dark:bg-muted">
-                    {(() => {
-                      const url = hf.selectedRow ? hf.previewUrl : manualPreviewUrl
-                      const mime = hf.selectedRow ? hf.previewMime : uploadedFile?.type
-                      const isImg = String(mime || "").startsWith("image/")
+                  <div className="min-h-0 flex-1 flex overflow-hidden bg-gray-100 relative dark:bg-muted">
+                    {uploadedFiles && uploadedFiles.length > 1 && !hf.selectedRow && (
+                      <div className="w-1/3 min-w-[200px] max-w-[280px] border-r border-gray-200 bg-white/95 backdrop-blur-md flex flex-col min-h-0 overflow-y-auto p-4 gap-3 dark:border-white/10 dark:bg-card/95 shrink-0 z-10">
+                        <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-white/5">
+                          <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                            Scan Pages ({uploadedFiles.length})
+                          </span>
+                          <span className="text-[9px] font-bold text-pup-maroon dark:text-primary uppercase bg-red-50 dark:bg-red-950/30 px-1.5 py-0.5 rounded-full">
+                            MERGE MODE
+                          </span>
+                        </div>
+                        <div className="flex-1 space-y-1.5 overflow-y-auto pr-1">
+                          {uploadedFiles.map((file, idx) => {
+                            const isSelected = selectedQueuedFileIndex === idx;
+                            return (
+                              <div
+                                key={idx}
+                                onClick={() => {
+                                  setSelectedQueuedFileIndex(idx);
+                                  onFileSelect(file, true);
+                                }}
+                                className={`group flex flex-col gap-1 rounded-brand border p-3 text-left cursor-pointer transition-all ${ isSelected ? "border-pup-maroon bg-red-50/40 dark:border-primary dark:bg-zinc-800" : "border-transparent bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10" }`}
+                              >
+                                <div className="flex items-center justify-between gap-1.5">
+                                  <span className="truncate text-xs font-black text-gray-900 dark:text-zinc-50">
+                                    Page {idx + 1}
+                                  </span>
+                                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <button
+                                      type="button"
+                                      disabled={idx === 0}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onReorderQueuedFiles(idx, -1);
+                                      }}
+                                      className="p-0.5 text-gray-400 hover:text-gray-900 disabled:opacity-30 dark:hover:text-zinc-200"
+                                      title="Move Up"
+                                    >
+                                      <i className="ph-bold ph-caret-up text-xs" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      disabled={idx === uploadedFiles.length - 1}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onReorderQueuedFiles(idx, 1);
+                                      }}
+                                      className="p-0.5 text-gray-400 hover:text-gray-900 disabled:opacity-30 dark:hover:text-zinc-200"
+                                      title="Move Down"
+                                    >
+                                      <i className="ph-bold ph-caret-down text-xs" />
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onRemoveQueuedFile(idx);
+                                      }}
+                                      className="p-0.5 text-red-500 hover:text-red-700"
+                                      title="Remove Page"
+                                    >
+                                      <i className="ph-bold ph-trash text-xs" />
+                                    </button>
+                                  </div>
+                                </div>
+                                <span className="truncate text-[10px] text-gray-500 dark:text-zinc-400" title={file.name}>
+                                  {file.name}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="mt-auto flex h-10 items-center justify-center gap-1.5 rounded-brand border border-dashed border-gray-300 bg-white text-[10px] font-black tracking-widest text-gray-600 uppercase transition-all hover:bg-gray-50 dark:bg-card dark:border-white/10 dark:text-zinc-300"
+                        >
+                          <i className="ph-bold ph-plus text-xs" /> Add Scan Page
+                        </button>
+                      </div>
+                    )}
 
-                      if (isImg || pdfPreviewDataUrl) {
-                        return (
-                          <div className="relative flex h-full w-full items-center justify-center p-4 animate-fade-up">
+                    <div className="flex-1 relative flex h-full items-center justify-center p-4">
+                      {(() => {
+                        const url = hf.selectedRow ? hf.previewUrl : manualPreviewUrl
+                        const mime = hf.selectedRow ? hf.previewMime : uploadedFile?.type
+                        const isImg = String(mime || "").startsWith("image/")
+
+                        if (isImg || pdfPreviewDataUrl) {
+                          return (
                             <img
                               src={isImg ? url : pdfPreviewDataUrl}
                               alt="Preview"
@@ -982,9 +1030,8 @@ export default function ScanUploadTab({
                               draggable="false"
                               style={{ transform: `rotate(${rotation}deg)` }}
                             />
-                          </div>
-                        )
-                      }
+                          )
+                        }
 
                       if (pdfRendering) {
                         return (
@@ -1003,6 +1050,7 @@ export default function ScanUploadTab({
                         </div>
                       )
                     })()}
+                    </div>
 
                     {windowDragActive && (
                       <div
@@ -1035,8 +1083,46 @@ export default function ScanUploadTab({
                       </div>
                     )}
                   </div>
+                  </div>
+                  ) : (
+                    <div
+                      className="relative flex min-h-[200px] flex-1 cursor-pointer flex-col items-center justify-center p-6"
+                      onClick={() => {
+                        if (fileInputRef.current) fileInputRef.current.click()
+                      }}
+                    >
+                      <Empty className="pointer-events-none flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+                        <EmptyHeader className="flex flex-col items-center gap-0">
+                          <EmptyMedia className="mb-4 flex h-20 w-20 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm transition-transform group-hover:scale-110 dark:border-white/10 dark:bg-card dark:shadow-none">
+                            <i className="ph-duotone ph-file-arrow-up text-4xl text-pup-maroon dark:text-primary"></i>
+                          </EmptyMedia>
+                          <EmptyTitle className="text-xl font-bold text-gray-900 dark:text-zinc-50">
+                            Drop Document or Image here
+                          </EmptyTitle>
+                          <EmptyDescription className="mt-2 text-sm font-medium text-gray-600 dark:text-zinc-300">
+                            or click to browse local files (PDF, JPG, PNG)
+                          </EmptyDescription>
+                          {hf.rows.length > 0 ? (
+                            <EmptyDescription className="mx-auto mt-4 max-w-xs text-xs font-medium text-gray-500 dark:text-zinc-400">
+                              This area still accepts manual drops and clicks even
+                              while the scanner inbox is shown above.
+                            </EmptyDescription>
+                          ) : null}
+                        </EmptyHeader>
+                      </Empty>
+
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        className="hidden"
+                        accept=".pdf,image/*"
+                        multiple
+                        onChange={(e) => handlePdfFileSelect(e.target.files)}
+                      />
+                    </div>
+                  )}
                 </div>
-              ) : null}
+              )}
               {uploadMode === "pdf" && (ocrLoading || hf.ocrLoading) ? (
                 <div className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-brand bg-white backdrop-blur-sm dark:bg-card/80">
                   <div className="w-full max-w-md px-6">
@@ -1407,7 +1493,13 @@ export default function ScanUploadTab({
                       type="button"
                       onClick={() =>
                         processSubmission({
-                          onSuccess: () => hf.removeIngestItem(),
+                          onSuccess: (ids) => {
+                            if (Array.isArray(ids) && ids.length > 0) {
+                              ids.forEach(id => hf.removeIngestItem(id));
+                            } else {
+                              hf.removeIngestItem();
+                            }
+                          },
                         })
                       }
                       className="flex h-10 w-full items-center justify-center gap-2 rounded-brand bg-pup-maroon text-sm font-bold text-white shadow-sm transition-all hover:bg-red-900 dark:bg-red-600 dark:shadow-none"

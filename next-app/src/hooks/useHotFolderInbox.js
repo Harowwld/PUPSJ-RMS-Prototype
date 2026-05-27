@@ -63,6 +63,7 @@ export function useHotFolderInbox({
       const file = new File([blob], row.original_filename || "scan", {
         type: row.mime_type || blob.type || "application/octet-stream",
       });
+      file.ingestId = row.id;
       const suggestion = await scanFileForSuggestion({ file, students, docTypes });
       // Forward OCR result to parent so it can populate newRec (the standard form).
       onOcrResult?.(suggestion);

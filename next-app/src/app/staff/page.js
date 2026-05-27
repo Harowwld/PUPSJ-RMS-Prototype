@@ -23,7 +23,7 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { scanFileForSuggestion, warmupOcrWorker } from "@/lib/ocrClient";
 import { findMatchingDocument } from "@/lib/docAvailability";
-import { imageToPdf, needsConversion } from "@/lib/imageToPdf";
+import { imageToPdf, needsConversion, mergeImagesToPdf } from "@/lib/imageToPdf";
 
 function normalizeStudentRow(row) {
   if (!row || typeof row !== "object") return row;
@@ -109,6 +109,8 @@ function StaffPageContent() {
   const [uploadStudentIsExisting, setUploadStudentIsExisting] = useState(false);
   const [dropActive, setDropActive] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [selectedQueuedFileIndex, setSelectedQueuedFileIndex] = useState(0);
   const fileInputRef = useRef(null);
   const [ocrLoading, setOcrLoading] = useState(false);
   const [ocrSuggestion, setOcrSuggestion] = useState(null);
@@ -635,17 +637,38 @@ function StaffPageContent() {
     }));
   }, []);
 
-  const handleFileSelect = async (file, skipOcr = false, rotationParam) => {
-    if (!file) return;
-    setUploadedFile(file);
+  const handleFileSelect = async (filesOrFile, skipOcr = false, rotationParam, skipQueue = false) => {
+    if (!filesOrFile) return;
+
+    let incomingFiles = [];
+    if (filesOrFile instanceof FileList || Array.isArray(filesOrFile)) {
+      incomingFiles = Array.from(filesOrFile);
+    } else {
+      incomingFiles = [filesOrFile];
+    }
+
+    if (incomingFiles.length === 0) return;
+
+    if (!skipQueue) {
+      let newFiles = [];
+      setUploadedFiles((prev) => {
+        newFiles = [...prev, ...incomingFiles];
+        setSelectedQueuedFileIndex(newFiles.length - incomingFiles.length);
+        return newFiles;
+      });
+    }
+
+    const activeFile = incomingFiles[0];
+    setUploadedFile(activeFile);
     clearUploadFieldError("pdfFile");
     setOcrError("");
     setOcrSuggestion(null);
+
     if (uploadMode === "pdf" && !skipOcr) {
       setOcrLoading(true);
       try {
         const suggestion = await scanFileForSuggestion({
-          file,
+          file: activeFile,
           students,
           docTypes,
           rotation: rotationParam !== undefined ? rotationParam : rotation,
@@ -718,6 +741,42 @@ function StaffPageContent() {
     }
   };
 
+  const handleRemoveQueuedFile = (indexToRemove) => {
+    setUploadedFiles((prev) => {
+      const next = prev.filter((_, idx) => idx !== indexToRemove);
+      if (next.length === 0) {
+        setUploadedFile(null);
+        setSelectedQueuedFileIndex(0);
+      } else {
+        const nextIndex = Math.min(selectedQueuedFileIndex, next.length - 1);
+        setSelectedQueuedFileIndex(nextIndex);
+        setUploadedFile(next[nextIndex]);
+      }
+      return next;
+    });
+  };
+
+  const handleReorderQueuedFiles = (index, direction) => {
+    setUploadedFiles((prev) => {
+      const next = [...prev];
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= next.length) return prev;
+      // Swap
+      const temp = next[index];
+      next[index] = next[targetIndex];
+      next[targetIndex] = temp;
+      
+      // Keep selection aligned
+      if (selectedQueuedFileIndex === index) {
+        setSelectedQueuedFileIndex(targetIndex);
+      } else if (selectedQueuedFileIndex === targetIndex) {
+        setSelectedQueuedFileIndex(index);
+      }
+      
+      return next;
+    });
+  };
+
   const lastRotationOcrRef = useRef(0);
 
   useEffect(() => {
@@ -729,7 +788,7 @@ function StaffPageContent() {
     if (rotation === lastRotationOcrRef.current) return;
 
     const timer = setTimeout(() => {
-      handleFileSelect(uploadedFile, false, rotation);
+      handleFileSelect(uploadedFile, false, rotation, true);
       lastRotationOcrRef.current = rotation;
     }, 1000);
     return () => clearTimeout(timer);
@@ -777,7 +836,27 @@ function StaffPageContent() {
 
     // Convert image files to PDF before uploading (API only accepts PDFs)
     let fileToUpload = uploadedFile;
-    if (needsConversion(uploadedFile)) {
+    if (uploadedFiles.length > 1) {
+      const allImages = uploadedFiles.every(f => needsConversion(f));
+      if (allImages) {
+        try {
+          fileToUpload = await mergeImagesToPdf(uploadedFiles);
+        } catch (convErr) {
+          showToast({ title: "Merging Failed", description: "Could not merge images into a PDF: " + convErr.message }, true);
+          return;
+        }
+      } else {
+        showToast({ title: "Multi-page Merge Warning", description: "Merging requires all selected files to be images. Uploading primary document." }, true);
+        if (needsConversion(uploadedFile)) {
+          try {
+            fileToUpload = await imageToPdf(uploadedFile);
+          } catch (convErr) {
+            showToast({ title: "Conversion Failed", description: "Could not convert image to PDF." }, true);
+            return;
+          }
+        }
+      }
+    } else if (needsConversion(uploadedFile)) {
       try {
         fileToUpload = await imageToPdf(uploadedFile);
       } catch (convErr) {
@@ -792,11 +871,11 @@ function StaffPageContent() {
       const docType = String(newRec.docType || "").trim();
       const cleanStudentNo = studentNo.replace(/[^a-zA-Z0-9-]/g, "_") || "UNKNOWN";
       const cleanDocType = docType.replace(/[^a-zA-Z0-9-]/g, "_") || "DOC";
-      const extension = (fileToUpload.name || "file.pdf").split(".").pop().toLowerCase();
+      const extension = "pdf";
       const newFileName = `${cleanStudentNo}_${cleanDocType}.${extension}`;
       
       // Use the File constructor to create a renamed blob
-      fileToUpload = new File([fileToUpload], newFileName, { type: fileToUpload.type });
+      fileToUpload = new File([fileToUpload], newFileName, { type: "application/pdf" });
     } catch (e) {
       console.error("[Rename Error]", e);
       // Fallback to original file if renaming fails for some reason
@@ -855,7 +934,18 @@ function StaffPageContent() {
       } else {
         showToast({ title: "Upload Complete", description: "Document has been submitted for review." });
       }
+      const ingestedIds = [];
+      if (uploadedFiles && uploadedFiles.length > 0) {
+        uploadedFiles.forEach(f => {
+          if (f.ingestId) ingestedIds.push(f.ingestId);
+        });
+      } else if (uploadedFile && uploadedFile.ingestId) {
+        ingestedIds.push(uploadedFile.ingestId);
+      }
+
       setUploadedFile(null);
+      setUploadedFiles([]);
+      setSelectedQueuedFileIndex(0);
       setUploadFieldErrors({});
       setUploadStudentIsExisting(false);
       setNewRec({
@@ -872,7 +962,7 @@ function StaffPageContent() {
       fetchData();
       fetchAllDocs();
       if (typeof onSuccess === "function") {
-        onSuccess();
+        onSuccess(ingestedIds);
       }
     } catch (err) {
       showToast({ title: "Upload Failed", description: err.message }, true);
@@ -1093,12 +1183,19 @@ function StaffPageContent() {
               dropActive={dropActive}
               setDropActive={setDropActive}
               uploadedFile={uploadedFile}
+              uploadedFiles={uploadedFiles}
+              selectedQueuedFileIndex={selectedQueuedFileIndex}
+              setSelectedQueuedFileIndex={setSelectedQueuedFileIndex}
+              onRemoveQueuedFile={handleRemoveQueuedFile}
+              onReorderQueuedFiles={handleReorderQueuedFiles}
               fileInputRef={fileInputRef}
               onFileSelect={handleFileSelect}
               rotation={rotation}
               setRotation={setRotation}
               onClearFile={() => {
                 setUploadedFile(null);
+                setUploadedFiles([]);
+                setSelectedQueuedFileIndex(0);
                 setOcrSuggestion(null);
                 setUploadStudentIsExisting(false);
                 setUploadFieldErrors({});
