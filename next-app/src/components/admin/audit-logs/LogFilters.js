@@ -171,40 +171,33 @@ export default function LogFilters({
             <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
               Role
             </label>
-            <div className="relative">
-              <Select
-                className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 shadow-xs outline-none transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-200"
-                value={logRoleFilter}
-                onChange={handleRoleChange}
-              >
-                <option value="All">All</option>
-                <option value="Admin">Admin</option>
-                <option value="Staff">Staff</option>
-                <option value="System">System</option>
-              </Select>
-            </div>
+            <Select
+              value={logRoleFilter}
+              onChange={handleRoleChange}
+            >
+              <option value="All">All</option>
+              <option value="Admin">Admin</option>
+              <option value="Staff">Staff</option>
+              <option value="System">System</option>
+            </Select>
           </div>
 
           <div className="w-32">
             <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
               Severity
             </label>
-            <div className="relative">
-              <Select
-                className="h-11 w-full rounded-xl border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 shadow-xs outline-none transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-200"
-                value={logSeverityFilter}
-                onChange={handleSeverityChange}
-              >
-                <option value="All">All</option>
-                <option value="INFO">Information</option>
-                <option value="WARNING">Warning</option>
-                <option value="CRITICAL">Critical</option>
-              </Select>
-            </div>
+            <Select
+              value={logSeverityFilter}
+              onChange={handleSeverityChange}
+            >
+              <option value="All">All</option>
+              <option value="INFO">Information</option>
+              <option value="WARNING">Warning</option>
+              <option value="CRITICAL">Critical</option>
+            </Select>
           </div>
         </div>
       </div>
     </div>
   )
 }
-

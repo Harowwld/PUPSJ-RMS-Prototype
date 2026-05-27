@@ -517,29 +517,32 @@ export default function DocumentRequestsTab({
                 <div className="p-6 flex-1 flex flex-col min-h-0">
                   <div 
                     key={`${page}-${statusFilter}-${debouncedQ}`}
-                    className="flex-1 overflow-y-auto overflow-x-auto border border-gray-200 rounded-brand animate-fade-up dark:border-white/10"
+                    className="h-auto w-full overflow-x-auto border border-gray-200 rounded-xl animate-fade-up dark:border-white/10"
                   >
-                    <table className="min-w-full text-sm">
-                      <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 dark:bg-muted dark:border-white/10">
-                        <tr className="text-left text-xs uppercase tracking-wider text-gray-600 dark:text-zinc-300 dark:border-white/10">
-                          <th className="p-3 font-bold w-16">ID</th>
-                          <th className="p-3 font-bold">Student</th>
-                          <th className="p-3 font-bold">Document</th>
-                          <th className="p-3 font-bold">Status</th>
-                          <th className="p-3 font-bold text-right">Created</th>
+                    <table className="min-w-full text-sm table-fixed">
+                      <thead className="border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">
+                        <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
+                          <th className="p-4 w-16">ID</th>
+                          <th className="p-4">Student</th>
+                          <th className="p-4">Document</th>
+                          <th className="p-4">Status</th>
+                          <th className="p-4 text-right">Created</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-200 dark:divide-white/10">
+                      <tbody className="divide-y divide-gray-100 dark:divide-white/10">
                         {rows.length === 0 ? (
                           <tr className="border-0 hover:bg-transparent">
                             <td colSpan={5} className="p-0 border-0">
-                              <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
+                              <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
                                 <EmptyHeader className="flex flex-col items-center gap-0">
-                                  <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
-                                    <i className="ph-duotone ph-tray text-3xl text-pup-maroon dark:text-primary"></i>
-                                  </EmptyMedia>
-                                  <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">No document requests yet</EmptyTitle>
-                                  <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md dark:text-zinc-300">
+                                  <div className="relative mb-6">
+                                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                                      <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
+                                    </EmptyMedia>
+                                  </div>
+                                  <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">No document requests yet</EmptyTitle>
+                                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                                     Create a request when an alumnus asks for a record.
                                     Track status and use the storage map to pull the
                                     physical drawer.
@@ -552,13 +555,16 @@ export default function DocumentRequestsTab({
                           rows.map((r) => (
                             <tr
                               key={r.id}
-                              className={`cursor-pointer hover:bg-gray-50 transition-colors ${ selectedId === r.id ? "bg-red-50" : "" } dark:hover:bg-white/10 dark:bg-card`}
+                              className={cn(
+                                "group transition-all duration-200 hover:bg-gray-50 dark:bg-card dark:hover:bg-white/5 select-none cursor-pointer",
+                                selectedId === r.id && "bg-amber-50 dark:bg-amber-950/40"
+                              )}
                               onClick={() => openDetail(r.id)}
                             >
-                              <td className="p-3 font-mono text-xs text-gray-500 dark:text-zinc-400">
+                              <td className="p-4 font-mono text-xs text-gray-500 dark:text-zinc-400">
                                 #{r.id}
                               </td>
-                              <td className="p-3">
+                              <td className="p-4">
                                 <div className="font-bold text-gray-900 dark:text-zinc-50">
                                   {r.student_name || "—"}
                                 </div>
@@ -566,17 +572,17 @@ export default function DocumentRequestsTab({
                                   {r.student_no}
                                 </div>
                               </td>
-                              <td className="p-3 font-medium text-gray-800 dark:text-zinc-100">
+                              <td className="p-4 font-medium text-gray-800 dark:text-zinc-100">
                                 {r.doc_type}
                               </td>
-                              <td className="p-3">
+                              <td className="p-4">
                                 <span
                                   className={`inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full border ${statusBadgeClass(r.status)}`}
                                 >
                                   {r.status}
                                 </span>
                               </td>
-                              <td className="p-3 text-right text-[11px] font-mono text-gray-500 whitespace-nowrap dark:text-zinc-400">
+                              <td className="p-4 text-right text-[11px] font-mono text-gray-500 whitespace-nowrap dark:text-zinc-400">
                                 {formatPHDateTime(r.created_at)}
                               </td>
                             </tr>

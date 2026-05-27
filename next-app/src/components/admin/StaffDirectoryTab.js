@@ -56,90 +56,83 @@ const StaffTableRow = React.memo(({
     <tr
       onClick={(e) => !isCurrentUser && toggleSelect(s.id, e)}
       className={cn(
-        "transition-colors hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card",
+        "group transition-all duration-200 hover:bg-gray-50/80 dark:bg-card dark:hover:bg-white/5 select-none",
         !isCurrentUser && "cursor-pointer",
         isCurrentUser && "bg-red-50 dark:bg-red-950/30",
-        isSelected && "bg-amber-50 dark:bg-amber-950/30"
+        isSelected && "bg-amber-50 dark:bg-amber-950/40"
       )}
     >
-      <td className="p-3 text-center">
+      <td className="p-4 text-center">
         <input
           type="checkbox"
-          className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:text-primary dark:border-white/10"
+          className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:border-white/10 dark:text-primary"
           checked={isSelected}
           onChange={() => {}} // Controlled by tr onClick
           disabled={isCurrentUser}
         />
       </td>
-      <td className="p-3">
+      <td className="p-4">
         <div className="flex items-center gap-3">
           <div
             className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition-transform group-hover:scale-110 shadow-sm",
-              "border-red-100 bg-red-50 text-pup-maroon",
-              "dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 dark:shadow-none"
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-black text-xs transition-all shadow-xs",
+              isSelected 
+                ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-primary shadow-sm" 
+                : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm"
             )}
           >
             {initials}
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-zinc-50">
+            <div className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-zinc-50 leading-tight">
               <span className="truncate">
                 {s.fname} {s.lname}
               </span>
               {isCurrentUser && (
-                <Badge className="h-4 bg-pup-maroon text-[9px] font-black uppercase dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
+                <Badge className="h-4 bg-pup-maroon text-[8px] font-black uppercase dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
                   You
                 </Badge>
               )}
             </div>
-            <div className="truncate text-xs font-medium text-gray-500 dark:text-zinc-400">
+            <div className="truncate text-[10px] font-medium text-gray-500 dark:text-zinc-400 mt-0.5">
               {s.email}
             </div>
           </div>
         </div>
       </td>
-      <td className="p-3 text-[11px] font-bold text-gray-600 whitespace-nowrap dark:text-zinc-300">
+      <td className="p-4 text-xs font-bold font-mono tracking-tight text-gray-700 whitespace-nowrap dark:text-zinc-300">
         {s.id}
       </td>
-      <td className="p-3">
-        <Badge
-          variant="outline"
-          className={cn(
-            "rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider transition-all",
-            s.role === "Admin" ||
-              s.role === "SuperAdmin"
-              ? "border-red-500/30 bg-red-500/10 text-red-600 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400"
-              : "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-400"
-          )}
-        >
+      <td className="p-4">
+        <div className={cn(
+          "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-wider transition-all",
+          s.role === "Admin" || s.role === "SuperAdmin"
+            ? "border-red-500/30 bg-red-500/10 text-red-600 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400"
+            : "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-400"
+        )}>
           <i className={cn(
-            "ph-bold mr-1.5 text-[11px]",
+            "ph-bold text-[10px]",
             s.role === "Admin" || s.role === "SuperAdmin" ? "ph-shield-star" : "ph-user"
           )}></i>
           {s.role}
-        </Badge>
+        </div>
       </td>
-      <td className="p-3">
+      <td className="p-4">
         {s.totp_enabled ? (
-          <Badge className="gap-1 rounded-full border-emerald-200 bg-emerald-50 text-[10px] font-black text-emerald-700 uppercase shadow-xs dark:bg-emerald-900/20 dark:border-emerald-900/30 dark:text-emerald-400">
+          <div className="flex w-fit items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-black text-emerald-600 uppercase tracking-wider dark:text-emerald-400">
             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            <i className="ph-bold ph-check-circle text-[10px]"></i>
-            ENABLED
-          </Badge>
+            2FA ENABLED
+          </div>
         ) : (
-          <Badge
-            variant="outline"
-            className="gap-1 rounded-full border-gray-200 bg-gray-50 text-[10px] font-black text-gray-500 uppercase shadow-xs dark:border-white/10 dark:bg-muted dark:text-zinc-400"
-          >
+          <div className="flex w-fit items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[9px] font-black text-gray-400 uppercase tracking-wider dark:border-white/10 dark:bg-white/5 dark:text-zinc-500">
             <i className="ph-bold ph-warning-circle text-[10px]"></i>
-            DISABLED
-          </Badge>
+            OFF
+          </div>
         )}
       </td>
-      <td className="p-3">
+      <td className="p-4">
         <div className={cn(
-          "flex items-center gap-1.5 text-[11px] font-bold uppercase",
+          "flex items-center gap-1.5 text-xs font-bold uppercase",
           !active.relative && active.date === "—" ? "text-gray-400 dark:text-zinc-500 font-medium" : "text-gray-900 dark:text-zinc-50"
         )}>
           {active.relative === "Active Now" && (
@@ -148,14 +141,14 @@ const StaffTableRow = React.memo(({
           {active.relative || (active.date === "—" ? "Never active" : active.date)}
         </div>
         {active.relative && (
-          <div className="text-[10px] text-gray-500 opacity-70 mt-0.5 dark:text-zinc-400">
+          <div className="text-[10px] text-gray-500 font-medium opacity-70 mt-0.5 dark:text-zinc-400">
             {active.date}
           </div>
         )}
       </td>
-      <td className="p-3 text-right">
+      <td className="p-4 text-right">
         <div
-          className="flex items-center justify-end gap-1"
+          className="flex items-center justify-end gap-2"
           onClick={(e) => e.stopPropagation()}
         >
           {isCurrentUser ? (
@@ -163,42 +156,39 @@ const StaffTableRow = React.memo(({
               variant="outline"
               size="sm"
               onClick={() => (window.location.href = "/account")}
-              className="h-8 w-[210px] gap-2 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-wider text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-muted dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+              className="h-9 w-full max-w-[140px] gap-2 rounded-xl border-gray-200 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-white/5 dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
             >
               <i className="ph-bold ph-user-circle text-base"></i>
-              MY ACCOUNT
+              ACCOUNT
             </Button>
           ) : (
-            <div className="flex w-[210px] items-center gap-1">
+            <div className="flex items-center gap-2">
               <Button
                 variant="outline"
-                size="sm"
+                size="icon"
                 onClick={() => onEditUser(s.id)}
-                className="h-8 flex-1 gap-1.5 rounded-brand border border-gray-300 bg-white px-0 text-[10px] font-black tracking-wider text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-muted dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800"
               >
                 <i className="ph-bold ph-pencil-simple text-base"></i>
-                EDIT
               </Button>
 
               {activeTab === "archived" ? (
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="icon"
                   onClick={() => onRestoreUser(s.id)}
-                  className="h-8 flex-1 gap-1.5 rounded-brand border border-gray-300 bg-white px-0 text-[10px] font-black tracking-wider text-emerald-600 uppercase shadow-sm transition-colors hover:border-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 active:scale-95 dark:bg-muted dark:text-emerald-400 dark:shadow-none dark:hover:bg-emerald-900/20 dark:border-white/10"
+                  className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-emerald-600 shadow-sm transition-all hover:border-emerald-600 hover:bg-emerald-50 dark:bg-white/5 dark:border-white/10 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
                 >
                   <i className="ph-bold ph-arrow-counter-clockwise text-base"></i>
-                  RESTORE
                 </Button>
               ) : (
                 <Button
                   variant="outline"
-                  size="sm"
+                  size="icon"
                   onClick={() => onDeleteUser(s.id)}
-                  className="h-8 flex-1 gap-1.5 rounded-brand border border-gray-300 bg-white px-0 text-[10px] font-black tracking-wider text-red-600 uppercase shadow-sm transition-colors hover:border-red-600 hover:bg-red-50 hover:text-red-700 active:scale-95 dark:bg-muted dark:shadow-none dark:border-white/10 dark:text-red-400/90 dark:hover:text-red-400 dark:hover:bg-red-400/10 dark:hover:border-red-400/20"
+                  className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10"
                 >
                   <i className="ph-bold ph-archive text-base"></i>
-                  ARCHIVE
                 </Button>
               )}
             </div>
@@ -449,7 +439,7 @@ export default function StaffDirectoryTab({
       onKeyDown={handleKeyDown}
       tabIndex={0}
     >
-      <Card className="rounded-brand border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
+      <Card className="rounded-[2rem] border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-users-three"
           title="Staff Directory"
@@ -489,7 +479,7 @@ export default function StaffDirectoryTab({
             </div>
 
             {/* Table Skeleton */}
-            <div className="overflow-hidden rounded-brand border border-gray-200 dark:border-white/10">
+            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
               <div className="h-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/5" />
               <div className="divide-y divide-gray-100 dark:divide-white/10">
                 {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -599,10 +589,11 @@ export default function StaffDirectoryTab({
                 key={activeTab}
                 className="outline-none animate-fade-up"
               >
-                <div className="overflow-x-auto rounded-brand border border-gray-200 bg-white shadow-xs select-none dark:border-white/10 dark:bg-card">                  <table className="min-w-full text-sm">
-                    <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
-                      <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
-                        <th className="w-12 p-3 text-center">
+                <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
+                  <table className="min-w-full text-sm">
+                    <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm dark:border-white/10 dark:bg-muted">
+                      <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
+                        <th className="w-12 p-4 text-center">
                           <input
                             type="checkbox"
                             className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:text-primary dark:border-white/10"
@@ -623,12 +614,12 @@ export default function StaffDirectoryTab({
                             }
                           />
                         </th>
-                        <th className="p-3 font-bold">
+                        <th className="p-4">
                           <button
                             onClick={() => handleSort("fname")}
-                            className="group flex items-center rounded px-2 py-1 uppercase transition-colors hover:bg-gray-100 focus:outline-none dark:bg-muted dark:hover:bg-white/10"
+                            className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                           >
-                            Name{" "}
+                            STAFF NAME{" "}
                             <SortIndicator
                               column="fname"
                               sortBy={sortBy}
@@ -636,12 +627,12 @@ export default function StaffDirectoryTab({
                             />
                           </button>
                         </th>
-                        <th className="w-32 p-3 font-bold whitespace-nowrap">
+                        <th className="w-32 p-4">
                           <button
                             onClick={() => handleSort("id")}
-                            className="group flex items-center rounded px-2 py-1 uppercase transition-colors hover:bg-gray-100 focus:outline-none dark:bg-muted dark:hover:bg-white/10"
+                            className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                           >
-                            ID{" "}
+                            EMPLOYEE ID{" "}
                             <SortIndicator
                               column="id"
                               sortBy={sortBy}
@@ -649,12 +640,12 @@ export default function StaffDirectoryTab({
                             />
                           </button>
                         </th>
-                        <th className="w-28 p-3 font-bold">
+                        <th className="w-28 p-4">
                           <button
                             onClick={() => handleSort("role")}
-                            className="group flex items-center rounded px-2 py-1 uppercase transition-colors hover:bg-gray-100 focus:outline-none dark:bg-muted dark:hover:bg-white/10"
+                            className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                           >
-                            Role{" "}
+                            SYSTEM ROLE{" "}
                             <SortIndicator
                               column="role"
                               sortBy={sortBy}
@@ -662,13 +653,13 @@ export default function StaffDirectoryTab({
                             />
                           </button>
                         </th>
-                        <th className="w-32 p-3 font-bold">Security</th>
-                        <th className="p-3 font-bold whitespace-nowrap">
+                        <th className="w-32 p-4">SECURITY</th>
+                        <th className="p-4">
                           <button
                             onClick={() => handleSort("last_active")}
-                            className="group flex items-center rounded px-2 py-1 uppercase transition-colors hover:bg-gray-100 focus:outline-none dark:bg-muted dark:hover:bg-white/10"
+                            className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                           >
-                            Last Login{" "}
+                            LAST LOGIN{" "}
                             <SortIndicator
                               column="last_active"
                               sortBy={sortBy}
@@ -676,26 +667,29 @@ export default function StaffDirectoryTab({
                             />
                           </button>
                         </th>
-                        <th className="w-24 p-3 text-right font-bold">
-                          Actions
+                        <th className="w-24 p-4 text-right">
+                          ACTIONS
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-white/10">
+                    <tbody className="divide-y divide-gray-100 dark:divide-white/10">
                       {filteredStaff.length === 0 ? (
                         <tr className="border-0 hover:bg-transparent">
                           <td colSpan={7} className="p-12 text-center">
-                            <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+                            <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
                               <EmptyHeader className="flex flex-col items-center gap-0">
-                                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                                  <i className="ph-duotone ph-users-three text-3xl text-pup-maroon dark:text-primary"></i>
-                                </EmptyMedia>
-                                <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
+                                <div className="relative mb-6">
+                                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                                    <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
+                                  </EmptyMedia>
+                                </div>
+                                <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
                                   {activeTab === "active"
                                     ? "No staff found"
                                     : "Archive is empty"}
                                 </EmptyTitle>
-                                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
+                                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                                   {localSearch !== "" || roleFilter !== "All"
                                     ? `No staff matches your current filters.`
                                     : activeTab === "active"
@@ -758,7 +752,7 @@ export default function StaffDirectoryTab({
                 </div>
 
                 {filteredStaff.length > 0 && (
-                  <div className="-mx-6 mt-4 -mb-6 flex items-center justify-between rounded-b-brand border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card">
+                  <div className="-mx-6 mt-4 -mb-6 flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-[2rem] dark:border-white/10 dark:bg-card">
                     <div className="flex items-center gap-8 select-none cursor-default">
                       <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
                         <span>
@@ -802,13 +796,13 @@ export default function StaffDirectoryTab({
                           onClick={() =>
                             setCurrentPage((p) => Math.max(1, p - 1))
                           }
-                          className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                          className="h-10 rounded-xl border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                         >
                           <i className="ph-bold ph-caret-left mr-2 text-base"></i>
                           PREV
                         </Button>
 
-                        <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                        <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-xl border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
                           {displayPage}
                         </div>
 
@@ -819,7 +813,7 @@ export default function StaffDirectoryTab({
                           onClick={() =>
                             setCurrentPage((p) => Math.min(totalPages, p + 1))
                           }
-                          className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                          className="h-10 rounded-xl border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                         >
                           NEXT
                           <i className="ph-bold ph-caret-right ml-2 text-base"></i>

@@ -1749,7 +1749,7 @@ function AdminPageContent() {
         <DialogContent className="w-full max-w-2xl overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-white/10 dark:bg-card">
           <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-primary/10">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 dark:border-primary/20 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-primary/10">
                 <i className="ph-duotone ph-key text-2xl"></i>
               </div>
               <div className="min-w-0">
@@ -1765,15 +1765,15 @@ function AdminPageContent() {
           </DialogHeader>
 
           <div className="space-y-6 p-8">
-            <div className="rounded-xl border border-amber-100 bg-amber-50 p-6 shadow-sm dark:bg-amber-950/50">
-              <label className="mb-3 block text-[10px] font-black tracking-widest text-amber-900 uppercase opacity-60">
+            <div className="rounded-xl border border-amber-100 dark:border-amber-900/30 bg-amber-50 p-6 shadow-sm dark:bg-amber-950/50">
+              <label className="mb-3 block text-[10px] font-black tracking-widest text-amber-900 dark:text-amber-400 uppercase opacity-60 dark:opacity-100">
                 Temporary Password for{" "}
                 <span className="text-pup-maroon dark:text-primary">
                   {defaultPwUserLabel}
                 </span>
               </label>
 
-              <div className="group relative flex items-center justify-between rounded-lg border border-amber-200 bg-white p-4 shadow-inner transition-all hover:border-amber-300 dark:bg-white/5 dark:shadow-none">
+              <div className="group relative flex items-center justify-between rounded-lg border border-amber-200 dark:border-amber-900/40 bg-white p-4 shadow-inner transition-all hover:border-amber-300 dark:hover:border-amber-800/50 dark:bg-white/5 dark:shadow-none">
                 <code className="font-mono text-lg font-black tracking-tight text-gray-900 dark:text-zinc-50">
                   {defaultReturnedPw}
                 </code>
@@ -1783,10 +1783,10 @@ function AdminPageContent() {
                   size="sm"
                   onClick={handleCopyPassword}
                   className={cn(
-                    "h-10 gap-2 rounded-brand border-amber-200 px-4 font-black transition-all",
+                    "h-10 gap-2 rounded-brand border-amber-200 dark:border-amber-900/50 px-4 font-black transition-all",
                     copied
                       ? "bg-emerald-500 text-white border-emerald-600 shadow-emerald-200"
-                      : "bg-white dark:bg-white/5 text-amber-900 hover:bg-amber-50 dark:hover:bg-white/5 hover:border-amber-400"
+                      : "bg-white dark:bg-white/5 text-amber-900 dark:text-amber-200 hover:bg-amber-50 dark:hover:bg-white/10 hover:border-amber-400 dark:hover:border-amber-700/50"
                   )}
                 >
                   <i className={cn("ph-bold", copied ? "ph-check-circle" : "ph-copy")} />
@@ -1794,7 +1794,7 @@ function AdminPageContent() {
                 </Button>
               </div>
 
-              <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200/50 bg-white p-3 text-[10px] font-bold leading-relaxed text-amber-800/80 dark:bg-white/5">
+              <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200/50 dark:border-amber-900/20 bg-white p-3 text-[10px] font-bold leading-relaxed text-amber-800/80 dark:text-amber-400/80 dark:bg-white/5">
                 <i className="ph-fill ph-warning-circle text-sm text-amber-600 mt-0.5" />
                 This password is temporary and will expire after the first login. Please ensure the user receives this securely.
               </div>
