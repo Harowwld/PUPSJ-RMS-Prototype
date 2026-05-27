@@ -221,11 +221,11 @@ export default function CoursesTab({
 
   const SortIndicator = ({ column }) => {
     if (sortCourse.key !== column)
-      return <i className="ph-bold ph-caret-up-down ml-1 opacity-30"></i>
+      return <i className="ph-bold ph-caret-up-down ml-1 opacity-40"></i>
     return sortCourse.direction === "asc" ? (
-      <i className="ph-bold ph-caret-up ml-1 text-pup-maroon dark:text-primary dark:text-primary"></i>
+      <i className="ph-bold ph-caret-up ml-1 text-pup-maroon dark:text-primary"></i>
     ) : (
-      <i className="ph-bold ph-caret-down ml-1 text-pup-maroon dark:text-primary dark:text-primary"></i>
+      <i className="ph-bold ph-caret-down ml-1 text-pup-maroon dark:text-primary"></i>
     )
   }
 
@@ -359,7 +359,7 @@ export default function CoursesTab({
               <Button
                 onClick={() => setIsAddCourseOpen(true)}
                 disabled={showArchived}
-                className="flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-5 font-bold text-white shadow-sm active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
+                className="flex h-10 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md px-5 font-bold text-white shadow-sm active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
               >
                 <i className="ph-bold ph-plus"></i>
                 <span className="hidden uppercase sm:inline">
@@ -433,7 +433,7 @@ export default function CoursesTab({
               </div>
             ) : (
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
+                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
                   <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
                     <th className="w-16 p-3 px-6 text-center">
                       <input
@@ -447,27 +447,27 @@ export default function CoursesTab({
                         disabled={filteredCourses.length === 0}
                       />
                     </th>
-                    <th className="w-48 p-3 px-6 font-bold">
+                    <th className="w-48 p-3 px-6 font-bold dark:text-zinc-300">
                       <button
                         onClick={() => onSort("code")}
                         className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none dark:bg-muted dark:hover:bg-white/10"
                       >
-                        Code <SortIndicator column="code" />
+                        CODE <SortIndicator column="code" />
                       </button>
                     </th>
-                    <th className="p-3 px-6 font-bold">
+                    <th className="p-3 px-6 font-bold dark:text-zinc-300">
                       <button
                         onClick={() => onSort("name")}
                         className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none dark:bg-muted dark:hover:bg-white/10"
                       >
-                        Designation <SortIndicator column="name" />
+                        DESIGNATION <SortIndicator column="name" />
                       </button>
                     </th>
                     <th className="w-40 p-3 px-6 text-left font-bold text-gray-600 uppercase dark:text-zinc-300">
                       Status
                     </th>
-                    <th className="w-32 p-3 px-6 text-right font-bold">
-                      Actions
+                    <th className="w-32 p-3 px-6 text-right font-bold dark:text-zinc-300">
+                      ACTIONS
                     </th>
                   </tr>
                 </thead>
@@ -525,7 +525,7 @@ export default function CoursesTab({
                                 name: newCourseName,
                               })
                             }
-                            className={`h-9 rounded-brand px-4 text-xs font-bold text-white shadow-sm active:scale-95 disabled:opacity-50 ${newCourseCode.trim() || newCourseName.trim() ? "bg-amber-600 hover:bg-amber-700" : "bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md "} transition-all dark:shadow-none`}
+                            className={`h-9 rounded-brand px-4 text-xs font-bold text-white shadow-sm active:scale-95 disabled:opacity-50 ${newCourseCode.trim() || newCourseName.trim() ? "bg-amber-600 hover:bg-amber-700" : "btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md "} transition-all dark:shadow-none`}
                           >
                             {isQuickAddLoading ? (
                               <i className="ph-bold ph-spinner animate-spin"></i>
@@ -576,7 +576,7 @@ export default function CoursesTab({
                         onDoubleClick={(e) => {
                           e.preventDefault();
                         }}
-                        className={`group transition-colors hover:bg-gray-50 select-none cursor-pointer ${ c.status === "Archived" ? "opacity-75" : "" } ${selectedCourses[c.id] ? (showArchived ? "bg-emerald-50" : "bg-red-50") : ""} ${isDisabled ? "cursor-not-allowed" : ""} dark:hover:bg-white/10 dark:bg-card`}
+                        className={`group transition-colors hover:bg-gray-50 select-none cursor-pointer ${ c.status === "Archived" ? "opacity-75" : "" } ${selectedCourses[c.id] ? (showArchived ? "bg-emerald-50 dark:bg-emerald-500/10" : "bg-red-50 dark:bg-red-500/10") : ""} ${isDisabled ? "cursor-not-allowed" : ""} dark:hover:bg-white/10 dark:bg-card`}
                       >
                         <td className="p-3 px-6 text-center">
                           <input
@@ -601,14 +601,14 @@ export default function CoursesTab({
                           {c.status === "Archived" ? (
                             <Badge
                               variant="outline"
-                              className="border-red-200 bg-red-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-red-700 uppercase dark:bg-red-950/30"
+                              className="border-red-200 bg-red-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-red-700 uppercase dark:border-red-500/20 dark:bg-red-500/10 dark:text-primary"
                             >
                               ARCHIVED
                             </Badge>
                           ) : (
                             <Badge
                               variant="outline"
-                              className="border-green-200 bg-green-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-green-700 uppercase"
+                              className="border-green-200 bg-green-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-green-700 uppercase dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400"
                             >
                               ACTIVE
                             </Badge>
@@ -705,7 +705,7 @@ export default function CoursesTab({
                         <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                           <EmptyHeader className="flex flex-col items-center gap-0">
                             <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                              <i className="ph-duotone ph-books text-3xl text-pup-maroon dark:text-primary dark:text-primary"></i>
+                              <i className="ph-duotone ph-books text-3xl text-pup-maroon dark:text-primary"></i>
                             </EmptyMedia>
                             <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                               No degree programs found
@@ -738,7 +738,7 @@ export default function CoursesTab({
                               !showArchived && (
                                 <Button
                                   onClick={() => setIsAddCourseOpen(true)}
-                                  className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-black tracking-widest text-white shadow-lg shadow-red-900/20 active:scale-95 transition-all dark:shadow-none"
+                                  className="mt-4 flex h-10 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-black tracking-widest text-white shadow-lg shadow-red-900/20 active:scale-95 transition-all dark:shadow-none"
                                 >
                                   <i className="ph-bold ph-plus text-lg"></i>
                                   ADD DEGREE PROGRAM
@@ -858,7 +858,7 @@ export default function CoursesTab({
               <div className="space-y-6">
                 <div>
                   <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
-                    Code <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span>
+                    Code <span className="text-pup-maroon dark:text-primary">*</span>
                   </label>
                   <Input
                     type="text"
@@ -874,7 +874,7 @@ export default function CoursesTab({
                 <div>
                   <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
                     Program Designation{" "}
-                    <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span>
+                    <span className="text-pup-maroon dark:text-primary">*</span>
                   </label>
                   <Input
                     type="text"
@@ -953,7 +953,7 @@ export default function CoursesTab({
               </Button>
               <Button
                 type="submit"
-                className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-black text-white shadow-sm dark:shadow-none"
+                className="flex h-11 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-black text-white shadow-sm dark:shadow-none"
               >
                 <i className="ph-bold ph-check text-lg"></i>
                 CREATE PROGRAM
@@ -994,7 +994,7 @@ export default function CoursesTab({
               <div className="space-y-6">
                 <div>
                   <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
-                    Code <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span>
+                    Code <span className="text-pup-maroon dark:text-primary">*</span>
                   </label>
                   <Input
                     type="text"
@@ -1012,7 +1012,7 @@ export default function CoursesTab({
                 <div>
                   <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
                     Program Designation{" "}
-                    <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span>
+                    <span className="text-pup-maroon dark:text-primary">*</span>
                   </label>
                   <Input
                     type="text"
@@ -1096,7 +1096,7 @@ export default function CoursesTab({
               </Button>
               <Button
                 type="submit"
-                className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-black text-white shadow-sm dark:shadow-none"
+                className="flex h-11 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-black text-white shadow-sm dark:shadow-none"
               >
                 <i className="ph-bold ph-check text-lg"></i>
                 SAVE CHANGES
@@ -1108,5 +1108,6 @@ export default function CoursesTab({
     </div>
   )
 }
+
 
 

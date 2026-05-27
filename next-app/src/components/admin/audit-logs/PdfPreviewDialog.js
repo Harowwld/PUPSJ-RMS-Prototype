@@ -92,7 +92,7 @@ export default function PdfPreviewDialog({
             <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
               <div className="max-w-lg text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-card">
-                  <i className="ph-bold ph-circle-notch animate-spin text-3xl text-pup-maroon dark:text-primary dark:text-primary"></i>
+                  <i className="ph-bold ph-circle-notch animate-spin text-3xl text-pup-maroon dark:text-primary"></i>
                 </div>
                 <p className="text-sm font-bold text-gray-600 uppercase dark:text-zinc-300">
                   Preparing report...
@@ -129,7 +129,7 @@ export default function PdfPreviewDialog({
             <Button
               onClick={handleDownloadFromPreview}
               disabled={!pdfBlobUrl}
-              className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 text-sm font-black tracking-wide text-white uppercase shadow-sm disabled:opacity-50 dark:shadow-none"
+              className="flex h-11 items-center gap-2 btn-brand-red active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
             >
               <i className="ph-bold ph-floppy-disk text-lg"></i>
               SAVE TO DEVICE
@@ -140,4 +140,5 @@ export default function PdfPreviewDialog({
     </Dialog>
   )
 }
+
 

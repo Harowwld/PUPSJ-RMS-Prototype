@@ -43,7 +43,7 @@ function statusBadgeClass(status) {
   if (s === "CANCELLED") return "bg-gray-100 dark:bg-muted text-gray-600 dark:text-zinc-300 dark:text-zinc-400 border-gray-200 dark:border-white/10";
   if (s === "READY") return "bg-sky-50 text-sky-800 border-sky-200";
   if (s === "PROCESSING" || s === "INPROGRESS") return "bg-amber-50 dark:bg-amber-950/20 text-amber-900 border-amber-200";
-  return "bg-red-50 dark:bg-red-950/20 text-pup-maroon dark:text-primary dark:text-primary border-red-100";
+  return "bg-red-50 dark:bg-red-950/20 text-pup-maroon dark:text-primary border-red-100";
 }
 
 export default function DocumentRequestsTab({
@@ -325,7 +325,7 @@ export default function DocumentRequestsTab({
               {!loading && !error && (
                 <Button
                   type="button"
-                  className="bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all font-bold shrink-0 dark:shadow-none"
+                  className="btn-brand-red font-bold shrink-0 dark:shadow-none"
                   onClick={() => setCreateOpen(true)}
                 >
                   <i className="ph-bold ph-plus mr-1.5"></i>
@@ -474,7 +474,7 @@ export default function DocumentRequestsTab({
             <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
-                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary dark:text-primary" />
+                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
                 </EmptyMedia>
                 <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">Could not load report</EmptyTitle>
                 <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md dark:text-zinc-300">
@@ -491,7 +491,7 @@ export default function DocumentRequestsTab({
                     className="flex-1 overflow-y-auto overflow-x-auto border border-gray-200 rounded-brand animate-fade-up dark:border-white/10"
                   >
                     <table className="min-w-full text-sm">
-                      <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 dark:bg-zinc-900 dark:border-white/10">
+                      <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 dark:bg-muted dark:border-white/10">
                         <tr className="text-left text-xs uppercase tracking-wider text-gray-600 dark:text-zinc-300 dark:border-white/10">
                           <th className="p-3 font-bold w-16">ID</th>
                           <th className="p-3 font-bold">Student</th>
@@ -507,7 +507,7 @@ export default function DocumentRequestsTab({
                               <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
                                 <EmptyHeader className="flex flex-col items-center gap-0">
                                   <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
-                                    <i className="ph-duotone ph-tray text-3xl text-pup-maroon dark:text-primary dark:text-primary"></i>
+                                    <i className="ph-duotone ph-tray text-3xl text-pup-maroon dark:text-primary"></i>
                                   </EmptyMedia>
                                   <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">No document requests yet</EmptyTitle>
                                   <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md dark:text-zinc-300">
@@ -653,7 +653,7 @@ export default function DocumentRequestsTab({
                       <Button
                         variant="default"
                         size="sm"
-                        className="h-7 px-3 text-[10px] font-black bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white uppercase shadow-sm dark:shadow-none"
+                        className="h-7 px-3 text-[10px] font-black btn-brand-red text-white uppercase shadow-sm dark:shadow-none"
                         onClick={handleManualSave}
                         disabled={saving}
                       >
@@ -667,7 +667,7 @@ export default function DocumentRequestsTab({
                     <Empty className="flex-1 flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
                       <EmptyHeader className="flex flex-col items-center gap-0">
                         <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
-                          <i className="ph-duotone ph-file-text text-3xl text-pup-maroon dark:text-primary dark:text-primary"></i>
+                          <i className="ph-duotone ph-file-text text-3xl text-pup-maroon dark:text-primary"></i>
                         </EmptyMedia>
                         <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">No Request Selected</EmptyTitle>
                         <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-[240px] dark:text-zinc-300">
@@ -715,7 +715,7 @@ export default function DocumentRequestsTab({
                         )}
                         <Button
                           type="button"
-                          className="mt-3 w-full bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all font-bold text-xs dark:shadow-none"
+                          className="mt-3 w-full btn-brand-red font-bold text-xs dark:shadow-none"
                           disabled={!studentForRequest}
                           onClick={() => {
                             if (!studentForRequest) return;
@@ -862,7 +862,7 @@ export default function DocumentRequestsTab({
               </Button>
               <Button
                 type="submit"
-                className="px-5 bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all font-bold shadow-sm rounded-brand gap-2 flex items-center dark:shadow-none"
+                className="px-5 btn-brand-red font-bold shadow-sm rounded-brand gap-2 flex items-center dark:shadow-none"
                 disabled={submitting}
               >
                 <i className="ph-bold ph-plus-circle text-lg"></i>
@@ -926,7 +926,7 @@ export default function DocumentRequestsTab({
             {studentForRequest ? (
               <Button
                 type="button"
-                className="px-5 bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all font-bold shadow-sm rounded-brand gap-2 flex items-center dark:shadow-none"
+                className="px-5 btn-brand-red font-bold shadow-sm rounded-brand gap-2 flex items-center dark:shadow-none"
                 onClick={() => {
                   setFileWarningOpen(false);
                   onLocateOnMap(studentForRequest);
@@ -942,5 +942,6 @@ export default function DocumentRequestsTab({
     </div>
   );
 }
+
 
 

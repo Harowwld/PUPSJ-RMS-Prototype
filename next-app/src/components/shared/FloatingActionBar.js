@@ -53,7 +53,7 @@ export default function FloatingActionBar({
                 <Button
                   size="sm"
                   onClick={onAction}
-                  className={`flex h-10 items-center gap-2 rounded-xl px-6 text-xs font-black uppercase text-white shadow-lg transition-all active:scale-95 ${ actionVariant === "success" ? "bg-linear-to-b from-emerald-500 to-emerald-700 border-4 border-emerald-800 shadow-emerald-600/20 hover:from-emerald-400 hover:to-emerald-600" : "bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon shadow-red-900/20 hover:from-red-700 hover:to-red-900 hover:shadow-md" }`}
+                  className={`btn-brand-red flex h-10 items-center gap-2 rounded-xl px-6 text-xs font-black uppercase text-white shadow-lg transition-all active:scale-95 ${ actionVariant === "success" ? "bg-linear-to-b from-emerald-500 to-emerald-700 border-4 border-emerald-800 shadow-emerald-600/20 hover:from-emerald-400 hover:to-emerald-600" : "" }`}
                 >
                   {actionIcon && <i className={`ph-bold ${actionIcon} text-sm`}></i>}
                   {actionLabel}

@@ -78,13 +78,13 @@ export default function LogDetailSheet({
             {/* Header Info */}
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="mb-1 text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                <p className="mb-1 text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-300">
                   Timestamp
                 </p>
                 <p className="text-sm font-bold text-gray-900 dark:text-zinc-50">{selectedLog.time}</p>
               </div>
               <div className="text-right">
-                <p className="mb-1 text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                <p className="mb-1 text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-300">
                   Severity
                 </p>
                 <Badge
@@ -98,8 +98,8 @@ export default function LogDetailSheet({
             {/* Actor Section */}
             <Card className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
               <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-3 dark:border-white/10 dark:bg-white/5">
-                <i className="ph-bold ph-user-focus text-pup-maroon dark:text-primary dark:text-primary"></i>
-                <h4 className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                <i className="ph-bold ph-user-focus text-pup-maroon dark:text-primary"></i>
+                <h4 className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-300">
                   Actor Information
                 </h4>
               </div>
@@ -116,7 +116,7 @@ export default function LogDetailSheet({
                           variant="outline"
                           size="icon"
                           onClick={() => onSearchSimilar(selectedLog.user)}
-                          className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:border-white/10 dark:bg-card dark:hover:border-zinc-700 dark:text-zinc-500"
+                          className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:border-white/10 dark:bg-card dark:hover:border-zinc-700 dark:text-zinc-300"
                         >
                           <i className="ph-bold ph-magnifying-glass text-xs"></i>
                         </Button>
@@ -136,14 +136,14 @@ export default function LogDetailSheet({
             {/* Event Details */}
             <Card className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
               <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-3 dark:border-white/10 dark:bg-white/5">
-                <i className="ph-bold ph-newspaper text-pup-maroon dark:text-primary dark:text-primary"></i>
-                <h4 className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                <i className="ph-bold ph-newspaper text-pup-maroon dark:text-primary"></i>
+                <h4 className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-300">
                   Event Details
                 </h4>
               </div>
               <div className="space-y-4 p-4">
                 <div>
-                  <p className="mb-1 text-[10px] font-bold text-gray-400 uppercase dark:text-zinc-500">
+                  <p className="mb-1 text-[10px] font-bold text-gray-400 uppercase dark:text-zinc-300">
                     Action Performed
                   </p>
                   <p
@@ -155,7 +155,7 @@ export default function LogDetailSheet({
 
                 <div className="border-t border-gray-100 pt-3 dark:border-white/10">
                   <div className="mb-1 flex items-center justify-between">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase dark:text-zinc-500">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase dark:text-zinc-300">
                       Description
                     </p>
                     <Tooltip>
@@ -164,7 +164,7 @@ export default function LogDetailSheet({
                           variant="outline"
                           size="icon"
                           onClick={() => handleCopy(selectedLog.details || "No known description", "Event description")}
-                          className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:border-white/10 dark:bg-card dark:hover:border-zinc-700 dark:text-zinc-500"
+                          className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:border-white/10 dark:bg-card dark:hover:border-zinc-700 dark:text-zinc-300"
                         >
                           <i className="ph-bold ph-copy text-xs"></i>
                         </Button>
@@ -182,7 +182,7 @@ export default function LogDetailSheet({
                 {(selectedLog.entityType || selectedLog.entityId) && (
                   <div className="grid grid-cols-2 gap-4 border-t border-gray-100 pt-3 dark:border-white/10">
                     <div>
-                      <p className="mb-1 text-[10px] font-bold text-gray-400 uppercase dark:text-zinc-500">
+                      <p className="mb-1 text-[10px] font-bold text-gray-400 uppercase dark:text-zinc-300">
                         Target Entity
                       </p>
                       <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-black text-gray-600 uppercase dark:text-zinc-300 dark:bg-muted">
@@ -191,7 +191,7 @@ export default function LogDetailSheet({
                     </div>
                     <div>
                       <div className="mb-1 flex items-center justify-between">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase dark:text-zinc-500">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase dark:text-zinc-300">
                           Entity Reference ID
                         </p>
                         {selectedLog.entityId && (
@@ -201,7 +201,7 @@ export default function LogDetailSheet({
                                 variant="outline"
                                 size="icon"
                                 onClick={() => handleCopy(selectedLog.entityId, "Entity ID")}
-                                className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:border-white/10 dark:bg-card dark:hover:border-zinc-700 dark:text-zinc-500"
+                                className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:border-white/10 dark:bg-card dark:hover:border-zinc-700 dark:text-zinc-300"
                               >
                                 <i className="ph-bold ph-copy text-xs"></i>
                               </Button>
@@ -224,15 +224,15 @@ export default function LogDetailSheet({
             {/* Network Data */}
             <Card className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
               <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-3 dark:border-white/10 dark:bg-white/5">
-                <i className="ph-bold ph-broadcast text-pup-maroon dark:text-primary dark:text-primary"></i>
-                <h4 className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                <i className="ph-bold ph-broadcast text-pup-maroon dark:text-primary"></i>
+                <h4 className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-300">
                   Network Data
                 </h4>
               </div>
               <div className="space-y-4 p-4">
                 <div>
                   <div className="mb-1 flex items-center justify-between">
-                    <p className="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase dark:text-zinc-500">
+                    <p className="flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase dark:text-zinc-300">
                       <i className="ph-bold ph-globe"></i> IP Address
                     </p>
                     <div className="flex items-center gap-2">
@@ -242,7 +242,7 @@ export default function LogDetailSheet({
                             variant="outline"
                             size="icon"
                             onClick={() => onSearchSimilar(selectedLog.ip)}
-                            className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:border-white/10 dark:bg-card dark:hover:border-zinc-700 dark:text-zinc-500"
+                            className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:border-white/10 dark:bg-card dark:hover:border-zinc-700 dark:text-zinc-300"
                           >
                             <i className="ph-bold ph-magnifying-glass text-xs"></i>
                           </Button>
@@ -257,7 +257,7 @@ export default function LogDetailSheet({
                             variant="outline"
                             size="icon"
                             onClick={() => handleCopy(selectedLog.ip, "IP address")}
-                            className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:border-white/10 dark:bg-card dark:hover:border-zinc-700 dark:text-zinc-500"
+                            className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:border-white/10 dark:bg-card dark:hover:border-zinc-700 dark:text-zinc-300"
                           >
                             <i className="ph-bold ph-copy text-xs"></i>
                           </Button>
@@ -273,7 +273,7 @@ export default function LogDetailSheet({
                   </p>
                 </div>
                 <div>
-                  <p className="mb-1 flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase dark:text-zinc-500">
+                  <p className="mb-1 flex items-center gap-1 text-[10px] font-bold text-gray-400 uppercase dark:text-zinc-300">
                     <i className="ph-bold ph-desktop"></i> Device &amp; Browser
                   </p>
                   <p className="rounded-lg border border-gray-100 bg-gray-50 p-3 text-[11px] leading-tight font-medium text-gray-600 dark:border-white/10 dark:bg-card dark:text-zinc-300">
@@ -313,5 +313,6 @@ export default function LogDetailSheet({
     </Sheet>
   )
 }
+
 
 

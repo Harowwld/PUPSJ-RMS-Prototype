@@ -873,7 +873,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
             <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">Current Room</label>
             <div className="flex items-center gap-2">
               <div className="relative group">
-                <i className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 transition-all duration-300", activeRoomId ? "ph-fill ph-door-open text-pup-maroon dark:text-primary dark:text-primary" : "ph-bold ph-door-open text-gray-400 dark:text-zinc-500", "group-focus-within:text-pup-maroon dark:text-primary")} />
+                <i className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 transition-all duration-300", activeRoomId ? "ph-fill ph-door-open text-pup-maroon dark:text-primary" : "ph-bold ph-door-open text-gray-400 dark:text-zinc-500", "group-focus-within:text-pup-maroon dark:text-primary")} />
                 <Select
                   className="h-10 min-w-[200px] cursor-pointer rounded-xl border border-gray-200 bg-white pl-10 pr-10 text-sm font-bold text-gray-800 shadow-xs transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-100 dark:focus:border-zinc-700"
                   value={String(activeRoomId ?? "")}
@@ -916,15 +916,15 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
           <div className="flex h-10 items-center gap-4 rounded-xl border border-gray-200 bg-white px-4 shadow-xs dark:border-white/10 dark:bg-card">
             <div className="flex items-center gap-2">
               <span className="text-[9px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">Grid</span>
-              <div role="button" tabIndex={0} onClick={() => setShowGrid(!showGrid)} className={cn("relative inline-flex h-4 w-8 items-center rounded-full transition-all duration-300", showGrid ? "bg-pup-maroon dark:bg-red-600" : "bg-gray-200 dark:bg-zinc-700")}>
-                <span className={cn("inline-block h-2.5 w-2.5 transform rounded-full bg-white dark:bg-card transition-transform duration-300", showGrid ? "translate-x-4.5" : "translate-x-1")} />
+              <div role="button" tabIndex={0} onClick={() => setShowGrid(!showGrid)} className={cn("relative inline-flex h-4 w-8 items-center rounded-full transition-all duration-300", showGrid ? "bg-pup-maroon dark:bg-red-500/20 dark:ring-1 dark:ring-red-500/30" : "bg-gray-200 dark:bg-zinc-800")}>
+                <span className={cn("inline-block h-2.5 w-2.5 transform rounded-full transition-all duration-300 shadow-xs", showGrid ? "translate-x-4.5 bg-white dark:bg-red-400" : "translate-x-1 bg-white dark:bg-zinc-500")} />
               </div>
             </div>
             <Separator orientation="vertical" className="h-3.5 bg-gray-100 dark:bg-muted" />
             <div className="flex items-center gap-2">
               <span className="text-[9px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">Snap</span>
-              <div role="button" tabIndex={0} onClick={() => setSnapToGrid(!snapToGrid)} className={cn("relative inline-flex h-4 w-8 items-center rounded-full transition-all duration-300", snapToGrid ? "bg-pup-maroon dark:bg-red-600" : "bg-gray-200 dark:bg-zinc-700")}>
-                <span className={cn("inline-block h-2.5 w-2.5 transform rounded-full bg-white dark:bg-card transition-transform duration-300", snapToGrid ? "translate-x-4.5" : "translate-x-1")} />
+              <div role="button" tabIndex={0} onClick={() => setSnapToGrid(!snapToGrid)} className={cn("relative inline-flex h-4 w-8 items-center rounded-full transition-all duration-300", snapToGrid ? "bg-pup-maroon dark:bg-red-500/20 dark:ring-1 dark:ring-red-500/30" : "bg-gray-200 dark:bg-zinc-800")}>
+                <span className={cn("inline-block h-2.5 w-2.5 transform rounded-full transition-all duration-300 shadow-xs", snapToGrid ? "translate-x-4.5 bg-white dark:bg-red-400" : "translate-x-1 bg-white dark:bg-zinc-500")} />
               </div>
             </div>
           </div>
@@ -948,7 +948,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
                     <Button
                       onClick={saveLayout}
                       disabled={saving || hasAnyCollisions}
-                      className="flex h-11 items-center gap-2 rounded-2xl bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-xl hover:-translate-y-0.5 px-8 font-black tracking-widest text-white uppercase shadow-lg shadow-red-900/20 active:scale-95 transition-all disabled:opacity-30 disabled:grayscale dark:shadow-none"
+                      className="flex h-11 items-center gap-2 btn-brand-red active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none"
                     >
                       <i className={`ph-bold ${saving ? "ph-spinner animate-spin" : "ph-floppy-disk"} text-lg`} />
                       {saving ? "SAVING..." : "SAVE"}
@@ -1025,5 +1025,6 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     </div>
   )
 }
+
 
 

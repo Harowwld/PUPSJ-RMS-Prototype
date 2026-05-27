@@ -22,7 +22,6 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import AccountSetupModal from "@/components/shared/AccountSetupModal";
-import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { isAdminRole, getRoleLabel } from "@/lib/roleUtils";
 import { cn } from "@/lib/utils";
 
@@ -129,7 +128,6 @@ export default function Header({ authUser, onLogout, children }) {
         </div>
 
         <div className="flex items-center gap-2">
-          <ThemeToggle className="mr-2" />
           <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger className={cn(
               "group flex items-center gap-3 rounded-brand border px-3 py-1.5 shadow-xs transition-all focus:outline-none",
@@ -171,7 +169,12 @@ export default function Header({ authUser, onLogout, children }) {
                         {authUser?.fname} {authUser?.lname}
                       </p>
                       <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-bold text-pup-maroon dark:text-primary bg-red-50 px-1.5 py-0.5 rounded border border-red-100 uppercase tracking-wider dark:bg-red-950/30 dark:border-red-900/50">
+                        <span className={cn(
+                          "text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider",
+                          isAdminView 
+                            ? "text-pup-maroon dark:text-primary bg-red-50 border-red-100 dark:bg-red-500/20 dark:border-red-500/30"
+                            : "text-amber-700 dark:text-yellow-500 bg-amber-50 border-amber-200 dark:bg-yellow-500/20 dark:border-yellow-500/30"
+                        )}>
                           {authUser?.role || "User"}
                         </span>
                       </div>
@@ -205,9 +208,8 @@ export default function Header({ authUser, onLogout, children }) {
                   onClick={() => router.push("/account/activity")}
                 >
                   <i className="ph-bold ph-clock-counter-clockwise text-lg text-gray-400 dark:text-zinc-500"></i>
-                  <span className="text-sm">Audit My Activity</span>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
+                  <span className="text-sm">My Activity</span>
+                  </DropdownMenuItem>              </DropdownMenuGroup>
 
               {hasAdminRights && (
                 <>
@@ -219,16 +221,32 @@ export default function Header({ authUser, onLogout, children }) {
                     <div className="grid grid-cols-2 gap-2 bg-gray-100/80 p-1.5 rounded-xl border border-gray-200 dark:bg-white/5 dark:border-white/5">
                       <DropdownMenuItem
                         onClick={() => handleViewSwitch("admin")}
-                        className={`flex flex-col items-center justify-center gap-1.5 py-3 rounded-lg transition-all cursor-pointer outline-none ${ isAdminView ? "bg-red-50 text-red-900 shadow-md border border-red-200 ring-1 ring-red-100/20" : "text-gray-400 hover:bg-white hover:text-gray-600" } dark:bg-red-950/30 dark:text-red-400 dark:border-red-900/50 dark:hover:bg-white/5 dark:hover:text-zinc-300`}
+                        className={cn(
+                          "flex flex-col items-center justify-center gap-1.5 py-3 rounded-lg transition-all cursor-pointer outline-none",
+                          isAdminView 
+                            ? "bg-red-50 text-red-900 shadow-md border border-red-200 ring-1 ring-red-100/20 dark:bg-red-500/20 dark:text-primary dark:border-red-500/30" 
+                            : "text-gray-400 hover:bg-white hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-300"
+                        )}
                       >
-                        <i className={`ph-bold ph-shield-check text-xl ${isAdminView ? "text-red-600" : ""} dark:text-primary`}></i>
+                        <i className={cn(
+                          "ph-bold ph-shield-check text-xl transition-colors",
+                          isAdminView ? "text-red-600 dark:text-primary" : "text-gray-400 dark:text-zinc-500"
+                        )}></i>
                         <span className="text-[10px] font-black uppercase tracking-wider">Admin</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleViewSwitch("staff")}
-                        className={`flex flex-col items-center justify-center gap-1.5 py-3 rounded-lg transition-all cursor-pointer outline-none ${ !isAdminView ? "bg-yellow-50 text-yellow-900 shadow-md border border-yellow-200 ring-1 ring-yellow-100/20" : "text-gray-400 hover:bg-white hover:text-gray-600" } dark:bg-yellow-950/30 dark:text-yellow-400 dark:border-yellow-900/50 dark:hover:bg-white/5 dark:hover:text-zinc-300`}
+                        className={cn(
+                          "flex flex-col items-center justify-center gap-1.5 py-3 rounded-lg transition-all cursor-pointer outline-none",
+                          !isAdminView 
+                            ? "bg-yellow-50 text-yellow-900 shadow-md border border-yellow-200 ring-1 ring-yellow-100/20 dark:bg-yellow-500/20 dark:text-yellow-500 dark:border-yellow-500/30" 
+                            : "text-gray-400 hover:bg-white hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-300"
+                        )}
                       >
-                        <i className={`ph-bold ph-users-three text-xl ${!isAdminView ? "text-yellow-600" : ""} dark:text-yellow-500`}></i>
+                        <i className={cn(
+                          "ph-bold ph-users-three text-xl transition-colors",
+                          !isAdminView ? "text-yellow-600 dark:text-yellow-500" : "text-gray-400 dark:text-zinc-500"
+                        )}></i>
                         <span className="text-[10px] font-black uppercase tracking-wider">Staff</span>
                       </DropdownMenuItem>
                     </div>
@@ -240,7 +258,7 @@ export default function Header({ authUser, onLogout, children }) {
               <DropdownMenuGroup className="p-1">
                 <DropdownMenuItem
                   onClick={onLogout}
-                  className="cursor-pointer rounded-xl bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon !text-white hover:from-red-700 hover:to-red-900 hover:!text-white focus:from-red-700 focus:to-red-900 focus:!text-white focus:**:!text-white flex items-center justify-center gap-2 font-black py-2.5 px-3 transition-all active:scale-95 m-1 shadow-md dark:from-red-600 dark:to-red-800 dark:border-red-950"
+                  className="btn-brand-red !text-white hover:!text-white focus:!text-white focus:**:!text-white flex items-center justify-center gap-2 py-2.5 px-3 m-1 shadow-md"
                 >
                   <i className="ph-bold ph-power text-lg !text-white"></i>
                   <span className="text-sm uppercase tracking-widest !text-white">Log Out</span>
@@ -264,7 +282,7 @@ export default function Header({ authUser, onLogout, children }) {
           <DialogFooter className="mt-4">
             <Button
               onClick={handleSessionExpiredRedirect}
-              className="w-full bg-linear-to-b from-red-800 to-pup-maroon border-b-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 text-white font-black uppercase tracking-widest text-xs h-11 rounded-xl shadow-md transition-all active:scale-95 dark:from-red-600 dark:to-red-800 dark:border-red-950"
+              className="w-full btn-brand-red border-b-4 text-xs h-11 shadow-md"
             >
               Back to Login
             </Button>

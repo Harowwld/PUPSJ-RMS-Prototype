@@ -93,9 +93,9 @@ export default function DigitizationComplianceTab({
         <i className="ph-bold ph-caret-up-down ml-1 opacity-30 transition-opacity group-hover:opacity-100"></i>
       );
     return sortOrder === "asc" ? (
-      <i className="ph-bold ph-caret-up ml-1 text-pup-maroon dark:text-primary dark:text-primary"></i>
+      <i className="ph-bold ph-caret-up ml-1 text-pup-maroon dark:text-primary"></i>
     ) : (
-      <i className="ph-bold ph-caret-down ml-1 text-pup-maroon dark:text-primary dark:text-primary"></i>
+      <i className="ph-bold ph-caret-down ml-1 text-pup-maroon dark:text-primary"></i>
     );
   };
 
@@ -382,7 +382,7 @@ export default function DigitizationComplianceTab({
                 size="sm"
                 onClick={handlePreview}
                 disabled={loading || !data || isGeneratingPdf}
-                className="h-10 px-6 font-black text-[10px] tracking-widest bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white shadow-lg shadow-red-900/20 active:scale-95 disabled:opacity-60 rounded-brand uppercase transition-all dark:shadow-none"
+                className="h-10 px-6 font-black text-[10px] tracking-widest btn-brand-red active:scale-95 disabled:opacity-60 rounded-brand uppercase transition-all dark:shadow-none"
               >
                 <i className={cn("ph-bold text-base mr-2", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
                 {isGeneratingPdf ? "GENERATING..." : "GENERATE REPORT"}
@@ -529,8 +529,8 @@ export default function DigitizationComplianceTab({
                   onPressedChange={setRequireApproved}
                   className={cn(
                     "h-10 px-4 gap-2 rounded-brand border border-gray-300 dark:border-white/10 font-bold text-[10px] uppercase tracking-wider transition-all select-none w-full sm:w-auto",
-                    "hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card hover:text-gray-700 dark:text-zinc-200 dark:hover:text-zinc-200 dark:text-zinc-300 hover:border-gray-400",
-                    "data-[state=on]:bg-pup-maroon dark:bg-red-600 data-[state=on]:text-white data-[state=on]:border-gray-300 dark:border-white/10 data-[state=on]:shadow-md dark:shadow-none"
+                    "hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card hover:text-gray-700 dark:text-zinc-200 dark:hover:text-zinc-200 hover:border-gray-400",
+                    "data-[state=on]:bg-pup-maroon data-[state=on]:text-white data-[state=on]:border-gray-300 dark:data-[state=on]:bg-red-500/10 dark:data-[state=on]:text-red-400 dark:data-[state=on]:border-red-500/20 dark:data-[state=on]:shadow-none data-[state=on]:shadow-md"
                   )}
                 >
                   <i
@@ -541,8 +541,7 @@ export default function DigitizationComplianceTab({
                     aria-hidden
                   />
                   Approved Docs Only
-                </Toggle>
-              </div>
+                </Toggle>              </div>
             </div>
           </div>
         </div>
@@ -575,7 +574,7 @@ export default function DigitizationComplianceTab({
             <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary dark:text-primary" />
+                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
                 </EmptyMedia>
                 <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">Data Unavailable</EmptyTitle>
                 <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
@@ -767,7 +766,7 @@ export default function DigitizationComplianceTab({
                 <div className="overflow-auto flex-1 border border-gray-200 shadow-inner rounded-b-2xl min-h-[450px] dark:border-white/10 dark:shadow-none">
                   {sortedByCourse.length > 0 ? (
                     <Table className="min-w-full text-sm">
-                      <TableHeader className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
+                      <TableHeader className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
                         <TableRow className="hover:bg-transparent text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300">
                           <TableHead className="py-4 px-6 font-bold">
                             <button
@@ -844,7 +843,7 @@ export default function DigitizationComplianceTab({
                     <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                       <EmptyHeader className="flex flex-col items-center gap-0">
                         <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                          <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon dark:text-primary dark:text-primary" />
+                          <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon dark:text-primary" />
                         </EmptyMedia>
                         <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">No data found</EmptyTitle>
                         <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
@@ -940,7 +939,7 @@ export default function DigitizationComplianceTab({
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center bg-white p-10 dark:bg-card">
                 <div className="flex flex-col items-center gap-4">
-                  <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary dark:text-primary" />
+                  <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary" />
                   <p className="text-sm font-bold text-gray-500 uppercase tracking-widest dark:text-zinc-400">
                     Generating...
                   </p>
@@ -973,7 +972,7 @@ export default function DigitizationComplianceTab({
               <Button
                 onClick={handlePrint}
                 disabled={!pdfBlobUrl}
-                className="flex h-11 items-center gap-2 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 font-black text-white shadow-sm rounded-brand transition-colors dark:shadow-none"
+                className="flex h-11 items-center gap-2 btn-brand-red px-8 font-black text-white shadow-sm rounded-brand transition-colors dark:shadow-none"
               >
                 <i className="ph-bold ph-floppy-disk text-lg"></i> SAVE TO DEVICE
               </Button>
@@ -984,6 +983,7 @@ export default function DigitizationComplianceTab({
     </div>
   );
 }
+
 
 
 

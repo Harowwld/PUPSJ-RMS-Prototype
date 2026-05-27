@@ -109,7 +109,7 @@ export default function RegisterAccountTab({
               {/* Main Registration Form */}
               <Card className="overflow-hidden rounded-brand border-gray-200 bg-white shadow-md dark:border-white/10 dark:bg-card dark:shadow-none">
                 <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 p-5 px-8 dark:border-white/10 dark:bg-white/5">                  <h3 className="flex items-center gap-2 text-sm font-black tracking-widest text-gray-900 uppercase dark:text-zinc-50">
-                    <i className="ph-bold ph-list-plus text-pup-maroon dark:text-primary dark:text-primary"></i>{" "}
+                    <i className="ph-bold ph-list-plus text-pup-maroon dark:text-primary"></i>{" "}
                     Registration Form
                   </h3>
                   <Button
@@ -183,8 +183,8 @@ export default function RegisterAccountTab({
                             className={cn(
                               "h-12 w-full rounded-brand border-2 text-[11px] font-black tracking-widest uppercase transition-all",
                               createForm.role === "Staff"
-                                ? "border-amber-600 bg-amber-50 dark:bg-amber-950/20 text-amber-700 shadow-sm dark:shadow-none"
-                                : "border-gray-200 dark:border-white/10 text-gray-500 dark:text-zinc-400 hover:border-amber-200 hover:bg-amber-50 dark:bg-amber-950/30 dark:hover:bg-amber-900/10"
+                                ? "border-amber-600 bg-amber-50 dark:border-amber-500/50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 shadow-sm dark:shadow-none"
+                                : "border-gray-200 dark:border-white/10 text-gray-500 dark:text-zinc-500 hover:border-amber-200 hover:bg-amber-50 dark:bg-transparent dark:hover:bg-amber-500/5"
                             )}
                           >
                             <i className={cn("ph-bold mr-2 text-base", createForm.role === "Staff" ? "ph-user-gear" : "ph-user")} />
@@ -213,8 +213,8 @@ export default function RegisterAccountTab({
                             className={cn(
                               "flex h-12 w-full items-center justify-center rounded-brand border-2 text-[11px] font-black tracking-widest uppercase transition-all",
                               createForm.role === "Admin"
-                                ? "border-gray-300 dark:border-white/10 bg-red-50 dark:bg-red-950/20 text-pup-maroon dark:text-primary dark:text-primary shadow-sm dark:shadow-none"
-                                : "border-gray-200 dark:border-white/10 text-gray-500 dark:text-zinc-400 hover:border-red-200 hover:bg-red-50 dark:bg-red-950/30"
+                                ? "border-gray-300 dark:border-red-500/50 bg-red-50 dark:bg-red-500/20 text-pup-maroon dark:text-primary shadow-sm dark:shadow-none"
+                                : "border-gray-200 dark:border-white/10 text-gray-500 dark:text-zinc-500 hover:border-red-200 hover:bg-red-50 dark:bg-transparent dark:hover:bg-red-500/5"
                             )}
                           >
                             <i className={cn("ph-bold mr-2 text-base", createForm.role === "Admin" ? "ph-shield-star" : "ph-shield")} />
@@ -400,7 +400,7 @@ export default function RegisterAccountTab({
                       <Button
                         type="submit"
                         disabled={isLoading}
-                        className="h-12 w-full gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-16 text-xs font-black tracking-widest text-white uppercase shadow-lg active:scale-95 sm:w-auto transition-all dark:shadow-none"
+                        className="h-12 w-full gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md px-16 text-xs font-black tracking-widest text-white uppercase shadow-lg active:scale-95 sm:w-auto transition-all dark:shadow-none"
                       >
                         {isLoading ? (
                           <>
@@ -427,7 +427,7 @@ export default function RegisterAccountTab({
           <DialogContent className="sm:max-w-md rounded-[20px] border-gray-200 p-6 dark:border-white/10">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-xl font-black text-gray-900 dark:text-zinc-50">
-                <i className="ph-fill ph-warning-circle text-pup-maroon dark:text-primary dark:text-primary"></i>
+                <i className="ph-fill ph-warning-circle text-pup-maroon dark:text-primary"></i>
                 Confirm Registration
               </DialogTitle>
               <DialogDescription className="mt-2 text-sm font-medium text-gray-500 dark:text-zinc-400">
@@ -466,7 +466,7 @@ export default function RegisterAccountTab({
                 <div className="flex items-start gap-2">
                   <span className={cn(
                     "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-black tracking-tight uppercase shadow-sm dark:shadow-none",
-                    createForm.role === "Admin" ? "border-red-200 bg-red-50 dark:bg-red-950/20 text-pup-maroon dark:text-primary dark:text-primary" : "border-amber-200 bg-amber-50 dark:bg-amber-950/20 text-amber-700"
+                    createForm.role === "Admin" ? "border-red-200 bg-red-50 dark:bg-red-950/20 text-pup-maroon dark:text-primary" : "border-amber-200 bg-amber-50 dark:bg-amber-950/20 text-amber-700"
                   )}>
                     <i className={cn("ph-fill mr-1 text-xs", createForm.role === "Admin" ? "ph-shield-star" : "ph-user-gear")} />
                     {createForm.role === "Admin" ? "Administrator" : "Registrar Staff"}
@@ -493,7 +493,7 @@ export default function RegisterAccountTab({
                 type="button"
                 disabled={countdown > 0 || isLoading}
                 onClick={handleConfirmAction}
-                className="h-10 flex-1 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-[10px] font-black tracking-widest text-white uppercase shadow-lg disabled:opacity-50 sm:flex-none sm:px-10 transition-all dark:shadow-none"
+                className="h-10 flex-1 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md text-[10px] font-black tracking-widest text-white uppercase shadow-lg disabled:opacity-50 sm:flex-none sm:px-10 transition-all dark:shadow-none"
               >
                 {countdown > 0 ? `CONFIRM (${countdown}s)` : "CONFIRM"}
               </Button>
@@ -504,6 +504,7 @@ export default function RegisterAccountTab({
     </TooltipProvider>
   )
 }
+
 
 
 

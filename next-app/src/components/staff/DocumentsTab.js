@@ -335,7 +335,7 @@ export default function DocumentsTab({
             <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
-                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary dark:text-primary" />
+                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
                 </EmptyMedia>
                 <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">Could not load report</EmptyTitle>
                 <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md dark:text-zinc-300">
@@ -380,7 +380,7 @@ export default function DocumentsTab({
                 className="flex-1 overflow-y-auto overflow-x-auto border border-gray-200 rounded-brand animate-fade-up dark:border-white/10"
               >
                 <table className="min-w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 dark:bg-zinc-900 dark:border-white/10">
+                  <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 dark:bg-muted dark:border-white/10">
                     <tr className="text-left text-xs uppercase tracking-wider text-gray-600 dark:text-zinc-300 dark:border-white/10">
                       <th className="p-3 font-bold">Student No</th>
                       <th className="p-3 font-bold">Name</th>
@@ -402,7 +402,7 @@ export default function DocumentsTab({
                           <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
                             <EmptyHeader className="flex flex-col items-center gap-0">
                               <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
-                                <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon dark:text-primary dark:text-primary"></i>
+                                <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon dark:text-primary"></i>
                               </EmptyMedia>
                               <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">Search Documents</EmptyTitle>
                               <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md dark:text-zinc-300">
@@ -443,23 +443,27 @@ export default function DocumentsTab({
                             {r.student_name || "—"}
                           </td>
                           <td className="p-3">
-                            <span className="inline-flex items-center px-2 py-1 rounded-full bg-red-50 text-pup-maroon dark:text-primary border border-red-100 text-xs font-bold dark:bg-red-950/30 dark:text-primary">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-red-500/20 bg-red-500/10 text-[10px] font-black uppercase tracking-wider text-red-600 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
+                              <i className="ph-bold ph-file text-[11px]"></i>
                               {r.doc_type}
                             </span>
                           </td>
                           <td className="p-3">
                             {r.status === "uploaded" ? (
                               r.verificationStatus === "unverified" ? (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold dark:bg-amber-950/30">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-amber-500/20 bg-amber-500/10 text-[10px] font-black uppercase tracking-wider text-amber-600 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-400">
+                                  <i className="ph-bold ph-warning-circle text-[11px]"></i>
                                   Unverified
                                 </span>
                               ) : (
-                                <span className="inline-flex items-center px-2 py-1 rounded-full bg-green-50 text-green-800 border border-green-200 text-xs font-bold">
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-400">
+                                  <i className="ph-bold ph-check-circle text-[11px]"></i>
                                   Uploaded
                                 </span>
                               )
                             ) : (
-                              <span className="inline-flex items-center px-2 py-1 rounded-full bg-red-50 text-red-800 border border-red-200 text-xs font-bold dark:bg-red-950/30">
+                              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-red-500/20 bg-red-500/10 text-[10px] font-black uppercase tracking-wider text-red-600 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
+                                <i className="ph-bold ph-x-circle text-[11px]"></i>
                                 Missing
                               </span>
                             )}
@@ -520,7 +524,7 @@ export default function DocumentsTab({
                                       setUpdateFile(null);
                                       setUpdatePromptOpen(true);
                                     }}
-                                    className="px-3 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white font-bold text-xs transition-all dark:shadow-none"
+                                    className="btn-brand-red active:scale-95 transition-all dark:shadow-none"
                                   >
                                     <i className="ph-bold ph-pencil-simple-line mr-1.5"></i>
                                     UPDATE
@@ -600,7 +604,7 @@ export default function DocumentsTab({
 
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide dark:text-zinc-200">
-                Replacement PDF <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span>
+                Replacement PDF <span className="text-pup-maroon dark:text-primary">*</span>
               </label>
               <button
                 type="button"
@@ -679,7 +683,7 @@ export default function DocumentsTab({
                 }
               }}
               disabled={updateSaving || !updateFile}
-              className="h-11 px-6 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white shadow-sm font-bold flex items-center gap-2 rounded-brand dark:shadow-none"
+              className="h-11 px-6 btn-brand-red active:scale-95 transition-all dark:shadow-none"
             >
               <i className="ph-bold ph-check text-lg"></i>
               {updateSaving ? "SAVING..." : "SAVE CHANGES"}
@@ -715,7 +719,7 @@ export default function DocumentsTab({
                 <Input disabled value={currentStudent?.studentNo} className="bg-gray-100 font-mono text-gray-500 border-gray-200 cursor-not-allowed dark:text-zinc-400 dark:border-white/10 dark:bg-muted" />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide dark:text-zinc-200">Full Name <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span></label>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide dark:text-zinc-200">Full Name <span className="text-pup-maroon dark:text-primary">*</span></label>
                 <Input
                   value={editStudentForm.name}
                   onChange={e => setEditStudentForm(p => ({ ...p, name: e.target.value.toUpperCase() }))}
@@ -725,7 +729,7 @@ export default function DocumentsTab({
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide dark:text-zinc-200">Degree Program <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span></label>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide dark:text-zinc-200">Degree Program <span className="text-pup-maroon dark:text-primary">*</span></label>
                 <Select
                   className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 dark:bg-card dark:text-zinc-50 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
                   value={editStudentForm.courseCode}
@@ -737,7 +741,7 @@ export default function DocumentsTab({
                 </Select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide dark:text-zinc-200">Section <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span></label>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide dark:text-zinc-200">Section <span className="text-pup-maroon dark:text-primary">*</span></label>
                 <Input
                   value={editStudentForm.section}
                   onChange={e => setEditStudentForm(p => ({ ...p, section: e.target.value }))}
@@ -750,7 +754,7 @@ export default function DocumentsTab({
             <div className="space-y-4">
               <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100 pb-1 dark:text-zinc-400 dark:border-white/10">Physical Location</h4>
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide dark:text-zinc-200">Room Number <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span></label>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide dark:text-zinc-200">Room Number <span className="text-pup-maroon dark:text-primary">*</span></label>
                 <Select
                   className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 dark:bg-card dark:text-zinc-50 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
                   value={String(editStudentForm.room || "")}
@@ -767,7 +771,7 @@ export default function DocumentsTab({
                 </Select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide dark:text-zinc-200">Cabinet ID <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span></label>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide dark:text-zinc-200">Cabinet ID <span className="text-pup-maroon dark:text-primary">*</span></label>
                 <Select
                   className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 dark:bg-card dark:text-zinc-50 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
                   value={editStudentForm.cabinet}
@@ -782,7 +786,7 @@ export default function DocumentsTab({
                 </Select>
               </div>
               <div>
-                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide dark:text-zinc-200">Drawer Number <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span></label>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide dark:text-zinc-200">Drawer Number <span className="text-pup-maroon dark:text-primary">*</span></label>
                 <Select
                   className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 dark:bg-card dark:text-zinc-50 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
                   value={String(editStudentForm.drawer || "")}
@@ -843,7 +847,7 @@ export default function DocumentsTab({
                 }
               }}
               disabled={editStudentSaving}
-              className="h-11 px-6 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white shadow-sm font-bold flex items-center gap-2 rounded-brand dark:shadow-none"
+              className="h-11 px-6 btn-brand-red active:scale-95 transition-all dark:shadow-none"
             >
               <i className="ph-bold ph-check text-lg"></i>
               {editStudentSaving ? "SAVING..." : "SAVE PROFILE"}
@@ -868,5 +872,6 @@ export default function DocumentsTab({
     </div>
   );
 }
+
 
 

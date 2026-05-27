@@ -74,7 +74,7 @@ export default function SecurityQuestionsTab({
             <Button
               onClick={handleSaveSecurityQuestions}
               disabled={securitySaving}
-              className="flex h-10 w-full items-center gap-2 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-6 font-black text-white shadow-sm active:scale-95 sm:w-auto transition-all dark:shadow-none"
+              className="btn-brand-red active:scale-95 sm:w-auto transition-all dark:shadow-none"
             >
               <i className={`ph-bold ${securitySaving ? "ph-spinner animate-spin" : "ph-check"}`}></i>
               {securitySaving ? "SAVING..." : "SAVE QUESTIONS"}
@@ -94,7 +94,7 @@ export default function SecurityQuestionsTab({
                         <label className="text-[11px] font-black tracking-widest text-gray-500 uppercase transition-colors group-focus-within:text-gray-900 dark:text-zinc-400">
                           Security Challenge Question{" "}
                           {i < 2 ? (
-                            <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span>
+                            <span className="text-pup-maroon dark:text-primary">*</span>
                           ) : (
                             <span className="ml-1 text-gray-400 normal-case dark:text-zinc-500">(Optional)</span>
                           )}
@@ -111,7 +111,7 @@ export default function SecurityQuestionsTab({
                                     Weak Challenge
                                   </span>
                                 </TooltipTrigger>
-                                <TooltipContent side="top" className="bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-950/30">
+                                <TooltipContent side="top" className="bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-900/50">
                                   <p className="text-[10px] font-bold uppercase">
                                     Question must be at least 10 chars and meaningful.
                                   </p>
@@ -166,5 +166,6 @@ export default function SecurityQuestionsTab({
     </div>
   )
 }
+
 
 

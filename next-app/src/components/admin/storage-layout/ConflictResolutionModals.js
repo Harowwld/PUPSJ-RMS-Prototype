@@ -53,7 +53,7 @@ const ConflictResolutionModals = memo(({
           <div className="p-6">
             <div className="max-h-[50vh] overflow-auto rounded-brand border border-gray-200 dark:border-white/10">
                 <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
+                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
                     <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
                     <th className="p-3 font-bold">From</th>
                     <th className="p-3 font-bold">To</th>
@@ -154,7 +154,7 @@ const ConflictResolutionModals = memo(({
             </div>
             <div className="max-h-[45vh] overflow-auto rounded-brand border border-gray-200 shadow-inner dark:border-white/10 dark:shadow-none">
                 <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
+                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
                     <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
                     <th className="p-3 font-bold">Current Drawer</th>
                     <th className="p-3 font-bold">Records</th>
@@ -242,7 +242,7 @@ const ConflictResolutionModals = memo(({
             <Button 
                 type="button" 
                 onClick={openApplyPreview}
-                className="h-11 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 text-sm font-black tracking-wide text-white uppercase shadow-sm rounded-brand dark:shadow-none"
+                className="h-11 btn-brand-red active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
             >
               Continue Reassignment
             </Button>
@@ -270,7 +270,7 @@ const ConflictResolutionModals = memo(({
           <div className="p-6">
             <div className="max-h-[50vh] overflow-auto rounded-brand border border-gray-200 shadow-inner dark:border-white/10 dark:shadow-none">
                 <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
+                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
                     <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
                     <th className="p-3 font-bold">Before</th>
                     <th className="p-3 font-bold">After</th>
@@ -308,7 +308,7 @@ const ConflictResolutionModals = memo(({
             <Button 
                 type="button" 
                 onClick={applyTemplateWithMappings}
-                className="h-11 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 text-sm font-black tracking-wide text-white uppercase shadow-sm rounded-brand flex items-center gap-2 dark:shadow-none"
+                className="h-11 btn-brand-red flex items-center gap-2 dark:shadow-none"
             >
               <i className="ph-bold ph-check text-lg"></i>
               Apply Template + Reassign

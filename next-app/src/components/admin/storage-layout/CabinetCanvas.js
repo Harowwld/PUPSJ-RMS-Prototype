@@ -257,10 +257,10 @@ const CabinetElement = memo(({
       className={cn(
         "absolute border-2 transition-all duration-75 rounded-sm",
         isSelected 
-          ? "z-10 border-cyan-500 bg-cyan-100 shadow-[0_0_0_4px_rgba(6,182,212,0.2)] dark:border-cyan-400 dark:bg-cyan-800 dark:shadow-[0_0_0_4px_rgba(34,211,238,0.2)]" 
+          ? "z-10 border-cyan-500 bg-cyan-100 shadow-[0_0_0_4px_rgba(6,182,212,0.2)] dark:border-cyan-300 dark:bg-cyan-400 dark:shadow-[0_0_0_4px_rgba(34,211,238,0.2)]" 
           : isConflict 
             ? "border-red-600 bg-red-50 shadow-[0_0_0_4px_rgba(220,38,38,0.2)] dark:border-red-500 dark:bg-red-900/40 dark:shadow-[0_0_0_4px_rgba(239,68,68,0.2)]" 
-            : "border-gray-500 bg-gray-100 shadow-sm dark:border-zinc-500 dark:bg-zinc-400 dark:shadow-none"
+            : "border-gray-500 bg-gray-100 shadow-sm dark:border-zinc-500 dark:bg-zinc-600 dark:shadow-none"
       )}
       style={{
         left: `${cab.rect.x * 100}%`,

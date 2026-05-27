@@ -186,7 +186,7 @@ export default function AccountSetupModal({ authUser }) {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <i
-                  className={`text-lg ${needsPassword && step > 1 ? "ph-fill ph-check-circle text-emerald-500" : "ph-duotone ph-password text-pup-maroon dark:text-primary dark:text-primary"}`}
+                  className={`text-lg ${needsPassword && step > 1 ? "ph-fill ph-check-circle text-emerald-500" : "ph-duotone ph-password text-pup-maroon dark:text-primary"}`}
                 ></i>
                 <span className="text-sm font-black text-gray-900 dark:text-zinc-50">Step 1</span>
               </div>
@@ -208,7 +208,7 @@ export default function AccountSetupModal({ authUser }) {
             className={`flex flex-col gap-1 rounded-brand px-4 py-3 transition-all ${step === 2 ? "scale-100 border border-gray-200 bg-white opacity-100 shadow-sm" : "scale-95 opacity-40 grayscale"} dark:border-white/10 dark:bg-card`}
           >
             <div className="flex items-center gap-2">
-              <i className="ph-duotone ph-shield-check text-lg text-pup-maroon dark:text-primary dark:text-primary"></i>
+              <i className="ph-duotone ph-shield-check text-lg text-pup-maroon dark:text-primary"></i>
               <span className="text-sm font-black text-gray-900 dark:text-zinc-50">Step 2</span>
             </div>
             <span className="pl-7 text-xs font-bold text-gray-600 dark:text-zinc-300">
@@ -247,7 +247,7 @@ export default function AccountSetupModal({ authUser }) {
                   <div className="space-y-4">
                     <div>
                       <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
-                        Current Password <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span>
+                        Current Password <span className="text-pup-maroon dark:text-primary">*</span>
                       </label>
                       <div className="relative group">
                         <Input
@@ -269,7 +269,7 @@ export default function AccountSetupModal({ authUser }) {
                     </div>
                     <div>
                       <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
-                        New Password <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span>
+                        New Password <span className="text-pup-maroon dark:text-primary">*</span>
                       </label>
                       <div className="relative group">
                         <Input
@@ -291,7 +291,7 @@ export default function AccountSetupModal({ authUser }) {
                     </div>
                     <div>
                       <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
-                        Confirm New Password <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span>
+                        Confirm New Password <span className="text-pup-maroon dark:text-primary">*</span>
                       </label>
                       <div className="relative group">
                         <Input
@@ -316,8 +316,8 @@ export default function AccountSetupModal({ authUser }) {
                 <div className="flex shrink-0 justify-end border-t border-gray-100 bg-gray-50 p-5 dark:border-white/10 dark:bg-card">
                   <Button
                     type="submit"
-                    disabled={pwLoading}
-                    className="h-11 bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 text-xs font-bold tracking-widest text-white uppercase shadow-sm transition-colors dark:from-red-700 dark:to-red-900 dark:border-red-950"
+                    disabled={loading}
+                    className="h-11 btn-brand-red px-6 text-xs font-bold tracking-widest text-white uppercase shadow-sm transition-colors"
                   >
                     {pwLoading
                       ? "Saving..."
@@ -369,7 +369,7 @@ export default function AccountSetupModal({ authUser }) {
                         <label className="mb-1.5 block text-xs leading-tight font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
                           {q.question}{" "}
                           {q.is_required ? (
-                            <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span>
+                            <span className="text-pup-maroon dark:text-primary">*</span>
                           ) : (
                             <span className="ml-1 font-medium text-gray-400 normal-case dark:text-zinc-500">
                               (Optional)
@@ -396,9 +396,8 @@ export default function AccountSetupModal({ authUser }) {
                     disabled={
                       secLoading || secSubmitting || questions.length === 0
                     }
-                    className="h-11 bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 text-xs font-bold tracking-widest text-white uppercase shadow-sm transition-colors dark:from-red-700 dark:to-red-900 dark:border-red-950"
-                  >
-                    {secSubmitting ? "Saving..." : "Complete Setup & Enter"}
+                    className="h-11 btn-brand-red px-6 text-xs font-bold tracking-widest text-white uppercase shadow-sm transition-colors"
+                  >                    {secSubmitting ? "Saving..." : "Complete Setup & Enter"}
                   </Button>
                 </div>
               </form>
@@ -409,4 +408,5 @@ export default function AccountSetupModal({ authUser }) {
     </Dialog>
   )
 }
+
 

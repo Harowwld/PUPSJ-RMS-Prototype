@@ -303,7 +303,7 @@ export default function Home() {
                   <Button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full h-11 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white font-bold text-sm shadow-sm active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none group dark:from-red-700 dark:to-red-900 dark:border-red-950 dark:hover:from-red-600 dark:hover:to-red-800"
+                    className="w-full h-11 btn-brand-red text-white font-bold text-sm shadow-sm active:scale-95 transition-all disabled:opacity-50 disabled:pointer-events-none group"
                   >
                     {isLoading ? (
                       <div className="flex items-center gap-2">
@@ -364,7 +364,7 @@ export default function Home() {
                       <Button
                         type="submit"
                         disabled={forgotLoading}
-                        className="w-full h-11 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white font-bold text-sm shadow-sm active:scale-95 transition-all disabled:opacity-50 group dark:from-red-700 dark:to-red-900 dark:border-red-950 dark:hover:from-red-600 dark:hover:to-red-800"
+                        className="w-full h-11 btn-brand-red text-white font-bold text-sm shadow-sm active:scale-95 transition-all disabled:opacity-50 group"
                       >
                         {forgotLoading ? (
                            <div className="flex items-center gap-2">
@@ -462,7 +462,7 @@ export default function Home() {
                       <Button
                         type="submit"
                         disabled={forgotLoading}
-                        className="w-full h-11 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white font-bold text-sm shadow-sm active:scale-95 transition-all disabled:opacity-50 group dark:from-red-700 dark:to-red-900 dark:border-red-950 dark:hover:from-red-600 dark:hover:to-red-800"
+                        className="w-full h-11 btn-brand-red text-white font-bold text-sm shadow-sm active:scale-95 transition-all disabled:opacity-50 group"
                       >
                         {forgotLoading ? (
                            <div className="flex items-center gap-2">
@@ -538,7 +538,7 @@ export default function Home() {
                 <Button
                   type="submit"
                   disabled={twoFactorLoading}
-                  className="w-full h-11 bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white font-black shadow-sm rounded-brand uppercase tracking-widest flex items-center justify-center gap-2 dark:from-red-700 dark:to-red-900 dark:border-red-950 dark:hover:from-red-600 dark:hover:to-red-800"
+                  className="w-full h-11 btn-brand-red"
                 >
                   {twoFactorLoading ? (
                     <>

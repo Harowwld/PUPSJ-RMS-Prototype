@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { AuthGuard } from "@/components/shared/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Tabs,
   TabsList,
@@ -464,21 +465,33 @@ function AccountPageContent() {
     );
   }
 
+  const handleThemeChange = (e) => {
+    const nextTheme = e.target.value
+    if (!document.startViewTransition) {
+      setTheme(nextTheme)
+      return
+    }
+    document.startViewTransition(() => {
+      setTheme(nextTheme)
+    })
+  }
+
   const initials =
     authUser?.fname && authUser?.lname
       ? (authUser.fname[0] + authUser.lname[0]).toUpperCase()
       : "AD";
 
   const isSuperAdmin = authUser?.role === "SuperAdmin";
+
   const roleBadgeColor = isSuperAdmin
-    ? "bg-amber-100 text-amber-800 border-amber-200"
-    : "bg-red-50 dark:data-[state=active]:bg-red-500/10 text-pup-maroon dark:text-primary border-red-100";
+    ? "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-400"
+    : "border-red-500/30 bg-red-500/10 text-red-600 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400";
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F9FAFB] font-inter selection:bg-pup-maroon selection:text-white">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-background font-inter selection:bg-pup-maroon selection:text-white">
       <Header authUser={authUser} onLogout={handleLogout} />
 
-      <main className="flex-1 w-full max-w-[1200px] mx-auto py-10 px-6 animate-fade-in">
+      <main className="flex-1 w-full max-w-[1200px] mx-auto py-10 px-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <PageHeader
           icon="ph-user-circle-gear"
           title="Account Settings"
@@ -490,7 +503,7 @@ function AccountPageContent() {
                 const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
                 router.push(path);
               }}
-              className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-gray-300 bg-white hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center gap-2 rounded-xl dark:border-white/10 dark:bg-card"
+              className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-gray-300 bg-white hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center gap-2 rounded-xl dark:border-white/10 dark:bg-card dark:text-zinc-300"
             >
               <i className="ph-bold ph-caret-left"></i>
               Return to Dashboard
@@ -498,7 +511,7 @@ function AccountPageContent() {
           }
         />
 
-        <Separator className="mt-8 bg-gray-200 dark:bg-zinc-700" />
+        <Separator className="mt-8 bg-gray-200 dark:bg-zinc-800" />
 
         <div className="mt-8">
           <Tabs
@@ -509,69 +522,87 @@ function AccountPageContent() {
           >
           {/* Sidebar Navigation */}
           <aside className="space-y-6 lg:sticky lg:top-24">
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden dark:bg-card dark:border-white/10">
-              <div className="p-8 bg-linear-to-b from-gray-50 to-white border-b border-gray-100 flex flex-col items-center text-center dark:border-white/10">
-                <div className="relative group">
-                  <div className="w-24 h-24 rounded-3xl bg-linear-to-br from-red-800 to-pup-maroon text-white flex items-center justify-center text-3xl font-black shadow-2xl shadow-red-900/30 mb-5 border-4 border-white rotate-3 group-hover:rotate-0 transition-transform duration-500">
-                    {initials}
+            <div className="bg-white rounded-[2.5rem] border border-gray-200 shadow-2xl shadow-black/5 overflow-hidden dark:bg-zinc-900 dark:border-white/5">
+              {/* Brand Banner Header */}
+              <div className="h-28 bg-linear-to-br from-red-900 via-pup-maroon to-red-800 relative">
+                <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-from)_0%,_transparent_100%)]"></div>
+                <div className="absolute bottom-0 left-0 w-full h-12 bg-linear-to-t from-black/20 to-transparent"></div>
+              </div>
+              
+              {/* Profile Identity Section (Overlapping Banner) */}
+              <div className="px-6 pb-8 -mt-14 relative flex flex-col items-center text-center">
+                <div className="relative mb-5">
+                  {/* Outer Glow/Ring */}
+                  <div className="absolute -inset-1 bg-white/20 rounded-[2rem] blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  
+                  {/* Initials Container */}
+                  <div className="relative w-28 h-28 rounded-[2rem] bg-white p-1.5 shadow-2xl dark:bg-zinc-800">
+                    <div className="w-full h-full rounded-[1.6rem] bg-linear-to-br from-red-800 to-pup-maroon text-white flex items-center justify-center text-4xl font-black shadow-inner">
+                      {initials}
+                    </div>
                   </div>
-                  <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-xl bg-white border-2 border-gray-100 flex items-center justify-center text-pup-maroon dark:text-primary shadow-lg animate-bounce dark:bg-card dark:border-white/10">
-                    <i className="ph-fill ph-shield-check text-lg"></i>
+
+                  {/* High-Contrast Integrated Security Badge */}
+                  <div className="absolute bottom-1 right-1 w-9 h-9 rounded-2xl bg-emerald-500 border-[5px] border-white dark:border-zinc-900 flex items-center justify-center text-white shadow-xl">
+                    <i className="ph-fill ph-shield-check text-base"></i>
                   </div>
                 </div>
                 
-                <h3 className="font-black text-gray-900 text-lg tracking-tight truncate w-full px-2 dark:text-zinc-50">
-                  {fname} {lname}
-                </h3>
-                <div
-                  className={`mt-2.5 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-[0.15em] border ${roleBadgeColor}`}
-                >
-                  {authUser?.role || "System User"}
+                <div className="space-y-1.5">
+                  <h3 className="font-black text-gray-900 text-2xl tracking-tight dark:text-zinc-50 leading-tight">
+                    {fname} {lname}
+                  </h3>
+                  <div className="flex flex-col items-center gap-1">
+                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest dark:text-zinc-400">
+                      {authUser?.email || authUser?.username}
+                    </p>
+                    <div
+                      className={cn(
+                        "mt-3 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border shadow-xs flex items-center gap-2",
+                        roleBadgeColor
+                      )}
+                    >
+                      <div className="w-1.5 h-1.5 rounded-full bg-current animate-pulse shadow-xs" />
+                      {authUser?.role || "System User"}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <TabsList className="p-2 w-full flex flex-col h-auto bg-transparent border-0 space-y-1">
-                <TabsTrigger
-                  value="profile"
-                  className="flex items-center justify-start gap-3 w-full px-4 py-3.5 rounded-xl text-sm font-bold transition-all data-[state=active]:bg-red-50 data-[state=active]:text-pup-maroon dark:data-[state=active]:text-red-500 data-[state=active]:shadow-sm dark:data-[state=active]:shadow-none text-gray-500 hover:bg-gray-50 hover:text-gray-900 border-0 dark:data-[state=active]:bg-red-500/10 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-50"
-                >
-                  <i className="ph-bold ph-identification-card text-xl"></i>
-                  Profile
-                </TabsTrigger>
-                <TabsTrigger
-                  value="security"
-                  className="flex items-center justify-start gap-3 w-full px-4 py-3.5 rounded-xl text-sm font-bold transition-all data-[state=active]:bg-red-50 data-[state=active]:text-pup-maroon dark:data-[state=active]:text-red-500 data-[state=active]:shadow-sm dark:data-[state=active]:shadow-none text-gray-500 hover:bg-gray-50 hover:text-gray-900 border-0 dark:data-[state=active]:bg-red-500/10 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-50"
-                >
-                  <i className="ph-bold ph-shield-star text-xl"></i>
-                  Security Settings
-                </TabsTrigger>
-                <TabsTrigger
-                  value="preferences"
-                  className="flex items-center justify-start gap-3 w-full px-4 py-3.5 rounded-xl text-sm font-bold transition-all data-[state=active]:bg-red-50 data-[state=active]:text-pup-maroon dark:data-[state=active]:text-red-500 data-[state=active]:shadow-sm dark:data-[state=active]:shadow-none text-gray-500 hover:bg-gray-50 hover:text-gray-900 border-0 dark:data-[state=active]:bg-red-500/10 dark:text-zinc-400 dark:hover:bg-white/10 dark:hover:text-zinc-50"
-                >
-                  <i className="ph-bold ph-palette text-xl"></i>
-                  System Preference
-                </TabsTrigger>
-              </TabsList>
-            </div>
-
-            <div className="bg-pup-maroon/5 border-2 border-dashed border-pup-maroon/10 rounded-2xl p-6 relative overflow-hidden">
-               <i className="ph-fill ph-fingerprint absolute -right-4 -bottom-4 text-7xl text-pup-maroon dark:text-primary/5 rotate-12"></i>
-               <div className="flex items-center gap-2 text-pup-maroon dark:text-primary font-black text-[11px] uppercase tracking-widest mb-2">
-                  <i className="ph-bold ph-info"></i>
-                  Security Note
-               </div>
-               <p className="text-[12px] text-gray-600 font-medium leading-relaxed relative z-10 dark:text-zinc-300">
-                  Any changes to your account are encrypted and logged for system safety.
-               </p>
+              {/* Navigation Menu */}
+              <div className="px-4 pb-4">
+                <div className="h-px w-full bg-gray-100 dark:bg-white/5 mb-4 px-2 mx-auto max-w-[80%]" />
+                
+                <TabsList className="w-full flex flex-col h-auto bg-transparent rounded-2xl p-0 space-y-1.5">
+                  {[
+                    { id: "profile", label: "Profile Info", icon: "ph-identification-card" },
+                    { id: "security", label: "Security & Access", icon: "ph-shield-star" },
+                    { id: "preferences", label: "System Preference", icon: "ph-palette" }
+                  ].map((tab) => (
+                    <TabsTrigger
+                      key={tab.id}
+                      value={tab.id}
+                      className="group flex items-center justify-start gap-4 w-full px-5 py-4 rounded-[1.25rem] text-[13px] font-black uppercase tracking-wider transition-all data-[state=active]:bg-gray-50 dark:data-[state=active]:bg-white/5 data-[state=active]:text-pup-maroon dark:data-[state=active]:text-primary data-[state=active]:shadow-inner text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 outline-none"
+                    >
+                      <div className="shrink-0 w-10 h-10 rounded-xl bg-gray-100 dark:bg-zinc-800 flex items-center justify-center transition-all group-data-[state=active]:bg-white dark:group-data-[state=active]:bg-zinc-700 group-data-[state=active]:shadow-md group-data-[state=active]:text-pup-maroon dark:group-data-[state=active]:text-primary">
+                        <i className={cn("ph-bold text-xl", tab.icon)}></i>
+                      </div>
+                      <span className="truncate text-left">{tab.label}</span>
+                      <div className="shrink-0 ml-auto w-5 h-5 flex items-center justify-center opacity-0 group-data-[state=active]:opacity-100 transition-opacity">
+                        <i className="ph-bold ph-caret-right text-sm"></i>
+                      </div>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+              </div>
             </div>
           </aside>
 
           {/* Content Area */}
           <div className="min-w-0 space-y-8">
-            <TabsContent value="profile" className="m-0 border-0 focus-visible:ring-0 animate-in fade-in slide-in-from-right-4 duration-500">
+            <TabsContent value="profile" className="m-0 border-0 focus-visible:ring-0 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <Card className="rounded-2xl border-gray-200 shadow-sm overflow-hidden bg-white dark:border-white/10 dark:bg-card">
-                <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-8 dark:border-white/10">
+                <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-8 dark:bg-muted dark:bg-none dark:border-white/10">
                   <div className="flex items-center gap-5">
                       <div className="w-14 h-14 rounded-2xl bg-white border-2 border-gray-100 flex items-center justify-center text-pup-maroon dark:text-primary shadow-md shrink-0 dark:bg-card dark:border-white/10">
                       <i className="ph-duotone ph-user-focus text-3xl"></i>
@@ -587,7 +618,7 @@ function AccountPageContent() {
                   </div>
                 </CardHeader>
 
-                <CardContent className="p-10">
+                <CardContent className="p-10 pt-12">
                   <form onSubmit={submitProfile} className="space-y-10">
                     {profileError && (
                       <div className="p-5 bg-red-50 border-2 border-red-100 text-red-700 text-sm font-bold rounded-xl flex items-center gap-4 animate-in shake-1 dark:data-[state=active]:bg-red-500/10">
@@ -650,7 +681,7 @@ function AccountPageContent() {
                       <Button
                         type="submit"
                         disabled={profileLoading}
-                        className="h-12 px-10 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-xl transition-all text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-xl active:scale-95 disabled:opacity-50"
+                        className="h-12 px-10 btn-brand-red text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-xl active:scale-95 disabled:opacity-50"
                       >
                         {profileLoading ? (
                           <i className="ph-bold ph-spinner animate-spin text-xl"></i>
@@ -669,7 +700,7 @@ function AccountPageContent() {
               <div className="space-y-8">
                 {/* Password Rotation Card */}
                 <Card className="rounded-2xl border-gray-200 shadow-sm overflow-hidden bg-white dark:border-white/10 dark:bg-card">
-                  <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-8 dark:border-white/10">
+                  <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-8 dark:bg-muted dark:bg-none dark:border-white/10">
                     <div className="flex items-center gap-5">
                       <div className="w-14 h-14 rounded-2xl bg-white border-2 border-gray-100 flex items-center justify-center text-pup-maroon dark:text-primary shadow-md shrink-0 dark:bg-card dark:border-white/10">
                         <i className="ph-duotone ph-key text-3xl"></i>
@@ -681,7 +712,7 @@ function AccountPageContent() {
                         <CardDescription className="font-medium text-gray-500 text-sm mt-1 dark:text-zinc-400">
                           Update your sign-in details.
                           {authUser?.password_last_changed && (
-                            <span className="flex items-center gap-1.5 mt-2 text-[10px] text-pup-maroon dark:text-primary font-black uppercase tracking-wider bg-red-50 w-fit px-2 py-0.5 rounded border border-red-100 dark:bg-red-950/50">
+                            <span className="flex items-center gap-1.5 mt-2 text-[10px] text-pup-maroon dark:text-red-400 font-black uppercase tracking-wider bg-red-50 dark:bg-red-400/10 w-fit px-2 py-0.5 rounded border border-red-100 dark:border-red-400/20">
                               <i className="ph-bold ph-calendar"></i>
                               Last Updated: {formatPHDateTime(authUser.password_last_changed)}
                             </span>
@@ -776,7 +807,7 @@ function AccountPageContent() {
                         <Button
                           type="submit"
                           disabled={pwLoading}
-                          className="h-12 px-10 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-xl transition-all text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-xl active:scale-95 disabled:opacity-50"
+                          className="h-12 px-10 btn-brand-red text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-xl active:scale-95 disabled:opacity-50"
                         >
                           {pwLoading ? (
                             <i className="ph-bold ph-spinner animate-spin text-xl"></i>
@@ -792,7 +823,7 @@ function AccountPageContent() {
 
                 {/* Security Questions Card */}
                 <Card className="rounded-2xl border-gray-200 shadow-sm overflow-hidden bg-white dark:border-white/10 dark:bg-card">
-                  <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-8 dark:border-white/10">
+                  <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-8 dark:bg-muted dark:bg-none dark:border-white/10">
                     <div className="flex items-center gap-5">
                       <div className="w-14 h-14 rounded-2xl bg-white border-2 border-gray-100 flex items-center justify-center text-pup-maroon dark:text-primary shadow-md shrink-0 dark:bg-card dark:border-white/10">
                         <i className="ph-duotone ph-shield-check text-3xl"></i>
@@ -818,13 +849,13 @@ function AccountPageContent() {
                       )}
 
                       {hasSetSecurity && (
-                        <div className="mb-8 p-6 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-start gap-4 dark:bg-emerald-950/50">
-                           <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-emerald-600 shadow-sm shrink-0 dark:bg-card">
+                        <div className="mb-8 p-6 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-start gap-4 dark:bg-emerald-400/10 dark:border-emerald-400/20">
+                           <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-emerald-600 shadow-sm shrink-0 dark:bg-emerald-400/20 dark:text-emerald-400 dark:shadow-none">
                               <i className="ph-fill ph-check-circle text-2xl"></i>
                            </div>
                            <div>
-                              <h4 className="font-black text-emerald-900 text-sm">Security Questions Set</h4>
-                              <p className="text-xs font-medium text-emerald-700 mt-1 leading-relaxed">
+                              <h4 className="font-black text-emerald-900 text-sm dark:text-emerald-400">Security Questions Set</h4>
+                              <p className="text-xs font-medium text-emerald-700 mt-1 leading-relaxed dark:text-emerald-400/80">
                                  Your recovery questions are active. To update an answer, click the &quot;Change&quot; button next to the question.
                               </p>
                            </div>
@@ -896,7 +927,7 @@ function AccountPageContent() {
                         <Button
                           type="submit"
                           disabled={secLoading || globalQuestions.length === 0}
-                          className="h-12 px-10 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-xl transition-all text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-xl active:scale-95 disabled:opacity-50"
+                          className="h-12 px-10 btn-brand-red text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-xl active:scale-95 disabled:opacity-50"
                         >
                           {secLoading ? (
                             <i className="ph-bold ph-spinner animate-spin text-xl"></i>
@@ -912,7 +943,7 @@ function AccountPageContent() {
 
                 {/* 2FA Card */}
                 <Card className="rounded-2xl border-gray-200 shadow-sm overflow-hidden bg-white dark:border-white/10 dark:bg-card">
-                  <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-8 dark:border-white/10">
+                  <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-8 dark:bg-muted dark:bg-none dark:border-white/10">
                     <div className="flex items-center gap-5">
                       <div className="w-14 h-14 rounded-2xl bg-white border-2 border-gray-100 flex items-center justify-center text-pup-maroon dark:text-primary shadow-md shrink-0 dark:bg-card dark:border-white/10">
                         <i className="ph-duotone ph-fingerprint text-3xl"></i>
@@ -931,13 +962,13 @@ function AccountPageContent() {
                   <CardContent className="p-10">
                     {totpEnabled ? (
                       <div className="space-y-10">
-                        <div className="p-6 bg-emerald-50 border-2 border-emerald-100 rounded-2xl flex items-start gap-5 dark:bg-emerald-950/50">
-                          <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-emerald-600 shadow-md shrink-0 dark:bg-card">
+                        <div className="p-6 bg-emerald-50 border-2 border-emerald-100 rounded-2xl flex items-start gap-5 dark:bg-emerald-400/10 dark:border-emerald-400/20">
+                          <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-emerald-600 shadow-md shrink-0 dark:bg-emerald-400/20 dark:text-emerald-400 dark:shadow-none">
                             <i className="ph-fill ph-check-circle text-3xl"></i>
                           </div>
                           <div>
-                            <h4 className="font-black text-emerald-900 text-base">Two-Factor Auth is On</h4>
-                            <p className="text-sm font-medium text-emerald-700 mt-1 leading-relaxed">
+                            <h4 className="font-black text-emerald-900 text-base dark:text-emerald-400">Two-Factor Auth is On</h4>
+                            <p className="text-sm font-medium text-emerald-700 mt-1 leading-relaxed dark:text-emerald-400/80">
                               Your account is guarded by secondary authentication. You will be prompted for codes during login.
                             </p>
                           </div>
@@ -999,9 +1030,9 @@ function AccountPageContent() {
                             </Button>
                           </div>
                           
-                          <div className="mt-6 p-5 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-3 dark:bg-amber-950/50">
-                            <i className="ph-fill ph-info text-xl mt-0.5 shrink-0 text-amber-600"></i>
-                            <p className="text-[12px] text-amber-800 font-bold leading-relaxed">
+                          <div className="mt-6 p-5 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-3 dark:bg-amber-400/10 dark:border-amber-400/20">
+                            <i className="ph-fill ph-info text-xl mt-0.5 shrink-0 text-amber-600 dark:text-amber-400"></i>
+                            <p className="text-[12px] text-amber-800 font-bold leading-relaxed dark:text-amber-400/90">
                               Recovery codes allow you to access your account if you lose your phone. Keep them in a safe place.
                             </p>
                           </div>
@@ -1073,7 +1104,7 @@ function AccountPageContent() {
                           <Button
                             onClick={verifyTOTP}
                             disabled={totpLoading || totpToken.length !== 6}
-                            className="h-12 px-10 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-xl transition-all text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-xl active:scale-95"
+                            className="h-12 px-10 btn-brand-red text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-xl active:scale-95"
                           >
                             {totpLoading ? (
                               <i className="ph-bold ph-spinner animate-spin text-xl"></i>
@@ -1100,7 +1131,7 @@ function AccountPageContent() {
                           <Button
                             onClick={startTOTPSetup}
                             disabled={totpLoading}
-                            className="h-12 px-10 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-xl transition-all text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-xl active:scale-95 disabled:opacity-50"
+                            className="h-12 px-10 btn-brand-red text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-xl active:scale-95 disabled:opacity-50"
                           >
                             {totpLoading ? (
                               <i className="ph-bold ph-spinner animate-spin text-xl"></i>
@@ -1119,7 +1150,7 @@ function AccountPageContent() {
 
             <TabsContent value="preferences" className="m-0 border-0 focus-visible:ring-0 animate-in fade-in slide-in-from-right-4 duration-500">
               <Card className="rounded-2xl border-gray-200 shadow-sm overflow-hidden bg-white dark:border-white/10 dark:bg-card">
-                <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-8 dark:border-white/10">
+                <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-8 dark:bg-muted dark:bg-none dark:border-white/10">
                   <div className="flex items-center gap-5">
                       <div className="w-14 h-14 rounded-2xl bg-white border-2 border-gray-100 flex items-center justify-center text-pup-maroon dark:text-primary shadow-md shrink-0 dark:bg-card dark:border-white/10">
                       <i className="ph-duotone ph-palette text-3xl"></i>
@@ -1136,17 +1167,56 @@ function AccountPageContent() {
                 </CardHeader>
 
                 <CardContent className="p-10">
-                   <div className="space-y-6">
-                      <div className="space-y-2">
-                        <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1 dark:text-zinc-400">
-                          Theme
-                        </label>
-                        <Select value={theme} onChange={(e) => setTheme(e.target.value)}>
-                          <option value="system">System</option>
-                          <option value="light">Light</option>
-                          <option value="dark">Dark</option>
-                        </Select>
-                        <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-3 ml-1 dark:text-zinc-500">
+                   <div className="space-y-10">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between px-1">
+                          <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">
+                            Interface Theme
+                          </label>
+                          <Badge variant="outline" className="h-5 px-2 bg-gray-50 border-gray-200 text-gray-500 font-black text-[9px] uppercase dark:bg-muted dark:border-white/10 dark:text-zinc-400">
+                             Visuals
+                          </Badge>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                           {['system', 'light', 'dark'].map((t) => (
+                             <button
+                                key={t}
+                                onClick={() => handleThemeChange({ target: { value: t } })}
+                                className={cn(
+                                  "relative flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-all group overflow-hidden",
+                                  theme === t 
+                                    ? "border-pup-maroon bg-red-50/50 dark:border-red-500 dark:bg-red-500/10" 
+                                    : "border-gray-100 bg-gray-50 hover:border-gray-200 dark:border-white/5 dark:bg-card dark:hover:border-white/10"
+                                )}
+                             >
+                                <div className={cn(
+                                  "w-12 h-12 rounded-xl flex items-center justify-center text-2xl transition-all shadow-xs",
+                                  theme === t 
+                                    ? "bg-pup-maroon text-white dark:bg-red-600" 
+                                    : "bg-white text-gray-400 dark:bg-zinc-800 dark:text-zinc-500 group-hover:text-gray-600 dark:group-hover:text-zinc-300"
+                                )}>
+                                   <i className={cn(
+                                     "ph-bold",
+                                     t === 'system' ? "ph-desktop" : t === 'light' ? "ph-sun" : "ph-moon"
+                                   )}></i>
+                                </div>
+                                <span className={cn(
+                                  "text-xs font-black uppercase tracking-widest",
+                                  theme === t ? "text-pup-maroon dark:text-red-500" : "text-gray-500 dark:text-zinc-400"
+                                )}>
+                                   {t}
+                                </span>
+                                {theme === t && (
+                                   <div className="absolute top-2 right-2 w-5 h-5 bg-pup-maroon dark:bg-red-600 rounded-full flex items-center justify-center text-white text-[10px] animate-in zoom-in duration-300">
+                                      <i className="ph-bold ph-check"></i>
+                                   </div>
+                                )}
+                             </button>
+                           ))}
+                        </div>
+                        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-4 ml-1 dark:text-zinc-500">
+                           <i className="ph-bold ph-info mr-1.5"></i>
                            Choose your preferred color theme for the interface.
                         </p>
                       </div>
@@ -1179,9 +1249,9 @@ function AccountPageContent() {
                 ))}
               </div>
 
-              <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-3 dark:bg-amber-950/30">
-                 <i className="ph-fill ph-warning text-xl text-amber-600 shrink-0"></i>
-                 <p className="text-[11px] text-amber-900 font-bold leading-relaxed">
+              <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-3 dark:bg-amber-400/10 dark:border-amber-400/20">
+                 <i className="ph-fill ph-warning text-xl text-amber-600 shrink-0 dark:text-amber-400"></i>
+                 <p className="text-[11px] text-amber-900 font-bold leading-relaxed dark:text-amber-400/90">
                     WARNING: These codes are for emergency use only. Each code can be used once. Save them somewhere safe.
                  </p>
               </div>

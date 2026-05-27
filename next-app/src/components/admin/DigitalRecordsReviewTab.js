@@ -624,7 +624,7 @@ export default function DigitalRecordsReviewTab({
             <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary dark:text-primary" />
+                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
                 </EmptyMedia>
                 <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                   Load failed
@@ -730,7 +730,7 @@ export default function DigitalRecordsReviewTab({
 
               <div className="flex-1 overflow-x-auto overflow-y-auto rounded-brand border border-gray-200 bg-white shadow-xs dark:border-white/10 dark:bg-card">
                 <table className="min-w-full text-sm">
-                  <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
+                  <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
                     <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
                       <th className="w-12 p-3 text-center">
                         <input
@@ -807,7 +807,7 @@ export default function DigitalRecordsReviewTab({
                           <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                             <EmptyHeader className="flex flex-col items-center gap-0">
                               <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                                <i className="ph-duotone ph-stack text-3xl text-pup-maroon dark:text-primary dark:text-primary"></i>
+                                <i className="ph-duotone ph-stack text-3xl text-pup-maroon dark:text-primary"></i>
                               </EmptyMedia>
                               <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                                 No records
@@ -1102,5 +1102,6 @@ export default function DigitalRecordsReviewTab({
     </div>
   )
 }
+
 
 

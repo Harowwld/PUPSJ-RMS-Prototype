@@ -179,7 +179,7 @@ export default function SLAAnalyticsTab({
                 size="sm"
                 onClick={handlePreview}
                 disabled={loading || !data || isGeneratingPdf}
-                className="h-10 px-6 font-black text-[10px] tracking-widest bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white shadow-lg shadow-red-900/20 active:scale-95 disabled:opacity-60 rounded-brand uppercase transition-all dark:shadow-none"
+                className="h-10 px-6 font-black text-[10px] tracking-widest btn-brand-red active:scale-95 disabled:opacity-60 rounded-brand uppercase transition-all dark:shadow-none"
               >
                 <i className={cn("ph-bold text-base mr-2", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
                 {isGeneratingPdf ? "Generating..." : "Generate Report"}
@@ -267,7 +267,7 @@ export default function SLAAnalyticsTab({
             <Empty className="flex h-[400px] flex-col items-center justify-center rounded-brand border border-gray-200 bg-white text-center text-gray-500 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary dark:text-primary" />
+                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
                 </EmptyMedia>
                 <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                   Data Unavailable
@@ -354,7 +354,7 @@ export default function SLAAnalyticsTab({
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center bg-white p-10 dark:bg-card">
                 <div className="flex flex-col items-center gap-4">
-                  <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary dark:text-primary" />
+                  <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary" />
                   <p className="text-sm font-bold text-gray-500 uppercase tracking-widest dark:text-zinc-400">
                     Generating Report Preview...
                   </p>
@@ -387,7 +387,7 @@ export default function SLAAnalyticsTab({
               <Button
                 onClick={handlePrint}
                 disabled={!pdfBlobUrl}
-                className="flex h-11 items-center gap-2 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 font-black text-white shadow-sm rounded-brand transition-colors dark:shadow-none"
+                className="btn-brand-red px-8 font-black text-white shadow-sm rounded-brand transition-colors dark:shadow-none"
               >
                 <i className="ph-bold ph-floppy-disk text-lg"></i> SAVE TO DEVICE
               </Button>
@@ -398,5 +398,6 @@ export default function SLAAnalyticsTab({
     </div>
   )
 }
+
 
 

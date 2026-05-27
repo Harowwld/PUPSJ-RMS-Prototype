@@ -47,7 +47,7 @@ export default function BulkImportTab({
   const [isRefreshing, setIsRefreshing] = useState(false)
 
   const [quickAdd, setQuickAdd] = useState({
-    category: "DocumentType",
+    category: "DOCUMENT TYPE",
     name: "",
     code: "",
   })
@@ -64,7 +64,7 @@ export default function BulkImportTab({
     if (!quickAdd.name) return
     if (onAddRow) {
       onAddRow(quickAdd)
-      setQuickAdd({ category: "DocumentType", name: "", code: "" })
+      setQuickAdd({ category: "DOCUMENT TYPE", name: "", code: "" })
     }
   }
 
@@ -113,8 +113,8 @@ export default function BulkImportTab({
         <div className="grid flex-1 grid-cols-1 gap-6 lg:grid-cols-12">
           {/* Protocol card - Redesigned as a structured sidebar */}
           <Card className="flex flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm lg:col-span-5 xl:col-span-4 dark:bg-card dark:shadow-none dark:border-white/10">
-            <div className="flex items-center gap-4 border-b border-gray-100 bg-gray-50 px-6 py-5 dark:border-white/10 dark:bg-white/5">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
+            <div className="flex items-center gap-4 border-b border-gray-100 bg-gray-50 px-6 py-5 dark:border-white/10 dark:bg-zinc-800/40">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-red-500/20 dark:bg-zinc-800 dark:text-primary dark:shadow-none">
                 <i className="ph-duotone ph-book-open text-xl"></i>
               </div>
               <div>
@@ -134,19 +134,19 @@ export default function BulkImportTab({
                   <div className="text-[10px] font-black tracking-[0.2em] text-gray-400 uppercase dark:text-zinc-500">
                     1. Architecture
                   </div>
-                  <div className="h-px flex-1 bg-gray-100 ml-4 dark:bg-muted"></div>
+                  <div className="h-px flex-1 bg-gray-100 ml-4 dark:bg-zinc-800/50"></div>
                 </div>
                 
                 <div className="grid grid-cols-3 gap-2">
                   {["Category", "Name", "Code"].map((col) => (
                     <div
                       key={col}
-                      className="group flex flex-col items-center gap-1 rounded-xl border border-gray-200 bg-gray-50 py-3 transition-all hover:border-pup-maroon/30 hover:bg-white dark:border-white/10 dark:bg-white/5 dark:hover:bg-white/5"
+                      className="group flex flex-col items-center gap-1 rounded-xl border border-gray-200 bg-gray-50 py-3 transition-all hover:border-pup-maroon/30 hover:bg-white dark:border-white/5 dark:bg-zinc-800/30 dark:hover:bg-zinc-800/60 dark:hover:border-red-500/20"
                     >
-                      <span className="text-[10px] font-black tracking-tighter text-gray-900 uppercase group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-50">
+                      <span className="text-[10px] font-black tracking-tighter text-gray-900 uppercase group-hover:text-pup-maroon dark:group-hover:text-primary dark:text-zinc-400">
                         {col}
                       </span>
-                      <div className="h-1 w-4 rounded-full bg-gray-200 group-hover:bg-pup-maroon/30 dark:bg-zinc-700"></div>
+                      <div className="h-1 w-4 rounded-full bg-gray-200 group-hover:bg-pup-maroon/30 dark:bg-zinc-700 dark:group-hover:bg-primary/30"></div>
                     </div>
                   ))}
                 </div>
@@ -158,23 +158,33 @@ export default function BulkImportTab({
                   <div className="text-[10px] font-black tracking-[0.2em] text-gray-400 uppercase dark:text-zinc-500">
                     2. Data Mapping
                   </div>
-                  <div className="h-px flex-1 bg-gray-100 ml-4 dark:bg-muted"></div>
+                  <div className="h-px flex-1 bg-gray-100 ml-4 dark:bg-zinc-800/50"></div>
                 </div>
                 
-                <div className="group relative overflow-hidden rounded-xl border border-red-100 bg-red-50 p-5 font-mono text-[11px] leading-relaxed text-gray-700 shadow-xs dark:bg-red-950/30 dark:text-zinc-200">
+                <div className="group relative overflow-hidden rounded-xl border border-red-100 bg-red-50 p-5 font-mono text-[11px] leading-relaxed text-gray-700 shadow-xs dark:bg-red-500/5 dark:border-red-500/20 dark:text-zinc-100">
                   <div className="absolute top-0 right-0 p-3 opacity-10 transition-opacity group-hover:opacity-30">
-                    <i className="ph-bold ph-file-csv text-4xl text-pup-maroon dark:text-primary dark:text-primary" />
+                    <i className="ph-bold ph-file-csv text-4xl text-pup-maroon dark:text-primary" />
                   </div>
-                  <div className="mb-3 flex items-center gap-2 text-[9px] font-black tracking-[0.15em] text-pup-maroon dark:text-primary/60 uppercase">
+                  <div className="mb-3 flex items-center gap-2 text-[9px] font-black tracking-[0.15em] text-pup-maroon dark:text-primary uppercase">
                     <i className="ph-bold ph-code text-xs" /> CSV Structure Example
                   </div>
-                  <span className="font-bold text-gray-900 dark:text-zinc-50">Category,Name,Code</span>
-                  <br />
-                  <span className="text-gray-500 dark:text-zinc-400">DocumentType,Transcript of Records,</span>
-                  <br />
-                  <span className="text-gray-500 dark:text-zinc-400">Course,Bachelor of Science in IT,BSIT</span>
-                  <br />
-                  <span className="text-gray-500 dark:text-zinc-400">Section,Block 1,BSIT</span>
+                  <span className="font-bold text-gray-900 dark:text-zinc-50 border-b border-red-200/50 dark:border-white/5 pb-0.5">Category,Name,Code</span>
+                  <div className="mt-2 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500 dark:text-zinc-400">DocumentType,</span>
+                      <span className="text-gray-800 dark:text-zinc-300 font-bold">Transcript of Records,</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500 dark:text-zinc-400">Course,</span>
+                      <span className="text-gray-800 dark:text-zinc-300 font-bold">Bachelor of Science in IT,</span>
+                      <span className="text-red-700 dark:text-primary font-black">BSIT</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-gray-500 dark:text-zinc-400">Section,</span>
+                      <span className="text-gray-800 dark:text-zinc-300 font-bold">Block 1,</span>
+                      <span className="text-red-700 dark:text-primary font-black">BSIT</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -184,13 +194,13 @@ export default function BulkImportTab({
                   <div className="text-[10px] font-black tracking-[0.2em] text-gray-400 uppercase dark:text-zinc-500">
                     3. Taxonomy Logic
                   </div>
-                  <div className="h-px flex-1 bg-gray-100 ml-4 dark:bg-muted"></div>
+                  <div className="h-px flex-1 bg-gray-100 ml-4 dark:bg-zinc-800/50"></div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-2.5">
                   {[
                     {
-                      label: "DocumentType",
+                      label: "DOCUMENT TYPE",
                       desc: "ID code optional. Only 'Name' required.",
                       icon: "ph-files",
                     },
@@ -207,9 +217,9 @@ export default function BulkImportTab({
                   ].map((rule) => (
                     <div
                       key={rule.label}
-                      className="group flex items-start gap-3 rounded-xl border border-gray-100 bg-white p-3.5 shadow-xs transition-all hover:border-red-200 hover:shadow-md dark:border-white/10 dark:bg-card dark:shadow-none"
+                      className="group flex items-start gap-3 rounded-xl border border-gray-100 bg-white p-3.5 shadow-xs transition-all hover:border-red-200 hover:shadow-md dark:border-white/5 dark:bg-zinc-800/30 dark:shadow-none"
                     >
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:text-primary border border-red-100 shadow-xs transition-transform group-hover:scale-110 dark:bg-red-950/30 dark:text-primary">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:text-primary border border-red-100 shadow-xs transition-transform group-hover:scale-110 dark:bg-red-500/10 dark:text-primary dark:border-red-500/20">
                         <i className={`ph-bold ${rule.icon} text-base`}></i>
                       </div>
                       <div>
@@ -246,7 +256,7 @@ export default function BulkImportTab({
             <CardContent className="flex flex-1 flex-col p-6">
               <div className="mb-6 flex flex-wrap items-center gap-3">
                 <a
-                  href="data:text/csv;charset=utf-8,Category,Name,Code%0ADocumentType,Transcript of Records,%0ADocumentType,Diploma,%0ACourse,Bachelor of Science in IT,BSIT%0ACourse,Bachelor of Science in Accountancy,BSA%0ASection,Block 1,BSIT%0ASection,Section 1,BSA"
+                  href="data:text/csv;charset=utf-8,Category,Name,Code%0ADOCUMENT TYPE,Transcript of Records,%0ADOCUMENT TYPE,Diploma,%0ACourse,Bachelor of Science in IT,BSIT%0ACourse,Bachelor of Science in Accountancy,BSA%0ASection,Block 1,BSIT%0ASection,Section 1,BSA"
                   download="PUP-IMPORT-TEMPLATE.csv"
                   className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-xs transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:hover:border-zinc-700 dark:border-white/10"
                 >
@@ -287,7 +297,7 @@ export default function BulkImportTab({
                 <Empty className="pointer-events-none flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <EmptyMedia className="mb-4 flex h-20 w-20 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm transition-transform group-hover:scale-110 dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <i className="ph-duotone ph-file-arrow-up text-4xl text-pup-maroon dark:text-primary dark:text-primary"></i>
+                      <i className="ph-duotone ph-file-arrow-up text-4xl text-pup-maroon dark:text-primary"></i>
                     </EmptyMedia>
                     <EmptyTitle className="text-xl font-bold tracking-tight text-gray-900 uppercase dark:text-zinc-50">
                       Drop CSV File here
@@ -323,7 +333,7 @@ export default function BulkImportTab({
                 </h3>
                 <div className="mt-1.5 text-xs leading-tight font-medium text-gray-500 dark:text-zinc-400">
                   <div className="flex items-center gap-1.5 font-bold text-gray-800 dark:text-zinc-100">
-                    <i className="ph-bold ph-file-csv text-sm text-pup-maroon dark:text-primary dark:text-primary" />
+                    <i className="ph-bold ph-file-csv text-sm text-pup-maroon dark:text-primary" />
                     {importFile?.name || "Records Data"}
                   </div>
                 </div>
@@ -331,8 +341,8 @@ export default function BulkImportTab({
             </div>
           </div>            <div className="flex items-center gap-3">
               <div className="flex items-center gap-4 rounded-full border border-gray-200 bg-white px-3 py-1.5 shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                <span className="border-r border-gray-100 pr-4 text-[10px] font-black tracking-widest text-gray-400 uppercase dark:border-white/10 dark:text-zinc-500">
-                  Summary
+                <span className="border-r border-gray-100 pr-4 text-[10px] font-black tracking-widest text-gray-400 uppercase dark:border-white/10 dark:text-zinc-300">
+                  SUMMARY
                 </span>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1.5">
@@ -355,7 +365,7 @@ export default function BulkImportTab({
           <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
             <div className="flex-1 overflow-auto bg-white dark:bg-card">
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-20 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
+                <thead className="sticky top-0 z-20 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
                   <tr className="text-left text-[11px] font-black tracking-wider text-gray-500 uppercase dark:text-zinc-400 dark:border-white/10">
                     <th className="w-12 p-4 text-center">
                       <input
@@ -368,11 +378,11 @@ export default function BulkImportTab({
                         onChange={(e) => toggleImportSelectAll(e.target.checked)}
                       />
                     </th>
-                    <th className="w-12 p-4 text-center">Row</th>
-                    <th className="w-48 p-4">Category</th>
-                    <th className="p-4 min-w-[200px]">Name / Label</th>
-                    <th className="w-48 p-4">Identifier</th>
-                    <th className="w-40 p-4 text-right">Validation</th>
+                    <th className="w-12 p-4 text-center dark:text-zinc-300">ROW</th>
+                    <th className="w-48 p-4 dark:text-zinc-300">CATEGORY</th>
+                    <th className="p-4 min-w-[200px] dark:text-zinc-300">NAME / LABEL</th>
+                    <th className="w-48 p-4 dark:text-zinc-300">IDENTIFIER</th>
+                    <th className="w-40 p-4 text-right dark:text-zinc-300">VALIDATION</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/10">                  <tr className="bg-gray-50 transition-colors hover:bg-gray-50 dark:bg-card dark:hover:bg-white/10">
@@ -395,7 +405,7 @@ export default function BulkImportTab({
                           }))
                         }
                       >
-                        <option value="DocumentType">DocumentType</option>
+                        <option value="DOCUMENT TYPE">DOCUMENT TYPE</option>
                         <option value="Course">Course</option>
                         <option value="Section">Section</option>
                       </Select>
@@ -457,7 +467,7 @@ export default function BulkImportTab({
                         size="sm"
                         disabled={!quickAdd.name}
                         onClick={handleQuickAdd}
-                        className="h-8 rounded-md bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-4 text-[10px] font-black text-white dark:shadow-none"
+                        className="h-8 rounded-md btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-4 text-[10px] font-black text-white dark:shadow-none"
                       >
                         <i className="ph-bold ph-plus mr-1"></i> ADD ROW
                       </Button>
@@ -468,7 +478,7 @@ export default function BulkImportTab({
                     return (
                       <tr
                         key={row.index}
-                        className={`transition-colors hover:bg-gray-50 ${row.error ? "bg-red-50" : ""} dark:hover:bg-white/10 dark:bg-card`}
+                        className={`transition-colors hover:bg-gray-50 ${row.error ? "bg-red-50 dark:bg-red-500/10" : ""} dark:hover:bg-white/10 dark:bg-card`}
                       >
                         <td className={`p-4 text-center ${row.error ? "border-l-4 border-l-red-500" : ""}`}>
                           <input
@@ -494,14 +504,14 @@ export default function BulkImportTab({
                                 }))
                               }
                             >
-                              <option value="DocumentType">DocumentType</option>
+                              <option value="DOCUMENT TYPE">DOCUMENT TYPE</option>
                               <option value="Course">Course</option>
                               <option value="Section">Section</option>
                             </Select>
                           ) : (
                             <Badge
                               variant="outline"
-                              className={`border-0 px-2 py-0.5 text-[9px] font-black tracking-widest uppercase ${ row.category.toLowerCase() === "documenttype" ? "bg-purple-100 text-purple-700" : row.category.toLowerCase() === "course" ? "bg-blue-100 text-blue-700" : "bg-amber-100 text-amber-700" }`}
+                              className={`border-0 px-2 py-0.5 text-[9px] font-black tracking-widest uppercase ${ row.category.toLowerCase() === "documenttype" ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" : row.category.toLowerCase() === "course" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" }`}
                             >
                               {row.category || "MISSING"}
                             </Badge>
@@ -658,7 +668,7 @@ export default function BulkImportTab({
                 <Button
                   onClick={executeBulkImport}
                   disabled={importRows.filter((r) => !r.error && importSelected[r.index]).length === 0}
-                  className="h-10 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-black tracking-widest text-white uppercase shadow-lg shadow-red-900/20 active:scale-95 transition-all dark:shadow-none"
+                  className="h-10 rounded-brand btn-brand-red active:scale-95 transition-all dark:shadow-none"
                 >
                   <i className="ph-bold ph-cloud-arrow-up mr-2 text-lg"></i>
                   Confirm & Import {importRows.filter((r) => !r.error && importSelected[r.index]).length} Records
@@ -672,7 +682,7 @@ export default function BulkImportTab({
           <div className="flex max-w-sm flex-col items-center gap-6 text-center">
             <div className="relative">
               <div className="h-20 w-20 animate-spin rounded-full border-4 border-gray-300 border-t-pup-maroon dark:border-white/10"></div>
-              <i className="ph-duotone ph-database absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-3xl text-pup-maroon dark:text-primary dark:text-primary"></i>
+              <i className="ph-duotone ph-database absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-3xl text-pup-maroon dark:text-primary"></i>
             </div>
             <div>
               <h3 className="text-xl font-black text-gray-900 dark:text-zinc-50">Adding Records</h3>
@@ -698,7 +708,7 @@ export default function BulkImportTab({
               <h3 className="text-2xl font-black tracking-tight text-gray-900 dark:text-zinc-50">Import Complete</h3>
               <p className="text-sm leading-relaxed font-medium text-gray-500 dark:text-zinc-400">
                 The batch of records has been successfully merged into the{" "}
-                <span className="font-bold text-pup-maroon dark:text-primary dark:text-primary">system</span>. All records are
+                <span className="font-bold text-pup-maroon dark:text-primary">system</span>. All records are
                 now active.
               </p>
             </div>
@@ -725,7 +735,7 @@ export default function BulkImportTab({
             <div className="flex w-full max-w-[280px] flex-col gap-3">
               <Button
                 onClick={resetImport}
-                className="flex h-10 w-full items-center justify-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md font-black tracking-widest text-white uppercase shadow-md active:scale-95 transition-all dark:shadow-none"
+                className="flex h-10 w-full items-center justify-center gap-2 rounded-brand btn-brand-red active:scale-95 transition-all dark:shadow-none"
               >
                 <i className="ph-bold ph-arrow-left text-base"></i>
                 Return to Imports
@@ -743,5 +753,6 @@ export default function BulkImportTab({
     </div>
   )
 }
+
 
 

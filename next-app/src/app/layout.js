@@ -27,7 +27,6 @@ export default function RootLayout({ children }) {
           attribute="class"
           defaultTheme="system"
           enableSystem
-          disableTransitionOnChange
         >
           <TooltipProvider>{children}</TooltipProvider>
           <Toaster richColors position="top-right" />

@@ -23,11 +23,24 @@ export function ThemeToggle({ className }) {
 
   const isDark = theme === "dark" || (theme === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches)
 
+  const toggleTheme = (event) => {
+    const nextTheme = isDark ? "light" : "dark"
+
+    if (!document.startViewTransition) {
+      setTheme(nextTheme)
+      return
+    }
+
+    document.startViewTransition(() => {
+      setTheme(nextTheme)
+    })
+  }
+
   return (
     <Button
       variant="ghost"
       size="icon"
-      onClick={() => setTheme(isDark ? "light" : "dark")}
+      onClick={toggleTheme}
       className={className}
       title={`Switch to ${isDark ? "light" : "dark"} mode`}
     >

@@ -1158,6 +1158,12 @@ function StaffPageContent() {
                   const headers = lines[0]
                     .split(",")
                     .map((h) => h.trim().toLowerCase().replace(/\s+/g, ""));
+                  
+                  // Use first valid location from layout as fallback if CSV data is missing/invalid
+                  const defaultRoomId = storageLayout?.rooms?.[0]?.id || 1;
+                  const defaultCabId = storageLayout?.rooms?.[0]?.cabinets?.[0]?.id || "A";
+                  const defaultDrawerId = storageLayout?.rooms?.[0]?.cabinets?.[0]?.drawerIds?.[0] || 1;
+
                   const rows = lines
                     .slice(1)
                     .filter((l) => l.trim())
@@ -1174,9 +1180,9 @@ function StaffPageContent() {
                           yearLevel:
                             parseInt(row.academicyear || row.yearlevel || row.year) || 1,
                           section: row.section,
-                          room: parseInt(row.room) || 1,
-                          cabinet: row.cabinet || "A",
-                          drawer: parseInt(row.drawer) || 1,
+                          room: parseInt(row.room) || defaultRoomId,
+                          cabinet: row.cabinet || defaultCabId,
+                          drawer: parseInt(row.drawer) || defaultDrawerId,
                         },
                         error: "",
                       };

@@ -168,10 +168,9 @@
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.55 0.15 25 / 50%);
 }
-
 @layer base {
   * {
-    @apply border-border outline-ring/50 transition-colors duration-300;
+    @apply border-border outline-ring/50;
   }
   body {
     @apply bg-background text-foreground;
@@ -180,11 +179,18 @@
     scrollbar-gutter: stable;
     -webkit-font-smoothing: antialiased;
     -moz-osx-osx-font-smoothing: grayscale;
+    transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
+}
+
+/* Scoped transitions for common components to ensure smooth feel without universal lag */
+.card, .button, input, select, textarea, header, aside, .tabs-list {
+  transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1), color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
   html {
     @apply font-sans;
   }
-}
 
 /* Modern Card Styling Overrides for Dark Mode */
 .dark .rounded-brand {
@@ -370,4 +376,137 @@
 ::selection {
     background-color: oklch(0.55 0.15 25 / 30%);
     color: oklch(0.98 0 0);
+}
+
+/* Storage Layout & Locator Styles */
+.locator-tile {
+  @apply transition-all duration-300;
+}
+
+.room-located, .cabinet-located, .drawer-located {
+  border-width: 3px !important;
+  border-color: #800000 !important;
+  background-color: rgba(128, 0, 0, 0.05) !important;
+}
+
+.dark .room-located, .dark .cabinet-located, .dark .drawer-located {
+  border-color: oklch(0.7 0.12 25) !important;
+  background-color: oklch(0.7 0.12 25 / 15%) !important;
+}
+
+.drawer-occupied {
+  @apply bg-gray-200 text-gray-600 border-gray-300 cursor-default shadow-inner;
+}
+
+.dark .drawer-occupied {
+  @apply bg-zinc-700 text-zinc-400 border-white/5;
+}
+
+/* View Transitions */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.3s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Base Animations Utility Support */
+@theme {
+  --animate-in: animate-in 0.2s ease-out forwards;
+  --animate-out: animate-out 0.2s ease-in forwards;
+}
+
+@keyframes animate-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes animate-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+@utility animate-in {
+  animation: animate-in var(--animate-duration, 200ms) ease-out forwards;
+}
+
+@utility animate-out {
+  animation: animate-out var(--animate-duration, 200ms) ease-in forwards;
+}
+
+@utility fade-in {
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  animation-name: fade-in;
+}
+
+@utility fade-out {
+  @keyframes fade-out {
+    from { opacity: 1; }
+    to { opacity: 0; }
+  }
+  animation-name: fade-out;
+}
+
+@utility zoom-in-95 {
+  @keyframes zoom-in-95 {
+    from { transform: scale(0.95); }
+    to { transform: scale(1); }
+  }
+  animation-name: zoom-in-95;
+}
+
+@utility zoom-out-95 {
+  @keyframes zoom-out-95 {
+    from { transform: scale(1); }
+    to { transform: scale(0.95); }
+  }
+  animation-name: zoom-out-95;
+}
+
+@utility slide-in-from-top-2 {
+  @keyframes slide-in-from-top-2 {
+    from { transform: translateY(-0.5rem); }
+    to { transform: translateY(0); }
+  }
+  animation-name: slide-in-from-top-2;
+}
+
+@utility slide-out-to-top-2 {
+  @keyframes slide-out-to-top-2 {
+    from { transform: translateY(0); }
+    to { transform: translateY(-0.5rem); }
+  }
+  animation-name: slide-out-to-top-2;
+}
+
+@utility slide-in-from-bottom-4 {
+  @keyframes slide-in-from-bottom-4 {
+    from { transform: translateY(1rem); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+  animation-name: slide-in-from-bottom-4;
+}
+
+/* Brand Buttons */
+.btn-brand-red {
+  background-image: linear-gradient(to bottom, var(--color-red-800), var(--color-pup-maroon));
+  @apply border-pup-darkMaroon text-white font-black uppercase transition-all active:scale-95 shadow-lg shadow-red-900/20 disabled:opacity-50;
+  border-width: 4px;
+}
+
+.dark .btn-brand-red {
+  background-image: linear-gradient(to bottom, #a03030, #601010); /* Pastel red to light maroon */
+  border-color: #400000;
+  box-shadow: none;
+}
+
+.btn-brand-red:hover {
+  background-image: linear-gradient(to bottom, var(--color-red-700), var(--color-red-900));
+  @apply shadow-xl;
+}
+
+.dark .btn-brand-red:hover {
+  background-image: linear-gradient(to bottom, #b04040, #702020);
 }

@@ -60,7 +60,13 @@ export default function RoomMap2D({
         return (
           <div
             key={c.cab}
-            className={`locator-tile absolute overflow-hidden shadow-sm ${ isTarget ? "cabinet-located" : "" } ${isSelected ? "ring-2 ring-pup-maroon/40" : ""} dark:shadow-none`}
+            className={`locator-tile absolute overflow-hidden shadow-sm transition-all duration-300 ${
+              isTarget
+                ? "cabinet-located"
+                : isSelected
+                  ? "bg-gray-50 dark:bg-zinc-500 ring-2 ring-pup-maroon/40"
+                  : "bg-white dark:bg-zinc-800 hover:bg-red-50 dark:hover:bg-zinc-700/50"
+            } dark:shadow-none`}
             style={{
               left: `${rect.x * 100}%`,
               top: `${rect.y * 100}%`,

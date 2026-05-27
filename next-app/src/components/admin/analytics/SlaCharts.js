@@ -13,6 +13,7 @@ import {
   Pie,
   Cell,
 } from "recharts"
+import { useTheme } from "next-themes"
 import {
   Empty,
   EmptyHeader,
@@ -63,6 +64,8 @@ const CustomPieTooltip = ({ active, payload }) => {
 }
 
 export default function SlaCharts({ data, pieData, onSwitchView }) {
+  const { theme, resolvedTheme } = useTheme()
+  const isDark = theme === "dark" || resolvedTheme === "dark"
   const totalSlaRequests = pieData.reduce((acc, curr) => acc + curr.value, 0)
 
   const renderLegend = (value, entry) => {
@@ -92,21 +95,24 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                 <CartesianGrid
                   strokeDasharray="3 3"
                   vertical={false}
-                  stroke="#e5e7eb"
+                  stroke={isDark ? "rgba(255,255,255,0.05)" : "#e5e7eb"}
                 />
                 <XAxis
                   dataKey="label"
-                  tick={{ fontSize: 10, fill: "#6b7280", angle: -45, textAnchor: "end" }}
+                  tick={{ fontSize: 10, fill: isDark ? "#a1a1aa" : "#6b7280", angle: -45, textAnchor: "end" }}
                   axisLine={false}
                   tickLine={false}
                   height={60}
                 />
                 <YAxis
-                  tick={{ fontSize: 10, fill: "#6b7280" }}
+                  tick={{ fontSize: 10, fill: isDark ? "#a1a1aa" : "#6b7280" }}
                   axisLine={false}
                   tickLine={false}
                 />
-                <ChartTooltip content={<CustomBarTooltip />} cursor={{ fill: "#f9fafb" }} />
+                <ChartTooltip 
+                  content={<CustomBarTooltip />} 
+                  cursor={{ fill: isDark ? "rgba(255,255,255,0.05)" : "#f9fafb" }} 
+                />
                 <Legend
                   wrapperStyle={{
                     fontSize: "10px",
@@ -127,7 +133,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                 <Bar
                   dataKey="completed"
                   name="Completed"
-                  fill="#800000"
+                  fill={isDark ? "#ef4444" : "#800000"}
                   radius={[4, 4, 0, 0]}
                   barSize={20}
                 />
@@ -137,7 +143,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
             <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-400 dark:text-zinc-500">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                  <i className="ph-bold ph-chart-bar text-2xl text-pup-maroon dark:text-primary dark:text-primary"></i>
+                  <i className="ph-bold ph-chart-bar text-2xl text-pup-maroon dark:text-primary"></i>
                 </EmptyMedia>
                 <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                   No trend data available
@@ -200,7 +206,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
               <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-400 dark:text-zinc-500">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                    <i className="ph-bold ph-chart-pie-slice text-2xl text-pup-maroon dark:text-primary dark:text-primary"></i>
+                    <i className="ph-bold ph-chart-pie-slice text-2xl text-pup-maroon dark:text-primary"></i>
                   </EmptyMedia>
                   <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                     No status data
@@ -278,7 +284,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
               <Empty className="flex flex-col items-center justify-center border-0 py-8 text-center text-gray-400 dark:text-zinc-500">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                    <i className="ph-bold ph-file-text text-2xl text-pup-maroon dark:text-primary dark:text-primary"></i>
+                    <i className="ph-bold ph-file-text text-2xl text-pup-maroon dark:text-primary"></i>
                   </EmptyMedia>
                   <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                     No requests recorded yet
@@ -304,4 +310,5 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
     </div>
   )
 }
+
 

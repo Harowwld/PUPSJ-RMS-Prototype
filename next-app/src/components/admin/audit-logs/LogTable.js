@@ -29,11 +29,11 @@ import LogPagination from "./LogPagination"
 
 function SortIndicator({ column, logSortBy, logSortOrder }) {
   if (logSortBy !== column)
-    return <i className="ph-bold ph-caret-up-down ml-1 opacity-20 transition-opacity group-hover:opacity-50"></i>
+    return <i className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60"></i>
   return logSortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-pup-maroon dark:text-primary animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
+    <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-pup-maroon dark:text-primary animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
+    <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
   )
 }
 
@@ -62,25 +62,25 @@ function getSeverityConfig(sev) {
   switch (String(sev || "").toUpperCase()) {
     case "CRITICAL":
       return {
-        bg: "bg-red-50 dark:bg-red-900/20",
-        text: "text-red-700 dark:text-red-400",
-        border: "border-red-200 dark:border-red-900/30",
+        bg: "bg-red-500/10",
+        text: "text-red-600 dark:text-red-400",
+        border: "border-red-500/20 dark:border-red-400/20",
         dot: "bg-red-500",
         icon: "ph-fill ph-warning-circle"
       }
     case "WARNING":
       return {
-        bg: "bg-amber-50 dark:bg-amber-900/20",
-        text: "text-amber-700 dark:text-amber-400",
-        border: "border-amber-200 dark:border-amber-900/30",
+        bg: "bg-amber-500/10",
+        text: "text-amber-600 dark:text-amber-400",
+        border: "border-amber-500/20 dark:border-amber-400/20",
         dot: "bg-amber-500",
         icon: "ph-fill ph-warning"
       }
     default:
       return {
-        bg: "bg-blue-50 dark:bg-blue-900/20",
-        text: "text-blue-700 dark:text-blue-400",
-        border: "border-blue-200 dark:border-blue-900/30",
+        bg: "bg-blue-500/10",
+        text: "text-blue-600 dark:text-blue-400",
+        border: "border-blue-500/20 dark:border-blue-400/20",
         dot: "bg-blue-500",
         icon: "ph-fill ph-info"
       }
@@ -118,8 +118,8 @@ const LogRow = React.memo(({
               toggleRow(log.id);
             }}
             className={cn(
-              "mx-auto flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-zinc-500 transition-all hover:bg-pup-maroon dark:hover:bg-red-600 hover:text-white",
-              isExpanded && "bg-pup-maroon dark:bg-red-600 text-white rotate-90"
+              "mx-auto flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-zinc-500 transition-all hover:bg-pup-maroon dark:hover:bg-zinc-800 dark:hover:text-primary hover:text-white",
+              isExpanded && "bg-pup-maroon dark:bg-zinc-700 text-white dark:text-primary rotate-90 shadow-sm"
             )}
           >
             <i className="ph-bold ph-caret-right text-xs"></i>
@@ -130,14 +130,14 @@ const LogRow = React.memo(({
             <span className="text-xs font-bold text-gray-900 dark:text-zinc-50">
               {uploaded.date}
             </span>
-            <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-500">
+            <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-400">
               {uploaded.time}
             </span>
           </div>
         </td>
         <td className="p-4">
           <div className={cn(
-            "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-tight shadow-xs",
+            "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-wider transition-all",
             sevConfig.bg,
             sevConfig.text,
             sevConfig.border
@@ -148,14 +148,19 @@ const LogRow = React.memo(({
         </td>
         <td className="p-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-500 font-black text-xs group-hover:bg-white group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 group-hover:shadow-sm transition-all dark:text-zinc-400 dark:bg-white/5 dark:shadow-none">
+            <div className={cn(
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-black text-xs transition-all shadow-xs",
+              isSelected 
+                ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-primary shadow-sm" 
+                : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm"
+            )}>
               {(log.user || "?").substring(0, 2).toUpperCase()}
             </div>
             <div className="flex flex-col overflow-hidden">
               <span className="truncate text-xs font-bold text-gray-900 dark:text-zinc-50">
                 {log.user}
               </span>
-              <span className="text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+              <span className="text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-400">
                 {log.role}
               </span>
             </div>
@@ -165,11 +170,11 @@ const LogRow = React.memo(({
           <div className="flex items-center gap-2.5">
             <div className={cn(
               "flex h-8 w-8 items-center justify-center rounded-lg transition-colors shadow-xs",
-              isSelected ? "bg-white dark:bg-muted text-pup-maroon dark:text-primary" : "bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-zinc-400 group-hover:bg-white dark:group-hover:bg-white/10 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:text-primary"
+              isSelected ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-primary" : "bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary"
             )}>
               <i className={cn(getActionIcon(log.action), "text-base")}></i>
             </div>
-            <span className="text-xs font-bold tracking-tight text-gray-700 uppercase dark:text-zinc-200">
+            <span className="text-xs font-bold tracking-tight text-gray-700 uppercase dark:text-zinc-300">
               {log.action}
             </span>
           </div>
@@ -193,7 +198,12 @@ const LogRow = React.memo(({
           <Button
             variant="ghost"
             size="icon"
-            className="h-9 w-9 rounded-xl border border-transparent hover:border-gray-200 hover:bg-white hover:text-pup-maroon dark:hover:text-red-500 hover:shadow-sm active:scale-95 transition-all dark:hover:border-white/10 dark:hover:bg-white/5 dark:bg-white/2 dark:text-primary dark:shadow-none"
+            className={cn(
+              "h-9 w-9 rounded-xl border border-transparent transition-all active:scale-95 dark:shadow-none",
+              isSelected 
+                ? "bg-white text-pup-maroon border-gray-200 dark:bg-zinc-800 dark:text-primary dark:border-white/10 shadow-sm" 
+                : "text-gray-400 hover:bg-white hover:text-pup-maroon hover:border-gray-200 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-primary dark:hover:border-white/10"
+            )}
             onClick={(e) => {
               e.stopPropagation();
               setSelectedLog(log);
@@ -279,7 +289,7 @@ export default function LogTable({
       <div className="animate-pulse space-y-4">
         <div className="overflow-x-auto rounded-xl border border-gray-100 bg-white dark:border-white/10 dark:bg-card">
           <table className="min-w-full">
-            <thead className="bg-gray-50 dark:bg-zinc-900">
+            <thead className="bg-gray-50 dark:bg-muted">
               <tr>
                 {[1, 2, 3, 4, 5, 6, 7].map((i) => (
                   <th key={i} className="p-4">
@@ -352,17 +362,17 @@ export default function LogTable({
       >
         <div className="overflow-x-auto">
           <table className="min-w-full table-fixed text-sm">
-            <thead className="border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-zinc-900">
-              <tr className="text-left text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500 dark:border-white/10">
+            <thead className="border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">
+              <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
                 <th className="w-[50px] p-4 text-center">
-                  <i className="ph-bold ph-hash dark:text-zinc-500"></i>
+                  <i className="ph-bold ph-hash text-[11px] dark:text-zinc-300"></i>
                 </th>
                 <th className="w-[180px] p-4">
                   <button
                     onClick={() => handleSort("created_at")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-primary"
+                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
                   >
-                    Timestamp{" "}
+                    TIMESTAMP{" "}
                     <SortIndicator
                       column="created_at"
                       logSortBy={logSortBy}
@@ -373,9 +383,9 @@ export default function LogTable({
                 <th className="w-[120px] p-4">
                   <button
                     onClick={() => handleSort("severity")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-primary"
+                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
                   >
-                    Severity{" "}
+                    SEVERITY{" "}
                     <SortIndicator
                       column="severity"
                       logSortBy={logSortBy}
@@ -386,9 +396,9 @@ export default function LogTable({
                 <th className="w-[200px] p-4">
                   <button
                     onClick={() => handleSort("actor")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-primary"
+                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
                   >
-                    Actor{" "}
+                    ACTOR{" "}
                     <SortIndicator
                       column="actor"
                       logSortBy={logSortBy}
@@ -399,9 +409,9 @@ export default function LogTable({
                 <th className="w-[220px] p-4">
                   <button
                     onClick={() => handleSort("action")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-primary"
+                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
                   >
-                    Event / Action{" "}
+                    EVENT / ACTION{" "}
                     <SortIndicator
                       column="action"
                       logSortBy={logSortBy}
@@ -409,9 +419,9 @@ export default function LogTable({
                     />
                   </button>
                 </th>
-                <th className="min-w-[300px] p-4">Description</th>
+                <th className="min-w-[300px] p-4 dark:text-zinc-300">DESCRIPTION</th>
                 <th className="w-[80px] p-4 text-center">
-                   <i className="ph-bold ph-dots-three-outline"></i>
+                   <i className="ph-bold ph-dots-three-outline text-[11px]"></i>
                 </th>
               </tr>
             </thead>

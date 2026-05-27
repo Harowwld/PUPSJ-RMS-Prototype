@@ -177,7 +177,7 @@ export default function RecordsArchiveTab({
                         setCurrentLocatorLevel("cabinets")
                       }}
                     >
-                      <i className="ph-duotone ph-warehouse mb-2 text-4xl text-pup-maroon dark:text-primary dark:text-primary"></i>
+                      <i className="ph-duotone ph-warehouse mb-2 text-4xl text-pup-maroon dark:text-primary"></i>
                       <h5 className="text-xl leading-tight font-bold text-gray-900 dark:text-zinc-50">
                         ROOM {r.room}
                       </h5>
@@ -254,7 +254,7 @@ export default function RecordsArchiveTab({
               <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                    <i className="ph-duotone ph-mouse-left-click text-3xl text-pup-maroon dark:text-primary dark:text-primary"></i>
+                    <i className="ph-duotone ph-mouse-left-click text-3xl text-pup-maroon dark:text-primary"></i>
                   </EmptyMedia>
                   <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                     Select a student
@@ -271,7 +271,7 @@ export default function RecordsArchiveTab({
                   <div className="mb-1 text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-zinc-400">
                     Physical Location
                   </div>
-                  <div className="text-2xl font-black text-pup-maroon dark:text-primary dark:text-primary">
+                  <div className="text-2xl font-black text-pup-maroon dark:text-primary">
                     ROOM-{activeStudent.room} • CAB-{activeStudent.cabinet} • D-
                     {activeStudent.drawer}
                   </div>
@@ -298,7 +298,7 @@ export default function RecordsArchiveTab({
                         <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                           <EmptyHeader className="flex flex-col items-center gap-0">
                             <EmptyMedia className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                              <i className="ph-duotone ph-files text-2xl text-pup-maroon dark:text-primary dark:text-primary"></i>
+                              <i className="ph-duotone ph-files text-2xl text-pup-maroon dark:text-primary"></i>
                             </EmptyMedia>
                             <EmptyTitle className="text-sm font-bold text-gray-900 dark:text-zinc-50">
                               No documents found
@@ -400,7 +400,7 @@ export default function RecordsArchiveTab({
               <Empty className="mt-32 flex flex-col items-center border-0 py-10 text-center">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                    <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon dark:text-primary dark:text-primary"></i>
+                    <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon dark:text-primary"></i>
                   </EmptyMedia>
                   <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                     Search Records
@@ -432,7 +432,7 @@ export default function RecordsArchiveTab({
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
                     <i
-                      className={`ph-duotone ${showArchived ? "ph-archive" : "ph-list-magnifying-glass"} text-3xl text-pup-maroon dark:text-primary dark:text-primary`}
+                      className={`ph-duotone ${showArchived ? "ph-archive" : "ph-list-magnifying-glass"} text-3xl text-pup-maroon dark:text-primary`}
                     ></i>
                   </EmptyMedia>
                   <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
@@ -546,7 +546,7 @@ export default function RecordsArchiveTab({
                 <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <i className="ph-duotone ph-users-three text-3xl text-pup-maroon dark:text-primary dark:text-primary"></i>
+                      <i className="ph-duotone ph-users-three text-3xl text-pup-maroon dark:text-primary"></i>
                     </EmptyMedia>
                     <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                       No student records yet
@@ -561,7 +561,7 @@ export default function RecordsArchiveTab({
                     <Button
                       type="button"
                       onClick={() => onSwitchView("upload")}
-                      className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-5 text-sm font-bold text-white shadow-sm transition-colors dark:shadow-none"
+                      className="mt-4 flex h-10 items-center gap-2 rounded-brand btn-brand-red active:scale-95 transition-all dark:shadow-none"
                     >
                       <i className="ph-bold ph-upload-simple"></i> GO TO
                       REGISTER / UPLOAD
@@ -599,7 +599,7 @@ export default function RecordsArchiveTab({
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
                       <i
-                        className={`ph-duotone ${showArchived ? "ph-archive" : "ph-users"} text-3xl text-pup-maroon dark:text-primary dark:text-primary`}
+                        className={`ph-duotone ${showArchived ? "ph-archive" : "ph-users"} text-3xl text-pup-maroon dark:text-primary`}
                       ></i>
                     </EmptyMedia>
                     <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
@@ -696,8 +696,7 @@ export default function RecordsArchiveTab({
                   className="flex-1 overflow-auto rounded-brand border border-gray-200 bg-white animate-fade-up dark:border-white/10 dark:bg-card"
                 >
                   <table className="min-w-full text-sm">
-                    <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
-                      <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
+                    <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">                      <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
                         <th className="w-[80px] p-3 text-center font-bold">
                           Profile
                         </th>
@@ -782,7 +781,7 @@ export default function RecordsArchiveTab({
           {storageFullscreen ? (
             <div className="fixed inset-0 z-[100] flex min-h-0 flex-col rounded-none border-0 bg-white shadow-none dark:bg-card">
               <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-card">
-                <h3 className="flex items-center gap-2 text-sm font-bold text-pup-maroon dark:text-primary dark:text-primary">
+                <h3 className="flex items-center gap-2 text-sm font-bold text-pup-maroon dark:text-primary">
                   <i className="ph-fill ph-archive-box text-lg"></i> Storage
                   Layout
                 </h3>
@@ -811,7 +810,7 @@ export default function RecordsArchiveTab({
               className="relative flex h-[44%] min-h-0 min-h-[280px] scroll-mt-6 flex-col rounded-brand border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10"
             >
               <div className="flex items-center justify-between rounded-t-brand border-b border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-card">
-                <h3 className="flex items-center gap-2 text-sm font-bold text-pup-maroon dark:text-primary dark:text-primary">
+                <h3 className="flex items-center gap-2 text-sm font-bold text-pup-maroon dark:text-primary">
                   <i className="ph-fill ph-archive-box text-lg"></i> Storage
                   Layout
                 </h3>
@@ -857,5 +856,6 @@ export default function RecordsArchiveTab({
     </div>
   )
 }
+
 
 

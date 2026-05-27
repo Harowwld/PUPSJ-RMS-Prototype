@@ -1812,7 +1812,7 @@ function AdminPageContent() {
             </Button>
             <Button
               onClick={() => setDefaultPwOpen(false)}
-              className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-bold text-white shadow-sm"
+              className="flex h-11 items-center gap-2 rounded-brand btn-brand-red px-6 font-bold text-white shadow-sm"
             >
               <i className="ph-bold ph-check"></i>
               Acknowledge

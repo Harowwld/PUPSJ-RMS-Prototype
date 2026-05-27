@@ -231,7 +231,7 @@ export default function BackupTab({
                     <Button
                       onClick={handleGenerateBackup}
                       disabled={localLoading.generating}
-                      className="flex h-9 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-4 text-xs font-black text-white shadow-sm active:scale-95 transition-all dark:shadow-none"
+                      className="flex h-9 items-center gap-2 btn-brand-red shadow-sm active:scale-95 transition-all dark:shadow-none"
                     >
                       <i
                         className={`ph-bold ${localLoading.generating ? "ph-arrows-clockwise animate-spin" : "ph-download-simple"} text-sm`}
@@ -285,7 +285,7 @@ export default function BackupTab({
             {isLoading ? (
               <div className="flex h-full w-full flex-1 flex-col items-center justify-center bg-white p-10 dark:bg-card">
                 <div className="flex flex-col items-center gap-4">
-                  <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary dark:text-primary" />
+                  <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary" />
                   <p className="text-sm font-bold text-gray-500 uppercase tracking-widest dark:text-zinc-400">
                     Loading...
                   </p>
@@ -296,7 +296,7 @@ export default function BackupTab({
                 <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary dark:text-primary" />
+                      <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
                     </EmptyMedia>
                     <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                       Could not load backups
@@ -441,5 +441,6 @@ export default function BackupTab({
     </TooltipProvider>
   )
 }
+
 
 

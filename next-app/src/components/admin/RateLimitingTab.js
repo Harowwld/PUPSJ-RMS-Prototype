@@ -128,14 +128,14 @@ export default function RateLimitingTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-zinc-300">Total Violations (24h)</p>
-              <p className="text-2xl font-bold text-pup-maroon dark:text-primary dark:text-primary">
+              <p className="text-2xl font-bold text-pup-maroon dark:text-primary">
                 {data.stats.violations.reduce(
                   (sum, v) => sum + parseInt(v.violations || 0),
                   0
                 )}
               </p>
             </div>
-            <PhShield className="h-8 w-8 text-pup-maroon dark:text-primary dark:text-primary" />
+            <PhShield className="h-8 w-8 text-pup-maroon dark:text-primary" />
           </div>
         </div>
 
@@ -143,14 +143,14 @@ export default function RateLimitingTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-zinc-300">API Requests (24h)</p>
-              <p className="text-2xl font-bold text-pup-maroon dark:text-primary dark:text-primary">
+              <p className="text-2xl font-bold text-pup-maroon dark:text-primary">
                 {data.stats.hits.reduce(
                   (sum, h) => sum + parseInt(h.hits || 0),
                   0
                 )}
               </p>
             </div>
-            <PhChartLine className="h-8 w-8 text-pup-maroon dark:text-primary dark:text-primary" />
+            <PhChartLine className="h-8 w-8 text-pup-maroon dark:text-primary" />
           </div>
         </div>
 
@@ -158,11 +158,11 @@ export default function RateLimitingTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-zinc-300">Suspicious IPs</p>
-              <p className="text-2xl font-bold text-pup-maroon dark:text-primary dark:text-primary">
+              <p className="text-2xl font-bold text-pup-maroon dark:text-primary">
                 {suspiciousIPs.length}
               </p>
             </div>
-            <PhWarning className="h-8 w-8 text-pup-maroon dark:text-primary dark:text-primary" />
+            <PhWarning className="h-8 w-8 text-pup-maroon dark:text-primary" />
           </div>
         </div>
       </div>
@@ -182,7 +182,7 @@ export default function RateLimitingTab() {
             </div>
           ) : (
             <table className="w-full">
-              <thead className="border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
+              <thead className="border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
                 <tr>
                   <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
                     Type
@@ -255,7 +255,7 @@ export default function RateLimitingTab() {
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
+          <thead className="border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
             <tr>
               <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
                 Endpoint Type
@@ -305,7 +305,7 @@ export default function RateLimitingTab() {
           </div>
         ) : (
           <table className="w-full">
-            <thead className="border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
+            <thead className="border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
               <tr>
                 <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
                   IP Address
@@ -423,5 +423,6 @@ export default function RateLimitingTab() {
     </div>
   )
 }
+
 
 

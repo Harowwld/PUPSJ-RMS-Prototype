@@ -83,7 +83,7 @@ export default function DocTypeModal({
           <Button
             type="button"
             onClick={onSave}
-            className="h-11 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-5 font-bold text-white shadow-sm"
+            className="btn-brand-red px-5 shadow-sm dark:shadow-none"
             disabled={isLoading}
           >
             {isLoading ? "Saving..." : "Save"}

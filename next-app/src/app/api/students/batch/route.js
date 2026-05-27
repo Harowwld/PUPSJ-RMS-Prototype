@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createStudent } from "../../../../lib/studentsRepo";
 import { listCourses } from "../../../../lib/coursesRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
+import { getStorageLayout } from "../../../../lib/storageLayoutRepo";
 
 export const runtime = "nodejs";
 
@@ -17,7 +18,7 @@ export async function GET() {
   }
 }
 
-function validateStudentPayload(body) {
+function validateStudentPayload(body, layout) {
   const studentNo = String(body?.studentNo || "").trim();
   const name = String(body?.name || "")
     .trim()
@@ -45,16 +46,28 @@ function validateStudentPayload(body) {
     return { ok: false, error: "Invalid yearLevel" };
   }
 
+  // Storage Location Validation
   if (!Number.isFinite(room) || room < 1) {
     return { ok: false, error: "Invalid room" };
   }
-
   if (!cabinet) {
     return { ok: false, error: "Invalid cabinet" };
   }
-
   if (!Number.isFinite(drawer) || drawer < 1) {
     return { ok: false, error: "Invalid drawer" };
+  }
+
+  // Physical Layout Verification
+  const roomDef = layout?.rooms?.find(r => r.id === room);
+  if (!roomDef) {
+    return { ok: false, error: `Storage Room ${room} does not exist in the system` };
+  }
+  const cabDef = roomDef.cabinets?.find(c => c.id === cabinet);
+  if (!cabDef) {
+    return { ok: false, error: `Cabinet ${cabinet} does not exist in Room ${room}` };
+  }
+  if (!cabDef.drawerIds?.includes(drawer)) {
+    return { ok: false, error: `Drawer ${drawer} does not exist in Cabinet ${cabinet} (Room ${room})` };
   }
 
   return {
@@ -90,10 +103,12 @@ export async function POST(req) {
     );
   }
 
+  const layout = await getStorageLayout().catch(() => null);
+
   const results = [];
   for (let i = 0; i < rows.length; i++) {
     const raw = rows[i];
-    const validated = validateStudentPayload(raw);
+    const validated = validateStudentPayload(raw, layout);
     if (!validated.ok) {
       results.push({ index: i, ok: false, error: validated.error });
       continue;

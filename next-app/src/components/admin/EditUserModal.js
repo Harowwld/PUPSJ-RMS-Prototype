@@ -44,7 +44,7 @@ export default function EditUserModal({
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
-                  Employee ID <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span>
+                  Employee ID <span className="text-pup-maroon dark:text-primary">*</span>
                 </label>
                 <Input
                   type="text"
@@ -59,7 +59,7 @@ export default function EditUserModal({
               </div>
               <div>
                 <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
-                  System Role <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span>
+                  System Role <span className="text-pup-maroon dark:text-primary">*</span>
                 </label>
                 <Select
                   required
@@ -81,7 +81,7 @@ export default function EditUserModal({
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
-                  First Name <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span>
+                  First Name <span className="text-pup-maroon dark:text-primary">*</span>
                 </label>
                 <Input
                   type="text"
@@ -96,7 +96,7 @@ export default function EditUserModal({
               </div>
               <div>
                 <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
-                  Last Name <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span>
+                  Last Name <span className="text-pup-maroon dark:text-primary">*</span>
                 </label>
                 <Input
                   type="text"
@@ -138,7 +138,7 @@ export default function EditUserModal({
             <Button
               type="submit"
               disabled={isLoading}
-              className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-black text-white shadow-sm dark:shadow-none"
+              className="flex h-11 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-black text-white shadow-sm dark:shadow-none"
             >
               <i className="ph-bold ph-floppy-disk"></i>
               {isLoading ? "Saving Changes..." : "Save Changes"}
@@ -149,5 +149,6 @@ export default function EditUserModal({
     </Dialog>
   )
 }
+
 
 

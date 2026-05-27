@@ -27,9 +27,9 @@ function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column)
     return <i className="ph-bold ph-caret-up-down ml-1 opacity-30"></i>
   return sortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-pup-maroon dark:text-primary dark:text-primary"></i>
+    <i className="ph-bold ph-caret-up ml-1 text-pup-maroon dark:text-primary"></i>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-pup-maroon dark:text-primary dark:text-primary"></i>
+    <i className="ph-bold ph-caret-down ml-1 text-pup-maroon dark:text-primary"></i>
   )
 }
 
@@ -67,7 +67,7 @@ export default function BackupTable({
         className={`min-h-[450px] w-full overflow-auto rounded-brand transition-all duration-300 ${ backups.length === 0 ? "" : "border border-gray-200 shadow-inner" } dark:border-white/10 dark:shadow-none`}
       >
         <table className="min-w-full text-sm">
-          <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
+          <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
             <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
               <th className="w-16 p-3 text-center">
                 <input
@@ -135,7 +135,7 @@ export default function BackupTable({
                   <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                     <EmptyHeader className="flex flex-col items-center gap-0">
                       <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                        <i className={`ph-duotone ${isFilterActive ? "ph-magnifying-glass" : "ph-database"} text-3xl text-pup-maroon dark:text-primary dark:text-primary`}></i>
+                        <i className={`ph-duotone ${isFilterActive ? "ph-magnifying-glass" : "ph-database"} text-3xl text-pup-maroon dark:text-primary`}></i>
                       </EmptyMedia>
                       <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                         {isFilterActive ? "No matches found" : "No snapshots detected"}
@@ -157,7 +157,7 @@ export default function BackupTable({
                       ) : (
                         <Button
                           onClick={handleGenerateBackup}
-                          className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-6 text-xs font-black text-white shadow-md active:scale-95 transition-all dark:shadow-none"
+                          className="btn-brand-red shadow-md active:scale-95 transition-all dark:shadow-none"
                         >
                           <i className="ph-bold ph-lightning"></i>
                           CREATE INITIAL SNAPSHOT
@@ -187,7 +187,7 @@ export default function BackupTable({
                         onChange={() => handleToggleRow(b.id)}
                       />
                     </td>
-                    <td className="max-w-[280px] p-3 text-xs font-bold text-pup-maroon dark:text-primary dark:text-primary">
+                    <td className="max-w-[280px] p-3 text-xs font-bold text-pup-maroon dark:text-primary">
                       <span className="block w-full truncate">
                         {b.filename}
                       </span>
@@ -288,7 +288,7 @@ export default function BackupTable({
                           variant="outline"
                           size="sm"
                           onClick={() => onDeleteBackup(b.id)}
-                          className="flex h-8 items-center gap-1.5 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-wider text-red-600 shadow-sm transition-colors hover:border-red-600 hover:bg-red-50 hover:text-red-700 active:scale-95 dark:bg-card dark:shadow-none dark:border-white/10"
+                          className="flex h-8 items-center gap-1.5 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-wider text-red-600 shadow-sm transition-colors hover:border-red-600 hover:bg-red-50 hover:text-red-700 active:scale-95 dark:bg-card dark:shadow-none dark:border-white/10 dark:text-red-400/90 dark:hover:text-red-400 dark:hover:bg-red-400/10 dark:hover:border-red-400/20"
                         >
                           <i className="ph-bold ph-trash text-xs"></i>
                           DELETE
@@ -321,4 +321,5 @@ export default function BackupTable({
     </>
   )
 }
+
 

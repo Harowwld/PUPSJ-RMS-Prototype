@@ -198,7 +198,7 @@ export default function NotificationsTab({
           {isLoading ? (
             <div className="flex h-full w-full flex-1 flex-col items-center justify-center bg-white p-10 min-h-[400px] dark:bg-card">
               <div className="flex flex-col items-center gap-4">
-                <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary dark:text-primary" />
+                <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary" />
                 <p className="text-sm font-bold text-gray-500 uppercase tracking-widest dark:text-zinc-400">
                   Loading...
                 </p>
@@ -208,7 +208,7 @@ export default function NotificationsTab({
             <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary dark:text-primary" />
+                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
                 </EmptyMedia>
                 <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                   Could not load notifications
@@ -224,7 +224,7 @@ export default function NotificationsTab({
                 {isRefreshing && (
                   <div className="absolute inset-0 z-20 flex h-full w-full flex-col items-center justify-center bg-white p-10 dark:bg-card">
                     <div className="flex flex-col items-center gap-4">
-                      <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary dark:text-primary" />
+                      <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary" />
                       <p className="text-sm font-bold text-gray-500 uppercase tracking-widest dark:text-zinc-400">
                         Generating...
                       </p>
@@ -232,7 +232,7 @@ export default function NotificationsTab({
                   </div>
                 )}
                 <table className="min-w-full text-sm">
-                  <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
+                  <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
                     <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
                       <th className="p-3 font-bold">Decision</th>
                       <th className="p-3 font-bold">Student No</th>
@@ -251,7 +251,7 @@ export default function NotificationsTab({
                           <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                             <EmptyHeader className="flex flex-col items-center gap-0">
                               <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                                <i className="ph-duotone ph-bell text-3xl text-pup-maroon dark:text-primary dark:text-primary"></i>
+                                <i className="ph-duotone ph-bell text-3xl text-pup-maroon dark:text-primary"></i>
                               </EmptyMedia>
                               <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                                 No notifications yet
@@ -379,7 +379,7 @@ export default function NotificationsTab({
                           <>
                             {" "}
                             •{" "}
-                            <strong className="text-pup-maroon dark:text-primary dark:text-primary">
+                            <strong className="text-pup-maroon dark:text-primary">
                               {unreadCount.toLocaleString()}
                             </strong>{" "}
                             unread
@@ -461,5 +461,6 @@ export default function NotificationsTab({
     </div>
   )
 }
+
 
 

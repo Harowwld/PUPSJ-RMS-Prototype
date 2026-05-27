@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatPHDateTimeParts } from "@/lib/timeFormat";
+import { formatPHDateTimeParts, formatPHDateTime } from "@/lib/timeFormat";
 import { Select } from "@/components/ui/select"
 import { isAdminRole } from "@/lib/roleUtils";
 import PageHeader from "@/components/shared/PageHeader";
@@ -21,6 +21,10 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { generateAuditLogsPdf } from "@/lib/pdfGenerator";
+import { generateExportFilename } from "@/lib/exportHelpers";
+import PdfPreviewDialog from "@/components/admin/audit-logs/PdfPreviewDialog";
+import { toast } from "sonner";
 
 function getActionIcon(action) {
   const act = String(action || "").toLowerCase();
@@ -45,26 +49,67 @@ function getSeverityConfig(sev) {
   switch (String(sev || "").toUpperCase()) {
     case "CRITICAL":
       return {
-        bg: "bg-red-50 dark:bg-red-950/30",
-        text: "text-red-700",
-        border: "border-red-200",
+        bg: "bg-red-500/10",
+        text: "text-red-600 dark:text-red-400",
+        border: "border-red-500/20 dark:border-red-400/20",
         icon: "ph-fill ph-warning-circle"
       };
     case "WARNING":
       return {
-        bg: "bg-amber-50 dark:bg-amber-950/30",
-        text: "text-amber-700",
-        border: "border-amber-200",
+        bg: "bg-amber-500/10",
+        text: "text-amber-600 dark:text-amber-400",
+        border: "border-amber-500/20 dark:border-amber-400/20",
         icon: "ph-fill ph-warning"
       };
     default:
       return {
-        bg: "bg-blue-50 dark:bg-blue-950/30",
-        text: "text-blue-700",
-        border: "border-blue-200",
+        bg: "bg-blue-500/10",
+        text: "text-blue-600 dark:text-blue-400",
+        border: "border-blue-500/20 dark:border-blue-400/20",
         icon: "ph-fill ph-info"
       };
   }
+}
+
+function Sparkline({ data, color = "#FFFFFF" }) {
+  if (!data || data.length === 0) return null;
+  
+  const width = 160;
+  const height = 50;
+  const max = Math.max(...data, 1);
+  const min = Math.min(...data);
+  const range = max - min || 1;
+  
+  const points = data.map((val, i) => {
+    const x = (i / (data.length - 1)) * width;
+    const y = height - ((val - min) / range) * height;
+    return `${x},${y}`;
+  });
+
+  const pathData = `M ${points.join(" L ")}`;
+  const areaData = `${pathData} L ${width},${height} L 0,${height} Z`;
+
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
+      <path d={areaData} fill={color} className="opacity-10" />
+      <path
+        d={pathData}
+        fill="none"
+        stroke={color}
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className="opacity-70"
+      />
+      <circle 
+        cx={width} 
+        cy={height - ((data[data.length-1] - min) / range) * height} 
+        r="3" 
+        fill={color}
+        className="opacity-100"
+      />
+    </svg>
+  );
 }
 
 export default function AccountActivityPage() {
@@ -81,6 +126,13 @@ export default function AccountActivityPage() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(false);
   const [stats, setStats] = useState(null);
+
+  // PDF & Export State
+  const [isExporting, setIsExporting] = useState(false);
+  const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
+  const [pdfBlobUrl, setPdfPreviewUrl] = useState(null);
+  const [previewFrameReady, setPreviewFrameReady] = useState(false);
+  const [isFullscreenPreview, setIsFullscreenPreview] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -146,128 +198,269 @@ export default function AccountActivityPage() {
     refreshStats();
   }, [loadingUser, authUser, refresh, refreshStats]);
 
+  const fetchAllForExport = async () => {
+    const sevQuery = severityFilter !== "All" ? `&severity=${encodeURIComponent(severityFilter)}` : "";
+    const res = await fetch(
+      `/api/audit-logs?mine=1&limit=50000&search=${encodeURIComponent(search)}${sevQuery}&sortBy=created_at&sortOrder=DESC`
+    );
+    const json = await res.json();
+    if (!res.ok || !json.ok) throw new Error(json.error || "Export failed");
+    return Array.isArray(json.data) ? json.data : [];
+  };
+
+  const handleDownloadCSV = async () => {
+    if (total === 0 || isExporting) return;
+    setIsExporting(true);
+    try {
+      const allLogs = await fetchAllForExport();
+      const headers = ["Date & Time", "Severity", "Actor", "Role", "Action", "Details", "IP Address", "User Agent", "Entity Type", "Entity ID"];
+      const rows = allLogs.map((log) => [
+        formatPHDateTime(log.created_at),
+        log.severity || "INFO",
+        log.actor,
+        log.role,
+        log.action,
+        log.details || "No known description",
+        log.ip || "—",
+        log.user_agent || "—",
+        log.entity_type || "—",
+        log.entity_id || "—",
+      ]);
+      const csvContent = [
+        headers.join(","),
+        ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
+      ].join("\n");
+      const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+      const fileName = generateExportFilename("MY-ACTIVITY", "DATA", "csv");
+      const link = document.createElement("a");
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Export Success", { description: "Your activity logs have been exported to CSV." });
+    } catch (err) {
+      toast.error("Export Failed", { description: err.message || "Unable to export activity logs." });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handlePreviewPDF = async () => {
+    if (total === 0 || isExporting) return;
+    setIsExporting(true);
+    try {
+      const allLogs = await fetchAllForExport();
+      const blob = await generateAuditLogsPdf(allLogs, {
+        role: "My Account",
+        severity: severityFilter,
+        search: search
+      });
+      const url = URL.createObjectURL(blob);
+      setPdfPreviewUrl(url);
+      setPdfPreviewOpen(true);
+    } catch (err) {
+      toast.error("Preview Failed", { description: err.message || "Unable to generate PDF preview." });
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleDownloadFromPreview = () => {
+    if (!pdfBlobUrl) return;
+    try {
+      const fileName = generateExportFilename("MY-ACTIVITY", "REPORT", "pdf");
+      const link = document.createElement("a");
+      link.href = pdfBlobUrl;
+      link.setAttribute("download", fileName);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success("Download Success", { description: "Activity report has been downloaded." });
+    } catch (err) {
+      toast.error("Download Failed", { description: "Unable to download the PDF report." });
+    }
+  };
+
   const totalPages = Math.max(1, Math.ceil(total / perPage));
   const displayPage = Math.min(page, totalPages);
 
   if (loadingUser) {
     return (
-      <div className="min-h-screen bg-gray-50 animate-fade-in dark:bg-white/5">
+      <div className="min-h-screen bg-gray-50 animate-in fade-in duration-700 dark:bg-background">
         <div className="h-16 bg-white border-b border-gray-200 dark:bg-card dark:border-white/10" />
         <main className="max-w-[1200px] mx-auto p-8 space-y-8">
           <div className="flex flex-col gap-2">
-            <Skeleton className="w-64 h-8" />
-            <Skeleton className="w-96 h-4" />
+            <Skeleton className="w-64 h-8 dark:bg-muted" />
+            <Skeleton className="w-96 h-4 dark:bg-muted" />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-             <Skeleton className="h-32 rounded-2xl" />
-             <Skeleton className="h-32 rounded-2xl" />
-             <Skeleton className="h-32 rounded-2xl" />
-             <Skeleton className="h-32 rounded-2xl" />
+             <Skeleton className="h-32 rounded-2xl dark:bg-muted" />
+             <Skeleton className="h-32 rounded-2xl dark:bg-muted" />
+             <Skeleton className="h-32 rounded-2xl dark:bg-muted" />
+             <Skeleton className="h-32 rounded-2xl dark:bg-muted" />
           </div>
-          <Skeleton className="h-[500px] w-full rounded-2xl" />
+          <Skeleton className="h-[500px] w-full rounded-2xl dark:bg-muted" />
         </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F9FAFB] font-inter">
+    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-background font-inter">
       <Header authUser={authUser} onLogout={handleLogout} />
 
-      <main className="flex-1 w-full max-w-[1400px] mx-auto py-10 px-6 animate-fade-in">
+      <main className="flex-1 w-full max-w-[1400px] mx-auto py-10 px-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <TooltipProvider delay={200}>
           <PageHeader
             icon="ph-clock-counter-clockwise"
             title="My Activity"
             description="Review a complete audit history of actions performed by your account."
             actions={
-              <Button
-                variant="outline"
-                onClick={() => {
-                  const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
-                  router.push(path);
-                }}
-                className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-gray-300 bg-white hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center gap-2 rounded-xl active:scale-95 dark:border-white/10 dark:bg-card"
-              >
-                <i className="ph-bold ph-caret-left"></i>
-                Return to Dashboard
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadCSV}
+                  disabled={total === 0 || isExporting}
+                  className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:text-zinc-300 dark:shadow-none dark:bg-red-950/30 dark:border-white/10"
+                >
+                  <i className={cn("ph-bold text-base", isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv")} aria-hidden />
+                  {isExporting ? "PREPARING..." : "EXPORT"}
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handlePreviewPDF}
+                  disabled={total === 0 || isExporting}
+                  className="flex h-10 px-5 items-center justify-center gap-2 btn-brand-red hover:-translate-y-0.5 text-[11px] font-black text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
+                >
+                  <i className={cn("ph-bold text-base", isExporting ? "ph-circle-notch animate-spin" : "ph-file-pdf")} aria-hidden />
+                  {isExporting ? "GENERATING..." : "GENERATE REPORT"}
+                </Button>
+                <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4 dark:border-white/10">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
+                      router.push(path);
+                    }}
+                    className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-gray-300 bg-white hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center gap-2 rounded-xl active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300"
+                  >
+                    <i className="ph-bold ph-caret-left"></i>
+                    Return to Dashboard
+                  </Button>
+                </div>
+              </div>
             }
           />
 
-          <Separator className="mt-8 bg-gray-200 dark:bg-zinc-700" />
+          <Separator className="mt-8 bg-gray-200 dark:bg-zinc-800" />
 
           {/* Stats Bar */}
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Total Activity - Blue */}
-            <div className="bg-blue-50 rounded-2xl p-6 border border-blue-100 shadow-sm relative overflow-hidden group hover:border-blue-200 transition-all dark:bg-blue-950/30">
-              <i className="ph-duotone ph-list-numbers absolute -right-3 -bottom-3 text-7xl opacity-10 text-blue-600 rotate-12 group-hover:scale-110 transition-transform" />
+            <div className="rounded-2xl p-6 border transition-all duration-300 shadow-sm dark:shadow-none bg-linear-to-br from-blue-800 to-blue-950 border-blue-950 relative overflow-hidden group">
               <div className="relative z-10">
-                <p className="text-[10px] font-black text-blue-600/60 uppercase tracking-widest mb-1.5">Total Activity</p>
-                {!stats ? (
-                  <Skeleton className="h-8 w-20 bg-blue-200/20" />
-                ) : (
-                  <>
-                    <h3 className="text-3xl font-black text-blue-900 tracking-tight">
-                      {stats.totalLogs.toLocaleString()}
-                    </h3>
-                    <p className="text-[10px] font-medium text-blue-700 mt-1">Actions performed</p>
-                  </>
-                )}
+                <div className="flex items-end justify-between">
+                  <div>
+                    <p className="text-[10px] font-black text-blue-200 uppercase tracking-widest mb-1.5">Total Activity</p>
+                    {!stats ? (
+                      <Skeleton className="h-8 w-20 bg-white/20" />
+                    ) : (
+                      <>
+                        <h3 className="text-3xl font-black text-white tracking-tight">
+                          {stats.totalLogs.toLocaleString()}
+                        </h3>
+                        <p className="text-[10px] font-medium text-blue-200/80 mt-1">Actions performed</p>
+                      </>
+                    )}
+                  </div>
+                  {stats?.trends && (
+                    <div className="opacity-70 transition-opacity group-hover:opacity-100">
+                      <Sparkline data={stats.trends.map(t => t.total)} color="#BFDBFE" />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Actions Today - Green */}
-            <div className="bg-emerald-50 rounded-2xl p-6 border border-emerald-100 shadow-sm relative overflow-hidden group hover:border-emerald-200 transition-all dark:bg-emerald-950/30">
-              <i className="ph-duotone ph-calendar-check absolute -right-3 -bottom-3 text-7xl opacity-10 text-emerald-600 rotate-12 group-hover:scale-110 transition-transform" />
+            <div className="rounded-2xl p-6 border transition-all duration-300 shadow-sm dark:shadow-none bg-linear-to-br from-emerald-800 to-emerald-950 border-emerald-950 relative overflow-hidden group">
               <div className="relative z-10">
-                <p className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest mb-1.5">Actions Today</p>
-                {!stats ? (
-                  <Skeleton className="h-8 w-20 bg-emerald-200/20" />
-                ) : (
-                  <>
-                    <h3 className="text-3xl font-black text-emerald-900 tracking-tight">
-                      {stats.logsToday.toLocaleString()}
-                    </h3>
-                    <p className="text-[10px] font-medium text-emerald-700 mt-1">Since midnight</p>
-                  </>
-                )}
+                <div className="flex items-end justify-between">
+                  <div>
+                    <p className="text-[10px] font-black text-emerald-100 uppercase tracking-widest mb-1.5">Actions Today</p>
+                    {!stats ? (
+                      <Skeleton className="h-8 w-20 bg-white/20" />
+                    ) : (
+                      <>
+                        <h3 className="text-3xl font-black text-white tracking-tight">
+                          {stats.logsToday.toLocaleString()}
+                        </h3>
+                        <p className="text-[10px] font-medium text-emerald-100/80 mt-1">Since midnight</p>
+                      </>
+                    )}
+                  </div>
+                  {stats?.trends && (
+                    <div className="opacity-70 transition-opacity group-hover:opacity-100">
+                      <Sparkline data={stats.trends.map(t => t.total)} color="#A7F3D0" />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Auth History - Yellow/Amber */}
-            <div className="bg-amber-50 rounded-2xl p-6 border border-amber-100 shadow-sm relative overflow-hidden group hover:border-amber-200 transition-all dark:bg-amber-950/30">
-              <i className="ph-duotone ph-fingerprint absolute -right-3 -bottom-3 text-7xl opacity-10 text-amber-600 rotate-12 group-hover:scale-110 transition-transform" />
+            <div className="rounded-2xl p-6 border transition-all duration-300 shadow-sm dark:shadow-none bg-linear-to-br from-amber-700 to-amber-950 border-amber-950 relative overflow-hidden group">
               <div className="relative z-10">
-                <p className="text-[10px] font-black text-amber-600/60 uppercase tracking-widest mb-1.5">Auth History</p>
-                {!stats ? (
-                  <Skeleton className="h-8 w-20 bg-amber-200/20" />
-                ) : (
-                  <>
-                    <h3 className="text-3xl font-black text-amber-900 tracking-tight">
-                      {stats.authEvents.toLocaleString()}
-                    </h3>
-                    <p className="text-[10px] font-medium text-amber-700 mt-1">Logins & logouts</p>
-                  </>
-                )}
+                <div className="flex items-end justify-between">
+                  <div>
+                    <p className="text-[10px] font-black text-amber-100 uppercase tracking-widest mb-1.5">Auth History</p>
+                    {!stats ? (
+                      <Skeleton className="h-8 w-20 bg-white/20" />
+                    ) : (
+                      <>
+                        <h3 className="text-3xl font-black text-white tracking-tight">
+                          {stats.authEvents.toLocaleString()}
+                        </h3>
+                        <p className="text-[10px] font-medium text-amber-100/80 mt-1">Logins & logouts</p>
+                      </>
+                    )}
+                  </div>
+                  {stats?.trends && (
+                    <div className="opacity-70 transition-opacity group-hover:opacity-100">
+                      <Sparkline data={stats.trends.map(t => t.auth)} color="#FDE68A" />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
             {/* Security Level - Red */}
-            <div className="bg-red-50 rounded-2xl p-6 border border-red-100 shadow-sm relative overflow-hidden group hover:border-red-200 transition-all dark:bg-red-950/30">
-              <i className="ph-duotone ph-warning-octagon absolute -right-3 -bottom-3 text-7xl opacity-10 text-red-600 rotate-12 group-hover:scale-110 transition-transform" />
+            <div className="rounded-2xl p-6 border transition-all duration-300 shadow-sm dark:shadow-none bg-linear-to-br from-red-700 to-red-950 border-red-950 relative overflow-hidden group">
               <div className="relative z-10">
-                <p className="text-[10px] font-black text-red-600/60 uppercase tracking-widest mb-1.5">Security Level</p>
-                {!stats ? (
-                  <Skeleton className="h-8 w-20 bg-red-200/20" />
-                ) : (
-                  <>
-                    <h3 className={`text-3xl font-black tracking-tight ${stats.criticalEvents > 0 ? "text-red-600" : "text-red-900"}`}>
-                      {stats.criticalEvents.toLocaleString()}
-                    </h3>
-                    <p className="text-[10px] font-medium text-red-700 mt-1">High-severity alerts</p>
-                  </>
-                )}
+                <div className="flex items-end justify-between">
+                  <div>
+                    <p className="text-[10px] font-black text-red-200 uppercase tracking-widest mb-1.5">Security Level</p>
+                    {!stats ? (
+                      <Skeleton className="h-8 w-20 bg-white/20" />
+                    ) : (
+                      <>
+                        <h3 className="text-3xl font-black text-white tracking-tight">
+                          {stats.criticalEvents.toLocaleString()}
+                        </h3>
+                        <p className="text-[10px] font-medium text-red-200/80 mt-1">High-priority alerts</p>
+                      </>
+                    )}
+                  </div>
+                  {stats?.trends && (
+                    <div className="opacity-70 transition-opacity group-hover:opacity-100">
+                      <Sparkline data={stats.trends.map(t => t.critical)} color="#FECACA" />
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -278,8 +471,8 @@ export default function AccountActivityPage() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
                 <div className="lg:col-span-6">
                   <div className="flex items-center justify-between mb-2 px-1">
-                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest dark:text-zinc-400">
-                      Search Audit Trace
+                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest dark:text-zinc-300">
+                      SEARCH AUDIT TRACE
                     </label>
                     {(search !== "" || severityFilter !== "All") && (
                       <Button
@@ -312,8 +505,8 @@ export default function AccountActivityPage() {
                 </div>
 
                 <div className="lg:col-span-4">
-                  <label className="block text-[10px] font-black text-gray-500 mb-2 uppercase tracking-widest ml-1 dark:text-zinc-400">
-                    Severity
+                  <label className="block text-[10px] font-black text-gray-500 mb-2 uppercase tracking-widest ml-1 dark:text-zinc-300">
+                    SEVERITY
                   </label>
                   <Select
                     className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 shadow-xs outline-none transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:focus:border-zinc-700"
@@ -331,8 +524,8 @@ export default function AccountActivityPage() {
                 </div>
 
                 <div className="lg:col-span-2">
-                  <label className="block text-[10px] font-black text-gray-500 mb-2 uppercase tracking-widest ml-1 dark:text-zinc-400">
-                    Display
+                  <label className="block text-[10px] font-black text-gray-500 mb-2 uppercase tracking-widest ml-1 dark:text-zinc-300">
+                    DISPLAY
                   </label>
                   <Select
                     className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 shadow-xs outline-none transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:focus:border-zinc-700"
@@ -354,24 +547,24 @@ export default function AccountActivityPage() {
             <CardContent className="p-0">
               <div className="overflow-x-auto select-none">
                 <table className="min-w-full">
-                  <thead className="bg-gray-50 border-b border-gray-100 dark:bg-zinc-900 dark:border-white/10">
-                    <tr className="text-left text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
-                      <th className="p-4 px-6">Timestamp</th>
-                      <th className="p-4 px-6">Severity</th>
-                      <th className="p-4 px-6">Event / Action</th>
-                      <th className="p-4 px-6">Trace Details</th>
-                      <th className="p-4 px-6 text-right">Identifier</th>
+                  <thead className="bg-gray-50 border-b border-gray-100 dark:bg-muted dark:border-white/10">
+                    <tr className="text-left text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-300">
+                      <th className="p-4 px-6">TIMESTAMP</th>
+                      <th className="p-4 px-6">SEVERITY</th>
+                      <th className="p-4 px-6">EVENT / ACTION</th>
+                      <th className="p-4 px-6">TRACE DETAILS</th>
+                      <th className="p-4 px-6 text-right">IDENTIFIER</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-white/10">
                     {loading ? (
                       Array.from({ length: 10 }).map((_, idx) => (
                         <tr key={idx}>
-                          <td className="p-4 px-6"><Skeleton className="h-4 w-32" /></td>
-                          <td className="p-4 px-6"><Skeleton className="h-6 w-16 rounded-full" /></td>
-                          <td className="p-4 px-6"><Skeleton className="h-4 w-40" /></td>
-                          <td className="p-4 px-6"><Skeleton className="h-4 w-full" /></td>
-                          <td className="p-4 px-6 text-right"><Skeleton className="h-4 w-24 ml-auto" /></td>
+                          <td className="p-4 px-6"><Skeleton className="h-4 w-32 dark:bg-muted" /></td>
+                          <td className="p-4 px-6"><Skeleton className="h-6 w-16 rounded-full dark:bg-muted" /></td>
+                          <td className="p-4 px-6"><Skeleton className="h-4 w-40 dark:bg-muted" /></td>
+                          <td className="p-4 px-6"><Skeleton className="h-4 w-full dark:bg-muted" /></td>
+                          <td className="p-4 px-6 text-right"><Skeleton className="h-4 w-24 ml-auto dark:bg-muted" /></td>
                         </tr>
                       ))
                     ) : rows.length === 0 ? (
@@ -396,18 +589,18 @@ export default function AccountActivityPage() {
                         return (
                           <tr 
                             key={r.id} 
-                            className="group hover:bg-gray-50 transition-all duration-200 cursor-default dark:hover:bg-white/10 dark:bg-background"
+                            className="group hover:bg-gray-50 transition-all duration-200 cursor-default dark:hover:bg-white/5 dark:bg-card"
                             onDoubleClick={(e) => e.preventDefault()}
                           >
                             <td className="p-4 px-6">
                               <div className="flex flex-col">
                                 <span className="text-xs font-bold text-gray-900 dark:text-zinc-50">{timeParts.date}</span>
-                                <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-500">{timeParts.time}</span>
+                                <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-400">{timeParts.time}</span>
                               </div>
                             </td>
                             <td className="p-4 px-6">
                               <div className={cn(
-                                "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-tight shadow-xs",
+                                "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-wider transition-all",
                                 sev.bg, sev.text, sev.border
                               )}>
                                 <i className={cn(sev.icon, "text-[10px]")}></i>
@@ -416,10 +609,10 @@ export default function AccountActivityPage() {
                             </td>
                             <td className="p-4 px-6">
                               <div className="flex items-center gap-2.5">
-                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-500 group-hover:bg-white group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 shadow-xs transition-colors dark:bg-zinc-800 dark:text-zinc-400 dark:group-hover:bg-white/5 dark:hover:bg-white/5">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50 text-gray-500 group-hover:bg-white group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 shadow-xs transition-colors dark:bg-zinc-800 dark:text-zinc-400 dark:group-hover:bg-white/5 dark:hover:bg-white/5">
                                   <i className={cn(getActionIcon(r.action), "text-base")}></i>
                                 </div>
-                                <span className="text-xs font-bold tracking-tight text-gray-700 uppercase dark:text-zinc-200">{r.action}</span>
+                                <span className="text-xs font-bold tracking-tight text-gray-700 uppercase dark:text-zinc-300">{r.action}</span>
                               </div>
                             </td>
                             <td className="p-4 px-6">
@@ -500,6 +693,17 @@ export default function AccountActivityPage() {
           </Card>
         </TooltipProvider>
       </main>
+
+      <PdfPreviewDialog
+        open={pdfPreviewOpen}
+        setOpen={setPdfPreviewOpen}
+        pdfBlobUrl={pdfBlobUrl}
+        onDownload={handleDownloadFromPreview}
+        previewFrameReady={previewFrameReady}
+        setPreviewFrameReady={setPreviewFrameReady}
+        isFullscreenPreview={isFullscreenPreview}
+        setIsFullscreenPreview={setIsFullscreenPreview}
+      />
     </div>
   );
 }

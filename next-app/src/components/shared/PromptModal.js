@@ -139,7 +139,7 @@ export default function PromptModal({
             onClick={onConfirm}
             className={cn(
               "flex h-10 items-center gap-2 rounded-brand px-5 text-[11px] font-black text-white shadow-md transition-all active:scale-95 disabled:opacity-50",
-              "bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 shadow-lg shadow-red-900/20"
+              "btn-brand-red"
             )}
             disabled={isLoading || confirmDisabled}
           >

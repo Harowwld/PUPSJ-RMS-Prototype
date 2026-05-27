@@ -59,7 +59,6 @@ const StaffTableRow = React.memo(({
         "transition-colors hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card",
         !isCurrentUser && "cursor-pointer",
         isCurrentUser && "bg-red-50 dark:bg-red-950/30",
-        isArchived && "bg-gray-50 dark:bg-white/5",
         isSelected && "bg-amber-50 dark:bg-amber-950/30"
       )}
     >
@@ -76,10 +75,9 @@ const StaffTableRow = React.memo(({
         <div className="flex items-center gap-3">
           <div
             className={cn(
-              "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition-transform group-hover:scale-110",
-              isArchived
-                ? "border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-muted text-gray-500 dark:text-zinc-400"
-                : "border-red-100 bg-red-50 dark:bg-red-900/20 text-pup-maroon dark:text-primary dark:text-primary shadow-sm dark:shadow-none"
+              "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition-transform group-hover:scale-110 shadow-sm",
+              "border-red-100 bg-red-50 text-pup-maroon",
+              "dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 dark:shadow-none"
             )}
           >
             {initials}
@@ -90,7 +88,7 @@ const StaffTableRow = React.memo(({
                 {s.fname} {s.lname}
               </span>
               {isCurrentUser && (
-                <Badge className="h-4 bg-pup-maroon text-[9px] font-black uppercase dark:bg-red-600">
+                <Badge className="h-4 bg-pup-maroon text-[9px] font-black uppercase dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
                   You
                 </Badge>
               )}
@@ -108,13 +106,17 @@ const StaffTableRow = React.memo(({
         <Badge
           variant="outline"
           className={cn(
-            "rounded-full px-2.5 py-1 text-[10px] font-black uppercase shadow-xs",
+            "rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-wider transition-all",
             s.role === "Admin" ||
               s.role === "SuperAdmin"
-              ? "border-red-200 bg-red-50 dark:bg-red-900/20 text-pup-maroon dark:text-red-400"
-              : "border-amber-200 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
+              ? "border-red-500/30 bg-red-500/10 text-red-600 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400"
+              : "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-400"
           )}
         >
+          <i className={cn(
+            "ph-bold mr-1.5 text-[11px]",
+            s.role === "Admin" || s.role === "SuperAdmin" ? "ph-shield-star" : "ph-user"
+          )}></i>
           {s.role}
         </Badge>
       </td>
@@ -193,7 +195,7 @@ const StaffTableRow = React.memo(({
                   variant="outline"
                   size="sm"
                   onClick={() => onDeleteUser(s.id)}
-                  className="h-8 flex-1 gap-1.5 rounded-brand border border-gray-300 bg-white px-0 text-[10px] font-black tracking-wider text-red-600 uppercase shadow-sm transition-colors hover:border-red-600 hover:bg-red-50 hover:text-red-700 active:scale-95 dark:bg-muted dark:shadow-none dark:border-white/10"
+                  className="h-8 flex-1 gap-1.5 rounded-brand border border-gray-300 bg-white px-0 text-[10px] font-black tracking-wider text-red-600 uppercase shadow-sm transition-colors hover:border-red-600 hover:bg-red-50 hover:text-red-700 active:scale-95 dark:bg-muted dark:shadow-none dark:border-white/10 dark:text-red-400/90 dark:hover:text-red-400 dark:hover:bg-red-400/10 dark:hover:border-red-400/20"
                 >
                   <i className="ph-bold ph-archive text-base"></i>
                   ARCHIVE
@@ -212,12 +214,12 @@ StaffTableRow.displayName = "StaffTableRow"
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column)
     return (
-      <i className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-30"></i>
+      <i className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40"></i>
     )
   return sortOrder === "asc" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon dark:text-primary dark:text-primary"></i>
+    <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon dark:text-primary"></i>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon dark:text-primary dark:text-primary"></i>
+    <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon dark:text-primary"></i>
   )
 }
 
@@ -466,7 +468,7 @@ export default function StaffDirectoryTab({
               <Button
                 size="sm"
                 onClick={() => onSwitchView("create")}
-                className="h-10 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-5 text-xs font-bold text-white shadow-sm active:scale-95 transition-all dark:shadow-none"
+                className="h-10 rounded-brand btn-brand-red active:scale-95 transition-all dark:shadow-none"
               >
                 <i className="ph-bold ph-user-plus mr-1.5"></i>
                 ADD STAFF
@@ -516,7 +518,7 @@ export default function StaffDirectoryTab({
             <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary dark:text-primary" />
+                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
                 </EmptyMedia>
                 <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                   Could not load personnel data
@@ -536,11 +538,15 @@ export default function StaffDirectoryTab({
             >
               <div className="mb-6 flex shrink-0 select-none flex-col items-center gap-3 sm:flex-row">
                 <div className="flex w-full items-center sm:w-auto">
-                  <div className="flex cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 backdrop-blur-sm sm:w-auto dark:border-white/10 dark:bg-muted/80">
+                  <div className="flex cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 backdrop-blur-sm sm:w-auto dark:border-white/10 dark:bg-muted/50">
                     <button
                       type="button"
                       onClick={() => setActiveTab("active")}
-                      className={`group flex h-11 w-[240px] cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${ activeTab === "active" ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon dark:text-primary shadow-sm ring-1 ring-inset ring-black/5" : "text-gray-500 ring-transparent hover:bg-white hover:text-gray-700" } dark:bg-card dark:text-primary dark:shadow-none dark:hover:bg-white/5 dark:hover:text-zinc-200`}
+                      className={`group flex h-11 w-[240px] cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${
+                        activeTab === "active"
+                          ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
+                          : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
+                      }`}
                     >
                       <i
                         className={`ph-bold ph-users-three ${activeTab === "active" ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
@@ -552,8 +558,8 @@ export default function StaffDirectoryTab({
                         className={cn(
                           "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-black transition-all duration-300",
                           activeTab === "active"
-                            ? "bg-pup-maroon dark:bg-red-600 text-white shadow-sm dark:shadow-none ring-2 ring-red-50/50"
-                            : "bg-gray-200 dark:bg-zinc-700/60 text-gray-500 dark:text-zinc-400 group-hover:bg-gray-200 dark:group-hover:bg-zinc-700 dark:hover:bg-zinc-700 dark:bg-zinc-700 group-hover:text-gray-700 dark:group-hover:text-zinc-200 dark:hover:text-zinc-200 dark:text-zinc-200 dark:text-zinc-300"
+                            ? "bg-pup-maroon text-white shadow-sm ring-2 ring-red-50/50 dark:bg-red-500/20 dark:text-red-400 dark:ring-red-400/20 dark:shadow-none"
+                            : "bg-gray-200 text-gray-500 group-hover:bg-gray-300 dark:bg-zinc-800 dark:text-zinc-500 dark:group-hover:bg-zinc-700 dark:group-hover:text-zinc-300"
                         )}
                       >
                         {staffData.filter((s) => s.status !== "Archived").length}
@@ -562,7 +568,11 @@ export default function StaffDirectoryTab({
                     <button
                       type="button"
                       onClick={() => setActiveTab("archived")}
-                      className={`group flex h-11 w-[240px] cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${ activeTab === "archived" ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon dark:text-primary shadow-sm ring-1 ring-inset ring-black/5" : "text-gray-500 ring-transparent hover:bg-white hover:text-gray-700" } dark:bg-card dark:text-primary dark:shadow-none dark:hover:bg-white/5 dark:hover:text-zinc-200`}
+                      className={`group flex h-11 w-[240px] cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${
+                        activeTab === "archived"
+                          ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
+                          : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
+                      }`}
                     >
                       <i
                         className={`ph-bold ph-archive ${activeTab === "archived" ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
@@ -573,8 +583,8 @@ export default function StaffDirectoryTab({
                         className={cn(
                           "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-black transition-all duration-300",
                           activeTab === "archived"
-                            ? "bg-pup-maroon dark:bg-red-600 text-white shadow-sm dark:shadow-none ring-2 ring-red-50/50"
-                            : "bg-gray-200 dark:bg-zinc-700/60 text-gray-500 dark:text-zinc-400 group-hover:bg-gray-200 dark:group-hover:bg-zinc-700 dark:hover:bg-zinc-700 dark:bg-zinc-700 group-hover:text-gray-700 dark:group-hover:text-zinc-200 dark:hover:text-zinc-200 dark:text-zinc-200 dark:text-zinc-300"
+                            ? "bg-pup-maroon text-white shadow-sm ring-2 ring-red-50/50 dark:bg-red-500/20 dark:text-red-400 dark:ring-red-400/20 dark:shadow-none"
+                            : "bg-gray-200 text-gray-500 group-hover:bg-gray-300 dark:bg-zinc-800 dark:text-zinc-500 dark:group-hover:bg-zinc-700 dark:group-hover:text-zinc-300"
                         )}
                       >
                         {staffData.filter((s) => s.status === "Archived").length}
@@ -590,7 +600,7 @@ export default function StaffDirectoryTab({
                 className="outline-none animate-fade-up"
               >
                 <div className="overflow-x-auto rounded-brand border border-gray-200 bg-white shadow-xs select-none dark:border-white/10 dark:bg-card">                  <table className="min-w-full text-sm">
-                    <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
+                    <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
                       <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
                         <th className="w-12 p-3 text-center">
                           <input
@@ -678,7 +688,7 @@ export default function StaffDirectoryTab({
                             <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                               <EmptyHeader className="flex flex-col items-center gap-0">
                                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                                  <i className="ph-duotone ph-users-three text-3xl text-pup-maroon dark:text-primary dark:text-primary"></i>
+                                  <i className="ph-duotone ph-users-three text-3xl text-pup-maroon dark:text-primary"></i>
                                 </EmptyMedia>
                                 <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                                   {activeTab === "active"
@@ -860,7 +870,7 @@ export default function StaffDirectoryTab({
                   onClick={() => {
                     onBulkArchive(Array.from(selectedIds))
                   }}
-                  className="flex h-10 items-center gap-3 rounded-xl bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-6 text-xs font-black text-white uppercase shadow-lg shadow-red-900/20 active:scale-95 transition-all dark:shadow-none"
+                  className="flex h-10 items-center gap-3 rounded-xl btn-brand-red px-6 text-xs font-black text-white uppercase shadow-lg shadow-red-900/20 active:scale-95 transition-all dark:shadow-none"
                 >
                   <i className="ph-bold ph-archive text-sm"></i>
                   ARCHIVE SELECTED
@@ -873,5 +883,6 @@ export default function StaffDirectoryTab({
     </div>
   )
 }
+
 
 
