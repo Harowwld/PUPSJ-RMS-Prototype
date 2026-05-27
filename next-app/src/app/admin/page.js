@@ -60,7 +60,22 @@ function AdminPageContent() {
     create: true,
   })
 
-  const [view, setView] = useState("directory")
+  const validViews = [
+    "directory",
+    "create",
+    "review",
+    "digitization",
+    "request_analytics",
+    "storage_layout",
+    "system_data",
+    "system",
+    "logs",
+  ]
+  const initialView = validViews.includes(searchParams?.get("view"))
+    ? searchParams.get("view")
+    : "directory"
+
+  const [view, setView] = useState(initialView)
   const [viewLoading, setViewLoading] = useState({
     directory: false,
     logs: false,
@@ -137,6 +152,8 @@ function AdminPageContent() {
   const [backupDeleteOpen, setBackupDeleteOpen] = useState(false)
   const [backupDeleteLoading, setBackupDeleteLoading] = useState(false)
   const [backupDeleteTypedText, setBackupDeleteTypedText] = useState("")
+  const [backupDeleteVerificationTarget, setBackupDeleteVerificationTarget] = useState("")
+  const [backupDeleteVerificationValue, setBackupDeleteVerificationValue] = useState("")
 
   const [restoreConfirmOpen, setRestoreConfirmOpen] = useState(false)
   const [restoreFile, setRestoreFile] = useState(null)
@@ -177,6 +194,11 @@ function AdminPageContent() {
     studentNo: "",
     refId: "",
   })
+
+  // Unsaved Changes Protection
+  const [isStorageDirty, setIsStorageDirty] = useState(false)
+  const [pendingView, setPendingView] = useState(null)
+  const [discardConfirmOpen, setDiscardConfirmOpen] = useState(false)
 
   const showToast = useCallback(
     (msg, typeOrIsError = false, autoHide = true) => {
@@ -241,10 +263,13 @@ function AdminPageContent() {
     }
   }, [])
 
-  const refreshStaff = useCallback(async () => {
-    setViewLoading((prev) => ({ ...prev, directory: true }))
+  const refreshStaff = useCallback(async (isManual = false) => {
+    if (isManual) setViewLoading((prev) => ({ ...prev, directory: true }))
     try {
-      const res = await fetch("/api/staff?limit=500")
+      const [res] = await Promise.all([
+        fetch("/api/staff?limit=500"),
+        isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
+      ])
       const json = await res.json()
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to load staff")
@@ -257,8 +282,8 @@ function AdminPageContent() {
     }
   }, [showToast])
 
-  const refreshAuditLogs = useCallback(async () => {
-    setViewLoading((prev) => ({ ...prev, logs: true }))
+  const refreshAuditLogs = useCallback(async (isManual = false) => {
+    if (isManual) setViewLoading((prev) => ({ ...prev, logs: true }))
     try {
       const offset = (logPage - 1) * logsPerPage
       const mineQuery = logsMineOnly ? "&mine=1" : ""
@@ -278,9 +303,12 @@ function AdminPageContent() {
         : ""
       const sortQuery = `&sortBy=${encodeURIComponent(logSortBy)}&sortOrder=${encodeURIComponent(logSortOrder)}`
 
-      const resLogs = await fetch(
-        `/api/audit-logs?limit=${logsPerPage}&offset=${offset}&search=${encodeURIComponent(logSearch)}${mineQuery}${roleQuery}${sevQuery}${startQuery}${endQuery}${sortQuery}`
-      )
+      const [resLogs] = await Promise.all([
+        fetch(
+          `/api/audit-logs?limit=${logsPerPage}&offset=${offset}&search=${encodeURIComponent(logSearch)}${mineQuery}${roleQuery}${sevQuery}${startQuery}${endQuery}${sortQuery}`
+        ),
+        isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
+      ])
       const jsonLogs = await resLogs.json()
       if (!resLogs.ok || !jsonLogs?.ok)
         throw new Error(jsonLogs?.error || "Failed to load audit logs")
@@ -306,7 +334,7 @@ function AdminPageContent() {
     } catch (err) {
       // silent
     } finally {
-      setViewLoading((prev) => ({ ...prev, logs: false }))
+      if (isManual) setViewLoading((prev) => ({ ...prev, logs: false }))
     }
   }, [
     logPage,
@@ -345,8 +373,8 @@ function AdminPageContent() {
     }
   }, [])
 
-  const refreshBackups = useCallback(async () => {
-    setViewLoading((prev) => ({ ...prev, system: true, backup: true }))
+  const refreshBackups = useCallback(async (isManual = false) => {
+    if (isManual) setViewLoading((prev) => ({ ...prev, system: true, backup: true }))
     try {
       const searchQuery = backupSearch
         ? `&search=${encodeURIComponent(backupSearch)}`
@@ -358,12 +386,12 @@ function AdminPageContent() {
         ? `&endDate=${encodeURIComponent(backupEndDate)}`
         : ""
 
-      const res = await fetch(
-        `/api/system/backup?t=${Date.now()}${searchQuery}${startQuery}${endQuery}`,
-        {
+      const [res] = await Promise.all([
+        fetch(`/api/system/backup?t=${Date.now()}${searchQuery}${startQuery}${endQuery}`, {
           cache: "no-store",
-        }
-      )
+        }),
+        isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
+      ])
       const json = await res.json()
       if (res.ok && json?.ok) {
         setBackups(Array.isArray(json.data) ? json.data : [])
@@ -373,18 +401,21 @@ function AdminPageContent() {
     } catch (err) {
       console.error("Failed to refresh backups:", err)
     } finally {
-      setViewLoading((prev) => ({ ...prev, system: false, backup: false }))
+      if (isManual) setViewLoading((prev) => ({ ...prev, system: false, backup: false }))
     }
   }, [backupSearch, backupStartDate, backupEndDate])
 
-  const refreshReviewRecords = useCallback(async () => {
-    setViewLoading((prev) => ({ ...prev, review: true }))
+  const refreshReviewRecords = useCallback(async (isManual = false) => {
+    if (isManual) setViewLoading((prev) => ({ ...prev, review: true }))
     try {
       const approvalStatus =
         reviewStatusFilter === "All"
           ? ""
           : `&approvalStatus=${encodeURIComponent(reviewStatusFilter)}`
-      const res = await fetch(`/api/documents?limit=200${approvalStatus}`)
+      const [res] = await Promise.all([
+        fetch(`/api/documents?limit=200${approvalStatus}`),
+        isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
+      ])
       const json = await res.json()
       if (!res.ok || !json?.ok) {
         throw new Error(json?.error || "Failed to load review records")
@@ -392,15 +423,17 @@ function AdminPageContent() {
       setReviewRecords(Array.isArray(json.data) ? json.data : [])
       loadedViewsRef.current.review = true
     } catch (err) {
-      showToast(
-        {
-          title: "Digital Records Review Load Failed",
-          description: err?.message || "The system was unable to fetch digital records for review.",
-        },
-        true
-      )
+      if (isManual) {
+        showToast(
+          {
+            title: "Digital Records Review Load Failed",
+            description: err?.message || "The system was unable to fetch digital records for review.",
+          },
+          true
+        )
+      }
     } finally {
-      setViewLoading((prev) => ({ ...prev, review: false }))
+      if (isManual) setViewLoading((prev) => ({ ...prev, review: false }))
     }
   }, [reviewStatusFilter, showToast])
 
@@ -448,7 +481,7 @@ function AdminPageContent() {
   )
 
   useEffect(() => {
-    const tab = String(searchParams?.get("tab") || "").trim()
+    const tab = String(searchParams?.get("view") || searchParams?.get("tab") || "").trim()
     const mine = searchParams?.get("mine") === "1"
     const allowedTabs = new Set([
       "directory",
@@ -460,6 +493,7 @@ function AdminPageContent() {
       "request_analytics",
       "system",
       "backup",
+      "storage_layout",
     ])
     if (allowedTabs.has(tab)) setView(tab)
     setLogsMineOnly(mine)
@@ -472,7 +506,9 @@ function AdminPageContent() {
         const res = await fetch("/api/auth/me")
         const json = await res.json().catch(() => null)
         if (!res.ok || !json?.ok) {
-          router.push("/")
+          if (res.status === 401) {
+            router.push("/")
+          }
           return
         }
         setAuthUser(json.data)
@@ -482,8 +518,8 @@ function AdminPageContent() {
           refreshStaff()
           refreshSystemHealth()
         }, 0)
-      } catch {
-        router.push("/")
+      } catch (err) {
+        console.error("[AdminPage] Profile fetch failed:", err)
       }
     })()
   }, [router, refreshStaff, refreshAuditLogs, refreshSystemHealth])
@@ -520,9 +556,19 @@ function AdminPageContent() {
     }
   }, [view, refreshReviewRecords])
 
-  const switchView = useCallback(
+  const performSwitchView = useCallback(
     (nextView) => {
+      if (nextView === "storage_layout") {
+        setIsStorageDirty(false)
+      }
       setView(nextView)
+      // Update URL without a full refresh
+      const params = new URLSearchParams(window.location.search)
+      params.set("view", nextView)
+      router.replace(`${window.location.pathname}?${params.toString()}`, {
+        scroll: false,
+      })
+
       if (nextView === "directory" && !loadedViewsRef.current.directory) {
         setTimeout(() => {
           refreshStaff()
@@ -547,8 +593,29 @@ function AdminPageContent() {
         }, 0)
       }
     },
-    [refreshAuditLogs, refreshBackups, refreshStaff, refreshReviewRecords]
+    [refreshAuditLogs, refreshBackups, refreshStaff, refreshReviewRecords, router]
   )
+
+  const switchView = useCallback(
+    (nextView) => {
+      if (isStorageDirty && view === "storage_layout") {
+        setPendingView(nextView)
+        setDiscardConfirmOpen(true)
+        return
+      }
+      performSwitchView(nextView)
+    },
+    [isStorageDirty, view, performSwitchView]
+  )
+
+  const confirmDiscardChanges = useCallback(() => {
+    setIsStorageDirty(false)
+    setDiscardConfirmOpen(false)
+    if (pendingView) {
+      performSwitchView(pendingView)
+      setPendingView(null)
+    }
+  }, [pendingView, performSwitchView])
 
   const reviewDocumentStatus = useCallback(
     async (id, approvalStatus, reviewNote = "") => {
@@ -737,6 +804,7 @@ function AdminPageContent() {
     } catch {
       /* ignore */
     }
+    localStorage.setItem("pup-logout", Date.now())
     router.push("/")
   }
 
@@ -1037,13 +1105,18 @@ function AdminPageContent() {
       if (!res.ok || !json?.ok)
         throw new Error(json?.error || "Failed to create backup")
 
-      if (json.data?.id) {
-        const link = document.createElement("a")
-        link.href = `/api/system/backup/download?id=${json.data.id}`
-        link.download = json.data.filename
-        link.click()
+      // Await refresh to ensure table updates before UI completes
+      await refreshBackups()
+
+      if (json?.data?.id) {
+        // Trigger download with a slight delay to avoid interrupting table refresh state
+        setTimeout(() => {
+          const link = document.createElement("a")
+          link.href = `/api/system/backup/download?id=${json?.data?.id}`
+          link.download = json?.data?.filename || "backup.zip.enc"
+          link.click()
+        }, 1000)
       }
-      refreshBackups()
       return json
     })()
 
@@ -1052,9 +1125,9 @@ function AdminPageContent() {
       success: (json) => {
         return (
           <div className="flex flex-col gap-1">
-            <p className="text-sm font-semibold">Snapshot Created</p>
+            <p className="text-sm font-semibold text-emerald-700">Backup Successful</p>
             <p className="text-xs font-normal">
-              Archive '{json?.data?.filename || "backup package"}' is ready.
+              Archive '{json?.data?.filename || "backup package"}' has been secured.
             </p>
           </div>
         )
@@ -1071,6 +1144,8 @@ function AdminPageContent() {
         )
       },
     })
+    
+    return promise
   }
 
   const syncExternal = async (id) => {
@@ -1105,6 +1180,8 @@ function AdminPageContent() {
         </div>
       ),
     })
+
+    return promise
   }
 
   const confirmDeleteBackup = async () => {
@@ -1129,10 +1206,10 @@ function AdminPageContent() {
         throw new Error(json?.error || "Failed to delete backup(s)")
 
       showToast({
-        title: isBulk ? "Backups Removed" : "Backup Removed",
+        title: isBulk ? "Bulk Deletion Successful" : "Deletion Successful",
         description: isBulk
-          ? `Successfully removed ${json.deletedCount} backup archives.`
-          : "The selected backup has been permanently deleted.",
+          ? `Successfully removed ${json.deletedCount} backup archives from the system.`
+          : "The selected backup archive has been permanently removed.",
       })
       setBackupDeleteOpen(false)
       refreshBackups()
@@ -1271,22 +1348,14 @@ function AdminPageContent() {
       iconClass: "ph-bold ph-seal-check",
     },
     {
-      type: "accordion",
-      key: "analytics",
-      label: "System Analytics",
-      iconClass: "ph-bold ph-chart-line-up",
-      children: [
-        {
-          key: "digitization",
-          label: "Compliance Analysis",
-          iconClass: "ph-bold ph-chart-bar",
-        },
-        {
-          key: "request_analytics",
-          label: "Request Analysis",
-          iconClass: "ph-bold ph-trend-up",
-        },
-      ],
+      key: "digitization",
+      label: "Compliance Analysis",
+      iconClass: "ph-bold ph-chart-bar",
+    },
+    {
+      key: "request_analytics",
+      label: "Request Analysis",
+      iconClass: "ph-bold ph-trend-up",
     },
 
     { type: "header", label: "System Configuration" },
@@ -1296,7 +1365,7 @@ function AdminPageContent() {
       iconClass: "ph-bold ph-warehouse",
     },
     { key: "system_data", label: "System Data", iconClass: "ph-bold ph-gear" },
-    { key: "system", label: "Backup", iconClass: "ph-bold ph-database" },
+    { key: "system", label: "Back Records", iconClass: "ph-bold ph-database" },
     { key: "logs", label: "Audit Logs", iconClass: "ph-bold ph-scroll" },
   ]
 
@@ -1304,7 +1373,7 @@ function AdminPageContent() {
 
   if (loading) {
     return (
-      <div className="font-inter flex h-screen flex-col gap-4 overflow-hidden bg-gray-50 p-4">
+      <div className="font-inter flex h-screen flex-col gap-4 overflow-hidden bg-gray-50 p-4 transition-colors duration-300 dark:bg-background">
         <Skeleton className="h-16 w-full shrink-0 rounded-brand" />
         <div className="flex flex-1 gap-4">
           <Skeleton className="h-full w-[30%] rounded-brand" />
@@ -1315,7 +1384,7 @@ function AdminPageContent() {
   }
 
   return (
-    <div className="font-inter flex h-screen flex-col overflow-hidden bg-gray-50">
+    <div className="font-inter flex h-screen flex-col overflow-hidden bg-gray-50 transition-colors duration-300 dark:bg-background">
       <Header authUser={authUser} onLogout={handleLogout} />
 
       <div className="flex min-h-0 w-full flex-1">
@@ -1368,6 +1437,7 @@ function AdminPageContent() {
               onBulkArchive={handleBulkArchive}
               onExportData={exportData}
               onSwitchView={switchView}
+              onRefresh={() => refreshStaff(true)}
             />
           )}
 
@@ -1417,6 +1487,7 @@ function AdminPageContent() {
               setLogSortOrder={setLogSortOrder}
               showToast={showToast}
               onLogAction={logAdminAction}
+              onRefresh={() => refreshAuditLogs(true)}
             />
           )}
 
@@ -1431,7 +1502,11 @@ function AdminPageContent() {
           )}
 
           {view === "storage_layout" && (
-            <StorageLayoutEditorTab showToast={showToast} />
+            <StorageLayoutEditorTab 
+              showToast={showToast} 
+              isDirty={isStorageDirty}
+              setIsDirty={setIsStorageDirty}
+            />
           )}
 
           {view === "review" && (
@@ -1481,9 +1556,9 @@ function AdminPageContent() {
               onSimulateBackup={() => simulateBackup()}
               onSyncExternal={syncExternal}
               onDownloadBackup={(b) => {
-                const id = typeof b === "object" ? b.id : b
+                const id = b && typeof b === "object" ? b.id : b
                 const filename =
-                  typeof b === "object" ? b.filename : "backup.zip.enc"
+                  b && typeof b === "object" ? b.filename : "backup.zip.enc"
                 const link = document.createElement("a")
                 link.href = `/api/system/backup/download?id=${id}`
                 link.download = filename
@@ -1493,6 +1568,9 @@ function AdminPageContent() {
                 const ids = Array.isArray(id) ? id : [id]
                 const targets = backups.filter((x) => ids.includes(x.id))
                 if (targets.length > 0) {
+                  const randomCode = Math.floor(1000 + Math.random() * 9000).toString()
+                  setBackupDeleteVerificationTarget(randomCode)
+                  setBackupDeleteVerificationValue("")
                   setBackupDeleteTargets(targets)
                   setBackupDeleteTypedText("")
                   setBackupDeleteOpen(true)
@@ -1515,6 +1593,20 @@ function AdminPageContent() {
       </div>
 
       <Footer />
+
+      <ConfirmModal
+        open={discardConfirmOpen}
+        title="Unsaved Changes"
+        message="You have unsaved layout modifications. Moving to another section will discard these changes."
+        confirmLabel="Discard Changes"
+        variant="warning"
+        onConfirm={confirmDiscardChanges}
+        onCancel={() => {
+          setDiscardConfirmOpen(false)
+          setPendingView(null)
+        }}
+        confirmClassName="bg-linear-to-b from-orange-700 to-orange-500 border-4 border-orange-900 hover:from-orange-600 hover:to-orange-800 text-white font-black uppercase tracking-widest text-[10px] h-11 px-8 rounded-xl shadow-lg shadow-orange-900/20 active:scale-95 transition-all"
+      />
 
       <EditUserModal
         open={editOpen}
@@ -1550,7 +1642,7 @@ function AdminPageContent() {
         onCancel={() => setRestoreOpen(false)}
       />
 
-      <PromptModal
+      <ConfirmModal
         open={backupDeleteOpen}
         title={
           backupDeleteTargets.length > 1
@@ -1562,17 +1654,15 @@ function AdminPageContent() {
             ? `You are about to permanently remove ${backupDeleteTargets.length} backup archives from the local server. This action is irreversible.`
             : `You are about to permanently remove the following backup archive from the local server. This action is irreversible.`
         }
-        itemsList={backupDeleteTargets.map((t) => t.filename)}
-        inputLabel="Please type 'DELETE' to confirm deletion"
-        value={backupDeleteTypedText}
-        onChange={setBackupDeleteTypedText}
+        selectedItems={backupDeleteTargets.map((t) => t?.filename || "Unknown")}
         onConfirm={confirmDeleteBackup}
         onCancel={() => setBackupDeleteOpen(false)}
-        confirmLabel="Delete Permanently"
-        placeholder="Type 'DELETE' to authorize..."
+        confirmLabel={backupDeleteTargets.length > 1 ? "Bulk Delete" : "Delete Permanently"}
         isLoading={backupDeleteLoading}
-        confirmDisabled={backupDeleteTypedText !== "DELETE"}
         variant="danger"
+        verificationTarget={backupDeleteVerificationTarget}
+        verificationValue={backupDeleteVerificationValue}
+        onVerificationChange={setBackupDeleteVerificationValue}
       />
 
       <ConfirmModal
@@ -1656,17 +1746,17 @@ function AdminPageContent() {
       />
 
       <Dialog open={defaultPwOpen} onOpenChange={setDefaultPwOpen}>
-        <DialogContent className="w-full max-w-2xl overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-2xl">
-          <DialogHeader className="border-b border-gray-100 bg-gray-50/50 p-6">
+        <DialogContent className="w-full max-w-2xl overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-white/10 dark:bg-card">
+          <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-primary/10">
                 <i className="ph-duotone ph-key text-2xl"></i>
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg leading-tight font-black tracking-tight text-gray-900">
+                <DialogTitle className="text-lg leading-tight font-black tracking-tight text-gray-900 dark:text-zinc-50">
                   Staff Account Created
                 </DialogTitle>
-                <DialogDescription className="mt-1.5 text-sm leading-relaxed font-medium text-gray-600">
+                <DialogDescription className="mt-1.5 text-sm leading-relaxed font-medium text-gray-600 dark:text-zinc-300">
                   System account configured successfully. Securely record the
                   following temporary credentials before closing this window.
                 </DialogDescription>
@@ -1675,16 +1765,16 @@ function AdminPageContent() {
           </DialogHeader>
 
           <div className="space-y-6 p-8">
-            <div className="rounded-xl border border-amber-100 bg-amber-50/50 p-6 shadow-sm">
+            <div className="rounded-xl border border-amber-100 bg-amber-50 p-6 shadow-sm dark:bg-amber-950/50">
               <label className="mb-3 block text-[10px] font-black tracking-widest text-amber-900 uppercase opacity-60">
                 Temporary Password for{" "}
-                <span className="text-pup-maroon">
+                <span className="text-pup-maroon dark:text-primary">
                   {defaultPwUserLabel}
                 </span>
               </label>
 
-              <div className="group relative flex items-center justify-between rounded-lg border border-amber-200 bg-white p-4 shadow-inner transition-all hover:border-amber-300">
-                <code className="font-mono text-lg font-black tracking-tight text-gray-900">
+              <div className="group relative flex items-center justify-between rounded-lg border border-amber-200 bg-white p-4 shadow-inner transition-all hover:border-amber-300 dark:bg-white/5 dark:shadow-none">
+                <code className="font-mono text-lg font-black tracking-tight text-gray-900 dark:text-zinc-50">
                   {defaultReturnedPw}
                 </code>
 
@@ -1696,7 +1786,7 @@ function AdminPageContent() {
                     "h-10 gap-2 rounded-brand border-amber-200 px-4 font-black transition-all",
                     copied
                       ? "bg-emerald-500 text-white border-emerald-600 shadow-emerald-200"
-                      : "bg-white text-amber-900 hover:bg-amber-50 hover:border-amber-400"
+                      : "bg-white dark:bg-white/5 text-amber-900 hover:bg-amber-50 dark:hover:bg-white/5 hover:border-amber-400"
                   )}
                 >
                   <i className={cn("ph-bold", copied ? "ph-check-circle" : "ph-copy")} />
@@ -1704,19 +1794,19 @@ function AdminPageContent() {
                 </Button>
               </div>
 
-              <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200/50 bg-white/40 p-3 text-[10px] font-bold leading-relaxed text-amber-800/80">
+              <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200/50 bg-white p-3 text-[10px] font-bold leading-relaxed text-amber-800/80 dark:bg-white/5">
                 <i className="ph-fill ph-warning-circle text-sm text-amber-600 mt-0.5" />
                 This password is temporary and will expire after the first login. Please ensure the user receives this securely.
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end">
+          <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card">
             <Button
               type="button"
               variant="outline"
               onClick={() => setDefaultPwOpen(false)}
-              className="h-11 rounded-brand border border-gray-300 px-6 text-sm font-bold text-gray-700 hover:bg-gray-50"
+              className="h-11 rounded-brand border border-gray-300 px-6 text-sm font-bold text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/5 dark:bg-white/2"
             >
               Close
             </Button>
@@ -1748,7 +1838,7 @@ export default function AdminPage() {
     <AdminGuard>
       <Suspense
         fallback={
-          <div className="font-inter flex h-screen flex-col gap-4 overflow-hidden bg-gray-50 p-4">
+          <div className="font-inter flex h-screen flex-col gap-4 overflow-hidden bg-gray-50 p-4 dark:bg-background">
             <Skeleton className="h-16 w-full shrink-0 rounded-brand" />
             <div className="flex flex-1 gap-4">
               <Skeleton className="h-full w-[30%] rounded-brand" />

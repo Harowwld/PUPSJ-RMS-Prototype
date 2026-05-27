@@ -42,6 +42,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import PageHeader from "@/components/shared/PageHeader";
+import { RefreshButton } from "@/components/shared/RefreshButton";
 import { Select } from "@/components/ui/select"
 
 export default function DigitizationComplianceTab({
@@ -59,6 +60,7 @@ export default function DigitizationComplianceTab({
   const [coursesLoading, setCoursesLoading] = useState(true);
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [manualLoading, setManualLoading] = useState(false);
   const [error, setError] = useState("");
   const [reportOpen, setReportOpen] = useState(false);
   const [pdfBlobUrl, setPdfPreviewUrl] = useState(null);
@@ -91,9 +93,9 @@ export default function DigitizationComplianceTab({
         <i className="ph-bold ph-caret-up-down ml-1 opacity-30 transition-opacity group-hover:opacity-100"></i>
       );
     return sortOrder === "asc" ? (
-      <i className="ph-bold ph-caret-up ml-1 text-pup-maroon"></i>
+      <i className="ph-bold ph-caret-up ml-1 text-pup-maroon dark:text-primary dark:text-primary"></i>
     ) : (
-      <i className="ph-bold ph-caret-down ml-1 text-pup-maroon"></i>
+      <i className="ph-bold ph-caret-down ml-1 text-pup-maroon dark:text-primary dark:text-primary"></i>
     );
   };
 
@@ -127,15 +129,16 @@ export default function DigitizationComplianceTab({
     return params.toString();
   }, [statusFilter, courseFilter, requireApproved]);
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (isManual = false) => {
+    if (isManual) setManualLoading(true);
     setLoading(true);
     setError("");
     try {
       const qs = buildQueryString();
-      const res = await fetch(
-        `/api/analytics/digitization-compliance?${qs}`,
-        { cache: "no-store" }
-      );
+      const [res] = await Promise.all([
+        fetch(`/api/analytics/digitization-compliance?${qs}`, { cache: "no-store" }),
+        isManual ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
+      ]);
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) {
         throw new Error(json?.error || "Failed to load compliance data");
@@ -150,19 +153,36 @@ export default function DigitizationComplianceTab({
       );
     } finally {
       setLoading(false);
+      setManualLoading(false);
     }
   }, [buildQueryString, showToast]);
 
   const firstLoadRef = useRef(true);
   useEffect(() => {
-    // Sync filters with URL
-    const params = new URLSearchParams(searchParams);
-    params.set("status", statusFilter);
-    if (courseFilter) params.set("course", courseFilter); else params.delete("course");
-    if (requireApproved) params.set("approved", "1"); else params.delete("approved");
+    const params = new URLSearchParams(window.location.search);
     
-    const newUrl = `${window.location.pathname}?${params.toString()}`;
-    window.history.replaceState(null, "", newUrl);
+    // Always enforce the correct view
+    const oldStatus = params.get("status") || "Active";
+    const oldCourse = params.get("course") || "";
+    const oldApproved = params.get("approved") || "0";
+    const currentView = params.get("view");
+
+    // Only update if something actually changed
+    const hasChanged = 
+        oldStatus !== statusFilter || 
+        oldCourse !== courseFilter || 
+        (oldApproved === "1") !== requireApproved ||
+        currentView !== "digitization";
+
+    if (hasChanged) {
+        params.set("view", "digitization");
+        params.set("status", statusFilter);
+        if (courseFilter) params.set("course", courseFilter); else params.delete("course");
+        if (requireApproved) params.set("approved", "1"); else params.delete("approved");
+        
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        router.replace(newUrl, { scroll: false });
+    }
 
     const delay = firstLoadRef.current ? 0 : 350;
     firstLoadRef.current = false;
@@ -170,7 +190,7 @@ export default function DigitizationComplianceTab({
       load();
     }, delay);
     return () => clearTimeout(id);
-  }, [statusFilter, courseFilter, requireApproved, load, searchParams]);
+  }, [statusFilter, courseFilter, requireApproved, load, router]);
 
   const summary = data?.summary;
   const meta = data?.meta;
@@ -348,12 +368,12 @@ export default function DigitizationComplianceTab({
   const hasActiveFilters = statusFilter !== "Active" || courseFilter !== "" || requireApproved || tableSearch !== "";
 
   return (
-    <div className="flex flex-col w-full h-full gap-4 animate-in fade-in slide-in-from-bottom-2 duration-500 font-inter min-h-0">
-      <Card className="flex-1 bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0">
+    <div className="flex flex-col w-full h-full gap-4 animate-fade-up font-inter min-h-0">
+      <Card className="flex-1 bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0 dark:bg-card dark:border-white/10 dark:shadow-none">
         <PageHeader
           icon="ph-chart-pie"
-          title="Digitization Compliance Analytics"
-          description="Monitoring of physical record digitization and archival completeness across programs."
+          title="Compliance Analysis"
+          description="Monitor digitization completeness."
           actions={
             <div className="flex items-center gap-2">
               <Button
@@ -362,10 +382,10 @@ export default function DigitizationComplianceTab({
                 size="sm"
                 onClick={handlePreview}
                 disabled={loading || !data || isGeneratingPdf}
-                className="h-10 px-6 font-black text-[10px] tracking-widest bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white shadow-lg shadow-red-900/20 active:scale-95 disabled:opacity-60 rounded-brand uppercase transition-all"
+                className="h-10 px-6 font-black text-[10px] tracking-widest bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md text-white shadow-lg shadow-red-900/20 active:scale-95 disabled:opacity-60 rounded-brand uppercase transition-all dark:shadow-none"
               >
                 <i className={cn("ph-bold text-base mr-2", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
-                {isGeneratingPdf ? "Generating..." : "Generate Report"}
+                {isGeneratingPdf ? "GENERATING..." : "GENERATE REPORT"}
               </Button>
               <Button
                 type="button"
@@ -373,44 +393,24 @@ export default function DigitizationComplianceTab({
                 size="sm"
                 onClick={downloadCsv}
                 disabled={loading || !data || isExportingCsv}
-                className="h-10 px-4 font-bold text-xs tracking-wide border-gray-300 shadow-sm hover:border-gray-300 hover:bg-red-50/30 active:scale-95 rounded-brand transition-all uppercase"
+                className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:text-zinc-300 dark:shadow-none dark:bg-red-950/30 dark:border-white/10"
               >
-                <i className={cn("ph-bold text-sm mr-2 text-pup-maroon", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
-                {isExportingCsv ? "Exporting..." : "Export CSV"}
+                <i className={cn("ph-bold text-base", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
+                {isExportingCsv ? "PREPARING..." : "EXPORT"}
               </Button>
 
-              <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4">
+              <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4 dark:border-white/10">
                   <div className="flex flex-col items-end gap-1">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Dataset Sync</p>
-                      <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest dark:text-zinc-500">Dataset Sync</p>
+                      <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap dark:text-zinc-400">
                           {hasActiveFilters ? "Filtering live analytics..." : "Showing cumulative data"}
                       </p>
                   </div>
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          onClick={load}
-                          disabled={loading}
-                          className="h-10 w-10 p-0 text-gray-600 bg-white border border-gray-300 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-90 rounded-brand"
-                        >
-                          <i
-                            className={cn(
-                              "ph-bold ph-arrows-clockwise text-sm",
-                              loading && "animate-spin"
-                            )}
-                            aria-hidden
-                          />
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="top">
-                        <p className="font-bold text-xs">Dataset Sync: Refresh Compliance Data</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
+                  <RefreshButton 
+                    onRefresh={() => load(true)} 
+                    isLoading={manualLoading} 
+                    title="Refresh Compliance Data"
+                  />
               </div>
             </div>
           }
@@ -418,13 +418,13 @@ export default function DigitizationComplianceTab({
 
         {/* Active Filter Chips Row */}
         {hasActiveFilters && (
-          <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300">
+          <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
             <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">
+                <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">
                 Active Filters:
                 </span>
                 {statusFilter !== "Active" && (
-                    <div className="flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 uppercase">
+                    <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 uppercase dark:bg-blue-950/30 dark:text-blue-400">
                     Status: {statusFilter}
                     <button
                         onClick={() => setStatusFilter("Active")}
@@ -435,7 +435,7 @@ export default function DigitizationComplianceTab({
                     </div>
                 )}
                 {courseFilter !== "" && (
-                    <div className="flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 uppercase">
+                    <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 uppercase dark:bg-amber-950/30 dark:text-amber-400">
                     Program: {courseFilter}
                     <button
                         onClick={() => setCourseFilter("")}
@@ -446,7 +446,7 @@ export default function DigitizationComplianceTab({
                     </div>
                 )}
                 {requireApproved && (
-                    <div className="flex items-center gap-1 rounded-full border border-emerald-100 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 uppercase">
+                    <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 uppercase dark:bg-emerald-950/30 dark:text-emerald-400">
                     Requirement: Approved Only
                     <button
                         onClick={() => setRequireApproved(false)}
@@ -457,7 +457,7 @@ export default function DigitizationComplianceTab({
                     </div>
                 )}
                 {tableSearch && (
-                    <div className="flex items-center gap-1 rounded-full border border-gray-300/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon uppercase">
+                    <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary uppercase dark:border-white/10 dark:text-primary">
                     Search: {tableSearch}
                     <button
                         onClick={() => setTableSearch("")}
@@ -471,7 +471,7 @@ export default function DigitizationComplianceTab({
                     variant="ghost"
                     size="sm"
                     onClick={handleClearAll}
-                    className="h-6 rounded-full border-2 border-dashed border-gray-300/30 px-3 text-[10px] font-black text-pup-maroon transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase"
+                    className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase dark:border-white/10 dark:text-primary dark:bg-red-950/30"
                 >
                     CLEAR ALL FILTERS
                 </Button>
@@ -479,15 +479,15 @@ export default function DigitizationComplianceTab({
           </div>
         )}
 
-        <div className="p-4 bg-gray-50/50 flex-none border-b border-gray-200">
+        <div className="p-4 bg-gray-50 flex-none border-b border-gray-200 dark:bg-white/5 dark:border-white/10">
           <div className="flex flex-col lg:flex-row lg:items-end gap-4 justify-between">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 flex-1">
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-widest">
+                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-widest dark:text-zinc-400">
                     Student Status
                 </label>
                 <Select
-                  className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-pup-maroon/20 focus:border-gray-300 hover:border-gray-400"
+                  className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-pup-maroon/20 focus:border-gray-300 hover:border-gray-400 dark:bg-card dark:text-zinc-200 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
                 >
@@ -497,12 +497,12 @@ export default function DigitizationComplianceTab({
                 </Select>
               </div>
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-widest">
+                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-widest dark:text-zinc-400">
                   Course
                 </label>
                 <div className="relative">
                   <Select
-                    className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-pup-maroon/20 focus:border-gray-300 hover:border-gray-400 disabled:opacity-60"
+                    className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-pup-maroon/20 focus:border-gray-300 hover:border-gray-400 disabled:opacity-60 dark:bg-card dark:text-zinc-200 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
                     value={courseFilter}
                     onChange={(e) => setCourseFilter(e.target.value)}
                     disabled={coursesLoading}
@@ -517,7 +517,7 @@ export default function DigitizationComplianceTab({
                   </Select>
                   {coursesLoading && (
                     <div className="absolute right-8 top-1/2 -translate-y-1/2">
-                      <i className="ph-bold ph-spinner animate-spin text-gray-400" />
+                      <i className="ph-bold ph-spinner animate-spin text-gray-400 dark:text-zinc-500" />
                     </div>
                   )}
                 </div>
@@ -528,9 +528,9 @@ export default function DigitizationComplianceTab({
                   pressed={requireApproved}
                   onPressedChange={setRequireApproved}
                   className={cn(
-                    "h-10 px-4 gap-2 rounded-brand border border-gray-300 font-bold text-[10px] uppercase tracking-wider transition-all select-none w-full sm:w-auto",
-                    "hover:bg-gray-50 hover:text-gray-700 hover:border-gray-400",
-                    "data-[state=on]:bg-pup-maroon data-[state=on]:text-white data-[state=on]:border-gray-300 data-[state=on]:shadow-md"
+                    "h-10 px-4 gap-2 rounded-brand border border-gray-300 dark:border-white/10 font-bold text-[10px] uppercase tracking-wider transition-all select-none w-full sm:w-auto",
+                    "hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card hover:text-gray-700 dark:text-zinc-200 dark:hover:text-zinc-200 dark:text-zinc-300 hover:border-gray-400",
+                    "data-[state=on]:bg-pup-maroon dark:bg-red-600 data-[state=on]:text-white data-[state=on]:border-gray-300 dark:border-white/10 data-[state=on]:shadow-md dark:shadow-none"
                   )}
                 >
                   <i
@@ -547,47 +547,47 @@ export default function DigitizationComplianceTab({
           </div>
         </div>
 
-        <CardContent className="flex-1 flex flex-col min-h-0 p-6 overflow-auto bg-white">
+        <CardContent className="flex-1 flex flex-col min-h-0 p-6 overflow-auto bg-white dark:bg-card">
           {loading && !data ? (
             <div className="space-y-8 animate-pulse">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 {[1, 2, 3, 4].map((i) => (
-                  <Skeleton key={i} className="h-28 rounded-xl bg-gray-100" />
+                  <Skeleton key={i} className="h-28 rounded-xl bg-gray-100 dark:bg-muted" />
                 ))}
               </div>
               <div className="space-y-4">
                 <div className="flex justify-between">
-                   <Skeleton className="h-3 w-40 rounded-full bg-gray-100" />
-                   <Skeleton className="h-4 w-12 rounded-full bg-gray-100" />
+                   <Skeleton className="h-3 w-40 rounded-full bg-gray-100 dark:bg-muted" />
+                   <Skeleton className="h-4 w-12 rounded-full bg-gray-100 dark:bg-muted" />
                 </div>
-                <Skeleton className="h-4 w-full rounded-full bg-gray-100" />
+                <Skeleton className="h-4 w-full rounded-full bg-gray-100 dark:bg-muted" />
               </div>
-              <div className="border border-gray-100 rounded-xl overflow-hidden">
-                <Skeleton className="h-10 w-full bg-gray-50" />
+              <div className="border border-gray-100 rounded-xl overflow-hidden dark:border-white/10">
+                <Skeleton className="h-10 w-full bg-gray-50 dark:bg-card" />
                 <div className="p-4 space-y-4">
                   {[1, 2, 3, 4, 5].map(i => (
-                    <Skeleton key={i} className="h-8 w-full bg-gray-50/50" />
+                    <Skeleton key={i} className="h-8 w-full bg-gray-50 dark:bg-muted" />
                   ))}
                 </div>
               </div>
             </div>
           ) : error ? (
-            <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500">
+            <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
-                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
+                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary dark:text-primary" />
                 </EmptyMedia>
-                <EmptyTitle className="text-lg font-bold text-gray-900">Data Unavailable</EmptyTitle>
-                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600">
+                <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">Data Unavailable</EmptyTitle>
+                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
                   {error}
                 </EmptyDescription>
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  onClick={load}
-                  className="mt-6 flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 uppercase tracking-wide" 
+                  onClick={() => load(true)}
+                  className="mt-6 flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 uppercase tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10" 
                 >
-                  <i className="ph-bold ph-arrows-clockwise"></i>
+                  <i className={cn("ph-bold ph-arrows-clockwise", manualLoading && "animate-spin")}></i>
                   Retry Connection
                 </Button>
               </EmptyHeader>
@@ -597,77 +597,77 @@ export default function DigitizationComplianceTab({
               {/* Stats Cards - Avg Completeness first for hierarchy */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
 
-                {/* Avg. Completeness — Primary Accent Card */}
-                <div className="group relative overflow-hidden rounded-xl border border-[#5c1520] bg-[#7a1e28] p-5 shadow-sm transition-all">
+                {/* Completeness Card */}
+                <div className="group relative overflow-hidden rounded-xl border border-red-950 bg-linear-to-br from-red-700 to-red-950 p-5 shadow-sm transition-all dark:shadow-none">
                   <i className="ph-duotone ph-chart-pie pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-20" />
                   <div className="relative z-10">
-                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-[#f7c9ce] uppercase">
-                      <i className="ph-bold ph-chart-pie" /> Avg. Completeness
+                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-red-200 uppercase">
+                      <i className="ph-bold ph-chart-pie" /> Completeness
                     </div>
                     <div className="text-3xl font-black text-white">
                       {summary?.percentDigitized != null ? `${summary.percentDigitized}%` : "0%"}
                     </div>
-                    <div className="mt-1 text-[10px] font-medium text-[#f7c9ce]/80">
-                      Overall record health index
+                    <div className="mt-1 text-[10px] font-medium text-red-200/80">
+                      Overall record health
                     </div>
-                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-black/20">
+                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/5">
                       <div
-                        className="h-full bg-emerald-400 transition-all duration-1000 ease-out"
+                        className="h-full bg-linear-to-r from-emerald-400 to-emerald-500 transition-all duration-1000 ease-out"
                         style={{ width: `${progressWidth}%` }}
                       />
                     </div>
                   </div>
                 </div>
 
-                {/* Total Students — Light Card */}
-                <div className="group relative overflow-hidden rounded-xl border border-[#7a1e28]/15 bg-[#fdf6f6] p-5 shadow-sm transition-all">
-                  <i className="ph-duotone ph-users-three pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-[#7a1e28] opacity-10" />
+                {/* Total Students — Dark Blue Card */}
+                <div className="group relative overflow-hidden rounded-xl border border-blue-950 bg-linear-to-br from-blue-800 to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+                  <i className="ph-duotone ph-users-three pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
                   <div className="relative z-10">
-                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-[#9e5a62] uppercase">
-                      <i className="ph-bold ph-users-three" /> Total Students
+                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-blue-200 uppercase">
+                      <i className="ph-bold ph-users-three" /> Students
                     </div>
-                    <div className="text-3xl font-black text-[#7a1e28]">
+                    <div className="text-3xl font-black text-white">
                       {summary?.totalStudents?.toLocaleString?.() ?? summary?.totalStudents}
                     </div>
-                    <div className="mt-1 text-[10px] font-medium text-[#b07078]">
-                      Enrolled Students
+                    <div className="mt-1 text-[10px] font-medium text-blue-200/80">
+                      Total Enrollment
                     </div>
                   </div>
                 </div>
 
-                {/* Fully Digitized — Light Card */}
-                <div className="group relative overflow-hidden rounded-xl border border-[#7a1e28]/15 bg-[#fdf6f6] p-5 shadow-sm transition-all">
-                  <i className="ph-duotone ph-check-square-offset pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-[#7a1e28] opacity-10" />
+                {/* Fully Digitized — Dark Amber Card */}
+                <div className="group relative overflow-hidden rounded-xl border border-amber-950 bg-linear-to-br from-amber-700 to-amber-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+                  <i className="ph-duotone ph-check-square-offset pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
                   <div className="relative z-10">
-                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-[#9e5a62] uppercase">
-                      <i className="ph-bold ph-check-square-offset" /> Fully Digitized
+                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-amber-100 uppercase">
+                      <i className="ph-bold ph-check-square-offset" /> Complete
                     </div>
-                    <div className="text-3xl font-black text-[#7a1e28]">
+                    <div className="text-3xl font-black text-white">
                       {summary?.digitizedStudents?.toLocaleString?.() ?? summary?.digitizedStudents}
                     </div>
-                    <div className="mt-1 text-[10px] font-bold text-emerald-600 flex items-center gap-1.5">
-                      <i className="ph-bold ph-trend-up" /> 100% Complete
+                    <div className="mt-1 text-[10px] font-bold text-white flex items-center gap-1.5">
+                      <i className="ph-bold ph-trend-up text-emerald-400" /> 100% Validated
                     </div>
                   </div>
                 </div>
 
-                {/* Archive Health — Light Card with SLA-style Tooltip */}
-                <div className="group relative overflow-hidden rounded-xl border border-[#7a1e28]/15 bg-[#fdf6f6] p-5 shadow-sm transition-all">
-                  <i className="ph-duotone ph-shield-check pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-[#7a1e28] opacity-10" />
+                {/* Archive Health — Dark Green Card */}
+                <div className="group relative overflow-hidden rounded-xl border border-emerald-950 bg-linear-to-br from-emerald-800 to-emerald-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+                  <i className="ph-duotone ph-shield-check pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
                   <div className="relative z-10">
-                    <div className="mb-1 flex items-center gap-2 text-[10px] font-bold tracking-widest text-[#9e5a62] uppercase">
-                      <i className="ph-bold ph-shield-check" /> Archive Health
+                    <div className="mb-1 flex items-center gap-2 text-[10px] font-bold tracking-widest text-emerald-100 uppercase">
+                      <i className="ph-bold ph-shield-check" /> Health
                       <TooltipProvider>
                         <Tooltip delayDuration={300}>
                           <TooltipTrigger asChild>
-                            <i className="ph-bold ph-info text-sm text-[#7a1e28] transition-opacity hover:opacity-70 cursor-pointer" />
+                            <i className="ph-bold ph-info text-sm text-emerald-200 transition-opacity hover:opacity-70 cursor-pointer" />
                           </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-[240px] border-[#7a1e28]/20 bg-[#7a1e28] p-3 text-white">
-                            <p className="font-bold leading-tight text-xs mb-1">Health Thresholds:</p>
+                          <TooltipContent side="top" className="max-w-[240px] border-emerald-800 bg-emerald-950 p-3 text-white">
+                            <p className="font-bold leading-tight text-xs mb-1">Status Thresholds:</p>
                             <ul className="space-y-1 text-[10px] font-medium opacity-90">
-                              <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-500" /> 95%+ Excellent</li>
-                              <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-blue-500" /> 80%+ Healthy</li>
-                              <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-500" /> Below 80% Warning</li>
+                              <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-400" /> 95%+ Excellent</li>
+                              <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-blue-400" /> 80%+ Healthy</li>
+                              <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-400" /> Below 80% Action</li>
                             </ul>
                           </TooltipContent>
                         </Tooltip>
@@ -675,89 +675,88 @@ export default function DigitizationComplianceTab({
                     </div>
                     <div className="mt-1">
                       {summary?.percentDigitized >= 95 ? (
-                        <Badge className="bg-emerald-50 text-emerald-700 border-emerald-200 font-black text-[10px] uppercase tracking-wider px-2 py-1">
+                        <Badge className="bg-emerald-400 text-emerald-950 border-0 font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5">
                           Excellent
                         </Badge>
                       ) : summary?.percentDigitized >= 80 ? (
-                        <Badge className="bg-blue-50 text-blue-700 border-blue-200 font-black text-[10px] uppercase tracking-wider px-2 py-1">
+                        <Badge className="bg-blue-400 text-blue-950 border-0 font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5">
                           Healthy
                         </Badge>
                       ) : (
-                        <Badge className="bg-amber-50 text-amber-700 border-amber-200 font-black text-[10px] uppercase tracking-wider px-2 py-1">
-                          Action Needed
+                        <Badge className="bg-amber-400 text-amber-950 border-0 font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5">
+                          Warning
                         </Badge>
                       )}
                     </div>
-                    <div className="mt-2 text-[10px] font-medium text-[#b07078]">
-                      Compliance rating
+                    <div className="mt-2 text-[10px] font-medium text-emerald-100/80">
+                      Overall Rating
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="mb-2 flex items-center justify-between gap-2">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
-                  Overall System Completeness
+                <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] dark:text-zinc-500">
+                  Digital Transformation Status
                 </span>
-                <span className="text-sm font-black text-gray-900 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100 shadow-sm">
+                <span className="text-sm font-black text-gray-900 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100 shadow-sm dark:text-zinc-50 dark:bg-card dark:border-white/10 dark:shadow-none">
                   {summary?.percentDigitized != null ? `${summary.percentDigitized}%` : "N/A"}
                 </span>
               </div>
-              <div className="h-4 w-full rounded-full bg-gray-100 border border-gray-200 overflow-hidden mb-8 shadow-inner">
+              <div className="h-4 w-full rounded-full bg-gray-100 overflow-hidden mb-8 shadow-inner dark:shadow-none dark:bg-muted">
                 <div
                   className={cn(
-                    "h-full shadow-sm transition-all duration-1000 ease-out",
-                    summary?.percentDigitized >= 95 ? "bg-emerald-500" : summary?.percentDigitized >= 80 ? "bg-pup-maroon" : "bg-amber-500"
+                    "h-full shadow-sm dark:shadow-none transition-all duration-1000 ease-out",
+                    summary?.percentDigitized >= 95 ? "bg-linear-to-r from-emerald-400 to-emerald-600" : summary?.percentDigitized >= 80 ? "bg-linear-to-r from-red-700 to-pup-maroon" : "bg-linear-to-r from-amber-400 to-amber-600"
                   )}
                   style={{ width: `${progressWidth}%` }}
                 />
               </div>
 
-              <div className="flex flex-wrap gap-8 mb-8 bg-gray-50/50 p-6 rounded-2xl border border-gray-100 shadow-inner">
+              <div className="flex flex-wrap gap-8 mb-8 bg-gray-50 p-6 rounded-2xl border border-gray-100 shadow-inner dark:bg-white/5 dark:border-white/10 dark:shadow-none">
                 <div>
-                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Digitized Files</div>
-                  <div className="text-xl font-black text-gray-900 tracking-tight">{summary?.totalDigitizedDocsCount?.toLocaleString() || 0}</div>
+                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-center dark:text-zinc-500">Digitized</div>
+                  <div className="text-xl font-black text-gray-900 tracking-tight text-center dark:text-zinc-50">{summary?.totalDigitizedDocsCount?.toLocaleString() || 0}</div>
                 </div>
                 <div>
-                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Required Files</div>
-                  <div className="text-xl font-black text-gray-900 tracking-tight">{summary?.totalExpectedDocsCount?.toLocaleString() || 0}</div>
+                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-center dark:text-zinc-500">Required</div>
+                  <div className="text-xl font-black text-gray-900 tracking-tight text-center dark:text-zinc-50">{summary?.totalExpectedDocsCount?.toLocaleString() || 0}</div>
                 </div>
                 <div>
-                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Full Record Rate</div>
-                  <div className="text-xl font-black text-emerald-600 tracking-tight">{summary?.fullyDigitizedRate != null ? `${summary.fullyDigitizedRate}%` : "0%"}</div>
+                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-center dark:text-zinc-500">Efficiency</div>
+                  <div className="text-xl font-black text-emerald-600 tracking-tight text-center dark:text-emerald-400">{summary?.fullyDigitizedRate != null ? `${summary.fullyDigitizedRate}%` : "0%"}</div>
                 </div>
                 <div className="sm:ml-auto">
-                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 italic">Report Formula</div>
-                  <div className="text-[11px] font-medium text-gray-500 max-w-xs leading-relaxed">
+                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 italic dark:text-zinc-500">Calculation Method</div>
+                  <div className="text-[11px] font-medium text-gray-500 max-w-xs leading-relaxed dark:text-zinc-400">
                     {meta?.definitions?.expectedCountFormula}
                   </div>
                 </div>
               </div>
 
-              <div className="flex-1 min-h-0 flex flex-col border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm mt-4">
-                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 px-6 py-4 bg-gray-50/50 border-b border-gray-200">
+              <div className="flex-1 min-h-0 flex flex-col border border-gray-200 rounded-2xl overflow-hidden bg-white shadow-sm mt-4 dark:border-white/10 dark:bg-card dark:shadow-none">                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200 dark:bg-white/5 dark:border-white/10">
                   <div className="flex items-center gap-3">
                     <div>
-                        <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1">
-                        Academic Program Breakdown
+                        <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1 dark:text-zinc-400">
+                        Program Breakdown
                         </h4>
                         <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase">
-                                Total Programs: <span className="text-gray-900 font-bold">{sortedByCourse.length}</span>
+                            <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                                Total: <span className="text-gray-900 font-bold dark:text-zinc-50">{sortedByCourse.length}</span>
                             </span>
                         </div>
                     </div>
                   </div>
                   <div className="min-w-[300px] flex-1 sm:max-w-md">
-                    <label className="mb-1 block text-[10px] font-bold text-gray-500 uppercase tracking-widest">
+                    <label className="mb-1 block text-[10px] font-bold text-gray-500 uppercase tracking-widest dark:text-zinc-400">
                         Search Program
                     </label>
                     <div className="relative">
-                        <i className="ph-bold ph-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"></i>
+                        <i className="ph-bold ph-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-gray-400 dark:text-zinc-500"></i>
                         <Input
                         type="text"
-                        placeholder="Search by program code..."
-                        className="h-10 w-full rounded-brand border border-gray-300 bg-white pl-10 text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none placeholder:text-gray-400 placeholder:font-normal"
+                        placeholder="Search program..."
+                        className="h-10 w-full rounded-brand border border-gray-300 bg-white pl-10 text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none placeholder:text-gray-400 placeholder:font-normal dark:bg-card dark:text-zinc-500 dark:border-white/10"
                         value={tableSearch}
                         onChange={(e) => setTableSearch(e.target.value)}
                         />
@@ -765,15 +764,15 @@ export default function DigitizationComplianceTab({
                   </div>
                 </div>
 
-                <div className="overflow-auto flex-1 border border-gray-200 shadow-inner rounded-b-2xl min-h-[450px]">
+                <div className="overflow-auto flex-1 border border-gray-200 shadow-inner rounded-b-2xl min-h-[450px] dark:border-white/10 dark:shadow-none">
                   {sortedByCourse.length > 0 ? (
                     <Table className="min-w-full text-sm">
-                      <TableHeader className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50">
-                        <TableRow className="hover:bg-transparent text-left text-xs tracking-wider text-gray-600 uppercase">
+                      <TableHeader className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
+                        <TableRow className="hover:bg-transparent text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300">
                           <TableHead className="py-4 px-6 font-bold">
                             <button
                               onClick={() => handleSort("courseCode")}
-                              className="group flex items-center gap-1.5 rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                              className="group flex items-center gap-1.5 rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none dark:bg-muted dark:hover:bg-white/10"
                             >
                               Program <SortIndicator column="courseCode" />
                             </button>
@@ -781,56 +780,56 @@ export default function DigitizationComplianceTab({
                           <TableHead className="py-4 px-6 text-center font-bold">
                             <button
                               onClick={() => handleSort("total")}
-                              className="group mx-auto flex items-center gap-1.5 rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                              className="group mx-auto flex items-center gap-1.5 rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none dark:bg-muted dark:hover:bg-white/10"
                             >
-                              Students <SortIndicator column="total" />
+                              Total <SortIndicator column="total" />
                             </button>
                           </TableHead>
                           <TableHead className="py-4 px-6 text-center font-bold">
                             <button
                               onClick={() => handleSort("digitized")}
-                              className="group mx-auto flex items-center gap-1.5 rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                              className="group mx-auto flex items-center gap-1.5 rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none dark:bg-muted dark:hover:bg-white/10"
                             >
-                              Complete <SortIndicator column="digitized" />
+                              Done <SortIndicator column="digitized" />
                             </button>
                           </TableHead>
                           <TableHead className="py-4 px-6 text-right font-bold">
                             <button
                               onClick={() => handleSort("percent")}
-                              className="group ml-auto flex items-center gap-1.5 rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                              className="group ml-auto flex items-center gap-1.5 rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none dark:bg-muted dark:hover:bg-white/10"
                             >
-                              Completeness <SortIndicator column="percent" />
+                              Health <SortIndicator column="percent" />
                             </button>
                           </TableHead>
                         </TableRow>
                       </TableHeader>
-                      <TableBody className="divide-y divide-gray-200">
+                      <TableBody className="divide-y divide-gray-200 dark:divide-white/10">
                         {sortedByCourse.map((row) => (
-                          <TableRow key={row.courseCode} className="group hover:bg-red-50/20 transition-all border-b border-gray-100 last:border-0">
-                            <TableCell className="py-4 px-6 font-inter font-bold text-pup-maroon text-xs">
+                          <TableRow key={row.courseCode} className="group hover:bg-red-50 transition-all border-b border-gray-100 last:border-0 dark:bg-red-950/30 dark:border-white/10">
+                            <TableCell className="py-4 px-6 font-inter font-bold text-pup-maroon dark:text-primary text-xs dark:text-primary">
                               {row.courseCode || "—"}
                             </TableCell>
-                            <TableCell className="py-4 px-6 text-gray-700 font-medium text-center">
+                            <TableCell className="py-4 px-6 text-gray-700 font-medium text-center dark:text-zinc-200">
                               {row.total?.toLocaleString?.() ?? row.total}
                             </TableCell>
                             <TableCell className="py-4 px-6 text-center">
-                              <span className="text-emerald-600 font-black">
+                              <span className="text-emerald-600 font-black dark:text-emerald-400">
                                 {row.digitized?.toLocaleString?.() ?? row.digitized}
                               </span>
-                              <span className="text-[10px] text-gray-400 font-bold ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <span className="text-[10px] text-gray-400 font-bold ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity dark:text-zinc-500">
                                 ({row.fullyDigitizedRate}%)
                               </span>
                             </TableCell>
                             <TableCell className="py-4 px-6 text-right">
                               <div className="flex items-center justify-end gap-4">
-                                <span className="text-gray-900 font-black text-xs">
+                                <span className="text-gray-900 font-black text-xs dark:text-zinc-50">
                                   {row.percent != null ? `${row.percent}%` : "0%"}
                                 </span>
-                                <div className="w-20 h-1.5 rounded-full bg-gray-100 overflow-hidden border border-gray-200 hidden sm:block shadow-inner">
+                                <div className="w-20 h-1.5 rounded-full bg-gray-100 overflow-hidden hidden sm:block shadow-inner dark:shadow-none dark:bg-muted">
                                   <div
                                     className={cn(
                                       "h-full transition-all duration-700",
-                                      row.percent >= 90 ? "bg-emerald-500" : "bg-pup-maroon"
+                                      row.percent >= 90 ? "bg-linear-to-r from-emerald-400 to-emerald-600" : "bg-linear-to-r from-red-700 to-pup-maroon"
                                     )}
                                     style={{ width: `${Math.min(100, row.percent || 0)}%` }}
                                   />
@@ -842,23 +841,23 @@ export default function DigitizationComplianceTab({
                       </TableBody>
                     </Table>
                   ) : (
-                    <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500">
+                    <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                       <EmptyHeader className="flex flex-col items-center gap-0">
-                        <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
-                          <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon" />
+                        <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+                          <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon dark:text-primary dark:text-primary" />
                         </EmptyMedia>
-                        <EmptyTitle className="text-lg font-bold text-gray-900">No program data</EmptyTitle>
-                        <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600">
+                        <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">No data found</EmptyTitle>
+                        <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
                           {tableSearch 
-                            ? `No academic programs found matching "${tableSearch}".` 
-                            : "No student records available to analyze for compliance metrics."}
+                            ? `No results found for "${tableSearch}".` 
+                            : "No student records available to analyze."}
                         </EmptyDescription>
                         {hasActiveFilters && (
                             <Button 
                                 variant="outline" 
                                 size="sm" 
                                 onClick={handleClearAll}
-                                className="mt-4 flex items-center gap-2 rounded-brand border border-gray-300 px-4 text-[10px] font-bold text-gray-600 hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon sm:text-xs shadow-sm transition-colors"
+                                className="mt-4 flex items-center gap-2 rounded-brand border border-gray-300 px-4 text-[10px] font-bold text-gray-600 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 sm:text-xs shadow-sm transition-colors dark:text-zinc-300 dark:hover:border-zinc-700 dark:bg-red-950/30 dark:shadow-none dark:border-white/10"
                             >
                                 <i className="ph-bold ph-x-circle"></i>
                                 CLEAR ALL FILTERS
@@ -887,53 +886,47 @@ export default function DigitizationComplianceTab({
           setReportOpen(open)
         }}
       >
-        <DialogContent 
-          hideClose={isFullscreenPreview}
-          className={cn(
-            "flex flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out font-inter",
-            isFullscreenPreview 
-                ? "fixed h-screen w-screen max-w-none sm:max-w-none m-0 rounded-none z-[100] left-1/2 top-1/2 translate-x-[-50%] translate-y-[-50%] sm:w-screen sm:h-screen" 
-                : "h-[90vh] w-[96vw] max-w-[96vw] xl:max-w-[1200px] rounded-brand"
-        )}>
-          <DialogHeader className="shrink-0 border-b border-gray-100 bg-gray-50/50 p-6">
+        <DialogContent
+          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out font-inter xl:max-w-[1200px] rounded-brand dark:border-white/10 dark:bg-muted"
+        >
+          <DialogHeader className="shrink-0 border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon shadow-sm">
+                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
                   <i className="ph-duotone ph-file-text text-2xl"></i>
                 </div>
                 <div className="min-w-0">
-                  <DialogTitle className="text-left text-xl leading-none font-black tracking-tight text-gray-900">
-                    Formal Compliance Report
+                  <DialogTitle className="text-left text-xl leading-none font-black tracking-tight text-gray-900 dark:text-zinc-50">
+                  Compliance Report
                   </DialogTitle>
-                  <p className="mt-1.5 text-left text-sm font-medium text-gray-500">
-                    Filter: {statusFilter} | {courseFilter || "All"} {requireApproved && " | Approved Only"}
+                  <p className="mt-1.5 text-left text-sm font-medium text-gray-500 dark:text-zinc-400">
+                  Filter: {statusFilter} | {courseFilter || "All"} {requireApproved && " | Approved Only"}
                   </p>
                 </div>
               </div>
-
-              <div className={cn("flex items-center gap-2", !isFullscreenPreview && "mr-8")}>
-                <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
-                    className="h-10 gap-2 rounded-brand border-gray-300 bg-white font-bold text-gray-700 hover:bg-gray-50 active:scale-95 shadow-sm"
-                >
-                    <i className={cn("ph-bold", isFullscreenPreview ? "ph-corners-in" : "ph-corners-out")} />
-                    {isFullscreenPreview ? "EXIT FULL SCREEN" : "FULL SCREEN"}
-                </Button>
-              </div>
             </div>
           </DialogHeader>
-
-          <div className="relative flex-1 overflow-hidden bg-gray-100">
+          <div className="relative flex-1 overflow-hidden bg-gray-100 dark:bg-muted">
             {pdfBlobUrl ? (
-              <div className="relative h-full w-full">
+              <div className={cn("relative h-full w-full transition-all duration-300", isFullscreenPreview ? "fixed inset-0 z-[9999] bg-white dark:bg-card" : "")}>
+                {isFullscreenPreview && (
+                  <div className="absolute top-4 right-4 z-[10000]">
+                    <Button
+                      variant="default"
+                      size="icon"
+                      onClick={() => setIsFullscreenPreview(false)}
+                      className="h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70 backdrop-blur-md border-0"
+                    >
+                      <i className="ph-bold ph-x text-lg"></i>
+                    </Button>
+                  </div>
+                )}
                 {!previewFrameReady && (
-                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white p-10">
+                  <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-white p-10 dark:bg-card">
                     <div className="w-full max-w-2xl space-y-4">
-                      <Skeleton className="h-8 w-64" />
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-[60vh] w-full" />
+                      <Skeleton className="h-8 w-64 dark:bg-muted" />
+                      <Skeleton className="h-4 w-full dark:bg-muted" />
+                      <Skeleton className="h-[60vh] w-full dark:bg-muted" />
                     </div>
                   </div>
                 )}
@@ -945,35 +938,52 @@ export default function DigitizationComplianceTab({
                 />
               </div>
             ) : (
-              <div className="flex h-full w-full flex-col items-center justify-center bg-white p-10">
+              <div className="flex h-full w-full flex-col items-center justify-center bg-white p-10 dark:bg-card">
                 <div className="flex flex-col items-center gap-4">
-                  <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon" />
-                  <p className="text-sm font-bold text-gray-500 uppercase tracking-widest">
-                    Generating Report Preview...
+                  <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary dark:text-primary" />
+                  <p className="text-sm font-bold text-gray-500 uppercase tracking-widest dark:text-zinc-400">
+                    Generating...
                   </p>
                 </div>
               </div>
             )}
           </div>
 
-          <div className="flex shrink-0 justify-end gap-3 border-t border-gray-100 bg-white p-4">
+          <div className="flex shrink-0 justify-between items-center gap-3 border-t border-gray-100 bg-white p-4 dark:border-white/10 dark:bg-card">
             <Button
               variant="outline"
-              onClick={() => setReportOpen(false)}
-              className="h-11 px-6 font-bold border-gray-300 shadow-sm hover:border-gray-300 hover:bg-red-50/30 rounded-brand transition-colors"
+              size="icon"
+              onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
+              className={cn(
+                "h-11 w-11 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card transition-all hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card shadow-sm dark:shadow-none",
+                isFullscreenPreview && "bg-pup-maroon dark:bg-red-600 text-white hover:bg-pup-darkMaroon border-pup-darkMaroon"
+              )}
             >
-              CLOSE PREVIEW
+              <i className={cn("ph-bold text-xl", isFullscreenPreview ? "ph-corners-in" : "ph-corners-out")}></i>
             </Button>
-            <Button
-              onClick={handlePrint}
-              disabled={!pdfBlobUrl}
-              className="flex h-11 items-center gap-2 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 font-black text-white shadow-sm rounded-brand transition-colors"
-            >
-              <i className="ph-bold ph-printer text-lg"></i> FINALIZE AND PRINT REPORT
-            </Button>
+
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                onClick={() => setReportOpen(false)}
+                className="h-11 px-6 font-bold border-gray-300 shadow-sm hover:border-gray-300 hover:bg-red-50 rounded-brand transition-colors dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+              >
+                CLOSE
+              </Button>
+              <Button
+                onClick={handlePrint}
+                disabled={!pdfBlobUrl}
+                className="flex h-11 items-center gap-2 bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-8 font-black text-white shadow-sm rounded-brand transition-colors dark:shadow-none"
+              >
+                <i className="ph-bold ph-floppy-disk text-lg"></i> SAVE TO DEVICE
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
     </div>
   );
 }
+
+
+

@@ -9,8 +9,63 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { formatPHDateTime } from "@/lib/timeFormat";
+import { formatPHDateTimeParts } from "@/lib/timeFormat";
 import { Select } from "@/components/ui/select"
+import { isAdminRole } from "@/lib/roleUtils";
+import PageHeader from "@/components/shared/PageHeader";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+
+function getActionIcon(action) {
+  const act = String(action || "").toLowerCase();
+  if (act.includes("login")) return "ph-duotone ph-sign-in";
+  if (act.includes("logout")) return "ph-duotone ph-sign-out";
+  if (act.includes("create") || act.includes("add")) return "ph-duotone ph-plus-circle";
+  if (act.includes("delete") || act.includes("remove")) return "ph-duotone ph-trash";
+  if (act.includes("restore")) return "ph-duotone ph-arrow-counter-clockwise";
+  if (act.includes("update") || act.includes("edit")) return "ph-duotone ph-pencil-line";
+  if (act.includes("upload") || act.includes("ingest")) return "ph-duotone ph-cloud-arrow-up";
+  if (act.includes("download") || act.includes("export")) return "ph-duotone ph-download-simple";
+  if (act.includes("view") || act.includes("preview")) return "ph-duotone ph-eye";
+  if (act.includes("approve")) return "ph-duotone ph-check-circle";
+  if (act.includes("reject")) return "ph-duotone ph-x-circle";
+  if (act.includes("archive")) return "ph-duotone ph-archive";
+  if (act.includes("rotate") || act.includes("password")) return "ph-duotone ph-key";
+  if (act.includes("backup")) return "ph-duotone ph-database";
+  return "ph-duotone ph-activity";
+}
+
+function getSeverityConfig(sev) {
+  switch (String(sev || "").toUpperCase()) {
+    case "CRITICAL":
+      return {
+        bg: "bg-red-50 dark:bg-red-950/30",
+        text: "text-red-700",
+        border: "border-red-200",
+        icon: "ph-fill ph-warning-circle"
+      };
+    case "WARNING":
+      return {
+        bg: "bg-amber-50 dark:bg-amber-950/30",
+        text: "text-amber-700",
+        border: "border-amber-200",
+        icon: "ph-fill ph-warning"
+      };
+    default:
+      return {
+        bg: "bg-blue-50 dark:bg-blue-950/30",
+        text: "text-blue-700",
+        border: "border-blue-200",
+        icon: "ph-fill ph-info"
+      };
+  }
+}
 
 export default function AccountActivityPage() {
   const router = useRouter();
@@ -30,9 +85,8 @@ export default function AccountActivityPage() {
   const handleLogout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
+    localStorage.setItem("pup-logout", Date.now());
     router.push("/");
   };
 
@@ -42,7 +96,9 @@ export default function AccountActivityPage() {
         const res = await fetch("/api/auth/me");
         const json = await res.json().catch(() => null);
         if (!res.ok || !json?.ok) {
-          router.push("/");
+          if (res.status === 401) {
+            router.push("/");
+          }
           return;
         }
         setAuthUser(json.data);
@@ -63,17 +119,7 @@ export default function AccountActivityPage() {
       );
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to load activity");
-      setRows(Array.isArray(json.data) ? json.data.map(r => ({
-        id: r.id,
-        time: formatPHDateTime(r.created_at),
-        action: r.action,
-        details: r.details || "—",
-        severity: r.severity || "INFO",
-        userAgent: r.user_agent || "—",
-        entityType: r.entity_type || "",
-        entityId: r.entity_id || "",
-        ip: r.ip || "—"
-      })) : []);
+      setRows(Array.isArray(json.data) ? json.data : []);
       setTotal(Number(json.total) || 0);
     } catch {
       setRows([]);
@@ -90,9 +136,7 @@ export default function AccountActivityPage() {
       if (res.ok && json?.ok) {
         setStats(json.data);
       }
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
   }, []);
 
   useEffect(() => {
@@ -105,333 +149,356 @@ export default function AccountActivityPage() {
   const totalPages = Math.max(1, Math.ceil(total / perPage));
   const displayPage = Math.min(page, totalPages);
 
-  const displayRows = useMemo(() => rows, [rows]);
-
-  const getSeverityColor = (sev) => {
-    switch (String(sev || "").toUpperCase()) {
-      case "CRITICAL": return "bg-red-100 text-red-700 border-red-200";
-      case "WARNING": return "bg-amber-100 text-amber-700 border-amber-200";
-      default: return "bg-blue-100 text-blue-700 border-blue-200";
-    }
-  };
-
   if (loadingUser) {
     return (
-      <div className="min-h-screen bg-gray-50/50">
-        <div className="h-16 bg-white border-b border-gray-200" />
-        <main className="max-w-[1100px] mx-auto p-6 space-y-4">
-          <Skeleton className="h-8 w-64" />
-          <Skeleton className="h-12 w-full" />
-          <Skeleton className="h-[420px] w-full" />
+      <div className="min-h-screen bg-gray-50 animate-fade-in dark:bg-white/5">
+        <div className="h-16 bg-white border-b border-gray-200 dark:bg-card dark:border-white/10" />
+        <main className="max-w-[1200px] mx-auto p-8 space-y-8">
+          <div className="flex flex-col gap-2">
+            <Skeleton className="w-64 h-8" />
+            <Skeleton className="w-96 h-4" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+             <Skeleton className="h-32 rounded-2xl" />
+             <Skeleton className="h-32 rounded-2xl" />
+             <Skeleton className="h-32 rounded-2xl" />
+             <Skeleton className="h-32 rounded-2xl" />
+          </div>
+          <Skeleton className="h-[500px] w-full rounded-2xl" />
         </main>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50/50 font-inter">
+    <div className="min-h-screen flex flex-col bg-[#F9FAFB] font-inter">
       <Header authUser={authUser} onLogout={handleLogout} />
 
-      <main className="flex-1 w-full max-w-[1200px] mx-auto py-8 px-6">
-        {/* Sleek Page Header */}
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-gray-200 pb-6">
-          <div>
-            <div className="flex items-center gap-2 text-xs font-black text-pup-maroon uppercase tracking-widest mb-1">
-              <i className="ph-bold ph-clock-counter-clockwise"></i>
-              Audit Activity
+      <main className="flex-1 w-full max-w-[1400px] mx-auto py-10 px-6 animate-fade-in">
+        <TooltipProvider delay={200}>
+          <PageHeader
+            icon="ph-clock-counter-clockwise"
+            title="My Activity"
+            description="Review a complete audit history of actions performed by your account."
+            actions={
+              <Button
+                variant="outline"
+                onClick={() => {
+                  const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
+                  router.push(path);
+                }}
+                className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-gray-300 bg-white hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center gap-2 rounded-xl active:scale-95 dark:border-white/10 dark:bg-card"
+              >
+                <i className="ph-bold ph-caret-left"></i>
+                Return to Dashboard
+              </Button>
+            }
+          />
+
+          <Separator className="mt-8 bg-gray-200 dark:bg-zinc-700" />
+
+          {/* Stats Bar */}
+          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Total Activity - Blue */}
+            <div className="bg-blue-50 rounded-2xl p-6 border border-blue-100 shadow-sm relative overflow-hidden group hover:border-blue-200 transition-all dark:bg-blue-950/30">
+              <i className="ph-duotone ph-list-numbers absolute -right-3 -bottom-3 text-7xl opacity-10 text-blue-600 rotate-12 group-hover:scale-110 transition-transform" />
+              <div className="relative z-10">
+                <p className="text-[10px] font-black text-blue-600/60 uppercase tracking-widest mb-1.5">Total Activity</p>
+                {!stats ? (
+                  <Skeleton className="h-8 w-20 bg-blue-200/20" />
+                ) : (
+                  <>
+                    <h3 className="text-3xl font-black text-blue-900 tracking-tight">
+                      {stats.totalLogs.toLocaleString()}
+                    </h3>
+                    <p className="text-[10px] font-medium text-blue-700 mt-1">Actions performed</p>
+                  </>
+                )}
+              </div>
             </div>
-            <h1 className="text-3xl font-black text-gray-900 tracking-tight">My Activity</h1>
-            <p className="text-sm text-gray-500 font-medium mt-1">Recent actions performed by your account.</p>
+
+            {/* Actions Today - Green */}
+            <div className="bg-emerald-50 rounded-2xl p-6 border border-emerald-100 shadow-sm relative overflow-hidden group hover:border-emerald-200 transition-all dark:bg-emerald-950/30">
+              <i className="ph-duotone ph-calendar-check absolute -right-3 -bottom-3 text-7xl opacity-10 text-emerald-600 rotate-12 group-hover:scale-110 transition-transform" />
+              <div className="relative z-10">
+                <p className="text-[10px] font-black text-emerald-600/60 uppercase tracking-widest mb-1.5">Actions Today</p>
+                {!stats ? (
+                  <Skeleton className="h-8 w-20 bg-emerald-200/20" />
+                ) : (
+                  <>
+                    <h3 className="text-3xl font-black text-emerald-900 tracking-tight">
+                      {stats.logsToday.toLocaleString()}
+                    </h3>
+                    <p className="text-[10px] font-medium text-emerald-700 mt-1">Since midnight</p>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Auth History - Yellow/Amber */}
+            <div className="bg-amber-50 rounded-2xl p-6 border border-amber-100 shadow-sm relative overflow-hidden group hover:border-amber-200 transition-all dark:bg-amber-950/30">
+              <i className="ph-duotone ph-fingerprint absolute -right-3 -bottom-3 text-7xl opacity-10 text-amber-600 rotate-12 group-hover:scale-110 transition-transform" />
+              <div className="relative z-10">
+                <p className="text-[10px] font-black text-amber-600/60 uppercase tracking-widest mb-1.5">Auth History</p>
+                {!stats ? (
+                  <Skeleton className="h-8 w-20 bg-amber-200/20" />
+                ) : (
+                  <>
+                    <h3 className="text-3xl font-black text-amber-900 tracking-tight">
+                      {stats.authEvents.toLocaleString()}
+                    </h3>
+                    <p className="text-[10px] font-medium text-amber-700 mt-1">Logins & logouts</p>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Security Level - Red */}
+            <div className="bg-red-50 rounded-2xl p-6 border border-red-100 shadow-sm relative overflow-hidden group hover:border-red-200 transition-all dark:bg-red-950/30">
+              <i className="ph-duotone ph-warning-octagon absolute -right-3 -bottom-3 text-7xl opacity-10 text-red-600 rotate-12 group-hover:scale-110 transition-transform" />
+              <div className="relative z-10">
+                <p className="text-[10px] font-black text-red-600/60 uppercase tracking-widest mb-1.5">Security Level</p>
+                {!stats ? (
+                  <Skeleton className="h-8 w-20 bg-red-200/20" />
+                ) : (
+                  <>
+                    <h3 className={`text-3xl font-black tracking-tight ${stats.criticalEvents > 0 ? "text-red-600" : "text-red-900"}`}>
+                      {stats.criticalEvents.toLocaleString()}
+                    </h3>
+                    <p className="text-[10px] font-medium text-red-700 mt-1">High-severity alerts</p>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
 
-          <Button
-            variant="outline"
-            onClick={() => router.push("/account")}
-            className="h-11 px-6 font-black uppercase tracking-widest text-xs border-gray-300 hover:border-gray-300 hover:text-pup-maroon transition-all shadow-sm flex items-center gap-2 shrink-0 rounded-brand group"
-          >
-            <i className="ph-bold ph-arrow-left transition-transform group-hover:-translate-x-1"></i>
-            Return to Account
-          </Button>
-        </div>
-
-        {/* Stat Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm relative overflow-hidden group hover:border-gray-300/30 transition-all">
-            <i className="ph-duotone ph-list-numbers absolute -right-3 -bottom-3 text-6xl opacity-5 text-pup-maroon rotate-12 group-hover:scale-110 transition-transform" />
-            <div className="relative z-10">
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Total Activity</p>
-              {!stats ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <>
-                  <h3 className="text-2xl font-black text-gray-900 tracking-tight">
-                    {stats.totalLogs.toLocaleString()}
-                  </h3>
-                  <p className="text-[10px] font-medium text-gray-500 mt-0.5">Lifetime system actions</p>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="bg-[#fdf6f6] rounded-xl p-5 border border-[#7a1e28]/10 shadow-sm relative overflow-hidden group hover:border-gray-300/30 transition-all">
-            <i className="ph-duotone ph-calendar-check absolute -right-3 -bottom-3 text-6xl opacity-10 text-pup-maroon rotate-12 group-hover:scale-110 transition-transform" />
-            <div className="relative z-10">
-              <p className="text-[10px] font-black text-[#9e5a62] uppercase tracking-widest mb-1">Actions Today</p>
-              {!stats ? (
-                <Skeleton className="h-8 w-20 bg-[#7a1e28]/5" />
-              ) : (
-                <>
-                  <h3 className="text-2xl font-black text-pup-maroon tracking-tight">
-                    {stats.logsToday.toLocaleString()}
-                  </h3>
-                  <p className="text-[10px] font-medium text-[#9e5a62] mt-0.5">Performed since midnight</p>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm relative overflow-hidden group hover:border-gray-300/30 transition-all">
-            <i className="ph-duotone ph-fingerprint absolute -right-3 -bottom-3 text-6xl opacity-5 text-pup-maroon rotate-12 group-hover:scale-110 transition-transform" />
-            <div className="relative z-10">
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Auth Events</p>
-              {!stats ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <>
-                  <h3 className="text-2xl font-black text-gray-900 tracking-tight">
-                    {stats.authEvents.toLocaleString()}
-                  </h3>
-                  <p className="text-[10px] font-medium text-gray-500 mt-0.5">Logins and logout history</p>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm relative overflow-hidden group hover:border-gray-300/30 transition-all">
-            <i className="ph-duotone ph-warning-octagon absolute -right-3 -bottom-3 text-6xl opacity-5 text-red-600 rotate-12 group-hover:scale-110 transition-transform" />
-            <div className="relative z-10">
-              <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Critical Events</p>
-              {!stats ? (
-                <Skeleton className="h-8 w-20" />
-              ) : (
-                <>
-                  <h3 className={`text-2xl font-black tracking-tight ${stats.criticalEvents > 0 ? "text-red-600" : "text-gray-900"}`}>
-                    {stats.criticalEvents.toLocaleString()}
-                  </h3>
-                  <p className="text-[10px] font-medium text-gray-500 mt-0.5">Records updated or deleted</p>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <Card className="bg-white rounded-brand border border-gray-200 shadow-sm">
-          <div className="p-4 bg-gray-50/50 border-b border-gray-200">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-end">
-              <div className="lg:col-span-5">
-                <div className="flex items-center justify-between mb-1">
-                  <label className="block text-xs font-bold text-gray-700 uppercase">
-                    Search Activity Logs
-                  </label>
-                  {(search !== "" || severityFilter !== "All") && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setSearch("");
-                        setSeverityFilter("All");
+          <Card className="mt-8 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden dark:bg-card dark:border-white/10">
+            {/* Filter Bar */}
+            <div className="p-6 bg-gray-50 border-b border-gray-100 dark:bg-muted/30 dark:border-white/10">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
+                <div className="lg:col-span-6">
+                  <div className="flex items-center justify-between mb-2 px-1">
+                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest dark:text-zinc-400">
+                      Search Audit Trace
+                    </label>
+                    {(search !== "" || severityFilter !== "All") && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSearch("");
+                          setSeverityFilter("All");
+                          setPage(1);
+                        }}
+                        className="h-5 px-1.5 text-[9px] font-black text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon uppercase tracking-tighter dark:bg-red-950/30"
+                      >
+                        Clear Filters
+                      </Button>
+                    )}
+                  </div>
+                  <div className="relative group">
+                    <i className="ph-bold ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-pup-maroon transition-colors dark:text-zinc-500"></i>
+                    <Input
+                      type="text"
+                      placeholder="Search by action, details, entity, or IP..."
+                      className="pl-11 h-12 w-full rounded-xl border border-gray-200 bg-white text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50"
+                      value={search}
+                      onChange={(e) => {
+                        setSearch(e.target.value);
                         setPage(1);
                       }}
-                      className="h-5 px-1.5 text-[9px] font-bold text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon"
-                    >
-                      CLEAR ALL
-                    </Button>
-                  )}
+                    />
+                  </div>
                 </div>
-                <div className="relative">
-                  <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
-                  <Input
-                    type="text"
-                    placeholder="Search by action, details, entity, or IP..."
-                    className="pl-10 h-10 w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-gray-300 transition-colors"
-                    value={search}
+
+                <div className="lg:col-span-4">
+                  <label className="block text-[10px] font-black text-gray-500 mb-2 uppercase tracking-widest ml-1 dark:text-zinc-400">
+                    Severity
+                  </label>
+                  <Select
+                    className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 shadow-xs outline-none transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:focus:border-zinc-700"
+                    value={severityFilter}
                     onChange={(e) => {
-                      setSearch(e.target.value);
+                      setSeverityFilter(e.target.value);
                       setPage(1);
                     }}
-                  />
+                  >
+                    <option value="All">All</option>
+                    <option value="INFO">INFO</option>
+                    <option value="WARNING">WARNING</option>
+                    <option value="CRITICAL">CRITICAL</option>
+                  </Select>
+                </div>
+
+                <div className="lg:col-span-2">
+                  <label className="block text-[10px] font-black text-gray-500 mb-2 uppercase tracking-widest ml-1 dark:text-zinc-400">
+                    Display
+                  </label>
+                  <Select
+                    className="h-12 w-full rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold text-gray-700 shadow-xs outline-none transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:focus:border-zinc-700"
+                    value={perPage}
+                    onChange={(e) => {
+                      setPerPage(Number(e.target.value));
+                      setPage(1);
+                    }}
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </Select>
                 </div>
               </div>
-
-              <div className="lg:col-span-3">
-                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                  Severity
-                </label>
-                <Select
-                  className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300"
-                  value={severityFilter}
-                  onChange={(e) => {
-                    setSeverityFilter(e.target.value);
-                    setPage(1);
-                  }}
-                >
-                  <option value="All">All Severities</option>
-                  <option value="INFO">INFO</option>
-                  <option value="WARNING">WARNING</option>
-                  <option value="CRITICAL">CRITICAL</option>
-                </Select>
-              </div>
-
-              <div className="lg:col-span-2">
-                <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
-                  Items
-                </label>
-                <Select
-                  className="h-10 w-full rounded-brand border border-gray-300 bg-white px-4 text-sm font-medium text-gray-700 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300"
-                  value={perPage}
-                  onChange={(e) => {
-                    setPerPage(Number(e.target.value));
-                    setPage(1);
-                  }}
-                >
-                  <option value={10}>10</option>
-                  <option value={20}>20</option>
-                  <option value={50}>50</option>
-                  <option value={100}>100</option>
-                </Select>
-              </div>
             </div>
-          </div>
 
-          <CardContent className="p-6">
-            <div className={`overflow-x-auto rounded-brand ${displayRows.length === 0 && !loading ? "" : "border border-gray-200"}`}>
-              <table className="min-w-full text-sm">
-                <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                  <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
-                    <th className="p-3 font-bold w-44">Timestamp</th>
-                    <th className="p-3 font-bold w-24">Severity</th>
-                    <th className="p-3 font-bold w-48">Action</th>
-                    <th className="p-3 font-bold">Rich Details</th>
-                    <th className="p-3 font-bold w-12 text-center"><i className="ph-bold ph-desktop" title="Device/Browser"></i></th>
-                    <th className="p-3 font-bold text-right w-32">IP Address</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {loading ? (
-                    Array.from({ length: 6 }).map((_, idx) => (
-                      <tr key={idx}>
-                        <td className="p-3"><Skeleton className="h-4 w-32" /></td>
-                        <td className="p-3"><Skeleton className="h-4 w-16" /></td>
-                        <td className="p-3"><Skeleton className="h-4 w-32" /></td>
-                        <td className="p-3"><Skeleton className="h-4 w-full" /></td>
-                        <td className="p-3"><Skeleton className="h-4 w-8" /></td>
-                        <td className="p-3"><Skeleton className="h-4 w-24 ml-auto" /></td>
-                      </tr>
-                    ))
-                  ) : displayRows.length === 0 ? (
-                    <tr className="border-0 hover:bg-transparent">
-                      <td colSpan={6} className="p-0 border-0">
-                        <div className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500">
-                          <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                            <i className="ph-duotone ph-clock-counter-clockwise text-3xl text-pup-maroon"></i>
-                          </div>
-                          <div className="text-lg font-bold text-gray-900">
-                            No activity yet
-                          </div>
-                          <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
-                            Actions performed by your account will appear here.
-                          </div>
-                        </div>
-                      </td>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto select-none">
+                <table className="min-w-full">
+                  <thead className="bg-gray-50 border-b border-gray-100 dark:bg-zinc-900 dark:border-white/10">
+                    <tr className="text-left text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                      <th className="p-4 px-6">Timestamp</th>
+                      <th className="p-4 px-6">Severity</th>
+                      <th className="p-4 px-6">Event / Action</th>
+                      <th className="p-4 px-6">Trace Details</th>
+                      <th className="p-4 px-6 text-right">Identifier</th>
                     </tr>
-                  ) : (
-                    displayRows.map((r) => {
-                      const isDestructive =
-                        r.action.toLowerCase().includes("delete") ||
-                        r.action.toLowerCase().includes("remove") ||
-                        r.action.toLowerCase().includes("archive");
-                      const isAuth =
-                        r.action.toLowerCase().includes("login") ||
-                        r.action.toLowerCase().includes("logout");
-
-                      return (
-                        <tr key={r.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="p-3 font-mono text-[10px] text-gray-500 whitespace-nowrap">
-                            {r.time}
-                          </td>
-                          <td className="p-3">
-                            <Badge variant="outline" className={`font-black text-[9px] px-1.5 py-0.5 rounded-sm border-0 ${getSeverityColor(r.severity)}`}>
-                              {r.severity}
-                            </Badge>
-                          </td>
-                          <td className="p-3 text-xs font-bold text-gray-700">
-                            {isDestructive ? (
-                              <span className="text-red-600 uppercase tracking-tighter">{r.action}</span>
-                            ) : isAuth ? (
-                              <span className="text-blue-600 uppercase tracking-tighter">{r.action}</span>
-                            ) : (
-                              <span className="text-gray-700 uppercase tracking-tighter">{r.action}</span>
-                            )}
-                          </td>
-                          <td className="p-3 text-xs text-gray-600 leading-relaxed font-medium">
-                            {r.details}
-                            {(r.entityType || r.entityId) && (
-                              <div className="flex gap-2 mt-1">
-                                {r.entityType && <span className="bg-gray-100 text-gray-500 text-[9px] px-1.5 py-0.5 rounded-full font-black uppercase">{r.entityType}</span>}
-                                {r.entityId && <span className="text-[9px] text-gray-400 font-mono">ID: {r.entityId}</span>}
-                              </div>
-                            )}
-                          </td>
-                          <td className="p-3 text-center">
-                            <div className="inline-flex items-center justify-center text-gray-300 hover:text-gray-600 transition-colors" title={r.userAgent}>
-                              <i className="ph-bold ph-info text-base"></i>
-                            </div>
-                          </td>
-                          <td className="p-3 text-right font-mono text-[10px] text-gray-400">
-                            {r.ip || "—"}
-                          </td>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+                    {loading ? (
+                      Array.from({ length: 10 }).map((_, idx) => (
+                        <tr key={idx}>
+                          <td className="p-4 px-6"><Skeleton className="h-4 w-32" /></td>
+                          <td className="p-4 px-6"><Skeleton className="h-6 w-16 rounded-full" /></td>
+                          <td className="p-4 px-6"><Skeleton className="h-4 w-40" /></td>
+                          <td className="p-4 px-6"><Skeleton className="h-4 w-full" /></td>
+                          <td className="p-4 px-6 text-right"><Skeleton className="h-4 w-24 ml-auto" /></td>
                         </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
+                      ))
+                    ) : rows.length === 0 ? (
+                      <tr>
+                        <td colSpan={5}>
+                          <div className="flex h-[400px] flex-col items-center justify-center text-center">
+                            <div className="w-20 h-20 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center mb-6 shadow-xs dark:bg-card dark:border-white/10">
+                              <i className="ph-duotone ph-clock-counter-clockwise text-4xl text-gray-300 dark:text-zinc-600"></i>
+                            </div>
+                            <h4 className="text-lg font-bold text-gray-900 dark:text-zinc-50">Zero Activity Found</h4>
+                            <p className="text-sm font-medium text-gray-500 mt-1 max-w-sm dark:text-zinc-400">
+                              No events matching your current filters were detected in the audit log.
+                            </p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      rows.map((r) => {
+                        const sev = getSeverityConfig(r.severity);
+                        const timeParts = formatPHDateTimeParts(r.created_at);
 
-            {total > 0 ? (
-              <div className="mt-6 flex items-center justify-between border-t border-gray-100 pt-6">
-                <div className="text-[11px] font-black text-gray-400 uppercase tracking-widest select-none cursor-default">
-                  Showing <strong className="text-gray-900">{displayRows.length}</strong> out of <strong className="text-gray-900">{total.toLocaleString()}</strong> Activity Entries
-                </div>
-                <div className="flex items-center gap-2 select-none">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={displayPage <= 1}
-                    onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="h-9 rounded-brand border-gray-200 bg-white px-4 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon active:scale-95 disabled:opacity-20"
-                  >
-                    <i className="ph-bold ph-caret-left mr-2 text-base"></i>
-                    PREV
-                  </Button>
-                  <div className="flex h-9 min-w-[36px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm">
-                    {displayPage}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={displayPage >= totalPages}
-                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    className="h-9 rounded-brand border-gray-200 bg-white px-4 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon active:scale-95 disabled:opacity-20"
-                  >
-                    NEXT
-                    <i className="ph-bold ph-caret-right ml-2 text-base"></i>
-                  </Button>
-                </div>
+                        return (
+                          <tr 
+                            key={r.id} 
+                            className="group hover:bg-gray-50 transition-all duration-200 cursor-default dark:hover:bg-white/10 dark:bg-background"
+                            onDoubleClick={(e) => e.preventDefault()}
+                          >
+                            <td className="p-4 px-6">
+                              <div className="flex flex-col">
+                                <span className="text-xs font-bold text-gray-900 dark:text-zinc-50">{timeParts.date}</span>
+                                <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-500">{timeParts.time}</span>
+                              </div>
+                            </td>
+                            <td className="p-4 px-6">
+                              <div className={cn(
+                                "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-tight shadow-xs",
+                                sev.bg, sev.text, sev.border
+                              )}>
+                                <i className={cn(sev.icon, "text-[10px]")}></i>
+                                {r.severity}
+                              </div>
+                            </td>
+                            <td className="p-4 px-6">
+                              <div className="flex items-center gap-2.5">
+                                <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-100 text-gray-500 group-hover:bg-white group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 shadow-xs transition-colors dark:bg-zinc-800 dark:text-zinc-400 dark:group-hover:bg-white/5 dark:hover:bg-white/5">
+                                  <i className={cn(getActionIcon(r.action), "text-base")}></i>
+                                </div>
+                                <span className="text-xs font-bold tracking-tight text-gray-700 uppercase dark:text-zinc-200">{r.action}</span>
+                              </div>
+                            </td>
+                            <td className="p-4 px-6">
+                              <div className="flex flex-col gap-1">
+                                <p className="text-xs font-medium text-gray-600 leading-relaxed max-w-[600px] line-clamp-2 dark:text-zinc-300">
+                                  {r.details || "No known description"}
+                                </p>
+                                {(r.entity_type || r.entity_id) && (
+                                  <div className="flex items-center gap-2 mt-1">
+                                     {r.entity_type && (
+                                       <Badge variant="outline" className="text-[9px] font-black bg-gray-100 border-0 text-gray-500 uppercase h-4 px-1.5 rounded-sm dark:bg-zinc-800 dark:text-zinc-400">
+                                         {r.entity_type}
+                                       </Badge>
+                                     )}
+                                     {r.entity_id && <span className="text-[9px] font-mono text-gray-400 dark:text-zinc-500">#{r.entity_id}</span>}
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                            <td className="p-4 px-6 text-right">
+                               <div className="flex flex-col items-end">
+                                  <span className="text-[10px] font-bold text-gray-700 font-mono tracking-tighter dark:text-zinc-200">{r.ip || "—"}</span>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <span className="text-[9px] font-medium text-gray-400 cursor-help flex items-center gap-1 dark:text-zinc-500">
+                                        <i className="ph-bold ph-desktop"></i>
+                                        Device Info
+                                      </span>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="left" className="max-w-[300px] bg-white border border-gray-200 p-3 rounded-xl shadow-2xl text-[10px] text-gray-600 font-medium dark:bg-card dark:border-white/10 dark:text-zinc-300">
+                                       {r.user_agent}
+                                    </TooltipContent>
+                                  </Tooltip>
+                               </div>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
               </div>
-            ) : null}
-          </CardContent>
-        </Card>
+
+              {/* Pagination */}
+              {total > 0 && (
+                <div className="p-6 bg-gray-50 border-t border-gray-100 flex items-center justify-between dark:bg-white/5 dark:border-white/10">
+                  <div className="text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
+                    Showing <strong className="text-gray-900 dark:text-zinc-50">{rows.length}</strong> of <strong className="text-gray-900 dark:text-zinc-50">{total.toLocaleString()}</strong> Activity Logs
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={displayPage <= 1 || loading}
+                      onClick={() => setPage(p => Math.max(1, p - 1))}
+                      className="h-9 rounded-xl border-gray-300 bg-white px-4 text-[10px] font-black text-gray-600 uppercase shadow-xs transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 disabled:opacity-30 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300"
+                    >
+                      <i className="ph-bold ph-caret-left mr-2"></i>
+                      Prev
+                    </Button>
+                    <div className="h-9 min-w-[36px] flex items-center justify-center rounded-xl bg-white border border-gray-300 shadow-xs px-3 text-[11px] font-black text-gray-900 select-none dark:bg-card dark:border-white/10 dark:text-zinc-50">
+                      {displayPage}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={displayPage >= totalPages || loading}
+                      onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                      className="h-9 rounded-xl border-gray-300 bg-white px-4 text-[10px] font-black text-gray-600 uppercase shadow-xs transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 disabled:opacity-30 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300"
+                    >
+                      Next
+                      <i className="ph-bold ph-caret-right ml-2"></i>
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TooltipProvider>
       </main>
     </div>
   );

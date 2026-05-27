@@ -56,17 +56,17 @@ const StaffTableRow = React.memo(({
     <tr
       onClick={(e) => !isCurrentUser && toggleSelect(s.id, e)}
       className={cn(
-        "transition-colors hover:bg-gray-50",
+        "transition-colors hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card",
         !isCurrentUser && "cursor-pointer",
-        isCurrentUser && "bg-red-50/30",
-        isArchived && "bg-gray-50/50",
-        isSelected && "bg-amber-50/40 dark:bg-amber-900/20"
+        isCurrentUser && "bg-red-50 dark:bg-red-950/30",
+        isArchived && "bg-gray-50 dark:bg-white/5",
+        isSelected && "bg-amber-50 dark:bg-amber-950/30"
       )}
     >
       <td className="p-3 text-center">
         <input
           type="checkbox"
-          className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20"
+          className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:text-primary dark:border-white/10"
           checked={isSelected}
           onChange={() => {}} // Controlled by tr onClick
           disabled={isCurrentUser}
@@ -78,30 +78,30 @@ const StaffTableRow = React.memo(({
             className={cn(
               "flex h-10 w-10 shrink-0 items-center justify-center rounded-full border text-xs font-bold transition-transform group-hover:scale-110",
               isArchived
-                ? "border-gray-200 bg-gray-50 text-gray-500"
-                : "border-red-100 bg-red-50 text-pup-maroon shadow-sm"
+                ? "border-gray-200 dark:border-white/10 bg-gray-50 dark:bg-muted text-gray-500 dark:text-zinc-400"
+                : "border-red-100 bg-red-50 dark:bg-red-900/20 text-pup-maroon dark:text-primary dark:text-primary shadow-sm dark:shadow-none"
             )}
           >
             {initials}
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-2 text-sm font-bold text-gray-900">
+            <div className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-zinc-50">
               <span className="truncate">
                 {s.fname} {s.lname}
               </span>
               {isCurrentUser && (
-                <Badge className="h-4 bg-pup-maroon text-[9px] font-black uppercase">
+                <Badge className="h-4 bg-pup-maroon text-[9px] font-black uppercase dark:bg-red-600">
                   You
                 </Badge>
               )}
             </div>
-            <div className="truncate text-xs font-medium text-gray-500">
+            <div className="truncate text-xs font-medium text-gray-500 dark:text-zinc-400">
               {s.email}
             </div>
           </div>
         </div>
       </td>
-      <td className="p-3 text-[11px] font-bold text-gray-600 whitespace-nowrap">
+      <td className="p-3 text-[11px] font-bold text-gray-600 whitespace-nowrap dark:text-zinc-300">
         {s.id}
       </td>
       <td className="p-3">
@@ -111,8 +111,8 @@ const StaffTableRow = React.memo(({
             "rounded-full px-2.5 py-1 text-[10px] font-black uppercase shadow-xs",
             s.role === "Admin" ||
               s.role === "SuperAdmin"
-              ? "border-red-200 bg-red-50 text-pup-maroon"
-              : "border-amber-200 bg-amber-50 text-amber-700"
+              ? "border-red-200 bg-red-50 dark:bg-red-900/20 text-pup-maroon dark:text-red-400"
+              : "border-amber-200 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400"
           )}
         >
           {s.role}
@@ -120,7 +120,7 @@ const StaffTableRow = React.memo(({
       </td>
       <td className="p-3">
         {s.totp_enabled ? (
-          <Badge className="gap-1 rounded-full border-emerald-200 bg-emerald-50 text-[10px] font-black text-emerald-700 uppercase shadow-xs">
+          <Badge className="gap-1 rounded-full border-emerald-200 bg-emerald-50 text-[10px] font-black text-emerald-700 uppercase shadow-xs dark:bg-emerald-900/20 dark:border-emerald-900/30 dark:text-emerald-400">
             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             <i className="ph-bold ph-check-circle text-[10px]"></i>
             ENABLED
@@ -128,7 +128,7 @@ const StaffTableRow = React.memo(({
         ) : (
           <Badge
             variant="outline"
-            className="gap-1 rounded-full border-gray-200 bg-gray-50 text-[10px] font-black text-gray-500 uppercase shadow-xs"
+            className="gap-1 rounded-full border-gray-200 bg-gray-50 text-[10px] font-black text-gray-500 uppercase shadow-xs dark:border-white/10 dark:bg-muted dark:text-zinc-400"
           >
             <i className="ph-bold ph-warning-circle text-[10px]"></i>
             DISABLED
@@ -138,7 +138,7 @@ const StaffTableRow = React.memo(({
       <td className="p-3">
         <div className={cn(
           "flex items-center gap-1.5 text-[11px] font-bold uppercase",
-          !active.relative && active.date === "—" ? "text-gray-400 font-medium" : "text-gray-900"
+          !active.relative && active.date === "—" ? "text-gray-400 dark:text-zinc-500 font-medium" : "text-gray-900 dark:text-zinc-50"
         )}>
           {active.relative === "Active Now" && (
             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse"></div>
@@ -146,7 +146,7 @@ const StaffTableRow = React.memo(({
           {active.relative || (active.date === "—" ? "Never active" : active.date)}
         </div>
         {active.relative && (
-          <div className="text-[10px] text-gray-500 opacity-70 mt-0.5">
+          <div className="text-[10px] text-gray-500 opacity-70 mt-0.5 dark:text-zinc-400">
             {active.date}
           </div>
         )}
@@ -161,10 +161,10 @@ const StaffTableRow = React.memo(({
               variant="outline"
               size="sm"
               onClick={() => (window.location.href = "/account")}
-              className="h-8 w-[210px] gap-2 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-wider text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
+              className="h-8 w-[210px] gap-2 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-wider text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-muted dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
             >
               <i className="ph-bold ph-user-circle text-base"></i>
-              MANAGE MY ACCOUNT
+              MY ACCOUNT
             </Button>
           ) : (
             <div className="flex w-[210px] items-center gap-1">
@@ -172,7 +172,7 @@ const StaffTableRow = React.memo(({
                 variant="outline"
                 size="sm"
                 onClick={() => onEditUser(s.id)}
-                className="h-8 flex-1 gap-1.5 rounded-brand border border-gray-300 bg-white px-0 text-[10px] font-black tracking-wider text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
+                className="h-8 flex-1 gap-1.5 rounded-brand border border-gray-300 bg-white px-0 text-[10px] font-black tracking-wider text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-muted dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
               >
                 <i className="ph-bold ph-pencil-simple text-base"></i>
                 EDIT
@@ -183,7 +183,7 @@ const StaffTableRow = React.memo(({
                   variant="outline"
                   size="sm"
                   onClick={() => onRestoreUser(s.id)}
-                  className="h-8 flex-1 gap-1.5 rounded-brand border border-gray-300 bg-white px-0 text-[10px] font-black tracking-wider text-emerald-600 uppercase shadow-sm transition-colors hover:border-emerald-600 hover:bg-emerald-50/30 hover:text-emerald-700 active:scale-95"
+                  className="h-8 flex-1 gap-1.5 rounded-brand border border-gray-300 bg-white px-0 text-[10px] font-black tracking-wider text-emerald-600 uppercase shadow-sm transition-colors hover:border-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 active:scale-95 dark:bg-muted dark:text-emerald-400 dark:shadow-none dark:hover:bg-emerald-900/20 dark:border-white/10"
                 >
                   <i className="ph-bold ph-arrow-counter-clockwise text-base"></i>
                   RESTORE
@@ -193,7 +193,7 @@ const StaffTableRow = React.memo(({
                   variant="outline"
                   size="sm"
                   onClick={() => onDeleteUser(s.id)}
-                  className="h-8 flex-1 gap-1.5 rounded-brand border border-gray-300 bg-white px-0 text-[10px] font-black tracking-wider text-red-600 uppercase shadow-sm transition-colors hover:border-red-600 hover:bg-red-50/30 hover:text-red-700 active:scale-95"
+                  className="h-8 flex-1 gap-1.5 rounded-brand border border-gray-300 bg-white px-0 text-[10px] font-black tracking-wider text-red-600 uppercase shadow-sm transition-colors hover:border-red-600 hover:bg-red-50 hover:text-red-700 active:scale-95 dark:bg-muted dark:shadow-none dark:border-white/10"
                 >
                   <i className="ph-bold ph-archive text-base"></i>
                   ARCHIVE
@@ -215,9 +215,9 @@ function SortIndicator({ column, sortBy, sortOrder }) {
       <i className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-30"></i>
     )
   return sortOrder === "asc" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon"></i>
+    <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon dark:text-primary dark:text-primary"></i>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon"></i>
+    <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon dark:text-primary dark:text-primary"></i>
   )
 }
 
@@ -238,6 +238,7 @@ export default function StaffDirectoryTab({
   onBulkArchive,
   onExportData,
   onSwitchView,
+  onRefresh,
 }) {
   const [activeTab, setActiveTab] = useState("active")
   const [localSearch, setLocalSearch] = useState("")
@@ -289,18 +290,6 @@ export default function StaffDirectoryTab({
       return matchesSearch && matchesRole && matchesTab
     })
   }, [search, roleFilter, staffData, activeTab])
-
-  const stats = useMemo(() => {
-    const total = staffData.length
-    const authCount = staffData.filter((s) => s.totp_enabled).length
-    const authRate = total > 0 ? Math.round((authCount / total) * 100) : 0
-
-    return {
-      total,
-      authCount,
-      authRate,
-    }
-  }, [staffData])
 
   const [sortBy, setSortBy] = useState("fname")
   const [sortOrder, setSortOrder] = useState("asc")
@@ -454,230 +443,163 @@ export default function StaffDirectoryTab({
 
   return (
     <div
-      className="animate-fade-in font-inter flex h-full w-full flex-col gap-4 focus:outline-none"
+      className="font-inter w-full gap-3 focus:outline-none animate-fade-up"
       onKeyDown={handleKeyDown}
       tabIndex={0}
     >
-      {isLoading ? (
-        <div className="flex flex-1 flex-col gap-4">
-          {/* Top Metric Row Skeleton */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            {[1, 2].map((i) => (
-              <div
-                key={i}
-                className="flex h-24 flex-col justify-center gap-3 rounded-xl border border-gray-200 bg-white p-5 shadow-sm"
+      <Card className="rounded-brand border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
+        <PageHeader
+          icon="ph-users-three"
+          title="Staff Directory"
+          description="Manage system staff and administrative access."
+          actions={
+            <div className="flex items-center gap-3">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onExportData(sortedStaff)}
+                className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:text-zinc-300 dark:shadow-none dark:bg-red-950/30 dark:border-white/10"
               >
-                <Skeleton className="h-4 w-28" />
-                <Skeleton className="h-10 w-20" />
-              </div>
-            ))}
-          </div>
+                <i className="ph-bold ph-file-csv text-base"></i>
+                EXPORT
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => onSwitchView("create")}
+                className="h-10 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-5 text-xs font-bold text-white shadow-sm active:scale-95 transition-all dark:shadow-none"
+              >
+                <i className="ph-bold ph-user-plus mr-1.5"></i>
+                ADD STAFF
+              </Button>
+            </div>
+          }
+        />
 
-          <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm">
-            <PageHeader
-              icon="ph-users-three"
-              title="Personnel Directory"
-              description="Manage registrar personnel and administrative access credentials."
-            />
-            <CardContent className="flex min-h-0 flex-1 flex-col p-6 pt-2">
-              {/* Tab & Toolbar Skeleton */}
-              <div className="mb-6 flex flex-col gap-4">
-                <Skeleton className="h-10 w-48 rounded-lg" />
-                <div className="flex flex-wrap items-center gap-3">
-                  <Skeleton className="h-10 min-w-[200px] flex-1 rounded-brand" />
-                  <Skeleton className="h-10 w-40 rounded-brand" />
-                </div>
+        {isLoading ? (
+          <CardContent className="p-6 pt-2">
+            {/* Tab & Toolbar Skeleton */}
+            <div className="mb-6 flex flex-col gap-3">
+              <Skeleton className="h-10 w-48 rounded-lg dark:bg-muted" />
+              <div className="flex flex-wrap items-center gap-3">
+                <Skeleton className="h-10 min-w-[200px] flex-1 rounded-brand dark:bg-muted" />
+                <Skeleton className="h-10 w-40 rounded-brand dark:bg-muted" />
               </div>
+            </div>
 
-              {/* Table Skeleton */}
-              <div className="flex-1 overflow-hidden rounded-brand border border-gray-200">
-                <div className="h-10 border-b border-gray-200 bg-gray-50/50" />
-                <div className="divide-y divide-gray-100">
-                  {[1, 2, 3, 4, 5, 6].map((i) => (
-                    <div key={i} className="flex items-center gap-4 p-4">
-                      <div className="flex flex-1 items-center gap-3">
-                        <Skeleton className="h-10 w-10 rounded-full" />
-                        <div className="space-y-2">
-                          <Skeleton className="h-4 w-32" />
-                          <Skeleton className="h-3 w-24" />
-                        </div>
-                      </div>
-                      <Skeleton className="hidden h-4 w-20 lg:block" />
-                      <Skeleton className="hidden h-6 w-20 rounded-full lg:block" />
-                      <Skeleton className="hidden h-6 w-24 rounded-full lg:block" />
-                      <Skeleton className="hidden h-4 w-28 lg:block" />
-                      <div className="flex gap-2">
-                        <Skeleton className="h-9 w-16 rounded-brand" />
+            {/* Table Skeleton */}
+            <div className="overflow-hidden rounded-brand border border-gray-200 dark:border-white/10">
+              <div className="h-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/5" />
+              <div className="divide-y divide-gray-100 dark:divide-white/10">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <div key={i} className="flex items-center gap-3 p-4">
+                    <div className="flex flex-1 items-center gap-3">
+                      <Skeleton className="h-10 w-10 rounded-full dark:bg-muted" />
+                      <div className="space-y-2">
+                        <Skeleton className="h-4 w-32 dark:bg-muted" />
+                        <Skeleton className="h-3 w-24 dark:bg-muted" />
                       </div>
                     </div>
-                  ))}
-                </div>
+                    <Skeleton className="hidden h-4 w-20 lg:block dark:bg-muted" />
+                    <Skeleton className="hidden h-6 w-20 rounded-full lg:block dark:bg-muted" />
+                    <Skeleton className="hidden h-6 w-24 rounded-full lg:block dark:bg-muted" />
+                    <Skeleton className="hidden h-4 w-28 lg:block dark:bg-muted" />
+                    <div className="flex gap-3">
+                      <Skeleton className="h-9 w-16 rounded-brand dark:bg-muted" />
+                    </div>
+                  </div>
+                ))}
               </div>
-            </CardContent>
-          </Card>
-        </div>
-      ) : error ? (
-        <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm">
-          <CardContent className="flex min-h-0 flex-1 flex-col p-6">
-            <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500">
+            </div>
+          </CardContent>
+        ) : error ? (
+          <CardContent className="p-6">
+            <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
-                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
+                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary dark:text-primary" />
                 </EmptyMedia>
-                <EmptyTitle className="text-lg font-bold text-gray-900">
+                <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                   Could not load personnel data
                 </EmptyTitle>
-                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600">
+                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
                   {error}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
           </CardContent>
-        </Card>
-      ) : (
-        <div className="flex flex-1 flex-col gap-4">
-          <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm">
-            <PageHeader
-              icon="ph-users-three"
-              title="Personnel Directory"
-              description="Manage registrar personnel and administrative access credentials."
-              actions={
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onExportData(sortedStaff)}
-                    className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
-                  >
-                    <i className="ph-bold ph-file-csv text-base"></i>
-                    EXPORT CSV
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => onSwitchView("create")}
-                    className="h-10 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-5 text-xs font-bold text-white shadow-sm active:scale-95 transition-all"
-                  >
-                    <i className="ph-bold ph-user-plus mr-1.5"></i>
-                    ADD PERSONNEL
-                  </Button>
-                </div>
-              }
-            />
-
-            <CardContent className="font-inter flex min-h-0 flex-1 flex-col bg-white p-6 pt-4">
-              <Tabs
-                value={activeTab}
-                onValueChange={setActiveTab}
-                className="w-full"
-              >
-                <div className="mb-6 flex shrink-0 select-none flex-col items-center justify-between gap-4 sm:flex-row">
-                  <div className="flex w-full items-center sm:w-auto">
-                    <div className="flex w-full cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100/80 p-0.5 backdrop-blur-sm sm:w-auto">
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab("active")}
-                        className={`group flex h-11 w-full cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] sm:w-[240px] ${
+        ) : (
+          <CardContent className="font-inter bg-white p-6 pt-4 dark:bg-card">
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
+              <div className="mb-6 flex shrink-0 select-none flex-col items-center gap-3 sm:flex-row">
+                <div className="flex w-full items-center sm:w-auto">
+                  <div className="flex cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 backdrop-blur-sm sm:w-auto dark:border-white/10 dark:bg-muted/80">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("active")}
+                      className={`group flex h-11 w-[240px] cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${ activeTab === "active" ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon dark:text-primary shadow-sm ring-1 ring-inset ring-black/5" : "text-gray-500 ring-transparent hover:bg-white hover:text-gray-700" } dark:bg-card dark:text-primary dark:shadow-none dark:hover:bg-white/5 dark:hover:text-zinc-200`}
+                    >
+                      <i
+                        className={`ph-bold ph-users-three ${activeTab === "active" ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
+                      ></i>
+                      <span className="whitespace-nowrap tracking-wide">
+                        ACTIVE
+                      </span>
+                      <span
+                        className={cn(
+                          "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-black transition-all duration-300",
                           activeTab === "active"
-                            ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
-                            : "rounded-l-[calc(var(--radius)-2px)] rounded-r-none text-gray-500 hover:bg-white/50 hover:text-gray-700"
-                        }`}
+                            ? "bg-pup-maroon dark:bg-red-600 text-white shadow-sm dark:shadow-none ring-2 ring-red-50/50"
+                            : "bg-gray-200 dark:bg-zinc-700/60 text-gray-500 dark:text-zinc-400 group-hover:bg-gray-200 dark:group-hover:bg-zinc-700 dark:hover:bg-zinc-700 dark:bg-zinc-700 group-hover:text-gray-700 dark:group-hover:text-zinc-200 dark:hover:text-zinc-200 dark:text-zinc-200 dark:text-zinc-300"
+                        )}
                       >
-                        <i
-                          className={`ph-bold ph-users-three ${activeTab === "active" ? "" : "text-gray-400 group-hover:text-gray-600"}`}
-                        ></i>
-                        <span className="whitespace-nowrap tracking-wide">ACTIVE DIRECTORY</span>
-                        <span
-                          className={cn(
-                            "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-black transition-all duration-300",
-                            activeTab === "active"
-                              ? "bg-pup-maroon text-white shadow-sm ring-2 ring-red-50/50"
-                              : "bg-gray-200/60 text-gray-500 group-hover:bg-gray-200 group-hover:text-gray-700"
-                          )}
-                        >
-                          {
-                            staffData.filter((s) => s.status !== "Archived")
-                              .length
-                          }
-                        </span>
-                      </button>
-                      <div className="h-6 w-px bg-gray-200/50" />
-                      <button
-                        type="button"
-                        onClick={() => setActiveTab("archived")}
-                        className={`group flex h-11 w-full cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] sm:w-[240px] ${
+                        {staffData.filter((s) => s.status !== "Archived").length}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("archived")}
+                      className={`group flex h-11 w-[240px] cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${ activeTab === "archived" ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon dark:text-primary shadow-sm ring-1 ring-inset ring-black/5" : "text-gray-500 ring-transparent hover:bg-white hover:text-gray-700" } dark:bg-card dark:text-primary dark:shadow-none dark:hover:bg-white/5 dark:hover:text-zinc-200`}
+                    >
+                      <i
+                        className={`ph-bold ph-archive ${activeTab === "archived" ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
+                      ></i>                      <span className="whitespace-nowrap tracking-wide">
+                        ARCHIVED
+                      </span>
+                      <span
+                        className={cn(
+                          "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-black transition-all duration-300",
                           activeTab === "archived"
-                            ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
-                            : "rounded-r-[calc(var(--radius)-2px)] rounded-l-none text-gray-500 hover:bg-white/50 hover:text-gray-700"
-                        }`}
+                            ? "bg-pup-maroon dark:bg-red-600 text-white shadow-sm dark:shadow-none ring-2 ring-red-50/50"
+                            : "bg-gray-200 dark:bg-zinc-700/60 text-gray-500 dark:text-zinc-400 group-hover:bg-gray-200 dark:group-hover:bg-zinc-700 dark:hover:bg-zinc-700 dark:bg-zinc-700 group-hover:text-gray-700 dark:group-hover:text-zinc-200 dark:hover:text-zinc-200 dark:text-zinc-200 dark:text-zinc-300"
+                        )}
                       >
-                        <i
-                          className={`ph-bold ph-archive ${activeTab === "archived" ? "" : "text-gray-400 group-hover:text-gray-600"}`}
-                        ></i>
-                        <span className="whitespace-nowrap tracking-wide">ARCHIVE VAULT</span>
-                        <span
-                          className={cn(
-                            "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-black transition-all duration-300",
-                            activeTab === "archived"
-                              ? "bg-pup-maroon text-white shadow-sm ring-2 ring-red-50/50"
-                              : "bg-gray-200/60 text-gray-500 group-hover:bg-gray-200 group-hover:text-gray-700"
-                          )}
-                        >
-                          {
-                            staffData.filter((s) => s.status === "Archived")
-                              .length
-                          }
-                        </span>
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Integrated Summary Metrics Bar */}
-                  <div className="flex flex-wrap items-center gap-3">
-                    <div className="flex min-w-[150px] select-none cursor-default items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm transition-all hover:shadow-md">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-red-50 text-pup-maroon shadow-xs">
-                        <i className="ph-duotone ph-users-four text-xl"></i>
-                      </div>
-                      <div>
-                        <p className="mb-1 text-[9px] leading-none font-black tracking-widest text-gray-400 uppercase">
-                          Personnel
-                        </p>
-                        <p className="text-base leading-tight font-black text-gray-900">
-                          {stats.total?.toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="flex min-w-[180px] select-none cursor-default items-center gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm transition-all hover:shadow-md">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-500 shadow-xs">
-                        <i className="ph-duotone ph-shield-check text-xl"></i>
-                      </div>
-                      <div>
-                        <p className="mb-1 text-[9px] leading-none font-black tracking-widest text-gray-400 uppercase">
-                          2FA Adoption
-                        </p>
-                        <div className="flex items-center gap-1.5">
-                          <p className="text-base leading-tight font-black text-gray-900">
-                            {stats.authRate}%
-                          </p>
-                          <span className="text-[10px] font-bold text-gray-400 opacity-70">
-                            ({stats.authCount} verified)
-                          </span>
-                        </div>
-                      </div>
-                    </div>
+                        {staffData.filter((s) => s.status === "Archived").length}
+                      </span>
+                    </button>
                   </div>
                 </div>
+              </div>
 
-                <div className="flex-1 overflow-x-auto overflow-y-auto rounded-brand border border-gray-200 bg-white shadow-xs select-none">
-                  <table className="min-w-full text-sm">
-                    <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50">
-                      <tr className="text-left text-xs tracking-wider text-gray-600 uppercase">
+              <TabsContent
+                value={activeTab}
+                key={activeTab}
+                className="outline-none animate-fade-up"
+              >
+                <div className="overflow-x-auto rounded-brand border border-gray-200 bg-white shadow-xs select-none dark:border-white/10 dark:bg-card">                  <table className="min-w-full text-sm">
+                    <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
+                      <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
                         <th className="w-12 p-3 text-center">
                           <input
                             type="checkbox"
-                            className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20"
+                            className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:text-primary dark:border-white/10"
                             checked={
-                              paginatedStaff.some((s) => s.id !== currentUserId) &&
+                              paginatedStaff.some(
+                                (s) => s.id !== currentUserId
+                              ) &&
                               paginatedStaff
                                 .filter((s) => s.id !== currentUserId)
                                 .every((s) => selectedIds.has(s.id))
@@ -685,16 +607,18 @@ export default function StaffDirectoryTab({
                             onChange={(e) => toggleSelectAll(e.target.checked)}
                             disabled={
                               paginatedStaff.length === 0 ||
-                              paginatedStaff.every((s) => s.id === currentUserId)
+                              paginatedStaff.every(
+                                (s) => s.id === currentUserId
+                              )
                             }
                           />
                         </th>
                         <th className="p-3 font-bold">
                           <button
                             onClick={() => handleSort("fname")}
-                            className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                            className="group flex items-center rounded px-2 py-1 uppercase transition-colors hover:bg-gray-100 focus:outline-none dark:bg-muted dark:hover:bg-white/10"
                           >
-                            Personnel Name{" "}
+                            Name{" "}
                             <SortIndicator
                               column="fname"
                               sortBy={sortBy}
@@ -705,9 +629,9 @@ export default function StaffDirectoryTab({
                         <th className="w-32 p-3 font-bold whitespace-nowrap">
                           <button
                             onClick={() => handleSort("id")}
-                            className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                            className="group flex items-center rounded px-2 py-1 uppercase transition-colors hover:bg-gray-100 focus:outline-none dark:bg-muted dark:hover:bg-white/10"
                           >
-                            Staff ID{" "}
+                            ID{" "}
                             <SortIndicator
                               column="id"
                               sortBy={sortBy}
@@ -718,7 +642,7 @@ export default function StaffDirectoryTab({
                         <th className="w-28 p-3 font-bold">
                           <button
                             onClick={() => handleSort("role")}
-                            className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                            className="group flex items-center rounded px-2 py-1 uppercase transition-colors hover:bg-gray-100 focus:outline-none dark:bg-muted dark:hover:bg-white/10"
                           >
                             Role{" "}
                             <SortIndicator
@@ -728,11 +652,11 @@ export default function StaffDirectoryTab({
                             />
                           </button>
                         </th>
-                        <th className="w-32 p-3 font-bold">2FA Status</th>
+                        <th className="w-32 p-3 font-bold">Security</th>
                         <th className="p-3 font-bold whitespace-nowrap">
                           <button
                             onClick={() => handleSort("last_active")}
-                            className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                            className="group flex items-center rounded px-2 py-1 uppercase transition-colors hover:bg-gray-100 focus:outline-none dark:bg-muted dark:hover:bg-white/10"
                           >
                             Last Login{" "}
                             <SortIndicator
@@ -747,26 +671,26 @@ export default function StaffDirectoryTab({
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200">
+                    <tbody className="divide-y divide-gray-200 dark:divide-white/10">
                       {filteredStaff.length === 0 ? (
                         <tr className="border-0 hover:bg-transparent">
                           <td colSpan={7} className="p-12 text-center">
-                            <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500">
+                            <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                               <EmptyHeader className="flex flex-col items-center gap-0">
-                                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
-                                  <i className="ph-duotone ph-users-three text-3xl text-pup-maroon"></i>
+                                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+                                  <i className="ph-duotone ph-users-three text-3xl text-pup-maroon dark:text-primary dark:text-primary"></i>
                                 </EmptyMedia>
-                                <EmptyTitle className="text-lg font-bold text-gray-900">
+                                <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                                   {activeTab === "active"
-                                    ? "No personnel records"
-                                    : "Archive vault is empty"}
+                                    ? "No staff found"
+                                    : "Archive is empty"}
                                 </EmptyTitle>
-                                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600">
+                                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
                                   {localSearch !== "" || roleFilter !== "All"
-                                    ? `No personnel matches your current filters in the ${activeTab} directory.`
+                                    ? `No staff matches your current filters.`
                                     : activeTab === "active"
-                                      ? "Start by adding registrar personnel to manage access and credentials."
-                                      : "Archived personnel records will appear here once they are moved from the active directory."}
+                                      ? "Start by adding system staff to manage access."
+                                      : "Archived staff records will appear here."}
                                 </EmptyDescription>
                                 {localSearch !== "" || roleFilter !== "All" ? (
                                   <Button
@@ -778,26 +702,27 @@ export default function StaffDirectoryTab({
                                       setRoleFilter("All")
                                       setCurrentPage(1)
                                     }}
-                                    className="mt-4 flex items-center gap-2 rounded-brand border border-gray-300 px-4 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon sm:text-xs"
+                                    className="mt-4 flex items-center gap-3 rounded-brand border border-gray-300 px-4 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 sm:text-xs dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
                                   >
                                     <i className="ph-bold ph-x-circle"></i>
-                                    CLEAR ALL FILTERS
+                                    CLEAR FILTERS
                                   </Button>
                                 ) : (
                                   activeTab === "active" && (
                                     <Button
                                       onClick={() => onSwitchView("create")}
-                                      className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-pup-maroon px-6 text-xs font-bold text-white shadow-sm transition-all hover:bg-red-900 active:scale-95"
+                                      className="mt-4 flex h-10 items-center gap-3 rounded-brand bg-pup-maroon px-6 text-xs font-bold text-white shadow-sm transition-all hover:bg-red-900 active:scale-95 dark:bg-red-600 dark:shadow-none"
                                     >
                                       <i className="ph-bold ph-user-plus"></i>
-                                      REGISTER NEW PERSONNEL
+                                      REGISTER NEW STAFF
                                     </Button>
                                   )
-                                  )}
-                                  </EmptyHeader>
-                                  </Empty>
-                                  </td>
-                                  </tr>                      ) : (
+                                )}
+                              </EmptyHeader>
+                            </Empty>
+                          </td>
+                        </tr>
+                      ) : (
                         paginatedStaff.map((s) => (
                           <StaffTableRow
                             key={s.id}
@@ -806,7 +731,10 @@ export default function StaffDirectoryTab({
                             isSelected={selectedIds.has(s.id)}
                             active={formatRelativeTime(s.last_active)}
                             isArchived={s.status === "Archived"}
-                            initials={`${s.fname?.[0] || ""}${s.lname?.[0] || ""}` || "?"}
+                            initials={
+                              `${s.fname?.[0] || ""}${s.lname?.[0] || ""}` ||
+                              "?"
+                            }
                             toggleSelect={toggleSelect}
                             onEditUser={onEditUser}
                             onRestoreUser={onRestoreUser}
@@ -820,20 +748,26 @@ export default function StaffDirectoryTab({
                 </div>
 
                 {filteredStaff.length > 0 && (
-                  <div className="-mx-6 mt-4 -mb-6 flex items-center justify-between rounded-b-brand border-t border-gray-100 bg-white p-6 px-8">
+                  <div className="-mx-6 mt-4 -mb-6 flex items-center justify-between rounded-b-brand border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card">
                     <div className="flex items-center gap-8 select-none cursor-default">
-                      <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest">
+                      <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
                         <span>
-                          Showing <strong className="text-gray-900">{paginatedStaff.length}</strong> out of{" "}
-                          <strong className="text-gray-900">{filteredStaff.length}</strong>{" "}
-                          {activeTab === "active" ? "Active" : "Archived"} Personnel
+                          Showing{" "}
+                          <strong className="text-gray-900 dark:text-zinc-50">
+                            {paginatedStaff.length}
+                          </strong>{" "}
+                          out of{" "}
+                          <strong className="text-gray-900 dark:text-zinc-50">
+                            {filteredStaff.length}
+                          </strong>{" "}
+                          {activeTab === "active" ? "Active" : "Archived"} Staff
                         </span>
 
                         {filteredStaff.length > 10 && (
-                          <div className="flex items-center gap-3 border-l border-gray-200/50 pl-6">
+                          <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
                             <span className="text-[10px] opacity-60">Rows:</span>
                             <Select
-                              className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50"
+                              className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
                               value={itemsPerPage}
                               onChange={(e) => {
                                 setItemsPerPage(Number(e.target.value))
@@ -855,14 +789,16 @@ export default function StaffDirectoryTab({
                           variant="outline"
                           size="sm"
                           disabled={displayPage <= 1}
-                          onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                          className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                          onClick={() =>
+                            setCurrentPage((p) => Math.max(1, p - 1))
+                          }
+                          className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                         >
                           <i className="ph-bold ph-caret-left mr-2 text-base"></i>
                           PREV
                         </Button>
-                        
-                        <div className="flex h-9 min-w-[36px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm">
+
+                        <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
                           {displayPage}
                         </div>
 
@@ -870,8 +806,10 @@ export default function StaffDirectoryTab({
                           variant="outline"
                           size="sm"
                           disabled={displayPage >= totalPages}
-                          onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                          className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                          onClick={() =>
+                            setCurrentPage((p) => Math.min(totalPages, p + 1))
+                          }
+                          className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                         >
                           NEXT
                           <i className="ph-bold ph-caret-right ml-2 text-base"></i>
@@ -880,13 +818,13 @@ export default function StaffDirectoryTab({
                     )}
                   </div>
                 )}
-              </Tabs>
-            </CardContent>
-          </Card>
-        </div>
-      )}
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+        )}
+      </Card>
 
-      {selectedIds.size > 0 && (
+      {selectedIds.size > 1 && (
         <FloatingActionBar
           selectedCount={selectedIds.size}
           selectionStatus="Selected Personnel"
@@ -897,7 +835,7 @@ export default function StaffDirectoryTab({
                 variant="ghost"
                 size="sm"
                 onClick={() => onSelectionChange(new Set())}
-                className="h-9 px-4 text-xs font-bold text-gray-500 uppercase transition-colors hover:bg-red-50/30 hover:text-pup-maroon"
+                className="h-9 px-4 text-xs font-bold text-gray-500 uppercase transition-colors hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-400 dark:bg-red-950/30"
               >
                 DESELECT ALL
               </Button>
@@ -911,7 +849,7 @@ export default function StaffDirectoryTab({
                   )
                   onExportData(selectedStaff)
                 }}
-                className="h-10 px-6 text-xs font-bold text-gray-700 uppercase shadow-lg shadow-gray-200/50 hover:bg-gray-200 active:scale-95 rounded-xl border border-gray-200"
+                className="h-10 px-6 text-xs font-bold text-gray-700 uppercase shadow-lg shadow-gray-200/50 hover:bg-gray-200 active:scale-95 rounded-xl border border-gray-200 dark:text-zinc-200 dark:hover:bg-zinc-700 dark:bg-zinc-700 dark:border-white/10"
               >
                 <i className="ph-bold ph-file-csv mr-2 text-sm"></i>
                 EXPORT SELECTED
@@ -922,7 +860,7 @@ export default function StaffDirectoryTab({
                   onClick={() => {
                     onBulkArchive(Array.from(selectedIds))
                   }}
-                  className="flex h-10 items-center gap-2 rounded-xl bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-6 text-xs font-black text-white uppercase shadow-lg shadow-red-900/20 active:scale-95 transition-all"
+                  className="flex h-10 items-center gap-3 rounded-xl bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-6 text-xs font-black text-white uppercase shadow-lg shadow-red-900/20 active:scale-95 transition-all dark:shadow-none"
                 >
                   <i className="ph-bold ph-archive text-sm"></i>
                   ARCHIVE SELECTED
@@ -935,3 +873,5 @@ export default function StaffDirectoryTab({
     </div>
   )
 }
+
+

@@ -18,7 +18,7 @@ export default function RoomMap2D({
   }
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-brand border border-gray-300 bg-gradient-to-br from-gray-100 to-gray-200">
+    <div className="relative h-full w-full overflow-hidden rounded-brand border border-gray-300 bg-gradient-to-br from-gray-100 to-gray-200 dark:border-white/10">
       {/* Subtle background grid */}
       <div
         className="pointer-events-none absolute inset-0 opacity-40"
@@ -41,8 +41,8 @@ export default function RoomMap2D({
         <div className="relative flex h-10 w-10 items-center justify-center">
           {/* Floor plan door quadrant symbol */}
           <div className="absolute bottom-0 left-0 h-[2px] w-full rounded-full bg-gray-400 transition-colors group-hover:bg-gray-600" />
-          <div className="absolute bottom-0 left-0 h-full w-[2px] rounded-full bg-pup-maroon transition-all" />
-          <div className="absolute inset-0 rounded-tr-full border-t-2 border-r-2 border-gray-300/20 transition-colors group-hover:border-gray-300/40" />
+          <div className="absolute bottom-0 left-0 h-full w-[2px] rounded-full bg-pup-maroon transition-all dark:bg-red-600" />
+          <div className="absolute inset-0 rounded-tr-full border-t-2 border-r-2 border-gray-300 transition-colors group-hover:border-gray-300 dark:border-white/10 dark:group-hover:border-zinc-700 dark:hover:border-zinc-700" />
 
           {/* Subtle Label */}
           <div className="pointer-events-none absolute -top-6 left-1/2 z-10 -translate-x-1/2 rounded bg-gray-900 px-1.5 py-0.5 text-[9px] font-black tracking-widest whitespace-nowrap text-white uppercase opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
@@ -60,9 +60,7 @@ export default function RoomMap2D({
         return (
           <div
             key={c.cab}
-            className={`locator-tile absolute overflow-hidden shadow-sm ${
-              isTarget ? "cabinet-located" : ""
-            } ${isSelected ? "ring-2 ring-pup-maroon/40" : ""}`}
+            className={`locator-tile absolute overflow-hidden shadow-sm ${ isTarget ? "cabinet-located" : "" } ${isSelected ? "ring-2 ring-pup-maroon/40" : ""} dark:shadow-none`}
             style={{
               left: `${rect.x * 100}%`,
               top: `${rect.y * 100}%`,
@@ -75,18 +73,18 @@ export default function RoomMap2D({
             }}
           >
             {showCabBadge ? (
-              <div className="absolute top-1.5 left-1.5 z-[1] rounded-sm border border-gray-200 bg-white/80 px-1.5 py-0.5 text-[11px] font-black text-gray-800">
+              <div className="absolute top-1.5 left-1.5 z-[1] rounded-sm border border-gray-200 bg-white px-1.5 py-0.5 text-[11px] font-black text-gray-800 dark:border-white/10 dark:bg-card/80 dark:text-zinc-100">
                 CAB-{c.cab}
               </div>
             ) : null}
 
             {kind === "cabinets" ? (
-              <div className="absolute inset-x-0 bottom-1.5 mx-1 rounded-sm border border-gray-200 bg-white/80 px-1 text-center text-[11px] font-bold text-gray-700">
+              <div className="absolute inset-x-0 bottom-1.5 mx-1 rounded-sm border border-gray-200 bg-white px-1 text-center text-[11px] font-bold text-gray-700 dark:border-white/10 dark:bg-card/80 dark:text-zinc-200">
                 {c.occupiedCount} Records
               </div>
             ) : isSelected ? (
               <div className="absolute inset-1 flex min-h-0 flex-col gap-1.5">
-                <div className="shrink-0 rounded-sm border border-gray-200 bg-white/95 px-1.5 py-0.5 text-center text-[10px] font-black tracking-wide text-gray-800 shadow-sm">
+                <div className="shrink-0 rounded-sm border border-gray-200 bg-white px-1.5 py-0.5 text-center text-[10px] font-black tracking-wide text-gray-800 shadow-sm dark:border-white/10 dark:bg-card/95 dark:text-zinc-100 dark:shadow-none">
                   CAB-{c.cab}
                 </div>
                 <div className="flex min-h-0 flex-1 flex-col gap-1.5">
@@ -95,23 +93,19 @@ export default function RoomMap2D({
                     const drawerClass =
                       d.count > 0
                         ? "drawer-occupied"
-                        : "bg-white border-gray-200 text-gray-300"
+                        : "bg-white dark:bg-card border-gray-200 dark:border-white/10 text-gray-300 dark:text-zinc-600"
 
                     return (
                       <div
                         key={d.drawer}
-                        className={`drawer-box locator-tile flex min-h-0 flex-1 cursor-pointer items-center justify-center rounded-brand border transition-all ${drawerClass} ${
-                          d.isTarget ? "drawer-located" : ""
-                        }`}
+                        className={`drawer-box locator-tile flex min-h-0 flex-1 cursor-pointer items-center justify-center rounded-brand border transition-all ${drawerClass} ${ d.isTarget ? "drawer-located" : "" }`}
                         onClick={(e) => {
                           e.stopPropagation()
                           onDrawerClick?.(d.drawer)
                         }}
                       >
                         <span
-                          className={`text-[10px] font-bold ${
-                            d.isTarget ? "text-pup-maroon" : "text-gray-900"
-                          }`}
+                          className={`text-[10px] font-bold ${ d.isTarget ? "text-pup-maroon dark:text-primary" : "text-gray-900" } dark:text-primary`}
                         >
                           {drawerText}
                         </span>
@@ -121,7 +115,7 @@ export default function RoomMap2D({
                 </div>
               </div>
             ) : (
-              <div className="absolute inset-x-0 bottom-1.5 px-1 text-center text-[10px] font-bold text-gray-600">
+              <div className="absolute inset-x-0 bottom-1.5 px-1 text-center text-[10px] font-bold text-gray-600 dark:text-zinc-300">
                 {c.occupiedCount} Records
               </div>
             )}
@@ -131,3 +125,5 @@ export default function RoomMap2D({
     </div>
   )
 }
+
+

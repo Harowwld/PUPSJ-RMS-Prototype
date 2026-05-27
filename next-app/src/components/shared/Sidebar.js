@@ -1,8 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
 
 export default function Sidebar({ items, activeKey, onSelect }) {
+  const pathname = usePathname()
   const [expandedKeys, setExpandedKeys] = useState(() => {
     const initial = {}
     items.forEach((item) => {
@@ -34,14 +36,22 @@ export default function Sidebar({ items, activeKey, onSelect }) {
     setExpandedKeys((prev) => ({ ...prev, [key]: !prev[key] }))
   }
 
+  const handleLinkClick = (e, key) => {
+    // Only intercept normal left clicks without modifiers (Ctrl, Cmd, Shift, Alt)
+    if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+      e.preventDefault()
+      onSelect(key)
+    }
+  }
+
   return (
-    <aside className="z-10 hidden w-72 flex-shrink-0 flex-col gap-2 overflow-y-auto border-r border-gray-200 bg-white p-4 shadow-sm md:flex">
+    <aside className="z-10 hidden w-72 flex-shrink-0 flex-col gap-2 overflow-y-auto border-r border-gray-200 bg-white p-4 shadow-sm md:flex select-none transition-colors duration-300 dark:border-white/5 dark:bg-white/2">
       {items.map((item, idx) => {
         if (item.type === "header") {
           return (
             <div
               key={`header-${idx}`}
-              className="mt-4 mb-2 px-2 text-[10px] font-bold tracking-widest text-gray-400 uppercase first:mt-0"
+              className="mt-4 mb-2 px-2 text-[10px] font-bold tracking-widest text-gray-400 uppercase first:mt-0 dark:text-zinc-500"
             >
               {item.label}
             </div>
@@ -55,19 +65,16 @@ export default function Sidebar({ items, activeKey, onSelect }) {
           return (
             <div key={item.key} className="flex flex-col gap-1">
               <button
+                type="button"
                 onClick={() => toggleAccordion(item.key)}
-                className={`flex items-center justify-between rounded-brand px-4 py-3 text-sm font-bold whitespace-nowrap transition-colors ${
-                  hasActiveChild && !isExpanded
-                    ? "bg-red-50 text-pup-maroon"
-                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                }`}
+                className={`flex w-full text-left items-center justify-between rounded-xl px-4 py-3 text-sm font-bold whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 ${ hasActiveChild && !isExpanded ? "bg-red-50 text-pup-maroon dark:bg-red-500/10 dark:text-primary" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900" } dark:focus-visible:ring-red-500/20 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50`}
               >
                 <div className="flex min-w-0 items-center gap-3">
                   <i className={`${item.iconClass} text-lg`}></i> {item.label}
                 </div>
                 <div className="flex items-center gap-2">
                   {item.badge > 0 ? (
-                    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-pup-maroon px-1.5 text-[11px] font-extrabold text-white">
+                    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-pup-maroon px-1.5 text-[11px] font-extrabold text-white dark:bg-red-600">
                       {item.badge > 99 ? "99+" : item.badge}
                     </span>
                   ) : null}
@@ -78,22 +85,15 @@ export default function Sidebar({ items, activeKey, onSelect }) {
               </button>
 
               <div
-                className={`overflow-hidden transition-all duration-[450ms] ease-out ${
-                  isExpanded
-                    ? "mt-1 max-h-[500px] opacity-100"
-                    : "mt-0 max-h-0 opacity-0"
-                }`}
+                className={`overflow-hidden transition-all duration-[450ms] ease-out ${ isExpanded ? "mt-1 max-h-[500px] opacity-100" : "mt-0 max-h-0 opacity-0" }`}
               >
-                <div className="ml-6 flex flex-col gap-1 border-l-2 border-gray-100 pl-4">
+                <div className="ml-6 flex flex-col gap-1 border-l-2 border-gray-100 pl-4 dark:border-white/5">
                   {item.children.map((child, childIdx) => (
-                    <button
+                    <a
                       key={child.key}
-                      onClick={() => onSelect(child.key)}
-                      className={`flex items-center justify-between gap-3 rounded-brand px-4 py-2 text-sm font-bold whitespace-nowrap transition-all duration-300 ${
-                        activeKey === child.key
-                          ? "bg-red-50 text-pup-maroon"
-                          : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                      }`}
+                      href={`${pathname}?view=${child.key}`}
+                      onClick={(e) => handleLinkClick(e, child.key)}
+                      className={`flex w-full text-left items-center justify-between gap-3 rounded-xl px-4 py-2 text-sm font-bold whitespace-nowrap transition-all duration-300 outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 cursor-pointer ${ activeKey === child.key ? "bg-red-50 text-pup-maroon dark:bg-red-500/10 dark:text-primary" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900" } dark:focus-visible:ring-red-500/20 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50`}
                       style={{
                         transitionDelay: isExpanded
                           ? `${childIdx * 50}ms`
@@ -105,11 +105,11 @@ export default function Sidebar({ items, activeKey, onSelect }) {
                         {child.label}
                       </span>
                       {child.badge > 0 ? (
-                        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-pup-maroon px-1.5 text-[11px] font-extrabold text-white">
+                        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-pup-maroon px-1.5 text-[11px] font-extrabold text-white dark:bg-red-600">
                           {child.badge > 99 ? "99+" : child.badge}
                         </span>
                       ) : null}
-                    </button>
+                    </a>
                   ))}
                 </div>
               </div>
@@ -118,26 +118,24 @@ export default function Sidebar({ items, activeKey, onSelect }) {
         }
 
         return (
-          <button
+          <a
             key={item.key}
-            onClick={() => onSelect(item.key)}
-            className={`flex items-center justify-between gap-3 rounded-brand px-4 py-3 text-sm font-bold whitespace-nowrap transition-colors ${
-              activeKey === item.key
-                ? "bg-red-50 text-pup-maroon"
-                : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-            }`}
+            href={`${pathname}?view=${item.key}`}
+            onClick={(e) => handleLinkClick(e, item.key)}
+            className={`flex w-full text-left items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm font-bold whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 cursor-pointer ${ activeKey === item.key ? "bg-red-50 text-pup-maroon dark:bg-red-500/10 dark:text-primary shadow-xs dark:shadow-none" : "text-gray-600 hover:bg-gray-100 hover:text-gray-900" } dark:focus-visible:ring-red-500/20 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50`}
           >
             <span className="flex min-w-0 items-center gap-3">
               <i className={`${item.iconClass} text-lg`}></i> {item.label}
             </span>
             {item.badge > 0 ? (
-              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-pup-maroon px-1.5 text-[11px] font-extrabold text-white">
+              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-pup-maroon px-1.5 text-[11px] font-extrabold text-white dark:bg-red-600">
                 {item.badge > 99 ? "99+" : item.badge}
               </span>
             ) : null}
-          </button>
+          </a>
         )
       })}
     </aside>
   )
 }
+

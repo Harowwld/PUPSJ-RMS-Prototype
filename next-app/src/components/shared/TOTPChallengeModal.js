@@ -60,17 +60,17 @@ export function TOTPChallengeModal({
         if (!isOpen) onOpenChange(false)
       }}
     >
-      <DialogContent className="overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md">
-        <DialogHeader className="border-b border-gray-100 bg-gray-50/50 p-6 text-left">
+      <DialogContent className="overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
+        <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 text-left dark:border-white/10 dark:bg-white/5">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30">
               <i className="ph-duotone ph-shield-check text-2xl"></i>
             </div>
             <div className="min-w-0">
-              <DialogTitle className="text-lg leading-tight font-black tracking-tight text-gray-900">
+              <DialogTitle className="text-lg leading-tight font-black tracking-tight text-gray-900 dark:text-zinc-50">
                 {title}
               </DialogTitle>
-              <DialogDescription className="mt-1.5 text-sm leading-relaxed font-medium text-gray-600">
+              <DialogDescription className="mt-1.5 text-sm leading-relaxed font-medium text-gray-600 dark:text-zinc-300">
                 {description}
               </DialogDescription>
             </div>
@@ -80,20 +80,20 @@ export function TOTPChallengeModal({
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 p-6">
             {error && (
-              <div className="animate-in fade-in slide-in-from-top-1 flex items-center gap-2 rounded-brand border border-red-100 bg-red-50 p-3 text-sm font-bold text-red-700">
+              <div className="animate-in fade-in slide-in-from-top-1 flex items-center gap-2 rounded-brand border border-red-100 bg-red-50 p-3 text-sm font-bold text-red-700 dark:bg-red-950/30">
                 <i className="ph-bold ph-warning-circle text-lg"></i>
                 {error}
               </div>
             )}
 
             <div className="space-y-3">
-              <label className="ml-1 text-[10px] font-black tracking-widest text-gray-400 uppercase">
+              <label className="ml-1 text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
                 Security Verification Code
               </label>
               <Input
                 type="text"
                 maxLength={6}
-                className="h-14 rounded-brand border-gray-300 bg-white text-center text-2xl font-black tracking-[0.5em] text-gray-900 shadow-sm focus:ring-pup-maroon"
+                className="h-14 rounded-brand border-gray-300 bg-white text-center text-2xl font-black tracking-[0.5em] text-gray-900 shadow-sm focus:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-50"
                 placeholder="000000"
                 value={token}
                 onChange={(e) =>
@@ -103,19 +103,19 @@ export function TOTPChallengeModal({
                 inputMode="numeric"
                 pattern="[0-9]*"
               />
-              <p className="text-center text-[11px] font-medium text-gray-500 italic">
+              <p className="text-center text-[11px] font-medium text-gray-500 italic dark:text-zinc-400">
                 Verify identity via your linked authenticator app
               </p>
             </div>
           </div>
 
-          <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end">
+          <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card">
             <Button
               type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold tracking-wider text-gray-700 uppercase hover:bg-gray-50"
+              className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold tracking-wider text-gray-700 uppercase hover:bg-gray-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card"
             >
               Cancel
             </Button>
@@ -164,3 +164,4 @@ export async function verifyTOTPWithRetry(token, maxRetries = 1) {
   }
   throw lastError || new Error("Verification failed")
 }
+

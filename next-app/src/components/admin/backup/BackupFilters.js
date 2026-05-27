@@ -53,19 +53,19 @@ export default function BackupFilters({
   }
 
   return (
-    <div className="rounded-t-brand border-b border-gray-200 bg-gray-50/50 p-4">
+    <div className="rounded-t-brand border-b border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
       <div className="flex w-full flex-wrap items-end gap-4">
         {/* Search */}
         <div className="min-w-[400px] flex-1">
-          <label className="mb-1 block text-xs font-bold text-gray-700 uppercase">
+          <label className="mb-1 block text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">
             Search Backups
           </label>
           <div className="relative">
-            <i className="ph-bold ph-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-gray-400"></i>
+            <i className="ph-bold ph-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-gray-400 dark:text-zinc-500"></i>
             <Input
               type="text"
               placeholder="Filename, version..."
-              className="h-10 w-full rounded-brand border border-gray-300 bg-white pl-10 text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none"
+              className="h-10 w-full rounded-brand border border-gray-300 bg-white pl-10 text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none dark:bg-card dark:border-white/10"
               value={localSearch}
               onChange={handleSearchChange}
             />
@@ -75,34 +75,34 @@ export default function BackupFilters({
         {/* Date Range Picker */}
         <div className="flex min-w-[450px] flex-[2] flex-col gap-1">
           <div className="flex items-center justify-between">
-            <label className="block text-xs font-bold text-gray-700 uppercase">
+            <label className="block text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">
               Capture Date Range
             </label>
             <div className="flex gap-1.5">
               <button
                 onClick={() => handleQuickRange("today")}
-                className="text-[9px] font-black text-gray-400 uppercase hover:text-pup-maroon transition-colors"
+                className="text-[9px] font-black text-gray-400 uppercase hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500"
               >
                 Today
               </button>
-              <span className="text-gray-300 text-[9px]">•</span>
+              <span className="text-gray-300 text-[9px] dark:text-zinc-600">•</span>
               <button
                 onClick={() => handleQuickRange("yesterday")}
-                className="text-[9px] font-black text-gray-400 uppercase hover:text-pup-maroon transition-colors"
+                className="text-[9px] font-black text-gray-400 uppercase hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500"
               >
                 Yesterday
               </button>
-              <span className="text-gray-300 text-[9px]">•</span>
+              <span className="text-gray-300 text-[9px] dark:text-zinc-600">•</span>
               <button
                 onClick={() => handleQuickRange("last7")}
-                className="text-[9px] font-black text-gray-400 uppercase hover:text-pup-maroon transition-colors"
+                className="text-[9px] font-black text-gray-400 uppercase hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500"
               >
                 Last 7 Days
               </button>
-              <span className="text-gray-300 text-[9px]">•</span>
+              <span className="text-gray-300 text-[9px] dark:text-zinc-600">•</span>
               <button
                 onClick={() => handleQuickRange("last30")}
-                className="text-[9px] font-black text-gray-400 uppercase hover:text-pup-maroon transition-colors"
+                className="text-[9px] font-black text-gray-400 uppercase hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500"
               >
                 Last 30 Days
               </button>
@@ -115,7 +115,7 @@ export default function BackupFilters({
                   <Button
                     variant={"outline"}
                     className={cn(
-                      "h-10 w-full justify-start rounded-brand border-gray-300 text-left text-xs font-medium",
+                      "h-10 w-full justify-start rounded-brand border-gray-300 dark:border-white/10 text-left text-xs font-medium",
                       !backupStartDate && "text-muted-foreground"
                     )}
                   >
@@ -148,7 +148,7 @@ export default function BackupFilters({
                   <Button
                     variant={"outline"}
                     className={cn(
-                      "h-10 w-full justify-start rounded-brand border-gray-300 text-left text-xs font-medium",
+                      "h-10 w-full justify-start rounded-brand border-gray-300 dark:border-white/10 text-left text-xs font-medium",
                       !backupEndDate && "text-muted-foreground"
                     )}
                   >
@@ -181,3 +181,4 @@ export default function BackupFilters({
     </div>
   )
 }
+

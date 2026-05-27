@@ -223,9 +223,9 @@ export default function CoursesTab({
     if (sortCourse.key !== column)
       return <i className="ph-bold ph-caret-up-down ml-1 opacity-30"></i>
     return sortCourse.direction === "asc" ? (
-      <i className="ph-bold ph-caret-up ml-1 text-pup-maroon"></i>
+      <i className="ph-bold ph-caret-up ml-1 text-pup-maroon dark:text-primary dark:text-primary"></i>
     ) : (
-      <i className="ph-bold ph-caret-down ml-1 text-pup-maroon"></i>
+      <i className="ph-bold ph-caret-down ml-1 text-pup-maroon dark:text-primary dark:text-primary"></i>
     )
   }
 
@@ -292,25 +292,25 @@ export default function CoursesTab({
       <div className="flex h-full w-full flex-col">
         <div className="space-y-4 p-6">
           <div className="flex items-center justify-between">
-            <Skeleton className="h-10 w-64 rounded-brand" />
-            <Skeleton className="h-10 w-48 rounded-brand" />
+            <Skeleton className="h-10 w-64 rounded-brand dark:bg-muted" />
+            <Skeleton className="h-10 w-48 rounded-brand dark:bg-muted" />
           </div>
-          <Skeleton className="h-[400px] w-full rounded-brand" />
+          <Skeleton className="h-[400px] w-full rounded-brand dark:bg-muted" />
         </div>
       </div>
     )
   }
 
   return (
-    <div className="animate-fade-in font-inter flex h-full w-full flex-col">
-      <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm">
+    <div className="animate-fade-up font-inter flex h-full w-full flex-col">
+      <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-books"
           title={
             <div className="flex items-center gap-2">
               Degree Programs
               {showArchived && (
-                <Badge className="border-red-100 bg-red-50 text-[10px] font-black text-red-700">
+                <Badge className="border-red-100 bg-red-50 text-[10px] font-black text-red-700 dark:bg-red-950/30">
                   RESTORE MODE
                 </Badge>
               )}
@@ -324,27 +324,19 @@ export default function CoursesTab({
           filters={
             <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
               <div className="flex h-full flex-col gap-1.5">
-                <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase">
+                <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
                   Status View
                 </label>
-                <div className="inline-flex h-10 items-center rounded-lg border border-gray-200 bg-gray-100 p-1 shadow-sm">
+                <div className="inline-flex h-10 items-center rounded-lg border border-gray-200 bg-gray-100 p-1 shadow-sm dark:border-white/10 dark:shadow-none dark:bg-muted">
                   <button
                     onClick={() => setShowArchived(false)}
-                    className={`flex h-full items-center gap-2 rounded-md px-3 text-[10px] font-black tracking-widest uppercase transition-all ${
-                      !showArchived
-                        ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
+                    className={`flex h-full items-center gap-2 rounded-md px-3 text-[10px] font-black tracking-widest uppercase transition-all ${ !showArchived ? "bg-white text-pup-maroon dark:text-primary shadow-sm ring-1 ring-black/5" : "text-gray-500 hover:text-gray-700" } dark:bg-card dark:text-primary dark:shadow-none dark:hover:text-zinc-200`}
                   >
                     ACTIVE
                   </button>
                   <button
                     onClick={() => setShowArchived(true)}
-                    className={`flex h-full items-center gap-2 rounded-md px-3 text-[10px] font-black tracking-widest uppercase transition-all ${
-                      showArchived
-                        ? "bg-amber-600 text-white shadow-sm ring-1 ring-black/5"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
+                    className={`flex h-full items-center gap-2 rounded-md px-3 text-[10px] font-black tracking-widest uppercase transition-all ${ showArchived ? "bg-amber-600 text-white shadow-sm ring-1 ring-black/5" : "text-gray-500 hover:text-gray-700" } dark:shadow-none dark:text-zinc-400 dark:hover:text-zinc-200`}
                   >
                     ARCHIVED
                   </button>
@@ -356,17 +348,18 @@ export default function CoursesTab({
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
+                size="sm"
                 onClick={handleExportCourses}
-                className="flex h-10 items-center justify-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
+                className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-white text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:border-white/10"
               >
                 <i className="ph-bold ph-file-csv text-base"></i>
-                EXPORT CSV
+                EXPORT
               </Button>
 
               <Button
                 onClick={() => setIsAddCourseOpen(true)}
                 disabled={showArchived}
-                className="flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-5 font-bold text-white shadow-sm active:scale-95 disabled:opacity-50 transition-all"
+                className="flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-5 font-bold text-white shadow-sm active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
               >
                 <i className="ph-bold ph-plus"></i>
                 <span className="hidden uppercase sm:inline">
@@ -379,11 +372,11 @@ export default function CoursesTab({
 
         {/* Active Filter Chips Row */}
         {(localSearch !== "" || showArchived) && (
-          <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300">
+          <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">Active Filters:</span>
+              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">Active Filters:</span>
               {localSearch && (
-                <div className="flex items-center gap-1 rounded-full border border-gray-300/20 bg-linear-to-br from-white to-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon uppercase">
+                <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-linear-to-br from-white to-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary uppercase dark:border-white/10 dark:text-primary">
                   Search: {localSearch}
                   <button
                     onClick={() => { setLocalSearch(""); setCourseSearch(""); setPageCourse(1); }}
@@ -394,7 +387,7 @@ export default function CoursesTab({
                 </div>
               )}
               {showArchived && (
-                <div className="flex items-center gap-1 rounded-full border border-amber-100 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 uppercase">
+                <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 uppercase dark:bg-amber-950/30 dark:text-amber-400">
                   Mode: Archived Records
                   <button
                     onClick={() => { setShowArchived(false); setPageCourse(1); }}
@@ -413,7 +406,7 @@ export default function CoursesTab({
                   setShowArchived(false)
                   setPageCourse(1)
                 }}
-                className="h-6 rounded-full border border-dashed border-gray-300/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase"
+                className="h-6 rounded-full border border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon uppercase dark:border-white/10 dark:text-primary dark:bg-red-950/30"
               >
                 CLEAR ALL FILTERS
               </Button>
@@ -421,7 +414,7 @@ export default function CoursesTab({
           </div>
         )}
 
-        <div className="relative flex flex-1 flex-col overflow-hidden">
+        <div key={showArchived} className="relative flex flex-1 flex-col overflow-hidden animate-fade-up">
           {/* Archive Mode Overlay Pattern */}
           {showArchived && (
             <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center opacity-[0.03]">
@@ -429,23 +422,23 @@ export default function CoursesTab({
             </div>
           )}
 
-          <div className="relative z-10 overflow-x-auto rounded-b-brand border-x border-b border-gray-200 bg-white shadow-sm">
+          <div className="relative z-10 overflow-x-auto rounded-b-brand border-x border-b border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
             {loading ? (
               <div className="space-y-4 p-8">
-                <Skeleton className="h-8 w-full rounded-brand" />
-                <Skeleton className="h-8 w-full rounded-brand" />
-                <Skeleton className="h-8 w-full rounded-brand" />
-                <Skeleton className="h-8 w-full rounded-brand" />
-                <Skeleton className="h-8 w-full rounded-brand" />
+                <Skeleton className="h-8 w-full rounded-brand dark:bg-muted" />
+                <Skeleton className="h-8 w-full rounded-brand dark:bg-muted" />
+                <Skeleton className="h-8 w-full rounded-brand dark:bg-muted" />
+                <Skeleton className="h-8 w-full rounded-brand dark:bg-muted" />
+                <Skeleton className="h-8 w-full rounded-brand dark:bg-muted" />
               </div>
             ) : (
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50">
-                  <tr className="text-left text-xs tracking-wider text-gray-600 uppercase">
+                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
+                  <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
                     <th className="w-16 p-3 px-6 text-center">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20"
+                        className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20 dark:text-primary dark:border-white/10"
                         checked={
                           filteredCourses.length > 0 &&
                           filteredCourses.every((c) => selectedCourses[c.id])
@@ -457,7 +450,7 @@ export default function CoursesTab({
                     <th className="w-48 p-3 px-6 font-bold">
                       <button
                         onClick={() => onSort("code")}
-                        className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                        className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none dark:bg-muted dark:hover:bg-white/10"
                       >
                         Code <SortIndicator column="code" />
                       </button>
@@ -465,12 +458,12 @@ export default function CoursesTab({
                     <th className="p-3 px-6 font-bold">
                       <button
                         onClick={() => onSort("name")}
-                        className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                        className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none dark:bg-muted dark:hover:bg-white/10"
                       >
                         Designation <SortIndicator column="name" />
                       </button>
                     </th>
-                    <th className="w-40 p-3 px-6 text-left font-bold text-gray-600 uppercase">
+                    <th className="w-40 p-3 px-6 text-left font-bold text-gray-600 uppercase dark:text-zinc-300">
                       Status
                     </th>
                     <th className="w-32 p-3 px-6 text-right font-bold">
@@ -478,17 +471,17 @@ export default function CoursesTab({
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-200">
+                <tbody className="divide-y divide-gray-200 dark:divide-white/10">
                   {!showArchived && (
                     <tr
-                      className={`transition-all duration-300 ${newCourseCode.trim() || newCourseName.trim() ? "bg-amber-50/50 hover:bg-amber-100/50" : "bg-gray-50/30 hover:bg-gray-50/50"}`}
+                      className={`transition-all duration-300 ${newCourseCode.trim() || newCourseName.trim() ? "bg-amber-50 hover:bg-amber-100/50" : "bg-gray-50 hover:bg-gray-50 dark:bg-card dark:hover:bg-white/10"}`}
                     >
                       <td className="p-3 px-6 text-center">
                         <div
-                          className={`flex h-5 w-5 items-center justify-center rounded-full border-2 border-dashed transition-colors ${newCourseCode.trim() || newCourseName.trim() ? "border-amber-400" : "border-gray-300"}`}
+                          className={`flex h-5 w-5 items-center justify-center rounded-full border-2 border-dashed transition-colors ${newCourseCode.trim() || newCourseName.trim() ? "border-amber-400" : "border-gray-300 dark:border-white/10"}`}
                         >
                           <i
-                            className={`ph-bold text-[10px] ${newCourseCode.trim() || newCourseName.trim() ? "ph-pencil-simple animate-bounce text-amber-600" : "ph-plus text-gray-400"}`}
+                            className={`ph-bold text-[10px] ${newCourseCode.trim() || newCourseName.trim() ? "ph-pencil-simple animate-bounce text-amber-600" : "ph-plus text-gray-400 dark:text-amber-400"}`}
                           ></i>
                         </div>
                       </td>
@@ -499,7 +492,7 @@ export default function CoursesTab({
                           onChange={(e) =>
                             setNewCourseCode(e.target.value.toUpperCase())
                           }
-                          className={`h-9 w-40 rounded-brand border-gray-300 bg-white text-xs font-black transition-all focus-visible:ring-pup-maroon ${newCourseCode.trim() || newCourseName.trim() ? "border-amber-400 ring-1 ring-amber-100" : "focus-visible:border-gray-300"}`}
+                          className={`h-9 w-40 rounded-brand border-gray-300 bg-white text-xs font-black transition-all focus-visible:ring-pup-maroon ${newCourseCode.trim() || newCourseName.trim() ? "border-amber-400 ring-1 ring-amber-100" : "focus-visible:border-gray-300 dark:border-white/10 dark:bg-card"}`}
                         />
                       </td>
                       <td className="p-3 px-6">
@@ -517,7 +510,7 @@ export default function CoursesTab({
                                 })
                               }
                             }}
-                            className={`h-9 flex-1 rounded-brand border-gray-300 bg-white text-sm transition-all focus-visible:ring-pup-maroon ${newCourseCode.trim() || newCourseName.trim() ? "border-amber-400 ring-2 ring-amber-100" : "focus-visible:border-gray-300"}`}
+                            className={`h-9 flex-1 rounded-brand border-gray-300 bg-white text-sm transition-all focus-visible:ring-pup-maroon ${newCourseCode.trim() || newCourseName.trim() ? "border-amber-400 ring-2 ring-amber-100" : "focus-visible:border-gray-300 dark:border-white/10 dark:bg-card"}`}
                           />
                           <Button
                             size="sm"
@@ -532,7 +525,7 @@ export default function CoursesTab({
                                 name: newCourseName,
                               })
                             }
-                            className={`h-9 rounded-brand px-4 text-xs font-bold text-white shadow-sm active:scale-95 disabled:opacity-50 ${newCourseCode.trim() || newCourseName.trim() ? "bg-amber-600 hover:bg-amber-700" : "bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md "} transition-all`}
+                            className={`h-9 rounded-brand px-4 text-xs font-bold text-white shadow-sm active:scale-95 disabled:opacity-50 ${newCourseCode.trim() || newCourseName.trim() ? "bg-amber-600 hover:bg-amber-700" : "bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md "} transition-all dark:shadow-none`}
                           >
                             {isQuickAddLoading ? (
                               <i className="ph-bold ph-spinner animate-spin"></i>
@@ -546,21 +539,21 @@ export default function CoursesTab({
                                   : "ADD"}
                               </>
                             )}
-                          </Button>{" "}
+                          </Button>
                         </div>
                       </td>
                       <td className="p-3 px-6">
                         {newCourseCode.trim() || newCourseName.trim() ? (
                           <Badge
                             variant="outline"
-                            className="animate-pulse border-amber-200 bg-amber-50 px-2 py-0.5 text-[9px] font-black tracking-wider text-amber-700 uppercase"
+                            className="animate-pulse border-amber-200 bg-amber-50 px-2 py-0.5 text-[9px] font-black tracking-wider text-amber-700 uppercase dark:bg-amber-950/30"
                           >
                             UNSAVED DRAFT
                           </Badge>
                         ) : (
                           <Badge
                             variant="outline"
-                            className="border-gray-200 bg-gray-100 px-2 py-0.5 text-[9px] font-bold tracking-wider text-gray-400 uppercase"
+                            className="border-gray-200 bg-gray-100 px-2 py-0.5 text-[9px] font-bold tracking-wider text-gray-400 uppercase dark:border-white/10 dark:text-zinc-500 dark:bg-muted"
                           >
                             NEW RECORD
                           </Badge>
@@ -569,76 +562,90 @@ export default function CoursesTab({
                       <td className="p-3 px-6 text-right"></td>
                     </tr>
                   )}
-                  {filteredCourses.map((c) => (
-                    <tr
-                      key={c.id}
-                      className={`group transition-colors hover:bg-gray-50 ${c.status === "Archived" ? "opacity-75" : ""} ${selectedCourses[c.id] ? (showArchived ? "bg-emerald-50/20" : "bg-red-50/20") : ""}`}
-                    >
-                      <td className="p-3 px-6 text-center">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20"
-                          checked={!!selectedCourses[c.id]}
-                          onChange={() => toggleCourseSelected(c.id)}
-                          disabled={
-                            showArchived
-                              ? c.status !== "Archived"
-                              : c.status === "Archived"
-                          }
-                        />
-                      </td>
-                      <td className="p-3 px-6 font-black tracking-tight text-gray-900">
-                        {c.code}
-                      </td>
-                      <td className="p-3 px-6 font-medium text-gray-700">
-                        {c.name}
-                      </td>
-                      <td className="p-3 px-6 text-left">
-                        {c.status === "Archived" ? (
-                          <Badge
-                            variant="outline"
-                            className="border-red-200 bg-red-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-red-700 uppercase"
-                          >
-                            ARCHIVED
-                          </Badge>
-                        ) : (
-                          <Badge
-                            variant="outline"
-                            className="border-green-200 bg-green-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-green-700 uppercase"
-                          >
-                            ACTIVE
-                          </Badge>
-                        )}
-                      </td>
-                      <td className="p-3 px-6 text-right">
-                        <div className="inline-flex items-center justify-end gap-2">
-                          {!showArchived && (
-                            <Button
+                  {filteredCourses.map((c) => {
+                    const isDisabled = showArchived
+                      ? c.status !== "Archived"
+                      : c.status === "Archived";
+                    
+                    return (
+                      <tr
+                        key={c.id}
+                        onClick={(e) => {
+                          if (!isDisabled) toggleCourseSelected(c.id, e);
+                        }}
+                        onDoubleClick={(e) => {
+                          e.preventDefault();
+                        }}
+                        className={`group transition-colors hover:bg-gray-50 select-none cursor-pointer ${ c.status === "Archived" ? "opacity-75" : "" } ${selectedCourses[c.id] ? (showArchived ? "bg-emerald-50" : "bg-red-50") : ""} ${isDisabled ? "cursor-not-allowed" : ""} dark:hover:bg-white/10 dark:bg-card`}
+                      >
+                        <td className="p-3 px-6 text-center">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20 dark:text-primary dark:border-white/10"
+                            checked={!!selectedCourses[c.id]}
+                            onChange={(e) => {
+                              // Prevent click from bubbling to tr
+                              e.stopPropagation();
+                              toggleCourseSelected(c.id);
+                            }}
+                            disabled={isDisabled}
+                          />
+                        </td>
+                        <td className="p-3 px-6 font-black tracking-tight text-gray-900 dark:text-zinc-50">
+                          {c.code}
+                        </td>
+                        <td className="p-3 px-6 font-medium text-gray-700 dark:text-zinc-200">
+                          {c.name}
+                        </td>
+                        <td className="p-3 px-6 text-left">
+                          {c.status === "Archived" ? (
+                            <Badge
                               variant="outline"
-                              size="sm"
-                              disabled={c.status === "Archived"}
-                              onClick={() => {
-                                setEditCourse({
-                                  id: c.id,
-                                  code: c.code,
-                                  name: c.name,
-                                })
-                                const currentBlocks = sections
-                                  .filter((s) => s.course_code === c.code)
-                                  .map((s) => s.name)
-                                setEditCourseBlocks(
-                                  currentBlocks.length > 0
-                                    ? currentBlocks
-                                    : [""]
-                                )
-                                setIsEditCourseOpen(true)
-                              }}
-                              className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                              className="border-red-200 bg-red-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-red-700 uppercase dark:bg-red-950/30"
                             >
-                              <i className="ph-bold ph-pencil-simple text-xs"></i>
-                              EDIT
-                            </Button>
+                              ARCHIVED
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="border-green-200 bg-green-50 px-2 py-0.5 text-[9px] font-bold tracking-wider text-green-700 uppercase"
+                            >
+                              ACTIVE
+                            </Badge>
                           )}
+                        </td>
+                        <td className="p-3 px-6 text-right">
+                          <div 
+                            className="inline-flex items-center justify-end gap-2"
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {!showArchived && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={c.status === "Archived"}
+                                onClick={() => {
+                                  setEditCourse({
+                                    id: c.id,
+                                    code: c.code,
+                                    name: c.name,
+                                  })
+                                  const currentBlocks = sections
+                                    .filter((s) => s.course_code === c.code)
+                                    .map((s) => s.name)
+                                  setEditCourseBlocks(
+                                    currentBlocks.length > 0
+                                      ? currentBlocks
+                                      : [""]
+                                  )
+                                  setIsEditCourseOpen(true)
+                                }}
+                                className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                              >
+                                <i className="ph-bold ph-pencil-simple text-xs"></i>
+                                EDIT
+                              </Button>
+                            )}
 
                           {c.status === "Archived" ? (
                             <Button
@@ -659,7 +666,7 @@ export default function CoursesTab({
                                 })
                                 setConfirmOpen(true)
                               }}
-                              className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 active:scale-95"
+                              className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:border-white/10"
                             >
                               <i className="ph-bold ph-arrow-counter-clockwise text-xs"></i>
                               RESTORE
@@ -682,7 +689,7 @@ export default function CoursesTab({
                                 })
                                 setConfirmOpen(true)
                               }}
-                              className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700 active:scale-95"
+                              className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:border-white/10"
                             >
                               <i className="ph-bold ph-archive text-xs"></i>
                               ARCHIVE
@@ -691,19 +698,19 @@ export default function CoursesTab({
                         </div>
                       </td>
                     </tr>
-                  ))}
+                  )})}
                   {filteredCourses.length === 0 && (
                     <tr className="border-0 hover:bg-transparent">
                       <td colSpan={5} className="border-0 p-0">
-                        <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500">
+                        <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                           <EmptyHeader className="flex flex-col items-center gap-0">
-                            <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
-                              <i className="ph-duotone ph-books text-3xl text-pup-maroon"></i>
+                            <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+                              <i className="ph-duotone ph-books text-3xl text-pup-maroon dark:text-primary dark:text-primary"></i>
                             </EmptyMedia>
-                            <EmptyTitle className="text-lg font-bold text-gray-900">
+                            <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                               No degree programs found
                             </EmptyTitle>
-                            <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600">
+                            <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
                               {courseSearch
                                 ? `No results matching "${courseSearch}" in the current view.`
                                 : showArchived
@@ -722,7 +729,7 @@ export default function CoursesTab({
                                   setCourseSearch("")
                                   setLocalSearch("")
                                 }}
-                                className="mt-4 flex h-9 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
+                                className="mt-4 flex h-9 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                               >
                                 <i className="ph-bold ph-arrow-counter-clockwise"></i>
                                 CLEAR SEARCH
@@ -731,7 +738,7 @@ export default function CoursesTab({
                               !showArchived && (
                                 <Button
                                   onClick={() => setIsAddCourseOpen(true)}
-                                  className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-black tracking-widest text-white shadow-lg shadow-red-900/20 active:scale-95 transition-all"
+                                  className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-black tracking-widest text-white shadow-lg shadow-red-900/20 active:scale-95 transition-all dark:shadow-none"
                                 >
                                   <i className="ph-bold ph-plus text-lg"></i>
                                   ADD DEGREE PROGRAM
@@ -750,20 +757,20 @@ export default function CoursesTab({
         </div>
 
         {filteredCoursesFull.length > 0 && (
-          <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8">
+          <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card">
             <div className="flex items-center gap-8 select-none cursor-default">
-              <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest">
+              <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
                 <span>
-                  Showing <strong className="text-gray-900">{filteredCourses.length}</strong> out of{" "}
-                  <strong className="text-gray-900">{filteredCoursesFull.length}</strong>{" "}
+                  Showing <strong className="text-gray-900 dark:text-zinc-50">{filteredCourses.length}</strong> out of{" "}
+                  <strong className="text-gray-900 dark:text-zinc-50">{filteredCoursesFull.length}</strong>{" "}
                   {showArchived ? "Archived" : "Active"} Programs
                 </span>
 
                 {filteredCoursesFull.length > 10 && (
-                  <div className="flex items-center gap-3 border-l border-gray-200/50 pl-6">
+                  <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
                     <span className="text-[10px] opacity-60">Rows:</span>
                     <Select
-                      className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50"
+                      className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
                       value={itemsPerPage}
                       onChange={handleItemsPerPageChange}
                     >
@@ -784,12 +791,12 @@ export default function CoursesTab({
                   size="sm"
                   disabled={pageCourse <= 1}
                   onClick={() => setPageCourse((p) => p - 1)}
-                  className="h-9 rounded-brand border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                  className="h-9 rounded-brand border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                 >
                   <i className="ph-bold ph-caret-left mr-2 text-base"></i> PREV
                 </Button>
                 
-                <div className="flex h-9 min-w-[36px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm">
+                <div className="flex h-9 min-w-[36px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
                   {pageCourse}
                 </div>
 
@@ -798,7 +805,7 @@ export default function CoursesTab({
                   size="sm"
                   disabled={pageCourse >= Math.ceil(filteredCoursesFull.length / itemsPerPage)}
                   onClick={() => setPageCourse((p) => p + 1)}
-                  className="h-9 rounded-brand border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                  className="h-9 rounded-brand border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                 >
                   NEXT <i className="ph-bold ph-caret-right ml-2 text-base"></i>
                 </Button>
@@ -829,17 +836,17 @@ export default function CoursesTab({
           }
         }}
       >
-        <DialogContent className="overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md">
-          <DialogHeader className="border-b border-gray-100 bg-gray-50/50 p-6">
+        <DialogContent className="overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
+          <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30 dark:text-primary dark:shadow-none">
                 <i className="ph-duotone ph-pencil-line text-2xl"></i>
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg leading-tight font-black tracking-tight text-gray-900">
+                <DialogTitle className="text-lg leading-tight font-black tracking-tight text-gray-900 dark:text-zinc-50">
                   New Degree Program
                 </DialogTitle>
-                <DialogDescription className="mt-1.5 text-sm leading-relaxed font-medium text-gray-600">
+                <DialogDescription className="mt-1.5 text-sm leading-relaxed font-medium text-gray-600 dark:text-zinc-300">
                   Register a new academic track and its initial organizational
                   blocks.
                 </DialogDescription>
@@ -850,13 +857,13 @@ export default function CoursesTab({
             <div className="max-h-[60vh] space-y-6 overflow-y-auto p-6">
               <div className="space-y-6">
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase">
-                    Code <span className="text-pup-maroon">*</span>
+                  <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+                    Code <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span>
                   </label>
                   <Input
                     type="text"
                     placeholder="BSIT"
-                    className="h-11 rounded-brand border border-gray-300 bg-white text-sm font-black focus-visible:border-gray-300 focus-visible:ring-pup-maroon"
+                    className="h-11 rounded-brand border border-gray-300 bg-white text-sm font-black focus-visible:border-gray-300 focus-visible:ring-pup-maroon dark:bg-card dark:border-white/10"
                     value={newCourseCode}
                     onChange={(e) =>
                       setNewCourseCode(e.target.value.toUpperCase())
@@ -865,14 +872,14 @@ export default function CoursesTab({
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase">
+                  <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
                     Program Designation{" "}
-                    <span className="text-pup-maroon">*</span>
+                    <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span>
                   </label>
                   <Input
                     type="text"
                     placeholder="Bachelor of Science in Information Technology"
-                    className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-pup-maroon"
+                    className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-pup-maroon dark:bg-card dark:border-white/10"
                     value={newCourseName}
                     onChange={(e) => setNewCourseName(e.target.value)}
                     required
@@ -882,7 +889,7 @@ export default function CoursesTab({
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold tracking-wide text-gray-700 uppercase">
+                  <label className="text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
                     Initial Course Blocks
                   </label>
                   <Button
@@ -890,7 +897,7 @@ export default function CoursesTab({
                     variant="ghost"
                     size="sm"
                     onClick={() => setNewCourseBlocks([...newCourseBlocks, ""])}
-                    className="h-7 rounded-md px-2 text-[10px] font-black text-pup-maroon hover:bg-red-50"
+                    className="h-7 rounded-md px-2 text-[10px] font-black text-pup-maroon dark:text-primary hover:bg-red-50 dark:text-primary dark:bg-red-950/30"
                   >
                     <i className="ph-bold ph-plus mr-1"></i> ADD BLOCK
                   </Button>
@@ -901,7 +908,7 @@ export default function CoursesTab({
                       <Input
                         type="text"
                         placeholder={`Block ${idx + 1} Name`}
-                        className="h-10 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-pup-maroon"
+                        className="h-10 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-pup-maroon dark:bg-card dark:border-white/10"
                         value={block}
                         onChange={(e) => {
                           const updated = [...newCourseBlocks]
@@ -920,7 +927,7 @@ export default function CoursesTab({
                             )
                             setNewCourseBlocks(updated)
                           }}
-                          className="h-10 w-10 shrink-0 text-gray-400 hover:text-red-600"
+                          className="h-10 w-10 shrink-0 text-gray-400 hover:text-red-600 dark:text-zinc-500"
                         >
                           <i className="ph-bold ph-trash"></i>
                         </Button>
@@ -930,7 +937,7 @@ export default function CoursesTab({
                 </div>
               </div>
             </div>
-            <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end">
+            <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card">
               <Button
                 type="button"
                 variant="outline"
@@ -940,13 +947,13 @@ export default function CoursesTab({
                   setNewCourseName("")
                   setNewCourseBlocks([""])
                 }}
-                className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon"
+                className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
               >
                 CANCEL
               </Button>
               <Button
                 type="submit"
-                className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-black text-white shadow-sm"
+                className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-black text-white shadow-sm dark:shadow-none"
               >
                 <i className="ph-bold ph-check text-lg"></i>
                 CREATE PROGRAM
@@ -966,17 +973,17 @@ export default function CoursesTab({
           }
         }}
       >
-        <DialogContent className="overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md">
-          <DialogHeader className="border-b border-gray-100 bg-gray-50/50 p-6">
+        <DialogContent className="overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
+          <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30 dark:text-primary dark:shadow-none">
                 <i className="ph-duotone ph-pencil-line text-2xl"></i>
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg leading-tight font-black tracking-tight text-gray-900">
+                <DialogTitle className="text-lg leading-tight font-black tracking-tight text-gray-900 dark:text-zinc-50">
                   Update Program Details
                 </DialogTitle>
-                <DialogDescription className="mt-1.5 text-sm leading-relaxed font-medium text-gray-600">
+                <DialogDescription className="mt-1.5 text-sm leading-relaxed font-medium text-gray-600 dark:text-zinc-300">
                   Modify the designation or associated blocks for this program.
                 </DialogDescription>
               </div>
@@ -986,12 +993,12 @@ export default function CoursesTab({
             <div className="max-h-[60vh] space-y-6 overflow-y-auto p-6">
               <div className="space-y-6">
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase">
-                    Code <span className="text-pup-maroon">*</span>
+                  <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+                    Code <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span>
                   </label>
                   <Input
                     type="text"
-                    className="h-11 rounded-brand border border-gray-300 bg-white text-sm font-black focus-visible:border-gray-300 focus-visible:ring-pup-maroon"
+                    className="h-11 rounded-brand border border-gray-300 bg-white text-sm font-black focus-visible:border-gray-300 focus-visible:ring-pup-maroon dark:bg-card dark:border-white/10"
                     value={editCourse.code}
                     onChange={(e) =>
                       setEditCourse((prev) => ({
@@ -1003,13 +1010,13 @@ export default function CoursesTab({
                   />
                 </div>
                 <div>
-                  <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase">
+                  <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
                     Program Designation{" "}
-                    <span className="text-pup-maroon">*</span>
+                    <span className="text-pup-maroon dark:text-primary dark:text-primary">*</span>
                   </label>
                   <Input
                     type="text"
-                    className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-pup-maroon"
+                    className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-pup-maroon dark:bg-card dark:border-white/10"
                     value={editCourse.name}
                     onChange={(e) =>
                       setEditCourse((prev) => ({
@@ -1024,7 +1031,7 @@ export default function CoursesTab({
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold tracking-wide text-gray-700 uppercase">
+                  <label className="text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
                     Manage Course Blocks
                   </label>
                   <Button
@@ -1034,7 +1041,7 @@ export default function CoursesTab({
                     onClick={() =>
                       setEditCourseBlocks([...editCourseBlocks, ""])
                     }
-                    className="h-7 rounded-md px-2 text-[10px] font-black text-pup-maroon hover:bg-red-50"
+                    className="h-7 rounded-md px-2 text-[10px] font-black text-pup-maroon dark:text-primary hover:bg-red-50 dark:text-primary dark:bg-red-950/30"
                   >
                     <i className="ph-bold ph-plus mr-1"></i> ADD BLOCK
                   </Button>
@@ -1045,7 +1052,7 @@ export default function CoursesTab({
                       <Input
                         type="text"
                         placeholder={`Block ${idx + 1} Name`}
-                        className="h-10 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-pup-maroon"
+                        className="h-10 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-pup-maroon dark:bg-card dark:border-white/10"
                         value={block}
                         onChange={(e) => {
                           const updated = [...editCourseBlocks]
@@ -1064,7 +1071,7 @@ export default function CoursesTab({
                             )
                             setEditCourseBlocks(updated)
                           }}
-                          className="h-10 w-10 shrink-0 text-gray-400 hover:text-red-600"
+                          className="h-10 w-10 shrink-0 text-gray-400 hover:text-red-600 dark:text-zinc-500"
                         >
                           <i className="ph-bold ph-archive"></i>
                         </Button>
@@ -1074,7 +1081,7 @@ export default function CoursesTab({
                 </div>
               </div>
             </div>
-            <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end">
+            <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card">
               <Button
                 type="button"
                 variant="outline"
@@ -1083,13 +1090,13 @@ export default function CoursesTab({
                   setEditCourse({ id: null, code: "", name: "" })
                   setEditCourseBlocks([""])
                 }}
-                className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon"
+                className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
               >
                 CANCEL
               </Button>
               <Button
                 type="submit"
-                className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-black text-white shadow-sm"
+                className="flex h-11 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-black text-white shadow-sm dark:shadow-none"
               >
                 <i className="ph-bold ph-check text-lg"></i>
                 SAVE CHANGES
@@ -1101,3 +1108,5 @@ export default function CoursesTab({
     </div>
   )
 }
+
+

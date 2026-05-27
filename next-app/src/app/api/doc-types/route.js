@@ -3,7 +3,6 @@ import {
   createDocType,
   listDocTypes,
   listAllDocTypes,
-  createDocTypeFull,
   updateDocType,
   archiveDocType,
   restoreDocType
@@ -15,7 +14,8 @@ export const runtime = "nodejs";
 async function getTargetName(id) {
   try {
     const rows = await listAllDocTypes({ includeArchived: true });
-    const target = rows.find(r => String(r.id) === String(id));
+    if (!Array.isArray(rows)) return id;
+    const target = rows.find(r => r && String(r.id) === String(id));
     return target?.name || id;
   } catch {
     return id;
@@ -28,16 +28,17 @@ export async function GET(req) {
 
   if (searchParams.get("admin") === "true") {
     const rows = await listAllDocTypes({ includeArchived });
-    return NextResponse.json({ ok: true, data: rows });
+    return NextResponse.json({ ok: true, data: rows || [] });
   }
 
   const rows = await listDocTypes({ includeArchived });
-  return NextResponse.json({ ok: true, data: rows });
+  return NextResponse.json({ ok: true, data: rows || [] });
 }
 
 export async function POST(req) {
   const { searchParams } = new URL(req.url);
   const silent = searchParams.get("silent") === "true" || searchParams.get("silent") === "1";
+  const isAdmin = searchParams.get("admin") === "true";
 
   const body = await req.json().catch(() => null);
   if (!body || typeof body !== "object") {
@@ -56,34 +57,28 @@ export async function POST(req) {
   }
 
   try {
-    if (searchParams.get("admin") === "true") {
-      const created = await createDocTypeFull(name);
-      if (!silent) {
-        await writeAuditLog(req, `Create Document Type`, {
-          details: `created new administrative document type identifier '${name}'`,
-          entity_type: "DocumentType",
-          entity_id: created.id
-        });
-      }
-      return NextResponse.json({ ok: true, data: created }, { status: 201 });
-    }
-
+    // Attempt creation with high reliability
     const created = await createDocType(name);
+    
+    // Defensive check before logging
+    const safeId = created && typeof created === 'object' ? created.id : null;
+
     if (!silent) {
       await writeAuditLog(req, `Create Document Type`, {
-        details: `registered new document category '${name}' in system taxonomy`,
+        details: isAdmin 
+          ? `created new administrative document type identifier '${name}'`
+          : `registered new document category '${name}' in system taxonomy`,
         entity_type: "DocumentType",
-        entity_id: created.id
+        entity_id: safeId || "NEW"
       });
     }
+    
     return NextResponse.json({ ok: true, data: created }, { status: 201 });
+
   } catch (e) {
-    const msg = String(e?.message || "");
-    if (msg.includes("UNIQUE") || msg.toLowerCase().includes("unique") || msg.includes("already exists")) {
-      if (searchParams.get("admin") === "true") {
-        return NextResponse.json({ ok: false, error: "Document type already exists" }, { status: 400 });
-      }
-      return NextResponse.json({ ok: true, data: name }, { status: 200 });
+    const msg = String(e?.message || "Unknown Error");
+    if (msg.toLowerCase().includes("already exists")) {
+      return NextResponse.json({ ok: false, error: "Document type already exists" }, { status: 400 });
     }
     return NextResponse.json(
       { ok: false, error: "Failed to create document type: " + msg },
@@ -107,7 +102,7 @@ export async function PUT(req) {
     const updated = await updateDocType(id, name);
     if (!silent) {
       await writeAuditLog(req, `Update Document Type`, {
-        details: `updated configuration for document type identifier '${updated.name}'`,
+        details: `updated configuration for document type identifier '${updated?.name || name}'`,
         entity_type: "DocumentType",
         entity_id: id
       });

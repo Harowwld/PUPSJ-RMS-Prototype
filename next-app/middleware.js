@@ -78,11 +78,12 @@ export async function middleware(req) {
     return addSecurityHeaders(NextResponse.redirect(url));
   }
 
-  const role = String(payload?.role || "");
+  const role = String(payload?.role || "").toLowerCase().trim();
+  const isAdmin = ["admin", "administrator", "superadmin"].includes(role);
 
   // 5. Role-based routing
   if (pathname.startsWith("/admin")) {
-    if (role !== "Admin") {
+    if (!isAdmin) {
       const url = req.nextUrl.clone();
       url.pathname = "/staff";
       return addSecurityHeaders(NextResponse.redirect(url));

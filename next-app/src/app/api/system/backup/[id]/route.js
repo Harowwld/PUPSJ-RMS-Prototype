@@ -55,7 +55,7 @@ export async function DELETE(req, { params }) {
     console.log(`[DELETE BACKUP] DB Changes: ${changes}`);
 
     if (changes === 0) {
-      throw new Error("Record was not removed from database");
+      console.log(`[DELETE BACKUP] Record was not found or already removed from database for ID: ${id}`);
     }
     await writeAuditLog(req, `Delete Backup`, { 
       details: `permanently deleted local backup package '${backup.filename}' (ID: ${id}) from primary storage`,

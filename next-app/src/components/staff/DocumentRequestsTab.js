@@ -40,12 +40,12 @@ const STATUS_OPTIONS = [
 
 function statusBadgeClass(status) {
   const s = String(status || "").toUpperCase();
-  if (s === "DONE" || s === "COMPLETED") return "bg-emerald-50 text-emerald-800 border-emerald-200";
-  if (s === "CANCELLED") return "bg-gray-100 text-gray-600 border-gray-200";
+  if (s === "DONE" || s === "COMPLETED") return "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 border-emerald-200";
+  if (s === "CANCELLED") return "bg-gray-100 dark:bg-muted text-gray-600 dark:text-zinc-300 dark:text-zinc-400 border-gray-200 dark:border-white/10";
   if (s === "READY") return "bg-sky-50 text-sky-800 border-sky-200";
-  if (s === "SHREDDED") return "bg-rose-50 text-rose-800 border-rose-200";
-  if (s === "PROCESSING" || s === "INPROGRESS") return "bg-amber-50 text-amber-900 border-amber-200";
-  return "bg-red-50 text-pup-maroon border-red-100";
+  if (s === "SHREDDED") return "bg-rose-50 dark:bg-rose-950/20 text-rose-800 border-rose-200";
+  if (s === "PROCESSING" || s === "INPROGRESS") return "bg-amber-50 dark:bg-amber-950/20 text-amber-900 border-amber-200";
+  return "bg-red-50 dark:bg-red-950/20 text-pup-maroon dark:text-primary dark:text-primary border-red-100";
 }
 
 export default function DocumentRequestsTab({
@@ -343,38 +343,40 @@ export default function DocumentRequestsTab({
   };
 
   return (
-    <div className="flex flex-col h-full min-h-0 gap-4 animate-fade-in font-inter">
-      <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm">
+    <div className="flex flex-col h-full min-h-0 gap-4 animate-fade-up font-inter">
+      <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-tray"
           title="Document Service Requests"
           description="Manage and process alumni requests for official university records."
           actions={
-            !loading && !error && (
-              <Button
-                type="button"
-                className="bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all font-bold shrink-0"
-                onClick={() => setCreateOpen(true)}
-              >
-                <i className="ph-bold ph-plus mr-1.5"></i>
-                NEW REQUEST
-              </Button>
-            )
+            <div className="flex items-center gap-3">
+              {!loading && !error && (
+                <Button
+                  type="button"
+                  className="bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all font-bold shrink-0 dark:shadow-none"
+                  onClick={() => setCreateOpen(true)}
+                >
+                  <i className="ph-bold ph-plus mr-1.5"></i>
+                  NEW REQUEST
+                </Button>
+              )}
+            </div>
           }
         />
         
         {!loading && !error && (
-          <div className="p-4 bg-gray-50/50 border-b border-gray-200 flex flex-col lg:flex-row gap-3 lg:items-end">
+          <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-col lg:flex-row gap-3 lg:items-end dark:bg-white/5 dark:border-white/10">
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-bold text-gray-700 uppercase">
+                <label className="block text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">
                   Search
                 </label>
               </div>
               <div className="relative">
-                <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500"></i>
                 <Input
-                  className="h-10 pl-10 rounded-brand border-gray-300 bg-white text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 transition-colors"
+                  className="h-10 pl-10 rounded-brand border-gray-300 bg-white text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 transition-colors dark:bg-card dark:border-white/10"
                   placeholder="Student no., name, document type…"
                   value={q}
                   onChange={(e) => {
@@ -385,11 +387,11 @@ export default function DocumentRequestsTab({
               </div>
             </div>
             <div className="w-full sm:w-48">
-              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase">
+              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase dark:text-zinc-200">
                 Status
               </label>
               <Select
-                className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 transition-colors"
+                className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 transition-colors dark:bg-card dark:text-zinc-100 dark:focus:border-zinc-700 dark:border-white/10"
                 value={statusFilter}
                 onChange={(e) => {
                   setStatusFilter(e.target.value);
@@ -409,11 +411,11 @@ export default function DocumentRequestsTab({
 
         {/* Active Filter Chips Row */}
         {!loading && !error && (q !== "" || statusFilter !== "") && (
-          <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300">
+          <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase">Active Filters:</span>
+              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">Active Filters:</span>
               {q && (
-                <div className="flex items-center gap-1 rounded-full border border-gray-300/20 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon uppercase">
+                <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary uppercase dark:border-white/10 dark:text-primary">
                   Search: {q}
                   <button
                     onClick={() => { setQ(""); setPage(1); }}
@@ -424,7 +426,7 @@ export default function DocumentRequestsTab({
                 </div>
               )}
               {statusFilter && (
-                <div className="flex items-center gap-1 rounded-full border border-blue-100 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 uppercase">
+                <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 uppercase dark:bg-blue-950/30 dark:text-blue-400">
                   Status: {statusFilter}
                   <button
                     onClick={() => { setStatusFilter(""); setPage(1); }}
@@ -442,7 +444,7 @@ export default function DocumentRequestsTab({
                   setStatusFilter("");
                   setPage(1);
                 }}
-                className="h-6 rounded-full border border-dashed border-gray-300/30 px-3 text-[10px] font-black text-pup-maroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase"
+                className="h-6 rounded-full border border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon uppercase dark:border-white/10 dark:text-primary dark:bg-red-950/30"
               >
                 CLEAR ALL FILTERS
               </Button>
@@ -453,70 +455,73 @@ export default function DocumentRequestsTab({
         <CardContent className="flex min-h-0 flex-1 flex-col p-6">
           {loading ? (
             <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
-              <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0">
+              <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0 dark:bg-card dark:border-white/10 dark:shadow-none">
                 <div className="p-6 flex-1 flex flex-col space-y-4">
-                  <div className="border border-gray-100 rounded-brand overflow-hidden">
-                    <Skeleton className="h-10 w-full rounded-none" />
-                    <div className="divide-y divide-gray-100">
+                  <div className="border border-gray-100 rounded-brand overflow-hidden dark:border-white/10">
+                    <Skeleton className="h-10 w-full rounded-none dark:bg-muted" />
+                    <div className="divide-y divide-gray-100 dark:divide-white/10">
                       {[1, 2, 3, 4, 5, 6].map((i) => (
                         <div key={i} className="p-4 flex items-center justify-between">
                           <div className="space-y-2 flex-1">
-                            <Skeleton className="h-4 w-1/4" />
-                            <Skeleton className="h-3 w-1/3" />
+                            <Skeleton className="h-4 w-1/4 dark:bg-muted" />
+                            <Skeleton className="h-3 w-1/3 dark:bg-muted" />
                           </div>
-                          <Skeleton className="h-6 w-20 rounded-full" />
+                          <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
                         </div>
                       ))}
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0">
-                <div className="p-4 border-b border-gray-100 bg-gray-50/80">
-                  <Skeleton className="h-3 w-24" />
+              <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0 dark:bg-card dark:border-white/10 dark:shadow-none">
+                <div className="p-4 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-muted/30">
+                  <Skeleton className="h-3 w-24 dark:bg-muted" />
                 </div>
                 <div className="p-6 space-y-6">
                   <div className="space-y-2">
-                    <Skeleton className="h-3 w-16" />
-                    <Skeleton className="h-5 w-3/4" />
-                    <Skeleton className="h-3 w-1/2" />
+                    <Skeleton className="h-3 w-16 dark:bg-muted" />
+                    <Skeleton className="h-5 w-3/4 dark:bg-muted" />
+                    <Skeleton className="h-3 w-1/2 dark:bg-muted" />
                   </div>
                   <div className="space-y-2">
-                    <Skeleton className="h-3 w-24" />
-                    <Skeleton className="h-5 w-1/2" />
+                    <Skeleton className="h-3 w-24 dark:bg-muted" />
+                    <Skeleton className="h-5 w-1/2 dark:bg-muted" />
                   </div>
-                  <Skeleton className="h-32 w-full rounded-brand" />
+                  <Skeleton className="h-32 w-full rounded-brand dark:bg-muted" />
                   <div className="space-y-2">
-                    <Skeleton className="h-3 w-16" />
-                    <Skeleton className="h-10 w-full rounded-brand" />
+                    <Skeleton className="h-3 w-16 dark:bg-muted" />
+                    <Skeleton className="h-10 w-full rounded-brand dark:bg-muted" />
                   </div>
                   <div className="space-y-2">
-                    <Skeleton className="h-3 w-16" />
-                    <Skeleton className="h-20 w-full rounded-brand" />
+                    <Skeleton className="h-3 w-16 dark:bg-muted" />
+                    <Skeleton className="h-20 w-full rounded-brand dark:bg-muted" />
                   </div>
                 </div>
               </div>
             </div>
           ) : error ? (
-            <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+            <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon" />
+                <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
+                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary dark:text-primary" />
                 </EmptyMedia>
-                <EmptyTitle className="text-lg font-bold text-gray-900">Could not load report</EmptyTitle>
-                <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">Could not load report</EmptyTitle>
+                <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md dark:text-zinc-300">
                   {error}
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
           ) : (
             <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
-              <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0">
+              <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0 dark:bg-card dark:border-white/10 dark:shadow-none">
                 <div className="p-6 flex-1 flex flex-col min-h-0">
-                  <div className="flex-1 overflow-y-auto overflow-x-auto border border-gray-200 rounded-brand">
+                  <div 
+                    key={`${page}-${statusFilter}-${debouncedQ}`}
+                    className="flex-1 overflow-y-auto overflow-x-auto border border-gray-200 rounded-brand animate-fade-up dark:border-white/10"
+                  >
                     <table className="min-w-full text-sm">
-                      <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10">
-                        <tr className="text-left text-xs uppercase tracking-wider text-gray-600">
+                      <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 dark:bg-zinc-900 dark:border-white/10">
+                        <tr className="text-left text-xs uppercase tracking-wider text-gray-600 dark:text-zinc-300 dark:border-white/10">
                           <th className="p-3 font-bold w-16">ID</th>
                           <th className="p-3 font-bold">Student</th>
                           <th className="p-3 font-bold">Document</th>
@@ -524,17 +529,17 @@ export default function DocumentRequestsTab({
                           <th className="p-3 font-bold text-right">Created</th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-200">
+                      <tbody className="divide-y divide-gray-200 dark:divide-white/10">
                         {rows.length === 0 ? (
                           <tr className="border-0 hover:bg-transparent">
                             <td colSpan={5} className="p-0 border-0">
-                              <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0">
+                              <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
                                 <EmptyHeader className="flex flex-col items-center gap-0">
-                                  <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                                    <i className="ph-duotone ph-tray text-3xl text-pup-maroon"></i>
+                                  <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
+                                    <i className="ph-duotone ph-tray text-3xl text-pup-maroon dark:text-primary dark:text-primary"></i>
                                   </EmptyMedia>
-                                  <EmptyTitle className="text-lg font-bold text-gray-900">No document requests yet</EmptyTitle>
-                                  <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                                  <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">No document requests yet</EmptyTitle>
+                                  <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md dark:text-zinc-300">
                                     Create a request when an alumnus asks for a record.
                                     Track status and use the storage map to pull the
                                     physical drawer.
@@ -547,23 +552,21 @@ export default function DocumentRequestsTab({
                           rows.map((r) => (
                             <tr
                               key={r.id}
-                              className={`cursor-pointer hover:bg-gray-50 transition-colors ${
-                                selectedId === r.id ? "bg-red-50/60" : ""
-                              }`}
+                              className={`cursor-pointer hover:bg-gray-50 transition-colors ${ selectedId === r.id ? "bg-red-50" : "" } dark:hover:bg-white/10 dark:bg-card`}
                               onClick={() => openDetail(r.id)}
                             >
-                              <td className="p-3 font-mono text-xs text-gray-500">
+                              <td className="p-3 font-mono text-xs text-gray-500 dark:text-zinc-400">
                                 #{r.id}
                               </td>
                               <td className="p-3">
-                                <div className="font-bold text-gray-900">
+                                <div className="font-bold text-gray-900 dark:text-zinc-50">
                                   {r.student_name || "—"}
                                 </div>
-                                <div className="font-mono text-[11px] text-gray-500">
+                                <div className="font-mono text-[11px] text-gray-500 dark:text-zinc-400">
                                   {r.student_no}
                                 </div>
                               </td>
-                              <td className="p-3 font-medium text-gray-800">
+                              <td className="p-3 font-medium text-gray-800 dark:text-zinc-100">
                                 {r.doc_type}
                               </td>
                               <td className="p-3">
@@ -573,7 +576,7 @@ export default function DocumentRequestsTab({
                                   {r.status}
                                 </span>
                               </td>
-                              <td className="p-3 text-right text-[11px] font-mono text-gray-500 whitespace-nowrap">
+                              <td className="p-3 text-right text-[11px] font-mono text-gray-500 whitespace-nowrap dark:text-zinc-400">
                                 {formatPHDateTime(r.created_at)}
                               </td>
                             </tr>
@@ -584,26 +587,26 @@ export default function DocumentRequestsTab({
                   </div>
                 </div>
                 {total > 0 ? (
-                  <div className="p-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
-                    <div className="flex items-center gap-4 text-xs font-medium text-gray-500">
+                  <div className="p-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between dark:border-white/10 dark:bg-white/5">
+                    <div className="flex items-center gap-4 text-xs font-medium text-gray-500 dark:text-zinc-400">
                       <span>
                         {(page - 1) * itemsPerPage + 1}-
                         {Math.min(page * itemsPerPage, total)} of{" "}
-                        <strong className="text-gray-900">
+                        <strong className="text-gray-900 dark:text-zinc-50">
                           {total.toLocaleString()}
                         </strong>{" "}
                         entries
                       </span>
 
-                      <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase">
+                      <div className="flex items-center gap-2 border-l border-gray-200 pl-4 dark:border-white/10">
+                        <span className="text-[10px] font-bold text-gray-400 uppercase dark:text-zinc-500">
                           Rows:
                         </span>
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <Select
-                                className="h-7 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-1 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none"
+                                className="h-7 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-1 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none dark:bg-card dark:text-zinc-200 dark:border-white/10"
                                 value={itemsPerPage}
                                 onChange={handleItemsPerPageChange}
                               >
@@ -629,11 +632,11 @@ export default function DocumentRequestsTab({
                         size="sm"
                         disabled={page <= 1}
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                        className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                       >
                         <i className="ph-bold ph-caret-left mr-1"></i> PREV
                       </Button>
-                      <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-2 text-[11px] font-bold text-gray-700 shadow-xs focus-within:border-gray-300 focus-within:ring-1 focus-within:ring-pup-maroon">
+                      <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-2 text-[11px] font-bold text-gray-700 shadow-xs focus-within:border-gray-300 focus-within:ring-1 focus-within:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-200">
                         <input
                           type="text"
                           className="w-6 bg-transparent text-center focus:outline-none"
@@ -642,7 +645,7 @@ export default function DocumentRequestsTab({
                           onKeyDown={handleJumpPage}
                           onBlur={handleJumpPage}
                         />
-                        <span className="mx-0.5 text-gray-400">/</span>
+                        <span className="mx-0.5 text-gray-400 dark:text-zinc-500">/</span>
                         <span>{totalPages}</span>
                       </div>
                       <Button
@@ -651,7 +654,7 @@ export default function DocumentRequestsTab({
                         size="sm"
                         disabled={page >= totalPages}
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                        className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95 disabled:opacity-30"
+                        className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                       >
                         NEXT <i className="ph-bold ph-caret-right ml-1"></i>
                       </Button>
@@ -660,9 +663,9 @@ export default function DocumentRequestsTab({
                 ) : null}
               </div>
 
-              <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0">
-                <div className="p-4 border-b border-gray-100 bg-gray-50/80 flex items-center justify-between">
-                  <div className="text-xs font-bold uppercase tracking-wider text-gray-500">
+              <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0 dark:bg-card dark:border-white/10 dark:shadow-none">
+                <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between dark:border-white/10 dark:bg-muted/30">
+                  <div className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
                     Request detail
                   </div>
                   {hasEdits && (
@@ -670,7 +673,7 @@ export default function DocumentRequestsTab({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 px-2 text-[10px] font-black text-gray-500 hover:text-gray-700 uppercase"
+                        className="h-7 px-2 text-[10px] font-black text-gray-500 hover:text-gray-700 uppercase dark:text-zinc-400 dark:hover:text-zinc-200"
                         onClick={handleResetEdits}
                         disabled={saving}
                       >
@@ -679,7 +682,7 @@ export default function DocumentRequestsTab({
                       <Button
                         variant="default"
                         size="sm"
-                        className="h-7 px-3 text-[10px] font-black bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white uppercase shadow-sm"
+                        className="h-7 px-3 text-[10px] font-black bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all text-white uppercase shadow-sm dark:shadow-none"
                         onClick={handleManualSave}
                         disabled={saving}
                       >
@@ -690,13 +693,13 @@ export default function DocumentRequestsTab({
                 </div>
                 <div className="p-4 flex-1 overflow-auto flex flex-col">
                   {!selectedId && (
-                    <Empty className="flex-1 flex flex-col items-center justify-center text-center text-gray-500 border-0">
+                    <Empty className="flex-1 flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
                       <EmptyHeader className="flex flex-col items-center gap-0">
-                        <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm">
-                          <i className="ph-duotone ph-file-text text-3xl text-pup-maroon"></i>
+                        <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
+                          <i className="ph-duotone ph-file-text text-3xl text-pup-maroon dark:text-primary dark:text-primary"></i>
                         </EmptyMedia>
-                        <EmptyTitle className="text-lg font-bold text-gray-900">No Request Selected</EmptyTitle>
-                        <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-[240px]">
+                        <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">No Request Selected</EmptyTitle>
+                        <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-[240px] dark:text-zinc-300">
                           Select a request from the list to see its details, notes, and physical storage location.
                         </EmptyDescription>
                       </EmptyHeader>
@@ -704,33 +707,33 @@ export default function DocumentRequestsTab({
                   )}
                   {selectedId && detailLoading && (
                     <div className="space-y-3">
-                      <Skeleton className="h-6 w-3/4" />
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-6 w-3/4 dark:bg-muted" />
+                      <Skeleton className="h-4 w-full dark:bg-muted" />
+                      <Skeleton className="h-4 w-full dark:bg-muted" />
                     </div>
                   )}
                   {detail && !detailLoading && (
                     <div className="space-y-4">
                       <div>
-                        <div className="text-xs font-bold text-gray-500 uppercase">
+                        <div className="text-xs font-bold text-gray-500 uppercase dark:text-zinc-400">
                           Student
                         </div>
-                        <div className="font-bold text-gray-900">{detail.student_name}</div>
-                        <div className="font-mono text-xs text-gray-600">{detail.student_no}</div>
+                        <div className="font-bold text-gray-900 dark:text-zinc-50">{detail.student_name}</div>
+                        <div className="font-mono text-xs text-gray-600 dark:text-zinc-300">{detail.student_no}</div>
                       </div>
                       <div>
-                        <div className="text-xs font-bold text-gray-500 uppercase">
+                        <div className="text-xs font-bold text-gray-500 uppercase dark:text-zinc-400">
                           Document type
                         </div>
-                        <div className="font-semibold text-gray-900">{detail.doc_type}</div>
+                        <div className="font-semibold text-gray-900 dark:text-zinc-50">{detail.doc_type}</div>
                       </div>
 
-                      <div className="rounded-brand border border-gray-200 p-3">
-                        <div className="text-xs font-bold text-gray-600 uppercase mb-1">
+                      <div className="rounded-brand border border-gray-200 p-3 dark:border-white/10">
+                        <div className="text-xs font-bold text-gray-600 uppercase mb-1 dark:text-zinc-300">
                           Physical location
                         </div>
                         {studentForRequest ? (
-                          <div className="text-sm font-mono text-gray-800">
+                          <div className="text-sm font-mono text-gray-800 dark:text-zinc-100">
                             Room {studentForRequest.room} · Cabinet {studentForRequest.cabinet}{" "}
                             · Drawer {studentForRequest.drawer}
                           </div>
@@ -741,7 +744,7 @@ export default function DocumentRequestsTab({
                         )}
                         <Button
                           type="button"
-                          className="mt-3 w-full bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all font-bold text-xs"
+                          className="mt-3 w-full bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all font-bold text-xs dark:shadow-none"
                           disabled={!studentForRequest}
                           onClick={() => {
                             if (!studentForRequest) return;
@@ -781,11 +784,11 @@ export default function DocumentRequestsTab({
                       )}
 
                       <div>
-                        <label className="text-xs font-bold text-gray-600 uppercase">
+                        <label className="text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
                           Status
                         </label>
                         <Select
-                          className="mt-1 h-10 w-full rounded-brand border border-gray-300 bg-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-pup-maroon"
+                          className="mt-1 h-10 w-full rounded-brand border border-gray-300 bg-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-pup-maroon dark:bg-card dark:border-white/10"
                           value={editStatus}
                           disabled={saving}
                           onChange={(e) => setEditStatus(e.target.value)}
@@ -799,11 +802,11 @@ export default function DocumentRequestsTab({
                       </div>
 
                       <div>
-                        <label className="text-xs font-bold text-gray-600 uppercase">
+                        <label className="text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
                           Notes
                         </label>
                         <textarea
-                          className="mt-1 w-full min-h-[72px] rounded-brand border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-pup-maroon"
+                          className="mt-1 w-full min-h-[72px] rounded-brand border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-pup-maroon dark:border-white/10"
                           value={editNotes}
                           onChange={(e) => setEditNotes(e.target.value)}
                         />
@@ -818,15 +821,15 @@ export default function DocumentRequestsTab({
       </Card>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
-          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10">
+          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon shadow-sm flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm flex items-center justify-center shrink-0 dark:bg-red-950/30 dark:text-primary dark:shadow-none">
                 <i className="ph-duotone ph-pencil-line text-2xl"></i>
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg font-black tracking-tight text-gray-900">New document request</DialogTitle>
-                <DialogDescription className="text-sm font-medium text-gray-600 mt-1">
+                <DialogTitle className="text-lg font-black tracking-tight text-gray-900 dark:text-zinc-50">New document request</DialogTitle>
+                <DialogDescription className="text-sm font-medium text-gray-600 mt-1 dark:text-zinc-300">
                   Enter the student number and the document being requested.
                 </DialogDescription>
               </div>
@@ -835,10 +838,10 @@ export default function DocumentRequestsTab({
           <form onSubmit={handleCreate}>
             <div className="p-6 space-y-4">
               {selectedStudent ? (
-                <div className="rounded-brand border border-red-100 bg-red-50/50 p-4 relative animate-in fade-in zoom-in-95 duration-200">
+                <div className="rounded-brand border border-red-100 bg-red-50/50 p-4 relative animate-in fade-in zoom-in-95 duration-200 dark:border-white/10 dark:bg-red-950/20">
                   <button
                     type="button"
-                    className="absolute top-2.5 right-2.5 text-gray-400 hover:text-gray-600 transition-colors bg-white hover:bg-gray-100 border border-gray-200 rounded-full w-5 h-5 flex items-center justify-center shadow-xs"
+                    className="absolute top-2.5 right-2.5 text-gray-400 hover:text-gray-600 transition-colors bg-white hover:bg-gray-100 border border-gray-200 rounded-full w-5 h-5 flex items-center justify-center shadow-xs dark:bg-zinc-800 dark:border-white/10 dark:text-zinc-300"
                     onClick={() => {
                       setSelectedStudent(null);
                       setCreateStudentNo("");
@@ -847,18 +850,18 @@ export default function DocumentRequestsTab({
                     <i className="ph-bold ph-x text-[10px]"></i>
                   </button>
                   <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-full bg-pup-maroon/10 text-pup-maroon flex items-center justify-center shrink-0">
+                    <div className="w-10 h-10 rounded-full bg-pup-maroon/10 text-pup-maroon flex items-center justify-center shrink-0 dark:bg-pup-maroon/20">
                       <i className="ph-bold ph-user-focus text-lg"></i>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="font-bold text-gray-900 text-sm truncate">{selectedStudent.name}</div>
-                      <div className="font-mono text-xs text-gray-500 mt-0.5">{selectedStudent.studentNo || selectedStudent.student_no}</div>
-                      <div className="text-[11px] text-gray-600 mt-1 flex flex-wrap gap-x-2 gap-y-0.5">
-                        <span>Course: <strong className="text-gray-800">{selectedStudent.courseCode || selectedStudent.course_code || "—"}</strong></span>
-                        <span>Section: <strong className="text-gray-800">{selectedStudent.section || "—"}</strong></span>
-                        <span>Year: <strong className="text-gray-800">{selectedStudent.yearLevel || selectedStudent.year_level || "—"}</strong></span>
+                      <div className="font-bold text-gray-900 text-sm truncate dark:text-zinc-50">{selectedStudent.name}</div>
+                      <div className="font-mono text-xs text-gray-500 mt-0.5 dark:text-zinc-400">{selectedStudent.studentNo || selectedStudent.student_no}</div>
+                      <div className="text-[11px] text-gray-600 mt-1 flex flex-wrap gap-x-2 gap-y-0.5 dark:text-zinc-300">
+                        <span>Course: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.courseCode || selectedStudent.course_code || "—"}</strong></span>
+                        <span>Section: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.section || "—"}</strong></span>
+                        <span>Year: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.yearLevel || selectedStudent.year_level || "—"}</strong></span>
                       </div>
-                      <div className="text-[11px] text-pup-maroon font-semibold mt-2 flex items-center gap-1">
+                      <div className="text-[11px] text-pup-maroon dark:text-red-500 font-semibold mt-2 flex items-center gap-1">
                         <i className="ph-bold ph-archive-tray text-xs"></i>
                         <span>Storage: Room {selectedStudent.room} · Cabinet {selectedStudent.cabinet} · Drawer {selectedStudent.drawer}</span>
                       </div>
@@ -868,7 +871,7 @@ export default function DocumentRequestsTab({
               ) : (
                 <div className="space-y-4">
                   <div className="relative">
-                    <label className="text-xs font-bold text-gray-700 uppercase">
+                    <label className="text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">
                       Search Student (Name or Number)
                     </label>
                     <div className="relative mt-1.5">
@@ -927,11 +930,11 @@ export default function DocumentRequestsTab({
                 </div>
               )}
               <div>
-                <label className="text-xs font-bold text-gray-700 uppercase">
+                <label className="text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">
                   Document type
                 </label>
                 <Select
-                  className="mt-1.5 h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300"
+                  className="mt-1.5 h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 dark:bg-card dark:border-white/10"
                   value={createDocType}
                   onChange={(e) => setCreateDocType(e.target.value)}
                   required
@@ -945,29 +948,29 @@ export default function DocumentRequestsTab({
                 </Select>
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-700 uppercase">
+                <label className="text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">
                   Notes (optional)
                 </label>
                 <textarea
-                  className="mt-1.5 w-full min-h-[72px] rounded-brand border border-gray-300 p-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300"
+                  className="mt-1.5 w-full min-h-[72px] rounded-brand border border-gray-300 p-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 dark:border-white/10"
                   value={createNotes}
                   onChange={(e) => setCreateNotes(e.target.value)}
                   placeholder="Requester name, contact, purpose…"
                 />
               </div>
             </div>
-            <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+            <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2 dark:border-white/10 dark:bg-card">
               <Button
                 type="button"
                 variant="outline"
-                className="px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+                className="px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
                 onClick={() => setCreateOpen(false)}
               >
                 CANCEL
               </Button>
               <Button
                 type="submit"
-                className="px-5 bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all font-bold shadow-sm rounded-brand gap-2 flex items-center"
+                className="px-5 bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all font-bold shadow-sm rounded-brand gap-2 flex items-center dark:shadow-none"
                 disabled={submitting}
               >
                 <i className="ph-bold ph-plus-circle text-lg"></i>
@@ -978,17 +981,17 @@ export default function DocumentRequestsTab({
         </DialogContent>
       </Dialog>
       <Dialog open={fileWarningOpen} onOpenChange={setFileWarningOpen}>
-        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand">
-          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50/50">
+        <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10">
+          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-red-700 shadow-sm flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-red-700 shadow-sm flex items-center justify-center shrink-0 dark:bg-red-950/30 dark:shadow-none">
                 <i className="ph-duotone ph-warning-circle text-2xl"></i>
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg font-black tracking-tight text-gray-900">
+                <DialogTitle className="text-lg font-black tracking-tight text-gray-900 dark:text-zinc-50">
                   No digital file in system
                 </DialogTitle>
-                <DialogDescription className="text-sm font-medium text-gray-600 mt-1">
+                <DialogDescription className="text-sm font-medium text-gray-600 mt-1 dark:text-zinc-300">
                   The requested document is not uploaded yet. Proceed with physical verification.
                 </DialogDescription>
               </div>
@@ -996,16 +999,16 @@ export default function DocumentRequestsTab({
           </DialogHeader>
           <div className="p-6 space-y-4">
             <div className="space-y-3 text-sm">
-              <div className="rounded-brand border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900 font-medium">
+              <div className="rounded-brand border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900 font-medium dark:bg-amber-950/30">
                 Verify the physical storage first before proceeding with release.
               </div>
               {studentForRequest ? (
-                <div className="rounded-brand border border-gray-200 bg-gray-50 px-4 py-3 font-mono text-gray-800 font-medium">
+                <div className="rounded-brand border border-gray-200 bg-gray-50 px-4 py-3 font-mono text-gray-800 font-medium dark:border-white/10 dark:bg-card dark:text-zinc-100">
                   Room {studentForRequest.room} · Cabinet {studentForRequest.cabinet} · Drawer{" "}
                   {studentForRequest.drawer}
                 </div>
               ) : (
-                <Empty className="py-6 border-red-200 bg-red-50 text-red-800">
+                <Empty className="py-6 border-red-200 bg-red-50 text-red-800 dark:bg-red-950/30">
                   <EmptyHeader>
                     <EmptyMedia>
                       <i className="ph-bold ph-warning-circle text-2xl text-red-600"></i>
@@ -1019,11 +1022,11 @@ export default function DocumentRequestsTab({
               )}
             </div>
           </div>
-          <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+          <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2 dark:border-white/10 dark:bg-card">
             <Button
               type="button"
               variant="outline"
-              className="px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand"
+              className="px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
               onClick={() => setFileWarningOpen(false)}
             >
               CLOSE
@@ -1031,7 +1034,7 @@ export default function DocumentRequestsTab({
             {studentForRequest ? (
               <Button
                 type="button"
-                className="px-5 bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all font-bold shadow-sm rounded-brand gap-2 flex items-center"
+                className="px-5 bg-linear-to-b from-red-800 to-pup-maroon border-[3px] border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all font-bold shadow-sm rounded-brand gap-2 flex items-center dark:shadow-none"
                 onClick={() => {
                   setFileWarningOpen(false);
                   onLocateOnMap(studentForRequest);
@@ -1047,3 +1050,5 @@ export default function DocumentRequestsTab({
     </div>
   );
 }
+
+

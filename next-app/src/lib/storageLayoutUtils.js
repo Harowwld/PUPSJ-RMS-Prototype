@@ -6,7 +6,7 @@ export function clamp(n, min, max) {
 export function getCabinetEffectiveSize(item) {
   const baseW = Number(item?.rect?.w ?? item?.w) || 0
   const baseH = Number(item?.rect?.h ?? item?.h) || 0
-  const rot = Number(item?.rotation) === 90 ? 90 : 0
+  const rot = Math.abs(Number(item?.rotation || 0)) % 180
   return rot === 90 ? { w: baseH, h: baseW } : { w: baseW, h: baseH }
 }
 
@@ -61,11 +61,13 @@ export function clampToRoom(item) {
   return { ...item, x: cx, y: cy }
 }
 
-export const SNAP_STEP = 0.02 // 2% grid
+export const SNAP_STEP_X = 0.025 // 2.5% (40 units wide)
+export const SNAP_STEP_Y = 0.04  // 4% (25 units high) to make it square on 16:10
 
-export function snapValue(val, snapToGrid) {
+export function snapValue(val, snapToGrid, axis = 'x') {
   if (!snapToGrid) return val
-  return Math.round(val / SNAP_STEP) * SNAP_STEP
+  const step = axis === 'x' ? SNAP_STEP_X : SNAP_STEP_Y
+  return Math.round(val / step) * step
 }
 
 export function toPct(val) {

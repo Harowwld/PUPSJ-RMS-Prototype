@@ -63,6 +63,22 @@ function StaffPageContent() {
 
   const [view, setView] = useState(initialView);
   const [authUser, setAuthUser] = useState(null);
+
+  const switchView = useCallback((nextView) => {
+    setView(nextView);
+    // Update URL without a full refresh
+    const params = new URLSearchParams(window.location.search);
+    params.set("view", nextView);
+    router.replace(`${window.location.pathname}?${params.toString()}`, { scroll: false });
+  }, [router]);
+
+  useEffect(() => {
+    const tab = String(searchParams?.get("view") || searchParams?.get("tab") || "").trim()
+    const allowedTabs = new Set(["requests", "upload", "documents", "notifications", "search"])
+    if (allowedTabs.has(tab)) {
+      setView(tab)
+    }
+  }, [searchParams])
   const [loading, setLoading] = useState(true);
   const [notificationsUnread, setNotificationsUnread] = useState(0);
 
@@ -244,7 +260,9 @@ function StaffPageContent() {
         const res = await fetch("/api/auth/me");
         const json = await res.json().catch(() => null);
         if (!res.ok || !json?.ok) {
-          router.push("/");
+          if (res.status === 401) {
+            router.push("/");
+          }
           return;
         }
         setAuthUser(json.data);
@@ -258,8 +276,8 @@ function StaffPageContent() {
             // Keep silent; OCR path will show explicit errors on scan.
           });
         }, 0);
-      } catch {
-        router.push("/");
+      } catch (err) {
+        console.error("[StaffPage] Profile fetch failed:", err);
       }
     })();
   }, [router, fetchData, fetchAllDocs, fetchNotificationsUnread]);
@@ -346,8 +364,9 @@ function StaffPageContent() {
     try {
       await fetch("/api/auth/logout", { method: "POST" });
     } catch {
-      /* silent */
+      /* ignore */
     }
+    localStorage.setItem("pup-logout", Date.now());
     router.push("/");
   };
 
@@ -974,7 +993,7 @@ function StaffPageContent() {
 
   if (loading) {
     return (
-      <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4">
+      <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4 transition-colors duration-300 dark:bg-background">
         <Skeleton className="h-16 w-full rounded-brand shrink-0" />
         <div className="flex-1 flex gap-4">
           <Skeleton className="w-[30%] h-full rounded-brand" />
@@ -985,16 +1004,16 @@ function StaffPageContent() {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gray-50 font-inter">
+    <div className="h-screen flex flex-col overflow-hidden bg-gray-50 font-inter transition-colors duration-300 dark:bg-background">
       <Header authUser={authUser} onLogout={handleLogout} />
 
       <Tabs
         value={view}
-        onValueChange={setView}
+        onValueChange={switchView}
         orientation="vertical"
         className="flex-1 flex overflow-hidden w-full gap-0"
       >
-        <Sidebar items={sidebarItems} activeKey={view} onSelect={setView} />
+        <Sidebar items={sidebarItems} activeKey={view} onSelect={switchView} />
 
         <main className="flex-1 overflow-hidden p-4 relative w-full min-w-0">
           <TabsContent value="search" className="h-full m-0 border-0 focus-visible:ring-0">
@@ -1504,7 +1523,7 @@ export default function StaffPage() {
     <StaffGuard>
       <Suspense
         fallback={
-          <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4">
+          <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4 dark:bg-background">
             <Skeleton className="h-16 w-full rounded-brand shrink-0" />
             <div className="flex-1 flex gap-4">
               <Skeleton className="w-[30%] h-full rounded-brand" />

@@ -27,9 +27,9 @@ function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column)
     return <i className="ph-bold ph-caret-up-down ml-1 opacity-30"></i>
   return sortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-pup-maroon"></i>
+    <i className="ph-bold ph-caret-up ml-1 text-pup-maroon dark:text-primary dark:text-primary"></i>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-pup-maroon"></i>
+    <i className="ph-bold ph-caret-down ml-1 text-pup-maroon dark:text-primary dark:text-primary"></i>
   )
 }
 
@@ -64,17 +64,15 @@ export default function BackupTable({
   return (
     <>
       <div
-        className={`min-h-[450px] w-full overflow-auto rounded-brand transition-all duration-300 ${
-          backups.length === 0 ? "" : "border border-gray-200 shadow-inner"
-        }`}
+        className={`min-h-[450px] w-full overflow-auto rounded-brand transition-all duration-300 ${ backups.length === 0 ? "" : "border border-gray-200 shadow-inner" } dark:border-white/10 dark:shadow-none`}
       >
         <table className="min-w-full text-sm">
-          <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50">
-            <tr className="text-left text-xs tracking-wider text-gray-600 uppercase">
+          <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-zinc-900">
+            <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
               <th className="w-16 p-3 text-center">
                 <input
                   type="checkbox"
-                  className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20"
+                  className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20 dark:text-primary dark:border-white/10"
                   checked={
                     backups.length > 0 &&
                     backups.every((b) => selectedBackupIds.includes(b.id))
@@ -86,7 +84,7 @@ export default function BackupTable({
               <th className="w-1/3 p-3 font-bold">
                 <button
                   onClick={() => handleSort("filename")}
-                  className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                  className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none dark:bg-muted dark:hover:bg-white/10"
                 >
                   Backup Archive{" "}
                   <SortIndicator
@@ -100,7 +98,7 @@ export default function BackupTable({
                 <div className="flex justify-center">
                   <button
                     onClick={() => handleSort("size_bytes")}
-                    className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                    className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none dark:bg-muted dark:hover:bg-white/10"
                   >
                     Size{" "}
                     <SortIndicator
@@ -114,7 +112,7 @@ export default function BackupTable({
               <th className="p-3 font-bold">
                 <button
                   onClick={() => handleSort("created_at")}
-                  className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none"
+                  className="group flex items-center rounded px-1 py-0.5 uppercase transition-colors hover:bg-gray-100 focus:outline-none dark:bg-muted dark:hover:bg-white/10"
                 >
                   Creation Date{" "}
                   <SortIndicator
@@ -130,19 +128,19 @@ export default function BackupTable({
               <th className="p-3 text-right font-bold">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className="divide-y divide-gray-200 dark:divide-white/10">
             {sortedAndPaginatedBackups.length === 0 ? (
               <tr className="border-0 hover:bg-transparent">
                 <td colSpan={6} className="border-0 p-0">
-                  <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500">
+                  <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                     <EmptyHeader className="flex flex-col items-center gap-0">
-                      <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm">
-                        <i className={`ph-duotone ${isFilterActive ? "ph-magnifying-glass" : "ph-database"} text-3xl text-pup-maroon`}></i>
+                      <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+                        <i className={`ph-duotone ${isFilterActive ? "ph-magnifying-glass" : "ph-database"} text-3xl text-pup-maroon dark:text-primary dark:text-primary`}></i>
                       </EmptyMedia>
-                      <EmptyTitle className="text-lg font-bold text-gray-900">
+                      <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
                         {isFilterActive ? "No matches found" : "No snapshots detected"}
                       </EmptyTitle>
-                      <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600">
+                      <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
                         {isFilterActive 
                           ? "Adjust your search parameters or date range to locate specific historical records." 
                           : "There are no local database backups in the history log yet."}
@@ -151,7 +149,7 @@ export default function BackupTable({
                         <Button
                           variant="outline"
                           onClick={onClearFilters}
-                          className="mt-4 flex h-9 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
+                          className="mt-4 flex h-9 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                         >
                           <i className="ph-bold ph-x-circle"></i>
                           CLEAR ALL FILTERS
@@ -159,7 +157,7 @@ export default function BackupTable({
                       ) : (
                         <Button
                           onClick={handleGenerateBackup}
-                          className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-6 text-xs font-black text-white shadow-md active:scale-95 transition-all"
+                          className="mt-4 flex h-10 items-center gap-2 rounded-brand bg-linear-to-b from-red-800 to-pup-maroon border-4 border-pup-darkMaroon hover:from-red-700 hover:to-red-900 hover:shadow-md px-6 text-xs font-black text-white shadow-md active:scale-95 transition-all dark:shadow-none"
                         >
                           <i className="ph-bold ph-lightning"></i>
                           CREATE INITIAL SNAPSHOT
@@ -170,159 +168,136 @@ export default function BackupTable({
                 </td>
               </tr>
             ) : (
-              sortedAndPaginatedBackups.map((b) => (
-                <tr
-                  key={b.id}
-                  className={`group cursor-default transition-all hover:bg-gray-50/80 ${
-                    selectedBackupIds.includes(b.id) ? "bg-red-50/20" : ""
-                  }`}
-                >
-                  <td className="p-3 text-center">
-                    <input
-                      type="checkbox"
-                      className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-pup-maroon focus:ring-pup-maroon"
-                      checked={selectedBackupIds.includes(b.id)}
-                      onChange={() => handleToggleRow(b.id)}
-                    />
-                  </td>
-                  <td className="max-w-[280px] p-3 text-xs font-bold text-pup-maroon">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <span className="block w-full truncate">
-                          {b.filename}
-                        </span>
-                      </TooltipTrigger>
-                      <TooltipContent
-                        side="right"
-                        className="max-w-[400px] rounded-brand break-all"
-                      >
+              sortedAndPaginatedBackups.map((b) => {
+                if (!b) return null;
+                return (
+                  <tr
+                    key={b.id}
+                    className={`group cursor-pointer transition-all hover:bg-gray-50 select-none ${ selectedBackupIds.includes(b.id) ? "bg-red-50" : "" } dark:bg-card dark:hover:bg-white/10`}
+                    onClick={(e) => {
+                      if (e.target.closest("button") || e.target.closest("input")) return
+                      handleToggleRow(b.id)
+                    }}
+                  >
+                    <td className="p-3 text-center">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-pup-maroon focus:ring-pup-maroon dark:border-white/10"
+                        checked={selectedBackupIds.includes(b.id)}
+                        onChange={() => handleToggleRow(b.id)}
+                      />
+                    </td>
+                    <td className="max-w-[280px] p-3 text-xs font-bold text-pup-maroon dark:text-primary dark:text-primary">
+                      <span className="block w-full truncate">
                         {b.filename}
-                      </TooltipContent>
-                    </Tooltip>
-                  </td>
-                  <td className="p-3 text-center text-xs font-black text-gray-700">
-                    {formatBytes(b.size_bytes)}
-                  </td>
-                  <td className="p-3 text-[11px] font-medium whitespace-nowrap text-gray-500">
-                    {formatPHDateTime(b.created_at)}
-                  </td>
-                  <td className="p-3">
-                    <div className="flex min-w-[140px] items-center gap-2">
-                      {/* Local Node */}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <div
-                            className={`flex items-center gap-1.5 rounded-md border px-2 py-1 shadow-sm transition-all ${
-                              b.status_local === "Success"
-                                ? "border-green-200 bg-green-50/50 text-green-700"
-                                : "border-gray-200 bg-gray-50 text-gray-500"
-                            }`}
-                          >
-                            <i
-                              className={`ph-bold ph-hard-drive text-xs ${
-                                b.status_local === "Success"
-                                  ? "text-green-600"
-                                  : "text-gray-400"
-                              }`}
-                            ></i>
-                            <span className="text-[10px] font-black tracking-tighter uppercase">
-                              Local
-                            </span>
-                          </div>
-                        </TooltipTrigger>
-                        <TooltipContent className="rounded-brand">
-                          <div className="text-xs font-bold">Local Storage</div>
-                          <div className="text-[10px] opacity-80">
-                            {b.status_local === "Success"
-                              ? "Backup secured on this server"
-                              : "Failed / Pending"}
-                          </div>
-                        </TooltipContent>
-                      </Tooltip>
-
-                      {/* External Node */}
-                      {b.status_external === "Success" ? (
+                      </span>
+                    </td>
+                    <td className="p-3 text-center text-xs font-black text-gray-700 dark:text-zinc-200">
+                      {formatBytes(b.size_bytes)}
+                    </td>
+                    <td className="p-3 text-[11px] font-medium whitespace-nowrap text-gray-500 dark:text-zinc-400">
+                      {formatPHDateTime(b.created_at)}
+                    </td>
+                    <td className="p-3">
+                      <div className="flex min-w-[140px] items-center gap-2">
+                        {/* Local Node */}
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <div className="flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50/50 px-2 py-1 text-blue-700 shadow-sm transition-all">
-                              <i className="ph-bold ph-hard-drives text-xs text-blue-600"></i>
-                              <span className="text-[10px] font-black tracking-tighter uppercase">
-                                External
-                              </span>
-                            </div>
-                          </TooltipTrigger>
-                          <TooltipContent className="rounded-brand">
-                            <div className="text-xs font-bold">
-                              External Storage
-                            </div>
-                            <div className="text-[10px] opacity-80">
-                              Verified on secondary drive
-                            </div>
-                          </TooltipContent>
-                        </Tooltip>
-                      ) : (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button
-                              onClick={() => handleSyncExternal(b.id)}
-                              disabled={localLoading.syncingId === b.id}
-                              className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[10px] font-black tracking-tight uppercase shadow-sm transition-all active:scale-95 disabled:opacity-50 ${
-                                b.status_external === "Failed"
-                                  ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
-                                  : "border-gray-300/30 bg-white text-pup-maroon hover:bg-red-50"
-                              }`}
+                            <div
+                              className={`flex items-center gap-1.5 rounded-md border px-2 py-1 shadow-sm transition-all ${ b.status_local === "Success" ? "border-green-200 bg-green-50/50 text-green-700" : "border-gray-200 bg-gray-50 text-gray-500" } dark:shadow-none dark:border-white/10 dark:bg-card dark:text-zinc-400`}
                             >
                               <i
-                                className={`ph-bold ${
-                                  localLoading.syncingId === b.id
-                                    ? "ph-arrows-clockwise animate-spin"
-                                    : b.status_external === "Failed"
-                                      ? "ph-warning-circle"
-                                      : "ph-share-network"
-                                } text-xs`}
+                                className={`ph-bold ph-hard-drive text-xs ${ b.status_local === "Success" ? "text-green-600" : "text-gray-400" } dark:text-zinc-500`}
                               ></i>
-                              <span>
-                                {localLoading.syncingId === b.id
-                                  ? localLoading.syncStatus || "..."
-                                  : b.status_external === "Failed"
-                                    ? "RETRY SYNC"
-                                    : "SYNC"}
+                              <span className="text-[10px] font-black tracking-tighter uppercase">
+                                Local
                               </span>
-                            </button>
+                            </div>
                           </TooltipTrigger>
                           <TooltipContent className="rounded-brand">
-                            {b.status_external === "Failed" 
-                              ? `Previous attempt failed. Click to retry institutional redundancy sync.`
-                              : "Distribute snapshot to external node"}
+                            <div className="text-xs font-bold">Local Storage</div>
+                            <div className="text-[10px] opacity-80">
+                              {b.status_local === "Success"
+                                ? "Backup secured on this server"
+                                : "Failed / Pending"}
+                            </div>
                           </TooltipContent>
                         </Tooltip>
-                      )}
-                    </div>
-                  </td>
-                  <td className="p-3 text-right">
-                    <div className="flex items-center justify-end gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onDownloadBackup(b.id, b.filename)}
-                        className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50/30 hover:text-pup-maroon active:scale-95"
-                      >
-                        <i className="ph-bold ph-file-zip text-xs"></i>
-                        DOWNLOAD
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onDeleteBackup(b.id)}
-                        className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-red-300 hover:bg-red-50 hover:text-red-700 active:scale-95"
-                      >
-                        <i className="ph-bold ph-trash text-xs"></i>
-                        DELETE
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))
+
+                        {/* External Node */}
+                        {b.status_external === "Success" ? (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <div className="flex items-center gap-1.5 rounded-md border border-blue-200 bg-blue-50 px-2 py-1 text-blue-700 shadow-sm transition-all dark:bg-blue-950/50 dark:shadow-none">
+                                <i className="ph-bold ph-hard-drives text-xs text-blue-600 dark:text-blue-400"></i>
+                                <span className="text-[10px] font-black tracking-tighter uppercase">
+                                  External
+                                </span>
+                              </div>
+                            </TooltipTrigger>
+                            <TooltipContent className="rounded-brand">
+                              <div className="text-xs font-bold">
+                                External Storage
+                              </div>
+                              <div className="text-[10px] opacity-80">
+                                Verified on secondary drive
+                              </div>
+                            </TooltipContent>
+                          </Tooltip>
+                        ) : (
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => handleSyncExternal(b.id)}
+                                disabled={localLoading.syncingId === b.id}
+                                className={`flex items-center gap-1.5 rounded-md border px-2.5 py-1 text-[10px] font-black tracking-tight uppercase shadow-sm transition-all active:scale-95 disabled:opacity-50 ${ b.status_external === "Failed" ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100" : "border-gray-300 bg-white text-pup-maroon dark:text-primary hover:bg-red-50" } dark:shadow-none dark:bg-amber-950/30 dark:border-white/10 dark:text-primary`}
+                              >
+                                <i
+                                  className={`ph-bold ${ localLoading.syncingId === b.id ? "ph-arrows-clockwise animate-spin" : b.status_external === "Failed" ? "ph-warning-circle" : "ph-share-network" } text-xs`}
+                                ></i>
+                                <span>
+                                  {localLoading.syncingId === b.id
+                                    ? localLoading.syncStatus || "..."
+                                    : b.status_external === "Failed"
+                                      ? "RETRY SYNC"
+                                      : "SYNC"}
+                                </span>
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent className="rounded-brand">
+                              {b.status_external === "Failed" 
+                                ? `Previous attempt failed. Click to retry institutional redundancy sync.`
+                                : "Distribute snapshot to external node"}
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </td>
+                    <td className="p-3 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onDownloadBackup(b.id, b.filename)}
+                          className="flex h-8 items-center gap-1.5 rounded-brand border-gray-300 bg-white px-3 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                        >
+                          <i className="ph-bold ph-file-zip text-xs"></i>
+                          DOWNLOAD
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => onDeleteBackup(b.id)}
+                          className="flex h-8 items-center gap-1.5 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-wider text-red-600 shadow-sm transition-colors hover:border-red-600 hover:bg-red-50 hover:text-red-700 active:scale-95 dark:bg-card dark:shadow-none dark:border-white/10"
+                        >
+                          <i className="ph-bold ph-trash text-xs"></i>
+                          DELETE
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })
             )}
           </tbody>
         </table>
@@ -346,3 +321,4 @@ export default function BackupTable({
     </>
   )
 }
+

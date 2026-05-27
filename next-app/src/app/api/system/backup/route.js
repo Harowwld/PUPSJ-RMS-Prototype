@@ -77,25 +77,30 @@ export async function POST(req) {
   console.log("[BACKUP API] TOTP verified, executing backup...");
   try {
     const record = await executeBackup();
-    console.log("[BACKUP API] Backup executed successfully:", record.filename);
+    const filename = record?.filename || "unknown-backup.zip.enc";
+    const recordId = record?.id || null;
+    
+    console.log("[BACKUP API] Backup executed successfully:", filename);
     
     // --- AUTOMATED BACKGROUND SYNC ---
     // We intentionally do NOT 'await' this call so the user gets an immediate response.
     // The sync will happen in the background and update the status in the DB when done.
-    syncBackupExternally(record.id).catch(err => {
-      console.error(`[BACKUP API] Background auto-sync failed for ${record.id}:`, err.message);
-    });
+    if (recordId) {
+      syncBackupExternally(recordId).catch(err => {
+        console.error(`[BACKUP API] Background auto-sync failed for ${recordId}:`, err.message);
+      });
+    }
 
     await writeAuditLog(req, `Create Backup`, { 
-      details: `initiated full system state capture (Package: ${record?.filename || "unknown"}) and distributed to primary storage`,
+      details: `initiated full system state capture (Package: ${filename}) and distributed to primary storage`,
       entity_type: "Backup",
-      entity_id: record?.id
+      entity_id: recordId
     });
 
     return NextResponse.json({
       ok: true,
       message: "Encrypted backup created successfully. Automatic external synchronization initiated in background.",
-      data: record
+      data: record || { filename, id: recordId }
     });
   } catch (error) {
     console.error("[BACKUP API] Backup Creation Error:", error);
@@ -141,10 +146,11 @@ export async function DELETE(req) {
         }
 
         const changes = await deleteBackupRecord(id);
-        if (changes > 0) {
+        if (changes >= 0) {
           deletedFiles.push(backup.filename);
-        } else {
-          errors.push(`Failed to remove DB record for ${backup.filename}`);
+          if (changes === 0) {
+            console.log(`[BULK DELETE BACKUP] Warning: DB record for ${backup.filename} was already removed.`);
+          }
         }
       } catch (err) {
         errors.push(`Error deleting ${id}: ${err.message}`);

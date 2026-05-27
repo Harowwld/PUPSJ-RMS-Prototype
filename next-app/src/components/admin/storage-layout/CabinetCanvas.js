@@ -5,14 +5,17 @@ import { Button } from "@/components/ui/button"
 import {
   Tooltip,
   TooltipContent,
+  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import {
   getCabinetEffectiveSize,
   toPct,
-  SNAP_STEP,
+  SNAP_STEP_X,
+  SNAP_STEP_Y,
 } from "@/lib/storageLayoutUtils"
 import { getDefaultDoor } from "@/lib/storageLayoutDefaults"
+import { cn } from "@/lib/utils"
 
 const CabinetCanvas = memo(({
   canvasRef,
@@ -27,18 +30,25 @@ const CabinetCanvas = memo(({
   handleCanvasPointerMove,
   handleCanvasPointerUp,
   setSelectedCabinetIds,
-  rotateSelectedCabinet,
   duplicateSelectedCabinet,
   setBulkConfirmOpen,
   dragRef,
   updateSelectedRectFromNormalized,
-  updateSelectedSizeNormalized
+  updateSelectedSizeNormalized,
+  selectionBox,
+  pushHistory,
+  layout,
+  isModalOpen = false
 }) => {
   return (
     <div
       ref={canvasRef}
-      className="relative w-full overflow-hidden border border-gray-300 bg-[#f8fafc] shadow-inner"
-      style={{ aspectRatio: "16 / 10" }}
+      data-slot="storage-canvas"
+      className={cn(
+        "relative w-full overflow-hidden border border-gray-300 dark:border-white/10 bg-[#f8fafc] dark:bg-zinc-800 shadow-inner dark:shadow-none transition-all duration-300",
+        isModalOpen ? "h-full" : ""
+      )}
+      style={!isModalOpen ? { aspectRatio: "16 / 10" } : {}}
       onPointerMove={handleCanvasPointerMove}
       onPointerUp={handleCanvasPointerUp}
       onPointerCancel={handleCanvasPointerUp}
@@ -46,21 +56,52 @@ const CabinetCanvas = memo(({
         // Deselect if clicking the background
         if (e.target === e.currentTarget) {
           setSelectedCabinetIds(new Set())
+
+          const container = e.currentTarget
+          if (!container) return
+
+          const box = container.getBoundingClientRect()
+          const relX = (e.clientX - box.left) / Math.max(1, box.width)
+          const relY = (e.clientY - box.top) / Math.max(1, box.height)
+
+          dragRef.current = {
+            pointerId: e.pointerId,
+            mode: "marquee",
+            startX: relX,
+            startY: relY,
+          }
+          
+          try {
+            e.currentTarget.setPointerCapture(e.pointerId)
+          } catch {
+            // ignore
+          }
         }
       }}
     >
       {/* AutoCAD-inspired precision grid */}
       {showGrid && (
         <div
-          className="pointer-events-none absolute inset-0"
+          className="pointer-events-none absolute inset-0 text-slate-400/20 dark:text-zinc-600/30"
           style={{
             backgroundImage: `
-              linear-gradient(to right, rgba(148, 163, 184, 0.1) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(148, 163, 184, 0.1) 1px, transparent 1px),
-              linear-gradient(to right, rgba(148, 163, 184, 0.3) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(148, 163, 184, 0.3) 1px, transparent 1px)
+              linear-gradient(to right, currentColor 1px, transparent 1px),
+              linear-gradient(to bottom, currentColor 1px, transparent 1px)
             `,
-            backgroundSize: "2% 2%, 2% 2%, 10% 10%, 10% 10%",
+            backgroundSize: "2.5% 4%, 2.5% 4%",
+          }}
+        />
+      )}
+
+      {/* Marquee Selection Box */}
+      {selectionBox && (
+        <div 
+          className="pointer-events-none absolute border border-cyan-500 bg-cyan-500/10 z-50 ring-1 ring-white/50"
+          style={{
+            left: `${Math.min(selectionBox.x1, selectionBox.x2) * 100}%`,
+            top: `${Math.min(selectionBox.y1, selectionBox.y2) * 100}%`,
+            width: `${Math.abs(selectionBox.x2 - selectionBox.x1) * 100}%`,
+            height: `${Math.abs(selectionBox.y2 - selectionBox.y1) * 100}%`,
           }}
         />
       )}
@@ -81,20 +122,41 @@ const CabinetCanvas = memo(({
         </svg>
       )}
 
-      {/* Orientation marker (Door Symbol) */}
+      {/* Orientation marker (Entrance Block) */}
       <div
-        className="group absolute z-2 cursor-move"
+        className={cn(
+          "group absolute z-20 cursor-move transition-all duration-200",
+          selectedCabinetIds.has("DOOR") ? "ring-2 ring-cyan-500 ring-offset-2 ring-offset-[#f8fafc] rounded-lg" : ""
+        )}
         style={{
           left: `${(activeRoom?.door?.x ?? getDefaultDoor().x) * 100}%`,
           top: `${(activeRoom?.door?.y ?? getDefaultDoor().y) * 100}%`,
-          transform: "translate(-50%, -50%)",
+          width: `${(activeRoom?.door?.w ?? 0.1) * 100}%`,
+          height: `${(activeRoom?.door?.h ?? 0.04) * 100}%`,
         }}
         onPointerDown={(e) => {
           e.preventDefault()
           e.stopPropagation()
+          pushHistory(layout)
+          
+          // Select the door when clicked
+          setSelectedCabinetIds(new Set(["DOOR"]))
+
+          const container = e.currentTarget.closest('[data-slot="storage-canvas"]')
+          const box = container.getBoundingClientRect()
+          const relX = (e.clientX - box.left) / Math.max(1, box.width)
+          const relY = (e.clientY - box.top) / Math.max(1, box.height)
+
           dragRef.current = {
             pointerId: e.pointerId,
             mode: "door",
+            startX: relX,
+            startY: relY,
+            initialPositions: [{ 
+              id: "DOOR", 
+              x: activeRoom?.door?.x ?? 0, 
+              y: activeRoom?.door?.y ?? 0 
+            }]
           }
           try {
             e.currentTarget.setPointerCapture(e.pointerId)
@@ -103,14 +165,19 @@ const CabinetCanvas = memo(({
           }
         }}
       >
-        <div className="relative flex h-12 w-12 items-center justify-center">
-          <div className="absolute bottom-0 left-0 h-full w-[3px] bg-pup-maroon" />
-          <div className="absolute bottom-0 left-0 h-[3px] w-full bg-slate-400 group-hover:bg-slate-600" />
-          <div className="absolute inset-0 rounded-tr-full border-t-2 border-r-2 border-gray-300/30 group-hover:border-gray-300/60" />
-
-          <div className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 rounded bg-slate-900 px-2 py-1 text-[10px] font-black tracking-widest whitespace-nowrap text-white uppercase opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+        <div 
+          className="relative flex h-full w-full items-center justify-center rounded-sm bg-pup-maroon shadow-md transition-all duration-300 dark:bg-red-600 dark:shadow-none"
+        >
+          {/* Inner Text Label - Dynamically Rotated and Flipped */}
+          <span className={cn(
+            "text-[9px] font-black tracking-widest text-white whitespace-nowrap transition-transform duration-300",
+            activeRoom?.door?.rotation === 0 && "rotate-0",
+            activeRoom?.door?.rotation === 180 && "rotate-0", // Opposite flip for bottom
+            activeRoom?.door?.rotation === 90 && "-rotate-90", // Opposite flip for right
+            activeRoom?.door?.rotation === 270 && "rotate-90"  // Opposite flip for left
+          )}>
             ENTRANCE
-          </div>
+          </span>
         </div>
       </div>
 
@@ -134,8 +201,8 @@ const CabinetCanvas = memo(({
             </div>
           </div>
         )}
-        <div className="rounded bg-slate-800/40 px-2 py-1 font-mono text-[9px] text-slate-200">
-          GRID: {toPct(SNAP_STEP)}%
+        <div className="rounded bg-slate-800/40 px-2 py-1 font-mono text-[9px] text-slate-200 uppercase tracking-tighter">
+          GRID: {toPct(SNAP_STEP_X)}% x {toPct(SNAP_STEP_Y)}%
         </div>
       </div>
 
@@ -155,12 +222,13 @@ const CabinetCanvas = memo(({
             rot={rot}
             selectedCabinetIds={selectedCabinetIds}
             setSelectedCabinetIds={setSelectedCabinetIds}
-            rotateSelectedCabinet={rotateSelectedCabinet}
             duplicateSelectedCabinet={duplicateSelectedCabinet}
             setBulkConfirmOpen={setBulkConfirmOpen}
             activeRoom={activeRoom}
             canvasRef={canvasRef}
             dragRef={dragRef}
+            pushHistory={pushHistory}
+            layout={layout}
           />
         )
       })}
@@ -176,22 +244,24 @@ const CabinetElement = memo(({
   rot,
   selectedCabinetIds,
   setSelectedCabinetIds,
-  rotateSelectedCabinet,
   duplicateSelectedCabinet,
   setBulkConfirmOpen,
   activeRoom,
   canvasRef,
-  dragRef
+  dragRef,
+  pushHistory,
+  layout
 }) => {
   return (
     <div
-      className={`absolute border-2 transition-all duration-75 ${
-        isSelected
-          ? "z-10 border-cyan-500 bg-cyan-50/20 shadow-[0_0_0_4px_rgba(6,182,212,0.2)]"
-          : isConflict
-            ? "z-10 border-red-600 bg-red-50/50 shadow-[0_0_0_4px_rgba(220,38,38,0.2)]"
-            : "border-slate-800 bg-white"
-      }`}
+      className={cn(
+        "absolute border-2 transition-all duration-75 rounded-sm",
+        isSelected 
+          ? "z-10 border-cyan-500 bg-cyan-100 shadow-[0_0_0_4px_rgba(6,182,212,0.2)] dark:border-cyan-400 dark:bg-cyan-800 dark:shadow-[0_0_0_4px_rgba(34,211,238,0.2)]" 
+          : isConflict 
+            ? "border-red-600 bg-red-50 shadow-[0_0_0_4px_rgba(220,38,38,0.2)] dark:border-red-500 dark:bg-red-900/40 dark:shadow-[0_0_0_4px_rgba(239,68,68,0.2)]" 
+            : "border-gray-500 bg-gray-100 shadow-sm dark:border-zinc-500 dark:bg-zinc-400 dark:shadow-none"
+      )}
       style={{
         left: `${cab.rect.x * 100}%`,
         top: `${cab.rect.y * 100}%`,
@@ -200,9 +270,13 @@ const CabinetElement = memo(({
         userSelect: "none",
       }}
       onPointerDown={(e) => {
-        if (!canvasRef.current) return
+        const container = e.currentTarget.closest('[data-slot="storage-canvas"]')
+        if (!container) return
+
         e.preventDefault()
         e.stopPropagation()
+
+        pushHistory(layout)
 
         const isMulti = e.ctrlKey || e.metaKey
         let next = new Set(selectedCabinetIds)
@@ -216,7 +290,7 @@ const CabinetElement = memo(({
         }
         setSelectedCabinetIds(next)
 
-        const box = canvasRef.current.getBoundingClientRect()
+        const box = container.getBoundingClientRect()
         const relX =
           (e.clientX - box.left) / Math.max(1, box.width)
         const relY =
@@ -250,31 +324,14 @@ const CabinetElement = memo(({
           className="animate-scale-in absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2"
           onPointerDown={(e) => e.stopPropagation()}
         >
-          <div className="flex items-center gap-1 rounded-full border border-gray-200 bg-white p-1 shadow-xl">
+          <div className="flex items-center gap-1 rounded-full border border-gray-200 bg-white p-1 shadow-xl dark:border-white/10 dark:bg-card dark:shadow-none">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-pup-maroon"
-                  onClick={rotateSelectedCabinet}
-                >
-                  <i className="ph-bold ph-arrow-clockwise text-sm" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top">Rotate</TooltipContent>
-            </Tooltip>
-
-            <div className="h-4 w-px bg-gray-200" />
-
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-pup-maroon"
+                  className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:bg-muted dark:hover:bg-white/10"
                   onClick={duplicateSelectedCabinet}
                 >
                   <i className="ph-bold ph-copy text-sm" />
@@ -285,7 +342,7 @@ const CabinetElement = memo(({
               </TooltipContent>
             </Tooltip>
 
-            <div className="h-4 w-px bg-gray-200" />
+            <div className="h-4 w-px bg-gray-200 dark:bg-zinc-700" />
 
             <Tooltip>
               <TooltipTrigger asChild>
@@ -293,7 +350,7 @@ const CabinetElement = memo(({
                   type="button"
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-red-600"
+                  className="h-8 w-8 rounded-full text-gray-700 hover:bg-gray-100 hover:text-red-600 dark:text-zinc-200 dark:bg-muted dark:hover:bg-white/10"
                   onClick={() => setBulkConfirmOpen(true)}
                 >
                   <i className="ph-bold ph-trash text-sm" />
@@ -304,34 +361,37 @@ const CabinetElement = memo(({
           </div>
         </div>
       )}
-      {eff.w >= 0.12 && eff.h >= 0.14 ? (
-        <>
-          <div className="absolute top-2 left-2 text-[10px] font-extrabold text-gray-600">
-            CAB-{cab.id}
-          </div>
-          <div className="absolute top-2 right-2 text-[10px] font-extrabold text-gray-500">
-            {rot === 90 ? "V" : "H"}
-          </div>
-          <div className="absolute right-2 bottom-2 left-2 text-[10px] font-bold text-gray-500">
-            {cab.drawerIds.length} drawers
-          </div>
-        </>
-      ) : (
-        <div className="absolute inset-0 flex items-center justify-center text-[10px] font-black text-gray-700">
-          CAB-{cab.id}
-        </div>
-      )}
+      
+      {/* Precision Frame Overlay (Simulated Depth) */}
+      <div className="absolute inset-0 border border-white/20 pointer-events-none rounded-[1px]" />
+      <div className="absolute inset-[1px] border border-black/5 pointer-events-none rounded-[1px]" />
+
+      <div className="absolute inset-0 flex flex-col items-center justify-center p-2 pointer-events-none">
+        <span className={cn(
+          "text-[10px] font-black text-gray-700 uppercase tracking-tighter dark:text-zinc-900",
+          isSelected && "dark:text-cyan-50"
+        )}>
+          {cab.id.startsWith("CAB-") ? cab.id : `CAB-${cab.id}`}
+        </span>
+        <div className={cn(
+          "mt-1 h-[2px] w-1/3 bg-gray-400/50 rounded-full dark:bg-zinc-900/40",
+          isSelected && "dark:bg-cyan-50/40"
+        )} />
+      </div>
+
       {isSelected ? (
         <Tooltip>
           <TooltipTrigger asChild>
             <div
               role="button"
               tabIndex={0}
-              className="absolute -right-1.5 -bottom-1.5 flex h-5 w-5 cursor-se-resize items-center justify-center rounded-sm border border-gray-300 bg-white leading-none text-pup-maroon shadow"
+              className="absolute -right-1.5 -bottom-1.5 flex h-5 w-5 cursor-se-resize items-center justify-center rounded-sm border border-gray-300 bg-white leading-none text-pup-maroon dark:text-primary shadow dark:bg-card dark:text-primary dark:border-white/10"
               onPointerDown={(e) => {
-                if (!canvasRef.current) return
+                const container = e.currentTarget.closest('[data-slot="storage-canvas"]')
+                if (!container) return
                 e.preventDefault()
                 e.stopPropagation()
+                pushHistory(layout)
                 setSelectedCabinetIds(new Set([cab.id]))
                 dragRef.current = {
                   pointerId: e.pointerId,
@@ -360,3 +420,4 @@ CabinetCanvas.displayName = "CabinetCanvas"
 CabinetElement.displayName = "CabinetElement"
 
 export default CabinetCanvas
+
