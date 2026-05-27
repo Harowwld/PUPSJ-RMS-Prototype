@@ -253,6 +253,69 @@ export async function populateSampleData({ force = false } = {}) {
     ],
   );
 
+  // Ready - 85 days old (5 days left)
+  const date85DaysAgo = new Date();
+  date85DaysAgo.setDate(date85DaysAgo.getDate() - 85);
+  const date85Str = date85DaysAgo.toISOString().replace('T', ' ').substring(0, 19);
+
+  await dbRun(
+    `INSERT INTO document_requests (
+      student_no, doc_type, status, notes, created_by, updated_by, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      "2022-10001-MN-1",
+      "Transcript of Records",
+      "Ready",
+      "Urgent: Alumni pickup requested. Almost due for ODRS shredding (85 days old).",
+      "records.marcus@pup.local",
+      "records.marcus@pup.local",
+      date85Str,
+      date85Str,
+    ],
+  );
+
+  // Ready - 95 days old (Expired / Scheduled for Shredding)
+  const date95DaysAgo = new Date();
+  date95DaysAgo.setDate(date95DaysAgo.getDate() - 95);
+  const date95Str = date95DaysAgo.toISOString().replace('T', ' ').substring(0, 19);
+
+  await dbRun(
+    `INSERT INTO document_requests (
+      student_no, doc_type, status, notes, created_by, updated_by, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      "2023-20003-MN-0",
+      "Certificate of Good Moral",
+      "Ready",
+      "Expired: Retained past 90 days. Scheduled for secure ODRS shredding.",
+      "records.marcus@pup.local",
+      "records.marcus@pup.local",
+      date95Str,
+      date95Str,
+    ],
+  );
+
+  // Ready - 2 days old (Plenty of time)
+  const date2DaysAgo = new Date();
+  date2DaysAgo.setDate(date2DaysAgo.getDate() - 2);
+  const date2Str = date2DaysAgo.toISOString().replace('T', ' ').substring(0, 19);
+
+  await dbRun(
+    `INSERT INTO document_requests (
+      student_no, doc_type, status, notes, created_by, updated_by, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+    [
+      "2021-30004-MN-1",
+      "Diploma",
+      "Ready",
+      "Processed and ready for pickup.",
+      "records.marcus@pup.local",
+      "records.marcus@pup.local",
+      date2Str,
+      date2Str,
+    ],
+  );
+
   // 9. Audit Logs
   await dbRun(
     `INSERT INTO audit_logs (actor, role, action, ip) VALUES (?, ?, ?, ?)`,

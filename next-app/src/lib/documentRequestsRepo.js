@@ -6,6 +6,7 @@ const VALID_STATUSES = new Set([
   "Ready",
   "Completed",
   "Cancelled",
+  "Shredded",
 ]);
 
 export function isValidRequestStatus(s) {
