@@ -31,9 +31,8 @@ function normalizeStudentRow(row) {
   const cabRaw = row.cabinet ?? "";
   const drawerRaw = row.drawer ?? "";
 
-  // Normalize cabinet so that it always includes "CAB-" prefix for mapping consistency in visual layouts
-  const cleanCabinet = String(cabRaw).trim().toUpperCase();
-  const normalizedCabinet = cleanCabinet.startsWith("CAB-") ? cleanCabinet : `CAB-${cleanCabinet}`;
+  // Normalize cabinet so that it is always a clean single uppercase letter (e.g. "C" or "A")
+  const cleanCabinet = String(cabRaw).trim().toUpperCase().replace(/^CAB-/, "");
 
   return {
     ...row,
@@ -41,7 +40,7 @@ function normalizeStudentRow(row) {
     courseCode: row.courseCode ?? row.course_code ?? "",
     yearLevel: row.yearLevel ?? row.year_level ?? null,
     room: Number.isFinite(Number(roomRaw)) ? Number(roomRaw) : String(roomRaw).trim(),
-    cabinet: normalizedCabinet,
+    cabinet: cleanCabinet,
     drawer: Number.isFinite(Number(drawerRaw)) ? Number(drawerRaw) : String(drawerRaw).trim(),
   };
 }
@@ -452,23 +451,28 @@ function StaffPageContent() {
         kind: "cabinets",
         room: selectedRoom,
         roomDoor: roomDef.door || null,
-        cabinets: roomDef.cabinets.map((c) => ({
-          cab: c.id,
-          occupiedCount: students.filter(
-            (s) => s.room === selectedRoom && s.cabinet === c.id,
-          ).length,
-          isTarget:
-            activeStudent?.room === selectedRoom &&
-            activeStudent?.cabinet === c.id,
-          rect: c.rect,
-          rotation: c.rotation || 0,
-          drawerIds: c.drawerIds,
-        })),
+        cabinets: roomDef.cabinets.map((c) => {
+          const normCab = String(c.id).toUpperCase().replace(/^CAB-/, "");
+          return {
+            cab: normCab,
+            occupiedCount: students.filter(
+              (s) => s.room === selectedRoom && s.cabinet === normCab,
+            ).length,
+            isTarget:
+              activeStudent?.room === selectedRoom &&
+              activeStudent?.cabinet === normCab,
+            rect: c.rect,
+            rotation: c.rotation || 0,
+            drawerIds: c.drawerIds,
+          };
+        }),
       };
     }
     if (currentLocatorLevel === "drawers") {
       const roomDef = storageLayout.rooms.find((r) => r.id === selectedRoom);
-      const cabinetDef = roomDef?.cabinets?.find((c) => c.id === selectedCabinet);
+      const cabinetDef = roomDef?.cabinets?.find(
+        (c) => String(c.id).toUpperCase().replace(/^CAB-/, "") === selectedCabinet
+      );
       if (!cabinetDef)
         return {
           kind: "drawers",
@@ -482,18 +486,21 @@ function StaffPageContent() {
         cabinet: selectedCabinet,
         roomDoor: roomDef?.door || null,
         cabinetRect: cabinetDef.rect,
-        cabinets: roomDef.cabinets.map((c) => ({
-          cab: c.id,
-          occupiedCount: students.filter(
-            (s) => s.room === selectedRoom && s.cabinet === c.id,
-          ).length,
-          isTarget:
-            activeStudent?.room === selectedRoom &&
-            activeStudent?.cabinet === c.id,
-          rect: c.rect,
-          rotation: c.rotation || 0,
-          drawerIds: c.drawerIds,
-        })),
+        cabinets: roomDef.cabinets.map((c) => {
+          const normCab = String(c.id).toUpperCase().replace(/^CAB-/, "");
+          return {
+            cab: normCab,
+            occupiedCount: students.filter(
+              (s) => s.room === selectedRoom && s.cabinet === normCab,
+            ).length,
+            isTarget:
+              activeStudent?.room === selectedRoom &&
+              activeStudent?.cabinet === normCab,
+            rect: c.rect,
+            rotation: c.rotation || 0,
+            drawerIds: c.drawerIds,
+          };
+        }),
         drawers: cabinetDef.drawerIds.map((d) => ({
           drawer: d,
           count: students.filter(
