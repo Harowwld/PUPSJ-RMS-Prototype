@@ -24,6 +24,7 @@ import {
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import PageHeader from "@/components/shared/PageHeader";
 import { Select } from "@/components/ui/select"
+import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
 
 export default function DocumentsTab({
   docsForm,
@@ -81,14 +82,14 @@ export default function DocumentsTab({
   const getCabinetsForRoom = (roomIdRaw) => getRoomDef(roomIdRaw)?.cabinets || [];
   const getDrawerIdsFor = (roomIdRaw, cabinetIdRaw) => {
     const roomDef = getRoomDef(roomIdRaw);
-    const cabId = String(cabinetIdRaw ?? "").trim();
+    const cabId = canonicalizeCabinetId(cabinetIdRaw);
     if (!roomDef || !cabId) return [];
-    const cab = roomDef.cabinets.find((c) => c.id === cabId);
+    const cab = roomDef.cabinets.find((c) => canonicalizeCabinetId(c.id) === cabId);
     return cab?.drawerIds || [];
   };
   const mergeSelectedCabinetId = (roomIdRaw, cabIdRaw) => {
-    const cabId = String(cabIdRaw || "").trim();
-    const ids = getCabinetsForRoom(roomIdRaw).map((c) => c.id);
+    const cabId = canonicalizeCabinetId(cabIdRaw);
+    const ids = getCabinetsForRoom(roomIdRaw).map((c) => canonicalizeCabinetId(c.id));
     if (cabId && !ids.includes(cabId)) return [cabId, ...ids];
     return ids;
   };

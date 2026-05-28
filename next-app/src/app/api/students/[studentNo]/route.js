@@ -6,6 +6,7 @@ import {
   updateStudent,
 } from "../../../../lib/studentsRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
+import { canonicalizeCabinetId } from "../../../../lib/storageLayoutUtils";
 
 export const runtime = "nodejs";
 
@@ -74,7 +75,7 @@ export async function PATCH(req, ctx) {
     yearLevel: body.yearLevel,
     section: body.section === undefined ? undefined : String(body.section).trim(),
     room: body.room,
-    cabinet: body.cabinet === undefined ? undefined : String(body.cabinet).trim(),
+    cabinet: body.cabinet === undefined ? undefined : canonicalizeCabinetId(body.cabinet),
     drawer: body.drawer,
     status: body.status === undefined ? undefined : String(body.status).trim(),
   });

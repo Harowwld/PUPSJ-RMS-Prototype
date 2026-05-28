@@ -3,6 +3,7 @@ import {
   buildDefaultStorageLayout,
   getDefaultDoor,
 } from "./storageLayoutDefaults.js";
+import { canonicalizeCabinetId } from "./storageLayoutUtils.js";
 
 const STORAGE_LAYOUT_KEY = "storage_layout";
 
@@ -45,7 +46,7 @@ function normalizeDrawerIds(drawerIdsRaw) {
 }
 
 function normalizeCabinetId(cabinetIdRaw) {
-  const id = String(cabinetIdRaw ?? "").trim();
+  const id = canonicalizeCabinetId(cabinetIdRaw);
   return id.length ? id : null;
 }
 

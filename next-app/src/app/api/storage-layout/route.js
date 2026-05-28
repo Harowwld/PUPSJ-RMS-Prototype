@@ -6,15 +6,13 @@ import {
   reassignStudentsByLocationMappings,
 } from "../../../lib/studentsRepo";
 import { getStorageLayout, setStorageLayout } from "../../../lib/storageLayoutRepo";
+import { canonicalizeCabinetId } from "../../../lib/storageLayoutUtils";
 
 export const runtime = "nodejs";
 
 
 function normalizeCabinetId(cabId) {
-  return String(cabId || "")
-    .trim()
-    .toUpperCase()
-    .replace(/^CAB[- ]/i, "");
+  return canonicalizeCabinetId(cabId);
 }
 
 function buildLayoutLocationSet(layout) {

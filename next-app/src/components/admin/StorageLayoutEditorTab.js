@@ -39,6 +39,7 @@ import {
   clampToRoom,
   snapValue,
   calculatePath,
+  canonicalizeCabinetId,
 } from "@/lib/storageLayoutUtils"
 
 export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty, error = null }) {

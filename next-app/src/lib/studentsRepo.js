@@ -1,4 +1,5 @@
 import { dbAll, dbGet, dbRun } from "./sqlite.js";
+import { canonicalizeCabinetId } from "./storageLayoutUtils.js";
 
 function normalizeStudentName(name) {
   return String(name || "")
@@ -59,6 +60,7 @@ export async function createStudent({
   const normalizedSection = String(section || "").trim();
   await ensureCourseSectionMapping(normalizedCourseCode, normalizedSection);
 
+  const normalizedCabinet = canonicalizeCabinetId(cabinet);
   const academicYear = parseInt(yearLevel);
   await dbRun(
     `
@@ -81,7 +83,7 @@ export async function createStudent({
       academicYear,
       normalizedSection,
       room,
-      cabinet,
+      normalizedCabinet,
       drawer,
       status || "Active",
     ]
@@ -191,7 +193,7 @@ export async function updateStudent(studentNo, patch) {
       patch.yearLevel === undefined ? existing.year_level : parseInt(patch.yearLevel),
     section: String(patch.section ?? existing.section).trim(),
     room: patch.room === undefined ? existing.room : parseInt(patch.room),
-    cabinet: patch.cabinet ?? existing.cabinet,
+    cabinet: canonicalizeCabinetId(patch.cabinet ?? existing.cabinet),
     drawer: patch.drawer === undefined ? existing.drawer : parseInt(patch.drawer),
     status: patch.status ?? existing.status,
   };
@@ -262,10 +264,10 @@ export async function reassignStudentsByLocationMappings(mappings = []) {
   const breakdown = [];
   for (const m of mappings) {
     const fromRoom = Number(m?.from?.room);
-    const fromCabinet = String(m?.from?.cabinet || "").trim();
+    const fromCabinet = canonicalizeCabinetId(m?.from?.cabinet);
     const fromDrawer = Number(m?.from?.drawer);
     const toRoom = Number(m?.to?.room);
-    const toCabinet = String(m?.to?.cabinet || "").trim();
+    const toCabinet = canonicalizeCabinetId(m?.to?.cabinet);
     const toDrawer = Number(m?.to?.drawer);
     if (
       !Number.isFinite(fromRoom) ||

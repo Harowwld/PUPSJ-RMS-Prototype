@@ -385,7 +385,8 @@ export default function BulkImportTab({
                     <th className="w-40 p-4 text-right dark:text-zinc-300">VALIDATION</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-white/10">                  <tr className="bg-gray-50 transition-colors hover:bg-gray-50 dark:bg-card dark:hover:bg-white/10">
+                <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+                  <tr className="bg-gray-50 transition-colors hover:bg-gray-50 dark:bg-card dark:hover:bg-white/10">
                     <td className="p-4 text-center">
                       <div className="flex h-5 w-5 mx-auto items-center justify-center rounded-full border-2 border-dashed border-gray-300 dark:border-white/10">
                         <i className="ph-bold ph-plus text-[10px] text-gray-400 dark:text-zinc-500"></i>

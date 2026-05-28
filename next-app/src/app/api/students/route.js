@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createStudent, listStudents } from "../../../lib/studentsRepo";
 import { writeAuditLog } from "../../../lib/auditLogRequest";
+import { canonicalizeCabinetId } from "../../../lib/storageLayoutUtils";
 
 export const runtime = "nodejs";
 
@@ -42,7 +43,7 @@ export async function POST(req) {
   const yearLevel = parseInt(body.yearLevel);
   const section = String(body.section || "").trim();
   const room = parseInt(body.room);
-  const cabinet = String(body.cabinet || "").trim();
+  const cabinet = canonicalizeCabinetId(body.cabinet);
   const drawer = parseInt(body.drawer);
   const status = String(body.status || "Active").trim() || "Active";
 

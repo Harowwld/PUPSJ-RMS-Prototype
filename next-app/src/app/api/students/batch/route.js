@@ -3,6 +3,7 @@ import { createStudent } from "../../../../lib/studentsRepo";
 import { listCourses } from "../../../../lib/coursesRepo";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { getStorageLayout } from "../../../../lib/storageLayoutRepo";
+import { canonicalizeCabinetId } from "../../../../lib/storageLayoutUtils";
 
 export const runtime = "nodejs";
 
@@ -28,7 +29,7 @@ function validateStudentPayload(body, layout) {
   const yearLevel = parseInt(body?.yearLevel);
   const section = String(body?.section || "").trim();
   const room = parseInt(body?.room);
-  const cabinet = String(body?.cabinet || "").trim();
+  const cabinet = canonicalizeCabinetId(body?.cabinet);
   const drawer = parseInt(body?.drawer);
   const status = String(body?.status || "Active").trim() || "Active";
 

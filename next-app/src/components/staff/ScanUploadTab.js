@@ -24,6 +24,7 @@ import {
   CardDescription,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Select } from "@/components/ui/select"
 import {
   Empty,
   EmptyHeader,
@@ -33,7 +34,7 @@ import {
 } from "@/components/ui/empty"
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
-import { Select } from "@/components/ui/select"
+import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils"
 
 export default function ScanUploadTab({
   loading,
@@ -123,34 +124,34 @@ export default function ScanUploadTab({
     getRoomDef(roomIdRaw)?.cabinets || []
   const getDrawerIdsFor = (roomIdRaw, cabinetIdRaw) => {
     const roomDef = getRoomDef(roomIdRaw)
-    const cabId = String(cabinetIdRaw ?? "").trim()
+    const cabId = canonicalizeCabinetId(cabinetIdRaw)
     if (!roomDef || !cabId) return []
-    const cab = roomDef.cabinets.find((c) => c.id === cabId)
+    const cab = roomDef.cabinets.find((c) => canonicalizeCabinetId(c.id) === cabId)
     return cab?.drawerIds || []
   }
 
   const isLocationValid = (roomIdRaw, cabIdRaw, drawerRaw) => {
     const roomId = coerceRoomId(roomIdRaw)
-    const cabId = String(cabIdRaw || "").trim()
+    const cabId = canonicalizeCabinetId(cabIdRaw)
     const drawerId = parseInt(String(drawerRaw || ""), 10)
     if (roomId == null || !cabId || !Number.isFinite(drawerId)) return false
 
     const roomDef = storageLayout?.rooms?.find((r) => r.id === roomId)
     if (!roomDef) return false
 
-    const cabDef = roomDef.cabinets?.find((c) => c.id === cabId)
+    const cabDef = roomDef.cabinets?.find((c) => canonicalizeCabinetId(c.id) === cabId)
     if (!cabDef) return false
 
     return cabDef.drawerIds?.includes(drawerId)
   }
 
   const mergeSelectedCabinetId = (roomIdRaw, cabIdRaw) => {
-    const cabId = String(cabIdRaw || "").trim()
-    const ids = getCabinetsForRoom(roomIdRaw).map((c) => c.id)
+    const cabId = canonicalizeCabinetId(cabIdRaw)
+    const ids = getCabinetsForRoom(roomIdRaw).map((c) => canonicalizeCabinetId(c.id))
     
     // If no room is selected or invalid, provide all possible cabinet IDs from the system as options
     if (ids.length === 0) {
-      const allCabs = Array.from(new Set(storageLayout?.rooms?.flatMap(r => r.cabinets.map(c => c.id)) || []))
+      const allCabs = Array.from(new Set(storageLayout?.rooms?.flatMap(r => r.cabinets.map(c => canonicalizeCabinetId(c.id))) || []))
       if (cabId && !allCabs.includes(cabId)) return [cabId, ...allCabs]
       return allCabs
     }

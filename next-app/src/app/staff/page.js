@@ -24,6 +24,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { scanFileForSuggestion, warmupOcrWorker } from "@/lib/ocrClient";
 import { findMatchingDocument } from "@/lib/docAvailability";
 import { imageToPdf, needsConversion, mergeImagesToPdf } from "@/lib/imageToPdf";
+import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
 
 function normalizeStudentRow(row) {
   if (!row || typeof row !== "object") return row;
@@ -31,8 +32,8 @@ function normalizeStudentRow(row) {
   const cabRaw = row.cabinet ?? "";
   const drawerRaw = row.drawer ?? "";
 
-  // Normalize cabinet so that it is always a clean single uppercase letter (e.g. "C" or "A")
-  const cleanCabinet = String(cabRaw).trim().toUpperCase();
+  // Normalize cabinet so that it is always a clean uppercase letter (no prefixes, trimmed)
+  const cleanCabinet = canonicalizeCabinetId(cabRaw);
 
   return {
     ...row,
