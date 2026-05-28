@@ -53,6 +53,10 @@ function getStudentNoYear(studentNo) {
   return year;
 }
 
+function normCabinetId(id) {
+  return String(id || "").trim().toUpperCase().replace(/^CAB-/, "");
+}
+
 function StaffPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -338,9 +342,9 @@ function StaffPageContent() {
 
       // If cabinet selected but removed, fallback to first cabinet (or null).
       if (selectedCabinet) {
-        const exists = roomDef.cabinets?.some((c) => c.id === selectedCabinet);
+        const exists = roomDef.cabinets?.some((c) => normCabinetId(c.id) === selectedCabinet);
         if (!exists) {
-          setSelectedCabinet(roomDef.cabinets?.[0]?.id || null);
+          setSelectedCabinet(normCabinetId(roomDef.cabinets?.[0]?.id) || null);
         }
       }
     }
