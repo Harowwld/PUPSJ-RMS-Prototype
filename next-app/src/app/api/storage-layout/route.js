@@ -10,13 +10,20 @@ import { getStorageLayout, setStorageLayout } from "../../../lib/storageLayoutRe
 export const runtime = "nodejs";
 
 
+function normalizeCabinetId(cabId) {
+  return String(cabId || "")
+    .trim()
+    .toUpperCase()
+    .replace(/^CAB[- ]/i, "");
+}
+
 function buildLayoutLocationSet(layout) {
   const set = new Set();
   for (const room of layout?.rooms || []) {
     const roomId = Number(room?.id);
     if (!Number.isFinite(roomId)) continue;
     for (const cab of room?.cabinets || []) {
-      const cabId = String(cab?.id || "").trim();
+      const cabId = normalizeCabinetId(cab?.id);
       if (!cabId) continue;
       for (const drawerIdRaw of cab?.drawerIds || []) {
         const drawerId = Number(drawerIdRaw);
@@ -79,7 +86,7 @@ export async function PUT(req) {
       const usage = await listStudentLocationUsage();
       const orphaned = usage.filter((u) => {
         const roomId = Number(u.room);
-        const cabId = String(u.cabinet || "").trim();
+        const cabId = normalizeCabinetId(u.cabinet);
         const drawerId = Number(u.drawer);
         return !proposedSet.has(`${roomId}|${cabId}|${drawerId}`);
       });
@@ -113,13 +120,16 @@ export async function PUT(req) {
             { status: 400 }
           );
         }
-        if (!proposedSet.has(`${to.room}|${to.cabinet}|${to.drawer}`)) {
+        if (!proposedSet.has(`${to.room}|${normalizeCabinetId(to.cabinet)}|${to.drawer}`)) {
           return NextResponse.json(
             { ok: false, error: "Reassignment target is not part of the proposed layout" },
             { status: 400 }
           );
         }
-        normalized.push({ from, to });
+        normalized.push({
+          from: { ...from, cabinet: normalizeCabinetId(from.cabinet) },
+          to: { ...to, cabinet: normalizeCabinetId(to.cabinet) }
+        });
       }
       const moved = await reassignStudentsByLocationMappings(normalized);
       movedCount = Number(moved?.moved || 0);

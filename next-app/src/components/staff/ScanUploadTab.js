@@ -3,6 +3,7 @@
 import Image from "next/image"
 import { useMemo, useState, useEffect } from "react"
 import { useHotFolderInbox } from "@/hooks/useHotFolderInbox"
+import { cn } from "@/lib/utils"
 import {
   Dialog,
   DialogContent,
@@ -33,7 +34,6 @@ import {
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import { Select } from "@/components/ui/select"
-import { cn } from "@/lib/utils"
 
 export default function ScanUploadTab({
   loading,

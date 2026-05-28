@@ -56,4 +56,22 @@ This document summarizes the major enhancements and architectural changes implem
     *   `_SAMPLE_DATA\`
 
 ---
+
+## 4. UI/UX & Storage Layout Exploration Polish (May 2026)
+
+### 4.1 Upgraded Storage Layout Map Preview
+*   **AutoCAD-Inspired Style**: Re-skinned the `RoomMap2D` visualization component in the staff's Records Archive view to match the premium, professional, AutoCAD precision styling of the administrator's layout editor. Added exact background precision grids, standardized entrance markers, and detailed depth outlines to all cabinets.
+*   **Double Legend Resolution**: Resolved a double legend rendering bug where both the card header and the inner layout header displayed the "Empty, Occupied, Target" key.
+
+### 4.2 Floating Cabinet Drawer Details Overlay
+*   **Uncluttered Viewport**: Removed the drawer grid list from rendering inside tiny cabinet tiles to keep the layout map completely clean and visually proportioned.
+*   **Glassmorphic Floating Panel**: Replaced it with a gorgeous, absolute-positioned glassmorphic overlay modal showing drawer details (Target, Occupied, and Empty slots) with clean indicators and direct drawer selection controls.
+*   **Hover-Over Auto-Hide**: Implemented an automated 2-second auto-hide timeout when the cursor hovers over the drawer modal, allowing it to easily clear out of the way so users can reveal and click on cabinets underneath. Leaving the modal cancels the countdown.
+*   **Active Click Reset**: Added a click-to-reset listener to the details overlay, ensuring that clicking inside the panel (e.g., selecting a drawer) immediately restarts the 2-second countdown to keep the panel open during active use.
+
+### 4.3 Normalized Cabinet ID Database Matching
+*   **Robust Backend Matching**: Upgraded the `GET` and `PUT` validator logic inside `/api/storage-layout/route.js` to normalize cabinet IDs.
+*   **Matching Resolution**: Successfully handles matching cabinet names like `C` (stored in the database) with template visual block keys like `CAB-C` (saved in the layout JSON), resolving a bug where saving the layout would fail with a false-alarm "Cannot delete occupied cabinet locations" block.
+
+---
 *End of Update Log*
