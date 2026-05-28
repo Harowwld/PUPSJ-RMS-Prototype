@@ -371,7 +371,7 @@ const CabinetElement = memo(({
           "text-[10px] font-black text-gray-700 uppercase tracking-tighter dark:text-zinc-900",
           isSelected && "dark:text-cyan-50"
         )}>
-          {cab.id.toUpperCase().replace(/^CAB-/, "")}
+          {cab.id}
         </span>
         <div className={cn(
           "mt-1 h-[2px] w-1/3 bg-gray-400/50 rounded-full dark:bg-zinc-900/40",

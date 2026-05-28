@@ -164,7 +164,7 @@ export default function RoomMap2D({
             <div className="flex items-center gap-2">
               <i className="ph-fill ph-archive-box text-pup-maroon dark:text-primary text-base"></i>
               <h5 className="font-black text-xs text-gray-900 dark:text-zinc-50 uppercase tracking-tight">
-                Cabinet {String(selectedCabinetId).toUpperCase().replace(/^CAB-/, "").replace(/^CAB/, "")}
+                Cabinet {selectedCabinetId}
               </h5>
             </div>
             {/* Clean close/back button that toggles cabinet selection back to null */}

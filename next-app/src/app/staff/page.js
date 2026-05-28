@@ -32,7 +32,7 @@ function normalizeStudentRow(row) {
   const drawerRaw = row.drawer ?? "";
 
   // Normalize cabinet so that it is always a clean single uppercase letter (e.g. "C" or "A")
-  const cleanCabinet = String(cabRaw).trim().toUpperCase().replace(/^CAB-/, "");
+  const cleanCabinet = String(cabRaw).trim().toUpperCase();
 
   return {
     ...row,
@@ -53,9 +53,7 @@ function getStudentNoYear(studentNo) {
   return year;
 }
 
-function normCabinetId(id) {
-  return String(id || "").trim().toUpperCase().replace(/^CAB-/, "");
-}
+
 
 function StaffPageContent() {
   const router = useRouter();
@@ -342,9 +340,9 @@ function StaffPageContent() {
 
       // If cabinet selected but removed, fallback to first cabinet (or null).
       if (selectedCabinet) {
-        const exists = roomDef.cabinets?.some((c) => normCabinetId(c.id) === selectedCabinet);
+        const exists = roomDef.cabinets?.some((c) => c.id === selectedCabinet);
         if (!exists) {
-          setSelectedCabinet(normCabinetId(roomDef.cabinets?.[0]?.id) || null);
+          setSelectedCabinet(roomDef.cabinets?.[0]?.id || null);
         }
       }
     }
@@ -456,7 +454,7 @@ function StaffPageContent() {
         room: selectedRoom,
         roomDoor: roomDef.door || null,
         cabinets: roomDef.cabinets.map((c) => {
-          const normCab = String(c.id).toUpperCase().replace(/^CAB-/, "");
+          const normCab = String(c.id);
           return {
             cab: normCab,
             occupiedCount: students.filter(
@@ -475,7 +473,7 @@ function StaffPageContent() {
     if (currentLocatorLevel === "drawers") {
       const roomDef = storageLayout.rooms.find((r) => r.id === selectedRoom);
       const cabinetDef = roomDef?.cabinets?.find(
-        (c) => String(c.id).toUpperCase().replace(/^CAB-/, "") === selectedCabinet
+        (c) => String(c.id) === selectedCabinet
       );
       if (!cabinetDef)
         return {
@@ -491,7 +489,7 @@ function StaffPageContent() {
         roomDoor: roomDef?.door || null,
         cabinetRect: cabinetDef.rect,
         cabinets: roomDef.cabinets.map((c) => {
-          const normCab = String(c.id).toUpperCase().replace(/^CAB-/, "");
+          const normCab = String(c.id);
           return {
             cab: normCab,
             occupiedCount: students.filter(
