@@ -499,7 +499,7 @@ export default function DigitalRecordsReviewTab({
             <div className="w-36 shrink-0">
               <label className="mb-1 block text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">Status</label>
               <Select
-                className="h-10 w-full rounded-brand border border-gray-300 bg-white pl-3 pr-10 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon focus:outline-none dark:bg-card dark:text-zinc-200 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
+                className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon focus:outline-none dark:bg-card dark:text-zinc-200 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
                 value={statusFilter}
                 onChange={(e) => { 
                   setStatusFilter(e.target.value); 
@@ -517,7 +517,7 @@ export default function DigitalRecordsReviewTab({
             <div className="w-44 shrink-0">
               <label className="mb-1 block text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">Doc Type</label>
               <Select
-                className="h-10 w-full rounded-brand border border-gray-300 bg-white pl-3 pr-10 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon focus:outline-none dark:bg-card dark:text-zinc-200 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
+                className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon focus:outline-none dark:bg-card dark:text-zinc-200 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
                 value={docTypeFilter}
                 onChange={(e) => { 
                   setDocTypeFilter(e.target.value); 
@@ -753,7 +753,7 @@ export default function DigitalRecordsReviewTab({
                 </div>
               </div>
 
-              <div className="h-auto w-full rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
+              <div className="h-auto w-full overflow-hidden overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
                 <table className="min-w-full text-sm">
                   <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm dark:border-white/10 dark:bg-muted">
                     <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">

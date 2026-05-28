@@ -379,7 +379,7 @@ export default function DocumentsTab({
               )}
               <div 
                 key={`${docsForm.studentNo}-${docsForm.docType}`}
-                className="h-auto w-full overflow-x-auto border border-gray-200 rounded-xl animate-fade-up dark:border-white/10"
+                className="h-auto w-full overflow-hidden overflow-x-auto border border-gray-200 rounded-xl animate-fade-up dark:border-white/10"
               >
                 <table className="min-w-full text-sm table-fixed">
                   <thead className="border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">

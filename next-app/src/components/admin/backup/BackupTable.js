@@ -60,7 +60,7 @@ export default function BackupTable({
     <>
       <div
         className={cn(
-          "flex-1 overflow-x-auto overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-sm select-none dark:border-white/10 dark:bg-card min-h-[400px]",
+          "flex-1 overflow-hidden overflow-x-auto overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-sm select-none dark:border-white/10 dark:bg-card min-h-[400px]",
           backups.length === 0 && "border-none shadow-none"
         )}
       >

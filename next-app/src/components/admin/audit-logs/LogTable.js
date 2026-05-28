@@ -288,7 +288,7 @@ export default function LogTable({
   if (isLoading && displayLogs.length === 0) {
     return (
       <div className="animate-pulse space-y-4">
-        <div className="overflow-x-auto rounded-xl border border-gray-100 bg-white dark:border-white/10 dark:bg-card">
+        <div className="overflow-hidden overflow-x-auto rounded-xl border border-gray-100 bg-white dark:border-white/10 dark:bg-card">
           <table className="min-w-full">
             <thead className="bg-gray-50 dark:bg-muted">
               <tr>

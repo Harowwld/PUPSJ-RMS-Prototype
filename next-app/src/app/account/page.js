@@ -577,16 +577,14 @@ function AccountPageContent() {
                   {[
                     { id: "profile", label: "Profile Info", icon: "ph-identification-card" },
                     { id: "security", label: "Security & Access", icon: "ph-shield-star" },
-                    { id: "preferences", label: "System Preference", icon: "ph-palette" }
+                    { id: "preferences", label: "System Preferences", icon: "ph-palette" }
                   ].map((tab) => (
                     <TabsTrigger
                       key={tab.id}
                       value={tab.id}
-                      className="group flex items-center justify-start gap-4 w-full px-5 py-4 rounded-[1.25rem] text-[13px] font-black uppercase tracking-wider transition-all data-[state=active]:bg-gray-50 dark:data-[state=active]:bg-white/5 data-[state=active]:text-pup-maroon dark:data-[state=active]:text-primary data-[state=active]:shadow-inner text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 outline-none"
+                      className="group flex items-center justify-start gap-3 w-full px-4 py-3 rounded-xl text-sm font-bold whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 data-[state=active]:bg-red-50 dark:data-[state=active]:bg-red-500/10 data-[state=active]:text-pup-maroon dark:data-[state=active]:text-primary text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50 dark:focus-visible:ring-red-500/20"
                     >
-                      <div className="shrink-0 w-10 h-10 rounded-xl bg-gray-100 dark:bg-zinc-800 flex items-center justify-center transition-all group-data-[state=active]:bg-white dark:group-data-[state=active]:bg-zinc-700 group-data-[state=active]:shadow-md group-data-[state=active]:text-pup-maroon dark:group-data-[state=active]:text-primary">
-                        <i className={cn("ph-bold text-xl", tab.icon)}></i>
-                      </div>
+                      <i className={cn("ph-bold text-lg shrink-0", tab.icon)}></i>
                       <span className="truncate text-left">{tab.label}</span>
                       <div className="shrink-0 ml-auto w-5 h-5 flex items-center justify-center opacity-0 group-data-[state=active]:opacity-100 transition-opacity">
                         <i className="ph-bold ph-caret-right text-sm"></i>

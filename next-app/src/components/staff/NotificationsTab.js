@@ -167,8 +167,8 @@ export default function NotificationsTab({
   }, [lastSeenReviewedAt])
 
   return (
-    <div className="animate-fade-up font-inter flex h-full w-full flex-col">
-      <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+    <div className="animate-fade-up font-inter flex w-full flex-col">
+      <Card className="flex flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bell"
           title="System Notifications"
@@ -221,18 +221,19 @@ export default function NotificationsTab({
             </Empty>
           ) : (
             <>
-              <div className="relative h-auto w-full overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10">
-                {isRefreshing && (
-                  <div className="absolute inset-0 z-20 flex h-full w-full flex-col items-center justify-center bg-white p-10 dark:bg-card">
-                    <div className="flex flex-col items-center gap-4">
-                      <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary" />
-                      <p className="text-sm font-bold text-gray-500 uppercase tracking-widest dark:text-zinc-400">
-                        Generating...
-                      </p>
+              <div className="rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden bg-white dark:bg-card">
+                <div className="relative h-auto w-full overflow-x-auto">
+                  {isRefreshing && (
+                    <div className="absolute inset-0 z-20 flex h-full w-full flex-col items-center justify-center bg-white p-10 dark:bg-card">
+                      <div className="flex flex-col items-center gap-4">
+                        <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary" />
+                        <p className="text-sm font-bold text-gray-500 uppercase tracking-widest dark:text-zinc-400">
+                          Generating...
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                )}
-                <table className="min-w-full text-xs">
+                  )}
+                  <table className="min-w-full text-xs border-separate border-spacing-0">
                   <thead className="border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">
                     <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
                       <th className="p-4 w-32">Decision</th>
@@ -335,7 +336,7 @@ export default function NotificationsTab({
                               <div className="flex flex-wrap justify-end gap-2">
                                 <Button
                                   variant="outline"
-                                  size="sm"
+                                  size="icon"
                                   onClick={() =>
                                     onPreviewDocument?.(
                                       n.doc_type,
@@ -344,10 +345,9 @@ export default function NotificationsTab({
                                       n.id
                                     )
                                   }
-                                  className="h-9 rounded-md border-gray-300 px-3 text-xs font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+                                  className="h-9 w-9 rounded-full border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800 cursor-pointer"
                                 >
-                                  <i className="ph-bold ph-eye mr-1.5"></i>
-                                  VIEW
+                                  <i className="ph-bold ph-eye text-base"></i>
                                 </Button>
                                 {n.approval_status === "Declined" && onRescan && (
                                   <Button
@@ -369,6 +369,7 @@ export default function NotificationsTab({
                   </tbody>
                 </table>
               </div>
+            </div>
 
               {total > 0 && (
                 <div className="-mx-6 mt-4 -mb-6 flex items-center justify-between border-t border-gray-100 bg-gray-50 p-4 px-6 dark:border-white/10 dark:bg-white/5">
@@ -403,17 +404,19 @@ export default function NotificationsTab({
                         <TooltipProvider>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <Select
-                                className="h-7 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-1 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none dark:bg-card dark:text-zinc-200 dark:border-white/10"
-                                value={itemsPerPage}
-                                onChange={handleItemsPerPageChange}
-                              >
-                                <option value={10}>10</option>
-                                <option value={20}>20</option>
-                                <option value={50}>50</option>
-                                <option value={100}>100</option>
-                                <option value={200}>200</option>
-                              </Select>
+                              <div className="h-7 w-16">
+                                  <Select
+                                    className="h-7 w-full cursor-pointer rounded-brand border border-gray-300 bg-white px-1 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none dark:bg-card dark:text-zinc-200 dark:border-white/10"
+                                  value={itemsPerPage}
+                                  onChange={handleItemsPerPageChange}
+                                >
+                                  <option value={10}>10</option>
+                                  <option value={20}>20</option>
+                                  <option value={50}>50</option>
+                                  <option value={100}>100</option>
+                                  <option value={200}>200</option>
+                                </Select>
+                              </div>
                             </TooltipTrigger>
                             <TooltipContent
                               side="top"
@@ -427,31 +430,33 @@ export default function NotificationsTab({
                     </div>
                   </div>
 
-                  <div className="flex shrink-0 items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={displayPage <= 1}
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-                    >
-                      <i className="ph-bold ph-caret-left mr-1"></i> PREV
-                    </Button>
-                    <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-xs dark:border-white/10 dark:bg-card dark:text-zinc-100">
-                      {displayPage}
+                  {total > 10 && (
+                    <div className="flex shrink-0 items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={displayPage <= 1}
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                      >
+                        <i className="ph-bold ph-caret-left mr-1"></i> PREV
+                      </Button>
+                      <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-xs dark:border-white/10 dark:bg-card dark:text-zinc-100">
+                        {displayPage}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={displayPage >= totalPages}
+                        onClick={() =>
+                          setPage((p) => Math.min(totalPages, p + 1))
+                        }
+                        className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                      >
+                        NEXT <i className="ph-bold ph-caret-right ml-1"></i>
+                      </Button>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={displayPage >= totalPages}
-                      onClick={() =>
-                        setPage((p) => Math.min(totalPages, p + 1))
-                      }
-                      className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-                    >
-                      NEXT <i className="ph-bold ph-caret-right ml-1"></i>
-                    </Button>
-                  </div>
+                  )}
                 </div>
               )}
             </>

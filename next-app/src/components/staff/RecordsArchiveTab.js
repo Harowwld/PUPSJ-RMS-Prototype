@@ -714,7 +714,7 @@ export default function RecordsArchiveTab({
               ) : (
                 <div 
                   key={`table-${currentLevel}-${showArchived}`}
-                  className="flex-1 overflow-auto rounded-xl border border-gray-200 bg-white shadow-sm animate-fade-up dark:border-white/10 dark:bg-card"
+                  className="flex-1 overflow-hidden overflow-auto rounded-xl border border-gray-200 bg-white shadow-sm animate-fade-up dark:border-white/10 dark:bg-card"
                 >
                   <table className="min-w-full text-sm">
                     <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">

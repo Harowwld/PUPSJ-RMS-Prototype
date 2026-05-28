@@ -168,7 +168,7 @@ export default function RateLimitingTab() {
       </div>
 
       {/* Recent Violations */}
-      <div className="rounded-brand border border-gray-200 bg-white dark:border-white/10 dark:bg-card">
+      <div className="rounded-brand border border-gray-200 bg-white overflow-hidden dark:border-white/10 dark:bg-card">
         <div className="border-b border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
           <h3 className="font-bold text-gray-900 dark:text-zinc-50">
             Recent Rate Limit Violations
@@ -249,7 +249,7 @@ export default function RateLimitingTab() {
   )
 
   const renderConfigurations = () => (
-    <div className="rounded-brand border border-gray-200 bg-white dark:border-white/10 dark:bg-card">
+    <div className="rounded-brand border border-gray-200 bg-white overflow-hidden dark:border-white/10 dark:bg-card">
       <div className="border-b border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
         <h3 className="font-bold text-gray-900 dark:text-zinc-50">Rate Limit Configurations</h3>
       </div>
@@ -293,7 +293,7 @@ export default function RateLimitingTab() {
   )
 
   const renderSuspiciousIPs = () => (
-    <div className="rounded-brand border border-gray-200 bg-white dark:border-white/10 dark:bg-card">
+    <div className="rounded-brand border border-gray-200 bg-white overflow-hidden dark:border-white/10 dark:bg-card">
       <div className="border-b border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
         <h3 className="font-bold text-gray-900 dark:text-zinc-50">Suspicious IP Addresses</h3>
       </div>

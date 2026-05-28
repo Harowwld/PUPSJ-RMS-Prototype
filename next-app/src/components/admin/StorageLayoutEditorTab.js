@@ -876,7 +876,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
               <div className="relative group">
                 <i className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 transition-all duration-300", activeRoomId ? "ph-fill ph-door-open text-pup-maroon dark:text-primary" : "ph-bold ph-door-open text-gray-400 dark:text-zinc-500", "group-focus-within:text-pup-maroon dark:text-primary")} />
                 <Select
-                  className="h-10 min-w-[200px] cursor-pointer rounded-xl border border-gray-200 bg-white pl-10 pr-10 text-sm font-bold text-gray-800 shadow-xs transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-100 dark:focus:border-zinc-700"
+                  className="h-10 min-w-[200px] cursor-pointer rounded-xl border border-gray-200 bg-white pl-10 pr-3 text-sm font-bold text-gray-800 shadow-xs transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-100 dark:focus:border-zinc-700"
                   value={String(activeRoomId ?? "")}
                   disabled={!layout?.rooms?.length}
                   onChange={(e) => setActiveRoomId(Number(e.target.value))}

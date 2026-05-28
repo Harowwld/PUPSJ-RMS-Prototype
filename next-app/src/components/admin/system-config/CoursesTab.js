@@ -423,7 +423,7 @@ export default function CoursesTab({
               </div>
             )}
 
-            <div className="relative z-10 flex-1 overflow-x-auto overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-sm select-none dark:border-white/10 dark:bg-card">
+            <div className="relative z-10 flex-1 overflow-hidden overflow-x-auto overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-sm select-none dark:border-white/10 dark:bg-card">
               {loading ? (
                 <div className="space-y-4 p-8">
                   <Skeleton className="h-10 w-full rounded-lg dark:bg-muted" />

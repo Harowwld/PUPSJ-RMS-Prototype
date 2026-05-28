@@ -51,7 +51,7 @@ const ConflictResolutionModals = memo(({
             </div>
           </DialogHeader>
           <div className="p-6">
-            <div className="max-h-[50vh] overflow-auto rounded-brand border border-gray-200 dark:border-white/10">
+            <div className="max-h-[50vh] overflow-hidden overflow-auto rounded-brand border border-gray-200 dark:border-white/10">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
                   <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
@@ -152,7 +152,7 @@ const ConflictResolutionModals = memo(({
                 </Button>
               </div>
             </div>
-            <div className="max-h-[45vh] overflow-auto rounded-brand border border-gray-200 shadow-inner dark:border-white/10 dark:shadow-none">
+            <div className="max-h-[45vh] overflow-hidden overflow-auto rounded-brand border border-gray-200 shadow-inner dark:border-white/10 dark:shadow-none">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
                   <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
@@ -268,7 +268,7 @@ const ConflictResolutionModals = memo(({
             </div>
           </DialogHeader>
           <div className="p-6">
-            <div className="max-h-[50vh] overflow-auto rounded-brand border border-gray-200 shadow-inner dark:border-white/10 dark:shadow-none">
+            <div className="max-h-[50vh] overflow-hidden overflow-auto rounded-brand border border-gray-200 shadow-inner dark:border-white/10 dark:shadow-none">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
                   <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">

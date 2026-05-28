@@ -518,7 +518,7 @@ export default function DocumentRequestsTab({
                 <div className="p-6 flex-1 flex flex-col min-h-0">
                   <div 
                     key={`${page}-${statusFilter}-${debouncedQ}`}
-                    className="h-auto w-full overflow-x-auto border border-gray-200 rounded-xl animate-fade-up dark:border-white/10"
+                    className="h-auto w-full overflow-hidden overflow-x-auto border border-gray-200 rounded-xl animate-fade-up dark:border-white/10"
                   >
                     <table className="min-w-full text-sm table-fixed">
                       <thead className="border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">
@@ -625,31 +625,33 @@ export default function DocumentRequestsTab({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={page <= 1}
-                        onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-                      >
-                        <i className="ph-bold ph-caret-left mr-1"></i> PREV
-                      </Button>
-                      <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-xs dark:border-white/10 dark:bg-card dark:text-zinc-100">
-                        {page}
+                    {total > 10 && (
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={page <= 1}
+                          onClick={() => setPage((p) => Math.max(1, p - 1))}
+                          className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                        >
+                          <i className="ph-bold ph-caret-left mr-1"></i> PREV
+                        </Button>
+                        <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-xs dark:border-white/10 dark:bg-card dark:text-zinc-100">
+                          {page}
+                        </div>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          disabled={page >= totalPages}
+                          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                          className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                        >
+                          NEXT <i className="ph-bold ph-caret-right ml-1"></i>
+                        </Button>
                       </div>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        disabled={page >= totalPages}
-                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                        className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-                      >
-                        NEXT <i className="ph-bold ph-caret-right ml-1"></i>
-                      </Button>
-                    </div>
+                    )}
                   </div>
                 ) : null}
               </div>

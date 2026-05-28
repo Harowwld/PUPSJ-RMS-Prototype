@@ -157,36 +157,34 @@ export default function Header({ authUser, onLogout, children }) {
                 menuOpen && "rotate-180 text-pup-maroon dark:text-primary"
               )}></i>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80 rounded-xl border border-gray-200 shadow-2xl p-2 bg-white/98 backdrop-blur-md dark:bg-card dark:border-white/10 dark:shadow-none">
-              <DropdownMenuGroup>
-                <div className="rounded-lg p-3 bg-gray-50 border border-gray-100 mb-1 dark:bg-white/5 dark:border-white/5">
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 shrink-0 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-base font-bold text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card">
-                      {initials}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-black text-gray-900 truncate tracking-tight dark:text-zinc-50">
-                        {authUser?.fname} {authUser?.lname}
-                      </p>
-                      <div className="flex items-center gap-1.5">
-                        <span className={cn(
-                          "text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider",
-                          isAdminView 
-                            ? "text-pup-maroon dark:text-primary bg-red-50 border-red-100 dark:bg-red-500/20 dark:border-red-500/30"
-                            : "text-amber-700 dark:text-yellow-500 bg-amber-50 border-amber-200 dark:bg-yellow-500/20 dark:border-yellow-500/30"
-                        )}>
-                          {authUser?.role || "User"}
-                        </span>
-                      </div>
-                      <p className="text-xs text-gray-500 truncate mt-0.5 font-medium dark:text-zinc-500">
-                        {authUser?.email || authUser?.username}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </DropdownMenuGroup>
-
-              <DropdownMenuSeparator className="opacity-50" />
+             <DropdownMenuContent align="end" className="w-80 rounded-xl border border-gray-200 shadow-2xl p-2 bg-white/98 backdrop-blur-md dark:bg-card dark:border-white/10 dark:shadow-none">
+               <DropdownMenuGroup>
+                 <div className="p-4 bg-gray-50/70 border-b border-gray-100 mb-2 dark:bg-white/5 dark:border-white/10 -mx-2 -mt-2 rounded-t-xl">
+                   <div className="flex items-center gap-3">
+                     <div className="h-12 w-12 shrink-0 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-base font-bold text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card">
+                       {initials}
+                     </div>
+                     <div className="min-w-0">
+                       <p className="text-sm font-black text-gray-900 truncate tracking-tight dark:text-zinc-50">
+                         {authUser?.fname} {authUser?.lname}
+                       </p>
+                       <div className="flex items-center gap-1.5">
+                         <span className={cn(
+                           "text-[10px] font-bold px-1.5 py-0.5 rounded border uppercase tracking-wider",
+                           isAdminView 
+                             ? "text-pup-maroon dark:text-primary bg-red-50 border-red-100 dark:bg-red-500/20 dark:border-red-500/30"
+                             : "text-amber-700 dark:text-yellow-500 bg-amber-50 border-amber-200 dark:bg-yellow-500/20 dark:border-yellow-500/30"
+                         )}>
+                           {authUser?.role || "User"}
+                         </span>
+                       </div>
+                       <p className="text-xs text-gray-500 truncate mt-0.5 font-medium dark:text-zinc-500">
+                         {authUser?.email || authUser?.username}
+                       </p>
+                     </div>
+                   </div>
+                 </div>
+               </DropdownMenuGroup>
 
               <DropdownMenuGroup className="p-1">
                 <DropdownMenuItem
@@ -212,9 +210,8 @@ export default function Header({ authUser, onLogout, children }) {
                   </DropdownMenuItem>              </DropdownMenuGroup>
 
               {hasAdminRights && (
-                <>
-                  <DropdownMenuSeparator className="opacity-50" />
-                  <div className="px-2 py-3">
+                 <>
+                   <div className="px-2 py-3">
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] px-2 mb-3 dark:text-zinc-500">
                       Switch Role
                     </p>
