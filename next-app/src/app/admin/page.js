@@ -1445,6 +1445,7 @@ function AdminPageContent() {
             <RegisterAccountTab
               createForm={createForm}
               setCreateForm={setCreateForm}
+              staffCount={staffData.length}
               isLoading={createLoading}
               onResetForm={() =>
                 setCreateForm({

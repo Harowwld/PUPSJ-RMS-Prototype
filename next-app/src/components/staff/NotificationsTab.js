@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { cn } from "@/lib/utils"
 import {
   Card,
   CardContent,
@@ -25,27 +26,26 @@ import {
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import { Select } from "@/components/ui/select"
-import { cn } from "@/lib/utils"
 
 function statusUi(status) {
   const s = String(status || "Pending")
   if (s === "Approved") {
     return {
       label: "Approved",
-      badge: "bg-green-50 text-green-700 border-green-200",
+      badge: "bg-green-50 text-green-700 border-green-200 dark:bg-emerald-950/20 dark:text-emerald-500/90 dark:border-emerald-900/50",
       icon: "ph-fill ph-check-circle",
     }
   }
   if (s === "Declined") {
     return {
       label: "Declined",
-      badge: "bg-red-50 dark:bg-red-950/20 text-red-700 border-red-200",
+      badge: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-500/90 dark:border-red-900/50",
       icon: "ph-fill ph-x-circle",
     }
   }
   return {
     label: s || "Pending",
-    badge: "bg-amber-50 dark:bg-amber-950/20 text-amber-700 border-amber-200",
+    badge: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50",
     icon: "ph-fill ph-clock",
   }
 }
@@ -306,7 +306,7 @@ export default function NotificationsTab({
                               {n.student_name || "—"}
                             </td>
                             <td className="p-3">
-                              <span className="inline-flex items-center rounded-full border border-red-100 bg-red-50 px-2 py-1 text-xs font-bold text-pup-maroon dark:text-primary dark:bg-red-950/30 dark:text-primary">
+                              <span className="inline-flex items-center rounded-full border border-red-100 bg-red-50 px-2 py-1 text-xs font-bold text-pup-maroon dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
                                 {n.doc_type}
                               </span>
                             </td>

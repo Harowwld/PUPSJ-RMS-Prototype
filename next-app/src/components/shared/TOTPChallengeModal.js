@@ -36,15 +36,16 @@ export function TOTPChallengeModal({
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    console.log("[TOTP MODAL] handleSubmit called, token:", token)
-    if (!token || token.length !== 6) {
+    const trimmed = token.trim()
+    console.log("[TOTP MODAL] handleSubmit called, token:", trimmed)
+    if (!trimmed || (trimmed.length !== 6 && trimmed.length !== 8)) {
       console.log("[TOTP MODAL] Invalid token length")
-      setError("Please enter a 6-digit code")
+      setError("Please enter a 6-digit code or 8-character recovery code")
       return
     }
     console.log("[TOTP MODAL] Calling onConfirm...")
     try {
-      await onConfirm(token)
+      await onConfirm(trimmed)
       console.log("[TOTP MODAL] onConfirm succeeded")
     } catch (err) {
       console.log("[TOTP MODAL] onConfirm error:", err.message)
@@ -92,19 +93,17 @@ export function TOTPChallengeModal({
               </label>
               <Input
                 type="text"
-                maxLength={6}
-                className="h-14 rounded-brand border-gray-300 bg-white text-center text-2xl font-black tracking-[0.5em] text-gray-900 shadow-sm focus:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-50"
-                placeholder="000000"
+                maxLength={8}
+                className="h-14 rounded-brand border-gray-300 bg-white text-center text-xl font-black tracking-[0.2em] text-gray-900 shadow-sm focus:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-50"
+                placeholder="Code or Recovery Code"
                 value={token}
                 onChange={(e) =>
-                  setToken(e.target.value.replace(/\D/g, "").slice(0, 6))
+                  setToken(e.target.value.trim().slice(0, 8))
                 }
                 autoFocus
-                inputMode="numeric"
-                pattern="[0-9]*"
               />
               <p className="text-center text-[11px] font-medium text-gray-500 italic dark:text-zinc-400">
-                Verify identity via your linked authenticator app
+                Verify identity via authenticator app or recovery code
               </p>
             </div>
           </div>
@@ -121,7 +120,7 @@ export function TOTPChallengeModal({
             </Button>
             <Button
               type="submit"
-              disabled={isLoading || token.length !== 6}
+              disabled={isLoading || (token.trim().length !== 6 && token.trim().length !== 8)}
               className="btn-brand-red px-8 shadow-lg shadow-red-900/20"
             >
               {isLoading ? (

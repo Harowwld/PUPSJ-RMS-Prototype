@@ -261,9 +261,9 @@ export default function DigitalRecordsReviewTab({
 
   const getStatusBadge = (status) => {
     const styles = {
-      Pending: "bg-amber-50 dark:bg-amber-950/20 text-amber-700 border-amber-200",
-      Approved: "bg-green-50 text-green-700 border-green-200",
-      Declined: "bg-red-50 dark:bg-red-950/20 text-red-700 border-red-200",
+      Pending: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50",
+      Approved: "bg-green-50 text-green-700 border-green-200 dark:bg-emerald-950/20 dark:text-emerald-500/90 dark:border-emerald-900/50",
+      Declined: "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-500/90 dark:border-red-900/50",
     }
     return styles[status] || styles.Pending
   }
@@ -372,10 +372,10 @@ export default function DigitalRecordsReviewTab({
         {/* Active Filter Chips Row */}
         {(localSearch !== "" || statusFilter !== "All" || docTypeFilter !== "All" || dateFrom || dateTo) && (
           <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
-            <div className="flex flex-wrap items-center gap-3">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">Active Filters:</span>
               {localSearch && (
-                <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
+                <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary uppercase dark:border-white/10 dark:text-primary">
                   Search: {localSearch}
                   <button
                     onClick={() => { setSearchQuery(""); setLocalSearch(""); setCurrentPage(1); }}
@@ -386,7 +386,7 @@ export default function DigitalRecordsReviewTab({
                 </div>
               )}
               {statusFilter !== "All" && (
-                <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
+                <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 uppercase dark:bg-blue-950/30 dark:text-blue-400">
                   Status: {statusFilter}
                   <button
                     onClick={() => { setStatusFilter("All"); setCurrentPage(1); }}
@@ -397,7 +397,7 @@ export default function DigitalRecordsReviewTab({
                 </div>
               )}
               {docTypeFilter !== "All" && (
-                <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
+                <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 uppercase dark:bg-amber-950/30 dark:text-amber-400">
                   Type: {docTypeFilter}
                   <button
                     onClick={() => { setDocTypeFilter("All"); setCurrentPage(1); }}
@@ -408,7 +408,7 @@ export default function DigitalRecordsReviewTab({
                 </div>
               )}
               {(dateFrom || dateTo) && (
-                <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
+                <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 uppercase dark:bg-emerald-950/30 dark:text-emerald-400">
                   Range: {dateFrom || "..."} to {dateTo || "..."}
                   <button
                     onClick={() => { setDateFrom(""); setDateTo(""); setCurrentPage(1); }}
@@ -430,9 +430,9 @@ export default function DigitalRecordsReviewTab({
                   setDateTo("")
                   setCurrentPage(1)
                 }}
-                className="h-6 rounded-full border border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
+                className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon uppercase dark:border-white/10 dark:text-primary dark:bg-red-950/30"
               >
-                CLEAR FILTERS
+                CLEAR ALL FILTERS
               </Button>
             </div>
           </div>
@@ -867,7 +867,7 @@ export default function DigitalRecordsReviewTab({
                               </div>
                             </td>
                             <td className="p-4">
-                              <div className="flex w-fit items-center gap-1.5 rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-[9px] font-black text-pup-maroon dark:text-primary tracking-wider uppercase dark:bg-red-950/30 dark:text-primary">
+                              <div className="flex w-fit items-center gap-1.5 rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-[9px] font-black text-pup-maroon tracking-wider uppercase dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
                                 <i className="ph-bold ph-file-text text-[10px]"></i>
                                 {r.doc_type}
                               </div>
@@ -1064,7 +1064,7 @@ export default function DigitalRecordsReviewTab({
               onCancel={() => setSelectedIds(new Set())}
               customContent={
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-medium text-amber-700 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-200 dark:bg-amber-950/30">
+                  <span className="text-xs font-medium text-amber-700 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-200 dark:bg-amber-950/30 dark:text-amber-500/90 dark:border-amber-900/50">
                     <i className="ph-fill ph-warning-circle mr-1.5"></i>
                     Contains reviewed records. Bulk actions disabled.
                   </span>

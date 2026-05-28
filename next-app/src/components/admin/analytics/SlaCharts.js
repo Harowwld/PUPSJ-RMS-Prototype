@@ -275,7 +275,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                       {dt.name}
                     </span>
                   </div>
-                  <span className="rounded-full border border-red-100 bg-red-50 px-2 py-0.5 text-xs font-bold text-pup-maroon dark:text-primary dark:bg-red-950/30 dark:text-primary">
+                  <span className="rounded-full border border-red-100 bg-red-50 px-2 py-0.5 text-xs font-bold text-pup-maroon dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
                     {dt.count} req
                   </span>
                 </div>

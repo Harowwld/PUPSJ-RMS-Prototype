@@ -28,6 +28,7 @@ import { cn } from "@/lib/utils"
 export default function RegisterAccountTab({
   createForm,
   setCreateForm,
+  staffCount = 0,
   isLoading = false,
   onResetForm,
   onCreateAccount,
@@ -38,8 +39,52 @@ export default function RegisterAccountTab({
   const [countdown, setCountdown] = useState(3)
   const fnameRef = useRef(null)
 
+  const [isIdManual, setIsIdManual] = useState(false)
+  const [isEmailManual, setIsEmailManual] = useState(false)
+
   const defaultPassword =
     process.env.NEXT_PUBLIC_DEFAULT_STAFF_PASSWORD || "pupstaff"
+
+  const suggestedId = useMemo(() => {
+    if (!createForm.fname && !createForm.lname) return ""
+    const nextId = (staffCount + 1).toString().padStart(3, "0")
+    return `PUPREGISTRAR-${nextId}`
+  }, [createForm.fname, createForm.lname, staffCount])
+
+  const suggestedEmail = useMemo(() => {
+    if (!createForm.lname || !createForm.role) return ""
+    const role = createForm.role.toLowerCase()
+    const name = createForm.lname.toLowerCase().replace(/[^a-z0-9]/g, "")
+    return `${role}.${name}@pup.local`
+  }, [createForm.lname, createForm.role])
+
+  // Auto-fill ID
+  useEffect(() => {
+    if (!isIdManual && suggestedId && createForm.id !== suggestedId) {
+      setCreateForm(f => ({ ...f, id: suggestedId }))
+      setLastAutoFilled(prev => ({ ...prev, id: true }))
+      const timer = setTimeout(() => setLastAutoFilled(prev => ({ ...prev, id: false })), 1000)
+      return () => clearTimeout(timer)
+    }
+    // If name is cleared, also clear the non-manual ID
+    if (!isIdManual && !suggestedId && createForm.id !== "") {
+      setCreateForm(f => ({ ...f, id: "" }))
+    }
+  }, [suggestedId, isIdManual, createForm.id, setCreateForm])
+
+  // Auto-fill Email
+  useEffect(() => {
+    if (!isEmailManual && suggestedEmail && createForm.email !== suggestedEmail) {
+      setCreateForm(f => ({ ...f, email: suggestedEmail }))
+      setLastAutoFilled(prev => ({ ...prev, email: true }))
+      const timer = setTimeout(() => setLastAutoFilled(prev => ({ ...prev, email: false })), 1000)
+      return () => clearTimeout(timer)
+    }
+    // If name/role is cleared, also clear the non-manual email
+    if (!isEmailManual && !suggestedEmail && createForm.email !== "") {
+      setCreateForm(f => ({ ...f, email: "" }))
+    }
+  }, [suggestedEmail, isEmailManual, createForm.email, setCreateForm])
 
   useEffect(() => {
     let timer
@@ -72,24 +117,13 @@ export default function RegisterAccountTab({
 
   const handleClearForm = () => {
     onResetForm()
+    setIsIdManual(false)
+    setIsEmailManual(false)
     // Small timeout to ensure state update has triggered before focusing
     setTimeout(() => {
         fnameRef.current?.focus()
     }, 0)
   }
-
-  const suggestedId = useMemo(() => {
-    if (!createForm.fname || !createForm.lname) return ""
-    const initials = (createForm.fname[0] || "").toUpperCase() + (createForm.lname[0] || "").toUpperCase()
-    return `PUPREGISTRAR-${initials}101`
-  }, [createForm.fname, createForm.lname])
-
-  const suggestedEmail = useMemo(() => {
-    if (!createForm.lname || !createForm.role) return ""
-    const role = createForm.role.toLowerCase()
-    const name = createForm.lname.toLowerCase().replace(/[^a-z0-9]/g, "")
-    return `${role}.${name}@pup.local`
-  }, [createForm.lname, createForm.role])
 
   // Removed implicit auto-generation logic to improve UX control
   // Values are now suggested via placeholders and manual "Apply" buttons
@@ -273,47 +307,19 @@ export default function RegisterAccountTab({
                             className={cn(
                               "h-10 w-full rounded-brand border border-gray-300 dark:border-white/10 bg-white dark:bg-card px-3 text-sm transition-all focus-visible:border-gray-300 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:text-zinc-50 dark:text-zinc-100",
                               lastAutoFilled.id &&
-                                "animate-pulse border-emerald-500 ring-2 ring-emerald-500/30"
+                                "border-emerald-500 ring-2 ring-emerald-500/20"
                             )}
                             placeholder={suggestedId || "PUPREGISTRAR-[XXX]"}
                             value={createForm.id}
-                            onChange={(e) =>
+                            onChange={(e) => {
+                              const val = e.target.value
+                              setIsIdManual(val !== "")
                               setCreateForm((f) => ({
                                 ...f,
-                                id: e.target.value,
+                                id: val,
                               }))
-                            }
+                            }}
                           />
-                          {suggestedId && createForm.id !== suggestedId && (
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  disabled={isLoading}
-                                  onClick={() => {
-                                    setCreateForm((f) => ({
-                                      ...f,
-                                      id: suggestedId,
-                                    }))
-                                    setLastAutoFilled(prev => ({ ...prev, id: true }))
-                                    setTimeout(() => setLastAutoFilled(prev => ({ ...prev, id: false })), 1000)
-                                  }}
-                                  className="h-10 shrink-0 border-dashed border-gray-300 px-3 text-[10px] font-black tracking-widest text-pup-maroon dark:text-primary uppercase hover:bg-red-50 dark:border-white/10 dark:text-primary dark:bg-red-950/30"
-                                >
-                                  <i className="ph-bold ph-magic-wand mr-1.5 text-sm" />
-                                  APPLY
-                                </Button>
-                              </TooltipTrigger>
-                              <TooltipContent 
-                                side="top" 
-                                sideOffset={8}
-                                className="rounded-[25px] border-red-900 bg-[#7a1e28] px-4 py-2 text-white shadow-xl dark:shadow-none"
-                              >
-                                Apply suggested ID
-                              </TooltipContent>
-                            </Tooltip>
-                          )}
                         </div>
                       </div>
 
@@ -351,48 +357,19 @@ export default function RegisterAccountTab({
                             className={cn(
                               "h-10 w-full rounded-brand border border-gray-300 dark:border-white/10 bg-white dark:bg-card px-3 text-sm transition-all focus-visible:border-gray-300 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:text-zinc-50 dark:text-zinc-100",
                               lastAutoFilled.email &&
-                                "animate-pulse border-emerald-500 ring-2 ring-emerald-500/30"
+                                "border-emerald-500 ring-2 ring-emerald-500/20"
                             )}
                             placeholder={suggestedEmail || "[role].[name]@pup.local"}
                             value={createForm.email}
-                            onChange={(e) =>
+                            onChange={(e) => {
+                              const val = e.target.value
+                              setIsEmailManual(val !== "")
                               setCreateForm((f) => ({
                                 ...f,
-                                email: e.target.value,
+                                email: val,
                               }))
-                            }
+                            }}
                           />
-                          {suggestedEmail &&
-                            createForm.email !== suggestedEmail && (
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <Button
-                                    type="button"
-                                    variant="outline"
-                                    disabled={isLoading}
-                                    onClick={() => {
-                                      setCreateForm((f) => ({
-                                        ...f,
-                                        email: suggestedEmail,
-                                      }))
-                                      setLastAutoFilled(prev => ({ ...prev, email: true }))
-                                      setTimeout(() => setLastAutoFilled(prev => ({ ...prev, email: false })), 1000)
-                                    }}
-                                    className="h-10 shrink-0 border-dashed border-gray-300 px-3 text-[10px] font-black tracking-widest text-pup-maroon dark:text-primary uppercase hover:bg-red-50 dark:border-white/10 dark:text-primary dark:bg-red-950/30"
-                                  >
-                                    <i className="ph-bold ph-magic-wand mr-1.5 text-sm" />
-                                    APPLY
-                                  </Button>
-                                </TooltipTrigger>
-                                <TooltipContent 
-                                  side="top" 
-                                  sideOffset={8}
-                                  className="rounded-[25px] border-red-900 bg-[#7a1e28] px-4 py-2 text-white shadow-xl dark:shadow-none"
-                                >
-                                  Apply suggested email
-                                </TooltipContent>
-                              </Tooltip>
-                            )}
                         </div>
                       </div>
                     </div>

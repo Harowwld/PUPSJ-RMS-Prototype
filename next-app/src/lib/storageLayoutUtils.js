@@ -88,16 +88,28 @@ export function calculatePath(room, targetCabId, getDefaultDoor) {
   const GRID_SIZE_X = 40
   const GRID_SIZE_Y = 25
   const grid = Array.from({ length: GRID_SIZE_Y }, () => Array(GRID_SIZE_X).fill(0))
+
   // Mark obstacles (cabinets)
+  const stepX = 1 / GRID_SIZE_X
+  const stepY = 1 / GRID_SIZE_Y
+
   room.cabinets.forEach((cab) => {
-    if (cab.id === targetCabId) return // Skip the target cabinet so the path can route into it
     const eff = getCabinetEffectiveSize(cab)
-    const sx = Math.max(0, Math.floor(cab.rect.x * GRID_SIZE_X))
-    const sy = Math.max(0, Math.floor(cab.rect.y * GRID_SIZE_Y))
-    const ex = Math.min(GRID_SIZE_X, Math.ceil((cab.rect.x + eff.w) * GRID_SIZE_X))
-    const ey = Math.min(GRID_SIZE_Y, Math.ceil((cab.rect.y + eff.h) * GRID_SIZE_Y))
-    for (let y = sy; y < ey; y++) {
-      for (let x = sx; x < ex; x++) {
+    const left = cab.rect.x
+    const right = cab.rect.x + eff.w
+    const top = cab.rect.y
+    const bottom = cab.rect.y + eff.h
+
+    for (let y = 0; y < GRID_SIZE_Y; y++) {
+      const cellTop = y * stepY
+      const cellBottom = (y + 1) * stepY
+      if (cellBottom <= top + 0.001 || cellTop >= bottom - 0.001) continue
+
+      for (let x = 0; x < GRID_SIZE_X; x++) {
+        const cellLeft = x * stepX
+        const cellRight = (x + 1) * stepX
+        if (cellRight <= left + 0.001 || cellLeft >= right - 0.001) continue
+
         grid[y][x] = 1
       }
     }
@@ -115,8 +127,9 @@ export function calculatePath(room, targetCabId, getDefaultDoor) {
   const queue = [[startX, startY, []]]
   const visited = new Set([`${startX},${startY}`])
   
-  // Clear start cell to ensure path can start
+  // Clear start/end grid cells to ensure path can start/end
   grid[startY][startX] = 0
+  grid[endY][endX] = 0
 
   while (queue.length > 0) {
     const [x, y, path] = queue.shift()

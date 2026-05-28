@@ -278,52 +278,48 @@ export default function AuditLogsTab({
 
           {/* Active Filter Chips Row */}
           {hasActiveFilters && (
-            <div className="flex-none border-b border-gray-100 bg-gray-50 px-6 py-4 animate-in fade-in slide-in-from-top-1 duration-500 dark:border-white/10 dark:bg-muted/30">
+            <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-2 text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">Active Filters:</span>
+                <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">Active Filters:</span>
                 {localSearch && (
-                  <div className="flex items-center gap-2 rounded-xl border border-pup-maroon/20 bg-pup-maroon/5 px-3 py-1.5 text-[10px] font-bold text-pup-maroon dark:text-primary shadow-sm dark:text-primary dark:shadow-none">
-                    <i className="ph-bold ph-magnifying-glass opacity-50"></i>
+                  <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary uppercase dark:border-white/10 dark:text-primary">
                     Search: {localSearch}
                     <button
                       onClick={() => { setLocalSearch(""); setLogSearch(""); setLogPage(1); }}
-                      className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-pup-maroon/10 hover:bg-pup-maroon hover:text-white transition-all dark:bg-red-600"
+                      className="ml-1 hover:text-pup-darkMaroon transition-colors"
                     >
                       <i className="ph-bold ph-x text-[8px]"></i>
                     </button>
                   </div>
                 )}
                 {logRoleFilter !== "All" && (
-                  <div className="flex items-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-1.5 text-[10px] font-bold text-blue-600 shadow-sm dark:bg-blue-950/30 dark:text-blue-400 dark:shadow-none">
-                    <i className="ph-bold ph-user-gear opacity-50"></i>
+                  <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 uppercase dark:bg-blue-950/30 dark:text-blue-400">
                     Role: {logRoleFilter}
                     <button
                       onClick={() => { setLogRoleFilter("All"); setLogPage(1); }}
-                      className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-blue-600/10 hover:bg-blue-600 hover:text-white transition-all"
+                      className="ml-1 hover:text-blue-800 transition-colors"
                     >
                       <i className="ph-bold ph-x text-[8px]"></i>
                     </button>
                   </div>
                 )}
                 {logSeverityFilter !== "All" && (
-                  <div className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-1.5 text-[10px] font-bold text-amber-600 shadow-sm dark:bg-amber-950/30 dark:text-amber-400 dark:shadow-none">
-                    <i className="ph-bold ph-warning-octagon opacity-50"></i>
+                  <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 uppercase dark:bg-amber-950/30 dark:text-amber-400">
                     Severity: {logSeverityFilter}
                     <button
                       onClick={() => { setLogSeverityFilter("All"); setLogPage(1); }}
-                      className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-amber-600/10 hover:bg-amber-600 hover:text-white transition-all"
+                      className="ml-1 hover:text-amber-800 transition-colors"
                     >
                       <i className="ph-bold ph-x text-[8px]"></i>
                     </button>
                   </div>
                 )}
                 {(logStartDate || logEndDate) && (
-                  <div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[10px] font-bold text-emerald-600 shadow-sm dark:bg-emerald-950/30 dark:text-emerald-400 dark:shadow-none">
-                    <i className="ph-bold ph-calendar opacity-50"></i>
+                  <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 uppercase dark:bg-emerald-950/30 dark:text-emerald-400">
                     Range: {logStartDate || "..."} to {logEndDate || "..."}
                     <button
                       onClick={() => { setLogStartDate(""); setLogEndDate(""); setLogPage(1); }}
-                      className="ml-1 flex h-4 w-4 items-center justify-center rounded-full bg-emerald-600/10 hover:bg-emerald-600 hover:text-white transition-all"
+                      className="ml-1 hover:text-emerald-800 transition-colors"
                     >
                       <i className="ph-bold ph-x text-[8px]"></i>
                     </button>
@@ -341,7 +337,7 @@ export default function AuditLogsTab({
                     setLogEndDate("")
                     setLogPage(1)
                   }}
-                  className="h-8 rounded-xl border border-dashed border-gray-300 px-4 text-[10px] font-black text-gray-500 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 transition-all dark:text-zinc-400 dark:bg-red-950/30 dark:border-white/10"
+                  className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon uppercase dark:border-white/10 dark:text-primary dark:bg-red-950/30"
                 >
                   CLEAR ALL FILTERS
                 </Button>

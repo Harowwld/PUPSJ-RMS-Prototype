@@ -398,7 +398,7 @@ export default function SectionsTab({
                   setShowArchived(false)
                   setPageSection(1)
                 }}
-                className="h-6 rounded-full border border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon uppercase dark:border-white/10 dark:text-primary dark:bg-red-950/30"
+                className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon uppercase dark:border-white/10 dark:text-primary dark:bg-red-950/30"
               >
                 CLEAR ALL FILTERS
               </Button>
@@ -464,17 +464,17 @@ export default function SectionsTab({
                       <tr className={cn(
                         "transition-all duration-300",
                         (secCourseCode || newSectionName.trim()) 
-                          ? "bg-amber-50/50" 
+                          ? "bg-amber-50/50 dark:bg-amber-950/10" 
                           : "bg-gray-50/30 hover:bg-gray-50 dark:bg-white/[0.02] dark:hover:bg-white/[0.05]"
                       )}>
                         <td className="p-4 text-center">
                           <div className={cn(
                             "flex h-5 w-5 mx-auto items-center justify-center rounded-full border-2 border-dashed transition-colors",
-                            (secCourseCode || newSectionName.trim()) ? "border-amber-400" : "border-gray-300 dark:border-white/10"
+                            (secCourseCode || newSectionName.trim()) ? "border-orange-400 dark:border-orange-500/50" : "border-gray-300 dark:border-white/10"
                           )}>
                             <i className={cn(
                               "ph-bold text-[10px]",
-                              (secCourseCode || newSectionName.trim()) ? "ph-pencil-simple text-amber-600 animate-bounce" : "ph-plus text-gray-400 dark:text-zinc-500"
+                              (secCourseCode || newSectionName.trim()) ? "ph-pencil-simple text-orange-600 animate-bounce dark:text-orange-400" : "ph-plus text-gray-400 dark:text-zinc-500"
                             )}></i>
                           </div>
                         </td>
@@ -516,17 +516,14 @@ export default function SectionsTab({
                               size="sm"
                               disabled={!secCourseCode || !newSectionName.trim() || isQuickAddLoading}
                               onClick={() => addSection(null, { courseCode: secCourseCode, name: newSectionName })}
-                              className={cn(
-                                "h-9 rounded-brand px-4 text-[10px] font-black tracking-widest text-white shadow-sm active:scale-95 disabled:opacity-50 transition-all dark:shadow-none uppercase",
-                                (secCourseCode || newSectionName.trim()) ? "bg-amber-600 hover:bg-amber-700" : "btn-brand-red"
-                              )}
+                              className="h-9 rounded-brand px-4 text-[10px] font-black tracking-widest text-white shadow-sm active:scale-95 disabled:opacity-50 transition-all dark:shadow-none uppercase btn-brand-red"
                             >
                             {isQuickAddLoading ? (
                               <i className="ph-bold ph-spinner animate-spin"></i>
                             ) : (
                               <>
-                                <i className={cn("ph-bold mr-2", (secCourseCode || newSectionName.trim()) ? "ph-check" : "ph-plus")}></i> 
-                                {(secCourseCode || newSectionName.trim()) ? "SAVE" : "ADD"}
+                                <i className="ph-bold ph-plus mr-2"></i> 
+                                ADD
                               </>
                             )}
                             </Button>
@@ -536,7 +533,7 @@ export default function SectionsTab({
                           {(secCourseCode || newSectionName.trim()) ? (
                             <Badge
                               variant="outline"
-                              className="border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-black tracking-wider text-amber-700 uppercase animate-pulse dark:bg-amber-950/30"
+                              className="border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-black tracking-wider text-amber-700 uppercase animate-pulse dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-500/50"
                             >
                               UNSAVED DRAFT
                             </Badge>

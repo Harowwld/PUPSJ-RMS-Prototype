@@ -331,7 +331,7 @@ export default function DocTypesTab({
             <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">Active Filters:</span>
               {localSearch && (
-                <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-linear-to-br from-white to-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary uppercase dark:border-white/10 dark:text-primary">
+                <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary uppercase dark:border-white/10 dark:text-primary">
                   Search: {localSearch}
                   <button
                     onClick={() => { setLocalSearch(""); setDocSearch(""); setPageDoc(1); }}
@@ -361,7 +361,7 @@ export default function DocTypesTab({
                   setShowArchived(false)
                   setPageDoc(1)
                 }}
-                className="h-6 rounded-full border border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon uppercase dark:border-white/10 dark:text-primary dark:bg-red-950/30"
+                className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon uppercase dark:border-white/10 dark:text-primary dark:bg-red-950/30"
               >
                 CLEAR ALL FILTERS
               </Button>
@@ -423,20 +423,20 @@ export default function DocTypesTab({
                       <tr
                         className={cn(
                           "transition-all duration-300",
-                          newDocTypeName.trim() ? "bg-amber-50/50" : "bg-gray-50/30 hover:bg-gray-50 dark:bg-white/[0.02] dark:hover:bg-white/[0.05]"
+                          newDocTypeName.trim() ? "bg-amber-50/50 dark:bg-amber-950/10" : "bg-gray-50/30 hover:bg-gray-50 dark:bg-white/[0.02] dark:hover:bg-white/[0.05]"
                         )}
                       >
                         <td className="p-4 text-center">
                           <div
                             className={cn(
                               "flex h-5 w-5 mx-auto items-center justify-center rounded-full border-2 border-dashed transition-colors",
-                              newDocTypeName.trim() ? "border-amber-400" : "border-gray-300 dark:border-white/10"
+                              newDocTypeName.trim() ? "border-orange-400 dark:border-orange-500/50" : "border-gray-300 dark:border-white/10"
                             )}
                           >
                             <i
                               className={cn(
                                 "ph-bold text-[10px]",
-                                newDocTypeName.trim() ? "ph-pencil-simple animate-bounce text-amber-600" : "ph-plus text-gray-400 dark:text-amber-400"
+                                newDocTypeName.trim() ? "ph-pencil-simple animate-bounce text-orange-600 dark:text-orange-400" : "ph-plus text-gray-400 dark:text-amber-400"
                               )}
                             ></i>
                           </div>
@@ -464,19 +464,14 @@ export default function DocTypesTab({
                                 !newDocTypeName.trim() || isQuickAddLoading
                               }
                               onClick={() => addDocType(null, newDocTypeName)}
-                              className={cn(
-                                "h-9 rounded-brand px-4 text-[10px] font-black tracking-widest text-white shadow-sm active:scale-95 disabled:opacity-50 transition-all dark:shadow-none uppercase",
-                                newDocTypeName.trim() ? "bg-amber-600 hover:bg-amber-700" : "btn-brand-red"
-                              )}
+                              className="h-9 rounded-brand px-4 text-[10px] font-black tracking-widest text-white shadow-sm active:scale-95 disabled:opacity-50 transition-all dark:shadow-none uppercase btn-brand-red"
                             >
                               {isQuickAddLoading ? (
                                 <i className="ph-bold ph-spinner animate-spin"></i>
                               ) : (
                                 <>
-                                  <i
-                                    className={cn("ph-bold mr-2", newDocTypeName.trim() ? "ph-check" : "ph-plus")}
-                                  ></i>
-                                  {newDocTypeName.trim() ? "SAVE" : "ADD"}
+                                  <i className="ph-bold ph-plus mr-2"></i>
+                                  ADD
                                 </>
                               )}
                             </Button>
@@ -486,7 +481,7 @@ export default function DocTypesTab({
                           {newDocTypeName.trim() ? (
                             <Badge
                               variant="outline"
-                              className="animate-pulse border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-black tracking-wider text-amber-700 uppercase dark:bg-amber-950/30"
+                              className="animate-pulse border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-black tracking-wider text-amber-700 uppercase dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-500/50"
                             >
                               UNSAVED DRAFT
                             </Badge>
