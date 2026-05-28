@@ -205,15 +205,11 @@ export default function RecordsArchiveTab({
                     )}
                     {currentLocatorLevel === "drawers" && (
                       <>
-                        ROOM {selectedRoom} <span className="text-gray-300 dark:text-zinc-700 mx-2">/</span> CAB {selectedCabinet}
+                        ROOM {selectedRoom} <span className="text-gray-300 dark:text-zinc-700 mx-2">/</span> {String(selectedCabinet).startsWith("CAB") ? selectedCabinet : `CAB ${selectedCabinet}`}
                       </>
                     )}
                   </h4>
                 </div>
-              </div>
-              <div className="flex flex-col items-start sm:items-end gap-1 shrink-0">
-                <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">View Selection</span>
-                {legend}
               </div>
             </div>
 
@@ -277,9 +273,13 @@ export default function RecordsArchiveTab({
                   cabinets={locatorModel.cabinets}
                   roomDoor={locatorModel.roomDoor}
                   selectedCabinetId={selectedCabinet}
-                  onCabinetClick={(cabId) => {
+                   onCabinetClick={(cabId) => {
                     setSelectedCabinet(cabId)
-                    setCurrentLocatorLevel("drawers")
+                    if (cabId) {
+                      setCurrentLocatorLevel("drawers")
+                    } else {
+                      setCurrentLocatorLevel("cabinets")
+                    }
                   }}
                   onDrawerClick={(drawerId) => {
                     // Optional: Highlight drawer students in the future
@@ -296,7 +296,11 @@ export default function RecordsArchiveTab({
                   drawerSlots={locatorModel.drawers}
                   onCabinetClick={(cabId) => {
                     setSelectedCabinet(cabId)
-                    setCurrentLocatorLevel("drawers")
+                    if (cabId) {
+                      setCurrentLocatorLevel("drawers")
+                    } else {
+                      setCurrentLocatorLevel("cabinets")
+                    }
                   }}
                 />
               </div>
