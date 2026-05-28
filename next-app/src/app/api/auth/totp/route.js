@@ -82,6 +82,8 @@ export async function POST(req) {
     return handleGenerateRecoveryCodes(req, user, body);
   } else if (action === "get-recovery-codes-status") {
     return handleGetRecoveryCodesStatus(req, user, body);
+  } else if (action === "disable-recovery-codes") {
+    return handleDisableRecoveryCodes(req, user, body);
   }
 
   return NextResponse.json({ ok: false, error: "Invalid action" }, { status: 400 });
@@ -194,9 +196,12 @@ async function handleDisable(req, user, body) {
     return NextResponse.json({ ok: false, error: "Invalid verification code" }, { status: 401 });
   }
 
+  const recoveryCodesCount = await getRecoveryCodesCount(user.userId);
+  const nextTotpEnabled = recoveryCodesCount > 0 ? 1 : 0;
+
   await dbRun(
-    "UPDATE staff SET totp_secret = NULL, totp_enabled = 0, updated_at = datetime('now') WHERE id = ?",
-    [user.userId]
+    "UPDATE staff SET totp_secret = NULL, totp_enabled = ?, updated_at = datetime('now') WHERE id = ?",
+    [nextTotpEnabled, user.userId]
   );
 
   await writeAuditLog(req, "Disabled TOTP authentication", {
@@ -236,11 +241,13 @@ async function handleGenerateRecoveryCodes(req, user, body) {
     return NextResponse.json({ ok: false, error: "User not found" }, { status: 404 });
   }
 
-  // Usually we require a recent password or TOTP confirmation to generate new recovery codes,
-  // but for now we'll allow it if they are authenticated.
-  
   const codes = await generateRecoveryCodes(user.userId);
-  
+
+  await dbRun(
+    "UPDATE staff SET totp_enabled = 1, updated_at = datetime('now') WHERE id = ?",
+    [user.userId]
+  );
+
   await writeAuditLog(req, "Generated new 2FA recovery codes", {
     actor: `${staff.fname} ${staff.lname}`,
     role: staff.role,
@@ -252,4 +259,27 @@ async function handleGenerateRecoveryCodes(req, user, body) {
 async function handleGetRecoveryCodesStatus(req, user, body) {
   const count = await getRecoveryCodesCount(user.userId);
   return NextResponse.json({ ok: true, data: { count } });
+}
+
+async function handleDisableRecoveryCodes(req, user, body) {
+  const staff = await getStaffById(user.userId);
+  if (!staff) {
+    return NextResponse.json({ ok: false, error: "User not found" }, { status: 404 });
+  }
+
+  await dbRun("DELETE FROM staff_recovery_codes WHERE staff_id = ?", [user.userId]);
+
+  if (!staff.totp_secret) {
+    await dbRun(
+      "UPDATE staff SET totp_enabled = 0, updated_at = datetime('now') WHERE id = ?",
+      [user.userId]
+    );
+  }
+
+  await writeAuditLog(req, "Disabled 2FA recovery codes", {
+    actor: `${staff.fname} ${staff.lname}`,
+    role: staff.role,
+  });
+
+  return NextResponse.json({ ok: true, data: { enabled: false } });
 }

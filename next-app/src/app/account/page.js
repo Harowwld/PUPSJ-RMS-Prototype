@@ -960,85 +960,7 @@ function AccountPageContent() {
                   </CardHeader>
 
                   <CardContent className="p-10">
-                    {totpEnabled ? (
-                      <div className="space-y-10">
-                        <div className="p-6 bg-emerald-50 border-2 border-emerald-100 rounded-2xl flex items-start gap-5 dark:bg-emerald-400/10 dark:border-emerald-400/20">
-                          <div className="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-emerald-600 shadow-md shrink-0 dark:bg-emerald-400/20 dark:text-emerald-400 dark:shadow-none">
-                            <i className="ph-fill ph-check-circle text-3xl"></i>
-                          </div>
-                          <div>
-                            <h4 className="font-black text-emerald-900 text-base dark:text-emerald-400">Two-Factor Auth is On</h4>
-                            <p className="text-sm font-medium text-emerald-700 mt-1 leading-relaxed dark:text-emerald-400/80">
-                              Your account is guarded by secondary authentication. You will be prompted for codes during login.
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="bg-gray-50 rounded-2xl border border-gray-100 p-8 space-y-6 dark:bg-white/5 dark:border-white/10">
-                           <div className="space-y-2">
-                              <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1 dark:text-zinc-400">
-                                Turn Off Two-Factor Auth
-                              </label>
-                              <Input
-                                type="text"
-                                maxLength={6}
-                                className="h-16 rounded-xl border border-gray-200 bg-white text-center text-2xl font-black tracking-[0.5em] text-gray-900 shadow-inner transition-all focus-visible:border-red-500/20 focus-visible:ring-4 focus-visible:ring-red-500/5 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none"
-                                placeholder="000000"
-                                value={totpToken}
-                                onChange={(e) => setTotpToken(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                              />
-                           </div>
-
-                           <div className="flex justify-center">
-                              <Button
-                                onClick={disableTOTP}
-                                disabled={totpLoading || totpToken.length !== 6}
-                                className="h-12 w-full bg-linear-to-b from-red-600 to-red-800 border-4 border-red-900 hover:from-red-500 hover:to-red-700 hover:shadow-xl transition-all text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center justify-center gap-3 rounded-xl active:scale-95 disabled:opacity-50"
-                              >
-                                {totpLoading ? (
-                                  <i className="ph-bold ph-spinner animate-spin text-xl"></i>
-                                ) : (
-                                  <i className="ph-bold ph-shield-slash text-xl"></i>
-                                )}
-                                Turn Off 2FA
-                              </Button>
-                           </div>
-                        </div>
-
-                        <div className="pt-10 border-t border-gray-100 dark:border-white/10">
-                          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-                            <div>
-                              <h4 className="text-lg font-black text-gray-900 tracking-tight dark:text-zinc-50">Recovery Codes</h4>
-                              <p className="text-sm font-medium text-gray-500 mt-1 dark:text-zinc-400">
-                                {recoveryCodesCount > 0 
-                                  ? `You have ${recoveryCodesCount} codes available.`
-                                  : "You haven't set up recovery codes yet."}
-                              </p>
-                            </div>
-                            <Button
-                              onClick={generateNewRecoveryCodes}
-                              disabled={totpLoading}
-                              variant="outline"
-                              className="h-11 px-6 font-black text-[10px] uppercase tracking-widest border-gray-300 hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 bg-white rounded-xl shadow-xs transition-all flex items-center gap-2 dark:border-white/10 dark:bg-card"
-                            >
-                              {totpLoading ? (
-                                <i className="ph-bold ph-spinner animate-spin"></i>
-                              ) : (
-                                <i className="ph-bold ph-arrows-clockwise-bold"></i>
-                              )}
-                              {recoveryCodesCount > 0 ? "Regenerate Codes" : "Get Codes"}
-                            </Button>
-                          </div>
-                          
-                          <div className="mt-6 p-5 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-3 dark:bg-amber-400/10 dark:border-amber-400/20">
-                            <i className="ph-fill ph-info text-xl mt-0.5 shrink-0 text-amber-600 dark:text-amber-400"></i>
-                            <p className="text-[12px] text-amber-800 font-bold leading-relaxed dark:text-amber-400/90">
-                              Recovery codes allow you to access your account if you lose your phone. Keep them in a safe place.
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ) : totpStep === "setup" && totpSetupData ? (
+                    {totpStep === "setup" && totpSetupData ? (
                       <div className="space-y-8 animate-in zoom-in-95 duration-500">
                         <div className="grid grid-cols-1 md:grid-cols-[1fr_250px] gap-8 bg-gray-50 rounded-2xl border border-gray-100 p-8 items-center dark:bg-card dark:border-white/10">
                           <div className="space-y-4">
@@ -1116,30 +1038,162 @@ function AccountPageContent() {
                         </div>
                       </div>
                     ) : (
-                      <div className="space-y-8 animate-in fade-in duration-500">
-                        <div className="p-8 bg-gray-50 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center text-center dark:bg-white/5 dark:border-white/10">
-                          <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center text-gray-300 mb-4 border-2 border-white shadow-inner dark:bg-zinc-800 dark:text-zinc-600 dark:shadow-none">
-                            <i className="ph-bold ph-lock-key-open text-3xl"></i>
+                      <div className="space-y-10 animate-in fade-in duration-500">
+                        {/* Authenticator App Method */}
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-6 bg-gray-50 border border-gray-100 rounded-2xl dark:bg-white/5 dark:border-white/10">
+                          <div className="flex gap-4 items-start">
+                            <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon dark:bg-zinc-800 dark:border-white/5 dark:text-primary shadow-xs shrink-0">
+                              <i className="ph-bold ph-device-mobile text-2xl"></i>
+                            </div>
+                            <div>
+                              <h4 className="font-black text-gray-900 text-base dark:text-zinc-50 flex items-center gap-2">
+                                Authenticator App (TOTP)
+                                {totpEnabled ? (
+                                  <Badge className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded">Active</Badge>
+                                ) : (
+                                  <Badge variant="outline" className="bg-gray-100/50 text-gray-400 border border-gray-200 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded dark:bg-white/5 dark:border-white/10">Inactive</Badge>
+                                )}
+                              </h4>
+                              <p className="text-xs font-medium text-gray-500 mt-1 max-w-md leading-relaxed dark:text-zinc-400">
+                                Secure your account with temporary, rotating 6-digit codes generated from an authenticator app (like Google Authenticator or Authy).
+                              </p>
+                            </div>
                           </div>
-                          <h4 className="font-black text-gray-900 text-lg tracking-tight dark:text-zinc-50">Two-Factor Auth is Off</h4>
-                          <p className="text-sm font-medium text-gray-500 mt-2 max-w-sm leading-relaxed dark:text-zinc-400">
-                            Your account doesn&apos;t have an extra layer of protection yet. Turn on 2FA to keep your account safe.
-                          </p>
+                          <div className="shrink-0 w-full md:w-auto flex justify-end">
+                            {totpEnabled ? (
+                              <Button
+                                onClick={() => setTotpStep("disable-flow")}
+                                className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-4 border-red-900 bg-linear-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-xl shadow-xs transition-all flex items-center gap-2"
+                              >
+                                Disable App
+                              </Button>
+                            ) : (
+                              <Button
+                                onClick={startTOTPSetup}
+                                disabled={totpLoading}
+                                className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-4 border-red-900 bg-linear-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-xl shadow-xs transition-all flex items-center gap-2"
+                              >
+                                {totpLoading ? <i className="ph-bold ph-spinner animate-spin" /> : <i className="ph-bold ph-shield-plus" />}
+                                Setup App
+                              </Button>
+                            )}
+                          </div>
                         </div>
 
-                        <div className="pt-8 border-t border-gray-100 flex justify-center sm:justify-end dark:border-white/10">
-                          <Button
-                            onClick={startTOTPSetup}
-                            disabled={totpLoading}
-                            className="h-12 px-10 btn-brand-red text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-xl active:scale-95 disabled:opacity-50"
-                          >
-                            {totpLoading ? (
-                              <i className="ph-bold ph-spinner animate-spin text-xl"></i>
-                            ) : (
-                              <i className="ph-bold ph-shield-plus text-xl"></i>
+                        {/* TOTP Disable Form Flow */}
+                        {totpStep === "disable-flow" && (
+                          <div className="bg-gray-50 rounded-2xl border border-gray-100 p-8 space-y-6 animate-in zoom-in-95 duration-300 dark:bg-white/5 dark:border-white/10">
+                             <div className="space-y-2">
+                                <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1 dark:text-zinc-400">
+                                  Enter Authenticator Code to Disable
+                                </label>
+                                <Input
+                                  type="text"
+                                  maxLength={6}
+                                  className="h-16 rounded-xl border border-gray-200 bg-white text-center text-2xl font-black tracking-[0.5em] text-gray-900 shadow-inner transition-all focus-visible:border-red-500/20 focus-visible:ring-4 focus-visible:ring-red-500/5 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none"
+                                  placeholder="000000"
+                                  value={totpToken}
+                                  onChange={(e) => setTotpToken(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                                  autoFocus
+                                />
+                             </div>
+
+                             {totpError && (
+                               <div className="p-5 bg-red-50 border-2 border-red-100 text-red-700 text-sm font-bold rounded-xl flex items-center gap-4 animate-in shake-1 dark:bg-red-500/10">
+                                 <i className="ph-fill ph-warning-circle text-2xl"></i>
+                                 {totpError}
+                               </div>
+                             )}
+
+                             <div className="flex justify-end gap-3">
+                                <Button
+                                  onClick={() => { setTotpStep("idle"); setTotpToken(""); setTotpError(""); }}
+                                  variant="outline"
+                                  className="h-12 px-6 font-black uppercase tracking-widest text-[10px] border-gray-300 rounded-xl"
+                                >
+                                  Cancel
+                                </Button>
+                                <Button
+                                  onClick={async (e) => {
+                                    await disableTOTP();
+                                    setTotpStep("idle");
+                                  }}
+                                  disabled={totpLoading || totpToken.length !== 6}
+                                  className="h-12 px-8 bg-linear-to-b from-red-600 to-red-800 border-4 border-red-900 hover:from-red-500 hover:to-red-700 text-white font-black uppercase tracking-widest shadow-lg rounded-xl active:scale-95 disabled:opacity-50"
+                                >
+                                  {totpLoading ? <i className="ph-bold ph-spinner animate-spin text-xl" /> : <i className="ph-bold ph-shield-slash text-xl" />}
+                                  Confirm Disable
+                                </Button>
+                             </div>
+                          </div>
+                        )}
+
+                        {/* Recovery Codes Method */}
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-6 bg-gray-50 border border-gray-100 rounded-2xl dark:bg-white/5 dark:border-white/10">
+                          <div className="flex gap-4 items-start">
+                            <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon dark:bg-zinc-800 dark:border-white/5 dark:text-primary shadow-xs shrink-0">
+                              <i className="ph-bold ph-shield-check text-2xl"></i>
+                            </div>
+                            <div>
+                              <h4 className="font-black text-gray-900 text-base dark:text-zinc-50 flex items-center gap-2">
+                                Backup Recovery Codes
+                                {recoveryCodesCount > 0 ? (
+                                  <Badge className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded">Active ({recoveryCodesCount} left)</Badge>
+                                ) : (
+                                  <Badge variant="outline" className="bg-gray-100/50 text-gray-400 border border-gray-200 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded dark:bg-white/5 dark:border-white/10">Inactive</Badge>
+                                )}
+                              </h4>
+                              <p className="text-xs font-medium text-gray-500 mt-1 max-w-md leading-relaxed dark:text-zinc-400">
+                                Generate a list of single-use backup recovery codes. These allow secure access to your account in emergency events.
+                              </p>
+                            </div>
+                          </div>
+                          <div className="shrink-0 w-full md:w-auto flex justify-end gap-3">
+                            {recoveryCodesCount > 0 && (
+                              <Button
+                                onClick={async () => {
+                                  setTotpLoading(true);
+                                  try {
+                                    const res = await fetch("/api/auth/totp", {
+                                      method: "POST",
+                                      headers: { "Content-Type": "application/json" },
+                                      body: JSON.stringify({ action: "disable-recovery-codes" })
+                                    });
+                                    const json = await res.json();
+                                    if (json.ok) {
+                                      setRecoveryCodesCount(0);
+                                      toast.success("Recovery Codes Disabled");
+                                      // Refresh status
+                                      const resTOTP = await fetch("/api/auth/totp");
+                                      const jsonTOTP = await resTOTP.json().catch(() => null);
+                                      if (jsonTOTP?.ok && jsonTOTP.data) {
+                                        setTotpEnabled(jsonTOTP.data.enabled);
+                                      }
+                                    } else {
+                                      throw new Error(json.error);
+                                    }
+                                  } catch (err) {
+                                    toast.error("Failed to disable recovery codes: " + err.message);
+                                  } finally {
+                                    setTotpLoading(false);
+                                  }
+                                }}
+                                disabled={totpLoading}
+                                variant="outline"
+                                className="h-10 px-4 font-black uppercase tracking-widest text-[10px] border-gray-300 hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 bg-white rounded-xl transition-all"
+                              >
+                                Disable Codes
+                              </Button>
                             )}
-                            Setup 2FA
-                          </Button>
+                            <Button
+                              onClick={generateNewRecoveryCodes}
+                              disabled={totpLoading}
+                              className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-4 border-red-900 bg-linear-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-xl shadow-xs transition-all flex items-center gap-2"
+                            >
+                              {totpLoading ? <i className="ph-bold ph-spinner animate-spin" /> : <i className="ph-bold ph-arrows-clockwise" />}
+                              {recoveryCodesCount > 0 ? "Regenerate Codes" : "Generate Codes"}
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     )}

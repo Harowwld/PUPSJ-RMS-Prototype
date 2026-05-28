@@ -1178,14 +1178,30 @@ export async function getDb() {
   return initializing;
 }
 
-function persistDb() {
+let writePromise = null;
+let writePending = false;
+
+async function persistDb() {
   if (!db) return;
+  
+  if (writePromise) {
+    writePending = true;
+    return;
+  }
+  
   try {
     const dbPath = getDbFilePath();
     const bytes = db.export();
-    fs.writeFileSync(dbPath, Buffer.from(bytes));
+    writePromise = fs.promises.writeFile(dbPath, Buffer.from(bytes));
+    await writePromise;
   } catch (err) {
     console.error("[DB] Persistence Error:", err);
+  } finally {
+    writePromise = null;
+    if (writePending) {
+      writePending = false;
+      persistDb();
+    }
   }
 }
 

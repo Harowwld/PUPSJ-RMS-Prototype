@@ -9,7 +9,6 @@ import {
   Suspense,
 } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { io } from "socket.io-client"
 import { toast } from "sonner"
 
 import Header from "@/components/layout/Header"
@@ -743,60 +742,7 @@ function AdminPageContent() {
     setPreviewOpen(true)
   }, [])
 
-  const [socket, setSocket] = useState(null)
 
-  useEffect(() => {
-    const s = io({ path: "/api/socket", addTrailingSlash: false })
-    setSocket(s)
-    return () => {
-      s.disconnect()
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!socket) return
-
-    socket.emit("adminSubscribe")
-
-    const onStaffLogin = (data) => {
-      setStaffData((prev) => {
-        const index = prev.findIndex((s) => s.id === data.staffId)
-        if (index === -1) return prev
-        const next = [...prev]
-        next[index] = {
-          ...next[index],
-          status: "Active",
-          last_active: data.last_active || new Date().toISOString(),
-        }
-        return next
-      })
-    }
-
-    const onStaffLogout = (data) => {
-      setStaffData((prev) => {
-        const index = prev.findIndex((s) => s.id === data.staffId)
-        if (index === -1) return prev
-        const next = [...prev]
-        next[index] = { ...next[index], status: "Inactive" }
-        return next
-      })
-    }
-
-    const onBackupSyncComplete = (data) => {
-      console.log("[BACKUP] Received backupSyncComplete event:", data)
-      refreshBackups()
-    }
-
-    socket.on("staffLogin", onStaffLogin)
-    socket.on("staffLogout", onStaffLogout)
-    socket.on("backupSyncComplete", onBackupSyncComplete)
-
-    return () => {
-      socket.off("staffLogin", onStaffLogin)
-      socket.off("staffLogout", onStaffLogout)
-      socket.off("backupSyncComplete", onBackupSyncComplete)
-    }
-  }, [socket, showToast, refreshBackups])
 
   const handleLogout = async () => {
     try {
