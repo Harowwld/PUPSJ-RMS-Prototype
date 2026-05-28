@@ -290,8 +290,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                     No requests recorded yet
                   </EmptyTitle>
                   <EmptyDescription className="mt-1 text-sm font-medium text-gray-600 mb-4 dark:text-zinc-300">
-                    Data will populate as document requests are
-                    created.
+                    Data will show once requests are made.
                   </EmptyDescription>
                   <Button 
                     variant="outline" 

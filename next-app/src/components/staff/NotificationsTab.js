@@ -195,7 +195,7 @@ export default function NotificationsTab({
             </div>
           }
         />
-        <CardContent className="flex min-h-0 flex-1 flex-col p-6">
+        <CardContent className="h-auto flex flex-col p-6">
           {isLoading ? (
             <div className="flex h-full w-full flex-1 flex-col items-center justify-center bg-white p-10 min-h-[400px] dark:bg-card">
               <div className="flex flex-col items-center gap-4">
@@ -221,7 +221,7 @@ export default function NotificationsTab({
             </Empty>
           ) : (
             <>
-              <div className="relative h-auto w-full overflow-x-auto overflow-y-auto rounded-xl border border-gray-200 dark:border-white/10">
+              <div className="relative h-auto w-full overflow-x-auto rounded-xl border border-gray-200 dark:border-white/10">
                 {isRefreshing && (
                   <div className="absolute inset-0 z-20 flex h-full w-full flex-col items-center justify-center bg-white p-10 dark:bg-card">
                     <div className="flex flex-col items-center gap-4">

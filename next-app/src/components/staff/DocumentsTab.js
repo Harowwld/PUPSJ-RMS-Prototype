@@ -138,8 +138,8 @@ export default function DocumentsTab({
       <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-files"
-          title="Digital Archives Explorer"
-          description="Browse and verify the university's digitized collection of student records."
+          title="Documents"
+          description="Search and view digitized student records."
         />
 
         <div className="p-4 bg-gray-50 flex-none border-b border-gray-200 dark:bg-white/5 dark:border-white/10">
@@ -285,7 +285,7 @@ export default function DocumentsTab({
           </div>
         )}
 
-        <CardContent className="p-6 flex-1 flex flex-col min-h-0">
+        <CardContent className="p-6 h-auto flex flex-col">
           {docsLoading ? (
             <div className="flex-1 flex flex-col space-y-4">
               <div className="bg-gray-50 border border-gray-200 rounded-brand p-5 flex items-center justify-between shadow-xs dark:bg-muted/30 dark:border-white/10">
@@ -349,9 +349,9 @@ export default function DocumentsTab({
               {isSingleStudentView && (
                 <div className="mb-4 bg-gray-50 border border-gray-200 rounded-brand p-5 flex items-center justify-between shadow-xs dark:bg-muted/30 dark:border-white/10">
                   <div>
-                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wide dark:text-zinc-50">Archive Completeness • {docsRows[0].student_name || docsRows[0].student_no}</h3>
+                    <h3 className="text-sm font-black text-gray-900 uppercase tracking-wide dark:text-zinc-50">Upload Progress • {docsRows[0].student_name || docsRows[0].student_no}</h3>
                     <p className="text-xs font-medium text-gray-500 mt-1 dark:text-zinc-400">
-                      {compUploaded} out of {compTotal} required document types uploaded.
+                      {compUploaded} out of {compTotal} documents uploaded.
                     </p>
                   </div>
                   <div className="flex items-center gap-6">
@@ -371,7 +371,7 @@ export default function DocumentsTab({
                       className="bg-white border border-gray-300 text-gray-700 hover:text-pup-maroon dark:hover:text-red-500 hover:border-gray-300 font-bold text-xs px-4 h-9 shadow-sm dark:bg-card dark:text-zinc-200 dark:hover:border-zinc-700 dark:shadow-none dark:border-white/10"
                     >
                       <i className="ph-bold ph-user-circle-gear mr-2 text-sm"></i>
-                      MANAGE PROFILE
+                      EDIT STUDENT
                     </Button>
                   </div>
                 </div>
@@ -642,7 +642,7 @@ export default function DocumentsTab({
                       Click to browse or drop replacement
                     </p>
                     <p className="mt-1 text-xs font-medium text-gray-600 dark:text-zinc-300">
-                      New scan will overwrite the existing file for {updateDocType}.
+                      The new scan will replace the current file for {updateDocType}.
                     </p>
                     <p className="mt-2 text-xs font-mono text-pup-maroon dark:text-primary font-bold truncate dark:text-primary">
                       {updateFile
@@ -717,7 +717,7 @@ export default function DocumentsTab({
                   Manage Student Profile
                 </DialogTitle>
                 <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 leading-relaxed dark:text-zinc-300">
-                  Update student metadata and physical storage location records.
+                  Update student info and storage location.
                 </DialogDescription>
               </div>
             </div>
@@ -820,7 +820,7 @@ export default function DocumentsTab({
                     <div>
                       <p className="text-xs font-bold text-red-900 uppercase tracking-tight">Archive Record</p>
                       <p className="text-[11px] text-red-700 mt-1 leading-relaxed">
-                        Soft-deleting this student will hide their profile and all documents from active search results.
+                        Archiving will hide the student and their documents from search.
                       </p>
                       <Button
                         type="button"

@@ -91,13 +91,13 @@ const Select = React.forwardRef(({ className, children, value, onChange, placeho
         }}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex h-11 w-full items-center justify-between rounded-xl border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 shadow-xs outline-none transition-all hover:bg-gray-50 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-zinc-800 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800",
+          "flex h-11 w-full items-center justify-between rounded-xl border border-gray-300 bg-white px-3 text-xs font-bold text-gray-700 shadow-xs outline-none transition-all hover:bg-gray-50 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800",
           className
         )}
         {...props}
       >
         <span className="flex-1 text-left truncate">
-          {selectedOption ? selectedOption.label : placeholder || (options[0]?.label || "Select...")}
+          {selectedOption ? selectedOption.label : (placeholder !== undefined ? placeholder : (options[0]?.label || "Select..."))}
         </span>
         <i
           className={cn(

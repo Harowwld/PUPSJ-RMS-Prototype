@@ -715,7 +715,7 @@ export default function StaffDirectoryTab({
                                   activeTab === "active" && (
                                     <Button
                                       onClick={() => onSwitchView("create")}
-                                      className="mt-4 flex h-10 items-center gap-3 rounded-brand bg-pup-maroon px-6 text-xs font-bold text-white shadow-sm transition-all hover:bg-red-900 active:scale-95 dark:bg-red-600 dark:shadow-none"
+                                      className="mt-4 flex h-10 items-center gap-3 rounded-brand btn-brand-red px-6 text-xs font-bold text-white transition-all dark:shadow-none"
                                     >
                                       <i className="ph-bold ph-user-plus"></i>
                                       REGISTER NEW STAFF

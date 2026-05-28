@@ -145,7 +145,7 @@ export default function DocumentRequestsTab({
         setTotal(Number(json.total) || 0);
       } catch (e) {
         if (showLoading) {
-          showToast({ title: "Load Failed", description: e?.message || "Unable to fetch document requests." }, true);
+          showToast({ title: "Load Failed", description: e?.message || "Unable to load requests." }, true);
           setRows([]);
           setTotal(0);
         }
@@ -189,7 +189,7 @@ export default function DocumentRequestsTab({
       setEditStatus(json.data.status || "Pending");
       setEditNotes(json.data.notes || "");
     } catch (e) {
-      showToast({ title: "Load Failed", description: e?.message || "Unable to load request details." }, true);
+      showToast({ title: "Load Failed", description: e?.message || "Unable to load details." }, true);
       setSelectedId(null);
     } finally {
       setDetailLoading(false);
@@ -307,7 +307,7 @@ export default function DocumentRequestsTab({
       });
       const json = await res.json().catch(() => null);
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to create");
-      showToast({ title: "Request Created", description: "A new document request has been logged." });
+      showToast({ title: "Request Created", description: "Request added." });
       setCreateOpen(false);
       setCreateStudentNo("");
       setCreateDocType("");
@@ -348,8 +348,8 @@ export default function DocumentRequestsTab({
       <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-tray"
-          title="Document Service Requests"
-          description="Manage and process alumni requests for official university records."
+          title="Alumni Requests"
+          description="Manage and track alumni requests."
           actions={
             <div className="flex items-center gap-3">
               {!loading && !error && (
@@ -453,7 +453,7 @@ export default function DocumentRequestsTab({
           </div>
         )}
 
-        <CardContent className="flex min-h-0 flex-1 flex-col p-6">
+        <CardContent className="h-auto flex flex-col p-6">
           {loading ? (
             <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
               <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0 dark:bg-card dark:border-white/10 dark:shadow-none">
@@ -542,11 +542,9 @@ export default function DocumentRequestsTab({
                                       <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
                                     </EmptyMedia>
                                   </div>
-                                  <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">No document requests yet</EmptyTitle>
+                                  <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">No alumni requests yet</EmptyTitle>
                                   <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                                    Create a request when an alumnus asks for a record.
-                                    Track status and use the storage map to pull the
-                                    physical drawer.
+                                    Create a request for alumni. Track status and find the physical file using the map.
                                   </EmptyDescription>
                                 </EmptyHeader>
                               </Empty>
@@ -659,7 +657,7 @@ export default function DocumentRequestsTab({
               <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0 dark:bg-card dark:border-white/10 dark:shadow-none">
                 <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between dark:border-white/10 dark:bg-muted/30">
                   <div className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
-                    Request detail
+                    Request Details
                   </div>
                   {hasEdits && (
                     <div className="flex items-center gap-2">
@@ -686,14 +684,17 @@ export default function DocumentRequestsTab({
                 </div>
                 <div className="p-4 flex-1 overflow-auto flex flex-col">
                   {!selectedId && (
-                    <Empty className="flex-1 flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
+                    <Empty className="flex-1 flex flex-col items-center justify-center border-0 bg-transparent text-center">
                       <EmptyHeader className="flex flex-col items-center gap-0">
-                        <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
-                          <i className="ph-duotone ph-file-text text-3xl text-pup-maroon dark:text-primary"></i>
-                        </EmptyMedia>
-                        <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">No Request Selected</EmptyTitle>
-                        <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-[240px] dark:text-zinc-300">
-                          Select a request from the list to see its details, notes, and physical storage location.
+                        <div className="relative mb-6">
+                          <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                          <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                            <i className="ph-duotone ph-file-text text-5xl text-gray-300 dark:text-zinc-600"></i>
+                          </EmptyMedia>
+                        </div>
+                        <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">Select a Request</EmptyTitle>
+                        <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                          Select a request to see details and location.
                         </EmptyDescription>
                       </EmptyHeader>
                     </Empty>
@@ -762,7 +763,7 @@ export default function DocumentRequestsTab({
                                 PUP ODRS Retention Policy
                               </span>
                               <span className="text-gray-600 block mt-0.5 leading-relaxed">
-                                According to the PUP Online Document Request System (ODRS) guidelines, unclaimed credentials are subject to **shredding** if not picked up within <strong className="text-gray-800">90 days</strong> of the release date.
+                                Unclaimed documents are shredded after 90 days according to ODRS policy.
                               </span>
                               <span className="text-amber-800 font-bold block mt-1.5 flex items-center gap-1.5">
                                 <i className="ph-bold ph-warning"></i>
@@ -821,9 +822,9 @@ export default function DocumentRequestsTab({
                 <i className="ph-duotone ph-pencil-line text-2xl"></i>
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg font-black tracking-tight text-gray-900 dark:text-zinc-50">New document request</DialogTitle>
+                <DialogTitle className="text-lg font-black tracking-tight text-gray-900 dark:text-zinc-50">New Alumni Request</DialogTitle>
                 <DialogDescription className="text-sm font-medium text-gray-600 mt-1 dark:text-zinc-300">
-                  Enter the student number and the document being requested.
+                  Enter the student number and document type.
                 </DialogDescription>
               </div>
             </div>
@@ -911,7 +912,7 @@ export default function DocumentRequestsTab({
                       <label className="text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">
                         Or enter custom student number
                       </label>
-                      <span className="text-[10px] text-gray-400 font-semibold">If student is not in database</span>
+                      <span className="text-[10px] text-gray-400 font-semibold">If student record is missing</span>
                     </div>
                     <Input
                       className="mt-1.5 font-mono uppercase bg-white border-gray-300 rounded-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 dark:bg-zinc-900 dark:border-zinc-800 dark:focus-visible:border-zinc-700"
@@ -982,10 +983,10 @@ export default function DocumentRequestsTab({
               </div>
               <div className="min-w-0">
                 <DialogTitle className="text-lg font-black tracking-tight text-gray-900 dark:text-zinc-50">
-                  No digital file in system
+                  No Digital Copy
                 </DialogTitle>
                 <DialogDescription className="text-sm font-medium text-gray-600 mt-1 dark:text-zinc-300">
-                  The requested document is not uploaded yet. Proceed with physical verification.
+                  Document not yet scanned. Check physical storage.
                 </DialogDescription>
               </div>
             </div>
@@ -993,7 +994,7 @@ export default function DocumentRequestsTab({
           <div className="p-6 space-y-4">
             <div className="space-y-3 text-sm">
               <div className="rounded-brand border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900 font-medium dark:bg-amber-950/30">
-                Verify the physical storage first before proceeding with release.
+                Check physical file before releasing.
               </div>
               {studentForRequest ? (
                 <div className="rounded-brand border border-gray-200 bg-gray-50 px-4 py-3 font-mono text-gray-800 font-medium dark:border-white/10 dark:bg-card dark:text-zinc-100">

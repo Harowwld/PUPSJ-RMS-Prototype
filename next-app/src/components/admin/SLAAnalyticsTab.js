@@ -166,7 +166,7 @@ export default function SLAAnalyticsTab({
 
   return (
     <div className="animate-fade-up font-inter flex h-full min-h-0 w-full flex-col">
-      <Card className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-2xl shadow-gray-200/50 backdrop-blur-xl dark:border-white/10 dark:bg-card/80 dark:shadow-none">
         <PageHeader
           icon="ph-chart-line-up"
           title="Request Analysis"

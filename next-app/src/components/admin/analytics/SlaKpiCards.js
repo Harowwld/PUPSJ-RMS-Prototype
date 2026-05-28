@@ -65,7 +65,7 @@ export default function SlaKpiCards({ total, slaHours, completionRate }) {
                 <TooltipContent side="top" className="max-w-[240px] border-blue-800 bg-blue-950 p-3 text-white shadow-xl dark:shadow-none">
                   <p className="font-bold leading-tight text-xs">Standard SLA: 72 Hours</p>
                   <p className="mt-1 text-[10px] font-medium opacity-90 leading-relaxed">
-                    Typical processing time for document requests is 3 to 5 business days.
+                    Most requests take 3 to 5 business days to process.
                   </p>
                 </TooltipContent>
               </Tooltip>
