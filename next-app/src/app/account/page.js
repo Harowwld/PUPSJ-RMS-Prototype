@@ -1240,14 +1240,14 @@ function AccountPageContent() {
                                 className={cn(
                                   "relative flex flex-col items-center gap-3 p-6 rounded-brand border-2 transition-all group overflow-hidden",
                                   theme === t 
-                                    ? "border-pup-maroon bg-red-50/50 dark:border-red-500 dark:bg-red-500/10" 
+                                    ? "border-pup-maroon bg-red-50/50 dark:border-pup-maroon dark:bg-pup-maroon/10" 
                                     : "border-gray-100 bg-gray-50 hover:border-gray-200 dark:border-white/5 dark:bg-card dark:hover:border-white/10"
                                 )}
                              >
                                 <div className={cn(
                                   "w-12 h-12 rounded-xl flex items-center justify-center text-2xl transition-all shadow-xs",
                                   theme === t 
-                                    ? "bg-pup-maroon text-white dark:bg-red-600" 
+                                    ? "bg-pup-maroon text-white dark:bg-pup-maroon" 
                                     : "bg-white text-gray-400 dark:bg-zinc-800 dark:text-zinc-500 group-hover:text-gray-600 dark:group-hover:text-zinc-300"
                                 )}>
                                    <i className={cn(
@@ -1257,12 +1257,12 @@ function AccountPageContent() {
                                 </div>
                                 <span className={cn(
                                   "text-xs font-black uppercase tracking-widest",
-                                  theme === t ? "text-pup-maroon dark:text-red-500" : "text-gray-500 dark:text-zinc-400"
+                                  theme === t ? "text-pup-maroon dark:text-pup-maroon/90" : "text-gray-500 dark:text-zinc-400"
                                 )}>
                                    {t}
                                 </span>
                                 {theme === t && (
-                                   <div className="absolute top-2 right-2 w-5 h-5 bg-pup-maroon dark:bg-red-600 rounded-full flex items-center justify-center text-white text-[10px] animate-in zoom-in duration-300">
+                                   <div className="absolute top-2 right-2 w-5 h-5 bg-pup-maroon dark:bg-pup-maroon rounded-full flex items-center justify-center text-white text-[10px] animate-in zoom-in duration-300">
                                       <i className="ph-bold ph-check"></i>
                                    </div>
                                 )}
