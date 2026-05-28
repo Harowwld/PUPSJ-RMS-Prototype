@@ -147,7 +147,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         rect: {
           x: activeRoom.door?.x ?? 0,
           y: activeRoom.door?.y ?? 0,
-          w: activeRoom.door?.w ?? 0.1,
+          w: activeRoom.door?.w ?? 0.125,
           h: activeRoom.door?.h ?? 0.04,
         },
         rotation: activeRoom.door?.rotation ?? 0,
@@ -342,33 +342,33 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       let finalX = rawX
       let finalY = rawY
       let finalRot = 0
-      let finalW = 0.1
+      let finalW = 0.125
       let finalH = 0.04
 
       if (minDist === distTop) {
         finalY = 0
         finalRot = 0
-        finalW = 0.1
+        finalW = 0.125
         finalH = 0.04
-        finalX = clamp(rawX, 0, 1 - 0.1)
+        finalX = clamp(rawX, 0, 1 - 0.125)
       } else if (minDist === distBottom) {
         finalY = 1 - 0.04
         finalRot = 180
-        finalW = 0.1
+        finalW = 0.125
         finalH = 0.04
-        finalX = clamp(rawX, 0, 1 - 0.1)
+        finalX = clamp(rawX, 0, 1 - 0.125)
       } else if (minDist === distLeft) {
         finalX = 0
         finalRot = 270
         finalW = 0.025
-        finalH = 0.16
-        finalY = clamp(rawY, 0, 1 - 0.16)
+        finalH = 0.20
+        finalY = clamp(rawY, 0, 1 - 0.20)
       } else if (minDist === distRight) {
         finalX = 1 - 0.025
         finalRot = 90
         finalW = 0.025
-        finalH = 0.16
-        finalY = clamp(rawY, 0, 1 - 0.16)
+        finalH = 0.20
+        finalY = clamp(rawY, 0, 1 - 0.20)
       }
 
       updateRoom(activeRoom.id, (r) => ({
@@ -948,7 +948,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   )
 
   const renderEditorContent = () => (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-white select-none dark:bg-card">
+    <div className="flex w-full flex-col bg-white select-none dark:bg-card">
       <PageHeader
         icon="ph-layout"
         title="Storage Layout Editor"
@@ -985,8 +985,8 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
 
       {renderToolbar()}
 
-      <div className="relative min-h-0 flex-1 overflow-auto">
-        <div className="grid grid-cols-1 gap-6 h-full p-6 lg:grid-cols-3">
+      <div className="relative">
+        <div className="grid grid-cols-1 gap-6 p-6 lg:grid-cols-3">
           <div className="lg:col-span-2">
             <CabinetCanvas 
               canvasRef={canvasRef} activeRoom={activeRoom} selectedCabinetIds={selectedCabinetIds} selectedCabinet={selectedCabinet} collidingIds={collidingIds} activePath={activePath} simulationMode={simulationMode} snapToGrid={snapToGrid} showGrid={showGrid} handleCanvasPointerMove={handleCanvasPointerMove} handleCanvasPointerUp={handleCanvasPointerUp} setSelectedCabinetIds={setSelectedCabinetIds} duplicateSelectedCabinet={duplicateSelectedCabinet} setBulkConfirmOpen={setBulkConfirmOpen} dragRef={dragRef} updateSelectedRectFromNormalized={updateSelectedRectFromNormalized} updateSelectedSizeNormalized={updateSelectedSizeNormalized} selectionBox={selectionBox} pushHistory={pushHistory} layout={layout} isModalOpen={false}
@@ -1003,7 +1003,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   )
 
   return (
-    <div className="animate-fade-up font-inter flex h-full w-full flex-col gap-4">
+    <div className="animate-fade-up font-inter flex w-full flex-col gap-4">
       <ConflictResolutionModals 
         applyReportOpen={applyReportOpen}
         setApplyReportOpen={setApplyReportOpen}
@@ -1026,7 +1026,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         applyTemplateWithMappings={applyTemplateWithMappings}
       />
 
-      <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm p-0 gap-0 dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="rounded-brand border border-gray-200 bg-white shadow-sm p-0 gap-0 dark:border-white/10 dark:bg-card dark:shadow-none w-full">
         {renderEditorContent()}
       </Card>
 

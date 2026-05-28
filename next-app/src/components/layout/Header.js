@@ -130,13 +130,13 @@ export default function Header({ authUser, onLogout, children }) {
         <div className="flex items-center gap-2">
           <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger className={cn(
-              "group flex items-center gap-3 rounded-brand border px-3 py-1.5 shadow-xs transition-all focus:outline-none",
+              "group flex items-center gap-3 rounded-md border px-3 py-1.5 shadow-xs transition-all focus:outline-none",
               menuOpen 
                 ? "border-pup-maroon dark:border-red-500 bg-white ring-2 ring-red-50 dark:ring-red-950/20 shadow-sm" 
                 : "border-gray-200 dark:border-white/5 bg-white/90 hover:border-gray-300 dark:hover:border-white/10 hover:bg-red-50 dark:bg-white/5 dark:hover:bg-white/10"
             )}>
               <div className={cn(
-                "h-9 w-9 shrink-0 rounded-brand bg-gray-100 dark:bg-white/5 flex items-center justify-center text-xs font-semibold text-gray-700 dark:text-zinc-300 transition-colors",
+                "h-9 w-9 shrink-0 rounded-md bg-gray-100 dark:bg-white/5 flex items-center justify-center text-xs font-semibold text-gray-700 dark:text-zinc-300 transition-colors",
                 menuOpen && "bg-red-50 dark:bg-red-950/30 text-pup-maroon dark:text-primary shadow-xs ring-1 ring-red-100 dark:ring-red-900/30"
               )}>
                 {initials}
@@ -157,11 +157,11 @@ export default function Header({ authUser, onLogout, children }) {
                 menuOpen && "rotate-180 text-pup-maroon dark:text-primary"
               )}></i>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80 rounded-2xl border border-gray-200 shadow-2xl p-2 bg-white/98 backdrop-blur-md dark:bg-card dark:border-white/10 dark:shadow-none">
+            <DropdownMenuContent align="end" className="w-80 rounded-xl border border-gray-200 shadow-2xl p-2 bg-white/98 backdrop-blur-md dark:bg-card dark:border-white/10 dark:shadow-none">
               <DropdownMenuGroup>
-                <div className="rounded-xl p-3 bg-gray-50 border border-gray-100 mb-1 dark:bg-white/5 dark:border-white/5">
+                <div className="rounded-lg p-3 bg-gray-50 border border-gray-100 mb-1 dark:bg-white/5 dark:border-white/5">
                   <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 shrink-0 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-base font-bold text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card">
+                    <div className="h-12 w-12 shrink-0 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-base font-bold text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card">
                       {initials}
                     </div>
                     <div className="min-w-0">
@@ -218,11 +218,11 @@ export default function Header({ authUser, onLogout, children }) {
                     <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] px-2 mb-3 dark:text-zinc-500">
                       Switch Role
                     </p>
-                    <div className="grid grid-cols-2 gap-2 bg-gray-100/80 p-1.5 rounded-xl border border-gray-200 dark:bg-white/5 dark:border-white/5">
+                    <div className="grid grid-cols-2 gap-2 bg-gray-100/80 p-1.5 rounded-lg border border-gray-200 dark:bg-white/5 dark:border-white/5">
                       <DropdownMenuItem
                         onClick={() => handleViewSwitch("admin")}
                         className={cn(
-                          "flex flex-col items-center justify-center gap-1.5 py-3 rounded-lg transition-all cursor-pointer outline-none",
+                          "flex flex-col items-center justify-center gap-1.5 py-3 rounded-md transition-all cursor-pointer outline-none",
                           isAdminView 
                             ? "bg-red-50 text-red-900 shadow-md border border-red-200 ring-1 ring-red-100/20 dark:bg-red-500/20 dark:text-primary dark:border-red-500/30" 
                             : "text-gray-400 hover:bg-white hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-300"
@@ -237,7 +237,7 @@ export default function Header({ authUser, onLogout, children }) {
                       <DropdownMenuItem
                         onClick={() => handleViewSwitch("staff")}
                         className={cn(
-                          "flex flex-col items-center justify-center gap-1.5 py-3 rounded-lg transition-all cursor-pointer outline-none",
+                          "flex flex-col items-center justify-center gap-1.5 py-3 rounded-md transition-all cursor-pointer outline-none",
                           !isAdminView 
                             ? "bg-yellow-50 text-yellow-900 shadow-md border border-yellow-200 ring-1 ring-yellow-100/20 dark:bg-yellow-500/20 dark:text-yellow-500 dark:border-yellow-500/30" 
                             : "text-gray-400 hover:bg-white hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-300"
@@ -258,7 +258,7 @@ export default function Header({ authUser, onLogout, children }) {
               <DropdownMenuGroup className="p-1">
                 <DropdownMenuItem
                   onClick={onLogout}
-                  className="btn-brand-red !text-white hover:!text-white focus:!text-white focus:**:!text-white flex items-center justify-center gap-2 py-2.5 px-3 m-1 shadow-md"
+                  className="btn-brand-red rounded-lg !text-white hover:!text-white focus:!text-white focus:**:!text-white flex items-center justify-center gap-2 py-2.5 px-3 m-1 shadow-md"
                 >
                   <i className="ph-bold ph-power text-lg !text-white"></i>
                   <span className="text-sm uppercase tracking-widest !text-white">Log Out</span>

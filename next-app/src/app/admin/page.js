@@ -619,7 +619,7 @@ function AdminPageContent() {
   }, [pendingView, performSwitchView])
 
   const reviewDocumentStatus = useCallback(
-    async (id, approvalStatus, reviewNote = "") => {
+    async (id, approvalStatus, reviewNote = "", suppressToast = false) => {
       try {
         const res = await fetch(`/api/documents/${id}`, {
           method: "PATCH",
@@ -631,10 +631,12 @@ function AdminPageContent() {
           throw new Error(json?.error || "Failed to review document")
         }
 
-        showToast({
-          title: "Document Review Finalized",
-          description: `The digital record has been successfully ${approvalStatus.toLowerCase()} and the status updated in the repository.`,
-        })
+        if (!suppressToast) {
+          showToast({
+            title: "Document Review Finalized",
+            description: `The digital record has been successfully ${approvalStatus.toLowerCase()} and the status updated in the repository.`,
+          })
+        }
         refreshReviewRecords()
       } catch (err) {
         showToast(
@@ -650,15 +652,15 @@ function AdminPageContent() {
   )
 
   const bulkReviewDocumentsStatus = useCallback(
-    async (ids, approvalStatus, reviewNote = "") => {
+    async (ids, approvalStatus, reviewNote = "", suppressToast = false) => {
       if (!ids || ids.length === 0) return
-      const toastId = showToast(
+      const toastId = !suppressToast ? showToast(
         {
           title: "Processing Batch",
           description: `Updating ${ids.length} digital records...`,
         },
         "loading"
-      )
+      ) : null
 
       const results = { success: 0, failed: 0 }
 
@@ -677,20 +679,23 @@ function AdminPageContent() {
         }
       }
 
-      toast.dismiss(toastId)
-      if (results.failed === 0) {
-        showToast({
-          title: "Batch Action Complete",
-          description: `Successfully ${approvalStatus.toLowerCase()} ${results.success} records.`,
-        })
-      } else {
-        showToast(
-          {
-            title: "Batch Action Partial",
-            description: `Processed ${results.success} success, ${results.failed} failed.`,
-          },
-          true
-        )
+      if (toastId) toast.dismiss(toastId)
+      
+      if (!suppressToast) {
+        if (results.failed === 0) {
+          showToast({
+            title: "Batch Action Complete",
+            description: `Successfully ${approvalStatus.toLowerCase()} ${results.success} records.`,
+          })
+        } else {
+          showToast(
+            {
+              title: "Batch Action Partial",
+              description: `Processed ${results.success} success, ${results.failed} failed.`,
+            },
+            true
+          )
+        }
       }
       refreshReviewRecords()
     },
@@ -1518,10 +1523,11 @@ function AdminPageContent() {
               statusFilter={reviewStatusFilter}
               setStatusFilter={setReviewStatusFilter}
               onRefresh={refreshReviewRecords}
-              onApprove={(id) => reviewDocumentStatus(id, "Approved")}
+              onApprove={(id, suppress = false) => reviewDocumentStatus(id, "Approved", "", suppress)}
               onDecline={openDeclinePrompt}
               onBulkApprove={handleBulkApprove}
               onBulkDecline={handleBulkDecline}
+              onSetStatus={reviewDocumentStatus}
               onPreviewDocument={handlePreviewDocument}
               showToast={showToast}
               onLogAction={logAdminAction}

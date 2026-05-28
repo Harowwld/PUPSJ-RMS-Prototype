@@ -232,7 +232,7 @@ export default function NotificationsTab({
                     </div>
                   </div>
                 )}
-                <table className="min-w-full text-sm table-fixed">
+                <table className="min-w-full text-xs">
                   <thead className="border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">
                     <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
                       <th className="p-4 w-32">Decision</th>
@@ -287,51 +287,51 @@ export default function NotificationsTab({
                             <td className="p-4">                              <div className="flex items-center gap-2">
                                 <Badge
                                   variant="outline"
-                                  className={`${ui.badge} rounded-full border px-2 py-1 text-xs font-bold shadow-xs`}
+                                  className={`${ui.badge} rounded-full border px-2 py-0.5 text-[10px] font-bold shadow-xs`}
                                 >
                                   <i className={`${ui.icon} mr-1.5`}></i>
                                   {ui.label}
                                 </Badge>
                                 {isUnread ? (
-                                  <span className="animate-pulse text-[10px] font-extrabold tracking-widest text-pup-maroon dark:text-primary uppercase dark:text-primary">
+                                  <span className="animate-pulse text-[9px] font-extrabold tracking-widest text-pup-maroon dark:text-primary uppercase">
                                     New
                                   </span>
                                 ) : null}
                               </div>
                             </td>
-                            <td className="p-3 font-mono font-bold text-gray-900 dark:text-zinc-50">
+                            <td className="p-4 font-mono text-xs font-bold text-gray-900 dark:text-zinc-50">
                               {n.student_no}
                             </td>
-                            <td className="p-3 font-medium text-gray-800 dark:text-zinc-100">
+                            <td className="p-4 text-xs font-black text-gray-900 dark:text-zinc-50">
                               {n.student_name || "—"}
                             </td>
-                            <td className="p-3">
-                              <span className="inline-flex items-center rounded-full border border-red-100 bg-red-50 px-2 py-1 text-xs font-bold text-pup-maroon dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
+                            <td className="p-4">
+                              <span className="inline-flex items-center rounded-full border border-red-100 bg-red-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-pup-maroon dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
                                 {n.doc_type}
                               </span>
                             </td>
-                            <td className="p-3 text-gray-700 dark:text-zinc-200">
-                              <div className="max-w-[200px] truncate text-sm font-medium">
+                            <td className="p-4 text-gray-700 dark:text-zinc-200">
+                              <div className="max-w-[200px] truncate text-xs font-medium">
                                 {n.original_filename}
                               </div>
                               {n.review_note && (
-                                <div className="mt-0.5 line-clamp-1 text-[11px] text-gray-500 italic dark:text-zinc-400">
+                                <div className="mt-0.5 line-clamp-1 text-[10px] text-gray-500 italic dark:text-zinc-400">
                                   Note: {n.review_note}
                                 </div>
                               )}
                             </td>
-                            <td className="p-3 font-medium text-gray-700 dark:text-zinc-200">
+                            <td className="p-4 text-xs font-bold text-gray-700 dark:text-zinc-300">
                               {n.reviewed_by || "—"}
                             </td>
-                            <td className="p-3 font-medium text-gray-600 dark:text-zinc-300">
-                              <div className="font-mono text-[11px]">
+                            <td className="p-4 text-gray-600 dark:text-zinc-300">
+                              <div className="font-mono text-xs">
                                 {reviewed.date}
                               </div>
-                              <div className="text-[10px] opacity-70">
+                              <div className="font-mono text-[10px] opacity-70">
                                 {reviewed.time}
                               </div>
                             </td>
-                            <td className="p-3">
+                            <td className="p-4">
                               <div className="flex flex-wrap justify-end gap-2">
                                 <Button
                                   variant="outline"
@@ -344,7 +344,7 @@ export default function NotificationsTab({
                                       n.id
                                     )
                                   }
-                                  className="h-9 rounded-brand border-gray-300 px-3 text-xs font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+                                  className="h-9 rounded-md border-gray-300 px-3 text-xs font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
                                 >
                                   <i className="ph-bold ph-eye mr-1.5"></i>
                                   VIEW
@@ -354,7 +354,7 @@ export default function NotificationsTab({
                                     variant="outline"
                                     size="sm"
                                     onClick={() => onRescan(n.student_no, n.doc_type, n.id, n.original_filename, n.mime_type)}
-                                    className="h-9 rounded-brand border-pup-maroon/30 hover:border-pup-maroon bg-white text-pup-maroon dark:text-primary px-3 text-xs font-bold shadow-sm transition-all hover:bg-red-50 dark:bg-card dark:text-primary dark:shadow-none"
+                                    className="h-9 rounded-md border-pup-maroon/30 hover:border-pup-maroon bg-white text-pup-maroon dark:text-primary px-3 text-xs font-bold shadow-sm transition-all hover:bg-red-50 dark:bg-card dark:text-primary dark:shadow-none"
                                   >
                                     <i className="ph-bold ph-arrow-counter-clockwise mr-1.5"></i>
                                     RE-SCAN

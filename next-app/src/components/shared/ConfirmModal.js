@@ -102,15 +102,31 @@ export default function ConfirmModal({
     }
   };
 
-  const handleKeyDown = (index, e) => {
+  const handleKeyDownLocal = (index, e) => {
     if (e.key === "Backspace" && !verificationValue[index] && index > 0) {
       inputRefs[index - 1].current?.focus();
     }
   };
 
+  // Global key listener for Enter when modal is open
+  useEffect(() => {
+    if (!open) return;
+    const handleGlobalKey = (e) => {
+      if (e.key === "Enter" && !isLoading && !disabled && isVerified) {
+        e.preventDefault();
+        e.stopPropagation();
+        onConfirm();
+      }
+    };
+    window.addEventListener("keydown", handleGlobalKey);
+    return () => window.removeEventListener("keydown", handleGlobalKey);
+  }, [open, isLoading, disabled, isVerified, onConfirm]);
+
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
-      <DialogContent className="sm:max-w-lg p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10">
+      <DialogContent 
+        className="sm:max-w-lg p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10"
+      >
         <DialogHeader className={cn(
           "p-6 border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-white/5 min-w-0",
           (!selectedItems.length && !isVerificationEnabled) && "pb-5 border-b-0"
@@ -193,7 +209,7 @@ export default function ConfirmModal({
                           placeholder="0"
                           value={verificationValue[i] || ""}
                           onChange={(e) => handleInputChange(i, e.target.value)}
-                          onKeyDown={(e) => handleKeyDown(i, e)}
+                          onKeyDown={(e) => handleKeyDownLocal(i, e)}
                           autoFocus={i === 0}
                         />
                       ))}

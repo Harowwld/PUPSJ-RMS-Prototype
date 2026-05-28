@@ -213,7 +213,7 @@ export default function BackupTab({
       <div className="animate-fade-up font-inter flex min-h-full w-full flex-col gap-4 pb-8">
         <div className="relative flex min-h-[600px] w-full items-stretch gap-5">
           {/* MAIN CONTENT */}
-          <Card className="flex h-fit min-h-[600px] w-full flex-1 flex-col overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-card dark:shadow-none">
+          <Card className="flex h-fit min-h-[600px] w-full flex-1 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-card dark:shadow-none">
             <PageHeader
               icon="ph-hard-drives"
               title="Backup Records"

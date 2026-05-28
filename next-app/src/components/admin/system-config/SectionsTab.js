@@ -277,7 +277,7 @@ export default function SectionsTab({
 
   return (
     <div className="animate-fade-up font-inter flex h-full w-full flex-col">
-      <Card className="flex flex-1 flex-col overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-list-numbers"
           title={
@@ -747,7 +747,7 @@ export default function SectionsTab({
         </CardContent>
 
         {filteredSectionsFull.length > 0 && (
-          <div className="-mx-6 mt-0 -mb-6 flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-[2rem] dark:border-white/10 dark:bg-card">
+          <div className="-mx-6 mt-0 -mb-6 flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-2xl dark:border-white/10 dark:bg-card">
             <div className="flex items-center gap-8 select-none cursor-default">
               <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
                 <span>
@@ -825,7 +825,7 @@ export default function SectionsTab({
           }
         }}
       >
-        <DialogContent className="overflow-hidden rounded-[2rem] border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
+        <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
           <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30 dark:text-primary dark:shadow-none">
@@ -908,7 +908,7 @@ export default function SectionsTab({
           if (!open) setEditSection({ id: null, name: "", courseCode: "" })
         }}
       >
-        <DialogContent className="overflow-hidden rounded-[2rem] border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
+        <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
           <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30 dark:text-primary dark:shadow-none">

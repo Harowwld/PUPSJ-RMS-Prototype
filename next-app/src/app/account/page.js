@@ -503,7 +503,7 @@ function AccountPageContent() {
                 const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
                 router.push(path);
               }}
-              className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-gray-300 bg-white hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center gap-2 rounded-xl dark:border-white/10 dark:bg-card dark:text-zinc-300"
+              className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-gray-300 bg-white hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center gap-2 rounded-brand dark:border-white/10 dark:bg-card dark:text-zinc-300"
             >
               <i className="ph-bold ph-caret-left"></i>
               Return to Dashboard
@@ -522,7 +522,7 @@ function AccountPageContent() {
           >
           {/* Sidebar Navigation */}
           <aside className="space-y-6 lg:sticky lg:top-24">
-            <div className="bg-white rounded-[2.5rem] border border-gray-200 shadow-2xl shadow-black/5 overflow-hidden dark:bg-zinc-900 dark:border-white/5">
+            <div className="bg-white rounded-brand border border-gray-200 shadow-2xl shadow-black/5 overflow-hidden dark:bg-zinc-900 dark:border-white/5">
               {/* Brand Banner Header */}
               <div className="h-28 bg-linear-to-br from-red-900 via-pup-maroon to-red-800 relative">
                 <div className="absolute inset-0 opacity-10 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-from)_0%,_transparent_100%)]"></div>
@@ -634,7 +634,7 @@ function AccountPageContent() {
                         </label>
                         <Input
                           type="text"
-                          className="h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50"
+                          className="h-12 rounded-brand border border-gray-200 bg-white px-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50"
                           placeholder="First Name"
                           value={fname}
                           onChange={(e) => setFname(e.target.value)}
@@ -647,7 +647,7 @@ function AccountPageContent() {
                         </label>
                         <Input
                           type="text"
-                          className="h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50"
+                          className="h-12 rounded-brand border border-gray-200 bg-white px-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50"
                           placeholder="Last Name"
                           value={lname}
                           onChange={(e) => setLname(e.target.value)}
@@ -666,7 +666,7 @@ function AccountPageContent() {
                         </div>
                         <Input
                           type="email"
-                          className="h-14 pl-14 rounded-xl border border-gray-200 bg-gray-50 font-bold text-gray-500 cursor-not-allowed select-none border-dashed text-sm dark:border-white/10 dark:bg-white/5 dark:text-zinc-400"
+                          className="h-14 pl-14 rounded-brand border border-gray-200 bg-gray-50 font-bold text-gray-500 cursor-not-allowed select-none border-dashed text-sm dark:border-white/10 dark:bg-white/5 dark:text-zinc-400"
                           value={username}
                           readOnly
                         />
@@ -681,7 +681,7 @@ function AccountPageContent() {
                       <Button
                         type="submit"
                         disabled={profileLoading}
-                        className="h-12 px-10 btn-brand-red text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-xl active:scale-95 disabled:opacity-50"
+                        className="h-12 px-10 btn-brand-red text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-brand active:scale-95 disabled:opacity-50"
                       >
                         {profileLoading ? (
                           <i className="ph-bold ph-spinner animate-spin text-xl"></i>
@@ -739,7 +739,7 @@ function AccountPageContent() {
                           <div className="relative group">
                             <Input
                               type={showPw.current ? "text" : "password"}
-                              className="h-12 rounded-xl border border-gray-200 bg-white pr-10 pl-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50"
+                              className="h-12 rounded-brand border border-gray-200 bg-white pr-10 pl-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50"
                               placeholder="Type your old password"
                               value={pwCurrent}
                               onChange={(e) => setPwCurrent(e.target.value)}
@@ -763,7 +763,7 @@ function AccountPageContent() {
                             <div className="relative group">
                               <Input
                                 type={showPw.next ? "text" : "password"}
-                                className="h-12 rounded-xl border border-gray-200 bg-white pr-10 pl-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50"
+                                className="h-12 rounded-brand border border-gray-200 bg-white pr-10 pl-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50"
                                 placeholder="Create a strong password"
                                 value={pwNext}
                                 onChange={(e) => setPwNext(e.target.value)}
@@ -785,7 +785,7 @@ function AccountPageContent() {
                             <div className="relative group">
                               <Input
                                 type={showPw.confirm ? "text" : "password"}
-                                className="h-12 rounded-xl border border-gray-200 bg-white pr-10 pl-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50"
+                                className="h-12 rounded-brand border border-gray-200 bg-white pr-10 pl-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50"
                                 placeholder="Match new password"
                                 value={pwConfirm}
                                 onChange={(e) => setPwConfirm(e.target.value)}
@@ -807,7 +807,7 @@ function AccountPageContent() {
                         <Button
                           type="submit"
                           disabled={pwLoading}
-                          className="h-12 px-10 btn-brand-red text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-xl active:scale-95 disabled:opacity-50"
+                          className="h-12 px-10 btn-brand-red text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-brand active:scale-95 disabled:opacity-50"
                         >
                           {pwLoading ? (
                             <i className="ph-bold ph-spinner animate-spin text-xl"></i>
@@ -849,7 +849,7 @@ function AccountPageContent() {
                       )}
 
                       {hasSetSecurity && (
-                        <div className="mb-8 p-6 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-start gap-4 dark:bg-emerald-400/10 dark:border-emerald-400/20">
+                        <div className="mb-8 p-6 bg-emerald-50 border border-emerald-100 rounded-brand flex items-start gap-4 dark:bg-emerald-400/10 dark:border-emerald-400/20">
                            <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-emerald-600 shadow-sm shrink-0 dark:bg-emerald-400/20 dark:text-emerald-400 dark:shadow-none">
                               <i className="ph-fill ph-check-circle text-2xl"></i>
                            </div>
@@ -904,14 +904,14 @@ function AccountPageContent() {
                                   {showInput ? (
                                     <Input
                                       type="text"
-                                      className="h-12 rounded-xl border border-gray-200 bg-white px-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card dark:text-zinc-50"
+                                      className="h-12 rounded-brand border border-gray-200 bg-white px-4 text-sm font-bold shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon/20 text-gray-900 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card dark:text-zinc-50"
                                       placeholder="Your secure answer"
                                       value={secAnswers[q.id] || ""}
                                       onChange={(e) => setSecAnswers({ ...secAnswers, [q.id]: e.target.value })}
                                       autoFocus={isEditing}
                                     />
                                   ) : (
-                                    <div className="h-12 flex items-center px-4 bg-gray-50 border border-gray-200 border-dashed rounded-xl text-sm font-bold text-gray-400 italic select-none dark:bg-white/5 dark:border-white/10 dark:text-zinc-500">
+                                    <div className="h-12 flex items-center px-4 bg-gray-50 border border-gray-200 border-dashed rounded-brand text-sm font-bold text-gray-400 italic select-none dark:bg-white/5 dark:border-white/10 dark:text-zinc-500">
                                       <i className="ph-bold ph-circle-dashed mr-2 opacity-50"></i>
                                       Answer saved and encrypted.
                                     </div>
@@ -927,7 +927,7 @@ function AccountPageContent() {
                         <Button
                           type="submit"
                           disabled={secLoading || globalQuestions.length === 0}
-                          className="h-12 px-10 btn-brand-red text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-xl active:scale-95 disabled:opacity-50"
+                          className="h-12 px-10 btn-brand-red text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-brand active:scale-95 disabled:opacity-50"
                         >
                           {secLoading ? (
                             <i className="ph-bold ph-spinner animate-spin text-xl"></i>
@@ -1040,7 +1040,7 @@ function AccountPageContent() {
                     ) : (
                       <div className="space-y-10 animate-in fade-in duration-500">
                         {/* Authenticator App Method */}
-                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-6 bg-gray-50 border border-gray-100 rounded-2xl dark:bg-white/5 dark:border-white/10">
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-6 bg-gray-50 border border-gray-100 rounded-brand dark:bg-white/5 dark:border-white/10">
                           <div className="flex gap-4 items-start">
                             <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon dark:bg-zinc-800 dark:border-white/5 dark:text-primary shadow-xs shrink-0">
                               <i className="ph-bold ph-device-mobile text-2xl"></i>
@@ -1063,7 +1063,7 @@ function AccountPageContent() {
                             {totpEnabled ? (
                               <Button
                                 onClick={() => setTotpStep("disable-flow")}
-                                className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-4 border-red-900 bg-linear-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-xl shadow-xs transition-all flex items-center gap-2"
+                                className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-4 border-red-900 bg-linear-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-brand shadow-xs transition-all flex items-center gap-2"
                               >
                                 Disable App
                               </Button>
@@ -1071,7 +1071,7 @@ function AccountPageContent() {
                               <Button
                                 onClick={startTOTPSetup}
                                 disabled={totpLoading}
-                                className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-4 border-red-900 bg-linear-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-xl shadow-xs transition-all flex items-center gap-2"
+                                className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-4 border-red-900 bg-linear-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-brand shadow-xs transition-all flex items-center gap-2"
                               >
                                 {totpLoading ? <i className="ph-bold ph-spinner animate-spin" /> : <i className="ph-bold ph-shield-plus" />}
                                 Setup App
@@ -1129,7 +1129,7 @@ function AccountPageContent() {
                         )}
 
                         {/* Recovery Codes Method */}
-                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-6 bg-gray-50 border border-gray-100 rounded-2xl dark:bg-white/5 dark:border-white/10">
+                        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 p-6 bg-gray-50 border border-gray-100 rounded-brand dark:bg-white/5 dark:border-white/10">
                           <div className="flex gap-4 items-start">
                             <div className="w-12 h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-pup-maroon dark:bg-zinc-800 dark:border-white/5 dark:text-primary shadow-xs shrink-0">
                               <i className="ph-bold ph-shield-check text-2xl"></i>
@@ -1180,7 +1180,7 @@ function AccountPageContent() {
                                 }}
                                 disabled={totpLoading}
                                 variant="outline"
-                                className="h-10 px-4 font-black uppercase tracking-widest text-[10px] border-gray-300 hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 bg-white rounded-xl transition-all"
+                                className="h-10 px-4 font-black uppercase tracking-widest text-[10px] border-gray-300 hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 bg-white rounded-brand transition-all"
                               >
                                 Disable Codes
                               </Button>
@@ -1188,7 +1188,7 @@ function AccountPageContent() {
                             <Button
                               onClick={generateNewRecoveryCodes}
                               disabled={totpLoading}
-                              className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-4 border-red-900 bg-linear-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-xl shadow-xs transition-all flex items-center gap-2"
+                              className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-4 border-red-900 bg-linear-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-brand shadow-xs transition-all flex items-center gap-2"
                             >
                               {totpLoading ? <i className="ph-bold ph-spinner animate-spin" /> : <i className="ph-bold ph-arrows-clockwise" />}
                               {recoveryCodesCount > 0 ? "Regenerate Codes" : "Generate Codes"}
@@ -1238,7 +1238,7 @@ function AccountPageContent() {
                                 key={t}
                                 onClick={() => handleThemeChange({ target: { value: t } })}
                                 className={cn(
-                                  "relative flex flex-col items-center gap-3 p-6 rounded-2xl border-2 transition-all group overflow-hidden",
+                                  "relative flex flex-col items-center gap-3 p-6 rounded-brand border-2 transition-all group overflow-hidden",
                                   theme === t 
                                     ? "border-pup-maroon bg-red-50/50 dark:border-red-500 dark:bg-red-500/10" 
                                     : "border-gray-100 bg-gray-50 hover:border-gray-200 dark:border-white/5 dark:bg-card dark:hover:border-white/10"

@@ -231,7 +231,7 @@ export default function AuditLogsTab({
         <StatCards isLoading={isLoading} logStats={logStats} />
 
         {/* Main Table Card */}
-        <Card className="rounded-[2rem] border border-gray-200 bg-white shadow-2xl shadow-gray-200/50 backdrop-blur-xl overflow-hidden dark:border-white/10 dark:bg-card/80">
+        <Card className="rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-gray-200/50 backdrop-blur-xl overflow-hidden dark:border-white/10 dark:bg-card/80">
           <PageHeader
             icon="ph-shield-check"
             title="Audit Logs"
@@ -364,7 +364,7 @@ export default function AuditLogsTab({
             logTotal={logTotal}
           />
 
-          <CardContent className="p-0">
+          <CardContent className="p-6 pt-0 pb-6 dark:bg-card">
             <LogTable
               isLoading={isLoading}
               error={error}

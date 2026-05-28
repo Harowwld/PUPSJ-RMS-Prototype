@@ -168,7 +168,7 @@ const StaffTableRow = React.memo(({
                   variant="outline"
                   size="icon"
                   onClick={() => onEditUser(s.id)}
-                  className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800"
+                  className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800 cursor-pointer active:scale-95"
                 >
                   <i className="ph-bold ph-pencil-simple text-base"></i>
                 </Button>
@@ -179,7 +179,7 @@ const StaffTableRow = React.memo(({
                   variant="outline"
                   size="icon"
                   onClick={() => onRestoreUser(s.id)}
-                  className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-emerald-600 shadow-sm transition-all hover:border-emerald-600 hover:bg-emerald-50 dark:bg-white/5 dark:border-white/10 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
+                  className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-emerald-600 shadow-sm transition-all hover:border-emerald-600 hover:bg-emerald-50 dark:bg-white/5 dark:border-white/10 dark:text-emerald-400 dark:hover:bg-emerald-900/20 cursor-pointer active:scale-95"
                 >
                   <i className="ph-bold ph-arrow-counter-clockwise text-base"></i>
                 </Button>
@@ -188,7 +188,7 @@ const StaffTableRow = React.memo(({
                   variant="outline"
                   size="icon"
                   onClick={() => onDeleteUser(s.id)}
-                  className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10"
+                  className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10 cursor-pointer active:scale-95"
                 >
                   <i className="ph-bold ph-archive text-base"></i>
                 </Button>
@@ -441,7 +441,7 @@ export default function StaffDirectoryTab({
       onKeyDown={handleKeyDown}
       tabIndex={0}
     >
-      <Card className="rounded-[2rem] border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-users-three"
           title="Staff Directory"

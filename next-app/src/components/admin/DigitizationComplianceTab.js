@@ -368,8 +368,8 @@ export default function DigitizationComplianceTab({
   const hasActiveFilters = statusFilter !== "Active" || courseFilter !== "" || requireApproved || tableSearch !== "";
 
   return (
-    <div className="flex flex-col w-full h-full gap-4 animate-fade-up font-inter min-h-0">
-      <Card className="flex-1 overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-card dark:shadow-none flex flex-col min-h-0">
+    <div className="flex flex-col w-full gap-4 animate-fade-up font-inter">
+      <Card className="rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-card dark:shadow-none w-full">
         <PageHeader
           icon="ph-chart-pie"
           title="Compliance Analysis"
@@ -546,7 +546,7 @@ export default function DigitizationComplianceTab({
           </div>
         </div>
 
-        <CardContent className="flex-1 flex flex-col min-h-0 p-6 overflow-auto bg-white dark:bg-card">
+        <CardContent className="p-6 bg-white dark:bg-card">
           {loading && !data ? (
             <div className="space-y-8 animate-pulse">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -729,7 +729,7 @@ export default function DigitizationComplianceTab({
                 </div>
               </div>
 
-              <div className="flex-1 min-h-0 flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
+              <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card mt-6">
                 <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200 dark:bg-white/5 dark:border-white/10">
                   <div className="flex items-center gap-3">
                     <div>
@@ -886,7 +886,7 @@ export default function DigitizationComplianceTab({
         }}
       >
         <DialogContent
-          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out font-inter xl:max-w-[1200px] rounded-[2rem] dark:border-white/10 dark:bg-muted"
+          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out font-inter xl:max-w-[1200px] rounded-2xl dark:border-white/10 dark:bg-muted"
         >
           <DialogHeader className="shrink-0 border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-center justify-between gap-4">

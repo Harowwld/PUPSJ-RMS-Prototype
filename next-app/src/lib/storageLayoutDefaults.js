@@ -20,8 +20,8 @@ export const ROOM_TEMPLATES = [
 ];
 
 export function getDefaultDoor() {
-  // Aligned to grid: 4x1 units (0.1 x 0.04)
-  return { x: GX * 2, y: GY * 24, w: GX * 4, h: GY, rotation: 0 };
+  // Aligned to grid: 5x1 units (0.125 x 0.04)
+  return { x: GX * 2, y: GY * 24, w: GX * 5, h: GY, rotation: 0 };
 }
 
 function buildGridCabinets({

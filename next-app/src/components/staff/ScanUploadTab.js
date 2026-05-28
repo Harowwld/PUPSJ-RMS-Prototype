@@ -104,6 +104,15 @@ export default function ScanUploadTab({
   const [pendingDroppedFile, setPendingDroppedFile] = useState(null)
   const [confirmDropOpen, setConfirmDropOpen] = useState(false)
   const [windowDragActive, setWindowDragActive] = useState(false)
+  const [csvFullscreen, setCsvFullscreen] = useState(false)
+
+  useEffect(() => {
+    const handleEsc = (e) => {
+      if (e.key === "Escape") setCsvFullscreen(false)
+    }
+    window.addEventListener("keydown", handleEsc)
+    return () => window.removeEventListener("keydown", handleEsc)
+  }, [])
 
   const fe = uploadFieldErrors || {}
   const ring = (key) =>
@@ -419,7 +428,7 @@ export default function ScanUploadTab({
       id="view-upload"
       className="animate-fade-up font-inter flex h-full min-h-0 w-full flex-col"
     >
-      <Card className="flex flex-1 flex-col overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-2xl shadow-gray-200/50 backdrop-blur-xl dark:border-white/10 dark:bg-card/80 dark:shadow-none">
+      <Card className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-gray-200/50 backdrop-blur-xl dark:border-white/10 dark:bg-card/80 dark:shadow-none">
         <PageHeader
           icon="ph-scan"
           title="Scan & Upload"
@@ -547,8 +556,18 @@ export default function ScanUploadTab({
                   className={`relative flex h-full min-h-0 flex-col items-center justify-center rounded-brand border border-gray-300 bg-white p-8 shadow-sm transition-all duration-300 ${ uploadMode === "csv" ? "w-full lg:w-[70%]" : "lg:w-[48%]" } dark:border-white/10 dark:bg-card dark:shadow-none`}
                 >
                   {uploadMode === "csv" ? (
-                    <div className="flex h-full w-full flex-col overflow-hidden rounded-brand border border-gray-200 bg-white dark:border-white/10 dark:bg-card">
-                      <div className="flex flex-col items-center justify-between gap-4 border-b border-gray-100 bg-gray-50/50 p-6 px-8 sm:flex-row dark:border-white/10 dark:bg-white/5">
+                    <div
+                      className={cn(
+                        "flex h-full w-full flex-col overflow-hidden bg-white transition-all duration-300 dark:bg-card",
+                        csvFullscreen
+                          ? "fixed inset-0 z-[100] rounded-none"
+                          : "rounded-brand border border-gray-200 dark:border-white/10"
+                      )}
+                    >
+                      <div className={cn(
+                        "flex flex-col items-center justify-between gap-4 border-b border-gray-100 bg-gray-50/50 sm:flex-row dark:border-white/10 dark:bg-white/5",
+                        csvFullscreen ? "p-8 px-12" : "p-6 px-8"
+                      )}>
                         <div className="flex items-center gap-4">
                           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
                             <i className="ph-duotone ph-table text-2xl"></i>
@@ -576,17 +595,34 @@ export default function ScanUploadTab({
                             </div>
                           </div>
                         </div>
-                        {csvFile && (
+                        <div className="flex shrink-0 items-center gap-2">
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => handleCsvFileSelect(null)}
-                            className="h-9 shrink-0 rounded-brand border-gray-300 px-4 text-[10px] font-black tracking-widest text-gray-700 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+                            onClick={() => setCsvFullscreen(!csvFullscreen)}
+                            className="h-9 shrink-0 rounded-brand border-gray-300 px-3 text-[10px] font-black tracking-widest text-gray-700 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+                            title={csvFullscreen ? "Exit Full Screen" : "Full Screen"}
                           >
-                            <i className="ph-bold ph-x-circle mr-1.5 text-xs" />
-                            CLEAR FILE
+                            <i
+                              className={cn(
+                                "ph-bold text-xs mr-1.5",
+                                csvFullscreen ? "ph-corners-in" : "ph-corners-out"
+                              )}
+                            />
+                            {csvFullscreen ? "EXIT" : "FULL SCREEN"}
                           </Button>
-                        )}
+                          {csvFile && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleCsvFileSelect(null)}
+                              className="h-9 shrink-0 rounded-brand border-gray-300 px-4 text-[10px] font-black tracking-widest text-gray-700 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+                            >
+                              <i className="ph-bold ph-x-circle mr-1.5 text-xs" />
+                              CLEAR FILE
+                            </Button>
+                          )}
+                        </div>
                       </div>
 
                       <div
@@ -612,13 +648,13 @@ export default function ScanUploadTab({
                         }}
                       >
                         {csvRows.length ? (
-                          <table className="min-w-full text-xs">
+                          <table className="min-w-full text-[10px] table-fixed">
                             <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
-                              <tr className="text-left text-[11px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400 dark:border-white/10">
-                                <th className="w-10 p-3 text-center">
+                              <tr className="text-left text-[9px] font-black tracking-wider text-gray-500 uppercase dark:text-zinc-400 dark:border-white/10">
+                                <th className="w-8 p-1.5 text-center">
                                   <input
                                     type="checkbox"
-                                    className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10"
+                                    className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10"
                                     checked={
                                       csvRows.length > 0 &&
                                       Object.values(csvSelected).filter(Boolean)
@@ -629,16 +665,16 @@ export default function ScanUploadTab({
                                     }
                                   />
                                 </th>
-                                <th className="px-4 py-3 whitespace-nowrap">#</th>
-                                <th className="px-4 py-3 whitespace-nowrap">Student No</th>
-                                <th className="px-4 py-3 whitespace-nowrap">Name</th>
-                                <th className="px-4 py-3 whitespace-nowrap">Course</th>
-                                <th className="px-4 py-3 whitespace-nowrap">Year</th>
-                                <th className="px-4 py-3 whitespace-nowrap">Section</th>
-                                <th className="px-4 py-3 whitespace-nowrap">Room</th>
-                                <th className="px-4 py-3 whitespace-nowrap">Cab</th>
-                                <th className="px-4 py-3 whitespace-nowrap">Drawer</th>
-                                <th className="px-4 py-3 whitespace-nowrap">Error</th>
+                                <th className="w-[30px] px-1.5 py-2">#</th>
+                                <th className="w-[110px] px-1.5 py-2">Student No</th>
+                                <th className="w-[100px] px-1.5 py-2 truncate">Name</th>
+                                <th className="w-[60px] px-1.5 py-2">Course</th>
+                                <th className="w-[35px] px-1.5 py-2">Year</th>
+                                <th className="w-[45px] px-1.5 py-2">Section</th>
+                                <th className="w-[70px] px-1.5 py-2">Room</th>
+                                <th className="w-[70px] px-1.5 py-2">Cab</th>
+                                <th className="w-[70px] px-1.5 py-2">Drawer</th>
+                                <th className="w-[90px] px-1.5 py-2">Status</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-white/10">
@@ -650,41 +686,41 @@ export default function ScanUploadTab({
                                     key={r.index}
                                     className={`transition-colors hover:bg-gray-50 ${csvSelected?.[r.index] ? (isValid ? "bg-red-50" : "bg-orange-50") : ""} dark:hover:bg-white/10 dark:bg-card`}
                                   >
-                                    <td className="p-3 text-center">
+                                    <td className="p-1.5 text-center">
                                       <input
                                         type="checkbox"
-                                        className="h-4 w-4 cursor-pointer rounded border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10"
+                                        className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10"
                                         checked={!!csvSelected?.[r.index]}
                                         onChange={() => toggleCsvRowSelected(r.index)}
                                       />
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap font-mono text-[10px] text-gray-400 dark:text-zinc-500">
+                                    <td className="px-1.5 py-2 font-mono text-[9px] text-gray-400 dark:text-zinc-500">
                                       {r.index}
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap font-mono font-bold text-gray-900 dark:text-zinc-50">
+                                    <td className="px-1.5 py-2 font-mono font-bold text-gray-900 dark:text-zinc-50 truncate">
                                       {r.student.studentNo}
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap font-bold text-gray-800 dark:text-zinc-100">
+                                    <td className="px-1.5 py-2 font-bold text-gray-800 dark:text-zinc-100 truncate">
                                       {r.student.name}
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap">
+                                    <td className="px-1.5 py-2">
                                       <Badge
                                         variant="outline"
-                                        className="border-0 bg-blue-50 text-[9px] font-black tracking-tighter text-blue-700 uppercase dark:bg-blue-950/30"
+                                        className="border-0 bg-blue-50 text-[8px] font-black tracking-tighter text-blue-700 uppercase dark:bg-blue-950/30 dark:text-blue-300 px-1 py-0"
                                       >
                                         {r.student.courseCode}
                                       </Badge>
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap font-bold text-gray-600 dark:text-zinc-300">
+                                    <td className="px-1.5 py-2 font-bold text-gray-600 dark:text-zinc-300">
                                       {r.student.yearLevel}
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap font-bold text-gray-600 dark:text-zinc-300">
+                                    <td className="px-1.5 py-2 font-bold text-gray-600 dark:text-zinc-300">
                                       {r.student.section}
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap">
+                                    <td className="px-1.5 py-2">
                                       <Select
                                         className={cn(
-                                          "h-8 min-w-[80px] rounded border border-gray-300 px-2 py-0 text-[11px] font-bold dark:border-white/10",
+                                          "h-7 w-[64px] rounded border border-gray-300 px-1 py-0 text-[10px] font-bold dark:border-white/10",
                                           !isValid && "border-orange-500 bg-orange-50 dark:bg-orange-950/20"
                                         )}
                                         value={String(r.student.room || "")}
@@ -698,15 +734,15 @@ export default function ScanUploadTab({
                                       >
                                         {roomOptions.map((room) => (
                                           <option key={room} value={room}>
-                                            Room {room}
+                                            {room}
                                           </option>
                                         ))}
                                       </Select>
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap">
+                                    <td className="px-1.5 py-2">
                                       <Select
                                         className={cn(
-                                          "h-8 min-w-[80px] rounded border border-gray-300 px-2 py-0 text-[11px] font-bold dark:border-white/10",
+                                          "h-7 w-[64px] rounded border border-gray-300 px-1 py-0 text-[10px] font-bold dark:border-white/10",
                                           !isValid && "border-orange-500 bg-orange-50 dark:bg-orange-950/20"
                                         )}
                                         value={String(r.student.cabinet || "")}
@@ -723,15 +759,15 @@ export default function ScanUploadTab({
                                           r.student.cabinet
                                         ).map((c) => (
                                           <option key={c} value={c}>
-                                            Cab {c}
+                                            {c}
                                           </option>
                                         ))}
                                       </Select>
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap">
+                                    <td className="px-1.5 py-2">
                                       <Select
                                         className={cn(
-                                          "h-8 min-w-[80px] rounded border border-gray-300 px-2 py-0 text-[11px] font-bold dark:border-white/10",
+                                          "h-7 w-[64px] rounded border border-gray-300 px-1 py-0 text-[10px] font-bold dark:border-white/10",
                                           !isValid && "border-orange-500 bg-orange-50 dark:bg-orange-950/20"
                                         )}
                                         value={String(r.student.drawer || "")}
@@ -749,30 +785,30 @@ export default function ScanUploadTab({
                                           r.student.drawer
                                         ).map((d) => (
                                           <option key={d} value={d}>
-                                            Draw {d}
+                                            {d}
                                           </option>
                                         ))}
                                       </Select>
                                     </td>
-                                    <td className="px-4 py-3 whitespace-nowrap">
+                                    <td className="px-1.5 py-2">
                                       {r.error ? (
-                                        <div className="flex items-center gap-1 text-red-600">
-                                          <i className="ph-bold ph-warning-circle text-sm" />
-                                          <span className="text-[9px] leading-none font-black tracking-tighter uppercase">
+                                        <div className="flex items-center gap-0.5 text-red-600">
+                                          <i className="ph-bold ph-warning-circle text-[11px]" />
+                                          <span className="text-[8px] leading-none font-black tracking-tighter uppercase">
                                             Error
                                           </span>
                                         </div>
                                       ) : !isValid ? (
-                                        <div className="flex items-center gap-1 text-orange-600" title="This location does not exist in the physical system.">
-                                          <i className="ph-bold ph-warning text-sm" />
-                                          <span className="text-[9px] leading-none font-black tracking-tighter uppercase">
-                                            Invalid Location
+                                        <div className="flex items-center gap-0.5 text-orange-600" title="This location does not exist in the physical system.">
+                                          <i className="ph-bold ph-warning text-[11px]" />
+                                          <span className="text-[8px] leading-none font-black tracking-tighter uppercase truncate">
+                                            Invalid
                                           </span>
                                         </div>
                                       ) : (
-                                        <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400">
-                                          <i className="ph-bold ph-check-circle text-sm" />
-                                          <span className="text-[9px] leading-none font-black tracking-tighter uppercase">
+                                        <div className="flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400">
+                                          <i className="ph-bold ph-check-circle text-[11px]" />
+                                          <span className="text-[8px] leading-none font-black tracking-tighter uppercase">
                                             Valid
                                           </span>
                                         </div>
@@ -1593,7 +1629,7 @@ export default function ScanUploadTab({
                                 <option value="">No change</option>
                                 {roomOptions.map((r) => (
                                   <option key={r} value={String(r)}>
-                                    Room {r}
+                                    {r}
                                   </option>
                                 ))}
                               </Select>
@@ -1624,7 +1660,7 @@ export default function ScanUploadTab({
                                       )
                                   return ids.map((c) => (
                                     <option key={c} value={c}>
-                                      Cab {c}
+                                      {c}
                                     </option>
                                   ))
                                 })()}
@@ -1661,7 +1697,7 @@ export default function ScanUploadTab({
                                   ids.sort((a, b) => a - b)
                                   return ids.map((d) => (
                                     <option key={d} value={String(d)}>
-                                      Draw {d}
+                                      {d}
                                     </option>
                                   ))
                                 })()}

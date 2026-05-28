@@ -504,19 +504,26 @@ function StaffPageContent() {
             drawerIds: c.drawerIds,
           };
         }),
-        drawers: cabinetDef.drawerIds.map((d) => ({
-          drawer: d,
-          count: students.filter(
+        drawers: cabinetDef.drawerIds.map((d) => {
+          const drawerStudents = students.filter(
             (s) =>
               s.room === selectedRoom &&
               s.cabinet === selectedCabinet &&
-              s.drawer === d,
-          ).length,
-          isTarget:
-            activeStudent?.room === selectedRoom &&
-            activeStudent?.cabinet === selectedCabinet &&
-            activeStudent?.drawer === d,
-        })),
+              s.drawer === d
+          );
+          return {
+            drawer: d,
+            count: drawerStudents.length,
+            students: drawerStudents.map((s) => ({
+              studentNo: s.studentNo,
+              name: s.name,
+            })),
+            isTarget:
+              activeStudent?.room === selectedRoom &&
+              activeStudent?.cabinet === selectedCabinet &&
+              activeStudent?.drawer === d,
+          };
+        }),
       };
     }
     return { kind: "none" };
@@ -1153,6 +1160,7 @@ function StaffPageContent() {
               currentLocatorLevel={currentLocatorLevel}
               activeStudent={activeStudent}
               activeStudentDocs={activeStudentDocs}
+              onUnfocusStudent={() => setActiveStudent(null)}
               onPreviewDocument={(docType, name, no, id) => {
                 setPreview({
                   docType,

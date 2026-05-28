@@ -151,7 +151,7 @@ export default function RegisterAccountTab({
                     size="sm"
                     disabled={isLoading}
                     onClick={handleClearForm}
-                    className="h-9 rounded-brand border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                    className="h-9 rounded-md border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                   >
                     <i className="ph-bold ph-arrow-counter-clockwise mr-1.5 text-xs"></i>
                     RESET FORM
@@ -170,7 +170,7 @@ export default function RegisterAccountTab({
                           required
                           ref={fnameRef}
                           disabled={isLoading}
-                          className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:bg-card dark:text-zinc-50 dark:border-white/10"
+                          className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:bg-card dark:text-zinc-50 dark:border-white/10"
                           placeholder="Juan"
                           value={createForm.fname}
                           onChange={(e) =>
@@ -189,7 +189,7 @@ export default function RegisterAccountTab({
                           type="text"
                           required
                           disabled={isLoading}
-                          className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:bg-card dark:text-zinc-50 dark:border-white/10"
+                          className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:bg-card dark:text-zinc-50 dark:border-white/10"
                           placeholder="Dela Cruz"
                           value={createForm.lname}
                           onChange={(e) =>
@@ -215,7 +215,7 @@ export default function RegisterAccountTab({
                             disabled={isLoading}
                             onClick={() => setCreateForm(f => ({ ...f, role: f.role === "Staff" ? "" : "Staff" }))}
                             className={cn(
-                              "h-12 w-full rounded-brand border-2 text-[11px] font-black tracking-widest uppercase transition-all",
+                              "h-12 w-full rounded-md border-2 text-[11px] font-black tracking-widest uppercase transition-all",
                               createForm.role === "Staff"
                                 ? "border-amber-600 bg-amber-50 dark:border-amber-500/50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 shadow-sm dark:shadow-none"
                                 : "border-gray-200 dark:border-white/10 text-gray-500 dark:text-zinc-500 hover:border-amber-200 hover:bg-amber-50 dark:bg-transparent dark:hover:bg-amber-500/5"
@@ -245,7 +245,7 @@ export default function RegisterAccountTab({
                             disabled={isLoading}
                             onClick={() => setCreateForm(f => ({ ...f, role: f.role === "Admin" ? "" : "Admin" }))}
                             className={cn(
-                              "flex h-12 w-full items-center justify-center rounded-brand border-2 text-[11px] font-black tracking-widest uppercase transition-all",
+                              "flex h-12 w-full items-center justify-center rounded-md border-2 text-[11px] font-black tracking-widest uppercase transition-all",
                               createForm.role === "Admin"
                                 ? "border-gray-300 dark:border-red-500/50 bg-red-50 dark:bg-red-500/20 text-pup-maroon dark:text-primary shadow-sm dark:shadow-none"
                                 : "border-gray-200 dark:border-white/10 text-gray-500 dark:text-zinc-500 hover:border-red-200 hover:bg-red-50 dark:bg-transparent dark:hover:bg-red-500/5"
@@ -284,10 +284,10 @@ export default function RegisterAccountTab({
                             <TooltipContent 
                               side="right" 
                               sideOffset={10}
-                              className="max-w-xs rounded-[25px] border-red-900 bg-[#7a1e28] p-4 text-white shadow-2xl"
+                              className="max-w-xs rounded-md border-red-900 bg-[#7a1e28] p-4 text-white shadow-2xl"
                             >
                               <p className="mb-1 text-[10px] font-black tracking-widest text-red-100 uppercase">ID Convention</p>
-                              <code className="block rounded-xl border border-white/10 bg-white/5 p-2 font-mono text-[10px] text-white">
+                              <code className="block rounded-md border border-white/10 bg-white/5 p-2 font-mono text-[10px] text-white">
                                 PUPREGISTRAR-[INITIALS][NUM]
                               </code>
                               <p className="mt-2 text-[9px] font-medium text-red-100/70">
@@ -305,7 +305,7 @@ export default function RegisterAccountTab({
                             required
                             disabled={isLoading}
                             className={cn(
-                              "h-10 w-full rounded-brand border border-gray-300 dark:border-white/10 bg-white dark:bg-card px-3 text-sm transition-all focus-visible:border-gray-300 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:text-zinc-50 dark:text-zinc-100",
+                              "h-10 w-full rounded-md border border-gray-300 dark:border-white/10 bg-white dark:bg-card px-3 text-sm transition-all focus-visible:border-gray-300 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:text-zinc-50 dark:text-zinc-100",
                               lastAutoFilled.id &&
                                 "border-emerald-500 ring-2 ring-emerald-500/20"
                             )}
@@ -332,14 +332,14 @@ export default function RegisterAccountTab({
                             <TooltipContent 
                               side="right" 
                               sideOffset={10}
-                              className="max-w-xs rounded-[25px] border-red-900 bg-[#7a1e28] p-4 text-white shadow-2xl"
+                              className="max-w-xs rounded-md border-red-900 bg-[#7a1e28] p-4 text-white shadow-2xl"
                             >
                               <p className="mb-1 text-[10px] font-black tracking-widest text-red-100 uppercase">Email Policy</p>
                               <div className="space-y-1">
-                                <code className="block rounded-xl border border-white/10 bg-white/5 px-2 py-1 font-mono text-[9px] text-white/80">
+                                <code className="block rounded-md border border-white/10 bg-white/5 px-2 py-1 font-mono text-[9px] text-white/80">
                                   admin.[lastname]@pup.local
                                 </code>
-                                <code className="block rounded-xl border border-white/10 bg-white/5 px-2 py-1 font-mono text-[9px] text-white/80">
+                                <code className="block rounded-md border border-white/10 bg-white/5 px-2 py-1 font-mono text-[9px] text-white/80">
                                   staff.[lastname]@pup.local
                                 </code>
                               </div>
@@ -355,7 +355,7 @@ export default function RegisterAccountTab({
                             required
                             disabled={isLoading}
                             className={cn(
-                              "h-10 w-full rounded-brand border border-gray-300 dark:border-white/10 bg-white dark:bg-card px-3 text-sm transition-all focus-visible:border-gray-300 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:text-zinc-50 dark:text-zinc-100",
+                              "h-10 w-full rounded-md border border-gray-300 dark:border-white/10 bg-white dark:bg-card px-3 text-sm transition-all focus-visible:border-gray-300 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:text-zinc-50 dark:text-zinc-100",
                               lastAutoFilled.email &&
                                 "border-emerald-500 ring-2 ring-emerald-500/20"
                             )}
@@ -377,7 +377,7 @@ export default function RegisterAccountTab({
                       <Button
                         type="submit"
                         disabled={isLoading}
-                        className="h-12 w-full gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md px-16 text-xs font-black tracking-widest text-white uppercase shadow-lg active:scale-95 sm:w-auto transition-all dark:shadow-none"
+                        className="h-12 w-full gap-2 rounded-md btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md px-16 text-xs font-black tracking-widest text-white uppercase shadow-lg active:scale-95 sm:w-auto transition-all dark:shadow-none"
                       >
                         {isLoading ? (
                           <>
@@ -401,7 +401,7 @@ export default function RegisterAccountTab({
 
         {/* Confirmation Modal */}
         <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
-          <DialogContent className="sm:max-w-md rounded-[20px] border-gray-200 p-6 dark:border-white/10">
+          <DialogContent className="sm:max-w-md rounded-md border-gray-200 p-6 dark:border-white/10">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2 text-xl font-black text-gray-900 dark:text-zinc-50">
                 <i className="ph-fill ph-warning-circle text-pup-maroon dark:text-primary"></i>
@@ -412,7 +412,7 @@ export default function RegisterAccountTab({
               </DialogDescription>
             </DialogHeader>
 
-            <div className="my-4 space-y-4 rounded-xl border border-gray-100 bg-gray-50 p-4 dark:border-white/10 dark:bg-card">
+            <div className="my-4 space-y-4 rounded-md border border-gray-100 bg-gray-50 p-4 dark:border-white/10 dark:bg-card">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white font-bold text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
                   {((createForm.fname?.[0] || "") + (createForm.lname?.[0] || "")).toUpperCase() || "?"}
@@ -462,7 +462,7 @@ export default function RegisterAccountTab({
                 type="button"
                 variant="outline"
                 onClick={() => setShowConfirmModal(false)}
-                className="h-10 flex-1 rounded-brand text-[10px] font-black tracking-widest text-gray-500 uppercase transition-all hover:bg-gray-100 sm:flex-none sm:px-8 dark:text-zinc-400 dark:bg-muted dark:hover:bg-white/10"
+                className="h-10 flex-1 rounded-md text-[10px] font-black tracking-widest text-gray-500 uppercase transition-all hover:bg-gray-100 sm:flex-none sm:px-8 dark:text-zinc-400 dark:bg-muted dark:hover:bg-white/10"
               >
                 RETURN
               </Button>
@@ -470,7 +470,7 @@ export default function RegisterAccountTab({
                 type="button"
                 disabled={countdown > 0 || isLoading}
                 onClick={handleConfirmAction}
-                className="h-10 flex-1 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md text-[10px] font-black tracking-widest text-white uppercase shadow-lg disabled:opacity-50 sm:flex-none sm:px-10 transition-all dark:shadow-none"
+                className="h-10 flex-1 rounded-md btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md text-[10px] font-black tracking-widest text-white uppercase shadow-lg disabled:opacity-50 sm:flex-none sm:px-10 transition-all dark:shadow-none"
               >
                 {countdown > 0 ? `CONFIRM (${countdown}s)` : "CONFIRM"}
               </Button>

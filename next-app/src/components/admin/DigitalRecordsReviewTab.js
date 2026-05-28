@@ -30,6 +30,7 @@ import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import { Select } from "@/components/ui/select"
+import { toast } from "sonner"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column)
@@ -52,6 +53,7 @@ export default function DigitalRecordsReviewTab({
   onDecline,
   onBulkApprove,
   onBulkDecline,
+  onSetStatus,
   onPreviewDocument,
   showToast,
   onLogAction,
@@ -245,11 +247,47 @@ export default function DigitalRecordsReviewTab({
     setSelectedIds(next)
   }
 
-  const handleBulkApprove = () => {
-    if (onBulkApprove) {
-      onBulkApprove(Array.from(selectedIds))
-      setSelectedIds(new Set())
+  const handleApprove = async (id) => {
+    try {
+      await onApprove(id, true) // suppress standard toast
+      toast.success("Record Approved", {
+        description: "The digital record has been finalized.",
+        action: {
+          label: "UNDO",
+          onClick: () => onSetStatus(id, "Pending", "Undo accidental approval"),
+        },
+      })
+    } catch (err) {
+      // error handled by parent onApprove
     }
+  }
+
+  const handleBulkApproveAction = async () => {
+    const ids = Array.from(selectedIds)
+    if (ids.length === 0) return
+    try {
+      if (onBulkApprove) {
+        await onBulkApprove(ids)
+        setSelectedIds(new Set())
+        toast.success("Records Approved", {
+          description: `Successfully approved ${ids.length} digital records.`,
+          action: {
+            label: "UNDO",
+            onClick: async () => {
+              // Bulk undo by setting all back to Pending
+              for (const id of ids) {
+                await onSetStatus(id, "Pending", "Undo bulk approval", true) // suppress nested toasts
+              }
+              toast.success("Bulk Approval Undone")
+            }
+          }
+        })
+      }
+    } catch (err) {}
+  }
+
+  const handleBulkApprove = () => {
+    handleBulkApproveAction()
   }
 
   const handleBulkDecline = () => {
@@ -334,7 +372,7 @@ export default function DigitalRecordsReviewTab({
 
   return (
     <div className="animate-fade-up font-inter flex h-auto w-full flex-col gap-3">
-      <Card className="flex h-auto w-full flex-col rounded-[2rem] border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="flex h-auto w-full flex-col rounded-2xl border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-seal-check"
           title="Digital Records Review"
@@ -926,25 +964,27 @@ export default function DigitalRecordsReviewTab({
                                   variant="outline"
                                   size="icon"
                                   onClick={() => handlePreview(r)}
-                                  className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800"
+                                  className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800 cursor-pointer"
                                 >
                                   <i className="ph-bold ph-eye text-lg"></i>
                                 </Button>
+
                                 {r.approval_status === "Pending" && (
                                   <>
                                     <Button
                                       variant="outline"
                                       size="icon"
-                                      onClick={() => onApprove(r.id)}
-                                      className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-emerald-600 shadow-sm transition-all hover:border-emerald-600 hover:bg-emerald-50 dark:bg-white/5 dark:border-white/10 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
+                                      onClick={() => handleApprove(r.id)}
+                                      className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-emerald-600 shadow-sm transition-all hover:border-emerald-600 hover:bg-emerald-50 dark:bg-white/5 dark:border-white/10 dark:text-emerald-400 dark:hover:bg-emerald-900/20 cursor-pointer"
                                     >
                                       <i className="ph-bold ph-check text-lg"></i>
                                     </Button>
+
                                     <Button
                                       variant="outline"
                                       size="icon"
                                       onClick={() => onDecline(r.id)}
-                                      className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10"
+                                      className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10 cursor-pointer"
                                     >
                                       <i className="ph-bold ph-x text-lg"></i>
                                     </Button>

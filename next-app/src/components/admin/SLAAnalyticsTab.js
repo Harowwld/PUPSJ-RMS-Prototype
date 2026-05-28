@@ -165,8 +165,8 @@ export default function SLAAnalyticsTab({
   const hasActiveFilters = startDate !== "" || endDate !== ""
 
   return (
-    <div className="animate-fade-up font-inter flex h-full min-h-0 w-full flex-col">
-      <Card className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-2xl shadow-gray-200/50 backdrop-blur-xl dark:border-white/10 dark:bg-card/80 dark:shadow-none">
+    <div className="animate-fade-up font-inter flex w-full flex-col">
+      <Card className="rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-gray-200/50 backdrop-blur-xl dark:border-white/10 dark:bg-card/80 dark:shadow-none w-full">
         <PageHeader
           icon="ph-chart-line-up"
           title="Request Analysis"
@@ -253,7 +253,7 @@ export default function SLAAnalyticsTab({
             onRefresh={handleRefresh}
         />
 
-        <CardContent className="flex-1 overflow-auto bg-white p-6 dark:bg-card">
+        <CardContent className="bg-white p-6 dark:bg-card">
           {loading && !data ? (
             <div className="space-y-6">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">

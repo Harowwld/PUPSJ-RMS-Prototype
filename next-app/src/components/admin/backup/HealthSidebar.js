@@ -161,23 +161,6 @@ export default function HealthSidebar({
                 />
               </div>
             </div>
-
-            {/* Database & Integrity */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-[9px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">
-                <div className="flex items-center gap-2">
-                  <i className="ph-bold ph-shield-check text-base text-emerald-500"></i>
-                  <span className="text-gray-800 dark:text-zinc-100">INTEGRITY</span>
-                </div>
-                <span className="text-emerald-600 dark:text-emerald-400">{systemHealth.integrityScore}%</span>
-              </div>
-              <div className="h-6 w-full overflow-hidden rounded-full bg-gray-300 shadow-inner border border-gray-200 dark:shadow-none dark:border-white/10 dark:bg-muted">
-                <div
-                  className="h-full rounded-full bg-linear-to-r from-emerald-400 to-green-600 transition-all duration-1000"
-                  style={{ width: `${systemHealth.integrityScore}%` }}
-                />
-              </div>
-            </div>
           </div>
 
           {/* Concise Node Records */}

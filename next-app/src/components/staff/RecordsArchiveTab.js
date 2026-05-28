@@ -52,9 +52,9 @@ export default function RecordsArchiveTab({
   activeStudentDocs,
   onPreviewDocument,
   onRestoreStudent,
+  onUnfocusStudent,
 }) {
   const [listType, setListType] = useState("card")
-  const [storageFullscreen, setStorageFullscreen] = useState(false)
   const [showArchived, setShowArchived] = useState(false)
   const [scrollTrigger, setScrollTrigger] = useState(0)
 
@@ -80,19 +80,7 @@ export default function RecordsArchiveTab({
     }
   }, [activeStudent, scrollTrigger])
 
-  useEffect(() => {
-    if (!storageFullscreen) return
-    const onKey = (e) => {
-      if (e.key === "Escape") setStorageFullscreen(false)
-    }
-    window.addEventListener("keydown", onKey)
-    const prev = document.body.style.overflow
-    document.body.style.overflow = "hidden"
-    return () => {
-      window.removeEventListener("keydown", onKey)
-      document.body.style.overflow = prev
-    }
-  }, [storageFullscreen])
+
 
   // Derived filtered results
   const filteredQuickResults = useMemo(() => {
@@ -127,29 +115,16 @@ export default function RecordsArchiveTab({
     return explorerItems
   }, [showArchived, explorerItems, archivedStudents, currentLevel, breadcrumbs])
 
-  const legend = (
-    <div className="hidden gap-4 text-xs font-medium text-gray-600 sm:flex dark:text-zinc-300">
-      <div className="flex items-center gap-1.5">
-        <div className="h-3 w-3 rounded-[2px] border border-gray-400 bg-white dark:bg-card"></div>
-        Empty
-      </div>
-      <div className="flex items-center gap-1.5">
-        <div className="h-3 w-3 rounded-[2px] border border-gray-400 bg-gray-300 dark:bg-zinc-600"></div>
-        Occupied
-      </div>
-      <div className="flex items-center gap-1.5">
-        <div className="h-3 w-3 rounded-[2px] border border-gray-300 bg-red-50 dark:bg-red-950/30 dark:border-white/10"></div>
-        Target
-      </div>
-    </div>
-  )
-
   function renderStorageBody(isFullscreen) {
     const mapWrap = isFullscreen
       ? "min-h-[min(70vh,800px)] flex-1 w-full aspect-[16/10] mx-auto max-w-6xl overflow-hidden rounded-xl shadow-2xl"
       : "w-full aspect-[16/10] max-h-[600px] mx-auto max-w-4xl overflow-hidden rounded-xl shadow-lg border border-gray-200 dark:border-white/10"
-    const rowClass = "flex flex-1 flex-col overflow-hidden min-h-0"
-    const leftClass = "bg-white dark:bg-zinc-950 p-8 min-h-0 overflow-y-auto flex flex-1 flex-col w-full"
+    const rowClass = isFullscreen
+      ? "flex flex-1 flex-col overflow-hidden min-h-0"
+      : "flex flex-col w-full"
+    const leftClass = isFullscreen
+      ? "bg-white dark:bg-zinc-950 p-8 min-h-0 overflow-y-auto flex flex-1 flex-col w-full"
+      : "bg-white dark:bg-zinc-950 p-8 flex flex-col w-full"
     const innerLeftClass = "flex w-full flex-col min-h-0 flex-1 mx-auto max-w-6xl"
 
     return (
@@ -220,6 +195,27 @@ export default function RecordsArchiveTab({
                   </h4>
                 </div>
               </div>
+
+              {activeStudent && (
+                <div className="flex items-center gap-3">
+                  <div className="flex flex-col text-right hidden sm:flex">
+                    <span className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest leading-none">Locating Target</span>
+                    <span className="text-xs font-bold text-pup-maroon dark:text-red-400 leading-tight mt-0.5">{activeStudent.name}</span>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      onUnfocusStudent?.();
+                    }}
+                    className="h-8 rounded-brand border-red-200 text-[10px] font-black tracking-widest text-red-600 shadow-xs hover:bg-red-50 dark:border-red-950 dark:hover:bg-red-950/30 cursor-pointer uppercase"
+                  >
+                    <i className="ph-bold ph-eye-slash mr-1.5 text-xs" />
+                    Unfocus
+                  </Button>
+                </div>
+              )}
             </div>
 
             {/* Level Inner Content */}
@@ -279,6 +275,7 @@ export default function RecordsArchiveTab({
               <div className={mapWrap}>
                 <RoomMap2D
                   kind="cabinets"
+                  activeStudent={activeStudent}
                   cabinets={locatorModel.cabinets}
                   roomDoor={locatorModel.roomDoor}
                   selectedCabinetId={selectedCabinet}
@@ -299,6 +296,7 @@ export default function RecordsArchiveTab({
               <div className={mapWrap}>
                 <RoomMap2D
                   kind="drawers"
+                  activeStudent={activeStudent}
                   cabinets={locatorModel.cabinets || []}
                   roomDoor={locatorModel.roomDoor}
                   selectedCabinetId={selectedCabinet}
@@ -326,130 +324,171 @@ export default function RecordsArchiveTab({
       className="animate-fade-up font-inter flex h-full w-full flex-col gap-4 lg:flex-row"
     >
       <div className="flex flex-1 flex-col items-stretch gap-4 overflow-hidden lg:flex-row">
-        <section className="flex h-full w-full flex-shrink-0 flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm lg:w-1/4 dark:bg-card dark:shadow-none dark:border-white/10">
-          <div className="space-y-3 border-b border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-card">
-            <div className="flex items-center justify-between">
-              <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
-                Global Search
-              </span>
-              <Toggle
-                pressed={showArchived}
-                onPressedChange={setShowArchived}
-                variant="outline"
-                size="sm"
-                className="h-7 gap-1.5 border-gray-300 px-2 text-[9px] font-black uppercase transition-all data-[state=on]:border-red-600 data-[state=on]:bg-red-600 data-[state=on]:text-white dark:border-white/10"
+        <div className="flex w-full flex-shrink-0 flex-col gap-4 lg:w-1/4 h-full overflow-hidden">
+          {/* Pill Tabs Container (Standalone) */}
+          <div className="flex w-full cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 shadow-xs backdrop-blur-sm dark:border-white/10 dark:bg-muted/50 dark:shadow-none">
+            <button
+              type="button"
+              onClick={() => setShowArchived(false)}
+              className={cn(
+                "group flex h-11 flex-1 cursor-pointer items-center justify-center gap-3 px-4 text-xs font-bold transition-all duration-200 active:scale-[0.98]",
+                !showArchived
+                  ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
+                  : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
+              )}
+            >
+              <i className={cn("ph-bold ph-users-three", !showArchived ? "text-pup-maroon dark:text-primary" : "text-gray-400 dark:text-zinc-500")} />
+              <span className="whitespace-nowrap tracking-wide text-[10px]">ACTIVE</span>
+              <span
+                className={cn(
+                  "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-black transition-all duration-300",
+                  !showArchived
+                    ? "bg-pup-maroon text-white shadow-sm dark:bg-red-500/20 dark:text-red-400"
+                    : "bg-gray-200 text-gray-500 dark:bg-zinc-800 dark:text-zinc-500"
+                )}
               >
-                <i
-                  className={`ph-bold text-xs ${showArchived ? "ph-archive" : "ph-archive-box"}`}
-                ></i>
-                {showArchived ? "ARCHIVED VIEW" : "ACTIVE VIEW"}
-              </Toggle>
-            </div>
-            <div className="group relative">
-              <i className="ph-bold ph-magnifying-glass absolute top-3 left-3 text-gray-500 group-focus-within:text-pup-maroon dark:text-zinc-400"></i>
-              <Input
-                type="text"
-                placeholder={
+                {students.length}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowArchived(true)}
+              className={cn(
+                "group flex h-11 flex-1 cursor-pointer items-center justify-center gap-3 px-4 text-xs font-bold transition-all duration-200 active:scale-[0.98]",
+                showArchived
+                  ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
+                  : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
+              )}
+            >
+              <i className={cn("ph-bold ph-archive", showArchived ? "text-pup-maroon dark:text-primary" : "text-gray-400 dark:text-zinc-500")} />
+              <span className="whitespace-nowrap tracking-wide text-[10px]">ARCHIVED</span>
+              <span
+                className={cn(
+                  "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-black transition-all duration-300",
                   showArchived
-                    ? "Search Archived ID..."
-                    : "Search ID or Name..."
-                }
-                className="h-10 w-full rounded-brand border border-gray-300 bg-white pr-10 pl-10 text-sm font-medium text-gray-900 placeholder-gray-500 transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none dark:bg-card dark:text-zinc-50 dark:border-white/10"
-                value={quickQuery}
-                onChange={(e) => setQuickQuery(e.target.value)}
-              />
-              {quickQuery !== "" && (
-                <button
-                  type="button"
-                  onClick={() => setQuickQuery("")}
-                  className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500"
-                >
-                  <i className="ph-bold ph-x-circle text-lg"></i>
-                </button>
+                    ? "bg-pup-maroon text-white shadow-sm dark:bg-red-500/20 dark:text-red-400"
+                    : "bg-gray-200 text-gray-500 dark:bg-zinc-800 dark:text-zinc-500"
+                )}
+              >
+                {archivedStudents.length}
+              </span>
+            </button>
+          </div>
+
+          {/* Global Search Card */}
+          <section className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
+            <div className="space-y-3 border-b border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-card">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                  Global Search
+                </span>
+              </div>
+              <div className="group relative">
+                <i className="ph-bold ph-magnifying-glass absolute top-3 left-3 text-gray-500 group-focus-within:text-pup-maroon dark:text-zinc-400"></i>
+                <Input
+                  type="text"
+                  placeholder={
+                    showArchived
+                      ? "Search Archived ID..."
+                      : "Search ID or Name..."
+                  }
+                  className="h-10 w-full rounded-brand border border-gray-300 bg-white pr-10 pl-10 text-sm font-medium text-gray-900 placeholder-gray-500 transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none dark:bg-card dark:text-zinc-50 dark:border-white/10"
+                  value={quickQuery}
+                  onChange={(e) => setQuickQuery(e.target.value)}
+                />
+                {quickQuery !== "" && (
+                  <button
+                    type="button"
+                    onClick={() => setQuickQuery("")}
+                    className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500"
+                  >
+                    <i className="ph-bold ph-x-circle text-lg"></i>
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="flex-1 space-y-1 overflow-y-auto p-2">
+              {quickQuery.trim().length < 2 && !showArchived ? (
+                <Empty className="mt-32 flex flex-col items-center border-0 py-10 text-center">
+                  <EmptyHeader className="flex flex-col items-center gap-0">
+                    <div className="relative mb-6">
+                      <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                        <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
+                      </EmptyMedia>
+                    </div>
+                    <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
+                      Search Records
+                    </EmptyTitle>
+                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                      Enter a student name or ID to quickly locate their records.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : isQuickSearching ? (
+                <div className="p-4">
+                  <div className="space-y-3">
+                    {Array.from({ length: 8 }).map((_, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-center gap-3 border-b border-gray-200 p-3 dark:border-white/10"
+                      >
+                        <div className="flex-1 space-y-2">
+                          <Skeleton className="h-4 w-40 dark:bg-muted" />
+                          <Skeleton className="h-3 w-28 dark:bg-muted" />
+                        </div>
+                        <Skeleton className="h-4 w-4 dark:bg-muted" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : filteredQuickResults.length === 0 ? (
+                <Empty className="mt-32 flex flex-col items-center justify-center border-0 py-8 text-center text-gray-500 dark:text-zinc-400">
+                  <EmptyHeader className="flex flex-col items-center gap-0">
+                    <div className="relative mb-6">
+                      <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                        <i
+                          className={`ph-duotone ${showArchived ? "ph-archive" : "ph-list-magnifying-glass"} text-5xl text-gray-300 dark:text-zinc-600`}
+                        ></i>
+                      </EmptyMedia>
+                    </div>
+                    <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
+                      {showArchived ? "No archived records" : "No records found"}
+                    </EmptyTitle>
+                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                      {showArchived
+                        ? "There are no archived students matching your search."
+                        : "We couldn't find any students matching your search query."}
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
+              ) : (
+                filteredQuickResults.map((s) => (
+                  <div
+                    key={s.studentNo}
+                    className="group flex cursor-pointer items-center justify-between border-b border-gray-200 p-3 transition-colors hover:bg-gray-100 dark:border-white/10 dark:bg-muted dark:hover:bg-white/10"
+                    onClick={() => handleLocateStudentClick(s)}
+                  >
+                    <div>
+                      <div className="text-sm font-bold text-gray-800 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-100">
+                        {s.name}
+                      </div>
+                      <div className="font-mono text-xs font-medium text-gray-500 dark:text-zinc-400">
+                        {s.studentNo}
+                      </div>
+                    </div>
+                    <i className="ph-bold ph-caret-right text-sm text-gray-400 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-500"></i>
+                  </div>
+                ))
               )}
             </div>
-          </div>
-
-          <div className="flex-1 space-y-1 overflow-y-auto p-2">
-            {quickQuery.trim().length < 2 && !showArchived ? (
-              <Empty className="mt-32 flex flex-col items-center border-0 py-10 text-center">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
-                    </EmptyMedia>
-                  </div>
-                  <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
-                    Search Records
-                  </EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                    Enter a student name or ID to quickly locate their records.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            ) : isQuickSearching ? (
-              <div className="p-4">
-                <div className="space-y-3">
-                  {Array.from({ length: 8 }).map((_, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-3 border-b border-gray-200 p-3 dark:border-white/10"
-                    >
-                      <div className="flex-1 space-y-2">
-                        <Skeleton className="h-4 w-40 dark:bg-muted" />
-                        <Skeleton className="h-3 w-28 dark:bg-muted" />
-                      </div>
-                      <Skeleton className="h-4 w-4 dark:bg-muted" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : filteredQuickResults.length === 0 ? (
-              <Empty className="mt-32 flex flex-col items-center justify-center border-0 py-8 text-center text-gray-500 dark:text-zinc-400">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <div className="relative mb-6">
-                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <i
-                        className={`ph-duotone ${showArchived ? "ph-archive" : "ph-list-magnifying-glass"} text-5xl text-gray-300 dark:text-zinc-600`}
-                      ></i>
-                    </EmptyMedia>
-                  </div>
-                  <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
-                    {showArchived ? "No archived records" : "No records found"}
-                  </EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                    {showArchived
-                      ? "There are no archived students matching your search."
-                      : "We couldn't find any students matching your search query."}
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            ) : (
-              filteredQuickResults.map((s) => (
-                <div
-                  key={s.studentNo}
-                  className="group flex cursor-pointer items-center justify-between border-b border-gray-200 p-3 transition-colors hover:bg-gray-100 dark:border-white/10 dark:bg-muted dark:hover:bg-white/10"
-                  onClick={() => handleLocateStudentClick(s)}
-                >
-                  <div>
-                    <div className="text-sm font-bold text-gray-800 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-100">
-                      {s.name}
-                    </div>
-                    <div className="font-mono text-xs font-medium text-gray-500 dark:text-zinc-400">
-                      {s.studentNo}
-                    </div>
-                  </div>
-                  <i className="ph-bold ph-caret-right text-sm text-gray-400 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-500"></i>
-                </div>
-              ))
-            )}
-          </div>
-        </section>
+          </section>
+        </div>
 
         <section className="flex h-full min-h-0 w-full flex-1 flex-col gap-4 overflow-y-auto lg:w-3/4">
-          <div className="relative flex min-h-[250px] shrink-0 flex-col rounded-brand border border-gray-300 bg-white shadow-sm dark:bg-[#202020] dark:shadow-none dark:border-white/10">
+          <div className="relative flex min-h-[250px] shrink-0 flex-col rounded-2xl overflow-hidden border border-gray-300 bg-white shadow-sm dark:bg-[#202020] dark:shadow-none dark:border-white/10">
             <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-gray-200 bg-white p-4 text-sm dark:border-white/10 dark:bg-[#202020]">
               <div className="flex items-center gap-2">
                 <Button
@@ -490,7 +529,7 @@ export default function RecordsArchiveTab({
                           <i className="ph-bold ph-caret-right text-sm text-gray-400 dark:text-zinc-500"></i>
                         </BreadcrumbSeparator>
                         <BreadcrumbItem>
-                          <Badge className="border-red-100 bg-red-50 text-[10px] font-black text-red-700 dark:bg-red-950/30">
+                          <Badge className="border-red-100 bg-red-50 text-[10px] font-black text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
                             ARCHIVE VIEW
                           </Badge>
                         </BreadcrumbItem>
@@ -765,60 +804,12 @@ export default function RecordsArchiveTab({
             </div>
           </div>
 
-          {storageFullscreen ? (
-            <div className="fixed inset-0 z-[100] flex min-h-0 flex-col rounded-none border-0 bg-white shadow-none dark:bg-card">
-              <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-card">
-                <h3 className="flex items-center gap-2 text-sm font-bold text-pup-maroon dark:text-primary">
-                  <i className="ph-fill ph-archive-box text-lg"></i> Storage
-                  Layout
-                </h3>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="border-gray-300 text-xs font-bold dark:border-white/10"
-                    onClick={() => setStorageFullscreen(false)}
-                    title="Exit full screen (Esc)"
-                  >
-                    <i className="ph-bold ph-corners-in mr-1.5"></i>
-                    EXIT FULL SCREEN
-                  </Button>
-                  {legend}
-                </div>
-              </div>
-              <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                {renderStorageBody(true)}
-              </div>
-            </div>
-          ) : (
-            <div
-              id="storage-layout-section"
-              className="relative flex flex-col rounded-brand bg-white shadow-sm scroll-mt-6 dark:bg-card dark:shadow-none dark:border-white/10"
-            >
-              <div className="flex items-center justify-between rounded-t-brand border-b border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-card">
-                <h3 className="flex items-center gap-2 text-sm font-bold text-pup-maroon dark:text-primary">
-                  <i className="ph-fill ph-archive-box text-lg"></i> Storage
-                  Layout
-                </h3>
-                <div className="flex items-center gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="border-gray-300 text-xs font-bold dark:border-white/10"
-                    onClick={() => setStorageFullscreen(true)}
-                    title="Full screen map & documents"
-                  >
-                    <i className="ph-bold ph-corners-out mr-1.5"></i>
-                    FULL SCREEN
-                  </Button>
-                  {legend}
-                </div>
-              </div>
-              {renderStorageBody(false)}
-            </div>
-          )}
+          <div
+            id="storage-layout-section"
+            className="relative flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm scroll-mt-6 shrink-0 dark:bg-card dark:shadow-none dark:border-white/10"
+          >
+            {renderStorageBody(false)}
+          </div>
         </section>
       </div>
 
