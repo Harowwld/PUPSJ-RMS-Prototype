@@ -3,6 +3,7 @@
 import Image from "next/image"
 import { useMemo, useState, useEffect } from "react"
 import { useHotFolderInbox } from "@/hooks/useHotFolderInbox"
+import { cn } from "@/lib/utils"
 import {
   Dialog,
   DialogContent,
