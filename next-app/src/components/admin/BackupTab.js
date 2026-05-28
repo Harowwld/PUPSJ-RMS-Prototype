@@ -286,17 +286,28 @@ export default function BackupTab({
               </div>
             ) : error ? (
               <CardContent className="flex flex-1 flex-col items-center justify-center p-6">
-                <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+                <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
                   <EmptyHeader className="flex flex-col items-center gap-0">
-                    <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
-                    </EmptyMedia>
-                    <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
+                    <div className="relative mb-6">
+                      <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                        <i className="ph-duotone ph-warning-circle text-5xl text-gray-300 dark:text-zinc-600" />
+                      </EmptyMedia>
+                    </div>
+                    <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
                       Could not load backups
                     </EmptyTitle>
-                    <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
+                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                       {error}
                     </EmptyDescription>
+                    <Button 
+                      variant="outline" 
+                      onClick={onRefresh}
+                      className="mt-6 rounded-full border-gray-200 font-bold hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/10 dark:bg-card"
+                    >
+                      <i className="ph-bold ph-arrows-clockwise mr-2"></i>
+                      RETRY LOADING
+                    </Button>
                   </EmptyHeader>
                 </Empty>
               </CardContent>

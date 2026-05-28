@@ -128,15 +128,18 @@ export default function BackupTable({
             {sortedAndPaginatedBackups.length === 0 ? (
               <tr className="border-0 hover:bg-transparent">
                 <td colSpan={6} className="border-0 p-0">
-                  <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+                  <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
                     <EmptyHeader className="flex flex-col items-center gap-0">
-                      <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                        <i className={cn("ph-duotone text-3xl text-pup-maroon dark:text-primary", isFilterActive ? "ph-magnifying-glass" : "ph-database")}></i>
-                      </EmptyMedia>
-                      <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
+                      <div className="relative mb-6">
+                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                        <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                          <i className={cn("ph-duotone text-5xl text-gray-300 dark:text-zinc-600", isFilterActive ? "ph-magnifying-glass" : "ph-database")}></i>
+                        </EmptyMedia>
+                      </div>
+                      <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
                         {isFilterActive ? "No matches found" : "No snapshots detected"}
                       </EmptyTitle>
-                      <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
+                      <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                         {isFilterActive 
                           ? "Adjust your search parameters or date range to locate specific historical records." 
                           : "There are no local database backups in the history log yet."}

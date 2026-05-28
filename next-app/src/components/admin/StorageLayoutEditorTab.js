@@ -901,19 +901,26 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       </div>
 
       <div className="flex flex-wrap items-center gap-6">
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col gap-1 w-48">
           <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">Templates</label>
-          <div className="flex h-10 items-center overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs dark:border-white/10 dark:bg-card">
+          <div className="flex flex-col gap-1.5">
             <Select
               menuClassName="min-w-max"
-              className="h-full cursor-pointer border-r border-gray-100 bg-transparent px-4 text-xs font-bold text-gray-700 focus:outline-none dark:border-white/10 dark:text-zinc-200 dark:bg-transparent dark:hover:bg-white/5"
+              className="h-9 w-full cursor-pointer rounded-xl border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 shadow-xs transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-100 dark:focus:border-zinc-700"
               value={selectedTemplateId}
               onChange={(e) => setSelectedTemplateId(e.target.value)}
               disabled={!activeRoom}
             >
               {ROOM_TEMPLATES.map((tpl) => <option key={`tpl-opt-${tpl.id}`} value={tpl.id}>{tpl.name}</option>)}
             </Select>
-            <Button type="button" variant="ghost" onClick={() => setTemplateApplyConfirmOpen(true)} className="h-full rounded-none bg-gray-50 px-4 text-[10px] font-black tracking-widest uppercase text-pup-maroon dark:text-primary hover:bg-pup-maroon hover:text-white dark:bg-white/5 dark:text-primary" disabled={!activeRoom}>USE</Button>
+            <Button 
+              type="button" 
+              onClick={() => setTemplateApplyConfirmOpen(true)} 
+              className="h-8 w-full rounded-xl btn-brand-red text-[9px] font-black tracking-widest uppercase text-white shadow-sm active:scale-95 transition-all dark:shadow-none" 
+              disabled={!activeRoom}
+            >
+              USE TEMPLATE
+            </Button>
           </div>
         </div>
 
