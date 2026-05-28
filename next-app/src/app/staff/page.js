@@ -31,13 +31,17 @@ function normalizeStudentRow(row) {
   const cabRaw = row.cabinet ?? "";
   const drawerRaw = row.drawer ?? "";
 
+  // Normalize cabinet so that it always includes "CAB-" prefix for mapping consistency in visual layouts
+  const cleanCabinet = String(cabRaw).trim().toUpperCase();
+  const normalizedCabinet = cleanCabinet.startsWith("CAB-") ? cleanCabinet : `CAB-${cleanCabinet}`;
+
   return {
     ...row,
     studentNo: row.studentNo ?? row.student_no ?? "",
     courseCode: row.courseCode ?? row.course_code ?? "",
     yearLevel: row.yearLevel ?? row.year_level ?? null,
     room: Number.isFinite(Number(roomRaw)) ? Number(roomRaw) : String(roomRaw).trim(),
-    cabinet: String(cabRaw).trim(),
+    cabinet: normalizedCabinet,
     drawer: Number.isFinite(Number(drawerRaw)) ? Number(drawerRaw) : String(drawerRaw).trim(),
   };
 }
