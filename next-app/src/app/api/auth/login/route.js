@@ -116,8 +116,8 @@ export async function POST(req) {
     ));
   }
 
-  // Check if TOTP is enabled
-  if (touched.totp_enabled && touched.totp_secret) {
+  // Check if 2FA is enabled
+  if (touched.totp_enabled) {
     // Generate a temporary token for 2FA verification
     const tempPayload = {
       sub: touched.id,
