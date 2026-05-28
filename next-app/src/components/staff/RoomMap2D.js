@@ -448,9 +448,17 @@ export default function RoomMap2D({
               {drawerSlots?.map((d) => {
                 const isDrawerTarget = d.isTarget
                 const hasOccupants = d.count > 0
+                const hasActiveDrawerTarget = drawerSlots?.some((slot) => slot.isTarget)
+                const isClickable = !hasActiveDrawerTarget || isDrawerTarget
 
                 return (
-                  <div key={d.drawer} className="flex flex-col gap-1">
+                  <div
+                    key={d.drawer}
+                    className={cn(
+                      "flex flex-col gap-1 transition-all duration-300",
+                      !isClickable && "opacity-30 pointer-events-none select-none"
+                    )}
+                  >
                     <div
                       className={cn(
                         "flex items-center justify-between rounded-lg border-2 p-2 cursor-pointer transition-all active:scale-[0.98]",
