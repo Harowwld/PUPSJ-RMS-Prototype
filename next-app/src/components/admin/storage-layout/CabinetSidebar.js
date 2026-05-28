@@ -51,7 +51,7 @@ const CabinetSidebar = memo(({
               {selectedCabinetIds.size > 1
                 ? `${selectedCabinetIds.size} cabinets selected`
                 : selectedCabinet
-                  ? (selectedCabinet.id.startsWith("CAB-") ? selectedCabinet.id : `CAB-${selectedCabinet.id}`)
+                  ? `Cabinet ${selectedCabinet.id.toUpperCase().replace(/^CAB-/, "")}`
                   : "Select a cabinet on the map"}
             </CardDescription>
           </div>

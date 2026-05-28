@@ -726,7 +726,7 @@ export default function RecordsArchiveTab({
                                 <i className="ph-fill ph-archive-box text-base"></i>
                               </div>
                               <span className="text-[10px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">
-                                CAB-{row.student.cabinet} • D-{row.student.drawer}
+                                Cabinet {row.student.cabinet} • Drawer {row.student.drawer}
                               </span>
                             </div>
                           </td>
