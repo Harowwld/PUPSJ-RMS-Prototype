@@ -97,15 +97,18 @@ export default function RoomMap2D({
       </div>
 
       {cabinetRects.map((c) => {
+        const hasActiveTarget = cabinetRects.some((cab) => cab.isTarget)
         const isSelected = kind === "drawers" && c.cab === selectedCabinetId
         const isTarget = Boolean(c.isTarget)
         const rect = getEffectiveRect(c)
+        const isClickable = !hasActiveTarget || isTarget
 
         return (
           <div
             key={c.cab}
             className={cn(
-              "absolute border-2 transition-all duration-300 rounded-sm shadow-xs cursor-pointer overflow-hidden",
+              "absolute border-2 transition-all duration-300 rounded-sm shadow-xs overflow-hidden",
+              isClickable ? "cursor-pointer" : "opacity-30 pointer-events-none select-none",
               isTarget
                 ? "border-red-600 bg-red-100 shadow-[0_0_0_4px_rgba(220,38,38,0.2)] dark:border-red-500 dark:bg-red-950/40 dark:shadow-[0_0_0_4px_rgba(239,68,68,0.2)]"
                 : isSelected
@@ -119,7 +122,9 @@ export default function RoomMap2D({
               height: `${rect.h * 100}%`,
             }}
             onClick={() => {
-              onCabinetClick?.(c.cab)
+              if (isClickable) {
+                onCabinetClick?.(c.cab)
+              }
             }}
           >
             {/* Precision Frame Overlay (Simulated Depth) */}
@@ -136,7 +141,7 @@ export default function RoomMap2D({
                     ? "text-cyan-800 dark:text-cyan-400"
                     : "text-gray-700 dark:text-zinc-300"
               )}>
-                {String(c.cab).startsWith("CAB") ? c.cab : `CAB-${c.cab}`}
+                {c.cab}
               </span>
               <span className="text-[8px] font-bold text-gray-500 dark:text-zinc-400 mt-0.5">
                 {c.occupiedCount} Recs
@@ -159,7 +164,7 @@ export default function RoomMap2D({
             <div className="flex items-center gap-2">
               <i className="ph-fill ph-archive-box text-pup-maroon dark:text-primary text-base"></i>
               <h5 className="font-black text-xs text-gray-900 dark:text-zinc-50 uppercase tracking-tight">
-                {String(selectedCabinetId).startsWith("CAB") ? selectedCabinetId : `CABINET ${selectedCabinetId}`}
+                Cabinet {selectedCabinetId}
               </h5>
             </div>
             {/* Clean close/back button that toggles cabinet selection back to null */}

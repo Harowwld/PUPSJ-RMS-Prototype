@@ -119,6 +119,8 @@ function AdminPageContent() {
   const [selectedStaffIds, setSelectedStaffIds] = useState(new Set())
   const [bulkArchiveOpen, setBulkArchiveOpen] = useState(false)
   const [bulkArchiveLoading, setBulkArchiveLoading] = useState(false)
+  const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false)
+  const [bulkRestoreLoading, setBulkRestoreLoading] = useState(false)
 
   const [createForm, setCreateForm] = useState({
     id: "",
@@ -889,6 +891,7 @@ function AdminPageContent() {
         title: "Staff Account Restored",
         description: `System access for ${name} has been successfully reactivated.`,
       })
+      setSelectedStaffIds(new Set())
       setRestoreOpen(false)
     } catch (err) {
       showToast({ title: "Account Restoration Failed", description: err.message || "The system was unable to reactivate the personnel account." }, true)
@@ -942,6 +945,7 @@ function AdminPageContent() {
         title: "Staff Account Archived",
         description: `The personnel account for ${name} has been successfully moved to the archive vault.`,
       })
+      setSelectedStaffIds(new Set())
       setDeleteOpen(false)
     } catch (err) {
       if (totpToken) throw err
@@ -953,6 +957,56 @@ function AdminPageContent() {
 
   const handleBulkArchive = () => {
     setBulkArchiveOpen(true)
+  }
+
+  const handleBulkRestore = () => {
+    setBulkRestoreOpen(true)
+  }
+
+  const confirmBulkRestore = async () => {
+    if (bulkRestoreLoading) return
+    setBulkRestoreLoading(true)
+
+    try {
+      let successCount = 0
+      let failCount = 0
+      const idsToRestore = Array.from(selectedStaffIds)
+
+      for (const id of idsToRestore) {
+        const res = await fetch(`/api/staff/${id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "Active" }),
+        })
+        const json = await res.json()
+
+        if (res.ok && json.ok) {
+          setStaffData((prev) => prev.map((s) => (s.id === id ? json.data : s)))
+          successCount++
+        } else {
+          failCount++
+        }
+      }
+
+      showToast({
+        title: "Bulk Restoration Complete",
+        description: `Successfully reactivated system access for ${successCount} personnel account(s). ${failCount > 0 ? `${failCount} accounts could not be restored.` : ""}`,
+      })
+      setBulkRestoreOpen(false)
+      setSelectedStaffIds(new Set())
+    } catch (err) {
+      showToast(
+        {
+          title: "Bulk Restoration Failed",
+          description:
+            err.message ||
+            "An unexpected error occurred during batch processing.",
+        },
+        true
+      )
+    } finally {
+      setBulkRestoreLoading(false)
+    }
   }
 
   const confirmBulkArchive = async (token = null) => {
@@ -1381,7 +1435,7 @@ function AdminPageContent() {
                 }
               }}
               onBulkArchive={handleBulkArchive}
-              onExportData={exportData}
+              onBulkRestore={handleBulkRestore}
               onSwitchView={switchView}
               onRefresh={() => refreshStaff(true)}
             />
@@ -1568,6 +1622,8 @@ function AdminPageContent() {
         title="Archive Personnel Account"
         message={`Archive this personnel account? This will restrict their system access immediately but can be restored later if needed.`}
         confirmLabel="Archive Account"
+        icon="ph-duotone ph-archive"
+        buttonIcon="ph-bold ph-archive"
         selectedItems={[
           deleteTarget ? `${deleteTarget.fname} ${deleteTarget.lname}` : "",
         ]}
@@ -1665,6 +1721,8 @@ function AdminPageContent() {
         title="Batch Archive Personnel"
         message={`Move ${selectedStaffIds.size} personnel profiles to the archive vault? This will revoke their system access immediately.`}
         confirmLabel="Archive Selected"
+        icon="ph-duotone ph-archive"
+        buttonIcon="ph-bold ph-archive"
         selectedItems={Array.from(selectedStaffIds).map((id) => {
           const s = staffData.find((x) => x.id === id)
           return s ? `${s.fname} ${s.lname}` : id
@@ -1684,6 +1742,23 @@ function AdminPageContent() {
           setBulkArchiveOpen(false)
         }}
         isLoading={bulkArchiveLoading}
+      />
+
+      <ConfirmModal
+        open={bulkRestoreOpen}
+        title="Batch Restore Personnel"
+        message={`Reactivate system access for ${selectedStaffIds.size} personnel profiles? They will be able to log in to the system again.`}
+        confirmLabel="Restore Selected"
+        variant="success"
+        selectedItems={Array.from(selectedStaffIds).map((id) => {
+          const s = staffData.find((x) => x.id === id)
+          return s ? `${s.fname} ${s.lname}` : id
+        })}
+        onConfirm={confirmBulkRestore}
+        onCancel={() => {
+          setBulkRestoreOpen(false)
+        }}
+        isLoading={bulkRestoreLoading}
       />
 
       <PDFPreviewModal
