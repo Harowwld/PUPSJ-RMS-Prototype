@@ -59,7 +59,8 @@ async function main() {
     );
   }
 
-  const bootstrapAdmin = await dbGet("SELECT id FROM staff WHERE id = ?", [
+  const bootstrapAdmin = await dbGet("SELECT id FROM staff WHERE id = ? OR email = ?", [
+    "admin.eli@pup.local",
     "admin.eli@pup.local",
   ]);
   if (!bootstrapAdmin) {
@@ -235,8 +236,8 @@ async function main() {
       "Diploma",
       "Pending",
       "Sample: alumni counter request",
-      "admin.eli@pup.local",
-      "admin.eli@pup.local",
+      "PUPREGISTRAR-001",
+      "PUPREGISTRAR-001",
     ],
   );
 
@@ -276,7 +277,7 @@ try {
   await main();
 } catch (err) {
   exitCode = 1;
-  console.error("[populate-sample-data] Failed:", err?.message || err);
+  console.error("[populate-sample-data] Failed:", err);
 } finally {
   reloadDb();
 }
