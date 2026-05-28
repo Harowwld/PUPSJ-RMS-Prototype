@@ -965,10 +965,10 @@ export default function DigitalRecordsReviewTab({
                   {sortedRecords.length > 0 && (
                     <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
                       <span>
-                        Showing <strong className="text-gray-900 dark:text-zinc-50">{paginatedRecords.length}</strong> out of <strong className="text-gray-900 dark:text-zinc-50">{sortedRecords.length}</strong> Records
+                        SHOWING <strong className="text-gray-900 dark:text-zinc-50">{paginatedRecords.length}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{sortedRecords.length}</strong> ENTRIES
                       </span>
                       <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
-                        <span className="text-[10px] opacity-60">Rows:</span>
+                        <span className="text-[10px] opacity-60">ROWS:</span>
                         <Select
                           className="h-8 w-16 cursor-pointer rounded-brand border border-gray-200 bg-white px-2 text-[10px] font-black text-gray-700 shadow-xs focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10"
                           value={itemsPerPage}
@@ -984,10 +984,10 @@ export default function DigitalRecordsReviewTab({
                         </Select>
                       </div>
                     </div>                  )}
-                </div>
+                    </div>
 
-                {sortedRecords.length > 0 && (
-                  <div className="flex shrink-0 items-center gap-3">
+                    {sortedRecords.length > 0 && (
+                    <div className="flex shrink-0 items-center gap-3">
                     <Button
                       variant="outline"
                       size="sm"
@@ -998,18 +998,9 @@ export default function DigitalRecordsReviewTab({
                       <i className="ph-bold ph-caret-left mr-2 text-base"></i>
                       PREV
                     </Button>
-                    
-                    <div className="flex h-10 min-w-[48px] items-center justify-center rounded-xl border border-gray-200 bg-gray-50 px-3 text-[11px] font-black text-gray-900 shadow-inner ring-1 ring-black/[0.02] dark:border-white/10 dark:bg-white/5 dark:text-zinc-50 dark:shadow-none">
-                      <input
-                        type="text"
-                        className="w-8 bg-transparent text-center focus:outline-none"
-                        value={jumpPage}
-                        onChange={(e) => setJumpPage(e.target.value)}
-                        onKeyDown={handleJumpPage}
-                        onBlur={handleJumpPage}
-                      />
-                      <span className="mx-1 text-gray-300 dark:text-zinc-600">/</span>
-                      <span>{totalPages}</span>
+
+                    <div className="flex h-9 min-w-[48px] items-center justify-center rounded-xl border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                      {displayPage}
                     </div>
 
                     <Button
@@ -1020,9 +1011,9 @@ export default function DigitalRecordsReviewTab({
                       className="h-10 rounded-xl border-gray-200 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
                     >
                       NEXT
-                      <i className="ph-bold ph-caret-right ml-2 text-base"></i>
+                      <i className="ph-bold ph-caret-right mr-2 text-base"></i>
                     </Button>
-                  </div>
+                    </div>
                 )}
               </div>
             </div>

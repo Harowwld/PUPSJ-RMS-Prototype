@@ -25,6 +25,7 @@ import {
   EmptyMedia,
 } from "@/components/ui/empty"
 import ConfirmModal from "@/components/shared/ConfirmModal"
+import { cn } from "@/lib/utils"
 
 export default function RecordsArchiveTab({
   loading,
@@ -136,207 +137,168 @@ export default function RecordsArchiveTab({
 
   function renderStorageBody(isFullscreen) {
     const mapWrap = isFullscreen
-      ? "min-h-[min(55vh,640px)] flex-1 w-full"
-      : "h-[380px] w-full"
-    const rowClass = isFullscreen
-      ? "flex flex-1 flex-col overflow-hidden min-h-0 lg:flex-row"
-      : "flex-1 flex overflow-hidden min-h-0"
-    const leftClass = isFullscreen
-      ? "bg-gray-100 dark:bg-muted p-4 min-h-0 overflow-y-auto flex flex-1 flex-col lg:w-[min(72%,calc(100%-22rem))]"
-      : "w-2/3 bg-gray-100 dark:bg-muted p-4 h-full min-h-0 overflow-y-auto"
-    const innerLeftClass = isFullscreen
-      ? "flex w-full flex-col min-h-0 flex-1"
-      : "w-full h-full"
-    const rightClass = isFullscreen
-      ? "border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col overflow-hidden min-h-0 border-l w-full max-h-[42vh] shrink-0 border-t lg:max-h-none lg:w-[min(28rem,100%)] lg:max-w-[40vw] lg:shrink-0"
-      : "w-1/3 border-l border-gray-200 dark:border-white/10 bg-white dark:bg-card flex flex-col overflow-hidden min-h-0"
-    const rightInnerClass = isFullscreen
-      ? "flex h-full min-h-0 flex-col overflow-hidden p-4"
-      : "p-4 h-full flex flex-col overflow-hidden min-h-0"
-    const ulClass = isFullscreen
-      ? "flex-1 space-y-2 overflow-y-auto pr-2 text-sm text-gray-700 dark:text-zinc-200 dark:text-zinc-300 min-h-0"
-      : "flex-1 overflow-y-auto space-y-2 text-sm text-gray-700 dark:text-zinc-200 dark:text-zinc-300 pr-2"
+      ? "min-h-[min(70vh,800px)] flex-1 w-full aspect-[16/10] mx-auto max-w-6xl overflow-hidden rounded-xl shadow-2xl"
+      : "w-full aspect-[16/10] max-h-[600px] mx-auto max-w-4xl overflow-hidden rounded-xl shadow-lg border border-gray-200 dark:border-white/10"
+    const rowClass = "flex flex-1 flex-col overflow-hidden min-h-0"
+    const leftClass = "bg-white dark:bg-zinc-950 p-8 min-h-0 overflow-y-auto flex flex-1 flex-col w-full"
+    const innerLeftClass = "flex w-full flex-col min-h-0 flex-1 mx-auto max-w-6xl"
 
     return (
       <div className={rowClass}>
         <div className={leftClass}>
           <div className={innerLeftClass}>
-            {locatorModel.kind === "rooms" ? (
-              <>
-                <h4 className="mb-4 text-lg font-bold text-gray-700 dark:text-zinc-200">
-                  {locatorModel.title}
-                </h4>
-                <div className="grid grid-cols-2 gap-4 pb-6">
-                  {locatorModel.rooms.map((r) => (
-                    <div
-                      key={r.room}
-                      className={`locator-tile flex cursor-pointer flex-col items-center justify-center rounded-brand p-6 ${ r.isTarget ? "room-located" : "" }`}
-                      onClick={() => {
-                        setSelectedRoom(r.room)
-                        setSelectedCabinet(null)
-                        setCurrentLocatorLevel("cabinets")
-                      }}
-                    >
-                      <i className="ph-duotone ph-warehouse mb-2 text-4xl text-pup-maroon dark:text-primary"></i>
-                      <h5 className="text-xl leading-tight font-bold text-gray-900 dark:text-zinc-50">
-                        ROOM {r.room}
-                      </h5>
-                      <span className="mt-1 text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                        {r.occupiedCount} Records Stored
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            ) : locatorModel.kind === "cabinets" ? (
-              <>
-                <h4 className="mb-4 text-lg font-bold text-gray-700 dark:text-zinc-200">
-                  <span
-                    className="cursor-pointer hover:text-pup-maroon dark:hover:text-red-500 dark:text-primary"
+            {/* Storage Explorer Unified Header with Browser-style Back & Forward Buttons */}
+            <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-white/10 pb-6">
+              <div className="flex flex-col gap-2">
+                <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">Storage Explorer</span>
+                
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  {/* Back Navigation Button */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-full border border-gray-300 dark:border-white/10 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 cursor-pointer"
+                    disabled={currentLocatorLevel === "rooms"}
                     onClick={() => {
-                      setCurrentLocatorLevel("rooms")
-                      setSelectedRoom(null)
+                      if (currentLocatorLevel === "drawers") {
+                        setCurrentLocatorLevel("cabinets");
+                      } else if (currentLocatorLevel === "cabinets") {
+                        setCurrentLocatorLevel("rooms");
+                        setSelectedRoom(null);
+                        setSelectedCabinet(null);
+                      }
+                    }}
+                  >
+                    <i className="ph-bold ph-caret-left text-sm" />
+                  </Button>
+
+                  {/* Forward Navigation Button */}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 rounded-full border border-gray-300 dark:border-white/10 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 cursor-pointer"
+                    disabled={
+                      (currentLocatorLevel === "rooms" && !selectedRoom) ||
+                      (currentLocatorLevel === "cabinets" && !selectedCabinet) ||
+                      currentLocatorLevel === "drawers"
+                    }
+                    onClick={() => {
+                      if (currentLocatorLevel === "rooms" && selectedRoom) {
+                        setCurrentLocatorLevel("cabinets");
+                      } else if (currentLocatorLevel === "cabinets" && selectedCabinet) {
+                        setCurrentLocatorLevel("drawers");
+                      }
+                    }}
+                  >
+                    <i className="ph-bold ph-caret-right text-sm" />
+                  </Button>
+                  
+                  {/* Location Path Text */}
+                  <h4 className="text-xl sm:text-2xl font-black tracking-tight text-gray-900 dark:text-zinc-50 uppercase flex items-center select-none ml-1.5 leading-none">
+                    {currentLocatorLevel === "rooms" && "Storage Rooms"}
+                    {currentLocatorLevel === "cabinets" && (
+                      <>
+                        ROOM {selectedRoom} <span className="text-gray-300 dark:text-zinc-700 mx-2">/</span> LAYOUT
+                      </>
+                    )}
+                    {currentLocatorLevel === "drawers" && (
+                      <>
+                        ROOM {selectedRoom} <span className="text-gray-300 dark:text-zinc-700 mx-2">/</span> CAB {selectedCabinet}
+                      </>
+                    )}
+                  </h4>
+                </div>
+              </div>
+              <div className="flex flex-col items-start sm:items-end gap-1 shrink-0">
+                <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">View Selection</span>
+                {legend}
+              </div>
+            </div>
+
+            {/* Level Inner Content */}
+            {locatorModel.kind === "rooms" ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-8">
+                {locatorModel.rooms.map((r) => (
+                  <div
+                    key={r.room}
+                    className={cn(
+                      "group relative flex cursor-pointer flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 dark:border-white/10 dark:bg-card",
+                      r.isTarget && "ring-2 ring-pup-maroon border-pup-maroon dark:ring-primary dark:border-primary"
+                    )}
+                    onClick={() => {
+                      setSelectedRoom(r.room)
                       setSelectedCabinet(null)
+                      setCurrentLocatorLevel("cabinets")
                     }}
                   >
-                    ← Rooms
-                  </span>{" "}
-                  / Room {selectedRoom} Cabinets
-                </h4>
-                <div className={mapWrap}>
-                  <RoomMap2D
-                    kind="cabinets"
-                    cabinets={locatorModel.cabinets}
-                    roomDoor={locatorModel.roomDoor}
-                    selectedCabinetId={selectedCabinet}
-                    onCabinetClick={(cabId) => {
-                      setSelectedCabinet(cabId)
-                      setCurrentLocatorLevel("drawers")
-                    }}
-                    onDrawerClick={(drawerId) => {
-                      // Optional: Highlight drawer students in the future
-                    }}
-                  />
-                </div>
-              </>
-            ) : (
-              <>
-                <h4 className="mb-4 text-lg font-bold text-gray-700 dark:text-zinc-200">
-                  <span
-                    className="cursor-pointer hover:text-pup-maroon dark:hover:text-red-500 dark:text-primary"
-                    onClick={() => setCurrentLocatorLevel("cabinets")}
-                  >
-                    ← Cabinets
-                  </span>{" "}
-                  / Room {selectedRoom} / Cabinet {selectedCabinet} Drawers
-                </h4>
-                <div className={mapWrap}>
-                  <RoomMap2D
-                    kind="drawers"
-                    cabinets={locatorModel.cabinets || []}
-                    roomDoor={locatorModel.roomDoor}
-                    selectedCabinetId={selectedCabinet}
-                    drawerSlots={locatorModel.drawers}
-                    onCabinetClick={(cabId) => {
-                      setSelectedCabinet(cabId)
-                      setCurrentLocatorLevel("drawers")
-                    }}
-                  />
-                </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        <div className={rightClass}>
-          <div className={rightInnerClass}>
-            {!activeStudent ? (
-              <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                    <i className="ph-duotone ph-mouse-left-click text-3xl text-pup-maroon dark:text-primary"></i>
-                  </EmptyMedia>
-                  <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
-                    Select a student
-                  </EmptyTitle>
-                  <EmptyDescription className="mt-1 text-sm font-medium text-gray-600 dark:text-zinc-300">
-                    Select a student from the list to view their location and
-                    documents.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            ) : (
-              <div className="flex h-full min-h-0 flex-col">
-                <div className="mb-4 flex-shrink-0">
-                  <div className="mb-1 text-xs font-bold tracking-wide text-gray-500 uppercase dark:text-zinc-400">
-                    Physical Location
-                  </div>
-                  <div className="text-2xl font-black text-pup-maroon dark:text-primary">
-                    ROOM-{activeStudent.room} • CAB-{activeStudent.cabinet} • D-
-                    {activeStudent.drawer}
-                  </div>
-                  <div className="mt-1 truncate text-base font-bold text-gray-900 dark:text-zinc-50">
-                    {activeStudent.name}
-                  </div>
-                  <div className="flex items-center gap-2 font-mono text-sm font-medium text-gray-600 dark:text-zinc-300">
-                    {activeStudent.studentNo}
-                    {activeStudent.status === "Archived" && (
-                      <Badge className="h-4 border-red-200 bg-red-50 px-1 text-[9px] font-black text-red-700 dark:bg-red-950/30">
-                        ARCHIVED
-                      </Badge>
+                    <div className={cn(
+                      "flex h-48 items-center justify-center transition-colors",
+                      r.isTarget ? "bg-pup-maroon/5 dark:bg-primary/5" : "bg-gray-50 dark:bg-muted"
+                    )}>
+                      <div className={cn(
+                        "flex h-24 w-24 items-center justify-center rounded-3xl shadow-lg transition-transform group-hover:scale-110",
+                        r.isTarget ? "bg-pup-maroon text-white dark:bg-primary" : "bg-white text-gray-400 dark:bg-zinc-800 dark:text-zinc-500"
+                      )}>
+                        <i className="ph-fill ph-warehouse text-5xl"></i>
+                      </div>
+                    </div>
+                    <div className="p-6">
+                      <div className="flex items-center justify-between mb-2">
+                        <h5 className="text-xl font-black text-gray-900 dark:text-zinc-50 tracking-tighter uppercase">
+                          ROOM {r.room}
+                        </h5>
+                        {r.isTarget && (
+                          <Badge className="bg-pup-maroon text-white animate-pulse dark:bg-primary">
+                            LOCATED
+                          </Badge>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-1 w-8 bg-pup-maroon/20 rounded-full dark:bg-primary/20"></div>
+                        <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                          {r.occupiedCount} ARCHIVED RECORDS
+                        </span>
+                      </div>
+                    </div>
+                    {r.isTarget && (
+                      <div className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full bg-pup-maroon text-white shadow-lg dark:bg-primary">
+                        <i className="ph-bold ph-map-pin"></i>
+                      </div>
                     )}
                   </div>
-                </div>
-
-                <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-                  <div className="mb-2 shrink-0 border-b border-gray-200 pb-2 text-xs font-bold tracking-wide text-gray-500 uppercase dark:border-white/10 dark:text-zinc-400">
-                    Documents on File
-                  </div>
-                  <ul className={ulClass}>
-                    {activeStudentDocs.length === 0 ? (
-                      <li className="h-full py-8">
-                        <Empty className="flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
-                          <EmptyHeader className="flex flex-col items-center gap-0">
-                            <EmptyMedia className="mb-3 flex h-12 w-12 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                              <i className="ph-duotone ph-files text-2xl text-pup-maroon dark:text-primary"></i>
-                            </EmptyMedia>
-                            <EmptyTitle className="text-sm font-bold text-gray-900 dark:text-zinc-50">
-                              No documents found
-                            </EmptyTitle>
-                            <EmptyDescription className="mt-1 max-w-[200px] text-xs font-medium text-gray-600 dark:text-zinc-300">
-                              This student has no scanned documents on file.
-                            </EmptyDescription>
-                          </EmptyHeader>
-                        </Empty>
-                      </li>
-                    ) : (
-                      activeStudentDocs.map((doc) => (
-                        <li key={doc.id}>
-                          <Button
-                            variant="ghost"
-                            onClick={() =>
-                              onPreviewDocument(
-                                doc.doc_type,
-                                activeStudent.name,
-                                activeStudent.studentNo,
-                                doc.id
-                              )
-                            }
-                            className="group flex h-auto w-full items-center justify-start gap-3 rounded-brand border border-transparent p-2 text-left font-normal transition-colors hover:border-gray-300 hover:bg-gray-100 dark:hover:border-zinc-700 dark:border-white/10 dark:bg-muted dark:hover:bg-white/10"
-                          >
-                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded bg-red-50 text-pup-maroon dark:text-primary transition-colors group-hover:bg-pup-maroon group-hover:text-white dark:bg-red-950/30 dark:text-primary">
-                              <i className="ph-fill ph-file-pdf text-lg"></i>
-                            </div>
-                            <span className="truncate font-bold text-gray-700 underline-offset-2 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 group-hover:underline dark:text-zinc-200">
-                              {doc.doc_type}
-                            </span>
-                            <i className="ph-bold ph-arrow-square-out ml-auto shrink-0 text-gray-400 transition-all group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-500"></i>
-                          </Button>
-                        </li>
-                      ))
-                    )}
-                  </ul>
-                </div>
+                ))}
+              </div>
+            ) : locatorModel.kind === "cabinets" ? (
+              <div className={mapWrap}>
+                <RoomMap2D
+                  kind="cabinets"
+                  cabinets={locatorModel.cabinets}
+                  roomDoor={locatorModel.roomDoor}
+                  selectedCabinetId={selectedCabinet}
+                  onCabinetClick={(cabId) => {
+                    setSelectedCabinet(cabId)
+                    setCurrentLocatorLevel("drawers")
+                  }}
+                  onDrawerClick={(drawerId) => {
+                    // Optional: Highlight drawer students in the future
+                  }}
+                />
+              </div>
+            ) : (
+              <div className={mapWrap}>
+                <RoomMap2D
+                  kind="drawers"
+                  cabinets={locatorModel.cabinets || []}
+                  roomDoor={locatorModel.roomDoor}
+                  selectedCabinetId={selectedCabinet}
+                  drawerSlots={locatorModel.drawers}
+                  onCabinetClick={(cabId) => {
+                    setSelectedCabinet(cabId)
+                    setCurrentLocatorLevel("drawers")
+                  }}
+                />
               </div>
             )}
           </div>
@@ -399,13 +361,16 @@ export default function RecordsArchiveTab({
             {quickQuery.trim().length < 2 && !showArchived ? (
               <Empty className="mt-32 flex flex-col items-center border-0 py-10 text-center">
                 <EmptyHeader className="flex flex-col items-center gap-0">
-                  <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                    <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon dark:text-primary"></i>
-                  </EmptyMedia>
-                  <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                      <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
+                    </EmptyMedia>
+                  </div>
+                  <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
                     Search Records
                   </EmptyTitle>
-                  <EmptyDescription className="mt-1 text-sm font-medium text-gray-600 dark:text-zinc-300">
+                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                     Enter a student name or ID to quickly locate their records.
                   </EmptyDescription>
                 </EmptyHeader>
@@ -430,15 +395,18 @@ export default function RecordsArchiveTab({
             ) : filteredQuickResults.length === 0 ? (
               <Empty className="mt-32 flex flex-col items-center justify-center border-0 py-8 text-center text-gray-500 dark:text-zinc-400">
                 <EmptyHeader className="flex flex-col items-center gap-0">
-                  <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                    <i
-                      className={`ph-duotone ${showArchived ? "ph-archive" : "ph-list-magnifying-glass"} text-3xl text-pup-maroon dark:text-primary`}
-                    ></i>
-                  </EmptyMedia>
-                  <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                      <i
+                        className={`ph-duotone ${showArchived ? "ph-archive" : "ph-list-magnifying-glass"} text-5xl text-gray-300 dark:text-zinc-600`}
+                      ></i>
+                    </EmptyMedia>
+                  </div>
+                  <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
                     {showArchived ? "No archived records" : "No records found"}
                   </EmptyTitle>
-                  <EmptyDescription className="mt-1 max-w-[200px] text-sm font-medium text-gray-600 dark:text-zinc-300">
+                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                     {showArchived
                       ? "There are no archived students matching your search."
                       : "We couldn't find any students matching your search query."}
@@ -467,9 +435,9 @@ export default function RecordsArchiveTab({
           </div>
         </section>
 
-        <section className="flex min-h-0 w-full flex-col gap-4 overflow-y-auto lg:h-full lg:w-3/4">
-          <div className="relative flex h-[60%] min-h-[250px] flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-gray-200 bg-white p-4 text-sm dark:border-white/10 dark:bg-card">
+        <section className="flex h-full min-h-0 w-full flex-1 flex-col gap-4 overflow-y-auto lg:w-3/4">
+          <div className="relative flex min-h-[250px] shrink-0 flex-col rounded-brand border border-gray-300 bg-white shadow-sm dark:bg-[#202020] dark:shadow-none dark:border-white/10">
+            <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-gray-200 bg-white p-4 text-sm dark:border-white/10 dark:bg-[#202020]">
               <div className="flex items-center gap-2">
                 <Button
                   variant="ghost"
@@ -541,7 +509,7 @@ export default function RecordsArchiveTab({
               )}
             </div>
 
-            <div className="flex-1 overflow-y-auto bg-gray-50 p-6 dark:bg-card">
+            <div className="flex-1 bg-gray-50 p-6 dark:bg-[#202020]">
               {students.length === 0 && !showArchived ? (
                 <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                   <EmptyHeader className="flex flex-col items-center gap-0">
@@ -574,20 +542,21 @@ export default function RecordsArchiveTab({
                     <div
                       key={index}
                       onClick={it.disabled ? undefined : it.onClick}
-                      className={`group relative h-36 w-full drop-shadow-sm transition-all duration-300 hover:drop-shadow-md ${ it.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:-translate-y-1" }`}
+                      className={`group relative h-36 w-full transition-all duration-300 ${ it.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:-translate-y-1.5" }`}
                     >
-                      {/* Seamless Folder Tab */}
-                      <div className="absolute top-0 left-0 z-0 h-8 w-[45%] rounded-tl-xl rounded-tr-lg bg-white transition-colors duration-300 group-hover:bg-red-50 dark:bg-card"></div>
+                      {/* Realistic Folder Tab (Backside) */}
+                      <div className="absolute top-0 left-0 z-0 h-8 w-[38%] rounded-t-lg bg-[#dca11e] dark:bg-[#c28d17] transition-all duration-300 group-hover:scale-y-105"></div>
 
-                      {/* Seamless Folder Body */}
-                      <div className="absolute top-4 right-0 bottom-0 left-0 z-10 flex flex-col items-center justify-center rounded-2xl rounded-tl-none bg-white p-4 transition-colors duration-300 group-hover:bg-red-50 dark:bg-card">
+                      {/* Realistic Folder Body (Frontside) */}
+                      <div className="absolute top-3 right-0 bottom-0 left-0 z-10 flex flex-col items-center justify-center rounded-lg rounded-tl-none bg-[#f1b82d] dark:bg-[#d69f21] border border-[#d69f21] p-4 transition-all duration-300 shadow-[0_2.5px_5px_rgba(0,0,0,0.15)] group-hover:shadow-[0_6px_12px_rgba(0,0,0,0.25)]">
+                        
                         <i
-                          className={`ph-fill ${it.icon} mb-2 text-5xl text-gray-400 transition-colors duration-300 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-500`}
+                          className={`ph-fill ${it.icon} mb-1 text-5xl text-[#5c3e03] dark:text-[#452c02] transition-transform duration-300 group-hover:scale-105`}
                         ></i>
-                        <h3 className="w-full truncate px-1 text-center text-sm leading-tight font-bold text-gray-800 transition-colors duration-300 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 sm:text-base dark:text-zinc-100">
+                        <h3 className="w-full truncate px-1 text-center text-sm leading-tight font-black text-[#3e2702] sm:text-base">
                           {it.title}
                         </h3>
-                        <span className="mt-1 text-[10px] font-black tracking-widest text-gray-500 uppercase transition-colors duration-300 group-hover:text-red-400 dark:text-zinc-400">
+                        <span className="mt-0.5 text-[9px] font-black tracking-widest text-[#785002] uppercase">
                           {it.subtitle}
                         </span>
                       </div>
@@ -693,57 +662,62 @@ export default function RecordsArchiveTab({
               ) : (
                 <div 
                   key={`table-${currentLevel}-${showArchived}`}
-                  className="flex-1 overflow-auto rounded-brand border border-gray-200 bg-white animate-fade-up dark:border-white/10 dark:bg-card"
+                  className="flex-1 overflow-auto rounded-xl border border-gray-200 bg-white shadow-sm animate-fade-up dark:border-white/10 dark:bg-card"
                 >
                   <table className="min-w-full text-sm">
-                    <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">                      <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
-                        <th className="w-[80px] p-3 text-center font-bold">
-                          Profile
+                    <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">
+                      <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
+                        <th className="w-[80px] p-4 text-center">
+                          <i className="ph-bold ph-user-circle text-[11px]"></i>
                         </th>
-                        <th className="w-48 p-3 font-bold">Student No.</th>
-                        <th className="p-3 font-bold">Name</th>
-                        <th className="w-56 p-3 font-bold">Location</th>
-                        <th className="w-32 p-3 text-right font-bold">
-                          Action
+                        <th className="w-48 p-4">Student No.</th>
+                        <th className="p-4">Full Name</th>
+                        <th className="w-56 p-4">Physical Location</th>
+                        <th className="w-40 p-4 text-right">
+                           <i className="ph-bold ph-dots-three-outline text-[11px]"></i>
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-200 dark:divide-white/10">
+                    <tbody className="divide-y divide-gray-100 dark:divide-white/10">
                       {filteredExplorerItems.map((row) => (
                         <tr
                           key={row.key}
-                          className="group cursor-pointer transition-colors hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card"
+                          className="group cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-white/5 dark:bg-card"
                           onClick={() => onLocateStudent(row.student)}
                         >
-                          <td className="p-3">
-                            <Avatar className="mx-auto h-8 w-8 border border-gray-200 dark:border-white/10">
-                              <AvatarFallback className="bg-gray-100 text-xs font-bold text-gray-500 transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-400 dark:bg-muted">
-                                <i className="ph-bold ph-user text-sm"></i>
+                          <td className="p-4">
+                            <Avatar className="mx-auto h-9 w-9 border border-gray-100 shadow-xs transition-transform group-hover:scale-110 dark:border-white/10 dark:bg-muted">
+                              <AvatarFallback className="bg-gray-50 text-gray-400 dark:bg-zinc-800 dark:text-zinc-500">
+                                <i className="ph-bold ph-user text-base"></i>
                               </AvatarFallback>
                             </Avatar>
                           </td>
-                          <td className="p-3 font-mono text-xs font-medium text-gray-600 dark:text-zinc-300">
+                          <td className="p-4 font-mono text-xs font-bold text-gray-600 dark:text-zinc-300">
                             {row.student.studentNo}
                           </td>
-                          <td className="p-3 font-bold text-gray-900 transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-50">
-                            <div className="flex items-center gap-2">
-                              {row.student.name}
+                          <td className="p-4">
+                            <div className="flex flex-col">
+                              <span className="text-sm font-black text-gray-900 transition-colors group-hover:text-pup-maroon dark:group-hover:text-primary dark:text-zinc-50">
+                                {row.student.name}
+                              </span>
                               {showArchived && (
-                                <Badge className="h-3.5 border-red-100 bg-red-50 px-1 text-[8px] font-black text-red-700 dark:bg-red-950/30">
-                                  ARCHIVED
+                                <Badge className="mt-1 w-fit border-red-100 bg-red-50 px-1.5 text-[8px] font-black text-red-700 dark:bg-red-950/30">
+                                  ARCHIVED RECORD
                                 </Badge>
                               )}
                             </div>
                           </td>
-                          <td className="p-3">
-                            <Badge
-                              variant="outline"
-                              className="border-gray-200 bg-gray-50 px-2 py-0.5 text-[10px] font-bold tracking-wider text-gray-600 uppercase dark:border-white/10 dark:bg-card dark:text-zinc-300"
-                            >
-                              CAB-{row.student.cabinet} • D-{row.student.drawer}
-                            </Badge>
+                          <td className="p-4">
+                            <div className="flex items-center gap-2">
+                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50 text-gray-400 group-hover:bg-red-50 group-hover:text-pup-maroon dark:bg-zinc-800 dark:group-hover:bg-primary/10 dark:group-hover:text-primary">
+                                <i className="ph-fill ph-archive-box text-base"></i>
+                              </div>
+                              <span className="text-[10px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">
+                                CAB-{row.student.cabinet} • D-{row.student.drawer}
+                              </span>
+                            </div>
                           </td>
-                          <td className="p-3 text-right">
+                          <td className="p-4 text-right">
                             {showArchived ? (
                               <Button
                                 variant="outline"
@@ -753,18 +727,18 @@ export default function RecordsArchiveTab({
                                   setRestoreTarget(row.student)
                                   setRestoreStudentOpen(true)
                                 }}
-                                className="h-8 rounded-brand border-green-200 px-3 text-[9px] font-bold text-green-700 shadow-xs hover:bg-green-50"
+                                className="h-9 rounded-xl border-green-200 bg-green-50/50 px-4 text-[10px] font-black text-green-700 shadow-xs hover:bg-green-100"
                               >
-                                <i className="ph-bold ph-arrow-counter-clockwise mr-1.5"></i>
+                                <i className="ph-bold ph-arrow-counter-clockwise mr-2"></i>
                                 RESTORE
                               </Button>
                             ) : (
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-8 rounded-brand border-gray-300 px-3 text-[10px] font-bold tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+                                className="h-9 rounded-xl border-gray-200 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 shadow-xs transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-primary dark:text-zinc-300 dark:bg-zinc-800 dark:border-white/10"
                               >
-                                <i className="ph-bold ph-magnifying-glass-plus mr-1.5 text-xs"></i>
+                                <i className="ph-bold ph-magnifying-glass-plus mr-2 text-sm"></i>
                                 LOCATE
                               </Button>
                             )}
@@ -807,7 +781,7 @@ export default function RecordsArchiveTab({
           ) : (
             <div
               id="storage-layout-section"
-              className="relative flex h-[44%] min-h-0 min-h-[280px] scroll-mt-6 flex-col rounded-brand border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10"
+              className="relative flex flex-col rounded-brand bg-white shadow-sm scroll-mt-6 dark:bg-card dark:shadow-none dark:border-white/10"
             >
               <div className="flex items-center justify-between rounded-t-brand border-b border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-card">
                 <h3 className="flex items-center gap-2 text-sm font-bold text-pup-maroon dark:text-primary">

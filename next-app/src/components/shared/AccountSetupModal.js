@@ -316,7 +316,7 @@ export default function AccountSetupModal({ authUser }) {
                 <div className="flex shrink-0 justify-end border-t border-gray-100 bg-gray-50 p-5 dark:border-white/10 dark:bg-card">
                   <Button
                     type="submit"
-                    disabled={loading}
+                    disabled={pwLoading}
                     className="h-11 btn-brand-red px-6 text-xs font-bold tracking-widest text-white uppercase shadow-sm transition-colors"
                   >
                     {pwLoading

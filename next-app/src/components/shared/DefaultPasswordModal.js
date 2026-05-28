@@ -78,7 +78,7 @@ export default function DefaultPasswordModal({
               <button
                 type="button"
                 onClick={handleCopy}
-                className={`absolute top-1/2 right-3 flex -translate-y-1/2 items-center gap-1.5 rounded-brand px-3 py-1.5 text-xs font-bold transition-all ${ copied ? "border-2 border-green-200 bg-green-100 text-green-700" : border-red-200 bg-white text-pup-maroon dark:text-primary shadow-sm hover:bg-red-50 } dark:bg-card`}
+                className={`absolute top-1/2 right-3 flex -translate-y-1/2 items-center gap-1.5 rounded-brand px-3 py-1.5 text-xs font-bold transition-all ${ copied ? "border-2 border-green-200 bg-green-100 text-green-700" : "border-red-200 bg-white text-pup-maroon dark:text-primary shadow-sm hover:bg-red-50" } dark:bg-card`}
               >
                 <i
                   className={`ph-bold ${copied ? "ph-check" : "ph-copy"} text-sm`}

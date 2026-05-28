@@ -26,11 +26,11 @@ export default function BackupPagination({
       <div className="flex items-center gap-8">
         <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
           <span>
-            Showing <strong className="text-gray-900 dark:text-zinc-50">{endItem - startItem + 1}</strong> out of <strong className="text-gray-900 dark:text-zinc-50">{totalCount}</strong> Entries
+            SHOWING <strong className="text-gray-900 dark:text-zinc-50">{endItem - startItem + 1}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{totalCount.toLocaleString()}</strong> ENTRIES
           </span>
 
           <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
-            <span className="text-[10px] opacity-60">Rows:</span>
+            <span className="text-[10px] opacity-60">ROWS:</span>
             <Select
               className="h-8 w-16 cursor-pointer rounded-brand border border-gray-200 bg-white px-2 text-[10px] font-black text-gray-700 shadow-xs focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10"
               value={itemsPerPage}

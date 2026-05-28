@@ -111,7 +111,7 @@ const CabinetCanvas = memo(({
         <svg className="pointer-events-none absolute inset-0 h-full w-full opacity-60">
           <polyline
             points={activePath
-              .map(([x, y]) => `${(x / 50) * 100},${(y / 50) * 100}`)
+              .map(([x, y]) => `${(x / 40) * 100},${(y / 25) * 100}`)
               .join(" ")}
             fill="none"
             stroke="cyan"

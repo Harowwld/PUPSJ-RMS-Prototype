@@ -85,38 +85,38 @@ export function calculatePath(room, targetCabId, getDefaultDoor) {
   if (!targetCab) return null
 
   const door = room.door || getDefaultDoor()
-  const GRID_SIZE = 50
-  const grid = Array.from({ length: GRID_SIZE }, () => Array(GRID_SIZE).fill(0))
-
+  const GRID_SIZE_X = 40
+  const GRID_SIZE_Y = 25
+  const grid = Array.from({ length: GRID_SIZE_Y }, () => Array(GRID_SIZE_X).fill(0))
   // Mark obstacles (cabinets)
   room.cabinets.forEach((cab) => {
+    if (cab.id === targetCabId) return // Skip the target cabinet so the path can route into it
     const eff = getCabinetEffectiveSize(cab)
-    const sx = Math.max(0, Math.floor(cab.rect.x * GRID_SIZE))
-    const sy = Math.max(0, Math.floor(cab.rect.y * GRID_SIZE))
-    const ex = Math.min(GRID_SIZE - 1, Math.ceil((cab.rect.x + eff.w) * GRID_SIZE))
-    const ey = Math.min(GRID_SIZE - 1, Math.ceil((cab.rect.y + eff.h) * GRID_SIZE))
-    for (let y = sy; y <= ey; y++) {
-      for (let x = sx; x <= ex; x++) {
+    const sx = Math.max(0, Math.floor(cab.rect.x * GRID_SIZE_X))
+    const sy = Math.max(0, Math.floor(cab.rect.y * GRID_SIZE_Y))
+    const ex = Math.min(GRID_SIZE_X, Math.ceil((cab.rect.x + eff.w) * GRID_SIZE_X))
+    const ey = Math.min(GRID_SIZE_Y, Math.ceil((cab.rect.y + eff.h) * GRID_SIZE_Y))
+    for (let y = sy; y < ey; y++) {
+      for (let x = sx; x < ex; x++) {
         grid[y][x] = 1
       }
     }
   })
 
   const doorEff = getCabinetEffectiveSize(door)
-  const startX = clamp(Math.floor((door.x + doorEff.w / 2) * GRID_SIZE), 0, GRID_SIZE - 1)
-  const startY = clamp(Math.floor((door.y + doorEff.h / 2) * GRID_SIZE), 0, GRID_SIZE - 1)
+  const startX = clamp(Math.floor((door.x + doorEff.w / 2) * GRID_SIZE_X), 0, GRID_SIZE_X - 1)
+  const startY = clamp(Math.floor((door.y + doorEff.h / 2) * GRID_SIZE_Y), 0, GRID_SIZE_Y - 1)
   
   const cabEff = getCabinetEffectiveSize(targetCab)
-  const endX = clamp(Math.floor((targetCab.rect.x + cabEff.w / 2) * GRID_SIZE), 0, GRID_SIZE - 1)
-  const endY = clamp(Math.floor((targetCab.rect.y + cabEff.h / 2) * GRID_SIZE), 0, GRID_SIZE - 1)
+  const endX = clamp(Math.floor((targetCab.rect.x + cabEff.w / 2) * GRID_SIZE_X), 0, GRID_SIZE_X - 1)
+  const endY = clamp(Math.floor((targetCab.rect.y + cabEff.h / 2) * GRID_SIZE_Y), 0, GRID_SIZE_Y - 1)
 
   // BFS for simplest path
   const queue = [[startX, startY, []]]
   const visited = new Set([`${startX},${startY}`])
   
-  // Clear start/end grid cells to ensure path can start/end
+  // Clear start cell to ensure path can start
   grid[startY][startX] = 0
-  grid[endY][endX] = 0
 
   while (queue.length > 0) {
     const [x, y, path] = queue.shift()
@@ -125,12 +125,11 @@ export function calculatePath(room, targetCabId, getDefaultDoor) {
     }
 
     const neighbors = [
-      [x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1],
-      [x + 1, y + 1], [x - 1, y - 1], [x + 1, y - 1], [x - 1, y + 1]
+      [x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]
     ]
 
     for (const [nx, ny] of neighbors) {
-      if (nx >= 0 && nx < GRID_SIZE && ny >= 0 && ny < GRID_SIZE && grid[ny][nx] === 0) {
+      if (nx >= 0 && nx < GRID_SIZE_X && ny >= 0 && ny < GRID_SIZE_Y && grid[ny][nx] === 0) {
         const key = `${nx},${ny}`
         if (!visited.has(key)) {
           visited.add(key)

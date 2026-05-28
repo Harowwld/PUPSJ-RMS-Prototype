@@ -25,6 +25,7 @@ import {
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import { Select } from "@/components/ui/select"
+import { cn } from "@/lib/utils"
 
 function statusUi(status) {
   const s = String(status || "Pending")
@@ -372,14 +373,17 @@ export default function NotificationsTab({
               {total > 0 && (
                 <div className="-mx-6 mt-4 -mb-6 flex items-center justify-between border-t border-gray-100 bg-gray-50 p-4 px-6 dark:border-white/10 dark:bg-white/5">
                   <div className="flex items-center gap-6">
-                    <div className="flex items-center gap-4 text-xs font-medium text-gray-500 dark:text-zinc-400">
+                    <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
                       <span>
-                        {offset + 1}-{Math.min(offset + itemsPerPage, total)}{" "}
-                        of{" "}
+                        SHOWING{" "}
+                        <strong className="text-gray-900 dark:text-zinc-50">
+                          {offset + 1}-{Math.min(offset + itemsPerPage, total)}
+                        </strong>{" "}
+                        OUT OF{" "}
                         <strong className="text-gray-900 dark:text-zinc-50">
                           {total.toLocaleString()}
                         </strong>{" "}
-                        entries
+                        ENTRIES
                         {unreadCount > 0 ? (
                           <>
                             {" "}
@@ -387,14 +391,14 @@ export default function NotificationsTab({
                             <strong className="text-pup-maroon dark:text-primary">
                               {unreadCount.toLocaleString()}
                             </strong>{" "}
-                            unread
+                            UNREAD
                           </>
                         ) : null}
                       </span>
 
                       <div className="flex items-center gap-2 border-l border-gray-200 pl-4 dark:border-white/10">
                         <span className="text-[10px] font-bold text-gray-400 uppercase dark:text-zinc-500">
-                          Rows:
+                          ROWS:
                         </span>
                         <TooltipProvider>
                           <Tooltip>
@@ -433,17 +437,8 @@ export default function NotificationsTab({
                     >
                       <i className="ph-bold ph-caret-left mr-1"></i> PREV
                     </Button>
-                    <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-2 text-[11px] font-bold text-gray-700 shadow-xs focus-within:border-gray-300 focus-within:ring-1 focus-within:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-200">
-                      <input
-                        type="text"
-                        className="w-6 bg-transparent text-center focus:outline-none"
-                        value={jumpPage}
-                        onChange={(e) => setJumpPage(e.target.value)}
-                        onKeyDown={handleJumpPage}
-                        onBlur={handleJumpPage}
-                      />
-                      <span className="mx-0.5 text-gray-400 dark:text-zinc-500">/</span>
-                      <span>{totalPages}</span>
+                    <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-xs dark:border-white/10 dark:bg-card dark:text-zinc-100">
+                      {displayPage}
                     </div>
                     <Button
                       variant="outline"

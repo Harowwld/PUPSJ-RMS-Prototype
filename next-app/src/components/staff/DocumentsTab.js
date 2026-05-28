@@ -23,6 +23,7 @@ import {
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import PageHeader from "@/components/shared/PageHeader";
 import { Select } from "@/components/ui/select"
+import { cn } from "@/lib/utils";
 
 export default function DocumentsTab({
   docsForm,
@@ -561,7 +562,7 @@ export default function DocumentsTab({
                   docsForm.studentName.trim() ||
                   docsForm.docType.trim() ? (
                     <span>
-                      <strong className="text-gray-900 dark:text-zinc-50">{docsRows.length}</strong> Documents Found
+                      SHOWING <strong className="text-gray-900 dark:text-zinc-50">{docsRows.length}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{docsRows.length}</strong> ENTRIES
                     </span>
                   ) : (
                     ""

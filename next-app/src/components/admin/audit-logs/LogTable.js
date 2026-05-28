@@ -23,6 +23,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { formatPHDateTimeParts } from "@/lib/timeFormat"
+import { cn } from "@/lib/utils"
 
 import LogExpandedRow from "./LogExpandedRow"
 import LogPagination from "./LogPagination"

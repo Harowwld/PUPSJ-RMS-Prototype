@@ -161,12 +161,9 @@ export default function ConfirmModal({
                       </div>
                     ))}
                   </div>
-                  {selectedItems.length > 3 && (
-                    <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-gray-50/50 to-transparent pointer-events-none rounded-b-lg z-10" />
+                  </div>
+                  </div>
                   )}
-                </div>
-              </div>
-            )}
 
             {isVerificationEnabled && (
               <div className="rounded-xl border border-red-100 bg-red-50 p-5 shadow-xs dark:bg-red-950/30 dark:border-zinc-800">

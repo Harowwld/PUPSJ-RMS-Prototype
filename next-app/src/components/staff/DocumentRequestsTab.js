@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/tooltip";
 import PageHeader from "@/components/shared/PageHeader";
 import { Select } from "@/components/ui/select"
+import { cn } from "@/lib/utils"
 
 const STATUS_OPTIONS = [
   "Pending",
@@ -40,12 +41,12 @@ const STATUS_OPTIONS = [
 
 function statusBadgeClass(status) {
   const s = String(status || "").toUpperCase();
-  if (s === "DONE" || s === "COMPLETED") return "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-800 border-emerald-200";
-  if (s === "CANCELLED") return "bg-gray-100 dark:bg-muted text-gray-600 dark:text-zinc-300 dark:text-zinc-400 border-gray-200 dark:border-white/10";
-  if (s === "READY") return "bg-sky-50 text-sky-800 border-sky-200";
-  if (s === "SHREDDED") return "bg-rose-50 dark:bg-rose-950/20 text-rose-800 border-rose-200";
-  if (s === "PROCESSING" || s === "INPROGRESS") return "bg-amber-50 dark:bg-amber-950/20 text-amber-900 border-amber-200";
-  return "bg-red-50 dark:bg-red-950/20 text-pup-maroon dark:text-primary border-red-100";
+  if (s === "DONE" || s === "COMPLETED") return "bg-emerald-50 dark:bg-emerald-950/15 text-emerald-800 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20";
+  if (s === "CANCELLED") return "bg-gray-100 dark:bg-zinc-800/40 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-800/65";
+  if (s === "READY") return "bg-sky-50 dark:bg-sky-950/15 text-sky-800 dark:text-sky-400 border-sky-200 dark:border-sky-500/20";
+  if (s === "SHREDDED") return "bg-rose-50 dark:bg-rose-950/15 text-rose-800 dark:text-rose-400 border-rose-200 dark:border-rose-500/20";
+  if (s === "PROCESSING" || s === "INPROGRESS") return "bg-amber-50 dark:bg-amber-950/15 text-amber-900 dark:text-amber-400 border-amber-200 dark:border-amber-500/20";
+  return "bg-red-50 dark:bg-red-950/15 text-pup-maroon dark:text-red-400 border-red-100 dark:border-red-500/20";
 }
 
 export default function DocumentRequestsTab({
@@ -594,40 +595,35 @@ export default function DocumentRequestsTab({
                 </div>
                 {total > 0 ? (
                   <div className="p-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between dark:border-white/10 dark:bg-white/5">
-                    <div className="flex items-center gap-4 text-xs font-medium text-gray-500 dark:text-zinc-400">
+                    <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
                       <span>
-                        {(page - 1) * itemsPerPage + 1}-
-                        {Math.min(page * itemsPerPage, total)} of{" "}
+                        SHOWING{" "}
+                        <strong className="text-gray-900 dark:text-zinc-50">
+                          {(page - 1) * itemsPerPage + 1}-
+                          {Math.min(page * itemsPerPage, total)}
+                        </strong>{" "}
+                        OUT OF{" "}
                         <strong className="text-gray-900 dark:text-zinc-50">
                           {total.toLocaleString()}
                         </strong>{" "}
-                        entries
+                        ENTRIES
                       </span>
 
                       <div className="flex items-center gap-2 border-l border-gray-200 pl-4 dark:border-white/10">
                         <span className="text-[10px] font-bold text-gray-400 uppercase dark:text-zinc-500">
-                          Rows:
+                          ROWS:
                         </span>
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Select
-                                className="h-7 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-1 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none dark:bg-card dark:text-zinc-200 dark:border-white/10"
-                                value={itemsPerPage}
-                                onChange={handleItemsPerPageChange}
-                              >
-                                <option value={10}>10</option>
-                                <option value={20}>20</option>
-                                <option value={50}>50</option>
-                                <option value={100}>100</option>
-                                <option value={200}>200</option>
-                              </Select>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="rounded-brand">
-                              Items per page
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
+                        <Select
+                          className="h-7 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-1 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none dark:bg-card dark:text-zinc-200 dark:border-white/10"
+                          value={itemsPerPage}
+                          onChange={handleItemsPerPageChange}
+                        >
+                          <option value={10}>10</option>
+                          <option value={20}>20</option>
+                          <option value={50}>50</option>
+                          <option value={100}>100</option>
+                          <option value={200}>200</option>
+                        </Select>
                       </div>
                     </div>
 
@@ -642,17 +638,8 @@ export default function DocumentRequestsTab({
                       >
                         <i className="ph-bold ph-caret-left mr-1"></i> PREV
                       </Button>
-                      <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-2 text-[11px] font-bold text-gray-700 shadow-xs focus-within:border-gray-300 focus-within:ring-1 focus-within:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-200">
-                        <input
-                          type="text"
-                          className="w-6 bg-transparent text-center focus:outline-none"
-                          value={jumpPage}
-                          onChange={(e) => setJumpPage(e.target.value)}
-                          onKeyDown={handleJumpPage}
-                          onBlur={handleJumpPage}
-                        />
-                        <span className="mx-0.5 text-gray-400 dark:text-zinc-500">/</span>
-                        <span>{totalPages}</span>
+                      <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-xs dark:border-white/10 dark:bg-card dark:text-zinc-100">
+                        {page}
                       </div>
                       <Button
                         type="button"
@@ -830,7 +817,7 @@ export default function DocumentRequestsTab({
         <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10">
           <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm flex items-center justify-center shrink-0 dark:bg-red-950/30 dark:text-primary dark:shadow-none">
+              <div className="w-12 h-12 rounded-full border border-red-100 dark:border-zinc-800 bg-red-50 text-pup-maroon dark:text-primary shadow-sm flex items-center justify-center shrink-0 dark:bg-red-950/30 dark:text-primary dark:shadow-none">
                 <i className="ph-duotone ph-pencil-line text-2xl"></i>
               </div>
               <div className="min-w-0">
@@ -883,33 +870,33 @@ export default function DocumentRequestsTab({
                     <div className="relative mt-1.5">
                       <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
                       <Input
-                        className="pl-9 bg-white border-gray-300 rounded-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300"
+                        className="pl-9 bg-white border-gray-300 rounded-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 dark:bg-zinc-900 dark:border-zinc-800 dark:focus-visible:border-zinc-700"
                         value={studentSearch}
                         onChange={(e) => setStudentSearch(e.target.value)}
                         placeholder="Type to search by student name or number..."
                       />
                     </div>
                     {studentSuggestions.length > 0 && (
-                      <div className="absolute z-50 left-0 right-0 mt-1 rounded-brand border border-gray-200 bg-white overflow-hidden shadow-lg animate-in fade-in slide-in-from-top-1 duration-200">
+                      <div className="absolute z-50 left-0 right-0 mt-1 rounded-brand border border-gray-200 bg-white overflow-hidden shadow-lg animate-in fade-in slide-in-from-top-1 duration-200 dark:bg-zinc-900 dark:border-zinc-800">
                         {studentSuggestions.map((s) => {
                           const sn = String(s?.studentNo || s?.student_no || "");
                           return (
                             <button
                               key={sn}
                               type="button"
-                              className="w-full text-left px-3 py-2 border-b last:border-b-0 border-gray-100 hover:bg-red-50/50 transition-colors group flex flex-col gap-0.5"
+                              className="w-full text-left px-3 py-2 border-b last:border-b-0 border-gray-100 hover:bg-red-50/50 transition-colors group flex flex-col gap-0.5 dark:border-zinc-800 dark:hover:bg-zinc-800/50"
                               onClick={() => {
                                 setSelectedStudent(s);
                                 setCreateStudentNo(sn);
                                 setStudentSearch("");
                               }}
                             >
-                              <div className="text-sm font-bold text-gray-900 group-hover:text-pup-maroon transition-colors">
+                              <div className="text-sm font-bold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
                                 {s?.name}
                               </div>
-                              <div className="text-[10px] text-gray-500 font-mono flex items-center gap-1.5">
+                              <div className="text-[10px] text-gray-500 dark:text-zinc-400 font-mono flex items-center gap-1.5">
                                 <span>{sn}</span>
-                                <span className="text-gray-300">•</span>
+                                <span className="text-gray-300 dark:text-zinc-700">•</span>
                                 <span>{s?.courseCode || s?.course_code || "—"} - {s?.section || "—"}</span>
                               </div>
                             </button>
@@ -921,13 +908,13 @@ export default function DocumentRequestsTab({
 
                   <div>
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-gray-700 uppercase">
+                      <label className="text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">
                         Or enter custom student number
                       </label>
                       <span className="text-[10px] text-gray-400 font-semibold">If student is not in database</span>
                     </div>
                     <Input
-                      className="mt-1.5 font-mono uppercase bg-white border-gray-300 rounded-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300"
+                      className="mt-1.5 font-mono uppercase bg-white border-gray-300 rounded-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 dark:bg-zinc-900 dark:border-zinc-800 dark:focus-visible:border-zinc-700"
                       value={createStudentNo}
                       onChange={(e) => setCreateStudentNo(e.target.value)}
                       placeholder="202X-XXXXX-MN-0"
@@ -958,7 +945,7 @@ export default function DocumentRequestsTab({
                   Notes (optional)
                 </label>
                 <textarea
-                  className="mt-1.5 w-full min-h-[72px] rounded-brand border border-gray-300 p-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 dark:border-white/10"
+                  className="mt-1.5 w-full min-h-[72px] rounded-brand border border-gray-300 p-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 dark:bg-zinc-900 dark:border-zinc-800 dark:focus-visible:border-zinc-700"
                   value={createNotes}
                   onChange={(e) => setCreateNotes(e.target.value)}
                   placeholder="Requester name, contact, purpose…"
