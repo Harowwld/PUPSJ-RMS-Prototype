@@ -56,20 +56,29 @@ export default function RecordsArchiveTab({
   const [listType, setListType] = useState("card")
   const [storageFullscreen, setStorageFullscreen] = useState(false)
   const [showArchived, setShowArchived] = useState(false)
+  const [scrollTrigger, setScrollTrigger] = useState(0)
 
   // Restore Modal State
   const [restoreStudentOpen, setRestoreStudentOpen] = useState(false)
   const [restoreTarget, setRestoreTarget] = useState(null)
 
+  const handleLocateStudentClick = (student) => {
+    onLocateStudent(student)
+    setScrollTrigger((prev) => prev + 1)
+  }
+
   // Scroll to storage layout when a student is located
   useEffect(() => {
     if (activeStudent) {
-      const el = document.getElementById("storage-layout-section")
-      if (el) {
-        el.scrollIntoView({ behavior: "smooth", block: "center" })
-      }
+      const timer = setTimeout(() => {
+        const el = document.getElementById("storage-layout-section")
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" })
+        }
+      }, 100)
+      return () => clearTimeout(timer)
     }
-  }, [activeStudent])
+  }, [activeStudent, scrollTrigger])
 
   useEffect(() => {
     if (!storageFullscreen) return
@@ -422,7 +431,7 @@ export default function RecordsArchiveTab({
                 <div
                   key={s.studentNo}
                   className="group flex cursor-pointer items-center justify-between border-b border-gray-200 p-3 transition-colors hover:bg-gray-100 dark:border-white/10 dark:bg-muted dark:hover:bg-white/10"
-                  onClick={() => onLocateStudent(s)}
+                  onClick={() => handleLocateStudentClick(s)}
                 >
                   <div>
                     <div className="text-sm font-bold text-gray-800 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-100">
@@ -593,7 +602,7 @@ export default function RecordsArchiveTab({
                     <div
                       key={index}
                       className={`group relative flex cursor-pointer flex-col rounded-brand border border-gray-300 bg-white p-5 shadow-sm transition-all hover:border-gray-300 hover:shadow-md ${showArchived ? "opacity-90" : ""} dark:border-white/10 dark:bg-card dark:shadow-none dark:hover:border-zinc-700`}
-                      onClick={() => onLocateStudent(row.student)}
+                      onClick={() => handleLocateStudentClick(row.student)}
                     >
                       <div className="mb-4 flex items-start gap-4">
                         <Avatar className="h-12 w-12 shrink-0 border border-gray-100 shadow-sm dark:border-white/10 dark:shadow-none">
@@ -687,7 +696,7 @@ export default function RecordsArchiveTab({
                         <tr
                           key={row.key}
                           className="group cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-white/5 dark:bg-card"
-                          onClick={() => onLocateStudent(row.student)}
+                          onClick={() => handleLocateStudentClick(row.student)}
                         >
                           <td className="p-4">
                             <Avatar className="mx-auto h-9 w-9 border border-gray-100 shadow-xs transition-transform group-hover:scale-110 dark:border-white/10 dark:bg-muted">

@@ -1,4 +1,4 @@
-import { getStaffById } from "./staffRepo";
+import { getStaffById, verifyRecoveryCode } from "./staffRepo";
 import { verifyTOTP, decryptSecret, isValidToken } from "./totp";
 
 export async function requireTOTP(userId, token) {
@@ -11,31 +11,43 @@ export async function requireTOTP(userId, token) {
     return { valid: false, error: "User not found" };
   }
 
-  // If TOTP is NOT enabled, we don't need a token.
-  if (!staff.totp_enabled || !staff.totp_secret) {
+  // If 2FA/TOTP is NOT enabled, we don't need a token.
+  if (!staff.totp_enabled) {
     return { valid: true, error: null };
   }
 
-  // TOTP is enabled, so we REQUIRE a valid token.
+  // TOTP/Recovery is enabled, so we REQUIRE a valid token.
   if (!token) {
     return { valid: false, error: "Verification code required", missing: true };
   }
 
-  if (!isValidToken(token)) {
-    return { valid: false, error: "Invalid verification code format (must be 6 digits)" };
+  // Try Recovery Code first if the token has the length of a recovery code (8 characters)
+  if (token.trim().length === 8) {
+    const isRecoveryValid = await verifyRecoveryCode(userId, token.trim());
+    if (isRecoveryValid) {
+      return { valid: true, error: null };
+    }
   }
 
-  const decrypted = decryptSecret(staff.totp_secret);
-  if (!decrypted) {
-    return { valid: false, error: "Failed to decrypt TOTP secret" };
+  if (staff.totp_secret) {
+    if (!isValidToken(token)) {
+      return { valid: false, error: "Invalid verification code format (must be 6 digits or recovery code)" };
+    }
+
+    const decrypted = decryptSecret(staff.totp_secret);
+    if (!decrypted) {
+      return { valid: false, error: "Failed to decrypt TOTP secret" };
+    }
+
+    const isValid = verifyTOTP(token, decrypted);
+    if (!isValid) {
+      return { valid: false, error: "Invalid verification code" };
+    }
+
+    return { valid: true, error: null };
   }
 
-  const isValid = verifyTOTP(token, decrypted);
-  if (!isValid) {
-    return { valid: false, error: "Invalid verification code" };
-  }
-
-  return { valid: true, error: null };
+  return { valid: false, error: "Invalid verification code" };
 }
 
 export function extractTOTPToken(headers) {
