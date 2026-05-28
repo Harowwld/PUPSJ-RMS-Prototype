@@ -34,7 +34,6 @@ import {
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import { Select } from "@/components/ui/select"
-import { cn } from "@/lib/utils"
 
 export default function ScanUploadTab({
   loading,
