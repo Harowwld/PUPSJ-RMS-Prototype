@@ -156,6 +156,19 @@ class RateLimiter {
   }
 
   /**
+   * Completely reset rate limit for a specific endpoint/identifier (clear violations and hits)
+   */
+  async resetRateLimit(endpointType, identifier) {
+    const { clearRateLimitViolation, clearRateLimitHits } = await import("./rateLimitRepo");
+    await clearRateLimitViolation(endpointType, identifier);
+    await clearRateLimitHits(endpointType, identifier);
+    
+    // Clear cache
+    const cacheKey = `${endpointType}:${identifier}`;
+    cache.delete(cacheKey);
+  }
+
+  /**
    * Clean up expired cache entries
    */
   cleanupCache() {
@@ -222,9 +235,19 @@ export async function checkAuthLoginRateLimit(ipAddress, userId = null) {
   return await rateLimiter.checkRateLimit('auth_login', ipAddress, { ipAddress, userId });
 }
 
+export async function resetAuthLoginRateLimit(ipAddress) {
+  const rateLimiter = getRateLimiter();
+  await rateLimiter.resetRateLimit('auth_login', ipAddress);
+}
+
 export async function checkAuthForgotPasswordRateLimit(ipAddress, userId = null) {
   const rateLimiter = getRateLimiter();
   return await rateLimiter.checkRateLimit('auth_forgot_password', ipAddress, { ipAddress, userId });
+}
+
+export async function resetAuthForgotPasswordRateLimit(ipAddress) {
+  const rateLimiter = getRateLimiter();
+  await rateLimiter.resetRateLimit('auth_forgot_password', ipAddress);
 }
 
 export async function checkApiGeneralRateLimit(identifier, ipAddress, userId = null) {

@@ -99,6 +99,13 @@ export async function clearRateLimitViolation(endpointType, identifier) {
   );
 }
 
+export async function clearRateLimitHits(endpointType, identifier) {
+  return await dbRun(
+    "DELETE FROM rate_limit_hits WHERE endpoint_type = ? AND identifier = ?",
+    [endpointType, identifier]
+  );
+}
+
 export async function getRateLimitViolations(limit = 50, offset = 0) {
   return await dbAll(
     "SELECT * FROM rate_limit_violations ORDER BY created_at DESC LIMIT ? OFFSET ?",

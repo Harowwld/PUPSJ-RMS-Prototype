@@ -12,6 +12,7 @@ import { verifyTOTP, decryptSecret } from "@/lib/totp";
 import { createSession } from "@/lib/sessionStore";
 import { broadcastToAdmins } from "@/pages/api/socket";
 import { writeAuditLog } from "@/lib/auditLogRequest";
+import { checkAuthLoginRateLimit, resetAuthLoginRateLimit } from "@/lib/rateLimiter";
 
 export const runtime = "nodejs";
 
@@ -24,6 +25,35 @@ function addSecurityHeaders(response) {
 }
 
 export async function POST(req) {
+  // 1. Check Rate Limit
+  const forwardedFor = req.headers.get('x-forwarded-for');
+  const realIP = req.headers.get('x-real-ip');
+  const ipAddress = forwardedFor ? forwardedFor.split(',')[0].trim() : 
+                    realIP ? realIP.trim() : 
+                    req.ip || 'unknown';
+
+  const rateLimitResult = await checkAuthLoginRateLimit(ipAddress);
+  if (!rateLimitResult.allowed) {
+    return addSecurityHeaders(NextResponse.json(
+      { 
+        ok: false, 
+        error: rateLimitResult.reason === 'locked_out' 
+          ? `Account temporarily locked due to too many failed attempts. Please try again later.`
+          : 'Too many login attempts. Please try again later.',
+        retryAfter: rateLimitResult.resetTime ? Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000) : undefined
+      },
+      { 
+        status: 429,
+        headers: rateLimitResult.resetTime ? {
+          'Retry-After': Math.ceil((rateLimitResult.resetTime - Date.now()) / 1000),
+          'X-RateLimit-Limit': rateLimitResult.limit,
+          'X-RateLimit-Remaining': Math.max(0, rateLimitResult.remaining || 0),
+          'X-RateLimit-Reset': new Date(rateLimitResult.resetTime).toISOString()
+        } : {}
+      }
+    ));
+  }
+
   const body = await req.json().catch(() => null);
   if (!body || !body.tempToken || !body.code) {
     return addSecurityHeaders(NextResponse.json({ ok: false, error: "Missing verification data" }, { status: 400 }));
@@ -99,6 +129,9 @@ export async function POST(req) {
   const token = await signSessionToken(sessionPayload);
   createSession(token, staff.id, staff.role || "Staff", staff.email);
   
+  // Reset login rate limit on successful 2FA
+  await resetAuthLoginRateLimit(ipAddress);
+
   await writeAuditLog(req, `User Login (2FA)`, { 
     details: `personnel '${getStaffDisplayName(staff)}' successfully verified via ${methodUsed} and authenticated`, 
     actor: getStaffDisplayName(staff),
