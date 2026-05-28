@@ -108,7 +108,7 @@ const StaffTableRow = React.memo(({
           "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-wider transition-all",
           s.role === "Admin" || s.role === "SuperAdmin"
             ? "border-red-500/30 bg-red-500/10 text-red-600 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400"
-            : "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:border-blue-400/20 dark:bg-blue-400/10 dark:text-blue-400"
+            : "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-400"
         )}>
           <i className={cn(
             "ph-bold text-[10px]",
@@ -696,7 +696,10 @@ export default function StaffDirectoryTab({
                                 <div className="relative mb-6">
                                   <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                                   <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                                    <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
+                                    <i className={cn(
+                                      "ph-duotone text-5xl text-gray-300 dark:text-zinc-600",
+                                      activeTab === "active" ? "ph-users-three" : "ph-archive"
+                                    )}></i>
                                   </EmptyMedia>
                                 </div>
                                 <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">

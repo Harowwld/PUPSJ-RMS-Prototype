@@ -450,7 +450,8 @@ export default function LogTable({
                           logStartDate !== "" ||
                           logEndDate !== "") && (
                           <Button
-                            variant="ghost"
+                            variant="outline"
+                            size="sm"
                             onClick={() => {
                               setLocalSearch("")
                               setLogSearch("")
@@ -460,9 +461,10 @@ export default function LogTable({
                               setLogEndDate("")
                               setLogPage(1)
                             }}
-                            className="mt-6 font-bold text-pup-maroon dark:text-primary hover:bg-red-50 dark:text-primary dark:bg-red-950/30"
+                            className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 uppercase tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                           >
-                            RESET ALL FILTERS
+                            <i className="ph-bold ph-arrow-counter-clockwise"></i>
+                            CLEAR SEARCH
                           </Button>
                         )}
                       </EmptyHeader>

@@ -37,7 +37,24 @@ export default function RegisterAccountTab({
   const [lastAutoFilled, setLastAutoFilled] = useState({ id: false, email: false })
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [countdown, setCountdown] = useState(3)
+  const [skipCountdown, setSkipCountdown] = useState(false)
   const fnameRef = useRef(null)
+
+  // Fetch preferences
+  useEffect(() => {
+    const fetchPrefs = async () => {
+      try {
+        const res = await fetch("/api/system/settings")
+        const json = await res.json()
+        if (json.ok) {
+          setSkipCountdown(json.data.skip_registration_countdown === "true")
+        }
+      } catch (err) {
+        console.error("Failed to fetch registration preferences:", err)
+      }
+    }
+    fetchPrefs()
+  }, [])
 
   const [isIdManual, setIsIdManual] = useState(false)
   const [isEmailManual, setIsEmailManual] = useState(false)
@@ -88,17 +105,17 @@ export default function RegisterAccountTab({
 
   useEffect(() => {
     let timer
-    if (showConfirmModal && countdown > 0) {
+    if (showConfirmModal && !skipCountdown && countdown > 0) {
       timer = setInterval(() => {
         setCountdown((prev) => prev - 1)
       }, 1000)
     }
     return () => clearInterval(timer)
-  }, [showConfirmModal, countdown])
+  }, [showConfirmModal, countdown, skipCountdown])
 
   const handleOpenConfirm = (e) => {
     e.preventDefault()
-    setCountdown(3)
+    setCountdown(skipCountdown ? 0 : 3)
     setShowConfirmModal(true)
   }
 

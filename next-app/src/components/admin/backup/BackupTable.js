@@ -60,8 +60,7 @@ export default function BackupTable({
     <>
       <div
         className={cn(
-          "flex-1 overflow-hidden overflow-x-auto overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-sm select-none dark:border-white/10 dark:bg-card min-h-[400px]",
-          backups.length === 0 && "border-none shadow-none"
+          "flex-1 overflow-hidden overflow-x-auto overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-sm select-none dark:border-white/10 dark:bg-card min-h-[400px]"
         )}
       >
         <table className="min-w-full text-sm">
@@ -137,7 +136,7 @@ export default function BackupTable({
                         </EmptyMedia>
                       </div>
                       <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
-                        {isFilterActive ? "No matches found" : "No snapshots detected"}
+                        {isFilterActive ? "No matches found" : "No Backup Record Detected"}
                       </EmptyTitle>
                       <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                         {isFilterActive 
@@ -160,7 +159,7 @@ export default function BackupTable({
                           className="mt-6 flex h-10 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-black tracking-widest text-white shadow-lg active:scale-95 transition-all dark:shadow-none uppercase"
                         >
                           <i className="ph-bold ph-lightning"></i>
-                          CREATE INITIAL SNAPSHOT
+                          CREATE BACKUP RECORD
                         </Button>
                       )}
                     </EmptyHeader>

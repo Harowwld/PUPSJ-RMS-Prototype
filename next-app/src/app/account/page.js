@@ -78,6 +78,10 @@ function AccountPageContent() {
 
   const [activeTab, setActiveTab] = useState("profile");
 
+  // System Settings State
+  const [systemSettings, setSystemSettings] = useState({});
+  const [systemSettingsLoading, setSystemSettingsLoading] = useState(false);
+
   const isAdminRole = (role) => {
     const normalized = String(role || "").toLowerCase();
     return (
@@ -108,6 +112,16 @@ function AccountPageContent() {
         setLname(user.lname || "");
         setUsername(user.email || user.username || "");
 
+        // If admin, fetch system settings
+        if (isAdminRole(user.role)) {
+          fetch("/api/system/settings")
+            .then(res => res.json())
+            .then(json => {
+              if (json.ok) setSystemSettings(json.data);
+            })
+            .catch(err => console.error("Failed to fetch system settings:", err));
+        }
+
         const jsonUserSecurity = await resUserSecurity.json().catch(() => null);
         if (jsonUserSecurity?.ok && jsonUserSecurity.data) {
           setHasSetSecurity(jsonUserSecurity.data.hasAllQuestions);
@@ -130,6 +144,29 @@ function AccountPageContent() {
       }
     })();
   }, [router]);
+
+  const handleSystemSettingToggle = async (key, checked) => {
+    setSystemSettingsLoading(true);
+    const newValue = String(checked);
+    try {
+      const res = await fetch("/api/system/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ key, value: newValue }),
+      });
+      const json = await res.json();
+      if (json.ok) {
+        setSystemSettings((prev) => ({ ...prev, [key]: newValue }));
+        toast.success("System preference updated successfully.");
+      } else {
+        throw new Error(json.error);
+      }
+    } catch (error) {
+      toast.error(error.message || "Could not save preference.");
+    } finally {
+      setSystemSettingsLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -1272,6 +1309,49 @@ function AccountPageContent() {
                            Choose your preferred color theme for the interface.
                         </p>
                       </div>
+
+                      {isAdminRole(authUser?.role) && (
+                        <>
+                          <Separator className="bg-gray-100 dark:bg-white/5" />
+
+                          <div className="space-y-6">
+                            <div className="flex items-center justify-between px-1">
+                              <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">
+                                Administrative Controls
+                              </label>
+                              <Badge variant="outline" className="h-5 px-2 bg-amber-50 border-amber-200 text-amber-600 font-black text-[9px] uppercase dark:bg-amber-950/30 dark:border-amber-900/30 dark:text-amber-400">
+                                Global Config
+                              </Badge>
+                            </div>
+
+                            <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 dark:bg-white/5 dark:border-white/10">
+                              <div className="flex items-center justify-between gap-6">
+                                <div className="space-y-1.5">
+                                  <h4 className="text-sm font-black text-gray-900 dark:text-zinc-50 uppercase tracking-tight">Skip Registration Countdown</h4>
+                                  <p className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 leading-relaxed max-w-md">
+                                    When enabled, the 3-second safety delay on the registration confirmation button is removed system-wide.
+                                  </p>
+                                </div>
+                                <label className="relative inline-flex cursor-pointer items-center shrink-0">
+                                  <input 
+                                    type="checkbox" 
+                                    className="sr-only peer"
+                                    checked={systemSettings.skip_registration_countdown === "true"}
+                                    onChange={(e) => handleSystemSettingToggle("skip_registration_countdown", e.target.checked)}
+                                    disabled={systemSettingsLoading}
+                                  />
+                                  <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-pup-maroon peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:border-gray-600 dark:bg-zinc-700 dark:peer-focus:ring-red-800"></div>
+                                </label>
+                              </div>
+                            </div>
+
+                            <p className="text-[11px] text-amber-600/70 font-bold uppercase tracking-wider mt-4 ml-1 dark:text-amber-400/50 italic">
+                               <i className="ph-bold ph-warning-octagon mr-1.5"></i>
+                               Note: These settings affect all administrators and the global system behavior.
+                            </p>
+                          </div>
+                        </>
+                      )}
                    </div>
                 </CardContent>
               </Card>

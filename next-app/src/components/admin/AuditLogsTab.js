@@ -239,16 +239,6 @@ export default function AuditLogsTab({
             actions={
               <div className="flex items-center gap-2">
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDownloadCSV}
-                  disabled={logTotal === 0 || isExporting}
-                  className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:text-zinc-300 dark:shadow-none dark:bg-red-950/30 dark:border-white/10"
-                >
-                  <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv"} text-base`}></i>
-                  {isExporting ? "PREPARING..." : "EXPORT"}
-                </Button>
-                <Button
                   variant="default"
                   size="sm"
                   onClick={handlePreviewPDF}
@@ -257,6 +247,16 @@ export default function AuditLogsTab({
                 >
                   <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-pdf"} text-base`}></i>
                   {isExporting ? "GENERATING..." : "GENERATE REPORT"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadCSV}
+                  disabled={logTotal === 0 || isExporting}
+                  className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:text-zinc-300 dark:shadow-none dark:bg-red-950/30 dark:border-white/10"
+                >
+                  <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv"} text-base`}></i>
+                  {isExporting ? "PREPARING..." : "EXPORT"}
                 </Button>
 
                 <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4 dark:border-white/10">
