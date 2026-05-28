@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from "rea
 import { useRouter, useSearchParams } from "next/navigation";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import Sidebar from "@/components/shared/Sidebar";
+import StaffTopBar from "@/components/staff/StaffTopBar";
 import { toast } from "sonner";
 import { StaffGuard } from "@/components/shared/AuthGuard";
 import RecordsArchiveTab from "@/components/staff/RecordsArchiveTab";
@@ -1121,12 +1121,12 @@ function StaffPageContent() {
       <Tabs
         value={view}
         onValueChange={switchView}
-        orientation="vertical"
-        className="flex-1 flex overflow-hidden w-full gap-0"
+        orientation="horizontal"
+        className="flex-1 flex flex-col overflow-hidden w-full gap-0 relative"
       >
-        <Sidebar items={sidebarItems} activeKey={view} onSelect={switchView} />
+        <StaffTopBar items={sidebarItems} activeKey={view} onSelect={switchView} />
 
-        <main className="flex-1 overflow-hidden p-4 relative w-full min-w-0">
+        <main className="flex-1 overflow-y-auto pt-24 p-4 relative w-full min-w-0">
           <TabsContent value="search" className="h-full m-0 border-0 focus-visible:ring-0">
             <RecordsArchiveTab
               loading={!storageLayout}

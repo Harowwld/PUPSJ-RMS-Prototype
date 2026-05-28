@@ -321,29 +321,29 @@ export default function RecordsArchiveTab({
   return (
     <div
       id="view-search"
-      className="animate-fade-up font-inter flex h-full w-full flex-col gap-4 lg:flex-row"
+      className="animate-fade-up font-inter flex h-auto w-full flex-col gap-4 lg:flex-row"
     >
-      <div className="flex flex-1 flex-col items-stretch gap-4 overflow-hidden lg:flex-row">
-        <div className="flex w-full flex-shrink-0 flex-col gap-4 lg:w-1/4 h-full overflow-hidden">
+      <div className="flex flex-1 flex-col items-stretch gap-4 lg:flex-row">
+        <div className="flex w-full flex-shrink-0 flex-col gap-4 lg:w-1/4 h-auto">
           {/* Pill Tabs Container (Standalone) */}
           <div className="flex w-full cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 shadow-xs backdrop-blur-sm dark:border-white/10 dark:bg-muted/50 dark:shadow-none">
             <button
               type="button"
               onClick={() => setShowArchived(false)}
               className={cn(
-                "group flex h-11 flex-1 cursor-pointer items-center justify-center gap-3 px-4 text-xs font-bold transition-all duration-200 active:scale-[0.98]",
+                "group flex h-12 flex-1 cursor-pointer items-center justify-center gap-3 px-4 text-sm font-bold transition-all duration-200 active:scale-[0.98]",
                 !showArchived
                   ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
                   : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
               )}
             >
-              <i className={cn("ph-bold ph-users-three", !showArchived ? "text-pup-maroon dark:text-primary" : "text-gray-400 dark:text-zinc-500")} />
-              <span className="whitespace-nowrap tracking-wide text-[10px]">ACTIVE</span>
+              <i className={cn("ph-bold ph-users-three text-lg", !showArchived ? "text-pup-maroon dark:text-primary" : "text-gray-400 dark:text-zinc-500")} />
+              <span className="whitespace-nowrap tracking-wide text-xs font-black">ACTIVE</span>
               <span
                 className={cn(
-                  "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-black transition-all duration-300",
+                  "flex h-6 min-w-[30px] items-center justify-center rounded-full px-2 text-[11px] font-black transition-all duration-300",
                   !showArchived
-                    ? "bg-pup-maroon text-white shadow-sm dark:bg-red-500/20 dark:text-red-400"
+                    ? "bg-pup-maroon text-white shadow-sm dark:bg-[#352021] dark:text-primary"
                     : "bg-gray-200 text-gray-500 dark:bg-zinc-800 dark:text-zinc-500"
                 )}
               >
@@ -354,19 +354,19 @@ export default function RecordsArchiveTab({
               type="button"
               onClick={() => setShowArchived(true)}
               className={cn(
-                "group flex h-11 flex-1 cursor-pointer items-center justify-center gap-3 px-4 text-xs font-bold transition-all duration-200 active:scale-[0.98]",
+                "group flex h-12 flex-1 cursor-pointer items-center justify-center gap-3 px-4 text-sm font-bold transition-all duration-200 active:scale-[0.98]",
                 showArchived
                   ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
                   : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
               )}
             >
-              <i className={cn("ph-bold ph-archive", showArchived ? "text-pup-maroon dark:text-primary" : "text-gray-400 dark:text-zinc-500")} />
-              <span className="whitespace-nowrap tracking-wide text-[10px]">ARCHIVED</span>
+              <i className={cn("ph-bold ph-archive text-lg", showArchived ? "text-pup-maroon dark:text-primary" : "text-gray-400 dark:text-zinc-500")} />
+              <span className="whitespace-nowrap tracking-wide text-xs font-black">ARCHIVED</span>
               <span
                 className={cn(
-                  "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-black transition-all duration-300",
+                  "flex h-6 min-w-[30px] items-center justify-center rounded-full px-2 text-[11px] font-black transition-all duration-300",
                   showArchived
-                    ? "bg-pup-maroon text-white shadow-sm dark:bg-red-500/20 dark:text-red-400"
+                    ? "bg-pup-maroon text-white shadow-sm dark:bg-[#352021] dark:text-primary"
                     : "bg-gray-200 text-gray-500 dark:bg-zinc-800 dark:text-zinc-500"
                 )}
               >
@@ -487,7 +487,7 @@ export default function RecordsArchiveTab({
           </section>
         </div>
 
-        <section className="flex h-full min-h-0 w-full flex-1 flex-col gap-4 overflow-y-auto lg:w-3/4">
+        <section className="flex h-auto w-full flex-1 flex-col gap-4 lg:w-3/4">
           <div className="relative flex min-h-[250px] shrink-0 flex-col rounded-2xl overflow-hidden border border-gray-300 bg-white shadow-sm dark:bg-[#202020] dark:shadow-none dark:border-white/10">
             <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-gray-200 bg-white p-4 text-sm dark:border-white/10 dark:bg-[#202020]">
               <div className="flex items-center gap-2">

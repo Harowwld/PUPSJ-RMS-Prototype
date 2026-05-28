@@ -426,9 +426,9 @@ export default function ScanUploadTab({
   return (
     <div
       id="view-upload"
-      className="animate-fade-up font-inter flex h-full min-h-0 w-full flex-col"
+      className="animate-fade-up font-inter flex h-auto w-full flex-col"
     >
-      <Card className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-gray-200/50 backdrop-blur-xl dark:border-white/10 dark:bg-card/80 dark:shadow-none">
+      <Card className="flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-gray-200/50 backdrop-blur-xl dark:border-white/10 dark:bg-card/80 dark:shadow-none">
         <PageHeader
           icon="ph-scan"
           title="Scan & Upload"
@@ -452,7 +452,7 @@ export default function ScanUploadTab({
           }
         />
 
-        <CardContent className="flex min-h-0 flex-1 flex-col p-6 pt-4">
+        <CardContent className="flex flex-col p-6 pt-4">
           {loading ? (
             <div className="flex h-full w-full flex-1 flex-col items-center justify-center bg-white p-10 min-h-[400px] dark:bg-card">
               <div className="flex flex-col items-center gap-4">
@@ -551,9 +551,9 @@ export default function ScanUploadTab({
                 </div>
               </div>
 
-              <div className="flex min-h-0 flex-1 flex-col gap-4 lg:flex-row">
+              <div className="flex flex-col gap-4 lg:flex-row h-auto">
                 <section
-                  className={`relative flex h-full min-h-0 flex-col items-center justify-center rounded-brand border border-gray-300 bg-white p-8 shadow-sm transition-all duration-300 ${ uploadMode === "csv" ? "w-full lg:w-[70%]" : "lg:w-[48%]" } dark:border-white/10 dark:bg-card dark:shadow-none`}
+                  className={`relative flex h-auto min-h-[400px] flex-col items-center justify-center rounded-brand border border-gray-300 bg-white p-8 shadow-sm transition-all duration-300 ${ uploadMode === "csv" ? "w-full lg:w-[70%]" : "lg:w-[48%]" } dark:border-white/10 dark:bg-card dark:shadow-none`}
                 >
                   {uploadMode === "csv" ? (
                     <div
@@ -1208,7 +1208,7 @@ export default function ScanUploadTab({
                 </section>
 
                 <section
-                  className={`font-inter flex h-full min-h-0 flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm transition-all duration-300 ${ uploadMode === "csv" ? "w-full lg:w-[70%]" : "lg:w-[52%]" } dark:border-white/10 dark:bg-card dark:shadow-none`}
+                  className={`font-inter flex h-auto flex-col rounded-brand border border-gray-300 bg-white shadow-sm transition-all duration-300 ${ uploadMode === "csv" ? "w-full lg:w-[70%]" : "lg:w-[52%]" } dark:border-white/10 dark:bg-card dark:shadow-none`}
                 >
                   <CardHeader className="flex flex-col items-center justify-between gap-4 border-b border-gray-100 bg-gray-50/50 p-6 px-8 sm:flex-row dark:border-white/10 dark:bg-white/5">
                     <div className="flex items-center gap-4">
@@ -1232,7 +1232,7 @@ export default function ScanUploadTab({
                     </div>
                   </CardHeader>
 
-                  <div className="flex-1 overflow-y-auto bg-gray-50 p-6 dark:bg-white/5">
+                  <div className="bg-gray-50 p-6 dark:bg-white/5">
                     {uploadMode === "pdf" ? (
                       <div className="space-y-5">
                         {uploadStudentIsExisting && (
