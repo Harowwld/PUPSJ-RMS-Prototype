@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "tailwindcss-animate";
 
 @font-face {
   font-family: 'Inter';
@@ -304,12 +305,27 @@
     background-color: oklch(0.25 0 0);
 }
 
+/* View Transitions */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 0.3s;
+  animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
 /* Radix & Shadcn UI Fixes */
 @layer utilities {
   [data-sonner-toast] {
     @apply rounded-xl border-border bg-card text-card-foreground shadow-2xl;
   }
   
+  [data-sonner-toast][data-mounted='true'] {
+    @apply animate-in fade-in zoom-in duration-500;
+  }
+
+  [data-sonner-toast][data-removed='true'] {
+    @apply animate-out fade-out zoom-out duration-500;
+  }
+
   .dark [data-sonner-toast] {
     background-color: oklch(0.24 0 0);
     border-color: oklch(1 0 0 / 12%);
@@ -407,86 +423,6 @@
 ::view-transition-new(root) {
   animation-duration: 0.3s;
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-/* Base Animations Utility Support */
-@theme {
-  --animate-in: animate-in 0.2s ease-out forwards;
-  --animate-out: animate-out 0.2s ease-in forwards;
-}
-
-@keyframes animate-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes animate-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
-}
-
-@utility animate-in {
-  animation: animate-in var(--animate-duration, 200ms) ease-out forwards;
-}
-
-@utility animate-out {
-  animation: animate-out var(--animate-duration, 200ms) ease-in forwards;
-}
-
-@utility fade-in {
-  @keyframes fade-in {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-  animation-name: fade-in;
-}
-
-@utility fade-out {
-  @keyframes fade-out {
-    from { opacity: 1; }
-    to { opacity: 0; }
-  }
-  animation-name: fade-out;
-}
-
-@utility zoom-in-95 {
-  @keyframes zoom-in-95 {
-    from { transform: scale(0.95); }
-    to { transform: scale(1); }
-  }
-  animation-name: zoom-in-95;
-}
-
-@utility zoom-out-95 {
-  @keyframes zoom-out-95 {
-    from { transform: scale(1); }
-    to { transform: scale(0.95); }
-  }
-  animation-name: zoom-out-95;
-}
-
-@utility slide-in-from-top-2 {
-  @keyframes slide-in-from-top-2 {
-    from { transform: translateY(-0.5rem); }
-    to { transform: translateY(0); }
-  }
-  animation-name: slide-in-from-top-2;
-}
-
-@utility slide-out-to-top-2 {
-  @keyframes slide-out-to-top-2 {
-    from { transform: translateY(0); }
-    to { transform: translateY(-0.5rem); }
-  }
-  animation-name: slide-out-to-top-2;
-}
-
-@utility slide-in-from-bottom-4 {
-  @keyframes slide-in-from-bottom-4 {
-    from { transform: translateY(1rem); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-  }
-  animation-name: slide-in-from-bottom-4;
 }
 
 /* Brand Buttons */

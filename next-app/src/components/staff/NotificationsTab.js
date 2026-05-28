@@ -220,7 +220,7 @@ export default function NotificationsTab({
             </Empty>
           ) : (
             <>
-              <div className="relative flex-1 overflow-x-auto overflow-y-auto rounded-brand border border-gray-200 dark:border-white/10">
+              <div className="relative h-auto w-full overflow-x-auto overflow-y-auto rounded-xl border border-gray-200 dark:border-white/10">
                 {isRefreshing && (
                   <div className="absolute inset-0 z-20 flex h-full w-full flex-col items-center justify-center bg-white p-10 dark:bg-card">
                     <div className="flex flex-col items-center gap-4">
@@ -231,32 +231,35 @@ export default function NotificationsTab({
                     </div>
                   </div>
                 )}
-                <table className="min-w-full text-sm">
-                  <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
-                    <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
-                      <th className="p-3 font-bold">Decision</th>
-                      <th className="p-3 font-bold">Student No</th>
-                      <th className="p-3 font-bold">Name</th>
-                      <th className="p-3 font-bold">Type</th>
-                      <th className="p-3 font-bold">File</th>
-                      <th className="p-3 font-bold">Reviewed By</th>
-                      <th className="p-3 font-bold">Reviewed</th>
-                      <th className="p-3 text-right font-bold">Actions</th>
+                <table className="min-w-full text-sm table-fixed">
+                  <thead className="border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">
+                    <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
+                      <th className="p-4 w-32">Decision</th>
+                      <th className="p-4 w-36">Student No</th>
+                      <th className="p-4">Name</th>
+                      <th className="p-4 w-36">Type</th>
+                      <th className="p-4">File</th>
+                      <th className="p-4 w-32">Reviewed By</th>
+                      <th className="p-4 w-36">Reviewed</th>
+                      <th className="p-4 text-right w-40">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-white/10">
+                  <tbody className="divide-y divide-gray-100 dark:divide-white/10">       
                     {items.length === 0 ? (
                       <tr className="border-0 hover:bg-transparent">
                         <td colSpan={8} className="border-0 p-0">
-                          <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+                          <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
                             <EmptyHeader className="flex flex-col items-center gap-0">
-                              <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                                <i className="ph-duotone ph-bell text-3xl text-pup-maroon dark:text-primary"></i>
-                              </EmptyMedia>
-                              <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
-                                No notifications yet
+                              <div className="relative mb-6">
+                                <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                                  <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
+                                </EmptyMedia>
+                              </div>
+                              <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
+                                No notifications found
                               </EmptyTitle>
-                              <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
+                              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                                 When admins approve or decline uploaded
                                 documents, updates will appear here.
                               </EmptyDescription>
@@ -275,10 +278,12 @@ export default function NotificationsTab({
                         return (
                           <tr
                             key={n.id}
-                            className={`transition-colors hover:bg-gray-50 ${ isUnread ? "bg-red-50" : "" } dark:hover:bg-white/10 dark:bg-card`}
+                            className={cn(
+                              "group transition-all duration-200 hover:bg-gray-50 dark:bg-card dark:hover:bg-white/5 select-none",
+                              isUnread && "bg-amber-50 dark:bg-amber-950/40"
+                            )}
                           >
-                            <td className="p-3">
-                              <div className="flex items-center gap-2">
+                            <td className="p-4">                              <div className="flex items-center gap-2">
                                 <Badge
                                   variant="outline"
                                   className={`${ui.badge} rounded-full border px-2 py-1 text-xs font-bold shadow-xs`}

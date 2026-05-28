@@ -377,21 +377,21 @@ export default function DocumentsTab({
               )}
               <div 
                 key={`${docsForm.studentNo}-${docsForm.docType}`}
-                className="flex-1 overflow-y-auto overflow-x-auto border border-gray-200 rounded-brand animate-fade-up dark:border-white/10"
+                className="h-auto w-full overflow-x-auto border border-gray-200 rounded-xl animate-fade-up dark:border-white/10"
               >
-                <table className="min-w-full text-sm">
-                  <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 dark:bg-muted dark:border-white/10">
-                    <tr className="text-left text-xs uppercase tracking-wider text-gray-600 dark:text-zinc-300 dark:border-white/10">
-                      <th className="p-3 font-bold">Student No</th>
-                      <th className="p-3 font-bold">Name</th>
-                      <th className="p-3 font-bold">Type</th>
-                      <th className="p-3 font-bold">Status</th>
-                      <th className="p-3 font-bold">File</th>
-                      <th className="p-3 font-bold">Created</th>
-                      <th className="p-3 font-bold text-right">Actions</th>
+                <table className="min-w-full text-sm table-fixed">
+                  <thead className="border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">
+                    <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
+                      <th className="p-4 w-40">Student No</th>
+                      <th className="p-4">Name</th>
+                      <th className="p-4 w-32">Type</th>
+                      <th className="p-4 w-32">Status</th>
+                      <th className="p-4 w-48">File</th>
+                      <th className="p-4 w-36">Created</th>
+                      <th className="p-4 w-40 text-right">Actions</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-white/10">
+                  <tbody className="divide-y divide-gray-100 dark:divide-white/10">
                     {!(
                       docsForm.studentNo.trim() ||
                       docsForm.studentName.trim() ||
@@ -399,13 +399,16 @@ export default function DocumentsTab({
                     ) ? (
                       <tr className="border-0 hover:bg-transparent">
                         <td colSpan={7} className="p-0 border-0">
-                          <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
+                          <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
                             <EmptyHeader className="flex flex-col items-center gap-0">
-                              <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
-                                <i className="ph-duotone ph-magnifying-glass text-3xl text-pup-maroon dark:text-primary"></i>
-                              </EmptyMedia>
-                              <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">Search Documents</EmptyTitle>
-                              <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md dark:text-zinc-300">
+                              <div className="relative mb-6">
+                                <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                                  <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
+                                </EmptyMedia>
+                              </div>
+                              <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">Search Documents</EmptyTitle>
+                              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                                 Enter a student number, name, or select a document
                                 type to find related records.
                               </EmptyDescription>
@@ -416,14 +419,17 @@ export default function DocumentsTab({
                     ) : docsRows.length === 0 ? (
                       <tr className="border-0 hover:bg-transparent">
                         <td colSpan={7} className="p-0 border-0">
-                          <Empty className="h-[400px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
+                          <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
                             <EmptyHeader className="flex flex-col items-center gap-0">
-                              <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
-                                <i className="ph-duotone ph-warning-circle text-3xl text-red-600"></i>
-                              </EmptyMedia>
-                              <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">No Results Found</EmptyTitle>
-                              <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md dark:text-zinc-300">
-                                We couldn&apos;t find any documents matching your
+                              <div className="relative mb-6">
+                                <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                                  <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
+                                </EmptyMedia>
+                              </div>
+                              <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">No Results Found</EmptyTitle>
+                              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                                We couldn't find any documents matching your
                                 search criteria.
                               </EmptyDescription>
                             </EmptyHeader>
@@ -434,21 +440,26 @@ export default function DocumentsTab({
                       docsRows.map((r, idx) => (
                         <tr
                           key={r.id || idx}
-                          className={`hover:bg-gray-50 ${ r.status === "uploaded" ? (r.verificationStatus === "unverified" ? "bg-amber-50" : "bg-green-50/40") : "bg-red-50" } dark:hover:bg-white/10 dark:bg-card`}
+                          className={cn(
+                            "group transition-all duration-200 hover:bg-gray-50 dark:bg-card dark:hover:bg-white/5 select-none",
+                            r.status === "uploaded" 
+                              ? (r.verificationStatus === "unverified" ? "bg-amber-50 dark:bg-amber-950/40" : "bg-green-50/40 dark:bg-emerald-950/30") 
+                              : "bg-red-50 dark:bg-red-950/30"
+                          )}
                         >
-                          <td className="p-3 font-mono font-bold text-gray-900 dark:text-zinc-50">
+                          <td className="p-4 font-mono font-bold text-gray-900 dark:text-zinc-50">
                             {r.student_no}
                           </td>
-                          <td className="p-3 text-gray-800 font-medium dark:text-zinc-100">
+                          <td className="p-4 text-gray-800 font-medium dark:text-zinc-100">
                             {r.student_name || "—"}
                           </td>
-                          <td className="p-3">
+                          <td className="p-4">
                             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-red-500/20 bg-red-500/10 text-[10px] font-black uppercase tracking-wider text-red-600 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
                               <i className="ph-bold ph-file text-[11px]"></i>
                               {r.doc_type}
                             </span>
                           </td>
-                          <td className="p-3">
+                          <td className="p-4">
                             {r.status === "uploaded" ? (
                               r.verificationStatus === "unverified" ? (
                                 <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-amber-500/20 bg-amber-500/10 text-[10px] font-black uppercase tracking-wider text-amber-600 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-400">
@@ -468,7 +479,7 @@ export default function DocumentsTab({
                               </span>
                             )}
                           </td>
-                          <td className="p-3 text-gray-700 max-w-[180px] dark:text-zinc-200">
+                          <td className="p-4 text-gray-700 max-w-[180px] dark:text-zinc-200">
                             {r.doc ? (
                               <>
                                 <div className="truncate font-medium text-gray-900 dark:text-zinc-50" title={r.doc.original_filename}>

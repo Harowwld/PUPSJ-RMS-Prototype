@@ -904,7 +904,13 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         <div className="flex flex-col gap-1">
           <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">Templates</label>
           <div className="flex h-10 items-center overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xs dark:border-white/10 dark:bg-card">
-            <Select className="h-full cursor-pointer border-r border-gray-100 bg-transparent px-4 text-xs font-bold text-gray-700 focus:outline-none dark:border-white/10 dark:text-zinc-200" value={selectedTemplateId} onChange={(e) => setSelectedTemplateId(e.target.value)} disabled={!activeRoom}>
+            <Select
+              menuClassName="min-w-max"
+              className="h-full cursor-pointer border-r border-gray-100 bg-transparent px-4 text-xs font-bold text-gray-700 focus:outline-none dark:border-white/10 dark:text-zinc-200 dark:bg-transparent dark:hover:bg-white/5"
+              value={selectedTemplateId}
+              onChange={(e) => setSelectedTemplateId(e.target.value)}
+              disabled={!activeRoom}
+            >
               {ROOM_TEMPLATES.map((tpl) => <option key={`tpl-opt-${tpl.id}`} value={tpl.id}>{tpl.name}</option>)}
             </Select>
             <Button type="button" variant="ghost" onClick={() => setTemplateApplyConfirmOpen(true)} className="h-full rounded-none bg-gray-50 px-4 text-[10px] font-black tracking-widest uppercase text-pup-maroon dark:text-primary hover:bg-pup-maroon hover:text-white dark:bg-white/5 dark:text-primary" disabled={!activeRoom}>USE</Button>

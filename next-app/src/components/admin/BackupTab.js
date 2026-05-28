@@ -1,7 +1,6 @@
 "use client"
 
 import { useMemo, useRef, useState, useEffect } from "react"
-import { format } from "date-fns"
 import {
   Card,
   CardContent,
@@ -16,17 +15,12 @@ import {
   EmptyMedia,
 } from "@/components/ui/empty"
 import {
-  Tooltip,
-  TooltipContent,
   TooltipProvider,
-  TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { formatPHDateTime } from "@/lib/timeFormat"
 
 import HealthSidebar from "./backup/HealthSidebar"
 import BackupTable from "./backup/BackupTable"
-import BackupPagination from "./backup/BackupPagination"
-import BackupFilters from "./backup/BackupFilters"
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import { RefreshButton } from "@/components/shared/RefreshButton"
@@ -172,7 +166,6 @@ export default function BackupTab({
     if (!f) return;
 
     setLocalLoading(prev => ({ ...prev, uploading: true }));
-    // Small delay to ensure the UI updates before the heavy file selection state update
     setTimeout(() => {
       onRestoreFileChange(e);
       setLocalLoading(prev => ({ ...prev, uploading: false }));
@@ -220,7 +213,7 @@ export default function BackupTab({
       <div className="animate-fade-up font-inter flex min-h-full w-full flex-col gap-4 pb-8">
         <div className="relative flex min-h-[600px] w-full items-stretch gap-5">
           {/* MAIN CONTENT */}
-          <Card className="flex h-fit min-h-[600px] w-full flex-1 flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
+          <Card className="flex h-fit min-h-[600px] w-full flex-1 flex-col overflow-hidden rounded-[2rem] border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-card dark:shadow-none">
             <PageHeader
               icon="ph-hard-drives"
               title="Backup Records"
@@ -231,10 +224,10 @@ export default function BackupTab({
                     <Button
                       onClick={handleGenerateBackup}
                       disabled={localLoading.generating}
-                      className="flex h-9 items-center gap-2 btn-brand-red shadow-sm active:scale-95 transition-all dark:shadow-none"
+                      className="flex h-10 items-center gap-2 rounded-brand btn-brand-red shadow-sm active:scale-95 transition-all dark:shadow-none px-5 text-[10px] font-black tracking-widest"
                     >
                       <i
-                        className={`ph-bold ${localLoading.generating ? "ph-arrows-clockwise animate-spin" : "ph-download-simple"} text-sm`}
+                        className={cn("ph-bold text-base", localLoading.generating ? "ph-arrows-clockwise animate-spin" : "ph-download-simple")}
                       ></i>
                       {localLoading.generating
                         ? localLoading.generatingStatus || "WORKING..."
@@ -247,10 +240,10 @@ export default function BackupTab({
                         restoreFileRef.current.click()
                       }
                       disabled={localLoading.uploading}
-                      className="flex h-9 items-center gap-2 rounded-brand border-amber-300 bg-amber-50 px-4 text-xs font-bold text-amber-700 shadow-sm transition-colors hover:border-amber-500 hover:bg-amber-100/50 hover:text-amber-800 active:scale-95 disabled:opacity-50 dark:bg-amber-950/30 dark:shadow-none"
+                      className="flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:border-white/10"
                     >
                       <i
-                        className={`ph-bold ${localLoading.uploading ? "ph-arrows-clockwise animate-spin" : "ph-arrow-counter-clockwise"} text-sm`}
+                        className={cn("ph-bold text-base", localLoading.uploading ? "ph-arrows-clockwise animate-spin" : "ph-arrow-counter-clockwise")}
                       ></i>{" "}
                       {localLoading.uploading
                         ? "READING FILE..."
@@ -308,7 +301,7 @@ export default function BackupTab({
                 </Empty>
               </CardContent>
             ) : (
-              <>
+              <div className="flex-1 flex flex-col min-h-0 bg-white dark:bg-card">
                 {/* Active Filter Chips Row */}
                 {(localSearch !== "" ||
                   backupStartDate !== "" ||
@@ -367,22 +360,7 @@ export default function BackupTab({
                   </div>
                 )}
 
-                <BackupFilters
-                  localSearch={localSearch}
-                  handleSearchChange={(e) => {
-                    setLocalSearch(e.target.value)
-                  }}
-                  backupStartDate={backupStartDate}
-                  setBackupStartDate={setBackupStartDate}
-                  backupEndDate={backupEndDate}
-                  setBackupEndDate={setBackupEndDate}
-                  setPage={setPage}
-                  setLocalSearch={setLocalSearch}
-                  setBackupSearch={setBackupSearch}
-                  backupTotal={(backups || []).length}
-                />
-
-                <CardContent className="flex min-h-[400px] flex-1 flex-col bg-white p-5 dark:bg-card">
+                <div className="flex-1 flex flex-col p-6 min-h-0">
                   <BackupTable
                     backups={backups}
                     sortedAndPaginatedBackups={sortedAndPaginatedBackups}
@@ -417,8 +395,8 @@ export default function BackupTab({
                     handleJumpPage={handleJumpPage}
                     handleItemsPerPageChange={handleItemsPerPageChange}
                   />
-                </CardContent>
-              </>
+                </div>
+              </div>
             )}
           </Card>
 
@@ -441,6 +419,3 @@ export default function BackupTab({
     </TooltipProvider>
   )
 }
-
-
-
