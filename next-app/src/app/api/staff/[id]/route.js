@@ -52,26 +52,29 @@ export async function PATCH(req, ctx) {
 
   const name = await getStaffDisplayNameById(id);
 
-  // Handle explicit status toggle (archiving/restoring)
-  if (body.status === "Active") {
-    const row = await restoreStaff(id);
-    if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
-    await writeAuditLog(req, `Restore Account`, { 
-      details: `restored system access permissions for personnel account '${name}' (ID: ${id})`,
-      entity_type: "User",
-      entity_id: id
-    });
-    return NextResponse.json({ ok: true, data: row });
-  } else if (body.status === "Inactive") {
-    const row = await archiveStaff(id);
-    if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
-    await writeAuditLog(req, `Archive Account`, { 
-      details: `archived personnel profile for '${name}' (ID: ${id}) and suspended all associated credentials`,
-      severity: "WARNING",
-      entity_type: "User",
-      entity_id: id
-    });
-    return NextResponse.json({ ok: true, data: row });
+  // Handle explicit status toggle (archiving/restoring) - only if it's a dedicated status change request
+  const isStatusToggle = body.status !== undefined && Object.keys(body).length === 1;
+  if (isStatusToggle) {
+    if (body.status === "Active") {
+      const row = await restoreStaff(id);
+      if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+      await writeAuditLog(req, `Restore Account`, { 
+        details: `restored system access permissions for personnel account '${name}' (ID: ${id})`,
+        entity_type: "User",
+        entity_id: id
+      });
+      return NextResponse.json({ ok: true, data: row });
+    } else if (body.status === "Inactive" || body.status === "Archived") {
+      const row = await archiveStaff(id);
+      if (!row) return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+      await writeAuditLog(req, `Archive Account`, { 
+        details: `archived personnel profile for '${name}' (ID: ${id}) and suspended all associated credentials`,
+        severity: "WARNING",
+        entity_type: "User",
+        entity_id: id
+      });
+      return NextResponse.json({ ok: true, data: row });
+    }
   }
 
   const patch = {

@@ -119,12 +119,12 @@ const StaffTableRow = React.memo(({
       </td>
       <td className="p-4">
         {s.totp_enabled ? (
-          <div className="flex w-fit items-center gap-1.5 rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-black text-emerald-600 uppercase tracking-wider dark:text-emerald-400">
+          <div className="flex w-fit items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-black text-emerald-600 uppercase tracking-wider dark:text-emerald-400">
             <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
             2FA ENABLED
           </div>
         ) : (
-          <div className="flex w-fit items-center gap-1.5 rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[9px] font-black text-gray-400 uppercase tracking-wider dark:border-white/10 dark:bg-white/5 dark:text-zinc-500">
+          <div className="flex w-fit items-center gap-1.5 whitespace-nowrap rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[9px] font-black text-gray-400 uppercase tracking-wider dark:border-white/10 dark:bg-white/5 dark:text-zinc-500">
             <i className="ph-bold ph-warning-circle text-[10px]"></i>
             OFF
           </div>
@@ -163,14 +163,16 @@ const StaffTableRow = React.memo(({
             </Button>
           ) : (
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => onEditUser(s.id)}
-                className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800"
-              >
-                <i className="ph-bold ph-pencil-simple text-base"></i>
-              </Button>
+              {activeTab === "active" && (
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => onEditUser(s.id)}
+                  className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800"
+                >
+                  <i className="ph-bold ph-pencil-simple text-base"></i>
+                </Button>
+              )}
 
               {activeTab === "archived" ? (
                 <Button
@@ -228,7 +230,7 @@ export default function StaffDirectoryTab({
   onRestoreUser,
   onDeleteUser,
   onBulkArchive,
-  onExportData,
+  onBulkRestore,
   onSwitchView,
   onRefresh,
 }) {
@@ -447,15 +449,6 @@ export default function StaffDirectoryTab({
           actions={
             <div className="flex items-center gap-3">
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onExportData(sortedStaff)}
-                className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:text-zinc-300 dark:shadow-none dark:bg-red-950/30 dark:border-white/10"
-              >
-                <i className="ph-bold ph-file-csv text-base"></i>
-                EXPORT
-              </Button>
-              <Button
                 size="sm"
                 onClick={() => onSwitchView("create")}
                 className="h-10 rounded-brand btn-brand-red active:scale-95 transition-all dark:shadow-none"
@@ -526,13 +519,13 @@ export default function StaffDirectoryTab({
               onValueChange={setActiveTab}
               className="w-full"
             >
-              <div className="mb-6 flex shrink-0 select-none flex-col items-center gap-3 sm:flex-row">
+              <div className="mb-6 flex shrink-0 select-none flex-col items-center justify-between gap-3 sm:flex-row">
                 <div className="flex w-full items-center sm:w-auto">
-                  <div className="flex cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 backdrop-blur-sm sm:w-auto dark:border-white/10 dark:bg-muted/50">
+                  <div className="flex w-full cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 backdrop-blur-sm sm:w-auto dark:border-white/10 dark:bg-muted/50">
                     <button
                       type="button"
                       onClick={() => setActiveTab("active")}
-                      className={`group flex h-11 w-[240px] cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${
+                      className={`group flex h-11 flex-1 cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] sm:w-[200px] sm:flex-none ${
                         activeTab === "active"
                           ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
                           : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
@@ -558,7 +551,7 @@ export default function StaffDirectoryTab({
                     <button
                       type="button"
                       onClick={() => setActiveTab("archived")}
-                      className={`group flex h-11 w-[240px] cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${
+                      className={`group flex h-11 flex-1 cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] sm:w-[200px] sm:flex-none ${
                         activeTab === "archived"
                           ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
                           : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
@@ -582,6 +575,28 @@ export default function StaffDirectoryTab({
                     </button>
                   </div>
                 </div>
+
+                <div className="flex w-full items-center gap-3 sm:w-auto">
+                  <div className="relative flex-1 sm:w-[300px] sm:flex-none">
+                    <i className="ph-bold ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+                    <Input
+                      placeholder="Search name, email or ID..."
+                      className="h-11 rounded-brand border-gray-200 bg-gray-50/50 pl-11 pr-4 text-sm transition-all focus:border-pup-maroon focus:bg-white dark:border-white/10 dark:bg-white/5 dark:text-zinc-300 dark:focus:border-primary"
+                      value={localSearch}
+                      onChange={(e) => setLocalSearch(e.target.value)}
+                    />
+                  </div>
+
+                  <Select
+                    className="h-11 w-44 rounded-brand border border-gray-200 bg-gray-50/50 px-4 text-sm font-bold text-gray-600 transition-all hover:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
+                    value={roleFilter}
+                    onChange={(e) => setRoleFilter(e.target.value)}
+                  >
+                    <option value="All">All</option>
+                    <option value="Admin">Administrators</option>
+                    <option value="Staff">Regular Staff</option>
+                  </Select>
+                </div>
               </div>
 
               <TabsContent
@@ -590,7 +605,7 @@ export default function StaffDirectoryTab({
                 className="outline-none animate-fade-up"
               >
                 <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
-                  <table className="min-w-full text-sm">
+                  <table className="min-w-full table-fixed text-sm">
                     <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm dark:border-white/10 dark:bg-muted">
                       <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
                         <th className="w-12 p-4 text-center">
@@ -614,7 +629,7 @@ export default function StaffDirectoryTab({
                             }
                           />
                         </th>
-                        <th className="p-4">
+                        <th className="w-72 p-4">
                           <button
                             onClick={() => handleSort("fname")}
                             className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
@@ -627,7 +642,7 @@ export default function StaffDirectoryTab({
                             />
                           </button>
                         </th>
-                        <th className="w-32 p-4">
+                        <th className="w-40 p-4">
                           <button
                             onClick={() => handleSort("id")}
                             className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
@@ -640,7 +655,7 @@ export default function StaffDirectoryTab({
                             />
                           </button>
                         </th>
-                        <th className="w-28 p-4">
+                        <th className="w-40 p-4">
                           <button
                             onClick={() => handleSort("role")}
                             className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
@@ -844,21 +859,7 @@ export default function StaffDirectoryTab({
                 DESELECT ALL
               </Button>
 
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => {
-                  const selectedStaff = staffData.filter((s) =>
-                    selectedIds.has(s.id)
-                  )
-                  onExportData(selectedStaff)
-                }}
-                className="h-10 px-6 text-xs font-bold text-gray-700 uppercase shadow-lg shadow-gray-200/50 hover:bg-gray-200 active:scale-95 rounded-xl border border-gray-200 dark:text-zinc-200 dark:hover:bg-zinc-700 dark:bg-zinc-700 dark:border-white/10"
-              >
-                <i className="ph-bold ph-file-csv mr-2 text-sm"></i>
-                EXPORT SELECTED
-              </Button>
-              {activeTab === "active" && (
+              {activeTab === "active" ? (
                 <Button
                   size="sm"
                   onClick={() => {
@@ -868,6 +869,17 @@ export default function StaffDirectoryTab({
                 >
                   <i className="ph-bold ph-archive text-sm"></i>
                   ARCHIVE SELECTED
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    onBulkRestore(Array.from(selectedIds))
+                  }}
+                  className="flex h-10 items-center gap-3 rounded-xl bg-emerald-600 px-6 text-xs font-black text-white uppercase shadow-lg shadow-emerald-900/20 active:scale-95 transition-all hover:bg-emerald-700 dark:bg-emerald-600 dark:shadow-none"
+                >
+                  <i className="ph-bold ph-arrow-counter-clockwise text-sm"></i>
+                  RESTORE SELECTED
                 </Button>
               )}
             </div>

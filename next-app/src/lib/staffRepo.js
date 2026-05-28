@@ -180,7 +180,7 @@ export async function restoreStaff(id) {
   const existing = await getStaffById(id);
   if (!existing) return null;
   await dbRun(
-    `UPDATE staff SET status = 'Inactive', updated_at = datetime('now') WHERE id = ?`,
+    `UPDATE staff SET status = 'Active', updated_at = datetime('now') WHERE id = ?`,
     [id]
   );
   return await getStaffById(id);
