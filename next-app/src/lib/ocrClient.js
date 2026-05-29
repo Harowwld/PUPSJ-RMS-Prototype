@@ -877,18 +877,26 @@ function levenshteinSimilarity(s1, s2) {
 
 export function findStudentsByOcrName(ocrName, students) {
   if (!ocrName || !Array.isArray(students)) return [];
-  const o = normNameMatch(ocrName);
+  
+  // Normalize the input OCR name to "Last, First MI." standard format to align with DB format
+  const formatted = formatToLNFnMi(ocrName) || ocrName;
+  const o = normNameMatch(formatted);
   if (o.length < 2) return [];
   
   // 1. Exact normalized match
-  const exact = students.filter((s) => normNameMatch(s?.name || s?.Name || "") === o);
+  const exact = students.filter((s) => {
+    const dbNorm = normNameMatch(s?.name || s?.Name || "");
+    return dbNorm === o || dbNorm === normNameMatch(ocrName);
+  });
   if (exact.length > 0) return exact;
   
   // 2. Fuzzy match stripping middle initial
   const oStripped = stripMiddleInitial(o);
+  const rawOStripped = stripMiddleInitial(normNameMatch(ocrName));
   const strippedMatches = students.filter((s) => {
     const dbNorm = normNameMatch(s?.name || s?.Name || "");
-    return stripMiddleInitial(dbNorm) === oStripped;
+    const dbStripped = stripMiddleInitial(dbNorm);
+    return dbStripped === oStripped || dbStripped === rawOStripped;
   });
   if (strippedMatches.length > 0) return strippedMatches;
 
@@ -902,7 +910,9 @@ export function findStudentsByOcrName(ocrName, students) {
       .filter((t) => t.length > 1); // skip single-letter initials like "E"
   
   const ocrTokens = getAlphaTokens(o);
-  if (ocrTokens.length >= 2) {
+  const rawOcrTokens = getAlphaTokens(normNameMatch(ocrName));
+  
+  if (ocrTokens.length >= 2 || rawOcrTokens.length >= 2) {
     const tokenMatches = students.filter((s) => {
       const dbNorm = normNameMatch(s?.name || s?.Name || "");
       const dbTokens = getAlphaTokens(dbNorm);
@@ -910,10 +920,11 @@ export function findStudentsByOcrName(ocrName, students) {
       
       // Check if DB tokens exist in the OCR tokens (with fuzzy tolerance for typos)
       const matchesCount = dbTokens.filter((dt) => 
-        ocrTokens.some((ot) => ot === dt || levenshteinSimilarity(ot, dt) >= 0.75)
+        ocrTokens.some((ot) => ot === dt || levenshteinSimilarity(ot, dt) >= 0.75) ||
+        rawOcrTokens.some((ot) => ot === dt || levenshteinSimilarity(ot, dt) >= 0.75)
       ).length;
       
-      const matchRatio = matchesCount / Math.min(dbTokens.length, ocrTokens.length);
+      const matchRatio = matchesCount / Math.min(dbTokens.length, Math.max(ocrTokens.length, rawOcrTokens.length));
       return matchRatio >= 0.80; // 80% token overlap
     });
     if (tokenMatches.length > 0) {
@@ -931,15 +942,22 @@ export function findStudentsByOcrName(ocrName, students) {
         o.replace(/,/g, " ").replace(/\s+/g, " "),
         dbNorm.replace(/,/g, " ").replace(/\s+/g, " ")
       );
-      const score = Math.max(simDirect, simNoComma);
+      
+      const simDirectRaw = levenshteinSimilarity(normNameMatch(ocrName), dbNorm);
+      const simNoCommaRaw = levenshteinSimilarity(
+        normNameMatch(ocrName).replace(/,/g, " ").replace(/\s+/g, " "),
+        dbNorm.replace(/,/g, " ").replace(/\s+/g, " ")
+      );
+      
+      const score = Math.max(simDirect, simNoComma, simDirectRaw, simNoCommaRaw);
       return { student: s, score };
     })
     .filter((c) => c.score >= 0.70)
     .sort((a, b) => b.score - a.score);
 
   if (fuzzyCandidates.length > 0) {
-    // Return the highest matching students above 70%
-    return [fuzzyCandidates[0].student];
+    // Return all matching students above 70% sorted by score (for quality autocomplete)
+    return fuzzyCandidates.map((c) => c.student);
   }
 
   return [];
