@@ -129,9 +129,6 @@ function StaffPageContent() {
   const [newRec, setNewRec] = useState({
     studentNo: "",
     name: "",
-    firstName: "",
-    middleName: "",
-    lastName: "",
     course: "",
     year: "",
     sectionPart: "",
@@ -643,7 +640,6 @@ function StaffPageContent() {
       const parts = sec.split("-");
       sectionPart = parts.length > 1 ? parts.slice(1).join("-") : sec;
     }
-    const parsedName = splitNameComponents(s.name || "");
     setNewRec((p) => ({
       ...p,
       studentNo: s.studentNo ?? "",
@@ -651,9 +647,6 @@ function StaffPageContent() {
         .trim()
         .replace(/\s+/g, " ")
         .toUpperCase(),
-      firstName: parsedName.firstName,
-      middleName: parsedName.middleName,
-      lastName: parsedName.lastName,
       course: s.courseCode ?? "",
       year: yearStr,
       sectionPart,
@@ -722,16 +715,12 @@ function StaffPageContent() {
 
         if (ambiguous) {
           console.log("[OCR] → AMBIGUOUS branch, setting docType:", suggestion.docType);
-          const parsed = splitNameComponents(suggestion.name || "");
           setNewRec((p) => ({
             ...p,
             name: String(suggestion.name || p.name || "")
               .trim()
               .replace(/\s+/g, " ")
               .toUpperCase(),
-            firstName: suggestion.firstName || parsed.firstName || p.firstName,
-            middleName: suggestion.middleName || parsed.middleName || p.middleName,
-            lastName: suggestion.lastName || parsed.lastName || p.lastName,
             docType:
               suggestion.docType != null && String(suggestion.docType).trim() !== ""
                 ? String(suggestion.docType).trim()
@@ -748,16 +737,12 @@ function StaffPageContent() {
           setOcrPromptOpen(false);
         } else {
           console.log("[OCR] → NEW STUDENT branch, setting docType:", suggestion.docType);
-          const parsed = splitNameComponents(suggestion.name || "");
           setNewRec((p) => ({
             ...p,
             name: String(suggestion.name || p.name || "")
               .trim()
               .replace(/\s+/g, " ")
               .toUpperCase(),
-            firstName: suggestion.firstName || parsed.firstName || p.firstName,
-            middleName: suggestion.middleName || parsed.middleName || p.middleName,
-            lastName: suggestion.lastName || parsed.lastName || p.lastName,
             docType:
               suggestion.docType != null && String(suggestion.docType).trim() !== ""
                 ? String(suggestion.docType).trim()
@@ -854,8 +839,7 @@ function StaffPageContent() {
       if (!newRec.docType) err.docType = true;
     } else {
       if (!String(newRec.studentNo || "").trim()) err.studentNo = true;
-      if (!String(newRec.lastName || "").trim()) err.lastName = true;
-      if (!String(newRec.firstName || "").trim()) err.firstName = true;
+      if (!String(newRec.name || "").trim()) err.name = true;
       if (!newRec.course) err.course = true;
       if (!newRec.year) err.year = true;
       if (!newRec.sectionPart) err.sectionPart = true;
@@ -906,15 +890,7 @@ function StaffPageContent() {
       }
     }
 
-    const studentName = uploadStudentIsExisting
-      ? String(newRec.name || "").trim().toUpperCase()
-      : [
-          String(newRec.lastName || "").trim().toUpperCase(),
-          [
-            String(newRec.firstName || "").trim().toUpperCase(),
-            String(newRec.middleName || "").trim().toUpperCase(),
-          ].filter(Boolean).join(" ")
-        ].filter(Boolean).join(", ");
+    const studentName = String(newRec.name || "").trim().toUpperCase();
 
     // RENAME FILE for meaningful identification: [STUDENT_NO]_[DOC_TYPE].[EXT]
     try {
@@ -1002,9 +978,6 @@ function StaffPageContent() {
       setNewRec({
         studentNo: "",
         name: "",
-        firstName: "",
-        middleName: "",
-        lastName: "",
         course: "",
         year: "",
         sectionPart: "",

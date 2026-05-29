@@ -114,6 +114,33 @@ export default function ScanUploadTab({
   const [windowDragActive, setWindowDragActive] = useState(false)
   const [csvPage, setCsvPage] = useState(1)
 
+  const [showStudentNoSuggestions, setShowStudentNoSuggestions] = useState(false)
+  const [showNameSuggestions, setShowNameSuggestions] = useState(false)
+
+  const filteredStudentNoSuggestions = useMemo(() => {
+    const q = (newRec.studentNo || "").trim().toLowerCase();
+    if (!q || uploadStudentIsExisting) return [];
+    return students.filter(s => {
+      const sn = String(s.studentNo || s.student_no || "").toLowerCase();
+      return sn.includes(q);
+    }).slice(0, 5);
+  }, [newRec.studentNo, students, uploadStudentIsExisting]);
+
+  const filteredNameSuggestions = useMemo(() => {
+    const q = (newRec.name || "").trim().toLowerCase();
+    if (!q || uploadStudentIsExisting) return [];
+    return students.filter(s => {
+      const name = String(s.name || "").toLowerCase();
+      return name.includes(q);
+    }).slice(0, 5);
+  }, [newRec.name, students, uploadStudentIsExisting]);
+
+  const handleSelectStudent = (student) => {
+    onSelectExistingStudent?.(student, newRec.docType || null);
+    setShowStudentNoSuggestions(false);
+    setShowNameSuggestions(false);
+  };
+
   useEffect(() => {
     setCsvPage(1)
   }, [csvFile])
@@ -1287,9 +1314,6 @@ export default function ScanUploadTab({
                                     setNewRec({
                                       studentNo: "",
                                       name: "",
-                                      firstName: "",
-                                      middleName: "",
-                                      lastName: "",
                                       course: "",
                                       year: "",
                                       sectionPart: "",
@@ -1310,31 +1334,60 @@ export default function ScanUploadTab({
                                 </Button>
                               )}
                             </div>
-                            <input
-                              type="text"
-                              className={`form-input h-11 rounded-brand font-mono ${ring("studentNo")} ${ lockIdentity ? lockedField : "" }`}
-                              placeholder="202X-XXXXX-MN-0"
-                              ref={newStudentNoInputRef}
-                              value={newRec.studentNo}
-                              disabled={lockIdentity}
-                              onChange={(e) => {
-                                clearUploadFieldError?.("studentNo")
-                                clearUploadFieldError?.("year")
-                                clearUploadFieldError?.("sectionPart")
-                                setNewRecStudentNoTouched(true)
-                                const masked = applyStudentNoMask(e.target.value)
-                                const derivedYear = deriveYearFromStudentNo(
-                                  masked.value
-                                )
-                                setNewRec((p) => ({
-                                  ...p,
-                                  studentNo: masked.value,
-                                  year: derivedYear,
-                                  sectionPart: "",
-                                }))
-                              }}
-                              onBlur={() => setNewRecStudentNoTouched(true)}
-                            />
+                            <div className="relative">
+                              <input
+                                type="text"
+                                className={`form-input w-full h-11 rounded-brand font-mono ${ring("studentNo")} ${ lockIdentity ? lockedField : "" }`}
+                                placeholder="202X-XXXXX-MN-0"
+                                ref={newStudentNoInputRef}
+                                value={newRec.studentNo}
+                                disabled={lockIdentity}
+                                onFocus={() => setShowStudentNoSuggestions(true)}
+                                onBlur={() => {
+                                  setNewRecStudentNoTouched(true)
+                                  setTimeout(() => setShowStudentNoSuggestions(false), 200)
+                                }}
+                                onChange={(e) => {
+                                  clearUploadFieldError?.("studentNo")
+                                  clearUploadFieldError?.("year")
+                                  clearUploadFieldError?.("sectionPart")
+                                  setNewRecStudentNoTouched(true)
+                                  const masked = applyStudentNoMask(e.target.value)
+                                  const derivedYear = deriveYearFromStudentNo(
+                                    masked.value
+                                  )
+                                  setNewRec((p) => ({
+                                    ...p,
+                                    studentNo: masked.value,
+                                    year: derivedYear,
+                                    sectionPart: "",
+                                  }))
+                                }}
+                              />
+                              {showStudentNoSuggestions && filteredStudentNoSuggestions.length > 0 && (
+                                <div className="absolute z-50 left-0 right-0 mt-1 rounded-brand border border-gray-200 bg-white overflow-hidden shadow-lg animate-in fade-in slide-in-from-top-1 duration-200 dark:bg-zinc-900 dark:border-zinc-800">
+                                  {filteredStudentNoSuggestions.map((s) => {
+                                    const sn = String(s?.studentNo || s?.student_no || "");
+                                    return (
+                                      <button
+                                        key={sn}
+                                        type="button"
+                                        onMouseDown={(e) => e.preventDefault()}
+                                        className="w-full text-left px-3 py-2 border-b last:border-b-0 border-gray-100 hover:bg-red-50/50 transition-colors group flex flex-col gap-0.5 dark:border-zinc-800 dark:hover:bg-zinc-800/50"
+                                        onClick={() => handleSelectStudent(s)}
+                                      >
+                                        <div className="text-sm font-bold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
+                                          {s?.name}
+                                        </div>
+                                        <div className="text-[10px] text-gray-500 dark:text-zinc-400 font-mono">
+                                          {sn}
+                                        </div>
+                                      </button>
+                                    );
+                                  })}
+                                </div>
+                              )}
+                            </div>
                             {newRecStudentNoHint ? (
                               <div className="mt-2 text-xs font-bold text-red-700">
                                 {newRecStudentNoHint}
@@ -1356,57 +1409,50 @@ export default function ScanUploadTab({
                               />
                             </div>
                           ) : (
-                            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-                              <div>
-                                <label
-                                  className="mb-1.5 block text-xs font-bold uppercase text-gray-700 dark:text-zinc-200"
-                                >
-                                  Last Name
-                                </label>
+                            <div>
+                              <label
+                                className="mb-1.5 block text-xs font-bold uppercase text-gray-700 dark:text-zinc-200"
+                              >
+                                Full Name (LN, FN MI.)
+                              </label>
+                               <div className="relative">
                                 <input
                                   type="text"
-                                  className={`form-input h-11 rounded-brand ${ring("lastName")}`}
-                                  placeholder="Last Name"
-                                  value={newRec.lastName || ""}
+                                  className={`form-input w-full h-11 rounded-brand ${ring("name")}`}
+                                  placeholder="e.g. DELA CRUZ, JUAN S."
+                                  value={newRec.name || ""}
+                                  onFocus={() => setShowNameSuggestions(true)}
+                                  onBlur={() => {
+                                    setTimeout(() => setShowNameSuggestions(false), 200)
+                                  }}
                                   onChange={(e) => {
-                                    clearUploadFieldError?.("lastName")
-                                    setNewRec((p) => ({ ...p, lastName: e.target.value }))
+                                    clearUploadFieldError?.("name")
+                                    setNewRec((p) => ({ ...p, name: e.target.value }))
                                   }}
                                 />
-                              </div>
-                              <div>
-                                <label
-                                  className="mb-1.5 block text-xs font-bold uppercase text-gray-700 dark:text-zinc-200"
-                                >
-                                  First Name
-                                </label>
-                                <input
-                                  type="text"
-                                  className={`form-input h-11 rounded-brand ${ring("firstName")}`}
-                                  placeholder="First Name"
-                                  value={newRec.firstName || ""}
-                                  onChange={(e) => {
-                                    clearUploadFieldError?.("firstName")
-                                    setNewRec((p) => ({ ...p, firstName: e.target.value }))
-                                  }}
-                                />
-                              </div>
-                              <div>
-                                <label
-                                  className="mb-1.5 block text-xs font-bold uppercase text-gray-700 dark:text-zinc-200"
-                                >
-                                  Middle Name
-                                </label>
-                                <input
-                                  type="text"
-                                  className={`form-input h-11 rounded-brand ${ring("middleName")}`}
-                                  placeholder="Middle Name"
-                                  value={newRec.middleName || ""}
-                                  onChange={(e) => {
-                                    clearUploadFieldError?.("middleName")
-                                    setNewRec((p) => ({ ...p, middleName: e.target.value }))
-                                  }}
-                                />
+                                {showNameSuggestions && filteredNameSuggestions.length > 0 && (
+                                  <div className="absolute z-50 left-0 right-0 mt-1 rounded-brand border border-gray-200 bg-white overflow-hidden shadow-lg animate-in fade-in slide-in-from-top-1 duration-200 dark:bg-zinc-900 dark:border-zinc-800">
+                                    {filteredNameSuggestions.map((s) => {
+                                      const sn = String(s?.studentNo || s?.student_no || "");
+                                      return (
+                                        <button
+                                          key={sn}
+                                          type="button"
+                                          onMouseDown={(e) => e.preventDefault()}
+                                          className="w-full text-left px-3 py-2 border-b last:border-b-0 border-gray-100 hover:bg-red-50/55 transition-colors group flex flex-col gap-0.5 dark:border-zinc-800 dark:hover:bg-zinc-800/50"
+                                          onClick={() => handleSelectStudent(s)}
+                                        >
+                                          <div className="text-sm font-bold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
+                                            {s?.name}
+                                          </div>
+                                          <div className="text-[10px] text-gray-500 dark:text-zinc-400 font-mono">
+                                            {sn}
+                                          </div>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                )}
                               </div>
                             </div>
                           )}

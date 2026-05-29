@@ -655,19 +655,21 @@ export async function getDb() {
               reviewed_by TEXT,
               reviewed_at TEXT,
               review_note TEXT,
+              uploaded_by TEXT,
               created_at TEXT NOT NULL DEFAULT (datetime('now')),
               FOREIGN KEY (student_no) REFERENCES students(student_no) ON UPDATE CASCADE ON DELETE RESTRICT,
               FOREIGN KEY (doc_type) REFERENCES document_types(name) ON UPDATE CASCADE ON DELETE RESTRICT,
-              FOREIGN KEY (reviewed_by) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE SET NULL
+              FOREIGN KEY (reviewed_by) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE SET NULL,
+              FOREIGN KEY (uploaded_by) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE SET NULL
             );
 
             INSERT INTO documents_new (
               id, student_no, student_name, doc_type, original_filename, storage_filename,
-              mime_type, size_bytes, approval_status, reviewed_by, reviewed_at, review_note, created_at
+              mime_type, size_bytes, approval_status, reviewed_by, reviewed_at, review_note, uploaded_by, created_at
             )
             SELECT
               id, student_no, student_name, doc_type, original_filename, storage_filename,
-              mime_type, size_bytes, approval_status, reviewed_by, reviewed_at, review_note, created_at
+              mime_type, size_bytes, approval_status, reviewed_by, reviewed_at, review_note, uploaded_by, created_at
             FROM documents;
 
             DROP TABLE documents;

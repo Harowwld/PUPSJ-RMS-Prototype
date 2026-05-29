@@ -334,6 +334,15 @@ function detectName(lines, { engine = "unknown" } = {}) {
       const endIdx = sexBoundaryIdx !== -1 ? sexBoundaryIdx : Math.min(lines.length, nameHeaderIdx + 8);
       const nameAreaLines = lines.slice(nameHeaderIdx, endIdx);
       
+      // If we stopped at a boundary line (e.g. "DELA PENA  2. SEX"), grab the text before the boundary
+      if (sexBoundaryIdx !== -1) {
+        const boundaryLine = lines[sexBoundaryIdx];
+        const boundaryMatch = boundaryLine.match(/^(.*?)\b(?:2\.\s*SEX|SEX|3\.\s*DATE|DATE\s+OF\s+BIRTH|4\.\s*PLACE)\b/i);
+        if (boundaryMatch && boundaryMatch[1].trim()) {
+          nameAreaLines.push(boundaryMatch[1].trim());
+        }
+      }
+      
       let firstVal = "", middleVal = "", lastVal = "";
       const valueTokens = [];
 
@@ -838,7 +847,36 @@ export function findStudentsByOcrName(ocrName, students) {
   });
   if (strippedMatches.length > 0) return strippedMatches;
 
-  // 3. 70% Levenshtein similarity fuzzy match
+  // 3. Token-based intersection matching (extremely robust for split 3-field formats)
+  // Splits both name strings into individual word tokens and checks for heavy overlap.
+  const getAlphaTokens = (str) =>
+    str
+      .toLowerCase()
+      .replace(/[^a-z\s]/g, " ")
+      .split(/\s+/)
+      .filter((t) => t.length > 1); // skip single-letter initials like "E"
+  
+  const ocrTokens = getAlphaTokens(o);
+  if (ocrTokens.length >= 2) {
+    const tokenMatches = students.filter((s) => {
+      const dbNorm = normNameMatch(s?.name || s?.Name || "");
+      const dbTokens = getAlphaTokens(dbNorm);
+      if (dbTokens.length < 2) return false;
+      
+      // Check if DB tokens exist in the OCR tokens (with fuzzy tolerance for typos)
+      const matchesCount = dbTokens.filter((dt) => 
+        ocrTokens.some((ot) => ot === dt || levenshteinSimilarity(ot, dt) >= 0.75)
+      ).length;
+      
+      const matchRatio = matchesCount / Math.min(dbTokens.length, ocrTokens.length);
+      return matchRatio >= 0.80; // 80% token overlap
+    });
+    if (tokenMatches.length > 0) {
+      return tokenMatches;
+    }
+  }
+
+  // 4. 70% Levenshtein similarity fuzzy match
   const fuzzyCandidates = students
     .map((s) => {
       const dbNorm = normNameMatch(s?.name || s?.Name || "");
@@ -866,28 +904,51 @@ export function findStudentsInText(rawText, students) {
   if (!rawText || !Array.isArray(students)) return [];
   const hay = up(rawText).replace(/\s+/g, " ");
 
+  // Tokenize the whole OCR raw text into clean uppercase alphanumeric words
+  const ocrTokens = up(rawText)
+    .replace(/[^A-Z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter((t) => t.length > 1);
+
   const matches = [];
   for (const s of students) {
     const name = up(s?.name || s?.Name || "").replace(/\s+/g, " ").trim();
     if (name.length < 5) continue;
 
-    // Direct match
+    // 1. Direct sub-string match check (ultra-fast exact match)
     if (hay.includes(name)) { matches.push(s); continue; }
 
     // Without comma  "DELA CRUZ MARIA" vs "DELA CRUZ, MARIA"
     const noComma = name.replace(/,/g, " ").replace(/\s+/g, " ").trim();
     if (noComma !== name && hay.includes(noComma)) { matches.push(s); continue; }
 
-    // Reversed: "FIRSTNAME LASTNAME" ↔ "LASTNAME, FIRSTNAME"
+    // 2. Reversed exact check
     if (name.includes(",")) {
       const [last, first] = name.split(",").map((x) => x.trim());
       if (first && last && hay.includes(`${first} ${last}`)) { matches.push(s); continue; }
       
-      // Reversed without middle initial: "FIRSTNAME LASTNAME" ↔ "LASTNAME, FIRSTNAME INITIAL"
       const firstStripped = stripMiddleInitial(lo(first)).toUpperCase();
       if (firstStripped && last && hay.includes(`${firstStripped} ${last}`)) {
         matches.push(s);
         continue;
+      }
+    }
+
+    // 3. Robust token-based fuzzy/typo-tolerant matching
+    // Extract tokens from the DB name (ignoring commas and single-letter initials)
+    const dbTokens = name
+      .replace(/[^A-Z0-9\s]/g, " ")
+      .split(/\s+/)
+      .filter((t) => t.length > 1);
+
+    if (dbTokens.length >= 2) {
+      const matchedTokensCount = dbTokens.filter((dt) =>
+        ocrTokens.some((ot) => ot === dt || levenshteinSimilarity(dt, ot) >= 0.75)
+      ).length;
+
+      const matchRatio = matchedTokensCount / dbTokens.length;
+      if (matchRatio >= 0.75) {
+        matches.push(s);
       }
     }
   }
@@ -990,49 +1051,17 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
   }
 
   // ── Detect name (fallback when student number did not match) ──
-  // Passes ocrEngine so detectName() uses the correct layout strategy.
-  const extractedName = matchedStudent ? "" : detectName(lines, { engine: ocrEngine });
-
   if (!matchedStudent) {
-    nameMatchesByName =
-      extractedName && Array.isArray(students)
-        ? findStudentsByOcrName(extractedName, students)
-        : [];
-
-    // Fallback: full-text fuzzy scan
-    if (nameMatchesByName.length === 0 && Array.isArray(students)) {
-      const fuzzy = findStudentsInText(rawText, students);
-      if (fuzzy.length > 0) nameMatchesByName = fuzzy;
+    if (Array.isArray(students)) {
+      nameMatchesByName = findStudentsInText(rawText, students);
     }
-
     matchedStudent = nameMatchesByName.length === 1 ? nameMatchesByName[0] : null;
   }
 
   // ── Build final suggested name ──
-  let suggestedName = matchedStudent
-    ? up(matchedStudent.name || matchedStudent.Name || extractedName || "").trim()
-    : normalizeExtractedName(extractedName);
-
-  // ── NLP fallback if still blank ──
-  if (!suggestedName) {
-    try {
-      const nlp = await loadNlp();
-      if (nlp) {
-        const people = nlp(rawText).people().out("array");
-        const valid = (people || []).filter((p) => {
-          const w = String(p || "").trim().split(/\s+/).filter(Boolean);
-          if (w.length < 2) return false;
-          if (w.some((x) => x.length < 2 && !/^[a-zA-Z]\.?$/.test(x))) return false;
-          if (w.some((x) => /^[^a-zA-Z]/.test(x))) return false;
-          return true;
-        });
-        if (valid.length > 0) suggestedName = normalizeExtractedName(valid[0]);
-      }
-    } catch (e) {
-       
-      console.warn("[OCR] NLP fallback failed:", e);
-    }
-  }
+  const suggestedName = matchedStudent
+    ? up(matchedStudent.name || matchedStudent.Name || "").trim()
+    : "";
 
   const nameComponents = splitNameComponents(suggestedName);
 
@@ -1048,3 +1077,4 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
     ocrLinesPreview: lines.slice(0, 18),
   };
 }
+
