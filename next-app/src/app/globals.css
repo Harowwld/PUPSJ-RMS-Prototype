@@ -468,3 +468,13 @@
 .dark thead th {
   border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
+
+/* Global Checkbox Visibility Style */
+input[type="checkbox"] {
+  border-width: 1.5px !important;
+  border-color: #9ca3af !important; /* gray-400 */
+}
+
+.dark input[type="checkbox"] {
+  border-color: #71717a !important; /* zinc-500 */
+}
