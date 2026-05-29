@@ -246,12 +246,14 @@ const BLACKLIST = new Set([
   "PROVINCE", "MUNICIPALITY", "MOTHER", "FATHER", "CHILD", "SCHOOL",
   "EDUCATION", "UNIVERSITY", "POLYTECHNIC", "SN",
   "STATISTICIAN", "PRINTED", "GENERIC", "OFFICIAL", "REPRESENTATIVE", "GUARDIAN",
+  "REGISTRY", "REGISTRY NO", "REGISTRY_NO", "REG", "NO."
 ]);
 
 function isPlausibleName(s) {
   const u = up(s).trim();
   if (u.length < 4 || u.length > 60) return false;
   if (/\d/.test(u)) return false;
+  if (/[#$@*()]/.test(u)) return false; // Avoid junk and parenthesized labels
   for (const b of BLACKLIST) if (u.includes(b)) return false;
   if (/^(NAME|STUDENT\s*NAME)$/i.test(u)) return false;
 
@@ -266,7 +268,7 @@ function isPlausibleNameComponent(s) {
   const u = up(s).trim();
   if (u.length < 2 || u.length > 30) return false;
   if (/\d/.test(u)) return false;
-  if (/[#$@*]/.test(u)) return false; // Avoid junk
+  if (/[#$@*()]/.test(u)) return false; // Avoid junk and parenthesized labels
   for (const b of BLACKLIST) if (u === b || u.includes(" " + b) || u.includes(b + " ")) return false;
   return true;
 }
@@ -1096,9 +1098,14 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
   // ── Load NLP engine if available ──
   const nlp = await loadNlp().catch(() => null);
 
+  const rawExtracted = matchedStudent ? "" : detectName(lines, { engine: ocrEngine, nlp });
+
   // ── Detect name (fallback when student number did not match) ──
   if (!matchedStudent) {
-    if (Array.isArray(students)) {
+    if (rawExtracted && Array.isArray(students)) {
+      nameMatchesByName = findStudentsByOcrName(rawExtracted, students);
+    }
+    if ((!nameMatchesByName || nameMatchesByName.length === 0) && Array.isArray(students)) {
       nameMatchesByName = findStudentsInText(rawText, students);
     }
     matchedStudent = nameMatchesByName.length === 1 ? nameMatchesByName[0] : null;
@@ -1108,11 +1115,8 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
   let suggestedName = "";
   if (matchedStudent) {
     suggestedName = up(matchedStudent.name || matchedStudent.Name || "").trim();
-  } else {
-    const rawExtracted = detectName(lines, { engine: ocrEngine, nlp });
-    if (rawExtracted) {
-      suggestedName = formatToLNFnMi(rawExtracted);
-    }
+  } else if (rawExtracted) {
+    suggestedName = formatToLNFnMi(rawExtracted);
   }
 
   const nameComponents = splitNameComponents(suggestedName);

@@ -14,6 +14,7 @@ import NotificationsTab from "@/components/staff/NotificationsTab";
 import DocumentRequestsTab from "@/components/staff/DocumentRequestsTab";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import OCRPromptModal from "@/components/staff/OCRPromptModal";
+import ConfirmModal from "@/components/shared/ConfirmModal";
 import {
   Tabs,
   TabsList,
@@ -124,6 +125,8 @@ function StaffPageContent() {
   const [ocrPromptOpen, setOcrPromptOpen] = useState(false);
   const [ocrError, setOcrError] = useState("");
   const [rotation, setRotation] = useState(0);
+  const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
+  const [pendingSubmission, setPendingSubmission] = useState(null);
 
 
   const [newRec, setNewRec] = useState({
@@ -755,6 +758,7 @@ function StaffPageContent() {
           setUploadStudentIsExisting(true);
           clearAllUploadFieldErrors();
           setOcrPromptOpen(false);
+          checkDuplicate(suggestion.matchedStudent.studentNo || suggestion.matchedStudent.student_no, suggestion.docType);
         } else {
           console.log("[OCR] → NEW STUDENT branch, setting docType:", suggestion.docType);
           setNewRec((p) => ({
@@ -838,7 +842,22 @@ function StaffPageContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rotation, uploadedFile]);
 
+  const checkDuplicate = useCallback((studentNo, docType) => {
+    if (!studentNo || !docType) return;
+    const cleanNo = String(studentNo).trim().toUpperCase();
+    const cleanType = String(docType).trim().toUpperCase();
 
+    const hasDuplicate = staffDocs.some(
+      (d) =>
+        String(d.student_no).trim().toUpperCase() === cleanNo &&
+        String(d.doc_type).trim().toUpperCase() === cleanType &&
+        String(d.approval_status).toLowerCase() !== "declined"
+    );
+
+    if (hasDuplicate) {
+      setDuplicateConfirmOpen(true);
+    }
+  }, [staffDocs]);
 
   const processSubmission = async ({ onSuccess } = {}) => {
     if (!uploadedFile) {
@@ -1468,6 +1487,7 @@ function StaffPageContent() {
                 setUploadStudentIsExisting(true);
                 clearAllUploadFieldErrors();
                 setOcrPromptOpen(false);
+                checkDuplicate(student.studentNo || student.student_no, ocrDocType);
               }}
             />
           </TabsContent>
@@ -1663,7 +1683,40 @@ function StaffPageContent() {
           setUploadStudentIsExisting(true);
           clearAllUploadFieldErrors();
           setOcrPromptOpen(false);
+          checkDuplicate(s.studentNo || s.student_no, ocrSuggestion?.docType);
         }}
+      />
+      <ConfirmModal
+        open={duplicateConfirmOpen}
+        title="Duplicate Document Warning"
+        message={`A document of type "${newRec.docType}" already exists for student ${newRec.studentNo}.`}
+        confirmLabel="Acknowledge"
+        cancelLabel="Clear Form"
+        onConfirm={() => {
+          setDuplicateConfirmOpen(false);
+        }}
+        onCancel={() => {
+          setDuplicateConfirmOpen(false);
+          setUploadedFile(null);
+          setUploadedFiles([]);
+          setSelectedQueuedFileIndex(0);
+          setOcrSuggestion(null);
+          setUploadStudentIsExisting(false);
+          setUploadFieldErrors({});
+          setRotation(0);
+          setNewRec({
+            studentNo: "",
+            name: "",
+            course: "",
+            year: "",
+            sectionPart: "",
+            room: "",
+            cabinet: "",
+            drawer: "",
+            docType: "",
+          });
+        }}
+        variant="warning"
       />
     </div>
   );

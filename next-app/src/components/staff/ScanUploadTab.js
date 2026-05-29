@@ -536,7 +536,7 @@ export default function ScanUploadTab({
                 onRefresh={() => {
                   if (uploadMode === "pdf") hf.refresh()
                 }} 
-                isLoading={hf.isLoading} 
+                isLoading={hf.loading} 
                 title="Refresh Inbox"
               />
             </div>
@@ -956,29 +956,39 @@ export default function ScanUploadTab({
                       }}
                       onDrop={onPdfDrop}
                     >
-                      {hf.rows.length > 0 ? (
+                      {uploadMode === "pdf" && (
                         <div className="z-10 shrink-0 border-b border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-card/95">
                           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                             <div>
                               <div className="text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
                                 Scanner Files
                               </div>
-                              <div className="text-sm font-bold text-gray-900 dark:text-zinc-50">
-                                {hf.rows.length} waiting · auto-refresh ~3s
+                              <div className="text-sm font-bold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
+                                <span className="relative flex h-2 w-2">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                </span>
+                                {hf.rows.length === 0 ? (
+                                  <span>0 waiting · <span className="text-[11px] text-gray-500 font-medium">listening for scans...</span></span>
+                                ) : (
+                                  <span>{hf.rows.length} waiting · <span className="text-[11px] text-gray-500 font-medium">auto-refresh ~3s</span></span>
+                                )}
                               </div>
                             </div>
                             <div className="flex items-center gap-2">
-                              <button
-                                type="button"
-                                className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-xs font-bold text-gray-800 hover:border-gray-300 disabled:opacity-60 dark:bg-card dark:text-zinc-100 dark:hover:border-zinc-700 dark:border-white/10"
-                                disabled={hf.rows.length === 0 || hf.loading}
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setClearInboxOpen(true)
-                                }}
-                              >
-                                CLEAR INBOX
-                              </button>
+                              {hf.rows.length > 0 && (
+                                <button
+                                  type="button"
+                                  className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-xs font-bold text-gray-800 hover:border-gray-300 disabled:opacity-60 dark:bg-card dark:text-zinc-100 dark:hover:border-zinc-700 dark:border-white/10"
+                                  disabled={hf.loading}
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setClearInboxOpen(true)
+                                  }}
+                                >
+                                  CLEAR INBOX
+                                </button>
+                              )}
                               <RefreshButton 
                                 onRefresh={(e) => {
                                   e.stopPropagation()
@@ -989,36 +999,42 @@ export default function ScanUploadTab({
                               />
                             </div>
                           </div>
-                          <div className="max-h-[min(40vh,220px)] space-y-1 overflow-y-auto pr-1">
-                            {hf.rows.map((row) => (
-                              <button
-                                key={row.id}
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  // Fetch the file blob and set it as the uploaded file for direct submission
-                                  hf.openItem(row).then((file) => {
-                                    if (file) {
-                                      onFileSelect(file, true)
-                                      hf.clearIngestSelection()
-                                    }
-                                  })
-                                }}
-                                className={`w-full rounded-brand border p-2.5 text-left transition-colors ${ hf.selected === row.id ? "border-gray-300 bg-red-50" : "border-transparent bg-gray-50 hover:bg-gray-100" } dark:border-white/10 dark:bg-red-950/50 dark:hover:bg-white/10`}
-                              >
-                                <div className="truncate text-sm font-bold text-gray-900 dark:text-zinc-50">
-                                  {row.original_filename}
-                                </div>
-                                <div className="mt-0.5 text-xs font-medium text-gray-600 dark:text-zinc-300">
-                                  {row.mime_type} ·{" "}
-                                  {(Number(row.size_bytes || 0) / 1024).toFixed(1)}{" "}
-                                  KB
-                                </div>
-                              </button>
-                            ))}
-                          </div>
+                          {hf.rows.length > 0 ? (
+                            <div className="max-h-[min(40vh,220px)] space-y-1 overflow-y-auto pr-1">
+                              {hf.rows.map((row) => (
+                                <button
+                                  key={row.id}
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    // Fetch the file blob and set it as the uploaded file for direct submission
+                                    hf.openItem(row).then((file) => {
+                                      if (file) {
+                                        onFileSelect(file, true)
+                                        hf.clearIngestSelection()
+                                      }
+                                    })
+                                  }}
+                                  className={`w-full rounded-brand border p-2.5 text-left transition-colors ${ hf.selected === row.id ? "border-gray-300 bg-red-50" : "border-transparent bg-gray-50 hover:bg-gray-100" } dark:border-white/10 dark:bg-red-950/50 dark:hover:bg-white/10`}
+                                >
+                                  <div className="truncate text-sm font-bold text-gray-900 dark:text-zinc-50">
+                                    {row.original_filename}
+                                  </div>
+                                  <div className="mt-0.5 text-xs font-medium text-gray-600 dark:text-zinc-300">
+                                    {row.mime_type} ·{" "}
+                                    {(Number(row.size_bytes || 0) / 1024).toFixed(1)}{" "}
+                                    KB
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-[11px] font-medium text-gray-400 dark:text-zinc-500 py-1 border-t border-gray-100 dark:border-white/5 mt-1 pt-2">
+                              No files waiting. Dropping scanned documents into the hot folder will automatically queue them here.
+                            </div>
+                          )}
                         </div>
-                      ) : null}
+                      )}
 
                       {uploadedFile ? (
                         <div
