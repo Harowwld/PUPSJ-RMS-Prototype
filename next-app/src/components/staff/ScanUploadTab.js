@@ -1393,7 +1393,6 @@ export default function ScanUploadTab({
                                   No incoming phone captures yet.
                                 </div>
                               )}
-                            </div>
                           </div>
                           </div>
 
