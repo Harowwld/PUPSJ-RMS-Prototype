@@ -633,7 +633,7 @@ export async function getDb() {
           )
           SELECT
             id, student_no, student_name, doc_type, original_filename, storage_filename,
-            mime_type, size_bytes, approval_status, reviewed_by, reviewed_at, review_note, uploaded_by, created_at
+            mime_type, size_bytes, approval_status, reviewed_by, reviewed_at, review_note, NULL, created_at
           FROM documents;
 
           DROP TABLE documents;
