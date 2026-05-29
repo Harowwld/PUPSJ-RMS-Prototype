@@ -1,6 +1,6 @@
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
-import { formatPHDateTime, formatDurationHuman } from "./timeFormat"
+import { formatPHDateTime } from "./timeFormat"
 
 /**
  * Helper to convert a source image to a PNG data URL (preserves transparency in jsPDF better than WebP)
@@ -274,7 +274,7 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
 /**
  * Generates a SLA Analytics PDF Report
  */
-export const generateSLAAnalyticsPdf = async (data, total, slaHours, completionRate, options = {}) => {
+export const generateSLAAnalyticsPdf = async (data, total, completionRate, options = {}) => {
   const doc = new jsPDF("p", "pt", "a4")
   const logoData = await getLogoAsPng()
   
@@ -289,14 +289,16 @@ export const generateSLAAnalyticsPdf = async (data, total, slaHours, completionR
   doc.setTextColor(0, 0, 0)
   doc.text(formatPHDateTime(new Date().toISOString()), 130, y)
 
-  if (options.startDate || options.endDate) {
-    y += 15
-    doc.setTextColor(150, 150, 150)
-    doc.text("REPORTING PERIOD:", 40, y)
-    doc.setTextColor(0, 0, 0)
-    const period = `${options.startDate || "Beginning"} to ${options.endDate || "Present"}`
-    doc.text(period, 130, y)
-  }
+  const isFiltered = !!(options.startDate || options.endDate);
+  
+  y += 15
+  doc.setTextColor(150, 150, 150)
+  doc.text("REPORTING PERIOD:", 40, y)
+  doc.setTextColor(0, 0, 0)
+  const period = isFiltered 
+    ? `${options.startDate || "Beginning"} to ${options.endDate || "Present"}`
+    : "Cumulative / All available historical records";
+  doc.text(period, 130, y)
   
   y += 40
   doc.setFontSize(12)
@@ -311,7 +313,10 @@ export const generateSLAAnalyticsPdf = async (data, total, slaHours, completionR
   doc.setFontSize(10)
   doc.setFont("helvetica", "normal")
   doc.setTextColor(60, 60, 60)
-  const intro = `This document details the registry's fulfillment efficiency across ${total} total documented requests. The key performance indicator for public service operations is measured through our Service Level Agreement (SLA) Turnaround Time, which tracks the interval from initial request pending state to final fulfillment.`
+  const dataScope = isFiltered 
+    ? "during the specified reporting period" 
+    : "aggregated from all available historical records";
+  const intro = `This document details the registry's fulfillment efficiency across ${total} total documented requests ${dataScope}. The key performance indicator for public service operations is measured through our Service Level Agreement (SLA) fulfillment completion rate.`
   const splitIntro = doc.splitTextToSize(intro, doc.internal.pageSize.getWidth() - 80)
   doc.text(splitIntro, 40, y)
   y += splitIntro.length * 14 + 25
@@ -324,12 +329,12 @@ export const generateSLAAnalyticsPdf = async (data, total, slaHours, completionR
   doc.setFontSize(9)
   doc.setFont("helvetica", "bold")
   doc.setTextColor(100, 100, 100)
-  doc.text("AVERAGE TURNAROUND (SLA)", 50, y + 25)
+  doc.text("TOTAL VOLUME (REQUESTS)", 50, y + 25)
   doc.text("FULFILLMENT COMPLETION", doc.internal.pageSize.getWidth() / 2 + 15, y + 25)
   
   doc.setFontSize(22)
   doc.setTextColor(122, 30, 40) // PUP Maroon
-  doc.text(formatDurationHuman(slaHours), 50, y + 55)
+  doc.text(`${total.toLocaleString()}`, 50, y + 55)
   doc.setTextColor(16, 185, 129) // Emerald for completion
   doc.text(`${completionRate}%`, doc.internal.pageSize.getWidth() / 2 + 15, y + 55)
   
@@ -369,35 +374,6 @@ export const generateSLAAnalyticsPdf = async (data, total, slaHours, completionR
     headStyles: { fillColor: [122, 30, 40], textColor: [255, 255, 255], fontStyle: "bold" },
     styles: { fontSize: 10, cellPadding: 6 },
     columnStyles: { 0: { fontStyle: "bold" }, 1: { halign: "right", fontStyle: "bold", textColor: [122, 30, 40] } },
-  })
-  
-  y = doc.lastAutoTable.finalY + 40
-  doc.setFontSize(12)
-  doc.setFont("helvetica", "bold")
-  doc.setTextColor(122, 30, 40)
-  doc.text("III. Recent Historical Volume", 40, y)
-  doc.setLineWidth(1.5)
-  doc.setDrawColor(122, 30, 40)
-  doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
-  y += 25
-
-  doc.setFontSize(10)
-  doc.setFont("helvetica", "normal")
-  doc.setTextColor(60, 60, 60)
-  const volumeDesc = "Volume analysis tracks the inflow and fulfillment of requests over a rolling 6-month period, providing insights into seasonal peaks and registry throughput."
-  const splitVolume = doc.splitTextToSize(volumeDesc, doc.internal.pageSize.getWidth() - 80)
-  doc.text(splitVolume, 40, y)
-  y += splitVolume.length * 14 + 10
-  
-  const volumeData = (data?.volumeTrend || []).map((v) => [v.label, v.received, v.completed])
-  autoTable(doc, {
-    startY: y,
-    head: [["Period", "Received", "Completed"]],
-    body: volumeData,
-    theme: "striped",
-    headStyles: { fillColor: [122, 30, 40], textColor: [255, 255, 255], fontStyle: "bold" },
-    styles: { fontSize: 10, cellPadding: 6 },
-    columnStyles: { 0: { fontStyle: "bold" }, 1: { halign: "center" }, 2: { halign: "center", textColor: [16, 185, 129], fontStyle: "bold" } },
   })
   
   y = doc.lastAutoTable.finalY + 60

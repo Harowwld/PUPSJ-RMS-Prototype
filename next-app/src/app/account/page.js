@@ -78,9 +78,12 @@ function AccountPageContent() {
 
   const [activeTab, setActiveTab] = useState("profile");
 
-  // System Settings State
+  // System Settings State (Global)
   const [systemSettings, setSystemSettings] = useState({});
   const [systemSettingsLoading, setSystemSettingsLoading] = useState(false);
+
+  // User Preferences State (Personal)
+  const [userPreferences, setUserPreferences] = useState({});
 
   const isAdminRole = (role) => {
     const normalized = String(role || "").toLowerCase();
@@ -111,8 +114,9 @@ function AccountPageContent() {
         setFname(user.fname || "");
         setLname(user.lname || "");
         setUsername(user.email || user.username || "");
+        setUserPreferences(user.preferences || {});
 
-        // If admin, fetch system settings
+        // If admin, fetch global system settings
         if (isAdminRole(user.role)) {
           fetch("/api/system/settings")
             .then(res => res.json())
@@ -145,26 +149,53 @@ function AccountPageContent() {
     })();
   }, [router]);
 
-  const handleSystemSettingToggle = async (key, checked) => {
-    setSystemSettingsLoading(true);
-    const newValue = String(checked);
+  const handleUserPreferenceToggle = async (key, checked) => {
+    const newValue = checked;
+    const oldPrefs = { ...userPreferences };
+    setUserPreferences((prev) => ({ ...prev, [key]: newValue }));
+    
     try {
-      const res = await fetch("/api/system/settings", {
+      const res = await fetch("/api/auth/preferences", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ key, value: newValue }),
+        body: JSON.stringify({ preferences: { [key]: newValue } }),
       });
       const json = await res.json();
-      if (json.ok) {
-        setSystemSettings((prev) => ({ ...prev, [key]: newValue }));
-        toast.success("System preference updated successfully.");
-      } else {
-        throw new Error(json.error);
-      }
+      if (!json.ok) throw new Error(json.error);
+      toast.success("Preference Saved", {
+        description: "Your settings have been successfully updated."
+      });
     } catch (error) {
-      toast.error(error.message || "Could not save preference.");
-    } finally {
-      setSystemSettingsLoading(false);
+      setUserPreferences(oldPrefs);
+      toast.error("Save Failed", {
+        description: error.message || "Could not update your preference."
+      });
+    }
+  };
+
+  const handleThemeChange = async (newThemeOrEvent) => {
+    const nextTheme = typeof newThemeOrEvent === "string"
+      ? newThemeOrEvent
+      : newThemeOrEvent?.target?.value;
+    
+    if (!nextTheme) return;
+
+    const changeThemeState = () => setTheme(nextTheme);
+
+    if (document.startViewTransition) {
+      document.startViewTransition(changeThemeState);
+    } else {
+      changeThemeState();
+    }
+
+    try {
+      await fetch("/api/auth/preferences", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ preferences: { theme: nextTheme } }),
+      });
+    } catch (err) {
+      console.error("Failed to save theme preference:", err);
     }
   };
 
@@ -465,7 +496,9 @@ function AccountPageContent() {
   const copyRecoveryCodes = () => {
     const text = recoveryCodes.join("\n");
     navigator.clipboard.writeText(text);
-    toast.success("Copied to Clipboard");
+    toast.success("Copied to Clipboard", {
+      description: "Recovery codes have been saved to your clipboard."
+    });
   };
 
   const downloadRecoveryCodes = () => {
@@ -502,16 +535,6 @@ function AccountPageContent() {
     );
   }
 
-  const handleThemeChange = (e) => {
-    const nextTheme = e.target.value
-    if (!document.startViewTransition) {
-      setTheme(nextTheme)
-      return
-    }
-    document.startViewTransition(() => {
-      setTheme(nextTheme)
-    })
-  }
 
   const initials =
     authUser?.fname && authUser?.lname
@@ -1197,7 +1220,9 @@ function AccountPageContent() {
                                     const json = await res.json();
                                     if (json.ok) {
                                       setRecoveryCodesCount(0);
-                                      toast.success("Recovery Codes Disabled");
+                                      toast.success("Recovery Codes Disabled", {
+                                        description: "Your emergency backup codes have been invalidated."
+                                      });
                                       // Refresh status
                                       const resTOTP = await fetch("/api/auth/totp");
                                       const jsonTOTP = await resTOTP.json().catch(() => null);
@@ -1208,7 +1233,9 @@ function AccountPageContent() {
                                       throw new Error(json.error);
                                     }
                                   } catch (err) {
-                                    toast.error("Failed to disable recovery codes: " + err.message);
+                                    toast.error("Action Failed", {
+                                      description: "Failed to disable recovery codes: " + err.message
+                                    });
                                   } finally {
                                     setTotpLoading(false);
                                   }
@@ -1310,48 +1337,43 @@ function AccountPageContent() {
                         </p>
                       </div>
 
-                      {isAdminRole(authUser?.role) && (
-                        <>
-                          <Separator className="bg-gray-100 dark:bg-white/5" />
+                      <Separator className="bg-gray-100 dark:bg-white/5" />
 
-                          <div className="space-y-6">
-                            <div className="flex items-center justify-between px-1">
-                              <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">
-                                Administrative Controls
-                              </label>
-                              <Badge variant="outline" className="h-5 px-2 bg-amber-50 border-amber-200 text-amber-600 font-black text-[9px] uppercase dark:bg-amber-950/30 dark:border-amber-900/30 dark:text-amber-400">
-                                Global Config
-                              </Badge>
+                      <div className="space-y-6">
+                        <div className="flex items-center justify-between px-1">
+                          <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">
+                            Workflow Preferences
+                          </label>
+                          <Badge variant="outline" className="h-5 px-2 bg-red-50 border-red-200 text-red-600 font-black text-[9px] uppercase dark:bg-red-950/30 dark:border-red-900/30 dark:text-red-400">
+                             Personal
+                          </Badge>
+                        </div>
+
+                        <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 dark:bg-white/5 dark:border-white/10">
+                          <div className="flex items-center justify-between gap-6">
+                            <div className="space-y-1.5">
+                              <h4 className="text-sm font-black text-gray-900 dark:text-zinc-50 uppercase tracking-tight">Skip Registration Confirmation</h4>
+                              <p className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 leading-relaxed max-w-md">
+                                When enabled, the final review modal is bypassed for faster account provisioning.
+                              </p>
                             </div>
-
-                            <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 dark:bg-white/5 dark:border-white/10">
-                              <div className="flex items-center justify-between gap-6">
-                                <div className="space-y-1.5">
-                                  <h4 className="text-sm font-black text-gray-900 dark:text-zinc-50 uppercase tracking-tight">Skip Registration Countdown</h4>
-                                  <p className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 leading-relaxed max-w-md">
-                                    When enabled, the 3-second safety delay on the registration confirmation button is removed system-wide.
-                                  </p>
-                                </div>
-                                <label className="relative inline-flex cursor-pointer items-center shrink-0">
-                                  <input 
-                                    type="checkbox" 
-                                    className="sr-only peer"
-                                    checked={systemSettings.skip_registration_countdown === "true"}
-                                    onChange={(e) => handleSystemSettingToggle("skip_registration_countdown", e.target.checked)}
-                                    disabled={systemSettingsLoading}
-                                  />
-                                  <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-pup-maroon peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:border-gray-600 dark:bg-zinc-700 dark:peer-focus:ring-red-800"></div>
-                                </label>
-                              </div>
-                            </div>
-
-                            <p className="text-[11px] text-amber-600/70 font-bold uppercase tracking-wider mt-4 ml-1 dark:text-amber-400/50 italic">
-                               <i className="ph-bold ph-warning-octagon mr-1.5"></i>
-                               Note: These settings affect all administrators and the global system behavior.
-                            </p>
+                            <label className="relative inline-flex cursor-pointer items-center shrink-0">
+                              <input 
+                                type="checkbox" 
+                                className="sr-only peer"
+                                checked={!!userPreferences.skip_registration_confirmation}
+                                onChange={(e) => handleUserPreferenceToggle("skip_registration_confirmation", e.target.checked)}
+                              />
+                              <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-pup-maroon peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:border-gray-600 dark:bg-zinc-700 dark:peer-focus:ring-red-800"></div>
+                            </label>
                           </div>
-                        </>
-                      )}
+                        </div>
+
+                        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-4 ml-1 dark:text-zinc-500 italic">
+                           <i className="ph-bold ph-info mr-1.5"></i>
+                           Note: These settings only affect your personal administrative experience.
+                        </p>
+                      </div>
                    </div>
                 </CardContent>
               </Card>

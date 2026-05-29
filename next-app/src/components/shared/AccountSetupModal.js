@@ -121,11 +121,13 @@ export default function AccountSetupModal({ authUser }) {
   const submitSecurity = async (e) => {
     e.preventDefault()
     if (secSubmitting) return
-    // Validation
+    
+    // Validation: Only require answers if they haven't been answered before
     const requiredQuestions = questions.filter((q) => q.is_required)
     for (const q of requiredQuestions) {
-      if (!answers[q.id] || !answers[q.id].trim()) {
-        setSecError("Please provide an answer for all required questions.")
+      const hasCurrentInput = !!(answers[q.id] && answers[q.id].trim());
+      if (!q.hasAnswer && !hasCurrentInput) {
+        setSecError(`Please provide an answer for: ${q.question}`)
         return
       }
     }
@@ -133,12 +135,14 @@ export default function AccountSetupModal({ authUser }) {
     setSecError("")
     setSecSubmitting(true)
     try {
+      // Send all questions that have either a new answer or were previously answered
+      // Empty string for a previously answered optional question will trigger deletion on backend
       const payload = questions
         .map((q) => ({
           questionId: q.id,
           answer: (answers[q.id] || "").trim(),
         }))
-        .filter((ans) => ans.answer !== "");
+        .filter((ans) => ans.answer !== "" || questions.find(q => q.id === ans.questionId)?.hasAnswer);
 
       const res = await fetch("/api/staff/security", {
         method: "PUT",
@@ -378,13 +382,13 @@ export default function AccountSetupModal({ authUser }) {
                         </label>
                         <Input
                           type="text"
-                          placeholder="Enter your answer"
+                          placeholder={q.hasAnswer ? "•••••••• (Already Answered)" : "Enter your answer"}
                           className="h-11 w-full rounded-brand border-gray-300 bg-gray-50 text-sm font-bold text-gray-900 focus-visible:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:ring-red-500/20"
                           value={answers[q.id] || ""}
                           onChange={(e) =>
                             setAnswers({ ...answers, [q.id]: e.target.value })
                           }
-                          required={!!q.is_required}
+                          required={!!q.is_required && !q.hasAnswer}
                         />
                       </div>
                     ))

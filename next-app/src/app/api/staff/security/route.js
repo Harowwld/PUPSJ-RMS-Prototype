@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { dbGet, dbRun, dbAll } from "@/lib/sqlite";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { verifySessionToken } from "@/lib/jwt";
+import { hasAllSecurityAnswers } from "@/lib/staffRepo";
 import crypto from "node:crypto";
 
 export const runtime = "nodejs";
@@ -24,8 +25,8 @@ export async function GET(req) {
     const answeredRows = await dbAll("SELECT question_id FROM staff_security_answers WHERE staff_id = ?", [uid]);
     const answeredSet = new Set((answeredRows || []).map(r => r.question_id));
     
-    // Updated logic: have they answered at least 2 questions?
-    const hasAllQuestions = answeredSet.size >= 2;
+    // Use the central logic to determine if the setup is complete
+    const hasAllQuestions = await hasAllSecurityAnswers(uid);
 
     const formattedQuestions = (questions || []).map(q => ({
       ...q,
@@ -65,13 +66,24 @@ export async function PUT(req) {
     const uid = user.sub || user.id;
 
     for (const ans of answers) {
-      if (!ans.questionId || !ans.answer) continue;
+      if (!ans.questionId) continue;
 
       // Verify the question exists
-      const qRow = await dbGet("SELECT id FROM security_questions WHERE id = ?", [ans.questionId]);
+      const qRow = await dbGet("SELECT id, is_required FROM security_questions WHERE id = ?", [ans.questionId]);
       if (!qRow) continue;
 
-      const answerNormalized = String(ans.answer).trim().toLowerCase();
+      const answerRaw = String(ans.answer || "").trim();
+      
+      if (answerRaw === "") {
+        // If it's a required question, we shouldn't allow deleting it
+        if (qRow.is_required) continue;
+
+        // Otherwise, delete the answer if it exists
+        await dbRun("DELETE FROM staff_security_answers WHERE staff_id = ? AND question_id = ?", [uid, qRow.id]);
+        continue;
+      }
+
+      const answerNormalized = answerRaw.toLowerCase();
       const answerHash = crypto.createHash("sha256").update(answerNormalized).digest("hex");
 
       // Use INSERT OR REPLACE since PRIMARY KEY is (staff_id, question_id)

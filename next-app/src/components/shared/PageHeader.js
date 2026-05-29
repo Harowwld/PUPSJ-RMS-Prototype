@@ -26,6 +26,7 @@ export default function PageHeader({
   leftAction,
   searchPlaceholder,
   searchLabel = "Search",
+  searchCount,
   searchValue,
   onSearchChange,
   filters,
@@ -64,9 +65,14 @@ export default function PageHeader({
             {(onSearchChange || searchValue !== undefined) && (
               <div className="w-full sm:w-64">
                 <div className="mb-1 flex items-center justify-between">
-                  <label className="mb-1 block text-[10px] font-bold text-gray-700 uppercase tracking-wide transition-colors dark:text-zinc-200">
+                  <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wide transition-colors dark:text-zinc-200">
                     {searchLabel}
                   </label>
+                  {searchCount && (
+                    <span className="text-[9px] font-black text-pup-maroon dark:text-primary/70 uppercase">
+                      {searchCount}
+                    </span>
+                  )}
                 </div>
                 <div className="relative transition-colors">
                   <i className="ph-bold ph-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-gray-400 dark:text-zinc-500"></i>

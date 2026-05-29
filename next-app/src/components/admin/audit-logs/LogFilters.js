@@ -60,7 +60,7 @@ export default function LogFilters({
   }
 
   return (
-    <div className="bg-white border-b border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
+    <div className="bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
       <div className="flex w-full flex-wrap items-end gap-5">
         {/* Search */}
         <div className="min-w-[320px] flex-[1.5]">

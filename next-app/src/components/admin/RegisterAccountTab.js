@@ -13,19 +13,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogDescription,
-} from "@/components/ui/dialog"
 import { Separator } from "@/components/ui/separator"
 import PageHeader from "@/components/shared/PageHeader"
+import ConfirmModal from "@/components/shared/ConfirmModal"
 import { cn } from "@/lib/utils"
+import { toast } from "sonner"
 
 export default function RegisterAccountTab({
+  authUser,
   createForm,
   setCreateForm,
   staffCount = 0,
@@ -38,24 +33,9 @@ export default function RegisterAccountTab({
   const [lastAutoFilled, setLastAutoFilled] = useState({ id: false, email: false })
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [countdown, setCountdown] = useState(3)
-  const [skipCountdown, setSkipCountdown] = useState(false)
+  
+  const skipConfirmation = !!authUser?.preferences?.skip_registration_confirmation
   const fnameRef = useRef(null)
-
-  // Fetch preferences
-  useEffect(() => {
-    const fetchPrefs = async () => {
-      try {
-        const res = await fetch("/api/system/settings")
-        const json = await res.json()
-        if (json.ok) {
-          setSkipCountdown(json.data.skip_registration_countdown === "true")
-        }
-      } catch (err) {
-        console.error("Failed to fetch registration preferences:", err)
-      }
-    }
-    fetchPrefs()
-  }, [])
 
   const [isIdManual, setIsIdManual] = useState(false)
   const [isEmailManual, setIsEmailManual] = useState(false)
@@ -106,17 +86,21 @@ export default function RegisterAccountTab({
 
   useEffect(() => {
     let timer
-    if (showConfirmModal && !skipCountdown && countdown > 0) {
+    if (showConfirmModal && !skipConfirmation && countdown > 0) {
       timer = setInterval(() => {
         setCountdown((prev) => prev - 1)
       }, 1000)
     }
     return () => clearInterval(timer)
-  }, [showConfirmModal, countdown, skipCountdown])
+  }, [showConfirmModal, countdown, skipConfirmation])
 
   const handleOpenConfirm = (e) => {
     e.preventDefault()
-    setCountdown(skipCountdown ? 0 : 3)
+    if (skipConfirmation) {
+      onCreateAccount(e)
+      return
+    }
+    setCountdown(3)
     setShowConfirmModal(true)
   }
 
@@ -135,16 +119,18 @@ export default function RegisterAccountTab({
 
   const handleClearForm = () => {
     onResetForm()
-    setIsIdManual(false)
-    setIsEmailManual(false)
-    // Small timeout to ensure state update has triggered before focusing
+    setLastAutoFilled({ id: false, email: false })
+    toast.success("Form cleared successfully", {
+      description: "All registration fields have been reset.",
+    })
+    // Delay resetting manual flags to ensure the form values have cleared first,
+    // preventing the auto-fill effect from re-triggering.
     setTimeout(() => {
+        setIsIdManual(false)
+        setIsEmailManual(false)
         fnameRef.current?.focus()
-    }, 0)
+    }, 50)
   }
-
-  // Removed implicit auto-generation logic to improve UX control
-  // Values are now suggested via placeholders and manual "Apply" buttons
 
   return (
     <TooltipProvider delay={200}>
@@ -160,7 +146,8 @@ export default function RegisterAccountTab({
             <div className="mx-auto max-w-6xl space-y-6">
               {/* Main Registration Form */}
               <Card className="overflow-hidden rounded-brand border-gray-200 bg-white shadow-md dark:border-white/10 dark:bg-card dark:shadow-none">
-                <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 p-5 px-8 dark:border-white/10 dark:bg-white/5">                  <h3 className="flex items-center gap-2 text-sm font-black tracking-widest text-gray-900 uppercase dark:text-zinc-50">
+                <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 p-5 px-8 dark:border-white/10 dark:bg-white/5">
+                  <h3 className="flex items-center gap-2 text-sm font-black tracking-widest text-gray-900 uppercase dark:text-zinc-50">
                     <i className="ph-bold ph-list-plus text-pup-maroon dark:text-primary"></i>{" "}
                     Registration Form
                   </h3>
@@ -428,89 +415,72 @@ export default function RegisterAccountTab({
           </CardContent>
         </Card>
 
-        {/* Confirmation Modal */}
-        <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
-          <DialogContent className="sm:max-w-md rounded-md border-gray-200 p-6 dark:border-white/10">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-xl font-black text-gray-900 dark:text-zinc-50">
-                <i className="ph-fill ph-warning-circle text-pup-maroon dark:text-primary"></i>
-                Confirm Registration
-              </DialogTitle>
-              <DialogDescription className="mt-2 text-sm font-medium text-gray-500 dark:text-zinc-400">
-                Are you sure you want to register this account? Please review the provisioning details below.
-              </DialogDescription>
-            </DialogHeader>
-
-            <div className="my-4 space-y-4 rounded-md border border-gray-100 bg-gray-50 p-4 dark:border-white/10 dark:bg-card">
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-gray-200 bg-white font-bold text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
-                  {((createForm.fname?.[0] || "") + (createForm.lname?.[0] || "")).toUpperCase() || "?"}
-                </div>
-                <div>
-                  <p className="text-[10px] font-black tracking-wider text-gray-400 uppercase dark:text-zinc-500">Full Name</p>
-                  <p className="text-sm font-bold text-gray-900 dark:text-zinc-50">{createForm.fname} {createForm.lname}</p>
-                </div>
+        <ConfirmModal
+          open={showConfirmModal}
+          onCancel={() => setShowConfirmModal(false)}
+          title="Confirm Registration"
+          variant="brand"
+          message="Review the provisioning details below before creating the new system credentials."
+          confirmLabel={countdown > 0 ? `CONFIRM (${countdown}s)` : "CONFIRM REGISTRATION"}
+          confirmClassName="bg-pup-maroon hover:bg-red-900 text-white"
+          buttonIcon={countdown > 0 ? "ph-bold ph-clock" : "ph-bold ph-check-circle"}
+          disabled={countdown > 0}
+          onConfirm={handleConfirmAction}
+          isLoading={isLoading}
+          note={createForm.role === "Admin" 
+            ? "Granted full administrative control over system configurations, user accounts, and audit logs." 
+            : "Granted operational access to process document requests, student records, and room layouts."}
+        >
+          <div className="mt-4 space-y-4 rounded-xl border border-gray-200 bg-gray-50/50 p-5 dark:border-white/10 dark:bg-white/5">
+            <div className="flex items-center gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white font-black text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card">
+                {((createForm.fname?.[0] || "") + (createForm.lname?.[0] || "")).toUpperCase() || "?"}
               </div>
-
-              <Separator className="bg-gray-200 dark:bg-zinc-700" />
-
-              <div className="grid grid-cols-2 gap-4">
-                 <div>
-                    <p className="text-[10px] font-black tracking-wider text-gray-400 uppercase dark:text-zinc-500">Employee ID</p>
-                    <p className="mt-1 text-xs font-bold text-gray-900 dark:text-zinc-50">{createForm.id}</p>
-                 </div>
-                 <div className="min-w-0">
-                    <p className="text-[10px] font-black tracking-wider text-gray-400 uppercase dark:text-zinc-500">Institutional Email</p>
-                    <p className="mt-1 truncate text-xs font-bold text-gray-900 dark:text-zinc-50" title={createForm.email}>{createForm.email}</p>
-                 </div>
-              </div>
-
-              <Separator className="bg-gray-200 dark:bg-zinc-700" />
-              
-              <div>
-                <p className="mb-2 text-[10px] font-black tracking-wider text-gray-400 uppercase dark:text-zinc-500">Access Level</p>
-                <div className="flex items-start gap-2">
-                  <span className={cn(
-                    "inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 text-[10px] font-black tracking-tight uppercase shadow-sm dark:shadow-none",
-                    createForm.role === "Admin" ? "border-red-200 bg-red-50 dark:bg-red-950/20 text-pup-maroon dark:text-primary" : "border-amber-200 bg-amber-50 dark:bg-amber-950/20 text-amber-700"
-                  )}>
-                    <i className={cn("ph-fill mr-1 text-xs", createForm.role === "Admin" ? "ph-shield-star" : "ph-user-gear")} />
-                    {createForm.role === "Admin" ? "Administrator" : "Registrar Staff"}
-                  </span>
-                  <p className="text-[10px] leading-tight font-medium text-gray-600 dark:text-zinc-300">
-                    {createForm.role === "Admin" 
-                      ? "Can manage system configs, backups, audits, and user accounts." 
-                      : "Can process documents, manage students, and view layouts."}
-                  </p>
-                </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[10px] font-black tracking-wider text-gray-400 uppercase dark:text-zinc-500 leading-none mb-1">Full Name</p>
+                <p className="text-base font-black text-gray-900 dark:text-zinc-50 truncate leading-tight">
+                  {createForm.fname} {createForm.lname}
+                </p>
               </div>
             </div>
 
-            <DialogFooter className="mt-4 flex items-center justify-end gap-3 px-0 pb-0">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowConfirmModal(false)}
-                className="h-10 flex-1 rounded-md text-[10px] font-black tracking-widest text-gray-500 uppercase transition-all hover:bg-gray-100 sm:flex-none sm:px-8 dark:text-zinc-400 dark:bg-muted dark:hover:bg-white/10"
-              >
-                RETURN
-              </Button>
-              <Button
-                type="button"
-                disabled={countdown > 0 || isLoading}
-                onClick={handleConfirmAction}
-                className="h-10 flex-1 rounded-md btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md text-[10px] font-black tracking-widest text-white uppercase shadow-lg disabled:opacity-50 sm:flex-none sm:px-10 transition-all dark:shadow-none"
-              >
-                {countdown > 0 ? `CONFIRM (${countdown}s)` : "CONFIRM"}
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            <Separator className="bg-gray-200 dark:bg-zinc-700/50" />
+
+            <div className="grid grid-cols-2 gap-6">
+              <div>
+                <p className="text-[10px] font-black tracking-wider text-gray-400 uppercase dark:text-zinc-500 mb-1">Employee ID</p>
+                <p className="text-xs font-bold text-gray-900 dark:text-zinc-50">{createForm.id}</p>
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-black tracking-wider text-gray-400 uppercase dark:text-zinc-500 mb-1">Institutional Email</p>
+                <p className="truncate text-xs font-bold text-gray-900 dark:text-zinc-50" title={createForm.email}>
+                  {createForm.email}
+                </p>
+              </div>
+            </div>
+
+            <Separator className="bg-gray-200 dark:bg-zinc-700/50" />
+            
+            <div>
+              <p className="mb-2 text-[10px] font-black tracking-wider text-gray-400 uppercase dark:text-zinc-500">Access Level</p>
+              <div className="flex items-start gap-3">
+                <span className={cn(
+                  "inline-flex shrink-0 items-center rounded-full border px-3 py-1 text-[10px] font-black tracking-tight uppercase shadow-sm dark:shadow-none",
+                  createForm.role === "Admin" 
+                    ? "border-red-200 bg-red-50 dark:bg-red-950/20 text-pup-maroon dark:text-primary" 
+                    : "border-amber-200 bg-amber-50 dark:bg-amber-950/20 text-amber-700"
+                )}>
+                  <i className={cn("ph-fill mr-1.5 text-xs", createForm.role === "Admin" ? "ph-shield-star" : "ph-user-gear")} />
+                  {createForm.role === "Admin" ? "Administrator" : "Registrar Staff"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </ConfirmModal>
       </div>
     </TooltipProvider>
   )
 }
-
 
 
 

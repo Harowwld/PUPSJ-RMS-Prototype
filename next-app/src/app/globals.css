@@ -318,26 +318,6 @@
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Radix & Shadcn UI Fixes */
-@layer utilities {
-  [data-sonner-toast] {
-    @apply rounded-xl border-border bg-card text-card-foreground shadow-2xl;
-  }
-  
-  [data-sonner-toast][data-mounted='true'] {
-    @apply animate-in fade-in zoom-in duration-500;
-  }
-
-  [data-sonner-toast][data-removed='true'] {
-    @apply animate-out fade-out zoom-out duration-500;
-  }
-
-  .dark [data-sonner-toast] {
-    background-color: oklch(0.24 0 0);
-    border-color: oklch(1 0 0 / 12%);
-  }
-}
-
 /* Dialog & Popup Animations */
 @layer utilities {
   [data-slot='dialog-overlay'] {

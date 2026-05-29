@@ -14,15 +14,21 @@ function buildStudentWhere({ studentStatus, courseCode }) {
 
   const cc = String(courseCode || "").trim().toUpperCase();
   if (cc) {
-    // Direct comparison uses the index on course_code
     filters.push("s.course_code = ?");
     params.push(cc);
   }
 
   const st = String(studentStatus || "").trim();
   if (st && st.toLowerCase() !== "all") {
-    filters.push("s.status = ?");
-    params.push(st);
+    if (st === "Active") {
+      filters.push("s.status = 'Active'");
+    } else if (st === "Archived") {
+      // Treat 'Archived' as a category for all non-active records
+      filters.push("s.status != 'Active'");
+    } else {
+      filters.push("s.status = ?");
+      params.push(st);
+    }
   }
 
   const where = filters.length ? `WHERE ${filters.join(" AND ")}` : "";

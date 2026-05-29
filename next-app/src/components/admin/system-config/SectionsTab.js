@@ -227,6 +227,10 @@ export default function SectionsTab({
     .filter((s) => selectedSections[s.id])
     .map((s) => `${s.course_code ? s.course_code + ' - ' : ''}${s.name}`)
 
+  const totalInView = sections.filter((s) => 
+    showArchived ? s.status === "Archived" : s.status !== "Archived"
+  ).length
+
   const handleBulkAction = () => {
     setConfirmPayload({
       title: showArchived ? "Restore Selected Blocks" : "Archive Selected Blocks",
@@ -242,12 +246,12 @@ export default function SectionsTab({
   }
 
   const programFilter = (
-    <div className="flex w-full flex-col gap-1.5 sm:w-64">
+    <div className="flex w-full flex-col gap-1.5 sm:w-64 min-w-0">
       <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
         Filter by Program
       </label>
       <Select
-        className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-xs font-bold text-gray-700 shadow-sm focus:border-gray-300 focus:ring-pup-maroon dark:bg-card dark:text-zinc-200 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
+        className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-xs font-bold text-gray-700 shadow-sm focus:border-gray-300 focus:ring-pup-maroon dark:bg-card dark:text-zinc-200 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10 min-w-0"
         value={selectedCourseFilter}
         onChange={(e) => setSelectedCourseFilter(e.target.value)}
       >
@@ -292,7 +296,14 @@ export default function SectionsTab({
           }
           description="Manage academic cohorts, sections, and organizational blocks."
           searchPlaceholder="Filter block name..."
-          searchLabel="Search Course Blocks"
+          searchLabel={
+            <div className="flex items-center justify-between w-full">
+              <span>Search Course Blocks</span>
+              <span className="text-[9px] font-black text-pup-maroon dark:text-primary/70 uppercase">
+                {filteredSectionsFull.length > 0 ? `${filteredSectionsFull.length.toLocaleString()} MATCHES` : "NO RESULTS"}
+              </span>
+            </div>
+          }
           searchValue={localSearch}
           onSearchChange={setLocalSearch}
           filters={
@@ -351,7 +362,7 @@ export default function SectionsTab({
         />
 
         {/* Active Filter Chips Row */}
-        {(localSearch !== "" || showArchived || selectedCourseFilter) && (
+        {(localSearch !== "" || selectedCourseFilter) && (
           <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
             <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">Active Filters:</span>
@@ -377,17 +388,6 @@ export default function SectionsTab({
                   </button>
                 </div>
               )}
-              {showArchived && (
-                <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 uppercase dark:bg-amber-950/30 dark:text-amber-400">
-                  Mode: Archived Records
-                  <button
-                    onClick={() => { setShowArchived(false); setPageSection(1); }}
-                    className="ml-1 hover:text-amber-800 transition-colors"
-                  >
-                    <i className="ph-bold ph-x text-[8px]"></i>
-                  </button>
-                </div>
-              )}
               <Button
                 variant="ghost"
                 size="sm"
@@ -395,7 +395,6 @@ export default function SectionsTab({
                   setLocalSearch("")
                   setSectionSearch("")
                   setSelectedCourseFilter("")
-                  setShowArchived(false)
                   setPageSection(1)
                 }}
                 className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon uppercase dark:border-white/10 dark:text-primary dark:bg-red-950/30"
@@ -591,8 +590,10 @@ export default function SectionsTab({
                               </span>
                             </div>
                           </td>
-                          <td className="p-4 px-6 font-medium text-gray-700 dark:text-zinc-200 text-xs">
-                            {sec.name}
+                          <td className="p-4 px-6 font-medium text-gray-700 dark:text-zinc-200 text-xs max-w-[300px]">
+                            <div className="truncate" title={sec.name}>
+                              {sec.name}
+                            </div>
                           </td>
                           <td className="p-4 px-6">
                             {sec.status === "Archived" ? (
@@ -704,21 +705,22 @@ export default function SectionsTab({
                                   </EmptyMedia>
                                 </div>
                                 <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
-                                  No course blocks found
+                                  {totalInView > 0 ? "No matches found" : "No activity found"}
                                 </EmptyTitle>
                                 <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                                  {sectionSearch
-                                    ? `No results matching "${sectionSearch}" for ${selectedCourseFilter || "all"}.`
+                                  {totalInView > 0
+                                    ? "Try adjusting your search filters or course selection to find what you're looking for."
                                     : showArchived
-                                      ? "There are no archived course blocks yet."
+                                      ? "There are currently no archived course blocks in the system."
                                       : "Add Course Block to organize students within degree programs."}
                                 </EmptyDescription>
-                                {sectionSearch || sections.some(sec => showArchived ? sec.status === 'Archived' : sec.status !== 'Archived') ? (
+                                {totalInView > 0 ? (
                                   <Button
                                     variant="outline"
                                     onClick={() => {
                                       setSectionSearch("")
                                       setLocalSearch("")
+                                      setSelectedCourseFilter("")
                                     }}
                                     className="mt-4 flex h-9 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                                   >
@@ -747,60 +749,56 @@ export default function SectionsTab({
         </CardContent>
 
         {filteredSectionsFull.length > 0 && (
-          <div className="-mx-6 mt-0 -mb-6 flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-2xl dark:border-white/10 dark:bg-card">
+          <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-2xl dark:border-white/10 dark:bg-card">
             <div className="flex items-center gap-8 select-none cursor-default">
               <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
                 <span>
-                  Showing <strong className="text-gray-900 dark:text-zinc-50">{filteredSections.length}</strong> out of{" "}
-                  <strong className="text-gray-900 dark:text-zinc-50">{filteredSectionsFull.length}</strong>{" "}
-                  {showArchived ? "Archived" : "Active"} Blocks
+                  SHOWING <strong className="text-gray-900 dark:text-zinc-50">{filteredSections.length}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{filteredSectionsFull.length}</strong> ENTRIES
                 </span>
 
-                {filteredSectionsFull.length > 10 && (
-                  <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
-                    <span className="text-[10px] opacity-60">Rows:</span>
-                    <Select
-                      className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-black text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
-                      value={itemsPerPage}
-                      onChange={handleItemsPerPageChange}
-                    >
-                      <option value={10}>10</option>
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                    </Select>
-                  </div>
-                )}
+                <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
+                  <span className="text-[10px] opacity-60">ROWS:</span>
+                  <Select
+                    className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
+                    value={itemsPerPage}
+                    onChange={handleItemsPerPageChange}
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </Select>
+                </div>
               </div>
             </div>
 
-            {Math.ceil(filteredSectionsFull.length / itemsPerPage) > 1 && (
-              <div className="flex shrink-0 items-center gap-2 select-none">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={pageSection <= 1}
-                  onClick={() => setPageSection((p) => p - 1)}
-                  className="h-10 rounded-brand border-gray-200 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-                >
-                  <i className="ph-bold ph-caret-left mr-2 text-base"></i> PREV
-                </Button>
-                
-                <div className="flex h-10 min-w-[48px] items-center justify-center rounded-brand border border-gray-200 bg-gray-50 px-3 text-[11px] font-black text-gray-900 shadow-inner ring-1 ring-black/[0.02] dark:border-white/10 dark:bg-white/5 dark:text-zinc-50 dark:shadow-none">
-                  {pageSection}
-                </div>
+            <div className="flex shrink-0 items-center gap-3 select-none">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={pageSection <= 1}
+                onClick={() => setPageSection((p) => p - 1)}
+                className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+              >
+                <i className="ph-bold ph-caret-left mr-2 text-base"></i>
+                PREV
+              </Button>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={pageSection >= Math.ceil(filteredSectionsFull.length / itemsPerPage)}
-                  onClick={() => setPageSection((p) => p + 1)}
-                  className="h-10 rounded-brand border-gray-200 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-                >
-                  NEXT <i className="ph-bold ph-caret-right ml-2 text-base"></i>
-                </Button>
+              <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                {pageSection}
               </div>
-            )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={pageSection >= Math.ceil(filteredSectionsFull.length / itemsPerPage)}
+                onClick={() => setPageSection((p) => p + 1)}
+                className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+              >
+                NEXT
+                <i className="ph-bold ph-caret-right ml-2 text-base"></i>
+              </Button>
+            </div>
           </div>
         )}
       </Card>
@@ -828,7 +826,7 @@ export default function SectionsTab({
         <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
           <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30 dark:text-primary dark:shadow-none">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon shadow-sm dark:bg-red-950/30 dark:border-white/10">
                 <i className="ph-duotone ph-pencil-line text-2xl"></i>
               </div>
               <div className="min-w-0">
@@ -842,14 +840,14 @@ export default function SectionsTab({
               </div>
             </div>
           </DialogHeader>
-          <form onSubmit={addSection}>
+          <form onSubmit={addSection} className="w-full min-w-0 overflow-hidden">
             <div className="p-6 space-y-6">
-              <div>
+              <div className="w-full min-w-0">
                 <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
                   Degree Program <span className="text-pup-maroon dark:text-primary">*</span>
                 </label>
                 <Select
-                  className="h-11 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-bold text-gray-700 shadow-sm focus:border-gray-300 focus:ring-pup-maroon dark:bg-card dark:text-zinc-200 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
+                  className="h-11 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-bold text-gray-700 shadow-sm focus:border-gray-300 focus:ring-pup-maroon dark:bg-card dark:text-zinc-200 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10 min-w-0"
                   value={secCourseCode}
                   onChange={(e) => setSecCourseCode(e.target.value)}
                   required
@@ -869,7 +867,7 @@ export default function SectionsTab({
                 <Input
                   type="text"
                   placeholder="e.g. Section 1"
-                  className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-pup-maroon dark:bg-card dark:border-white/10"
+                  className="h-11 w-full rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-pup-maroon dark:bg-card dark:border-white/10 min-w-0"
                   value={newSectionName}
                   onChange={(e) => setNewSectionName(e.target.value)}
                   required
@@ -911,7 +909,7 @@ export default function SectionsTab({
         <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
           <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30 dark:text-primary dark:shadow-none">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon shadow-sm dark:bg-red-950/30 dark:border-white/10">
                 <i className="ph-duotone ph-pencil-line text-2xl"></i>
               </div>
               <div className="min-w-0">
@@ -924,14 +922,14 @@ export default function SectionsTab({
               </div>
             </div>
           </DialogHeader>
-          <form onSubmit={updSection}>
+          <form onSubmit={updSection} className="w-full min-w-0 overflow-hidden">
             <div className="p-6 space-y-6">
-              <div>
+              <div className="w-full min-w-0">
                 <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
                   Degree Program <span className="text-pup-maroon dark:text-primary">*</span>
                 </label>
                 <Select
-                  className="h-11 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-bold text-gray-700 shadow-sm focus:border-gray-300 focus:ring-pup-maroon dark:bg-card dark:text-zinc-200 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
+                  className="h-11 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-bold text-gray-700 shadow-sm focus:border-gray-300 focus:ring-pup-maroon dark:bg-card dark:text-zinc-200 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10 min-w-0"
                   value={editSection.courseCode}
                   onChange={(e) =>
                     setEditSection((prev) => ({
@@ -949,13 +947,13 @@ export default function SectionsTab({
                   ))}
                 </Select>
               </div>
-              <div>
+              <div className="min-w-0">
                 <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
                   Block Name <span className="text-pup-maroon dark:text-primary">*</span>
                 </label>
                 <Input
                   type="text"
-                  className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-pup-maroon dark:bg-card dark:border-white/10"
+                  className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-pup-maroon dark:bg-card dark:border-white/10 min-w-0"
                   value={editSection.name}
                   onChange={(e) =>
                     setEditSection((prev) => ({

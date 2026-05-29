@@ -1220,6 +1220,23 @@ export async function getDb() {
         }
       }
 
+      // Migration to version 20: Add preferences column to staff table
+      if (schemaVersion < 20) {
+        try {
+          const pragma = db.exec("PRAGMA table_info(staff)");
+          const cols = new Set(
+            (pragma?.[0]?.values || []).map((r) => String(r?.[1] || ""))
+          );
+          if (!cols.has("preferences")) {
+            db.exec("ALTER TABLE staff ADD COLUMN preferences TEXT DEFAULT '{}'");
+          }
+          db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '20')");
+          persistDb();
+        } catch (e) {
+          console.error("[DB] schema_version 20 migration (staff preferences):", e);
+        }
+      }
+
       try {
         db.exec("PRAGMA foreign_keys = ON");
       } catch (e) {
@@ -1233,11 +1250,11 @@ export async function getDb() {
       ensureSerialKeyColumn();
       ensureBirthCertificateDocType();
       ensureScanSessionTables();
+      ensureStaffPreferencesColumn();
 
       initializing = null;
       return db;
     } catch (err) {
-
       initializing = null;
       throw err;
     }
@@ -1348,6 +1365,21 @@ function ensureSerialKeyColumn() {
     }
   } catch (e) {
     console.error("[DB] ensureSerialKeyColumn:", e);
+  }
+}
+
+function ensureStaffPreferencesColumn() {
+  if (!db) return;
+  try {
+    const pragma = db.exec("PRAGMA table_info(staff)");
+    const cols = new Set((pragma?.[0]?.values || []).map((r) => String(r?.[1] || "")));
+    if (!cols.has("preferences")) {
+      db.exec("ALTER TABLE staff ADD COLUMN preferences TEXT DEFAULT '{}'");
+      persistDb();
+      console.log("[DB] Added missing preferences column to staff table.");
+    }
+  } catch (e) {
+    console.error("[DB] ensureStaffPreferencesColumn:", e);
   }
 }
 

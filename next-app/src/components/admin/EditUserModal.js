@@ -22,9 +22,9 @@ export default function EditUserModal({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="w-full max-w-3xl overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-3xl dark:border-white/10 dark:bg-card">
-        <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
+        <DialogHeader className="border-b border-gray-100 bg-gray-50/50 p-6 dark:border-white/10 dark:bg-white/5">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30 dark:text-primary dark:shadow-none">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon shadow-sm dark:bg-red-950/30 dark:border-white/10">
               <i className="ph-duotone ph-user-gear text-2xl"></i>
             </div>
             <div className="min-w-0">
@@ -41,43 +41,7 @@ export default function EditUserModal({
 
         <form onSubmit={onSubmit}>
           <div className="space-y-6 p-6">
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-              <div>
-                <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
-                  Employee ID <span className="text-pup-maroon dark:text-primary">*</span>
-                </label>
-                <Input
-                  type="text"
-                  required
-                  className="h-11 rounded-brand border border-gray-300 bg-white font-mono text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none dark:bg-card dark:border-white/10"
-                  placeholder="e.g. 2023-001"
-                  value={editForm.id}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, id: e.target.value }))
-                  }
-                />
-              </div>
-              <div>
-                <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
-                  System Role <span className="text-pup-maroon dark:text-primary">*</span>
-                </label>
-                <Select
-                  required
-                  className="h-11 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon focus:outline-none dark:bg-card dark:text-zinc-50 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
-                  value={editForm.role}
-                  onChange={(e) =>
-                    setEditForm((f) => ({ ...f, role: e.target.value }))
-                  }
-                >
-                  <option value="" disabled>
-                    Select Role...
-                  </option>
-                  <option value="Admin">Admin</option>
-                  <option value="Staff">Staff</option>
-                </Select>
-              </div>
-            </div>
-
+            {/* Part 1: Full Name */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
@@ -111,17 +75,53 @@ export default function EditUserModal({
               </div>
             </div>
 
+            {/* Part 2: Role Selection */}
             <div>
               <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
-                Institutional Username / Email
+                System Role <span className="text-pup-maroon dark:text-primary">*</span>
               </label>
-              <Input
-                type="email"
-                readOnly
-                className="h-11 cursor-not-allowed rounded-brand border border-gray-200 bg-gray-50 text-sm text-gray-500 focus-visible:outline-none dark:border-white/10 dark:bg-card dark:text-zinc-400"
-                placeholder="username@pup.edu.ph"
-                value={editForm.email}
-              />
+              <Select
+                required
+                className="h-11 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon focus:outline-none dark:bg-card dark:text-zinc-50 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
+                value={editForm.role}
+                onChange={(e) =>
+                  setEditForm((f) => ({ ...f, role: e.target.value }))
+                }
+              >
+                <option value="" disabled>
+                  Select Role...
+                </option>
+                <option value="Admin">Admin</option>
+                <option value="Staff">Staff</option>
+              </Select>
+            </div>
+
+            {/* Part 3: System Identifiers */}
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+                  Employee ID <span className="text-pup-maroon dark:text-primary">*</span>
+                </label>
+                <Input
+                  type="text"
+                  readOnly
+                  className="h-11 cursor-not-allowed rounded-brand border border-gray-200 bg-gray-50 font-mono text-sm text-gray-500 focus-visible:outline-none dark:border-white/10 dark:bg-card dark:text-zinc-400"
+                  placeholder="e.g. 2023-001"
+                  value={editForm.id}
+                />
+              </div>
+              <div>
+                <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+                  Institutional Email
+                </label>
+                <Input
+                  type="email"
+                  readOnly
+                  className="h-11 cursor-not-allowed rounded-brand border border-gray-200 bg-gray-50 text-sm text-gray-500 focus-visible:outline-none dark:border-white/10 dark:bg-card dark:text-zinc-400"
+                  placeholder="username@pup.edu.ph"
+                  value={editForm.email}
+                />
+              </div>
             </div>
           </div>
 

@@ -86,7 +86,6 @@ export default function SLAAnalyticsTab({
 
   // Safe variables
   const total = data?.totalRequests || 0
-  const slaHours = data?.sla?.averageTurnaroundHours
   const completed = data?.sla?.totalCompleted || 0
   const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0
 
@@ -98,7 +97,7 @@ export default function SLAAnalyticsTab({
     if (!data || loading) return;
     setIsGeneratingPdf(true);
     try {
-      const blob = await generateSLAAnalyticsPdf(data, total, slaHours, completionRate);
+      const blob = await generateSLAAnalyticsPdf(data, total, completionRate, { startDate, endDate });
       const url = URL.createObjectURL(blob);
       setPdfPreviewUrl(url);
       setReportOpen(true);
@@ -115,7 +114,7 @@ export default function SLAAnalyticsTab({
     if (!pdfBlobUrl) {
       setIsGeneratingPdf(true);
       try {
-        const blob = await generateSLAAnalyticsPdf(data, total, slaHours, completionRate);
+        const blob = await generateSLAAnalyticsPdf(data, total, completionRate, { startDate, endDate });
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
@@ -153,7 +152,7 @@ export default function SLAAnalyticsTab({
     try {
       await new Promise(resolve => setTimeout(resolve, 100));
       const fileName = generateExportFilename("SLA-ANALYTICS", "DATA", "csv");
-      downloadSlaCsv(data, total, slaHours, completionRate, onLogAction, fileName);
+      downloadSlaCsv(data, total, completionRate, onLogAction, fileName);
       showToast?.({ title: "Export Successful", description: `The SLA data has been successfully exported to ${fileName}.` });
     } catch (e) {
       showToast?.({ title: "Export Failed", description: "Failed to export SLA analytics to CSV format." }, true);
@@ -168,19 +167,19 @@ export default function SLAAnalyticsTab({
     <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
       {/* 1. Color KPI Cards / Skeletons at the Top */}
       {loading && !data ? (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 animate-pulse">
-          {[1, 2, 3].map((i) => (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 animate-pulse">
+          {[1, 2].map((i) => (
             <Skeleton key={i} className="h-28 rounded-brand dark:bg-muted" />
           ))}
         </div>
       ) : !error && data ? (
         <div className={cn("transition-all duration-500", loading && "opacity-40 blur-[1px]")}>
-          <SlaKpiCards total={total} slaHours={slaHours} completionRate={completionRate} />
+          <SlaKpiCards total={total} completionRate={completionRate} />
         </div>
       ) : null}
 
       {/* 2. Main Page Card */}
-      <Card className="rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-gray-200/50 backdrop-blur-xl dark:border-white/10 dark:bg-card/80 dark:shadow-none w-full">
+      <Card className="rounded-brand border border-gray-200 bg-white shadow-2xl shadow-gray-200/50 backdrop-blur-xl dark:border-white/10 dark:bg-card/80 dark:shadow-none w-full">
         <PageHeader
           icon="ph-chart-line-up"
           title="Request Analysis"

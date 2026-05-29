@@ -37,7 +37,7 @@ const ConflictResolutionModals = memo(({
         <DialogContent className="sm:max-w-3xl p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10">
           <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full border border-blue-100/30 bg-blue-50 text-blue-600 shadow-sm flex items-center justify-center shrink-0 dark:bg-blue-950/30 dark:text-blue-400 dark:shadow-none">
+              <div className="w-12 h-12 rounded-xl border border-blue-100/30 bg-blue-50 text-blue-600 shadow-sm flex items-center justify-center shrink-0 dark:bg-blue-950/30 dark:text-blue-400 dark:shadow-none">
                 <i className="ph-duotone ph-seal-check text-2xl"></i>
               </div>
               <div className="min-w-0">
@@ -112,7 +112,7 @@ const ConflictResolutionModals = memo(({
         <DialogContent className="sm:max-w-4xl p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10">
           <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full border border-amber-100/30 bg-amber-50 text-amber-600 shadow-sm flex items-center justify-center shrink-0 dark:bg-amber-950/30 dark:text-amber-400 dark:shadow-none">
+              <div className="w-12 h-12 rounded-xl border border-amber-100/30 bg-amber-50 text-amber-600 shadow-sm flex items-center justify-center shrink-0 dark:bg-amber-950/30 dark:text-amber-400 dark:shadow-none">
                 <i className="ph-duotone ph-warning text-2xl"></i>
               </div>
               <div className="min-w-0">
@@ -254,7 +254,7 @@ const ConflictResolutionModals = memo(({
         <DialogContent className="sm:max-w-3xl p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10">
           <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full border border-blue-100/30 bg-blue-50 text-blue-600 shadow-sm flex items-center justify-center shrink-0 dark:bg-blue-950/30 dark:text-blue-400 dark:shadow-none">
+              <div className="w-12 h-12 rounded-xl border border-blue-100/30 bg-blue-50 text-blue-600 shadow-sm flex items-center justify-center shrink-0 dark:bg-blue-950/30 dark:text-blue-400 dark:shadow-none">
                 <i className="ph-duotone ph-list-checks text-2xl"></i>
               </div>
               <div className="min-w-0">
