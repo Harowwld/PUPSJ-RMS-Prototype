@@ -516,7 +516,7 @@ function AdminPageContent() {
   }, [searchParams])
 
   useEffect(() => {
-    ; (async () => {
+    ;(async () => {
       try {
         const res = await fetch("/api/auth/me")
         const json = await res.json().catch(() => null)
@@ -580,7 +580,7 @@ function AdminPageContent() {
     }
 
     checkDrive()
-    const timer = setInterval(checkDrive, 500)
+    const timer = setInterval(checkDrive, 5000)
     return () => {
       cancelled = true
       clearInterval(timer)
@@ -737,7 +737,7 @@ function AdminPageContent() {
       }
 
       if (toastId) toast.dismiss(toastId)
-
+      
       if (!suppressToast) {
         if (results.failed === 0) {
           showToast({
@@ -1149,166 +1149,101 @@ function AdminPageContent() {
       headers.set("x-totp-token", totpToken)
     }
 
-    // Staged progress toast
-    const toastId = toast.loading(
-      <div className="flex items-center gap-3">
-        <i className="ph-bold ph-spinner animate-spin text-base text-blue-500" />
-        <div>
-          <p className="text-sm font-bold">Creating Backup</p>
-          <p className="text-xs font-medium text-gray-500">Scanning repository files...</p>
-        </div>
-      </div>
-    )
-
-    const stages = [
-      { delay: 600,  label: "Packing files into archive...",       icon: "ph-archive" },
-      { delay: 1400, label: "Encrypting with AES-256-GCM...",       icon: "ph-lock-key" },
-      { delay: 2200, label: "Writing encrypted image to disk...",    icon: "ph-floppy-disk" },
-      { delay: 3000, label: "Finalizing and recording checksum...",  icon: "ph-check-circle" },
-    ]
-
-    const stageTimers = stages.map(({ delay, label, icon }) =>
-      setTimeout(() => {
-        toast.loading(
-          <div className="flex items-center gap-3">
-            <i className={`ph-bold ${icon} animate-pulse text-base text-blue-500`} />
-            <div>
-              <p className="text-sm font-bold">Creating Backup</p>
-              <p className="text-xs font-medium text-gray-500">{label}</p>
-            </div>
-          </div>,
-          { id: toastId }
-        )
-      }, delay)
-    )
-
-    let json
-    try {
-      const res = await fetch("/api/system/backup", { method: "POST", headers })
-      json = await res.json()
-
-      stageTimers.forEach(clearTimeout)
+    const promise = (async () => {
+      const res = await fetch("/api/system/backup", {
+        method: "POST",
+        headers,
+      })
+      const json = await res.json()
 
       if (res.status === 403 && json?.requiresTOTP) {
-        toast.dismiss(toastId)
-        if (totpToken) throw new Error(json.error || "Invalid verification code")
+        if (totpToken) {
+          throw new Error(json.error || "Invalid verification code")
+        }
         executeWithTOTP((token) => simulateBackup(token), "Create Backup", true)
         throw new Error("TOTP_REQUIRED")
       }
 
-      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to create backup")
+      if (!res.ok || !json?.ok)
+        throw new Error(json?.error || "Failed to create backup")
 
+      // Await refresh to ensure table updates before UI completes
       await refreshBackups()
 
-      toast.success(
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-bold text-emerald-700">Backup Complete</p>
-          <p className="text-xs font-medium text-gray-500">
-            {json?.data?.filename || "Archive"} secured &amp; downloading.
-          </p>
-        </div>,
-        { id: toastId, duration: 5000 }
-      )
-
       if (json?.data?.id) {
+        // Trigger download with a slight delay to avoid interrupting table refresh state
         setTimeout(() => {
           const link = document.createElement("a")
-          link.href = `/api/system/backup/download?id=${json.data.id}`
-          link.download = json.data.filename || "backup.zip.enc"
+          link.href = `/api/system/backup/download?id=${json?.data?.id}`
+          link.download = json?.data?.filename || "backup.zip.enc"
           link.click()
         }, 1000)
       }
-
       return json
-    } catch (err) {
-      stageTimers.forEach(clearTimeout)
-      if (err.message !== "TOTP_REQUIRED") {
-        toast.error(
+    })()
+
+    toast.promise(promise, {
+      loading: "Creating full system snapshot...",
+      success: (json) => {
+        return (
           <div className="flex flex-col gap-1">
-            <p className="text-sm font-bold">Backup Failed</p>
+            <p className="text-sm font-semibold text-emerald-700">Backup Successful</p>
+            <p className="text-xs font-normal">
+              Archive '{json?.data?.filename || "backup package"}' has been secured.
+            </p>
+          </div>
+        )
+      },
+      error: (err) => {
+        if (err.message === "TOTP_REQUIRED") return null
+        return (
+          <div className="flex flex-col gap-1">
+            <p className="text-sm font-bold text-red-600">Backup Failed</p>
             <p className="text-xs font-medium opacity-80">
               {err.message || "Unable to complete system snapshot."}
             </p>
-          </div>,
-          { id: toastId, duration: 6000 }
+          </div>
         )
-      } else {
-        toast.dismiss(toastId)
-      }
-      throw err
-    }
+      },
+    })
+    
+    return promise
   }
 
   const syncExternal = async (id) => {
-    const toastId = toast.loading(
-      <div className="flex items-center gap-3">
-        <i className="ph-bold ph-spinner animate-spin text-base text-amber-500" />
-        <div>
-          <p className="text-sm font-bold">Syncing to External Drive</p>
-          <p className="text-xs font-medium text-gray-500">Preparing transfer...</p>
-        </div>
-      </div>
-    )
-
-    const syncStages = [
-      { delay: 500,  label: "Locating backup archive...",           icon: "ph-magnifying-glass" },
-      { delay: 1200, label: "Opening PUPSJRMS Backups folder...",   icon: "ph-folder-open" },
-      { delay: 2000, label: "Copying encrypted image to drive...",  icon: "ph-hard-drive" },
-    ]
-
-    const stageTimers = syncStages.map(({ delay, label, icon }) =>
-      setTimeout(() => {
-        toast.loading(
-          <div className="flex items-center gap-3">
-            <i className={`ph-bold ${icon} animate-pulse text-base text-amber-500`} />
-            <div>
-              <p className="text-sm font-bold">Syncing to External Drive</p>
-              <p className="text-xs font-medium text-gray-500">{label}</p>
-            </div>
-          </div>,
-          { id: toastId }
-        )
-      }, delay)
-    )
-
-    try {
+    const promise = (async () => {
       const res = await fetch("/api/system/backup/sync-external", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id }),
       })
       const json = await res.json()
-
-      stageTimers.forEach(clearTimeout)
-
       if (!res.ok || !json?.ok) throw new Error(json?.error || "Sync failed")
-
       refreshBackups()
-
-      toast.success(
-        <div className="flex flex-col gap-1">
-          <p className="text-sm font-bold text-emerald-700">External Sync Complete</p>
-          <p className="text-xs font-medium text-gray-500">
-            Encrypted copy secured on Seagate drive.
-          </p>
-        </div>,
-        { id: toastId, duration: 5000 }
-      )
-
       return json
-    } catch (err) {
-      stageTimers.forEach(clearTimeout)
-      toast.error(
+    })()
+
+    toast.promise(promise, {
+      loading: "Transferring encrypted backup to external volume...",
+      success: (
         <div className="flex flex-col gap-1">
-          <p className="text-sm font-bold">Sync Failed</p>
+          <p className="text-sm font-bold">External Sync Complete</p>
+          <p className="text-xs font-medium opacity-80">
+            A redundant copy has been secured on the external drive.
+          </p>
+        </div>
+      ),
+      error: (err) => (
+        <div className="flex flex-col gap-1">
+          <p className="text-sm font-bold text-red-600">Sync Failed</p>
           <p className="text-xs font-medium opacity-80">
             {err.message || "Unable to secure external copy."}
           </p>
-        </div>,
-        { id: toastId, duration: 6000 }
-      )
-      throw err
-    }
+        </div>
+      ),
+    })
+
+    return promise
   }
 
   const confirmDeleteBackup = async () => {
@@ -1425,7 +1360,7 @@ function AdminPageContent() {
         headers.join(","),
         ...csvRows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
       ].join("\n")
-
+      
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
       const url = URL.createObjectURL(blob)
       const link = document.createElement("a")
@@ -1456,6 +1391,18 @@ function AdminPageContent() {
   }
 
   const sidebarItems = [
+    { type: "header", label: "User Management" },
+    {
+      key: "directory",
+      label: "Staff Directory",
+      iconClass: "ph-bold ph-users",
+    },
+    {
+      key: "create",
+      label: "Register Account",
+      iconClass: "ph-bold ph-user-plus",
+    },
+
     { type: "header", label: "Operations & Analytics" },
     {
       key: "review",
@@ -1471,18 +1418,6 @@ function AdminPageContent() {
       key: "request_analytics",
       label: "Request Analysis",
       iconClass: "ph-bold ph-trend-up",
-    },
-
-    { type: "header", label: "User Management" },
-    {
-      key: "directory",
-      label: "Staff Directory",
-      iconClass: "ph-bold ph-users",
-    },
-    {
-      key: "create",
-      label: "Register Account",
-      iconClass: "ph-bold ph-user-plus",
     },
 
     { type: "header", label: "System Configuration" },
@@ -1635,8 +1570,8 @@ function AdminPageContent() {
           )}
 
           {view === "storage_layout" && (
-            <StorageLayoutEditorTab
-              showToast={showToast}
+            <StorageLayoutEditorTab 
+              showToast={showToast} 
               isDirty={isStorageDirty}
               setIsDirty={setIsStorageDirty}
             />
