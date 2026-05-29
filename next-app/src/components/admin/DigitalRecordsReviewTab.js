@@ -440,34 +440,34 @@ export default function DigitalRecordsReviewTab({
   }, [records])
 
   return (
-    <div className="animate-fade-up font-inter flex h-auto w-full flex-col gap-6">
-      {/* Color Stat Cards / Skeletons at the Top */}
-      {isLoading && !records ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
-          {[1, 2, 3].map((i) => (
-            <Skeleton key={i} className="h-28 rounded-brand bg-gray-100 dark:bg-muted" />
-          ))}
-        </div>
-      ) : !error ? (
-        <div className={cn(
-          "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 transition-all duration-500",
-          isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-        )}>
-          <div className="group relative overflow-hidden rounded-brand border border-blue-950 bg-linear-to-br from-blue-800 to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
-              <i className="ph-duotone ph-clock-countdown pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
-              <div className="relative z-10">
-                <div className="flex items-center justify-between">
-                  <p className="mb-1 text-[10px] font-black tracking-widest text-blue-200 uppercase">
-                    Pending Review
-                  </p>
-                  {stats.hasSlaBreach && !isLoading && (
-                    <div className="flex items-center gap-1.5">
-                       <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                       </span>
-                       <TooltipProvider>
-                          <Tooltip delayDuration={300}>
+    <TooltipProvider delayDuration={200}>
+      <div className="animate-fade-up font-inter flex h-auto w-full flex-col gap-6">
+        {/* Color Stat Cards / Skeletons at the Top */}
+        {isLoading && !records ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
+            {[1, 2, 3].map((i) => (
+              <Skeleton key={i} className="h-28 rounded-brand bg-gray-100 dark:bg-muted" />
+            ))}
+          </div>
+        ) : !error ? (
+          <div className={cn(
+            "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 transition-all duration-500",
+            isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+          )}>
+            <div className="group relative overflow-hidden rounded-brand border border-blue-950 bg-linear-to-br from-blue-800 to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+                <i className="ph-duotone ph-clock-countdown pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
+                <div className="relative z-10">
+                  <div className="flex items-center justify-between">
+                    <p className="mb-1 text-[10px] font-black tracking-widest text-blue-200 uppercase">
+                      Pending Review
+                    </p>
+                    {stats.hasSlaBreach && !isLoading && (
+                      <div className="flex items-center gap-1.5">
+                         <span className="relative flex h-2 w-2">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                         </span>
+                          <Tooltip>
                             <TooltipTrigger asChild>
                                <Badge className="bg-red-500 text-white border-0 text-[8px] font-black px-1.5 py-0 h-4 uppercase tracking-tighter cursor-help">
                                   SLA Warning
@@ -480,18 +480,17 @@ export default function DigitalRecordsReviewTab({
                                </p>
                             </TooltipContent>
                           </Tooltip>
-                       </TooltipProvider>
-                    </div>
-                  )}
+                      </div>
+                    )}
+                  </div>
+                  <h3 className="text-3xl font-black text-white">
+                    {stats.pending.toLocaleString()}
+                  </h3>
+                  <p className="mt-0.5 text-[10px] font-medium text-blue-200/80">
+                    Waiting to be checked
+                  </p>
                 </div>
-                <h3 className="text-3xl font-black text-white">
-                  {stats.pending.toLocaleString()}
-                </h3>
-                <p className="mt-0.5 text-[10px] font-medium text-blue-200/80">
-                  Waiting to be checked
-                </p>
               </div>
-            </div>
 
             <div className="group relative overflow-hidden rounded-brand border border-emerald-950 bg-linear-to-br from-emerald-800 to-emerald-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
               <i className="ph-duotone ph-check-circle pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
@@ -1014,19 +1013,17 @@ export default function DigitalRecordsReviewTab({
                                 {r.approval_status || "Pending"}
                               </div>
                               {isSlaBreached && (
-                                <TooltipProvider>
-                                  <Tooltip>
-                                    <TooltipTrigger asChild>
-                                      <div className="flex h-5 w-5 animate-pulse items-center justify-center rounded-full bg-red-100 text-red-600 shadow-sm cursor-help dark:shadow-none">
-                                        <i className="ph-bold ph-warning-diamond text-[10px]"></i>
-                                      </div>
-                                    </TooltipTrigger>
-                                    <TooltipContent side="top" className="bg-red-600 text-white border-red-500">
-                                       <p className="text-[10px] font-bold uppercase tracking-tight">SLA Breach Detected</p>
-                                       <p className="text-[9px] font-medium opacity-90">Pending for over 48 hours.</p>
-                                    </TooltipContent>
-                                  </Tooltip>
-                                </TooltipProvider>
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className="flex h-5 w-5 animate-pulse items-center justify-center rounded-full bg-red-100 text-red-600 shadow-sm cursor-help dark:shadow-none">
+                                      <i className="ph-bold ph-warning-diamond text-[10px]"></i>
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="top" className="bg-red-600 text-white border-red-500">
+                                     <p className="text-[10px] font-bold uppercase tracking-tight">SLA Breach Detected</p>
+                                     <p className="text-[9px] font-medium opacity-90">Pending for over 48 hours.</p>
+                                  </TooltipContent>
+                                </Tooltip>
                               )}
                             </div>
                           </td>
@@ -1042,35 +1039,58 @@ export default function DigitalRecordsReviewTab({
                           </td>
                           <td className="p-4 text-right">
                             <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => handlePreview(r)}
-                                className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800 cursor-pointer active:scale-95"
-                              >
-                                <i className="ph-bold ph-eye text-lg"></i>
-                              </Button>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    size="icon"
+                                    onClick={() => handlePreview(r)}
+                                    className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800 cursor-pointer active:scale-95"
+                                  >
+                                    <i className="ph-bold ph-eye text-lg"></i>
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
+                                  <p className="text-[10px] font-bold">Document Preview</p>
+                                  <p className="text-[9px] opacity-80">Open full view of this record</p>
+                                </TooltipContent>
+                              </Tooltip>
+
                               {r.approval_status === "Pending" ? (
                                  <>
-                                   <Button
-                                     variant="outline"
-                                     size="icon"
-                                     onClick={() => handleApprove(r.id)}
-                                     className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-emerald-600 shadow-sm transition-all hover:border-emerald-600 hover:bg-emerald-50 dark:bg-white/5 dark:border-white/10 dark:text-emerald-400 dark:hover:bg-emerald-900/20 cursor-pointer active:scale-95"
-                                     title="Approve Record"
-                                   >
-                                     <i className="ph-bold ph-check text-lg"></i>
-                                   </Button>
+                                   <Tooltip>
+                                     <TooltipTrigger asChild>
+                                       <Button
+                                         variant="outline"
+                                         size="icon"
+                                         onClick={() => handleApprove(r.id)}
+                                         className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-emerald-600 shadow-sm transition-all hover:border-emerald-600 hover:bg-emerald-50 dark:bg-white/5 dark:border-white/10 dark:text-emerald-400 dark:hover:bg-emerald-900/20 cursor-pointer active:scale-95"
+                                       >
+                                         <i className="ph-bold ph-check text-lg"></i>
+                                       </Button>
+                                     </TooltipTrigger>
+                                     <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
+                                       <p className="text-[10px] font-bold">Approve Record</p>
+                                       <p className="text-[9px] opacity-80">Finalize and verify this submission</p>
+                                     </TooltipContent>
+                                   </Tooltip>
 
-                                   <Button
-                                     variant="outline"
-                                     size="icon"
-                                     onClick={() => onDecline(r.id)}
-                                     className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10 cursor-pointer active:scale-95"
-                                     title="Decline Record"
-                                   >
-                                     <i className="ph-bold ph-x text-lg"></i>
-                                   </Button>
+                                   <Tooltip>
+                                     <TooltipTrigger asChild>
+                                       <Button
+                                         variant="outline"
+                                         size="icon"
+                                         onClick={() => onDecline(r.id)}
+                                         className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10 cursor-pointer active:scale-95"
+                                       >
+                                         <i className="ph-bold ph-x text-lg"></i>
+                                       </Button>
+                                     </TooltipTrigger>
+                                     <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
+                                       <p className="text-[10px] font-bold">Decline Record</p>
+                                       <p className="text-[9px] opacity-80">Flag issues and return for correction</p>
+                                     </TooltipContent>
+                                   </Tooltip>
                                  </>
                                ) : (
                                  // Grace Period Logic: Only allow revert within 10 minutes of review
@@ -1082,15 +1102,22 @@ export default function DigitalRecordsReviewTab({
                                    if (!isWithinGracePeriod) return null
 
                                    return (
-                                     <Button
-                                       variant="outline"
-                                       size="icon"
-                                       onClick={() => onSetStatus(r.id, "Pending", "Undo review action")}
-                                       className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-amber-600 shadow-sm transition-all hover:border-amber-600 hover:bg-amber-50 dark:bg-white/5 dark:border-white/10 dark:text-amber-500 dark:hover:bg-amber-900/20 cursor-pointer active:scale-95"
-                                       title="Revert to Pending"
-                                     >
-                                       <i className="ph-bold ph-arrow-counter-clockwise text-lg"></i>
-                                     </Button>
+                                     <Tooltip>
+                                       <TooltipTrigger asChild>
+                                         <Button
+                                           variant="outline"
+                                           size="icon"
+                                           onClick={() => onSetStatus(r.id, "Pending", "Undo review action")}
+                                           className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-amber-600 shadow-sm transition-all hover:border-amber-600 hover:bg-amber-50 dark:bg-white/5 dark:border-white/10 dark:text-amber-500 dark:hover:bg-amber-900/20 cursor-pointer active:scale-95"
+                                         >
+                                           <i className="ph-bold ph-arrow-counter-clockwise text-lg"></i>
+                                         </Button>
+                                       </TooltipTrigger>
+                                       <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
+                                         <p className="text-[10px] font-bold">Revert to Pending</p>
+                                         <p className="text-[9px] opacity-80">Undo the previous review decision</p>
+                                       </TooltipContent>
+                                     </Tooltip>
                                    )
                                  })()
                                )}
@@ -1234,5 +1261,6 @@ export default function DigitalRecordsReviewTab({
         })()
       )}
     </div>
+    </TooltipProvider>
   )
 }
