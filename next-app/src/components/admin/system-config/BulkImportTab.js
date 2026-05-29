@@ -86,7 +86,7 @@ export default function BulkImportTab({
   }
   if (loading) {
     return (
-      <div className="flex h-full w-full flex-col p-6">
+      <div className="flex h-full w-full flex-col">
         <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
           <Skeleton className="h-[500px] w-full rounded-brand dark:bg-muted" />
           <Skeleton className="h-[500px] w-full rounded-brand dark:bg-muted" />
@@ -96,7 +96,7 @@ export default function BulkImportTab({
   }
 
   return (
-    <div className="flex flex-col p-6 font-inter animate-fade-up">
+    <div className="flex w-full flex-col gap-6 font-inter animate-fade-up">
       {importStatus === "idle" ? (
         <div className="grid flex-1 grid-cols-1 gap-6 lg:grid-cols-12">
           {/* Protocol card - Redesigned as a structured sidebar */}

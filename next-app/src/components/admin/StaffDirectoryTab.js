@@ -463,18 +463,6 @@ export default function StaffDirectoryTab({
             </div>
           }
           description="Manage system staff and administrative access."
-          actions={
-            <div className="flex items-center gap-3">
-              <Button
-                size="sm"
-                onClick={() => onSwitchView("create")}
-                className="h-10 rounded-brand btn-brand-red active:scale-95 transition-all dark:shadow-none"
-              >
-                <i className="ph-bold ph-user-plus mr-1.5"></i>
-                ADD STAFF
-              </Button>
-            </div>
-          }
         />
 
         {hasActiveFilters && (
@@ -619,6 +607,17 @@ export default function StaffDirectoryTab({
                   <option value="Admin">Administrators</option>
                   <option value="Staff">Regular Staff</option>
                 </Select>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <Button
+                  onClick={() => onSwitchView("create")}
+                  disabled={activeTab === "archived"}
+                  className="flex h-11 items-center gap-2 rounded-brand btn-brand-red active:scale-95 disabled:opacity-50 transition-all dark:shadow-none uppercase text-[10px] font-black tracking-widest px-6"
+                >
+                  <i className="ph-bold ph-user-plus text-base"></i>
+                  ADD STAFF
+                </Button>
               </div>
             </div>
           </CardContent>

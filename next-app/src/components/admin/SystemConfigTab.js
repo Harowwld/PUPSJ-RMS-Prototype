@@ -1161,7 +1161,7 @@ export default function SystemConfigTab({
 
             <TabsContent
               value="bulk-import"
-              className="m-0 flex flex-col border-0 bg-gray-50 focus-visible:ring-0 dark:bg-white/5"
+              className="m-0 flex flex-col border-0 focus-visible:ring-0"
             >
               <BulkImportTab
                 importStatus={importStatus}

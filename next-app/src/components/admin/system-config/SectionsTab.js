@@ -280,7 +280,7 @@ export default function SectionsTab({
   }
 
   return (
-    <div className="font-inter flex w-full flex-col gap-6">
+    <div className="font-inter flex w-full flex-col gap-6 animate-fade-up">
       <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
         <PageHeader
           icon="ph-list-numbers"
@@ -339,8 +339,6 @@ export default function SectionsTab({
               </div>
             </div>
 
-            {programFilter}
-
             <div className="flex flex-1 flex-col gap-1.5 min-w-[300px]">
               <div className="flex items-center justify-between">
                 <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
@@ -360,6 +358,8 @@ export default function SectionsTab({
                 />
               </div>
             </div>
+
+            {programFilter}
 
             <div className="flex items-center gap-3">
               <Button

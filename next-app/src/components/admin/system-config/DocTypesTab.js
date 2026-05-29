@@ -254,7 +254,7 @@ export default function DocTypesTab({
 
   return (
     <TooltipProvider delay={200}>
-      <div className="font-inter flex w-full flex-col gap-6">
+      <div className="font-inter flex w-full flex-col gap-6 animate-fade-up">
         <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
           <PageHeader
             icon="ph-files"
