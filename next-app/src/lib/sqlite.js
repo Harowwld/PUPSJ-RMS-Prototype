@@ -201,6 +201,10 @@ export const DEFAULT_SECURITY_QUESTIONS = [
 ];
 
 export async function getDb() {
+  if (global.sqliteMaintenanceMode) {
+    throw new Error("Database is undergoing scheduled maintenance/restoration. Please try again in a moment.");
+  }
+
   if (db) {
     try {
       if (typeof db.pragma !== "function") {
@@ -629,7 +633,7 @@ export async function getDb() {
           )
           SELECT
             id, student_no, student_name, doc_type, original_filename, storage_filename,
-            mime_type, size_bytes, approval_status, reviewed_by, reviewed_at, review_note, uploaded_by, created_at
+            mime_type, size_bytes, approval_status, reviewed_by, reviewed_at, review_note, NULL, created_at
           FROM documents;
 
           DROP TABLE documents;
@@ -1091,6 +1095,16 @@ export function reloadDb() {
   console.log("[DB] In-memory connection cache cleared for reload.");
 }
 
+export function setMaintenanceMode(enabled) {
+  global.sqliteMaintenanceMode = enabled;
+  if (enabled) {
+    reloadDb();
+    console.log("[DB] Maintenance mode ENABLED. Connection closed.");
+  } else {
+    console.log("[DB] Maintenance mode DISABLED. Ready for connections.");
+  }
+}
+
 function ensureSerialKeyColumn() {
   if (!db) return;
   try {
@@ -1110,6 +1124,8 @@ function ensureStaffPreferencesColumn() {
       db.exec("ALTER TABLE staff ADD COLUMN preferences TEXT DEFAULT '{}'");
       console.log("[DB] Added missing preferences column to staff table.");
     }
+    // Cleanse any invalid NULL or empty preferences records to standard '{}'
+    db.exec("UPDATE staff SET preferences = '{}' WHERE preferences IS NULL OR TRIM(preferences) = ''");
   } catch (e) {
     console.error("[DB] ensureStaffPreferencesColumn:", e);
   }

@@ -38,7 +38,7 @@ export async function POST(req) {
       );
     }
 
-    const { id, questionId, answer, newPassword } = await req.json();
+    const { id, questionId, answer, newPassword } = await req.json().catch(() => null) || {};
 
     if (!id || !questionId || !answer || !newPassword) {
       return NextResponse.json({ ok: false, error: "Missing required fields" }, { status: 400 });

@@ -23,16 +23,21 @@ async function getTargetName(id) {
 }
 
 export async function GET(req) {
-  const { searchParams } = new URL(req.url);
-  const includeArchived = searchParams.get("includeArchived") === "true";
+  try {
+    const { searchParams } = new URL(req.url);
+    const includeArchived = searchParams.get("includeArchived") === "true";
 
-  if (searchParams.get("admin") === "true") {
-    const rows = await listAllDocTypes({ includeArchived });
+    if (searchParams.get("admin") === "true") {
+      const rows = await listAllDocTypes({ includeArchived });
+      return NextResponse.json({ ok: true, data: rows || [] });
+    }
+
+    const rows = await listDocTypes({ includeArchived });
     return NextResponse.json({ ok: true, data: rows || [] });
+  } catch (err) {
+    console.error("GET /api/doc-types error:", err);
+    return NextResponse.json({ ok: false, error: err.message, stack: err.stack }, { status: 500 });
   }
-
-  const rows = await listDocTypes({ includeArchived });
-  return NextResponse.json({ ok: true, data: rows || [] });
 }
 
 export async function POST(req) {

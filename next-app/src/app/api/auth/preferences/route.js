@@ -46,7 +46,7 @@ export async function POST(req) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
+    const body = await req.json().catch(() => null) || {};
     const { preferences } = body;
 
     if (!preferences || typeof preferences !== "object") {
