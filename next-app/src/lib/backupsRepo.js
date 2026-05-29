@@ -3,7 +3,6 @@ import path from "node:path";
 import fs from "node:fs";
 import crypto from "node:crypto";
 import AdmZip from "adm-zip";
-import { broadcastToAdmins } from "../pages/api/socket";
 
 const BACKUP_ENC_MAGIC = Buffer.from("PUPSBK1", "utf8");
 const BACKUP_ENC_ALGO = "aes-256-gcm";
@@ -165,15 +164,11 @@ export async function syncBackupExternally(id) {
     await updateBackupStatus(id, "status_external", "Success");
     console.log(`[SYNC DEBUG] Database updated to 'Success' for ID: ${id}`);
     
-    // Notify frontend via WebSocket
-    broadcastToAdmins("backupSyncComplete", { id, status: "Success" });
-    
     return { ok: true, path: destPath };
   } catch (error) {
     console.error(`[SYNC DEBUG] ERROR for backup ${id}:`, error.message);
     try {
       await updateBackupStatus(id, "status_external", "Failed");
-      broadcastToAdmins("backupSyncComplete", { id, status: "Failed", error: error.message });
     } catch (dbErr) {
       console.error(`[SYNC DEBUG] Failed to record failure status in DB:`, dbErr.message);
     }

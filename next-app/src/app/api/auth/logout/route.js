@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { removeSession } from "../../../../lib/sessionStore";
 import { setStaffStatus } from "../../../../lib/staffRepo";
-import { broadcastToAdmins } from "../../../../pages/api/socket";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 
 export const runtime = "nodejs";
@@ -30,27 +29,17 @@ export async function POST(req) {
       if (userId && userId !== "admin") {
         await setStaffStatus(userId, "Inactive");
         await writeAuditLog(req, `User Logout`, { 
-          details: `personnel '${username || userId}' successfully terminated system session and cleared credentials`,
+          details: `personnel '${username || userId}' successfully terminated system session and secure credentials`,
           entity_type: "User",
           entity_id: userId
         });
-        // Broadcast to admins
-        broadcastToAdmins("staffLogout", {
-          staffId: userId,
-          status: "Inactive",
-        });
       } else if (userId === "admin") {
         await writeAuditLog(req, `User Logout`, { 
-          details: `administrator session terminated and secure credentials purged from client storage`,
+          details: `administrator session terminated and secure credentials purged from secure browser store`,
           actor: username || "admin",
           role: "Admin",
           entity_type: "User",
           entity_id: "admin"
-        });
-        // Broadcast admin logout too
-        broadcastToAdmins("staffLogout", {
-          staffId: "admin",
-          status: "Inactive",
         });
       }
     } catch {

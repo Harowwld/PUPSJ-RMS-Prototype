@@ -306,6 +306,78 @@ function detectName(lines, { engine = "unknown" } = {}) {
     candidates.push({ name: cleaned, score, strategy });
   }
 
+  // ── Strategy A0-PSA-Area (95): Area-Bounded Name Scan ──
+  // This is a premium layout-bounded scanner. It isolates the lines between
+  // the "1. NAME" header block and the "2. SEX" field, ensuring that any
+  // text from other regions (e.g., place of birth, parents' names, informant)
+  // is mathematically ignored. Inside the area, we look for (First), (Middle), (Last) 
+  // columns and grab the corresponding name values.
+  {
+    let nameHeaderIdx = -1;
+    let sexBoundaryIdx = -1;
+
+    for (let i = 0; i < lines.length; i++) {
+      const lineUpper = up(lines[i]);
+      if (nameHeaderIdx === -1 && (/\b1\.\s*NAME\b/i.test(lineUpper) || (/^\(?first\b/i.test(lineUpper) && /^\(?last\b/i.test(lineUpper)))) {
+        nameHeaderIdx = i;
+      }
+      if (nameHeaderIdx !== -1 && sexBoundaryIdx === -1 && i > nameHeaderIdx) {
+        if (/\b(?:2\.\s*SEX|SEX|3\.\s*DATE|DATE\s+OF\s+BIRTH|4\.\s*PLACE)\b/i.test(lineUpper)) {
+          sexBoundaryIdx = i;
+          break;
+        }
+      }
+    }
+
+    // Bounded search window
+    if (nameHeaderIdx !== -1) {
+      const endIdx = sexBoundaryIdx !== -1 ? sexBoundaryIdx : Math.min(lines.length, nameHeaderIdx + 8);
+      const nameAreaLines = lines.slice(nameHeaderIdx, endIdx);
+      
+      let firstVal = "", middleVal = "", lastVal = "";
+      const valueTokens = [];
+
+      for (const rawLine of nameAreaLines) {
+        const line = rawLine.trim();
+        const lineUpper = up(line);
+        // Ignore the main field labels
+        if (/\b1\.\s*NAME\b/i.test(lineUpper)) continue;
+        if (/^\((?:first|midd|last)/i.test(lineUpper)) continue;
+        // Skip purely numeric values or registry noise
+        if (/^\d{4}-\d{6}/.test(line) || /^\d{5,}/.test(line)) continue;
+        
+        // Split line by double-space or tab to preserve column alignment
+        const columns = line.split(/\s{2,}/).filter(Boolean);
+        for (const col of columns) {
+          const val = stripTrailing(norm(col));
+          if (val && isPlausibleNameComponent(val)) {
+            valueTokens.push(val);
+          }
+        }
+      }
+
+      if (valueTokens.length >= 2) {
+        // If we found separate column tokens (First, Middle, Last)
+        // Usually, in a left-to-right reading: First = 0, Middle = 1, Last = 2
+        if (valueTokens.length === 3) {
+          firstVal = valueTokens[0];
+          middleVal = valueTokens[1];
+          lastVal = valueTokens[2];
+        } else if (valueTokens.length === 2) {
+          firstVal = valueTokens[0];
+          lastVal = valueTokens[1];
+        }
+        
+        if (firstVal && lastVal) {
+          const combined = middleVal
+            ? `${lastVal}, ${firstVal} ${middleVal}`
+            : `${lastVal}, ${firstVal}`;
+          addCandidate(combined, 95, "A0-PSA-Area-Bounded");
+        }
+      }
+    }
+  }
+
   // ── Strategy A (90): Scattered component labels — PSA/DepEd vertical layout ──
   // Looks for standalone "LAST NAME" / "FIRST NAME" / "MIDDLE NAME" header lines
   // and reads the value from the line(s) immediately below. labelIs() tolerates

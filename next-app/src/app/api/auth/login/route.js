@@ -7,7 +7,6 @@ import {
 } from "../../../../lib/staffRepo";
 import { getSessionCookieName, signSessionToken } from "../../../../lib/jwt";
 import { createSession } from "../../../../lib/sessionStore";
-import { broadcastToAdmins } from "../../../../pages/api/socket";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
 import { checkAuthLoginRateLimit, resetAuthLoginRateLimit } from "../../../../lib/rateLimiter";
 import { LoginSchema } from "../../../../lib/authSchemas";
@@ -164,15 +163,6 @@ export async function POST(req) {
     role: touched.role || "Staff",
     entity_type: "User",
     entity_id: touched.id
-  });
-
-  // Broadcast to admins
-  broadcastToAdmins("staffLogin", {
-    staffId: touched.id,
-    role: touched.role || "Staff",
-    username: touched.email,
-    status: "Active",
-    last_active: touched.last_active,
   });
 
   const res = NextResponse.json({

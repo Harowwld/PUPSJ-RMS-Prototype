@@ -10,7 +10,6 @@ import {
 import { getSessionCookieName, verifySessionToken, signSessionToken } from "@/lib/jwt";
 import { verifyTOTP, decryptSecret } from "@/lib/totp";
 import { createSession } from "@/lib/sessionStore";
-import { broadcastToAdmins } from "@/pages/api/socket";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { checkAuthLoginRateLimit, resetAuthLoginRateLimit } from "@/lib/rateLimiter";
 
@@ -138,15 +137,6 @@ export async function POST(req) {
     role: staff.role || "Staff",
     entity_type: "User",
     entity_id: staff.id
-  });
-
-  // Broadcast to admins
-  broadcastToAdmins("staffLogin", {
-    staffId: staff.id,
-    role: staff.role || "Staff",
-    username: staff.email,
-    status: "Active",
-    last_active: staff.last_active,
   });
 
   const res = NextResponse.json({
