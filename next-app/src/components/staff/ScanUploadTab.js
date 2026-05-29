@@ -406,7 +406,7 @@ export default function ScanUploadTab({
     if (!normalizedTypedName || normalizedTypedName.length < 2 || lockIdentity)
       return []
     const terms = normalizedTypedName.split(/\s+/).filter(Boolean)
-    const ranked = students
+    const ranked = (students || [])
       .map((s) => {
         const name = String(s?.name || "")
         const nameLower = name.toLowerCase()

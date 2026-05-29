@@ -28,29 +28,43 @@ export async function listDocumentReviewNotifications({
   limit = 20,
   offset = 0,
   lastSeenReviewedAt = null,
+  uploadedBy = null,
 } = {}) {
   const lim = Math.min(Math.max(parseInt(limit) || 20, 1), 100);
   const off = Math.max(parseInt(offset) || 0, 0);
+
+  const filters = ["reviewed_at IS NOT NULL", "approval_status IN ('Approved', 'Declined')"];
+  const params = [];
+
+  if (uploadedBy) {
+    filters.push("uploaded_by = ?");
+    params.push(uploadedBy);
+  }
+
+  const whereClause = filters.join(" AND ");
 
   const totalRow = await dbGet(
     `
       SELECT COUNT(1) AS total
       FROM documents
-      WHERE reviewed_at IS NOT NULL
-        AND approval_status IN ('Approved', 'Declined')
+      WHERE ${whereClause}
     `,
+    params
   );
   const total = Number(totalRow?.total || 0);
+
+  const unreadFilters = [...filters];
+  const unreadParams = [...params];
+  unreadFilters.push("(? IS NULL OR reviewed_at > ?)");
+  unreadParams.push(lastSeenReviewedAt, lastSeenReviewedAt);
 
   const unreadRow = await dbGet(
     `
       SELECT COUNT(1) AS unread
       FROM documents
-      WHERE reviewed_at IS NOT NULL
-        AND approval_status IN ('Approved', 'Declined')
-        AND (? IS NULL OR reviewed_at > ?)
+      WHERE ${unreadFilters.join(" AND ")}
     `,
-    [lastSeenReviewedAt, lastSeenReviewedAt],
+    unreadParams
   );
   const unreadCount = Number(unreadRow?.unread || 0);
 
@@ -66,14 +80,14 @@ export async function listDocumentReviewNotifications({
         reviewed_by,
         reviewed_at,
         review_note,
-        created_at
+        created_at,
+        uploaded_by
       FROM documents
-      WHERE reviewed_at IS NOT NULL
-        AND approval_status IN ('Approved', 'Declined')
+      WHERE ${whereClause}
       ORDER BY reviewed_at DESC, id DESC
       LIMIT ? OFFSET ?
     `,
-    [lim, off],
+    [...params, lim, off]
   );
 
   return { items, total, unreadCount };

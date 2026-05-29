@@ -185,6 +185,7 @@ export async function POST(req) {
     mimeType: file.type || "application/pdf",
     sizeBytes: file.size || buf.length,
     buffer: buf,
+    uploadedBy: user.id,
   });
   await writeAuditLog(
     req,

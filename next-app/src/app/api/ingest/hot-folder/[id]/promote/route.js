@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { createDocument, getUploadsDir } from "@/lib/documentsRepo";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { createStudent } from "@/lib/studentsRepo";
+import { requireStaff, createAuthErrorResponse } from "@/lib/authHelpers";
 import {
   getIngestById,
   getIngestFilePath,
@@ -21,6 +22,11 @@ function sanitizeNameForFs(input) {
 }
 
 export async function POST(req, ctx) {
+  const { user, error } = await requireStaff(req);
+  if (error || !user) {
+    return createAuthErrorResponse(error || "Authentication required", 401);
+  }
+
   const params = await ctx.params;
   const id = Number(params.id);
   if (!Number.isInteger(id) || id < 1) {
@@ -102,6 +108,7 @@ export async function POST(req, ctx) {
     mimeType: String(ingest.mime_type || "application/octet-stream"),
     sizeBytes: Number(ingest.size_bytes || bytes.length),
     storageFilename: targetStorageFilename,
+    uploadedBy: user.id,
   });
   await markIngestPromoted(id, doc.id);
   await writeAuditLog(req, `Promote Ingest`, { 
