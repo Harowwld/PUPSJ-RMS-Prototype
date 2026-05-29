@@ -338,10 +338,10 @@ export default function RecordsArchiveTab({
   return (
     <div
       id="view-search"
-      className="animate-fade-up font-inter flex h-auto w-full flex-col gap-4 lg:flex-row"
+      className="animate-fade-up font-inter flex h-auto w-full flex-col gap-6 lg:flex-row"
     >
-      <div className="flex flex-1 flex-col items-stretch gap-4 lg:flex-row">
-        <div className="flex w-full flex-shrink-0 flex-col gap-4 lg:w-1/4 h-auto">
+      <div className="flex flex-1 flex-col items-stretch gap-6 lg:flex-row">
+        <div className="flex w-full flex-shrink-0 flex-col gap-6 lg:w-1/4 h-auto">
           {/* Pill Tabs Container (Standalone) */}
           <div className="flex w-full cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 shadow-xs backdrop-blur-sm dark:border-white/10 dark:bg-muted/50 dark:shadow-none">
             <button
@@ -504,7 +504,7 @@ export default function RecordsArchiveTab({
           </section>
         </div>
 
-        <section className="flex h-auto w-full flex-1 flex-col gap-4 lg:w-3/4">
+        <section className="flex h-auto w-full flex-1 flex-col gap-6 lg:w-3/4">
           <div className="relative flex min-h-[250px] shrink-0 flex-col rounded-2xl overflow-hidden border border-gray-300 bg-white shadow-sm dark:bg-[#202020] dark:shadow-none dark:border-white/10">
             <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-gray-200 bg-white p-4 text-sm dark:border-white/10 dark:bg-[#202020]">
               <div className="flex items-center gap-2">

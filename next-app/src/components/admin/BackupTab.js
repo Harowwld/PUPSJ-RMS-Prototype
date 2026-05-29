@@ -210,10 +210,10 @@ export default function BackupTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="animate-fade-up font-inter flex min-h-full w-full flex-col gap-4 pb-8">
+      <div className="animate-fade-up font-inter flex min-h-full w-full flex-col gap-6 pb-8">
         <div className="relative flex min-h-[600px] w-full items-stretch gap-5">
           {/* MAIN CONTENT */}
-          <div className="flex-1 flex flex-col gap-4">
+          <div className="flex-1 flex flex-col gap-6">
             {/* Page Header Card */}
             <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
               <PageHeader

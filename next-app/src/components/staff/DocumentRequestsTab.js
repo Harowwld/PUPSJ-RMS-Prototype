@@ -374,7 +374,7 @@ export default function DocumentRequestsTab({
     setPage(1);
   };
   return (
-    <div className="flex flex-col h-auto gap-4 animate-fade-up font-inter">
+    <div className="flex flex-col h-auto gap-6 animate-fade-up font-inter">
       <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-tray"
