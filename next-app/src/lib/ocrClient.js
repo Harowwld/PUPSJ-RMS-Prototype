@@ -31,6 +31,27 @@ function up(v) {
   return String(v ?? "").toUpperCase();
 }
 
+/**
+ * Normalise a line to a single-spaced uppercase string for label comparisons.
+ * Handles OCR artefacts like "LAST  NAME" (double space) or "LASTNAME" (no space).
+ */
+function normLabel(s) {
+  return up(s).replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Returns true if normLabel(line) matches any of the given candidate labels,
+ * also checking a no-space variant to catch "FIRSTNAME" vs "FIRST NAME".
+ */
+function labelIs(line, ...candidates) {
+  const nl = normLabel(line);
+  const nlns = nl.replace(/\s/g, "");
+  return candidates.some((c) => {
+    const cu = c.toUpperCase();
+    return nl === cu || nlns === cu.replace(/\s/g, "");
+  });
+}
+
 // ─── 1. TESSERACT WORKER REMOVED (NATIVE SYSTEM OCR IS USED EXCLUSIVELY) ───
 
 export async function warmupOcrWorker() {
@@ -261,260 +282,302 @@ function stripTrailing(s) {
     .trim();
 }
 
-function detectName(lines) {
+/**
+ * detectName — score-based multi-strategy name extractor.
+ *
+ * Every strategy pushes candidates into a shared pool with a numeric confidence
+ * score. After all strategies run, the highest-scoring plausible name wins.
+ * This prevents an early weak match from shadowing a stronger one found later.
+ *
+ * @param {string[]} lines
+ * @param {{ engine?: string }} opts  engine: "apple-vision"|"windows-media"|"unknown"
+ * @returns {string}
+ */
+function detectName(lines, { engine = "unknown" } = {}) {
   const full = lines.join(" ");
+  /** @type {{ name: string; score: number; strategy: string }[]} */
+  const candidates = [];
 
-  // ── Strategy A: Scattered Child Name Components (e.g., PSA Birth Certificates) ──
-  // If the document has separate "Last Name", "First Name", and "Middle Name" labels
-  // scattered across different lines, we can reconstruct the full name.
+  function addCandidate(raw, score, strategy) {
+    const cleaned = stripTrailing(norm(String(raw || ""))).replace(/[,]+$/, "").trim();
+    if (!cleaned || !isPlausibleName(cleaned)) return;
+    const existing = candidates.find((c) => c.name.toUpperCase() === cleaned.toUpperCase());
+    if (existing) { if (score > existing.score) existing.score = score; return; }
+    candidates.push({ name: cleaned, score, strategy });
+  }
+
+  // ── Strategy A (90): Scattered component labels — PSA/DepEd vertical layout ──
+  // Looks for standalone "LAST NAME" / "FIRST NAME" / "MIDDLE NAME" header lines
+  // and reads the value from the line(s) immediately below. labelIs() tolerates
+  // OCR spacing artefacts like "LASTNAME" or "LAST  NAME".
   {
-    let extractedFirst = "";
-    let extractedMiddle = "";
-    let extractedLast = "";
+    let extractedFirst = "", extractedMiddle = "", extractedLast = "";
 
     for (let i = 0; i < lines.length; i++) {
-      const normLine = up(lines[i].trim()).replace(/\s+/g, " ");
+      const isLastLabel  = labelIs(lines[i], "LAST NAME", "LASTNAME", "SURNAME", "FAMILY NAME", "APELLIDO");
+      const isFirstLabel = labelIs(lines[i], "FIRST NAME", "FIRSTNAME", "GIVEN NAME", "GIVENNAME");
+      const isMiddleLabel = labelIs(lines[i], "MIDDLE NAME", "MIDDLENAME");
 
-      if (normLine === "LAST NAME" || normLine === "SURNAME" || normLine === "FAMILY NAME") {
+      const extractNextValue = () => {
         for (let j = 1; j <= 2; j++) {
           if (i + j >= lines.length) break;
           const val = stripTrailing(norm(lines[i + j]));
-          if (val && isPlausibleNameComponent(val) && !/^(LAST|FIRST|MIDDLE|NAME|SEX|PLACE|DATE|TYPE|MAIDEN|CITIZENSHIP|RELIGION|AGE|RESIDENCE)/i.test(val)) {
-            extractedLast = val;
-            break;
-          }
+          if (val && isPlausibleNameComponent(val) &&
+              !/^(LAST|FIRST|MIDDLE|NAME|SEX|PLACE|DATE|TYPE|MAIDEN|CITIZENSHIP|RELIGION|AGE|RESIDENCE)/i.test(val))
+            return val;
         }
-      }
+        return "";
+      };
 
-      if (normLine === "FIRST NAME" || normLine === "GIVEN NAME") {
-        for (let j = 1; j <= 2; j++) {
-          if (i + j >= lines.length) break;
-          const val = stripTrailing(norm(lines[i + j]));
-          if (val && isPlausibleNameComponent(val) && !/^(LAST|FIRST|MIDDLE|NAME|SEX|PLACE|DATE|TYPE|MAIDEN|CITIZENSHIP|RELIGION|AGE|RESIDENCE)/i.test(val)) {
-            extractedFirst = val;
-            break;
-          }
-        }
-      }
-
-      if (normLine === "MIDDLE NAME") {
-        for (let j = 1; j <= 2; j++) {
-          if (i + j >= lines.length) break;
-          const val = stripTrailing(norm(lines[i + j]));
-          if (val && isPlausibleNameComponent(val) && !/^(LAST|FIRST|MIDDLE|NAME|SEX|PLACE|DATE|TYPE|MAIDEN|CITIZENSHIP|RELIGION|AGE|RESIDENCE)/i.test(val)) {
-            extractedMiddle = val;
-            break;
-          }
-        }
-      }
+      if (isLastLabel && !extractedLast)   extractedLast   = extractNextValue();
+      else if (isFirstLabel && !extractedFirst)  extractedFirst  = extractNextValue();
+      else if (isMiddleLabel && !extractedMiddle) extractedMiddle = extractNextValue();
     }
 
     if (extractedFirst && extractedLast) {
-      const fullName = extractedMiddle
+      const n = extractedMiddle
         ? `${extractedLast}, ${extractedFirst} ${extractedMiddle}`
         : `${extractedLast}, ${extractedFirst}`;
-      console.log(`[OCR Name Parser] Successfully reconstructed scattered child name components: ${fullName}`);
-      return fullName;
+      addCandidate(n, 90, "A-scattered-labels");
     }
   }
 
-  // ── Strategy A2: Same-Line Parenthesized Name Components (Horizontal/Windows OCR layout) ──
-  // Catches lines like: "(First) RJ JACK 2 Female (Midd16) Registry NO. 2005-061 ooo (Last) FLORIDA"
-  // Restricted specifically to Windows clients to avoid interfering with pristine macOS Apple Vision OCR extraction layouts.
+  // ── Strategy A-PSA (88): Parenthesized vertical sub-labels — PSA birth cert ──
+  // Apple Vision OCR reads PSA birth certs with each column label on its own line,
+  // FOLLOWED by each column value on its own line:
+  //
+  //   (First)          ← standalone label line
+  //   (Middie)         ← "Middle" OCR-misspelled as "Middie", standalone
+  //   (Last)           ← standalone label line
+  //   RJ JACK          ← value for (First)
+  //   APURA            ← value for (Middle)
+  //   FLORIDA          ← value for (Last)
+  //
+  // The old implementation read ONLY the first line after (Last) and got "RJ JACK",
+  // missing APURA and FLORIDA entirely. Updated to read the next 3 lines as
+  // (First value), (Middle value), (Last value) in order, then assemble the name.
   {
-    const isWindows = typeof window !== "undefined" && /windows|win32/i.test(window.navigator.userAgent || window.navigator.platform || "");
-    if (isWindows) {
-      for (const line of lines) {
-        const upperLine = up(line);
-        
-        // Skip parent/signatory/informant/official/template labels
-        if (/\b(?:MAIDEN|FATHER|MOTHER|PARENT|INFORMANT|REGISTRAR|ATTENDANT|PHYSICIAN|WITNESS|OFFICER|CLERK|ADMINISTRATOR|SECRETARY|PREPARED|STATISTICIAN|PRINTED|SIGNATURE|GENERIC|REPRESENTATIVE|GUARDIAN)\b/i.test(upperLine)) {
-          continue;
+    for (let i = 0; i < lines.length; i++) {
+      // Match (Last) / (LAST) / (last) as a standalone label line
+      if (!/^\(last\)$/i.test(lines[i].trim())) continue;
+
+      // Check the preceding 8 lines for (First) label and no parent/signatory context
+      let hasParenFirst = false;
+      let hasParentContext = false;
+      for (let k = Math.max(0, i - 8); k < i; k++) {
+        if (/^\((?:first|given)\b/i.test(lines[k].trim())) hasParenFirst = true;
+        if (/\b(?:MAIDEN|FATHER|MOTHER|PARENT|INFORMANT|WITNESS|GUARDIAN)\b/i.test(lines[k])) hasParentContext = true;
+      }
+
+      // Require (First) seen before (Last) and no parent/signatory context nearby
+      if (!hasParenFirst || hasParentContext) continue;
+
+      // Collect the next 1-5 non-empty, non-label lines as name value tokens
+      const valueLines = [];
+      for (let j = 1; j <= 5 && valueLines.length < 3; j++) {
+        if (i + j >= lines.length) break;
+        const cand = stripTrailing(norm(lines[i + j]));
+        // Skip bare "NAME" artefacts or parenthesized label lines
+        if (!cand || /^NAME$/i.test(cand.trim()) || /^\([^)]+\)$/.test(cand.trim())) continue;
+        // Stop if we hit a clearly non-name line (date, sex, numbers, etc.)
+        if (/^\d{1,2}$/.test(cand.trim()) || /\b(?:SEX|DATE|BIRTH|PLACE|MALE|FEMALE|SINGLE|TWIN|TRIPLET)\b/i.test(cand)) break;
+        // Require at least one plausible name token
+        if (/[A-Za-z]{2,}/.test(cand)) valueLines.push(cand);
+      }
+
+      if (valueLines.length === 0) { break; }
+
+      if (valueLines.length === 1) {
+        // Single combined line (old format): "GABRIEL MATEO SANTOS RAMIREZ"
+        if (isPlausibleName(valueLines[0])) {
+          addCandidate(valueLines[0], 88, "A-PSA-vertical-labels");
         }
-        
-        // Skip if the line starts with a number that is not 1 (likely parent or other sections)
-        const numM = upperLine.match(/^(\d+)/);
-        if (numM && numM[1] !== "1" && numM[1] !== "01") {
-          continue;
+      } else {
+        // Multiple lines: valueLines[0]=First, valueLines[1]=Middle, valueLines[2]=Last
+        // (The column values follow the same left-to-right order as the labels above)
+        const firstVal  = valueLines[0] || "";
+        const middleVal = valueLines[1] || "";
+        const lastVal   = valueLines[2] || "";
+        if (firstVal && lastVal) {
+          const combined = middleVal
+            ? `${lastVal}, ${firstVal} ${middleVal}`
+            : `${lastVal}, ${firstVal}`;
+          addCandidate(combined, 88, "A-PSA-vertical-labels");
+        } else if (firstVal && middleVal) {
+          // Only 2 value lines: treat as first + last (no middle)
+          addCandidate(`${middleVal}, ${firstVal}`, 88, "A-PSA-vertical-labels");
         }
+      }
 
-        if (upperLine.includes("(FIRST") || upperLine.includes("(LAST") || upperLine.includes("(MIDD")) {
-          const matches = [...line.matchAll(/\(([^)]+)\)\s*([^()]*)/g)];
-          if (matches.length > 0) {
-            let firstVal = "";
-            let middleVal = "";
-            let lastVal = "";
+      break; // Only use the first qualifying (Last) group — the child's section
+    }
+  }
 
-            for (const m of matches) {
-              const label = up(m[1]).trim();
-              let val = m[2].trim();
 
-              // Clean up value: remove extra columns/fields recognized on same line
-              val = val
-                .replace(/\s*\b(FEMALE|MALE|SEX|REGISTRY|REG\.?|NO\.?|\d+)\b[\s\S]*/gi, "")
-                .trim();
+  // ── Strategy A-PSA-H (87): Horizontal (First)/(Middle)/(Last) on one line ──
+  // Apple Vision OCR reads PSA birth cert column headers as a single combined
+  // line like:  "1. NAME (First) (Middle) (Last)"
+  // and the actual name values appear on the NEXT line as separate columns
+  // that Vision may join into one line: "RJ APURA JACK"
+  // In this layout, the column order is FIRST MIDDLE LAST (left to right),
+  // so the raw joined line is in First-Middle-Last order and can be passed
+  // directly to normalizeExtractedName for surname detection.
+  {
+    for (let i = 0; i < lines.length; i++) {
+      const upperLine = up(lines[i]);
+      // Must contain (First) and (Last) on the same line
+      if (!/(^|\s)\(first\b/i.test(upperLine) || !/(^|\s)\(last\b/i.test(upperLine)) continue;
+      // Must be related to the NAME field (row 1 of PSA cert)
+      if (!/\bname\b/i.test(upperLine) && !/^\(?first\b/i.test(upperLine)) {
+        // Allow if the line only has sub-labels
+        if (!/(^\s*\(first\b|\(middle\b|\(last\b)/i.test(upperLine)) continue;
+      }
+      // Avoid parent/signatory rows
+      if (/\b(?:MAIDEN|FATHER|MOTHER|PARENT|INFORMANT|WITNESS|GUARDIAN)\b/i.test(upperLine)) continue;
 
-              // Strip trash punctuation/symbols
-              val = val.replace(/[^a-zA-Z\s.-]/g, "").trim();
-
-              if (label.includes("FIRST") || label.includes("F1RST") || label.includes("GIVEN")) {
-                if (isPlausibleNameComponent(val)) firstVal = val;
-              } else if (label.includes("MIDDLE") || label.includes("MIDD16") || label.includes("MIDDIE") || label.includes("MIDD")) {
-                if (isPlausibleNameComponent(val)) middleVal = val;
-              } else if (label.includes("LAST") || label.includes("SURNAME") || label.includes("FAMILY")) {
-                if (isPlausibleNameComponent(val)) lastVal = val;
-              }
-            }
-
-            if (firstVal && lastVal) {
-              const fullName = middleVal
-                ? `${lastVal}, ${firstVal} ${middleVal}`
-                : `${lastVal}, ${firstVal}`;
-              console.log(`[OCR Name Parser] Successfully extracted horizontal name components: ${fullName}`);
-              return fullName;
-            }
-          }
+      // Read the next 1-3 non-empty lines for the actual name value
+      for (let j = 1; j <= 3; j++) {
+        if (i + j >= lines.length) break;
+        const cand = stripTrailing(norm(lines[i + j]));
+        if (!cand || cand.startsWith("(")) continue;
+        // Must look like a plausible multi-word name (at least 2 alpha tokens)
+        const tokens = cand.split(/\s+/).filter(t => /^[A-Za-z.'-]{2,}$/.test(t));
+        if (tokens.length >= 2 && isPlausibleName(cand)) {
+          addCandidate(cand, 87, "A-PSA-H-horizontal-header");
+          break;
         }
+      }
+      break;
+    }
+  }
+
+
+  // ── Strategy A2 (85): Parenthesized same-line components — all engines ──
+  // PSA birth certificates have horizontal column headers on the same line:
+  //   "1. NAME  (First)  (Middle)  (Last)"
+  // Apple Vision OCR (macOS) may emit this with the name values following each
+  // label on the same line, or on a nearby line after the label token.
+  // Previously gated to windows-media only, which caused the middle name to be
+  // silently dropped on macOS scans. Now runs for ALL engines.
+  {
+    for (const line of lines) {
+      const upperLine = up(line);
+      if (/\b(?:MAIDEN|FATHER|MOTHER|PARENT|INFORMANT|REGISTRAR|ATTENDANT|PHYSICIAN|WITNESS|OFFICER|CLERK|ADMINISTRATOR|SECRETARY|PREPARED|STATISTICIAN|PRINTED|SIGNATURE|GENERIC|REPRESENTATIVE|GUARDIAN)\b/i.test(upperLine)) continue;
+      const numM = upperLine.match(/^(\d+)/);
+      if (numM && numM[1] !== "1" && numM[1] !== "01") continue;
+      if (!(upperLine.includes("(FIRST") || upperLine.includes("(LAST") || upperLine.includes("(MIDD"))) continue;
+
+      const matches = [...line.matchAll(/\(([^)]+)\)\s*([^()]*)/g)];
+      let firstVal = "", middleVal = "", lastVal = "";
+      for (const m of matches) {
+        const label = up(m[1]).trim();
+        let val = m[2].trim()
+          .replace(/\s*\b(FEMALE|MALE|SEX|REGISTRY|REG\.?|NO\.?|\d+)\b[\s\S]*/gi, "")
+          .replace(/[^a-zA-Z\s.-]/g, "").trim();
+        if (label.includes("FIRST") || label.includes("F1RST") || label.includes("GIVEN")) {
+          if (isPlausibleNameComponent(val)) firstVal = val;
+        } else if (label.includes("MIDD") || label.includes("MIDDLE")) {
+          if (isPlausibleNameComponent(val)) middleVal = val;
+        } else if (label.includes("LAST") || label.includes("SURNAME") || label.includes("FAMILY")) {
+          if (isPlausibleNameComponent(val)) lastVal = val;
+        }
+      }
+      if (firstVal && lastVal) {
+        const n = middleVal ? `${lastVal}, ${firstVal} ${middleVal}` : `${lastVal}, ${firstVal}`;
+        addCandidate(n, 85, "A2-horizontal-parenthesized");
+        break;
       }
     }
   }
 
-  // ── Strategy 1: "certify / certifies / certified that [Title] NAME" ──
+  // ── Strategy 1 (80): "certify/certifies/certified that NAME" ──
   {
     const m = full.match(
       /\bcertif(?:y|ies|ied)\s+that\s+(?:(?:Ms|Mr|Mrs|Miss|Dr|Engr|Atty|Prof|Hon|Rev)\.?\s+)?([A-Z][A-Za-z .,''-]{3,}?)(?=\s+(?:has|is|having|was|of|a\s+bona|a\s+student|,?\s*(?:with|born|student))|[.(]|$)/i
     );
-    if (m?.[1]) {
-      const c = m[1].replace(/\s*[(\[].*/, "").trim();
-      if (isPlausibleName(c)) return c;
-    }
+    if (m?.[1]) addCandidate(m[1].replace(/\s*[(\[].*/, ""), 80, "1-certify-that");
   }
 
-  // ── Strategy 2: "conferred upon / awarded to NAME" ──
+  // ── Strategy 2 (75): "conferred upon / awarded to NAME" ──
   {
-    const m = full.match(
-      /(?:conferred\s+upon|awarded\s+to)\s+([A-Z][A-Za-z .,''-]{3,})/i
-    );
-    if (m?.[1]) {
-      const c = m[1].replace(/\s*[(\[].*/, "").trim();
-      if (isPlausibleName(c)) return c;
-    }
+    const m = full.match(/(?:conferred\s+upon|awarded\s+to)\s+([A-Z][A-Za-z .,''-]{3,})/i);
+    if (m?.[1]) addCandidate(m[1].replace(/\s*[(\[].*/, ""), 75, "2-conferred-upon");
   }
 
-  // ── Strategy 3: line-by-line label scan (highest priority for forms) ──
+  // ── Strategy 3 (72–55): Line-by-line label scan ──
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
     const upper = up(line);
 
-    // Skip fields that belong to parents/signatories/non-student entities in standard PH certificates (e.g. Field 6, 13)
-    const numM = upper.match(/^(\d+)/);
-    if (numM && numM[1] !== "1" && numM[1] !== "01") {
-      if (/\bNAME\b/i.test(upper)) {
-        continue;
-      }
-    }
+    if (/\b(?:MAIDEN|FATHER|MOTHER|PARENT|INFORMANT|REGISTRAR|ATTENDANT|PHYSICIAN|WITNESS|OFFICER|CLERK|ADMINISTRATOR|SECRETARY|PREPARED|STATISTICIAN|PRINTED|SIGNATURE|GENERIC|REPRESENTATIVE|GUARDIAN)\b/i.test(upper)) continue;
+    if (/[\[(].*NAME.*[\])]/i.test(upper)) continue;
 
-    // Skip placeholder templates like [Name] or (Name)
-    if (/[\[(].*NAME.*[\])]/i.test(upper)) {
-      continue;
-    }
-
-    // Skip parent/signatory/official/template labels
-    if (/\b(?:MAIDEN|FATHER|MOTHER|PARENT|INFORMANT|REGISTRAR|ATTENDANT|PHYSICIAN|WITNESS|OFFICER|CLERK|ADMINISTRATOR|SECRETARY|PREPARED|STATISTICIAN|PRINTED|SIGNATURE|GENERIC|REPRESENTATIVE|GUARDIAN)\b/i.test(upper)) {
-      continue;
-    }
-
-    // 3a — "STUDENT NAME:" label (highest priority)
+    // 3a — "STUDENT NAME:" (72/71)
     if (/\bSTUDENT\s+NAME\b/i.test(upper)) {
-      // Same-line value after colon
       const colonM = line.match(/\bSTUDENT\s+NAME\b[^:–-]*[:–-]\s*(.*)/i);
-      if (colonM?.[1]) {
-        const c = stripTrailing(norm(colonM[1]));
-        if (c && isPlausibleName(c)) return c;
-      }
-      // Value on the NEXT line (common in TORs)
+      if (colonM?.[1]) addCandidate(colonM[1], 72, "3a-student-name-colon");
       if (i + 1 < lines.length) {
         const next = stripTrailing(norm(lines[i + 1]));
-        if (next && isPlausibleName(next) && !/^(NAME|STUDENT|NUMBER|DATE)/i.test(next)) return next;
+        if (next && !/^(NAME|STUDENT|NUMBER|DATE)/i.test(next)) addCandidate(next, 71, "3a-student-name-nextline");
       }
     }
 
-    // 3b — "NAME:" / "NAME OF STUDENT:" label
+    // 3b — generic "NAME:" (65/62)
+    // Guard: skip a bare "NAME" line that appears after MAIDEN in the preceding lines.
+    // PSA birth certs split "6. MAIDEN NAME" across two lines; the orphaned "NAME"
+    // would otherwise incorrectly match the mother's name instead of the child's.
     if (/\bNAME\b/i.test(upper)) {
-      // Same-line value after colon / dash
-      const colonM = line.match(/\bNAME\b[^:–-]*[:–-]\s*(.*)/i);
-      if (colonM?.[1]) {
-        const c = stripTrailing(norm(colonM[1]));
-        if (c && isPlausibleName(c)) return c;
-      }
-      
-      // Lookahead helper for multi-line name grids (e.g. Birth Certificates)
-      // Check up to 5 lines ahead for the actual values, skipping parenthesized sub-labels
-      for (let j = 1; j <= 5; j++) {
-        if (i + j >= lines.length) break;
-        const cand = stripTrailing(norm(lines[i + j]));
-        const candUpper = up(cand);
-        
-        // Skip sub-labels like "(First)", "(Middle)", "(Last)"
-        if (cand.startsWith("(") && cand.endsWith(")")) continue;
-        if (/\b(?:FIRST|MIDDLE|MIDDIE|LAST|SURNAME|GIVEN|FAMILY|NAME)\b/i.test(candUpper)) continue;
-        
-        if (cand && isPlausibleName(cand)) {
-          // If we matched the multi-line "1. NAME" Birth Certificate field,
-          // try to combine First, Middle, and Last name from successive lines.
-          const isBirthNameGrid = /^1\.?\s*NAME/i.test(upper) || (i > 0 && /^1\.?\s*NAME/i.test(up(lines[i-1])));
-          if (isBirthNameGrid && i + j + 2 < lines.length) {
-            const next1 = stripTrailing(norm(lines[i + j + 1]));
-            const next2 = stripTrailing(norm(lines[i + j + 2]));
-            if (next1 && next2 && !next1.startsWith("(") && !next2.startsWith("(")) {
-              // Format as: LAST, FIRST MIDDLE
-              return `${next2}, ${cand} ${next1}`;
-            }
-          }
-          return cand;
+      // Check if this NAME occurrence is part of a MAIDEN NAME split
+      const precedingContext = lines.slice(Math.max(0, i - 6), i).join(" ").toUpperCase();
+      const isOrphanedMaidenName = /^NAME$/i.test(line.trim()) && /\bMAIDEN\b/.test(precedingContext);
+      if (!isOrphanedMaidenName) {
+        const colonM = line.match(/\bNAME\b[^:–-]*[:–-]\s*(.*)/i);
+        if (colonM?.[1]) addCandidate(colonM[1], 65, "3b-name-colon");
+        // Extended lookahead (10 lines) so deeply nested name values are reachable.
+        // The PSA birth cert has 6 lines between "1. NAME" and the actual name:
+        //   MANILA, 2011-012345, (First), (Middle), (Last), then the name at j=6.
+        for (let j = 1; j <= 10; j++) {
+          if (i + j >= lines.length) break;
+          const cand = stripTrailing(norm(lines[i + j]));
+          const candUpper = up(cand);
+          if (cand.startsWith("(") && cand.endsWith(")")) continue;
+          if (/\b(?:FIRST|MIDDLE|MIDDIE|LAST|SURNAME|GIVEN|FAMILY|NAME)\b/i.test(candUpper)) continue;
+          if (cand && isPlausibleName(cand)) { addCandidate(cand, 62, "3b-name-nextlines"); break; }
         }
       }
     }
 
-    // 3c — DepEd surname field
+    // 3c — DepEd SURNAME inline (55)
     {
       const m = upper.match(
         /\b(?:SURNAME|SUMAME|SURNAMF|SURNANE)\b[\s:_-]*([A-Z][A-Z '.–-]{4,}?)(?=\bDATE\s+OF\s+BIRTH\b|\bSEX\b|$)/
       );
-      if (m?.[1]) {
-        const c = norm(m[1]);
-        if (c && isPlausibleName(c)) return c;
-      }
+      if (m?.[1]) addCandidate(m[1], 55, "3c-deped-surname");
     }
   }
 
-  // ── Strategy 4: first stand-alone Title-prefix line that isn't a signatory ──
+  // ── Strategy 4 (50): Title-prefix line (Mr./Ms./Dr. NAME) ──
   for (const line of lines) {
     const t = line.trim();
-    const m = t.match(
-      /\b(?:Ms|Mr|Mrs|Miss|Dr|Engr|Atty|Prof|Hon|Rev)\.?\s+([A-Z][A-Z][A-Z .,''-]*)/i
-    );
+    const m = t.match(/\b(?:Ms|Mr|Mrs|Miss|Dr|Engr|Atty|Prof|Hon|Rev)\.?\s+([A-Z][A-Z][A-Z .,''-]*)/i);
     if (m?.[1]) {
       const raw = m[1].replace(/\s*[(\[].*/, "").replace(/\s*,.*/, "").trim();
-      if (!isPlausibleName(raw)) continue;
-      // skip signatories
       if (/(guidance|counselor|principal|registrar|dean|president|director|chairperson)/i.test(t)) continue;
-      return raw;
+      addCandidate(raw, 50, "4-title-prefix");
     }
   }
 
-  // ── Strategy 5: raw ALL-CAPS "LASTNAME, FIRSTNAME" line ──
+  // ── Strategy 5 (40): Raw ALL-CAPS "LASTNAME, FIRSTNAME" line (last resort) ──
   for (const line of lines) {
-    const t = line.trim();
-    // Allow trailing columns separated by 3 or more spaces (common in tabular scans)
-    const m = t.match(/^([A-Z\s.'-]+,\s*[A-Z\s.'-]+)(?:\s{3,}|$)/);
-    if (m?.[1]) {
-      const nameCand = m[1].trim();
-      if (isPlausibleName(nameCand)) return nameCand;
-    }
+    const m = line.trim().match(/^([A-Z\s.'-]+,\s*[A-Z\s.'-]+)(?:\s{3,}|$)/);
+    if (m?.[1]) addCandidate(m[1], 40, "5-raw-caps-lastname-first");
   }
 
-  return "";
+  if (candidates.length === 0) return "";
+  candidates.sort((a, b) => b.score - a.score);
+  console.log("[OCR Name] candidates:", candidates.map((c) => `${c.strategy}(${c.score}):${c.name}`).join(" | "));
+  console.log("[OCR Name] winner:", candidates[0].name, "->", candidates[0].strategy);
+  return candidates[0].name;
 }
 
 // ─── 5. NAME NORMALISATION → "LASTNAME, FIRSTNAME MI." ─────────────────────
@@ -553,6 +616,49 @@ export function normalizeExtractedName(raw) {
   const given = w.slice(0, si).join(" ");
   return given ? `${surname}, ${given}` : surname;
 }
+
+export function splitNameComponents(fullName) {
+  if (!fullName) return { firstName: "", middleName: "", lastName: "" };
+  const s = String(fullName).trim().toUpperCase();
+  
+  if (s.includes(",")) {
+    const commaIdx = s.indexOf(",");
+    const lastName = s.slice(0, commaIdx).trim();
+    const rest = s.slice(commaIdx + 1).trim();
+    
+    const words = rest.split(/\s+/).filter(Boolean);
+    if (words.length === 0) {
+      return { firstName: "", middleName: "", lastName };
+    }
+    if (words.length === 1) {
+      // Only one given name word — it's the first name, no middle name
+      return { firstName: words[0], middleName: "", lastName };
+    }
+    // Philippine convention: middle name = last word (mother's maiden surname)
+    // First name = everything before the last word
+    const middleName = words[words.length - 1];
+    const firstName = words.slice(0, -1).join(" ");
+    return { firstName, middleName, lastName };
+  }
+  
+  // No comma — space-separated, last word = last name
+  const words = s.split(/\s+/).filter(Boolean);
+  if (words.length === 0) {
+    return { firstName: "", middleName: "", lastName: "" };
+  }
+  if (words.length === 1) {
+    return { firstName: "", middleName: "", lastName: words[0] };
+  }
+  if (words.length === 2) {
+    return { firstName: words[0], middleName: "", lastName: words[1] };
+  }
+  // 3+ words: last = surname, second-to-last = middle name, rest = first name
+  const lastName = words[words.length - 1];
+  const middleName = words[words.length - 2];
+  const firstName = words.slice(0, -2).join(" ");
+  return { firstName, middleName, lastName };
+}
+
 
 // ─── 6. STUDENT MATCHING ────────────────────────────────────────────────────
 
@@ -698,19 +804,23 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
   let rawText = "";
   let usedNative = false;
   let ocrErrorMsg = "";
+  // ocrEngine is returned by the server so detectName() picks the correct layout
+  // strategy without sniffing navigator.userAgent (client OS !== server OS).
+  let ocrEngine = "unknown";
 
   try {
-    const payload = new FormData();
-    payload.append("file", file);
+    const formPayload = new FormData();
+    formPayload.append("file", file);
     const res = await fetch("/api/ingest/ocr", {
       method: "POST",
-      body: payload,
+      body: formPayload,
     });
     const data = await res.json().catch(() => null);
     if (res.ok && data?.ok && typeof data?.text === "string") {
       rawText = data.text;
       usedNative = true;
-      console.log("[OCR] Using platform-native offline OCR (Lightning Fast!)");
+      ocrEngine = data?.engine ?? "unknown";
+      console.log(`[OCR] Platform-native offline OCR complete (engine: ${ocrEngine})`);
     } else {
       ocrErrorMsg = data?.error || `Server returned status ${res.status}`;
     }
@@ -729,7 +839,6 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
     );
   }
 
-   
   console.log("=== OCR RAW TEXT ===\n" + rawText + "\n====================");
 
   const lines = rawText
@@ -755,8 +864,9 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
     }
   }
 
-  // ── Detect name (as fallback if student number did not match) ──
-  const extractedName = matchedStudent ? "" : detectName(lines);
+  // ── Detect name (fallback when student number did not match) ──
+  // Passes ocrEngine so detectName() uses the correct layout strategy.
+  const extractedName = matchedStudent ? "" : detectName(lines, { engine: ocrEngine });
 
   if (!matchedStudent) {
     nameMatchesByName =
@@ -799,8 +909,13 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
     }
   }
 
+  const nameComponents = splitNameComponents(suggestedName);
+
   return {
     name: suggestedName,
+    firstName: nameComponents.firstName,
+    middleName: nameComponents.middleName,
+    lastName: nameComponents.lastName,
     docType,
     matchedStudent,
     nameMatchesByName,

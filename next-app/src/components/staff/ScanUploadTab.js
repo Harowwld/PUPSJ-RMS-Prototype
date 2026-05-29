@@ -35,6 +35,7 @@ import {
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils"
+import { splitNameComponents } from "@/lib/ocrClient"
 
 export default function ScanUploadTab({
   loading,
@@ -241,11 +242,15 @@ export default function ScanUploadTab({
         onSelectExistingStudent?.(suggestion.matchedStudent, ocrDocType)
       } else {
         // No match — only fill in the name/docType, leave form unlocked for manual entry.
+        const parsed = splitNameComponents(suggestion.name || "");
         setNewRec?.((p) => ({
           ...p,
           name: suggestion.name
             ? String(suggestion.name).trim().replace(/\s+/g, " ").toUpperCase()
             : p.name,
+          firstName: suggestion.firstName || parsed.firstName || p.firstName,
+          middleName: suggestion.middleName || parsed.middleName || p.middleName,
+          lastName: suggestion.lastName || parsed.lastName || p.lastName,
           docType: ocrDocType || p.docType,
         }))
       }
@@ -408,29 +413,39 @@ export default function ScanUploadTab({
     handlePdfFileSelect(validFiles)
   }
 
-  const normalizedTypedName = String(newRec?.name || "")
-    .trim()
-    .toLowerCase()
   const nameSuggestions = useMemo(() => {
-    if (!normalizedTypedName || normalizedTypedName.length < 2 || lockIdentity)
-      return []
-    const terms = normalizedTypedName.split(/\s+/).filter(Boolean)
+    const terms = [
+      ...String(newRec?.lastName || "").trim().toLowerCase().split(/\s+/).filter(Boolean),
+      ...String(newRec?.firstName || "").trim().toLowerCase().split(/\s+/).filter(Boolean),
+      ...String(newRec?.middleName || "").trim().toLowerCase().split(/\s+/).filter(Boolean)
+    ]
+    if (terms.length === 0 || lockIdentity) return []
+    
+    // Trigger suggestions once at least one term has length >= 2
+    const hasLongTerm = terms.some(t => t.length >= 2)
+    if (!hasLongTerm) return []
+
     const ranked = (students || [])
       .map((s) => {
         const name = String(s?.name || "")
         const nameLower = name.toLowerCase()
-        const studentNo = String(s?.studentNo || s?.student_no || "")
         const allTermsHit = terms.every((t) => nameLower.includes(t))
         if (!allTermsHit) return null
-        const startsWith = nameLower.startsWith(normalizedTypedName) ? 1 : 0
-        return { student: s, score: startsWith }
+        
+        let score = 0
+        const lName = String(newRec?.lastName || "").trim().toLowerCase()
+        const fName = String(newRec?.firstName || "").trim().toLowerCase()
+        if (lName && nameLower.startsWith(lName)) score += 2
+        if (fName && nameLower.includes(fName)) score += 1
+        
+        return { student: s, score }
       })
       .filter(Boolean)
       .sort((a, b) => b.score - a.score)
       .slice(0, 6)
       .map((x) => x.student)
     return ranked
-  }, [students, normalizedTypedName, lockIdentity])
+  }, [students, newRec?.firstName, newRec?.middleName, newRec?.lastName, lockIdentity])
 
   const phoneStatus =
     phoneSession?.status === "Paired"
@@ -1416,6 +1431,9 @@ export default function ScanUploadTab({
                                     setNewRec({
                                       studentNo: "",
                                       name: "",
+                                      firstName: "",
+                                      middleName: "",
+                                      lastName: "",
                                       course: "",
                                       year: "",
                                       sectionPart: "",
@@ -1467,48 +1485,99 @@ export default function ScanUploadTab({
                               </div>
                             ) : null}
                           </div>
-                          <div>
-                            <label
-                              className={`mb-1.5 block text-xs font-bold uppercase ${ lockIdentity ? lockedLabel : "text-gray-700" } dark:text-zinc-200`}
-                            >
-                              Full Name
-                            </label>
-                            <input
-                              type="text"
-                              className={`form-input h-11 rounded-brand ${ring("name")} ${lockIdentity ? lockedField : ""}`}
-                              placeholder="Last Name, First Name"
-                              value={newRec.name}
-                              disabled={lockIdentity}
-                              onChange={(e) => {
-                                clearUploadFieldError?.("name")
-                                setNewRec((p) => ({ ...p, name: e.target.value }))
-                              }}
-                            />
-                            {!lockIdentity && nameSuggestions.length > 0 ? (
-                              <div className="mt-2 overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                                {nameSuggestions.map((s) => {
-                                  const studentNo = String(
-                                    s?.studentNo || s?.student_no || ""
-                                  )
-                                  return (
-                                    <button
-                                      key={studentNo}
-                                      type="button"
-                                      className="w-full border-b border-gray-300 px-3 py-2 text-left transition-colors last:border-b-0 hover:bg-red-50 dark:bg-red-950/50 dark:border-white/10"
-                                      onClick={() => onSelectExistingStudent?.(s)}
-                                    >
-                                      <div className="text-sm font-bold text-gray-900 dark:text-zinc-50">
-                                        {s?.name}
-                                      </div>
-                                      <div className="font-mono text-xs text-gray-600 dark:text-zinc-300">
-                                        {studentNo}
-                                      </div>
-                                    </button>
-                                  )
-                                })}
+                          {lockIdentity ? (
+                            <div>
+                              <label
+                                className={`mb-1.5 block text-xs font-bold uppercase ${lockedLabel} dark:text-zinc-200`}
+                              >
+                                Full Name
+                              </label>
+                              <input
+                                type="text"
+                                className={`form-input h-11 rounded-brand ${lockedField}`}
+                                value={newRec.name}
+                                disabled
+                              />
+                            </div>
+                          ) : (
+                            <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+                              <div>
+                                <label
+                                  className="mb-1.5 block text-xs font-bold uppercase text-gray-700 dark:text-zinc-200"
+                                >
+                                  Last Name
+                                </label>
+                                <input
+                                  type="text"
+                                  className={`form-input h-11 rounded-brand ${ring("lastName")}`}
+                                  placeholder="Last Name"
+                                  value={newRec.lastName || ""}
+                                  onChange={(e) => {
+                                    clearUploadFieldError?.("lastName")
+                                    setNewRec((p) => ({ ...p, lastName: e.target.value }))
+                                  }}
+                                />
                               </div>
-                            ) : null}
-                          </div>
+                              <div>
+                                <label
+                                  className="mb-1.5 block text-xs font-bold uppercase text-gray-700 dark:text-zinc-200"
+                                >
+                                  First Name
+                                </label>
+                                <input
+                                  type="text"
+                                  className={`form-input h-11 rounded-brand ${ring("firstName")}`}
+                                  placeholder="First Name"
+                                  value={newRec.firstName || ""}
+                                  onChange={(e) => {
+                                    clearUploadFieldError?.("firstName")
+                                    setNewRec((p) => ({ ...p, firstName: e.target.value }))
+                                  }}
+                                />
+                              </div>
+                              <div>
+                                <label
+                                  className="mb-1.5 block text-xs font-bold uppercase text-gray-700 dark:text-zinc-200"
+                                >
+                                  Middle Name
+                                </label>
+                                <input
+                                  type="text"
+                                  className={`form-input h-11 rounded-brand ${ring("middleName")}`}
+                                  placeholder="Middle Name"
+                                  value={newRec.middleName || ""}
+                                  onChange={(e) => {
+                                    clearUploadFieldError?.("middleName")
+                                    setNewRec((p) => ({ ...p, middleName: e.target.value }))
+                                  }}
+                                />
+                              </div>
+                            </div>
+                          )}
+                          {!lockIdentity && nameSuggestions.length > 0 ? (
+                            <div className="-mt-3 overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+                              {nameSuggestions.map((s) => {
+                                const studentNo = String(
+                                  s?.studentNo || s?.student_no || ""
+                                )
+                                return (
+                                  <button
+                                    key={studentNo}
+                                    type="button"
+                                    className="w-full border-b border-gray-300 px-3 py-2 text-left transition-colors last:border-b-0 hover:bg-red-50 dark:bg-red-950/50 dark:border-white/10"
+                                    onClick={() => onSelectExistingStudent?.(s)}
+                                  >
+                                    <div className="text-sm font-bold text-gray-900 dark:text-zinc-50">
+                                      {s?.name}
+                                    </div>
+                                    <div className="font-mono text-xs text-gray-600 dark:text-zinc-300">
+                                      {studentNo}
+                                    </div>
+                                  </button>
+                                )
+                              })}
+                            </div>
+                          ) : null}
                         </div>
 
                         <div>
