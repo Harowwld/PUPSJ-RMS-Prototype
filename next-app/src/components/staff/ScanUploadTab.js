@@ -413,40 +413,6 @@ export default function ScanUploadTab({
     handlePdfFileSelect(validFiles)
   }
 
-  const nameSuggestions = useMemo(() => {
-    const terms = [
-      ...String(newRec?.lastName || "").trim().toLowerCase().split(/\s+/).filter(Boolean),
-      ...String(newRec?.firstName || "").trim().toLowerCase().split(/\s+/).filter(Boolean),
-      ...String(newRec?.middleName || "").trim().toLowerCase().split(/\s+/).filter(Boolean)
-    ]
-    if (terms.length === 0 || lockIdentity) return []
-    
-    // Trigger suggestions once at least one term has length >= 2
-    const hasLongTerm = terms.some(t => t.length >= 2)
-    if (!hasLongTerm) return []
-
-    const ranked = (students || [])
-      .map((s) => {
-        const name = String(s?.name || "")
-        const nameLower = name.toLowerCase()
-        const allTermsHit = terms.every((t) => nameLower.includes(t))
-        if (!allTermsHit) return null
-        
-        let score = 0
-        const lName = String(newRec?.lastName || "").trim().toLowerCase()
-        const fName = String(newRec?.firstName || "").trim().toLowerCase()
-        if (lName && nameLower.startsWith(lName)) score += 2
-        if (fName && nameLower.includes(fName)) score += 1
-        
-        return { student: s, score }
-      })
-      .filter(Boolean)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 6)
-      .map((x) => x.student)
-    return ranked
-  }, [students, newRec?.firstName, newRec?.middleName, newRec?.lastName, lockIdentity])
-
   const phoneStatus =
     phoneSession?.status === "Paired"
       ? phoneSession?.is_online
@@ -1444,30 +1410,7 @@ export default function ScanUploadTab({
                               </div>
                             </div>
                           )}
-                          {!lockIdentity && nameSuggestions.length > 0 ? (
-                            <div className="-mt-3 overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                              {nameSuggestions.map((s) => {
-                                const studentNo = String(
-                                  s?.studentNo || s?.student_no || ""
-                                )
-                                return (
-                                  <button
-                                    key={studentNo}
-                                    type="button"
-                                    className="w-full border-b border-gray-300 px-3 py-2 text-left transition-colors last:border-b-0 hover:bg-red-50 dark:bg-red-950/50 dark:border-white/10"
-                                    onClick={() => onSelectExistingStudent?.(s)}
-                                  >
-                                    <div className="text-sm font-bold text-gray-900 dark:text-zinc-50">
-                                      {s?.name}
-                                    </div>
-                                    <div className="font-mono text-xs text-gray-600 dark:text-zinc-300">
-                                      {studentNo}
-                                    </div>
-                                  </button>
-                                )
-                              })}
-                            </div>
-                          ) : null}
+
                         </div>
 
                         <div>

@@ -791,6 +791,36 @@ function stripMiddleInitial(normalizedName) {
   return normalizedName;
 }
 
+
+function levenshteinSimilarity(s1, s2) {
+  const a = String(s1 || "").trim().toUpperCase();
+  const b = String(s2 || "").trim().toUpperCase();
+  if (a === b) return 1.0;
+  if (!a || !b) return 0.0;
+
+  const matrix = [];
+  for (let i = 0; i <= b.length; i++) matrix[i] = [i];
+  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) === a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1, // substitution
+          matrix[i][j - 1] + 1,     // insertion
+          matrix[i - 1][j] + 1      // deletion
+        );
+      }
+    }
+  }
+
+  const distance = matrix[b.length][a.length];
+  const maxLength = Math.max(a.length, b.length);
+  return 1.0 - distance / maxLength;
+}
+
 export function findStudentsByOcrName(ocrName, students) {
   if (!ocrName || !Array.isArray(students)) return [];
   const o = normNameMatch(ocrName);
@@ -800,13 +830,36 @@ export function findStudentsByOcrName(ocrName, students) {
   const exact = students.filter((s) => normNameMatch(s?.name || s?.Name || "") === o);
   if (exact.length > 0) return exact;
   
-  // 2. Fuzzy match stripping middle initial (if unique)
+  // 2. Fuzzy match stripping middle initial
   const oStripped = stripMiddleInitial(o);
   const strippedMatches = students.filter((s) => {
     const dbNorm = normNameMatch(s?.name || s?.Name || "");
     return stripMiddleInitial(dbNorm) === oStripped;
   });
-  return strippedMatches;
+  if (strippedMatches.length > 0) return strippedMatches;
+
+  // 3. 70% Levenshtein similarity fuzzy match
+  const fuzzyCandidates = students
+    .map((s) => {
+      const dbNorm = normNameMatch(s?.name || s?.Name || "");
+      // Compare both full name and space-separated versions
+      const simDirect = levenshteinSimilarity(o, dbNorm);
+      const simNoComma = levenshteinSimilarity(
+        o.replace(/,/g, " ").replace(/\s+/g, " "),
+        dbNorm.replace(/,/g, " ").replace(/\s+/g, " ")
+      );
+      const score = Math.max(simDirect, simNoComma);
+      return { student: s, score };
+    })
+    .filter((c) => c.score >= 0.70)
+    .sort((a, b) => b.score - a.score);
+
+  if (fuzzyCandidates.length > 0) {
+    // Return the highest matching students above 70%
+    return [fuzzyCandidates[0].student];
+  }
+
+  return [];
 }
 
 export function findStudentsInText(rawText, students) {
