@@ -1456,18 +1456,6 @@ function AdminPageContent() {
   }
 
   const sidebarItems = [
-    { type: "header", label: "User Management" },
-    {
-      key: "directory",
-      label: "Staff Directory",
-      iconClass: "ph-bold ph-users",
-    },
-    {
-      key: "create",
-      label: "Register Account",
-      iconClass: "ph-bold ph-user-plus",
-    },
-
     { type: "header", label: "Operations & Analytics" },
     {
       key: "review",
@@ -1483,6 +1471,18 @@ function AdminPageContent() {
       key: "request_analytics",
       label: "Request Analysis",
       iconClass: "ph-bold ph-trend-up",
+    },
+
+    { type: "header", label: "User Management" },
+    {
+      key: "directory",
+      label: "Staff Directory",
+      iconClass: "ph-bold ph-users",
+    },
+    {
+      key: "create",
+      label: "Register Account",
+      iconClass: "ph-bold ph-user-plus",
     },
 
     { type: "header", label: "System Configuration" },
