@@ -413,7 +413,7 @@ export default function ScanUploadTab({
     if (!normalizedTypedName || normalizedTypedName.length < 2 || lockIdentity)
       return []
     const terms = normalizedTypedName.split(/\s+/).filter(Boolean)
-    const ranked = students
+    const ranked = (students || [])
       .map((s) => {
         const name = String(s?.name || "")
         const nameLower = name.toLowerCase()
@@ -427,6 +427,7 @@ export default function ScanUploadTab({
       .sort((a, b) => b.score - a.score)
       .slice(0, 6)
       .map((x) => x.student)
+    return ranked
   }, [students, normalizedTypedName, lockIdentity])
 
   const phoneStatus =

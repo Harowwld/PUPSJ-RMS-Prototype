@@ -294,10 +294,12 @@ export async function getDb() {
           reviewed_by TEXT,
           reviewed_at TEXT,
           review_note TEXT,
+          uploaded_by TEXT,
           created_at TEXT NOT NULL DEFAULT (datetime('now')),
           FOREIGN KEY (student_no) REFERENCES students(student_no) ON UPDATE CASCADE ON DELETE RESTRICT,
           FOREIGN KEY (doc_type) REFERENCES document_types(name) ON UPDATE CASCADE ON DELETE RESTRICT,
-          FOREIGN KEY (reviewed_by) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE SET NULL
+          FOREIGN KEY (reviewed_by) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE SET NULL,
+          FOREIGN KEY (uploaded_by) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE SET NULL
         );
 
         CREATE TABLE IF NOT EXISTS document_types (
@@ -407,6 +409,7 @@ export async function getDb() {
     CREATE INDEX IF NOT EXISTS idx_documents_doc_type ON documents(doc_type);
     CREATE INDEX IF NOT EXISTS idx_documents_created_at ON documents(created_at);
     CREATE INDEX IF NOT EXISTS idx_documents_approval_status ON documents(approval_status);
+    CREATE INDEX IF NOT EXISTS idx_documents_uploaded_by ON documents(uploaded_by);
 
     CREATE INDEX IF NOT EXISTS idx_document_types_name ON document_types(name);
     CREATE INDEX IF NOT EXISTS idx_document_types_name_norm ON document_types(name_norm);

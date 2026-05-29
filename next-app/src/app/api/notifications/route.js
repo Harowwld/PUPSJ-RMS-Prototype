@@ -42,6 +42,7 @@ export async function GET(req) {
     limit,
     offset,
     lastSeenReviewedAt: state.lastSeenReviewedAt,
+    uploadedBy: staff.id,
   });
 
   return NextResponse.json({
@@ -84,6 +85,7 @@ export async function POST(req) {
     limit: 1,
     offset: 0,
     lastSeenReviewedAt: state.lastSeenReviewedAt,
+    uploadedBy: staff.id,
   });
 
   return NextResponse.json({

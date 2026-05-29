@@ -1,8 +1,8 @@
 import fs from "node:fs";
 import { NextResponse } from "next/server";
-import { getSessionStaff, isActiveStaff } from "../../../../../../lib/scanSessionAuth.js";
-import { getIncomingById, getScanSessionByIdForStaff } from "../../../../../../lib/scanSessionRepo.js";
-import { getScanFilePath } from "../../../../../../lib/scanSessionFiles.js";
+import { getSessionStaff, isActiveStaff } from "@/lib/scanSessionAuth";
+import { getIncomingById, getScanSessionByIdForStaff } from "@/lib/scanSessionRepo";
+import { getScanFilePath } from "@/lib/scanSessionFiles";
 
 export const runtime = "nodejs";
 
