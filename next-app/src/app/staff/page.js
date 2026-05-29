@@ -1314,6 +1314,7 @@ function StaffPageContent() {
                   return;
                 }
                 setCsvFile(f);
+                setCsvResults([]);
                 setCsvError("");
                 setCsvLoading(true);
                 const r = new FileReader();
@@ -1445,6 +1446,7 @@ function StaffPageContent() {
                     setCsvFile(null);
                     setCsvRows([]);
                     setCsvResults([]);
+                    if (csvInputRef.current) csvInputRef.current.value = "";
                   } else if (successCount > 0) {
                     showToast(
                       { 

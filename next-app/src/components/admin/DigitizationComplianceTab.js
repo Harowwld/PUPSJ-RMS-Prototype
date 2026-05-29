@@ -365,7 +365,7 @@ export default function DigitizationComplianceTab({
     <div className="flex flex-col w-full gap-6 animate-fade-up font-inter">
       {/* 1. Color Stat Cards / Skeletons at the Top */}
       {loading && !data ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
           {[1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-28 rounded-xl bg-gray-100 dark:bg-muted" />
           ))}
@@ -376,7 +376,7 @@ export default function DigitizationComplianceTab({
           loading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
         )}>
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Completeness Card */}
             <div className="group relative overflow-hidden rounded-xl border border-red-950 bg-linear-to-br from-red-700 to-red-950 p-5 shadow-sm transition-all dark:shadow-none">
               <i className="ph-duotone ph-chart-pie pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-20" />
@@ -444,7 +444,7 @@ export default function DigitizationComplianceTab({
       ) : null}
 
       {/* 2. Header and Filters Card & Table Wrapper */}
-      <div className="flex flex-col gap-2 w-full">
+      <div className="flex flex-col gap-6 w-full">
         <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
           <PageHeader
             icon="ph-chart-pie"

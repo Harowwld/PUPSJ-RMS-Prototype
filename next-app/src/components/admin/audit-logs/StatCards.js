@@ -101,7 +101,7 @@ export default function StatCards({ isLoading, logStats }) {
 
   if (isLoading && !logStats) {
     return (
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 animate-pulse">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 animate-pulse">
         {[1, 2, 3].map((i) => (
           <Skeleton key={i} className="h-28 rounded-xl bg-gray-100 dark:bg-muted" />
         ))}
@@ -113,7 +113,7 @@ export default function StatCards({ isLoading, logStats }) {
 
   return (
     <div className={cn(
-      "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 transition-all duration-500",
+      "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 transition-all duration-500",
       isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
     )}>
       {stats.map((stat, i) => {

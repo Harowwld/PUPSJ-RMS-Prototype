@@ -642,7 +642,7 @@ export default function ScanUploadTab({
                 </div>
               </div>
 
-              <div className="flex flex-col gap-4 h-auto lg:flex-row lg:items-stretch">
+              <div className="flex flex-col gap-6 h-auto lg:flex-row lg:items-stretch">
                 <section
                   className={cn(
                     "relative flex h-auto min-h-[580px] flex-col transition-all duration-300",
@@ -695,27 +695,52 @@ export default function ScanUploadTab({
                       </div>
 
                       <div
-                        className={`min-h-0 flex-1 overflow-auto transition-colors duration-200 ${csvDropActive ? "bg-red-50" : ""} dark:bg-[#2c2c2c]`}
+                        className={`relative min-h-0 flex-1 overflow-auto transition-colors duration-200 ${csvDropActive ? "bg-red-50" : ""} dark:bg-[#2c2c2c]`}
                         onDragOver={(e) => {
                           e.preventDefault()
                           setCsvDropActive(true)
                         }}
-                        onDragLeave={(e) => {
-                          e.preventDefault()
-                          setCsvDropActive(false)
-                        }}
-                        onDrop={(e) => {
-                          e.preventDefault()
-                          setCsvDropActive(false)
-                          const file = e.dataTransfer.files?.[0]
-                          if (
-                            file &&
-                            (file.name.endsWith(".csv") || file.type === "text/csv")
-                          ) {
-                            handleCsvFileSelect(file)
-                          }
-                        }}
                       >
+                        {csvDropActive && (
+                          <div
+                            className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-pup-maroon/10 backdrop-blur-xs border-2 border-dashed border-pup-maroon/50 rounded-brand animate-fade-up dark:bg-red-600/[0.04] dark:border-primary/50"
+                            onDragOver={(e) => {
+                              e.preventDefault()
+                              setCsvDropActive(true)
+                            }}
+                            onDragLeave={(e) => {
+                              e.preventDefault()
+                              setCsvDropActive(false)
+                            }}
+                            onDrop={(e) => {
+                              e.preventDefault()
+                              setCsvDropActive(false)
+                              const file = e.dataTransfer.files?.[0]
+                              if (
+                                file &&
+                                (file.name.toLowerCase().endsWith(".csv") ||
+                                  file.type === "text/csv" ||
+                                  file.type === "application/vnd.ms-excel" ||
+                                  file.type === "application/csv" ||
+                                  file.type === "")
+                              ) {
+                                handleCsvFileSelect(file)
+                              }
+                            }}
+                          >
+                            <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-gray-200 shadow-2xl max-w-xs text-center pointer-events-none dark:bg-card/95 dark:border-white/10 animate-scale-up">
+                              <div className="w-14 h-14 rounded-full bg-red-50 border border-red-100 flex items-center justify-center mb-3 dark:bg-red-950/30">
+                                <i className="ph-duotone ph-file-csv text-2xl text-pup-maroon dark:text-primary animate-bounce"></i>
+                              </div>
+                              <p className="text-sm font-bold text-gray-900 leading-tight dark:text-zinc-50">
+                                Drop CSV here to replace data
+                              </p>
+                              <p className="text-[11px] font-bold text-pup-maroon dark:text-primary mt-1.5 uppercase tracking-wider dark:text-primary">
+                                Load new batch
+                              </p>
+                            </div>
+                          </div>
+                        )}
                         {csvRows.length ? (
                           <table className="min-w-full text-[12px] table-auto">
                             <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">

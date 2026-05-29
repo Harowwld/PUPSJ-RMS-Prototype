@@ -167,7 +167,7 @@ export default function SLAAnalyticsTab({
     <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
       {/* 1. Color KPI Cards / Skeletons at the Top */}
       {loading && !data ? (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 animate-pulse">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 animate-pulse">
           {[1, 2].map((i) => (
             <Skeleton key={i} className="h-28 rounded-brand dark:bg-muted" />
           ))}

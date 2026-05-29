@@ -136,7 +136,7 @@ export default function DocumentsTab({
   return (
     <div
       id="view-documents"
-      className="flex flex-col w-full h-auto gap-4 animate-fade-up font-inter"
+      className="flex flex-col w-full h-auto gap-6 animate-fade-up font-inter"
     >
       <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader

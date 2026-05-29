@@ -941,7 +941,7 @@ export default function SystemConfigTab({
 
   if (activeError) {
     return (
-      <div className="animate-fade-up font-inter flex w-full flex-col gap-4">
+      <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
         <Card className="flex flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
           <CardContent className="flex flex-col p-6">
             <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
@@ -965,7 +965,7 @@ export default function SystemConfigTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="animate-fade-up font-inter flex w-full flex-col gap-4">
+      <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
         <Tabs
           defaultValue="document-types"
           value={activeSubTab}

@@ -443,14 +443,14 @@ export default function DigitalRecordsReviewTab({
     <div className="animate-fade-up font-inter flex h-auto w-full flex-col gap-6">
       {/* Color Stat Cards / Skeletons at the Top */}
       {isLoading && !records ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 animate-pulse">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
           {[1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-28 rounded-brand bg-gray-100 dark:bg-muted" />
           ))}
         </div>
       ) : !error ? (
         <div className={cn(
-          "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 transition-all duration-500",
+          "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 transition-all duration-500",
           isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
         )}>
           <div className="group relative overflow-hidden rounded-brand border border-blue-950 bg-linear-to-br from-blue-800 to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">

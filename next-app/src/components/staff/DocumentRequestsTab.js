@@ -343,7 +343,7 @@ export default function DocumentRequestsTab({
     setPage(1);
   };
   return (
-    <div className="flex flex-col h-auto gap-4 animate-fade-up font-inter">
+    <div className="flex flex-col h-auto gap-6 animate-fade-up font-inter">
       <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-tray"
@@ -461,7 +461,7 @@ export default function DocumentRequestsTab({
 
         <CardContent className="h-auto flex flex-col p-6">
           {loading ? (
-            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
+            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
               <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0 dark:bg-card dark:border-white/10 dark:shadow-none">
                 <div className="p-6 flex-1 flex flex-col space-y-4">
                   <div className="border border-gray-100 rounded-brand overflow-hidden dark:border-white/10">
@@ -519,7 +519,7 @@ export default function DocumentRequestsTab({
               </EmptyHeader>
             </Empty>
           ) : (
-            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
+            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
               <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0 dark:bg-card dark:border-white/10 dark:shadow-none">
                 <div className="p-6 flex-1 flex flex-col min-h-0">
                   <div 
