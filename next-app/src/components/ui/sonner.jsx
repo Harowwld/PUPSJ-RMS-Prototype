@@ -17,7 +17,7 @@ const Toaster = ({
           toast.dismiss(t.id);
         },
         classNames: {
-          toast: "cn-toast group/toast relative flex w-full items-start overflow-hidden p-0 cursor-pointer select-none border border-gray-200 bg-white shadow-xl dark:bg-zinc-900 dark:border-zinc-800 dark:shadow-2xl transition-all duration-500 ease-in-out data-[mounted=true]:animate-in data-[mounted=true]:fade-in data-[mounted=true]:zoom-in data-[removed=true]:animate-out data-[removed=true]:fade-out data-[removed=true]:zoom-out rounded-2xl",
+          toast: "cn-toast group/toast relative flex w-full items-start overflow-hidden p-0 cursor-pointer select-none border border-gray-200 bg-white shadow-xl dark:bg-zinc-900 dark:border-zinc-800 dark:shadow-2xl rounded-2xl",
           title: "text-[13px] font-black text-gray-900 leading-snug dark:text-zinc-50 tracking-tight",
           description: "text-[11px] font-medium !text-gray-500 leading-relaxed dark:!text-zinc-400 mt-1",
           content: "flex-1 py-4 px-4",
