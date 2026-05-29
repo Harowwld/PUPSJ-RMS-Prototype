@@ -237,6 +237,24 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
 
   const removeSelectedCabinet = useCallback(() => {
     if (!activeRoom || selectedCabinetIds.size === 0) return
+
+    const cabinetsToRemove = activeRoom.cabinets.filter((c) => selectedCabinetIds.has(c.id))
+    const occupiedCabinets = cabinetsToRemove.filter((cab) => {
+      return Array.from(studentDrawerUsage.keys()).some((key) => {
+        const [rId, cId] = key.split("|")
+        return Number(rId) === Number(activeRoom.id) && cId === cab.id && (studentDrawerUsage.get(key) || 0) > 0
+      })
+    })
+
+    if (occupiedCabinets.length > 0) {
+      const names = occupiedCabinets.map((c) => c.id).join(", ")
+      showToast?.({
+        title: "Cannot Remove Cabinet",
+        description: `Cabinet${occupiedCabinets.length > 1 ? "s" : ""} ${names} contain${occupiedCabinets.length === 1 ? "s" : ""} active student documents.`,
+      }, true)
+      return
+    }
+
     pushHistory(layout)
     
     const idsToRemove = Array.from(selectedCabinetIds)
@@ -247,7 +265,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     }))
     
     setSelectedCabinetIds(new Set())
-  }, [activeRoom, selectedCabinetIds, layout, pushHistory, updateRoom])
+  }, [activeRoom, selectedCabinetIds, layout, pushHistory, updateRoom, studentDrawerUsage, showToast])
 
   const duplicateSelectedCabinet = useCallback(() => {
     if (!activeRoom || !selectedCabinet) return
@@ -889,7 +907,16 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
               <div className="flex h-10 items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-xs dark:border-white/10 dark:bg-card">
                 <Button type="button" variant="ghost" size="icon" onClick={addRoom} className="h-8 w-8 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/30"><i className="ph-bold ph-plus-circle text-lg" /></Button>
                 <Separator orientation="vertical" className="h-4 mx-0.5 bg-gray-100 dark:bg-muted" />
-                <Button type="button" variant="ghost" size="icon" onClick={() => setDeleteRoomConfirmOpen(true)} className="h-8 w-8 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 dark:bg-red-950/30 dark:text-zinc-500" disabled={!activeRoom || activeRoomStudentCount > 0}><i className="ph-bold ph-trash text-lg" /></Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setDeleteRoomConfirmOpen(true)}
+                  className="h-8 w-8 rounded-lg text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:bg-red-950/30 disabled:text-gray-400 dark:disabled:text-zinc-500 disabled:bg-transparent dark:disabled:bg-transparent"
+                  disabled={!activeRoom || activeRoomStudentCount > 0}
+                >
+                  <i className="ph-bold ph-trash text-lg" />
+                </Button>
               </div>
             </div>
           </div>

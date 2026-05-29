@@ -11,11 +11,10 @@ export const dynamic = "force-dynamic";
 export async function GET(req) {
   try {
     const rows = await dbAll("SELECT id, question FROM security_questions ORDER BY id ASC");
-    // Ensure we return exactly 5, in order, padding with empty strings if needed
-    const questions = ["", "", "", "", ""];
-    rows.forEach((row, i) => {
-      if (i < 5) questions[i] = row.question || "";
-    });
+    const questions = rows.map((row) => row.question || "");
+    while (questions.length < 2) {
+      questions.push("");
+    }
     
     return NextResponse.json({ ok: true, data: questions });
   } catch (error) {
@@ -53,7 +52,7 @@ export async function PUT(req) {
     }
 
     // Validation: 10-character minimum and entropy check
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < questions.length; i++) {
       const q = String(questions[i] || "").trim();
       if (q) {
         if (q.length < 10) {
@@ -82,7 +81,7 @@ export async function PUT(req) {
 
     // Clear and re-insert to keep it simple and ordered
     await dbRun("DELETE FROM security_questions");
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < questions.length; i++) {
       const q = String(questions[i] || "").trim();
       if (q) {
         // Any question provided is now considered a potential recovery challenge
@@ -94,7 +93,7 @@ export async function PUT(req) {
       role: user.role
     });
 
-    return NextResponse.json({ ok: true, data: questions.slice(0, 5) });
+    return NextResponse.json({ ok: true, data: questions });
   } catch (error) {
     console.error("[PUT /api/system/security-questions Error]:", error);
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });

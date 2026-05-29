@@ -137,7 +137,7 @@ export default function BackupTable({
                         </EmptyMedia>
                       </div>
                       <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
-                        {isFilterActive ? "No matches found" : "No snapshots detected"}
+                        {isFilterActive ? "No matches found" : "No backups detected"}
                       </EmptyTitle>
                       <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                         {isFilterActive 
@@ -160,7 +160,7 @@ export default function BackupTable({
                           className="mt-6 flex h-10 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-black tracking-widest text-white shadow-lg active:scale-95 transition-all dark:shadow-none uppercase"
                         >
                           <i className="ph-bold ph-lightning"></i>
-                          CREATE INITIAL SNAPSHOT
+                          CREATE FULL BACKUP
                         </Button>
                       )}
                     </EmptyHeader>
@@ -284,7 +284,7 @@ export default function BackupTable({
                             </TooltipTrigger>
                             <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
                                 <p className="text-[10px] font-bold">Mirroring Sync</p>
-                                <p className="text-[9px] opacity-80">Send snapshot to external storage node</p>
+                                <p className="text-[9px] opacity-80">Send backup copy to external storage node</p>
                             </TooltipContent>
                           </Tooltip>
                         )}

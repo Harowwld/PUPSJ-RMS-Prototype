@@ -129,7 +129,7 @@ export default function SystemConfigTab({
   const [importing, setImporting] = useState(false)
 
   // Security Questions State
-  const [securityQuestions, setSecurityQuestions] = useState(["", "", "", "", ""])
+  const [securityQuestions, setSecurityQuestions] = useState(["", ""])
   const [securitySaving, setSecuritySaving] = useState(false)
 
   // Confirmation Modal
@@ -534,7 +534,10 @@ export default function SystemConfigTab({
       setSections(jSec.data)
 
       if (jSecQ.ok && Array.isArray(jSecQ.data)) {
-        const qList = [...jSecQ.data, "", "", "", "", ""].slice(0, 5)
+        const qList = [...jSecQ.data]
+        while (qList.length < 2) {
+          qList.push("");
+        }
         setSecurityQuestions(qList)
       }
     } catch (err) {
@@ -725,10 +728,22 @@ export default function SystemConfigTab({
         ) {
           error = "Invalid Category"
         } else if (category.toLowerCase() === "section") {
-          // Deep Validation: Check if the program code exists
+          // Deep Validation: Check if the program code exists in DB or in the CSV itself
+          const csvCourseCodes = new Set();
+          lines.slice(1).forEach((l) => {
+            const vals = l.split(",")
+            const r = {}
+            headers.forEach((h, hIdx) => {
+              r[h] = vals[hIdx]?.trim() || ""
+            })
+            if (String(r.category || "").toLowerCase().trim() === "course" && r.code) {
+              csvCourseCodes.add(String(r.code).trim().toLowerCase())
+            }
+          });
+
           const exists = courses.some(
             (c) => c.code.toLowerCase() === code.toLowerCase()
-          )
+          ) || csvCourseCodes.has(code.toLowerCase())
           if (!exists) {
             error = "Program Not Found"
           }
@@ -790,10 +805,13 @@ export default function SystemConfigTab({
           ) {
             error = "Invalid Category"
           } else if (category.toLowerCase() === "section") {
-            // Deep Validation: Check if the program code exists
+            // Deep Validation: Check if the program code exists in DB or in current staged import rows
+            const existsInImport = prev.some(
+              (r) => r.index !== index && r.category.toLowerCase() === "course" && r.code.toLowerCase() === code.toLowerCase()
+            )
             const exists = courses.some(
               (c) => c.code.toLowerCase() === code.toLowerCase()
-            )
+            ) || existsInImport
             if (!exists) {
               error = "Program Not Found"
             }
@@ -828,9 +846,12 @@ export default function SystemConfigTab({
     ) {
       error = "Invalid Category"
     } else if (category.toLowerCase() === "section") {
+      const existsInImport = importRows.some(
+        (r) => r.category.toLowerCase() === "course" && r.code.toLowerCase() === code.toLowerCase()
+      )
       const exists = courses.some(
         (c) => c.code.toLowerCase() === code.toLowerCase()
-      )
+      ) || existsInImport
       if (!exists) {
         error = "Program Not Found"
       }

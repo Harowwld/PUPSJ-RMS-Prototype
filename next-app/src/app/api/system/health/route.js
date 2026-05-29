@@ -213,7 +213,6 @@ async function buildHealthData() {
     dbSize,
     lastRestorationAt,
     dbStatus: "Healthy",
-    integrityScore: 100, // Simulated score
     timestamp: new Date().toISOString(),
   };
 }
