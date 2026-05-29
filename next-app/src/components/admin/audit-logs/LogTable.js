@@ -285,7 +285,7 @@ export default function LogTable({
     }
   }
 
-  if (isLoading && displayLogs.length === 0) {
+  if (isLoading && !displayLogs) {
     return (
       <div className="animate-pulse space-y-4">
         <div className="overflow-hidden overflow-x-auto rounded-brand border border-gray-100 bg-white dark:border-white/10 dark:bg-card">

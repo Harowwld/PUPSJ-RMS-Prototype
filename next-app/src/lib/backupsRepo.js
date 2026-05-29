@@ -197,6 +197,8 @@ export async function executeBackup() {
   const backupPath = path.join(backupsDir, backupFilename);
   console.log(`[BACKUP] Creating: ${backupPath}`);
 
+
+
   const localDir = getLocalDir();
   const uploadsDir = path.join(localDir, "uploads");
 

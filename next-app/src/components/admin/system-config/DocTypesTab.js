@@ -233,7 +233,7 @@ export default function DocTypesTab({
       buttonIcon: showArchived ? "ph-bold ph-arrow-counter-clockwise" : "ph-bold ph-archive",
       icon: showArchived ? "ph-duotone ph-arrow-counter-clockwise" : "ph-duotone ph-archive",
       selectedItems: selectedNames,
-      onConfirm: () => executeBulkTaxonomyAction("DocType", showArchived ? "restore" : "delete"),
+      onConfirm: () => executeBulkTaxonomyAction("DocumentType", showArchived ? "restore" : "delete"),
     })
     setConfirmOpen(true)
   }

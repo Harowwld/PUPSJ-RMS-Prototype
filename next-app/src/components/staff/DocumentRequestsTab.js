@@ -826,7 +826,7 @@ export default function DocumentRequestsTab({
         <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10">
           <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full border border-red-100 dark:border-zinc-800 bg-red-50 text-pup-maroon dark:text-primary shadow-sm flex items-center justify-center shrink-0 dark:bg-red-950/30 dark:text-primary dark:shadow-none">
+              <div className="w-12 h-12 rounded-xl border border-red-100 dark:border-zinc-800 bg-red-50 text-pup-maroon dark:text-primary shadow-sm flex items-center justify-center shrink-0 dark:bg-red-950/30 dark:text-primary dark:shadow-none">
                 <i className="ph-duotone ph-pencil-line text-2xl"></i>
               </div>
               <div className="min-w-0">
@@ -986,7 +986,7 @@ export default function DocumentRequestsTab({
         <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10">
           <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-red-700 shadow-sm flex items-center justify-center shrink-0 dark:bg-red-950/30 dark:shadow-none">
+              <div className="w-12 h-12 rounded-xl border border-red-100 bg-red-50 text-red-700 shadow-sm flex items-center justify-center shrink-0 dark:bg-red-950/30 dark:shadow-none">
                 <i className="ph-duotone ph-warning-circle text-2xl"></i>
               </div>
               <div className="min-w-0">

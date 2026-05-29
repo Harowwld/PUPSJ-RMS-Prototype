@@ -22,6 +22,7 @@ export default function AuditLogsTab({
   displayLogs,
   logStats,
   isLoading = false,
+  isManualLoading = false,
   error = null,
   logPage,
   setLogPage,
@@ -46,6 +47,7 @@ export default function AuditLogsTab({
   onLogAction,
   onRefresh,
 }) {
+  const logs = displayLogs || []
   const [localSearch, setLocalSearch] = useState(logSearch || "")
   const [itemsPerPage, setItemsPerPage] = useState(logsPerPage || 10)
   const [isExporting, setIsExporting] = useState(false)
@@ -208,17 +210,17 @@ export default function AuditLogsTab({
 
   const handleNextLog = () => {
     if (!selectedLog) return
-    const currentIndex = displayLogs.findIndex((log) => log.id === selectedLog.id)
-    if (currentIndex < displayLogs.length - 1) {
-      setSelectedLog(displayLogs[currentIndex + 1])
+    const currentIndex = logs.findIndex((log) => log.id === selectedLog.id)
+    if (currentIndex < logs.length - 1) {
+      setSelectedLog(logs[currentIndex + 1])
     }
   }
 
   const handlePrevLog = () => {
     if (!selectedLog) return
-    const currentIndex = displayLogs.findIndex((log) => log.id === selectedLog.id)
+    const currentIndex = logs.findIndex((log) => log.id === selectedLog.id)
     if (currentIndex > 0) {
-      setSelectedLog(displayLogs[currentIndex - 1])
+      setSelectedLog(logs[currentIndex - 1])
     }
   }
 
@@ -268,7 +270,7 @@ export default function AuditLogsTab({
                   </div>
                   <RefreshButton 
                     onRefresh={onRefresh} 
-                    isLoading={isLoading} 
+                    isLoading={isManualLoading} 
                     title="Refresh Audit Logs"
                   />
                 </div>
@@ -278,7 +280,10 @@ export default function AuditLogsTab({
 
           {/* Active Filter Chips Row */}
           {hasActiveFilters && (
-            <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+            <div className={cn(
+              "flex-none border-b border-gray-100 bg-white px-4 py-3 transition-all duration-500 animate-in fade-in slide-in-from-top-1 dark:border-white/10 dark:bg-card",
+              isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+            )}>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">Active Filters:</span>
                 {localSearch && (
@@ -362,13 +367,14 @@ export default function AuditLogsTab({
             setLogRoleFilter={setLogRoleFilter}
             setLogSeverityFilter={setLogSeverityFilter}
             logTotal={logTotal}
+            isLoading={isLoading}
           />
         </Card>
 
         <LogTable
           isLoading={isLoading}
           error={error}
-          displayLogs={displayLogs}
+          displayLogs={logs}
           selectedLog={selectedLog}
           setSelectedLog={setSelectedLog}
           logTotal={logTotal}
@@ -410,8 +416,8 @@ export default function AuditLogsTab({
           }}
           onNext={handleNextLog}
           onPrev={handlePrevLog}
-          hasNext={displayLogs.length > 0 && selectedLog && displayLogs.findIndex(l => l.id === selectedLog.id) < displayLogs.length - 1}
-          hasPrev={displayLogs.length > 0 && selectedLog && displayLogs.findIndex(l => l.id === selectedLog.id) > 0}
+          hasNext={logs.length > 0 && selectedLog && logs.findIndex(l => l.id === selectedLog.id) < logs.length - 1}
+          hasPrev={logs.length > 0 && selectedLog && logs.findIndex(l => l.id === selectedLog.id) > 0}
         />
 
         {/* PDF Export Preview */}
