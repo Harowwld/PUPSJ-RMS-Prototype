@@ -12,6 +12,7 @@ export default function RoomMap2D({
   drawerSlots,
   onCabinetClick,
   onDrawerClick,
+  onPreviewDocument,
 }) {
   const cabinetRects = cabinets || []
   const containerRef = useRef(null)
@@ -503,10 +504,10 @@ export default function RoomMap2D({
                           <div
                             key={student.studentNo}
                             className={cn(
-                              "group/item flex items-center justify-between rounded-md p-1.5 text-[10px] bg-slate-100/50 dark:bg-zinc-800/50 transition-colors",
+                              "group/item flex flex-col gap-1 rounded-md p-1.5 text-[10px] bg-slate-100/50 dark:bg-zinc-800/50 transition-colors",
                               activeStudent
-                                ? "hover:bg-red-50 dark:hover:bg-red-950/30"
-                                : "hover:bg-cyan-50 dark:hover:bg-cyan-950/30"
+                                ? "hover:bg-red-50/50 dark:hover:bg-red-950/20"
+                                : "hover:bg-cyan-50/50 dark:hover:bg-cyan-950/20"
                             )}
                           >
                             <div className="min-w-0 flex-1">
@@ -522,6 +523,41 @@ export default function RoomMap2D({
                                 {student.studentNo}
                               </p>
                             </div>
+                            {student.documents && student.documents.length > 0 ? (
+                              <div className="mt-1 space-y-1">
+                                <div className="flex flex-col gap-1">
+                                  {student.documents.map((doc) => (
+                                    <div
+                                      key={doc.id}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onPreviewDocument?.(doc.docType, student.name, student.studentNo, doc.id);
+                                      }}
+                                      className="flex items-center justify-between gap-1.5 p-1 rounded bg-white hover:bg-red-50 dark:bg-zinc-900/50 dark:hover:bg-red-950/30 border border-gray-200/50 dark:border-white/5 cursor-pointer transition-colors group/doc"
+                                    >
+                                      <div className="flex items-center gap-1 min-w-0">
+                                        <i className="ph-bold ph-file-pdf text-[10px] text-red-500 group-hover/doc:scale-110 transition-transform"></i>
+                                        <span className="truncate font-semibold text-[8px] text-gray-700 dark:text-zinc-300 group-hover/doc:text-pup-maroon dark:group-hover/doc:text-red-400" title={doc.filename}>
+                                          {doc.docType}
+                                        </span>
+                                      </div>
+                                      <span className={cn(
+                                        "text-[6px] font-black uppercase px-1 rounded-full border shrink-0 scale-90 origin-right",
+                                        doc.approvalStatus === "Approved"
+                                          ? "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900"
+                                          : "bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900"
+                                      )}>
+                                        {doc.approvalStatus}
+                                      </span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            ) : (
+                              <p className="text-[8px] font-medium text-gray-400 dark:text-zinc-500 italic mt-0.5 pl-1">
+                                No documents uploaded
+                              </p>
+                            )}
                           </div>
                         ))}
                       </div>

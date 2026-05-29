@@ -21,11 +21,7 @@ function getLocalDir() {
     : path.join(process.cwd(), ".local");
 }
 
-function persistDatabase(db) {
-  const dbPath = path.join(getLocalDir(), "db.sqlite");
-  fs.mkdirSync(path.dirname(dbPath), { recursive: true });
-  fs.writeFileSync(dbPath, Buffer.from(db.export()));
-}
+// Database persistence is handled automatically by better-sqlite3
 
 function emptyDirFiles(dir) {
   if (!fs.existsSync(dir)) return;
@@ -93,7 +89,7 @@ async function main() {
     `INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '${SCHEMA_VERSION}')`
   );
 
-  persistDatabase(db);
+  // persistence is automatic with better-sqlite3
 
   const uploadsDir = path.join(getLocalDir(), "uploads");
   emptyDirFiles(uploadsDir);

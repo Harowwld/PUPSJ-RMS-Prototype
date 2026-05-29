@@ -290,6 +290,7 @@ export default function RecordsArchiveTab({
                   onDrawerClick={(drawerId) => {
                     // Optional: Highlight drawer students in the future
                   }}
+                  onPreviewDocument={onPreviewDocument}
                 />
               </div>
             ) : (
@@ -309,6 +310,7 @@ export default function RecordsArchiveTab({
                       setCurrentLocatorLevel("cabinets")
                     }
                   }}
+                  onPreviewDocument={onPreviewDocument}
                 />
               </div>
             )}

@@ -101,11 +101,6 @@ async function main() {
   }
 
   console.log(`Successfully generated and stored ${count} alumni document requests!`);
-  console.log("Forcing synchronous database flush to disk...");
-  const bytes = db.export();
-  const dbPath = path.join(process.env.LOCAL_DATA_DIR || path.join(process.cwd(), ".local"), "db.sqlite");
-  fs.writeFileSync(dbPath, Buffer.from(bytes));
-  console.log("Database successfully flushed to:", dbPath);
   process.exit(0);
 }
 

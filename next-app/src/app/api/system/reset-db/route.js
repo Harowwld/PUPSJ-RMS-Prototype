@@ -147,11 +147,6 @@ export async function GET(req) {
       console.error("Failed to seed default security questions:", e?.message || e);
     }
 
-    // Export and persist the empty database
-    const bytes = db.export();
-    const dbPath = path.join(process.cwd(), ".local", "db.sqlite");
-    fs.writeFileSync(dbPath, Buffer.from(bytes));
-
     // Clear physical files again just in case
     const uploadsDir = path.join(process.cwd(), ".local", "uploads");
     if (fs.existsSync(uploadsDir)) {

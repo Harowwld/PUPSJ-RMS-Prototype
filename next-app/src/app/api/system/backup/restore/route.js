@@ -107,15 +107,22 @@ export async function POST(req) {
     const checksum = hashSum.digest("hex");
     const sizeBytes = encryptedSnapshot.length;
 
-    // --- PHASE 2: OVERWRITE SYSTEM ---
-    console.log("[RESTORE] Overwriting system with uploaded backup...");
+    // Force the application to checkpoint and truncate the WAL file before we overwrite it.
+    // This avoids deleting the WAL file on disk (which causes concurrent connections to throw disk I/O errors).
+    try {
+      const dbInstance = await getDb();
+      dbInstance.pragma("wal_checkpoint(TRUNCATE)");
+      console.log("[RESTORE] WAL file checkpointed and truncated successfully.");
+    } catch (checkpointErr) {
+      console.error("[RESTORE] WAL checkpoint failed:", checkpointErr.message);
+    }
+
+    // Force the application to close our connection so we don't lock it during overwrite
+    reloadDb();
 
     // Replace DB
     fs.copyFileSync(stagedDbPath, currentDbPath);
     console.log("[RESTORE] db.sqlite overwritten.");
-
-    // Force the application to reload the connection to the NEW database
-    reloadDb();
 
     // Replace Uploads folder
     if (fs.existsSync(stagedUploadsDir)) {

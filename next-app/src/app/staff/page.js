@@ -435,6 +435,12 @@ function StaffPageContent() {
     return [];
   }, [currentLevel, students, archivedStudents, selectedYear, academicYearOptions]);
 
+  const staffDocs = useMemo(
+    () =>
+      allDocs.filter((d) => String(d?.approval_status || "") !== "Declined"),
+    [allDocs],
+  );
+
   const locatorModel = useMemo(() => {
     if (!storageLayout?.rooms?.length) return { kind: "none" };
 
@@ -519,6 +525,14 @@ function StaffPageContent() {
             students: drawerStudents.map((s) => ({
               studentNo: s.studentNo,
               name: s.name,
+              documents: staffDocs
+                .filter((doc) => doc.student_no === s.studentNo)
+                .map((doc) => ({
+                  id: doc.id,
+                  docType: doc.doc_type,
+                  filename: doc.original_filename,
+                  approvalStatus: doc.approval_status,
+                })),
             })),
             isTarget:
               activeStudent?.room === selectedRoom &&
@@ -536,6 +550,7 @@ function StaffPageContent() {
     students,
     activeStudent,
     storageLayout,
+    staffDocs,
   ]);
 
   const availableSectionsForNewRecord = useMemo(() => {
@@ -548,12 +563,6 @@ function StaffPageContent() {
     if (linked.length > 0) return linked;
     return sections;
   }, [sections, newRec.course]);
-
-  const staffDocs = useMemo(
-    () =>
-      allDocs.filter((d) => String(d?.approval_status || "") !== "Declined"),
-    [allDocs],
-  );
 
   const activeStudentDocs = useMemo(
     () =>
@@ -688,6 +697,17 @@ function StaffPageContent() {
     setOcrSuggestion(null);
 
     if (uploadMode === "pdf" && !skipOcr) {
+      // Run OCR only if the file is the very first page of the document
+      const isLeadPage =
+        uploadedFiles.length === 0
+          ? activeFile === incomingFiles[0]
+          : activeFile === uploadedFiles[0];
+
+      if (!isLeadPage) {
+        console.log("[OCR] Skipping OCR: file is not the lead page.");
+        return;
+      }
+
       setOcrLoading(true);
       try {
         const suggestion = await scanFileForSuggestion({

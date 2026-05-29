@@ -1,4 +1,4 @@
-import { dbAll, dbGet, dbRun } from "./sqlite";
+import { dbAll, dbGet, dbRun, getDb } from "./sqlite.js";
 import path from "node:path";
 import fs from "node:fs";
 import crypto from "node:crypto";
@@ -198,20 +198,33 @@ export async function executeBackup() {
   console.log(`[BACKUP] Creating: ${backupPath}`);
 
   const localDir = getLocalDir();
-  const dbPath = path.join(localDir, "db.sqlite");
   const uploadsDir = path.join(localDir, "uploads");
+
+  // Safely backup active SQLite database to a temporary file
+  const db = await getDb();
+  const tempDbPath = path.join(localDir, `db-backup-temp-${Date.now()}.sqlite`);
+  await db.backup(tempDbPath);
 
   // Create the ZIP archive
   const zip = new AdmZip();
 
   // Add Database
-  if (fs.existsSync(dbPath)) {
-    zip.addLocalFile(dbPath, "", "db.sqlite");
+  if (fs.existsSync(tempDbPath)) {
+    zip.addLocalFile(tempDbPath, "", "db.sqlite");
   }
 
   // Add Uploads folder
   if (fs.existsSync(uploadsDir)) {
     zip.addLocalFolder(uploadsDir, "uploads");
+  }
+
+  // Clean up temporary database copy
+  try {
+    if (fs.existsSync(tempDbPath)) {
+      fs.unlinkSync(tempDbPath);
+    }
+  } catch (e) {
+    console.error("[BACKUP] Failed to cleanup temp db backup file:", e);
   }
 
   // Build ZIP in memory first, then encrypt with AES-256-GCM.
