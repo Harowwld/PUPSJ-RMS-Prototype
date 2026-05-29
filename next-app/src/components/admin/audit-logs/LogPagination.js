@@ -24,7 +24,7 @@ export default function LogPagination({
   const totalPages = Math.max(1, Math.ceil(logTotal / logsPerPage))
 
   return (
-    <div className="-mx-6 mt-4 -mb-6 flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-brand dark:border-white/10 dark:bg-card">
+    <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-brand dark:border-white/10 dark:bg-card">
       <div className="flex items-center gap-8">
         <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
           <span>

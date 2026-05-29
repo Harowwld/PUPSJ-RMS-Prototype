@@ -104,15 +104,11 @@ export default function ScanUploadTab({
   const [pendingDroppedFile, setPendingDroppedFile] = useState(null)
   const [confirmDropOpen, setConfirmDropOpen] = useState(false)
   const [windowDragActive, setWindowDragActive] = useState(false)
-  const [csvFullscreen, setCsvFullscreen] = useState(false)
+  const [csvPage, setCsvPage] = useState(1)
 
   useEffect(() => {
-    const handleEsc = (e) => {
-      if (e.key === "Escape") setCsvFullscreen(false)
-    }
-    window.addEventListener("keydown", handleEsc)
-    return () => window.removeEventListener("keydown", handleEsc)
-  }, [])
+    setCsvPage(1)
+  }, [csvFile])
 
   const fe = uploadFieldErrors || {}
   const ring = (key) =>
@@ -213,6 +209,12 @@ export default function ScanUploadTab({
       if (manualPreviewUrl) URL.revokeObjectURL(manualPreviewUrl)
     }
   }, [manualPreviewUrl])
+
+  const paginatedCsvRows = useMemo(() => {
+    const itemsPerPage = 10
+    const startIndex = (csvPage - 1) * itemsPerPage
+    return csvRows.slice(startIndex, startIndex + itemsPerPage)
+  }, [csvRows, csvPage])
 
   const hf = useHotFolderInbox({
     enabled: uploadMode === "pdf",
@@ -551,23 +553,16 @@ export default function ScanUploadTab({
                 </div>
               </div>
 
-              <div className="flex flex-col gap-4 lg:flex-row h-auto">
+              <div className="flex flex-col gap-4 h-auto lg:flex-row lg:items-start">
                 <section
-                  className={`relative flex h-auto min-h-[400px] flex-col items-center justify-center rounded-brand border border-gray-300 bg-white p-8 shadow-sm transition-all duration-300 ${ uploadMode === "csv" ? "w-full lg:w-[70%]" : "lg:w-[48%]" } dark:border-white/10 dark:bg-card dark:shadow-none`}
+                  className={cn(
+                    "relative flex h-auto min-h-[400px] flex-col transition-all duration-300",
+                    uploadMode === "csv" ? "w-full lg:w-[68%]" : "w-full lg:w-[48%]"
+                  )}
                 >
                   {uploadMode === "csv" ? (
-                    <div
-                      className={cn(
-                        "flex h-full w-full flex-col overflow-hidden bg-white transition-all duration-300 dark:bg-card",
-                        csvFullscreen
-                          ? "fixed inset-0 z-[100] rounded-none"
-                          : "rounded-brand border border-gray-200 dark:border-white/10"
-                      )}
-                    >
-                      <div className={cn(
-                        "flex flex-col items-center justify-between gap-4 border-b border-gray-100 bg-gray-50/50 sm:flex-row dark:border-white/10 dark:bg-white/5",
-                        csvFullscreen ? "p-8 px-12" : "p-6 px-8"
-                      )}>
+                    <div className="flex h-full w-full flex-col overflow-hidden bg-white transition-all duration-300 rounded-brand border border-gray-200 dark:bg-card dark:border-white/10">
+                      <div className="flex flex-col items-center justify-between gap-4 border-b border-gray-100 bg-gray-50/50 p-6 px-8 sm:flex-row dark:border-white/10 dark:bg-white/5">
                         <div className="flex items-center gap-4">
                           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
                             <i className="ph-duotone ph-table text-2xl"></i>
@@ -596,27 +591,12 @@ export default function ScanUploadTab({
                           </div>
                         </div>
                         <div className="flex shrink-0 items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setCsvFullscreen(!csvFullscreen)}
-                            className="h-9 shrink-0 rounded-brand border-gray-300 px-3 text-[10px] font-black tracking-widest text-gray-700 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
-                            title={csvFullscreen ? "Exit Full Screen" : "Full Screen"}
-                          >
-                            <i
-                              className={cn(
-                                "ph-bold text-xs mr-1.5",
-                                csvFullscreen ? "ph-corners-in" : "ph-corners-out"
-                              )}
-                            />
-                            {csvFullscreen ? "EXIT" : "FULL SCREEN"}
-                          </Button>
                           {csvFile && (
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() => handleCsvFileSelect(null)}
-                              className="h-9 shrink-0 rounded-brand border-gray-300 px-4 text-[10px] font-black tracking-widest text-gray-700 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+                              className="h-9 shrink-0 rounded-brand border-gray-300 px-4 text-[10px] font-black tracking-widest text-gray-700 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:bg-zinc-800/30 dark:border-white/10"
                             >
                               <i className="ph-bold ph-x-circle mr-1.5 text-xs" />
                               CLEAR FILE
@@ -626,7 +606,7 @@ export default function ScanUploadTab({
                       </div>
 
                       <div
-                        className={`min-h-0 flex-1 overflow-auto transition-colors duration-200 ${csvDropActive ? "bg-red-50" : ""} dark:bg-red-950/40`}
+                        className={`min-h-0 flex-1 overflow-auto transition-colors duration-200 ${csvDropActive ? "bg-red-50" : ""} dark:bg-[#2c2c2c]`}
                         onDragOver={(e) => {
                           e.preventDefault()
                           setCsvDropActive(true)
@@ -648,10 +628,10 @@ export default function ScanUploadTab({
                         }}
                       >
                         {csvRows.length ? (
-                          <table className="min-w-full text-[10px] table-fixed">
+                          <table className="min-w-full text-[12px] table-auto">
                             <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
-                              <tr className="text-left text-[9px] font-black tracking-wider text-gray-500 uppercase dark:text-zinc-400 dark:border-white/10">
-                                <th className="w-8 p-1.5 text-center">
+                              <tr className="text-left text-[10px] font-black tracking-wider text-gray-500 uppercase dark:text-zinc-400 dark:border-white/10">
+                                <th className="w-12 p-3.5 py-3 text-center">
                                   <input
                                     type="checkbox"
                                     className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10"
@@ -665,20 +645,20 @@ export default function ScanUploadTab({
                                     }
                                   />
                                 </th>
-                                <th className="w-[30px] px-1.5 py-2">#</th>
-                                <th className="w-[110px] px-1.5 py-2">Student No</th>
-                                <th className="w-[100px] px-1.5 py-2 truncate">Name</th>
-                                <th className="w-[60px] px-1.5 py-2">Course</th>
-                                <th className="w-[35px] px-1.5 py-2">Year</th>
-                                <th className="w-[45px] px-1.5 py-2">Section</th>
-                                <th className="w-[70px] px-1.5 py-2">Room</th>
-                                <th className="w-[70px] px-1.5 py-2">Cab</th>
-                                <th className="w-[70px] px-1.5 py-2">Drawer</th>
-                                <th className="w-[90px] px-1.5 py-2">Status</th>
+                                <th className="px-3.5 py-3">#</th>
+                                <th className="px-3.5 py-3">Student No</th>
+                                <th className="px-3.5 py-3">Name</th>
+                                <th className="px-3.5 py-3">Course</th>
+                                <th className="px-3.5 py-3">Year</th>
+                                <th className="px-3.5 py-3">Section</th>
+                                <th className="px-3.5 py-3">Room</th>
+                                <th className="px-3.5 py-3">Cab</th>
+                                <th className="px-3.5 py-3">Drawer</th>
+                                <th className="px-3.5 py-3 text-right">Status</th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200 dark:divide-white/10">
-                              {csvRows.slice(0, 100).map((r) => {
+                              {paginatedCsvRows.map((r) => {
                                 const isValid = isLocationValid(r.student.room, r.student.cabinet, r.student.drawer)
 
                                 return (
@@ -686,7 +666,7 @@ export default function ScanUploadTab({
                                     key={r.index}
                                     className={`transition-colors hover:bg-gray-50 ${csvSelected?.[r.index] ? (isValid ? "bg-red-50" : "bg-orange-50") : ""} dark:hover:bg-white/10 dark:bg-card`}
                                   >
-                                    <td className="p-1.5 text-center">
+                                    <td className="p-3.5 py-3 text-center">
                                       <input
                                         type="checkbox"
                                         className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10"
@@ -694,30 +674,30 @@ export default function ScanUploadTab({
                                         onChange={() => toggleCsvRowSelected(r.index)}
                                       />
                                     </td>
-                                    <td className="px-1.5 py-2 font-mono text-[9px] text-gray-400 dark:text-zinc-500">
+                                    <td className="px-3.5 py-3 font-mono text-[10px] text-gray-400 dark:text-zinc-500">
                                       {r.index}
                                     </td>
-                                    <td className="px-1.5 py-2 font-mono font-bold text-gray-900 dark:text-zinc-50 truncate">
+                                    <td className="px-3.5 py-3 font-mono font-bold text-gray-900 dark:text-zinc-50">
                                       {r.student.studentNo}
                                     </td>
-                                    <td className="px-1.5 py-2 font-bold text-gray-800 dark:text-zinc-100 truncate">
+                                    <td className="px-3.5 py-3 font-bold text-gray-800 dark:text-zinc-100">
                                       {r.student.name}
                                     </td>
-                                    <td className="px-1.5 py-2">
+                                    <td className="px-3.5 py-3">
                                       <Badge
                                         variant="outline"
-                                        className="border-0 bg-blue-50 text-[8px] font-black tracking-tighter text-blue-700 uppercase dark:bg-blue-950/30 dark:text-blue-300 px-1 py-0"
+                                        className="border-0 bg-blue-50 text-[9px] font-black tracking-tighter text-blue-700 uppercase dark:bg-blue-950/30 dark:text-blue-300 px-1.5 py-0.5"
                                       >
                                         {r.student.courseCode}
                                       </Badge>
                                     </td>
-                                    <td className="px-1.5 py-2 font-bold text-gray-600 dark:text-zinc-300">
+                                    <td className="px-3.5 py-3 font-bold text-gray-600 dark:text-zinc-300">
                                       {r.student.yearLevel}
                                     </td>
-                                    <td className="px-1.5 py-2 font-bold text-gray-600 dark:text-zinc-300">
+                                    <td className="px-3.5 py-3 font-bold text-gray-600 dark:text-zinc-300">
                                       {r.student.section}
                                     </td>
-                                    <td className="px-1.5 py-2">
+                                    <td className="px-3.5 py-3">
                                       <Select
                                         className={cn(
                                           "h-7 w-[64px] rounded border border-gray-300 px-1 py-0 text-[10px] font-bold dark:border-white/10",
@@ -739,7 +719,7 @@ export default function ScanUploadTab({
                                         ))}
                                       </Select>
                                     </td>
-                                    <td className="px-1.5 py-2">
+                                    <td className="px-3.5 py-3">
                                       <Select
                                         className={cn(
                                           "h-7 w-[64px] rounded border border-gray-300 px-1 py-0 text-[10px] font-bold dark:border-white/10",
@@ -764,7 +744,7 @@ export default function ScanUploadTab({
                                         ))}
                                       </Select>
                                     </td>
-                                    <td className="px-1.5 py-2">
+                                    <td className="px-3.5 py-3">
                                       <Select
                                         className={cn(
                                           "h-7 w-[64px] rounded border border-gray-300 px-1 py-0 text-[10px] font-bold dark:border-white/10",
@@ -790,23 +770,23 @@ export default function ScanUploadTab({
                                         ))}
                                       </Select>
                                     </td>
-                                    <td className="px-1.5 py-2">
+                                    <td className="px-3.5 py-3 text-right">
                                       {r.error ? (
-                                        <div className="flex items-center gap-0.5 text-red-600">
+                                        <div className="flex items-center justify-end gap-0.5 text-red-600">
                                           <i className="ph-bold ph-warning-circle text-[11px]" />
                                           <span className="text-[8px] leading-none font-black tracking-tighter uppercase">
                                             Error
                                           </span>
                                         </div>
                                       ) : !isValid ? (
-                                        <div className="flex items-center gap-0.5 text-orange-600" title="This location does not exist in the physical system.">
+                                        <div className="flex items-center justify-end gap-0.5 text-orange-600" title="This location does not exist in the physical system.">
                                           <i className="ph-bold ph-warning text-[11px]" />
                                           <span className="text-[8px] leading-none font-black tracking-tighter uppercase truncate">
                                             Invalid
                                           </span>
                                         </div>
                                       ) : (
-                                        <div className="flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400">
+                                        <div className="flex items-center justify-end gap-0.5 text-emerald-600 dark:text-emerald-400">
                                           <i className="ph-bold ph-check-circle text-[11px]" />
                                           <span className="text-[8px] leading-none font-black tracking-tighter uppercase">
                                             Valid
@@ -821,7 +801,7 @@ export default function ScanUploadTab({
                           </table>
                         ) : (
                           <div
-                            className={`group flex h-full cursor-pointer items-center justify-center rounded-brand border-2 border-dashed p-12 transition-all ${ csvDropActive ? "border-gray-300 bg-red-50 shadow-inner" : "bg-gray-50 hover:border-gray-300 hover:bg-red-50" } dark:border-white/10 dark:bg-red-950/30 dark:shadow-none dark:hover:border-zinc-700`}
+                            className={`group flex h-full cursor-pointer items-center justify-center rounded-brand border-2 border-dashed p-12 transition-all ${ csvDropActive ? "border-gray-300 bg-red-50 shadow-inner" : "bg-gray-50 hover:border-gray-300 hover:bg-red-50" } dark:border-white/10 dark:bg-zinc-900/30 dark:shadow-none dark:hover:border-zinc-700`}
                             onClick={() => csvInputRef.current?.click()}
                           >
                             <Empty className="pointer-events-none flex flex-col items-center justify-center border-0 bg-transparent text-center">
@@ -842,11 +822,36 @@ export default function ScanUploadTab({
                             </Empty>
                           </div>
                         )}
-                        {csvRows.length > 100 ? (
-                          <div className="border-t border-gray-200 p-3 text-xs font-medium text-gray-600 dark:border-white/10 dark:text-zinc-300">
-                            Showing first 100 rows.
+                        {csvRows.length > 0 && (
+                          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-gray-200 p-4 bg-gray-50/50 dark:border-white/10 dark:bg-white/5 select-none shrink-0">
+                            <div className="text-xs font-medium text-gray-500">
+                              Showing <strong>{(csvPage - 1) * 10 + 1}</strong> to <strong>{Math.min(csvPage * 10, csvRows.length)}</strong> of <strong>{csvRows.length.toLocaleString()}</strong> entries
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={csvPage <= 1}
+                                onClick={() => setCsvPage((p) => p - 1)}
+                                className="h-8 rounded-brand text-xs border border-gray-300 bg-white font-bold hover:bg-gray-100 dark:bg-card dark:hover:bg-zinc-800 dark:border-white/10"
+                              >
+                                <i className="ph-bold ph-caret-left mr-1" /> Previous
+                              </Button>
+                              <div className="px-3 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-md h-8 flex items-center dark:bg-card dark:text-zinc-200 dark:border-white/10">
+                                Page {csvPage} of {Math.ceil(csvRows.length / 10) || 1}
+                              </div>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={csvPage >= (Math.ceil(csvRows.length / 10) || 1)}
+                                onClick={() => setCsvPage((p) => p + 1)}
+                                className="h-8 rounded-brand text-xs border border-gray-300 bg-white font-bold hover:bg-gray-100 dark:bg-card dark:hover:bg-zinc-800 dark:border-white/10"
+                              >
+                                Next <i className="ph-bold ph-caret-right ml-1" />
+                              </Button>
+                            </div>
                           </div>
-                        ) : null}
+                        )}
                       </div>
                     </div>
                   ) : (
@@ -1208,7 +1213,7 @@ export default function ScanUploadTab({
                 </section>
 
                 <section
-                  className={`font-inter flex h-auto flex-col rounded-brand border border-gray-300 bg-white shadow-sm transition-all duration-300 ${ uploadMode === "csv" ? "w-full lg:w-[70%]" : "lg:w-[52%]" } dark:border-white/10 dark:bg-card dark:shadow-none`}
+                  className={`font-inter flex h-auto flex-col rounded-brand border border-gray-300 bg-white shadow-sm transition-all duration-300 ${ uploadMode === "csv" ? "w-full lg:w-[32%]" : "lg:w-[52%]" } dark:border-white/10 dark:bg-card dark:shadow-none`}
                 >
                   <CardHeader className="flex flex-col items-center justify-between gap-4 border-b border-gray-100 bg-gray-50/50 p-6 px-8 sm:flex-row dark:border-white/10 dark:bg-white/5">
                     <div className="flex items-center gap-4">

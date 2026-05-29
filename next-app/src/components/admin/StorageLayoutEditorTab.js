@@ -689,27 +689,24 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   }
 
   function addRoom() {
-    let createdRoomId = null
+    if (!layout) return
+    const max = Math.max(0, ...(layout.rooms || []).map((r) => Number(r.id) || 0))
+    const nextId = max + 1
+    const next = {
+      id: nextId,
+      name: `Room ${nextId}`,
+      cabinets: [],
+      door: getDefaultDoor(),
+    }
     setLayout((prev) => {
       if (!prev) return prev
-      const max = Math.max(0, ...(prev.rooms || []).map((r) => Number(r.id) || 0))
-      const nextId = max + 1
-      createdRoomId = nextId
-      const next = {
-        id: nextId,
-        name: `Room ${nextId}`,
-        cabinets: [],
-        door: getDefaultDoor(),
-      }
       return {
         ...prev,
         rooms: [...prev.rooms, next].sort((a, b) => a.id - b.id),
       }
     })
     setSelectedCabinetIds(new Set())
-    if (createdRoomId != null) {
-      setActiveRoomId(createdRoomId)
-    }
+    setActiveRoomId(nextId)
   }
 
   function removeActiveRoom() {
@@ -875,8 +872,8 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
             <div className="flex items-center gap-2">
               <div className="relative group">
                 <i className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 transition-all duration-300", activeRoomId ? "ph-fill ph-door-open text-pup-maroon dark:text-primary" : "ph-bold ph-door-open text-gray-400 dark:text-zinc-500", "group-focus-within:text-pup-maroon dark:text-primary")} />
-                <Select
-                  className="h-10 min-w-[200px] cursor-pointer rounded-xl border border-gray-200 bg-white pl-10 pr-3 text-sm font-bold text-gray-800 shadow-xs transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-100 dark:focus:border-zinc-700"
+                 <Select
+                  className="h-10 min-w-[200px] cursor-pointer rounded-brand border border-gray-200 bg-white pl-10 pr-3 text-sm font-bold text-gray-800 shadow-xs transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-100 dark:focus:border-zinc-700"
                   value={String(activeRoomId ?? "")}
                   disabled={!layout?.rooms?.length}
                   onChange={(e) => setActiveRoomId(Number(e.target.value))}
@@ -886,10 +883,10 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
                   ))}
                 </Select>
               </div>
-              <div className="flex h-10 items-center gap-1 rounded-xl border border-gray-200 bg-white p-1 shadow-xs dark:border-white/10 dark:bg-card">
-                <Button type="button" variant="ghost" size="icon" onClick={addRoom} className="h-8 w-8 rounded-lg text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/30"><i className="ph-bold ph-plus-circle text-lg" /></Button>
+              <div className="flex h-10 items-center gap-1 rounded-brand border border-gray-200 bg-white p-1 shadow-xs dark:border-white/10 dark:bg-card">
+                <Button type="button" variant="ghost" size="icon" onClick={addRoom} className="h-8 w-8 rounded-brand text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/30"><i className="ph-bold ph-plus-circle text-lg" /></Button>
                 <Separator orientation="vertical" className="h-4 mx-0.5 bg-gray-100 dark:bg-muted" />
-                <Button type="button" variant="ghost" size="icon" onClick={() => setDeleteRoomConfirmOpen(true)} className="h-8 w-8 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 dark:bg-red-950/30 dark:text-zinc-500" disabled={!activeRoom || activeRoomStudentCount > 0}><i className="ph-bold ph-trash text-lg" /></Button>
+                <Button type="button" variant="ghost" size="icon" onClick={() => setDeleteRoomConfirmOpen(true)} className="h-8 w-8 rounded-brand text-gray-400 hover:bg-red-50 hover:text-red-600 dark:bg-red-950/30 dark:text-zinc-500" disabled={!activeRoom || activeRoomStudentCount > 0}><i className="ph-bold ph-trash text-lg" /></Button>
               </div>
             </div>
           </div>
@@ -897,7 +894,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
 
         <div className="flex flex-col gap-1">
           <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">Add Tools</label>
-          <Button type="button" variant="outline" onClick={addCabinet} className="h-10 rounded-xl border border-gray-200 bg-white px-5 font-black text-[10px] tracking-widest text-gray-600 shadow-xs hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300" disabled={!activeRoom}><i className="ph-bold ph-plus-square mr-2 text-base" />NEW CABINET</Button>
+          <Button type="button" variant="outline" onClick={addCabinet} className="h-10 rounded-brand border border-gray-200 bg-white px-5 font-black text-[10px] tracking-widest text-gray-600 shadow-xs hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300" disabled={!activeRoom}><i className="ph-bold ph-plus-square mr-2 text-base" />NEW CABINET</Button>
         </div>
       </div>
 
@@ -907,7 +904,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
           <div className="flex flex-col gap-1.5">
             <Select
               menuClassName="min-w-max"
-              className="h-9 w-full cursor-pointer rounded-xl border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 shadow-xs transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-100 dark:focus:border-zinc-700"
+              className="h-9 w-full cursor-pointer rounded-brand border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 shadow-xs transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-100 dark:focus:border-zinc-700"
               value={selectedTemplateId}
               onChange={(e) => setSelectedTemplateId(e.target.value)}
               disabled={!activeRoom}
@@ -917,7 +914,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
             <Button 
               type="button" 
               onClick={() => setTemplateApplyConfirmOpen(true)} 
-              className="h-8 w-full rounded-xl btn-brand-red text-[9px] font-black tracking-widest uppercase text-white shadow-sm active:scale-95 transition-all dark:shadow-none" 
+              className="h-8 w-full rounded-brand btn-brand-red text-[9px] font-black tracking-widest uppercase text-white shadow-sm active:scale-95 transition-all dark:shadow-none" 
               disabled={!activeRoom}
             >
               USE TEMPLATE
@@ -927,7 +924,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
 
         <div className="flex flex-col gap-1">
           <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">View Settings</label>
-          <div className="flex h-10 items-center gap-4 rounded-xl border border-gray-200 bg-white px-4 shadow-xs dark:border-white/10 dark:bg-card">
+          <div className="flex h-10 items-center gap-4 rounded-brand border border-gray-200 bg-white px-4 shadow-xs dark:border-white/10 dark:bg-card">
             <div className="flex items-center gap-2">
               <span className="text-[9px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">Grid</span>
               <div role="button" tabIndex={0} onClick={() => setShowGrid(!showGrid)} className={cn("relative inline-flex h-4 w-8 items-center rounded-full transition-all duration-300", showGrid ? "bg-pup-maroon dark:bg-red-500/20 dark:ring-1 dark:ring-red-500/30" : "bg-gray-200 dark:bg-zinc-800")}>

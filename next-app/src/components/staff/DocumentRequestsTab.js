@@ -517,7 +517,7 @@ export default function DocumentRequestsTab({
                 <div className="p-6 flex-1 flex flex-col min-h-0">
                   <div 
                     key={`${page}-${statusFilter}-${debouncedQ}`}
-                    className="w-full overflow-auto border border-gray-200 rounded-xl animate-fade-up dark:border-white/10"
+                    className="w-full overflow-auto border border-gray-200 rounded-brand animate-fade-up dark:border-white/10"
                   >
                     <table className="min-w-full text-sm table-fixed">
                       <thead className="border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">

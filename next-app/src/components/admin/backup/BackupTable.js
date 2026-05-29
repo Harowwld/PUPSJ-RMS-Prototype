@@ -60,7 +60,7 @@ export default function BackupTable({
     <>
       <div
         className={cn(
-          "flex-1 overflow-hidden overflow-x-auto overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-sm select-none dark:border-white/10 dark:bg-card min-h-[400px]"
+          "flex-1 overflow-hidden overflow-x-auto overflow-y-auto select-none min-h-[400px]"
         )}
       >
         <table className="min-w-full text-sm">
@@ -192,7 +192,7 @@ export default function BackupTable({
                     </td>
                     <td className="p-4">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-xs font-black text-gray-500 shadow-xs dark:bg-white/5 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm transition-all">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-brand bg-gray-100 text-xs font-black text-gray-500 shadow-xs dark:bg-white/5 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm transition-all">
                                 <i className="ph-duotone ph-file-zip text-lg"></i>
                             </div>
                             <span className="text-xs font-bold text-gray-900 dark:text-zinc-50 max-w-[280px] truncate" title={b.filename}>
@@ -295,7 +295,7 @@ export default function BackupTable({
                           variant="outline"
                           size="icon"
                           onClick={() => onDownloadBackup(b.id, b.filename)}
-                          className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800"
+                          className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800"
                         >
                           <i className="ph-bold ph-download-simple text-lg"></i>
                         </Button>
@@ -303,7 +303,7 @@ export default function BackupTable({
                           variant="outline"
                           size="icon"
                           onClick={() => onDeleteBackup(b.id)}
-                          className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10"
+                          className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10"
                         >
                           <i className="ph-bold ph-trash text-lg"></i>
                         </Button>

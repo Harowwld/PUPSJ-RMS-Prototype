@@ -91,7 +91,7 @@ const Select = React.forwardRef(({ className, children, value, onChange, placeho
         }}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex h-11 w-full items-center justify-between rounded-xl border border-gray-300 bg-white px-3 text-xs font-bold text-gray-700 shadow-xs outline-none transition-all hover:bg-gray-50 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800",
+          "flex h-11 w-full items-center justify-between rounded-brand border border-gray-300 bg-white px-3 text-xs font-bold text-gray-700 shadow-xs outline-none transition-all hover:bg-gray-50 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800",
           className
         )}
         {...props}
@@ -118,7 +118,7 @@ const Select = React.forwardRef(({ className, children, value, onChange, placeho
             zIndex: 9999,
           }}
           className={cn(
-            "transition-[opacity,transform] animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden rounded-xl border border-gray-200 bg-white p-1 shadow-2xl dark:border-white/10 dark:bg-zinc-900",
+            "transition-[opacity,transform] animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden rounded-brand border border-gray-200 bg-white p-1 shadow-2xl dark:border-white/10 dark:bg-zinc-900",
             menuClassName
           )}
         >

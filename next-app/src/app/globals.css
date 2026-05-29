@@ -457,3 +457,14 @@
 .dark .btn-brand-red:hover {
   background-image: linear-gradient(to bottom, #b04040, #702020);
 }
+
+/* Global Table Header Dark Mode Styling */
+.dark thead,
+.dark thead tr,
+.dark thead th {
+  background-color: #1f1f1f !important;
+}
+
+.dark thead th {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}

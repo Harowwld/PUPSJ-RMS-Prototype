@@ -165,7 +165,21 @@ export default function SLAAnalyticsTab({
   const hasActiveFilters = startDate !== "" || endDate !== ""
 
   return (
-    <div className="animate-fade-up font-inter flex w-full flex-col">
+    <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
+      {/* 1. Color KPI Cards / Skeletons at the Top */}
+      {loading && !data ? (
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 animate-pulse">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-28 rounded-brand dark:bg-muted" />
+          ))}
+        </div>
+      ) : !error && data ? (
+        <div className={cn("transition-all duration-500", loading && "opacity-40 blur-[1px]")}>
+          <SlaKpiCards total={total} slaHours={slaHours} completionRate={completionRate} />
+        </div>
+      ) : null}
+
+      {/* 2. Main Page Card */}
       <Card className="rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-gray-200/50 backdrop-blur-xl dark:border-white/10 dark:bg-card/80 dark:shadow-none w-full">
         <PageHeader
           icon="ph-chart-line-up"
@@ -198,7 +212,7 @@ export default function SLAAnalyticsTab({
 
               <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4 dark:border-white/10">
                   <div className="flex flex-col items-end gap-1">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest dark:text-zinc-500">Dataset Sync</p>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest dark:text-zinc-505">Dataset Sync</p>
                       <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap dark:text-zinc-400">
                           {hasActiveFilters ? "Filtering live analytics..." : "Showing cumulative data"}
                       </p>
@@ -217,7 +231,7 @@ export default function SLAAnalyticsTab({
         {hasActiveFilters && (
           <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">Active Filters:</span>
+              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-505">Active Filters:</span>
               {(startDate || endDate) && (
                 <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 uppercase dark:bg-emerald-950/30 dark:text-emerald-400">
                   Range: {startDate || "..."} to {endDate || "..."}
@@ -256,11 +270,6 @@ export default function SLAAnalyticsTab({
         <CardContent className="bg-white p-6 dark:bg-card">
           {loading && !data ? (
             <div className="space-y-6">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                {[1, 2, 3].map((i) => (
-                  <Skeleton key={i} className="h-28 rounded-brand dark:bg-muted" />
-                ))}
-              </div>
               <Skeleton className="h-72 w-full rounded-brand dark:bg-muted" />
             </div>
           ) : error ? (
@@ -279,7 +288,6 @@ export default function SLAAnalyticsTab({
             </Empty>
           ) : data ? (
             <div className={cn("space-y-6 transition-all duration-500", loading ? "opacity-40 blur-[1px]" : "opacity-100")}>
-              <SlaKpiCards total={total} slaHours={slaHours} completionRate={completionRate} />
               <SlaCharts data={data} pieData={pieData} onSwitchView={onSwitchView} />
             </div>
           ) : null}

@@ -150,7 +150,7 @@ const LogRow = React.memo(({
         <td className="p-4">
           <div className="flex items-center gap-3">
             <div className={cn(
-              "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-black text-xs transition-all shadow-xs",
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-brand font-black text-xs transition-all shadow-xs",
               isSelected 
                 ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-primary shadow-sm" 
                 : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm"
@@ -288,7 +288,7 @@ export default function LogTable({
   if (isLoading && displayLogs.length === 0) {
     return (
       <div className="animate-pulse space-y-4">
-        <div className="overflow-hidden overflow-x-auto rounded-xl border border-gray-100 bg-white dark:border-white/10 dark:bg-card">
+        <div className="overflow-hidden overflow-x-auto rounded-brand border border-gray-100 bg-white dark:border-white/10 dark:bg-card">
           <table className="min-w-full">
             <thead className="bg-gray-50 dark:bg-muted">
               <tr>
@@ -357,7 +357,7 @@ export default function LogTable({
       <div
         key={`${logPage}-${logSortBy}-${logSortOrder}-${itemsPerPage}`}
         className={cn(
-          "overflow-hidden rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card shadow-sm dark:shadow-none transition-all duration-500 animate-fade-up",
+          "overflow-hidden rounded-brand border border-gray-200 dark:border-white/10 bg-white dark:bg-card shadow-sm dark:shadow-none transition-all duration-500 animate-fade-up",
           isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
         )}
       >
@@ -488,23 +488,22 @@ export default function LogTable({
             </tbody>
           </table>
         </div>
-      </div>
 
-      {/* Pagination */}
-      <div className="mt-4 px-2">
-        <LogPagination
-          logTotal={logTotal}
-          logPage={logPage}
-          setLogPage={setLogPage}
-          itemsPerPage={itemsPerPage}
-          logsPerPage={logsPerPage}
-          handleItemsPerPageChange={handleItemsPerPageChange}
-          jumpPage={jumpPage}
-          setJumpPage={setJumpPage}
-          handleJumpPage={handleJumpPage}
-        />
+        {/* Pagination inside the card container */}
+        {logTotal > 0 && (
+          <LogPagination
+            logTotal={logTotal}
+            logPage={logPage}
+            setLogPage={setLogPage}
+            itemsPerPage={itemsPerPage}
+            logsPerPage={logsPerPage}
+            handleItemsPerPageChange={handleItemsPerPageChange}
+            jumpPage={jumpPage}
+            setJumpPage={setJumpPage}
+            handleJumpPage={handleJumpPage}
+          />
+        )}
       </div>
     </div>
   )
 }
-

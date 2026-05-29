@@ -368,209 +368,364 @@ export default function DigitizationComplianceTab({
   const hasActiveFilters = statusFilter !== "Active" || courseFilter !== "" || requireApproved || tableSearch !== "";
 
   return (
-    <div className="flex flex-col w-full gap-4 animate-fade-up font-inter">
-      <Card className="rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-card dark:shadow-none w-full">
-        <PageHeader
-          icon="ph-chart-pie"
-          title="Compliance Analysis"
-          description="Monitor digitization completeness."
-          actions={
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="default"
-                size="sm"
-                onClick={handlePreview}
-                disabled={loading || !data || isGeneratingPdf}
-                className="h-10 px-6 font-black text-[10px] tracking-widest btn-brand-red active:scale-95 disabled:opacity-60 rounded-brand uppercase transition-all dark:shadow-none"
-              >
-                <i className={cn("ph-bold text-base mr-2", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
-                {isGeneratingPdf ? "GENERATING..." : "GENERATE REPORT"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={downloadCsv}
-                disabled={loading || !data || isExportingCsv}
-                className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:text-zinc-300 dark:shadow-none dark:bg-red-950/30 dark:border-white/10"
-              >
-                <i className={cn("ph-bold text-base", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
-                {isExportingCsv ? "PREPARING..." : "EXPORT"}
-              </Button>
-
-              <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4 dark:border-white/10">
-                  <div className="flex flex-col items-end gap-1">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest dark:text-zinc-500">Dataset Sync</p>
-                      <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap dark:text-zinc-400">
-                          {hasActiveFilters ? "Filtering live analytics..." : "Showing cumulative data"}
-                      </p>
-                  </div>
-                  <RefreshButton 
-                    onRefresh={() => load(true)} 
-                    isLoading={manualLoading} 
-                    title="Refresh Compliance Data"
+    <div className="flex flex-col w-full gap-6 animate-fade-up font-inter">
+      {/* 1. Color Stat Cards / Skeletons at the Top */}
+      {loading && !data ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-pulse">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-28 rounded-xl bg-gray-100 dark:bg-muted" />
+          ))}
+        </div>
+      ) : !error && data ? (
+        <div className={cn("transition-all duration-500", loading && "opacity-40 blur-[1px]")}>
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {/* Completeness Card */}
+            <div className="group relative overflow-hidden rounded-xl border border-red-950 bg-linear-to-br from-red-700 to-red-950 p-5 shadow-sm transition-all dark:shadow-none">
+              <i className="ph-duotone ph-chart-pie pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-20" />
+              <div className="relative z-10">
+                <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-red-200 uppercase">
+                  <i className="ph-bold ph-chart-pie" /> Completeness
+                </div>
+                <div className="text-3xl font-black text-white">
+                  {summary?.percentDigitized != null ? `${summary.percentDigitized}%` : "0%"}
+                </div>
+                <div className="mt-1 text-[10px] font-medium text-red-200/80">
+                  Overall record health
+                </div>
+                <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/5">
+                  <div
+                    className="h-full bg-linear-to-r from-emerald-400 to-emerald-500 transition-all duration-1000 ease-out"
+                    style={{ width: `${progressWidth}%` }}
                   />
-              </div>
-            </div>
-          }
-        />
-
-        {/* Active Filter Chips Row */}
-        {hasActiveFilters && (
-          <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
-            <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">
-                Active Filters:
-                </span>
-                {statusFilter !== "Active" && (
-                    <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 uppercase dark:bg-blue-950/30 dark:text-blue-400">
-                    Status: {statusFilter}
-                    <button
-                        onClick={() => setStatusFilter("Active")}
-                        className="ml-1 transition-colors hover:text-blue-800"
-                    >
-                        <i className="ph-bold ph-x text-[8px]"></i>
-                    </button>
-                    </div>
-                )}
-                {courseFilter !== "" && (
-                    <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 uppercase dark:bg-amber-950/30 dark:text-amber-400">
-                    Program: {courseFilter}
-                    <button
-                        onClick={() => setCourseFilter("")}
-                        className="ml-1 transition-colors hover:text-amber-800"
-                    >
-                        <i className="ph-bold ph-x text-[8px]"></i>
-                    </button>
-                    </div>
-                )}
-                {requireApproved && (
-                    <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 uppercase dark:bg-emerald-950/30 dark:text-emerald-400">
-                    Requirement: Approved Only
-                    <button
-                        onClick={() => setRequireApproved(false)}
-                        className="ml-1 transition-colors hover:text-emerald-800"
-                    >
-                        <i className="ph-bold ph-x text-[8px]"></i>
-                    </button>
-                    </div>
-                )}
-                {tableSearch && (
-                    <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary uppercase dark:border-white/10 dark:text-primary">
-                    Search: {tableSearch}
-                    <button
-                        onClick={() => setTableSearch("")}
-                        className="ml-1 transition-colors hover:text-pup-darkMaroon"
-                    >
-                        <i className="ph-bold ph-x text-[8px]"></i>
-                    </button>
-                    </div>
-                )}
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleClearAll}
-                    className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase dark:border-white/10 dark:text-primary dark:bg-red-950/30"
-                >
-                    CLEAR ALL FILTERS
-                </Button>
-            </div>
-          </div>
-        )}
-
-        <div className="p-4 bg-gray-50 flex-none border-b border-gray-200 dark:bg-white/5 dark:border-white/10">
-          <div className="flex flex-col lg:flex-row lg:items-end gap-4 justify-between">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 flex-1">
-              <div>
-                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-widest dark:text-zinc-400">
-                    Student Status
-                </label>
-                <Select
-                  className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-pup-maroon/20 focus:border-gray-300 hover:border-gray-400 dark:bg-card dark:text-zinc-200 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                >
-                  <option value="Active">Active</option>
-                  <option value="All">All</option>
-                  <option value="Inactive">Inactive</option>
-                </Select>
-              </div>
-              <div>
-                <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-widest dark:text-zinc-400">
-                  Course
-                </label>
-                <div className="relative">
-                  <Select
-                    className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-pup-maroon/20 focus:border-gray-300 hover:border-gray-400 disabled:opacity-60 dark:bg-card dark:text-zinc-200 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
-                    value={courseFilter}
-                    onChange={(e) => setCourseFilter(e.target.value)}
-                    disabled={coursesLoading}
-                  >
-                    <option value="">All</option>
-                    {courses.map((c) => (
-                      <option key={c.code || c.id} value={String(c.code || "")}>
-                        {c.code}
-                        {c.name ? ` — ${c.name}` : ""}
-                      </option>
-                    ))}
-                  </Select>
-                  {coursesLoading && (
-                    <div className="absolute right-8 top-1/2 -translate-y-1/2">
-                      <i className="ph-bold ph-spinner animate-spin text-gray-400 dark:text-zinc-500" />
-                    </div>
-                  )}
                 </div>
               </div>
-              <div className="flex items-end">
-                <Toggle
-                  variant="outline"
-                  pressed={requireApproved}
-                  onPressedChange={setRequireApproved}
-                  className={cn(
-                    "h-10 px-4 gap-2 rounded-brand border border-gray-300 dark:border-white/10 font-bold text-[10px] uppercase tracking-wider transition-all select-none w-full sm:w-auto",
-                    "hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card hover:text-gray-700 dark:text-zinc-200 dark:hover:text-zinc-200 hover:border-gray-400",
-                    "data-[state=on]:bg-pup-maroon data-[state=on]:text-white data-[state=on]:border-gray-300 dark:data-[state=on]:bg-red-500/10 dark:data-[state=on]:text-red-400 dark:data-[state=on]:border-red-500/20 dark:data-[state=on]:shadow-none data-[state=on]:shadow-md"
+            </div>
+
+            <div className="group relative overflow-hidden rounded-xl border border-blue-950 bg-linear-to-br from-blue-800 to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+              <i className="ph-duotone ph-users-three pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
+              <div className="relative z-10">
+                <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-blue-200 uppercase">
+                  <i className="ph-bold ph-users-three" /> Students
+                </div>
+                <div className="text-3xl font-black text-white">
+                  {summary?.totalStudents?.toLocaleString?.() ?? summary?.totalStudents}
+                </div>
+                <div className="mt-1 text-[10px] font-medium text-blue-200/80">
+                  Total Enrollment
+                </div>
+              </div>
+            </div>
+
+            <div className="group relative overflow-hidden rounded-xl border border-amber-950 bg-linear-to-br from-amber-700 to-amber-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+              <i className="ph-duotone ph-check-square-offset pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
+              <div className="relative z-10">
+                <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-amber-100 uppercase">
+                  <i className="ph-bold ph-check-square-offset" /> Complete
+                </div>
+                <div className="text-3xl font-black text-white">
+                  {summary?.digitizedStudents?.toLocaleString?.() ?? summary?.digitizedStudents}
+                </div>
+                <div className="mt-1 text-[10px] font-bold text-white flex items-center gap-1.5">
+                  <i className="ph-bold ph-trend-up text-emerald-400" /> 100% Validated
+                </div>
+              </div>
+            </div>
+
+            <div className="group relative overflow-hidden rounded-xl border border-emerald-950 bg-linear-to-br from-emerald-800 to-emerald-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+              <i className="ph-duotone ph-shield-check pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
+              <div className="relative z-10">
+                <div className="mb-1 flex items-center gap-2 text-[10px] font-bold tracking-widest text-emerald-100 uppercase">
+                  <i className="ph-bold ph-shield-check" /> Health
+                  <TooltipProvider>
+                    <Tooltip delayDuration={300}>
+                      <TooltipTrigger asChild>
+                        <i className="ph-bold ph-info text-sm text-emerald-200 transition-opacity hover:opacity-70 cursor-pointer" />
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[240px] border-emerald-800 bg-emerald-950 p-3 text-white">
+                        <p className="font-bold leading-tight text-xs mb-1">Status Thresholds:</p>
+                        <ul className="space-y-1 text-[10px] font-medium opacity-90">
+                          <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-400" /> 95%+ Excellent</li>
+                          <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-blue-400" /> 80%+ Healthy</li>
+                          <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-400" /> Below 80% Action</li>
+                        </ul>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
+                <div className="mt-1">
+                  {summary?.percentDigitized >= 95 ? (
+                    <Badge className="bg-emerald-400 text-emerald-950 border-0 font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5">
+                      Excellent
+                    </Badge>
+                  ) : summary?.percentDigitized >= 80 ? (
+                    <Badge className="bg-blue-400 text-blue-950 border-0 font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5">
+                      Healthy
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-amber-400 text-amber-950 border-0 font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5">
+                      Warning
+                    </Badge>
                   )}
-                >
-                  <i
-                    className={cn(
-                      "ph-bold",
-                      requireApproved ? "ph-check-circle" : "ph-circle"
-                    )}
-                    aria-hidden
-                  />
-                  Approved Docs Only
-                </Toggle>              </div>
+                </div>
+                <div className="mt-2 text-[10px] font-medium text-emerald-100/80">
+                  Overall Rating
+                </div>
+              </div>
             </div>
           </div>
         </div>
+      ) : null}
 
-        <CardContent className="p-6 bg-white dark:bg-card">
-          {loading && !data ? (
-            <div className="space-y-8 animate-pulse">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {[1, 2, 3, 4].map((i) => (
-                  <Skeleton key={i} className="h-28 rounded-xl bg-gray-100 dark:bg-muted" />
-                ))}
-              </div>
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                   <Skeleton className="h-3 w-40 rounded-full bg-gray-100 dark:bg-muted" />
-                   <Skeleton className="h-4 w-12 rounded-full bg-gray-100 dark:bg-muted" />
+      {/* 2. Header and Filters Card & Table Wrapper */}
+      <div className="flex flex-col gap-2 w-full">
+        <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
+          <PageHeader
+            icon="ph-chart-pie"
+            title="Compliance Analysis"
+            description="Monitor digitization completeness."
+            actions={
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                  onClick={handlePreview}
+                  disabled={loading || !data || isGeneratingPdf}
+                  className="h-10 px-6 font-black text-[10px] tracking-widest btn-brand-red active:scale-95 disabled:opacity-60 rounded-brand uppercase transition-all dark:shadow-none"
+                >
+                  <i className={cn("ph-bold text-base mr-2", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
+                  {isGeneratingPdf ? "GENERATING..." : "GENERATE REPORT"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={downloadCsv}
+                  disabled={loading || !data || isExportingCsv}
+                  className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:text-zinc-300 dark:shadow-none dark:bg-red-950/30 dark:border-white/10"
+                >
+                  <i className={cn("ph-bold text-base", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
+                  {isExportingCsv ? "PREPARING..." : "EXPORT"}
+                </Button>
+
+                <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4 dark:border-white/10">
+                    <div className="flex flex-col items-end gap-1">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest dark:text-zinc-505">Dataset Sync</p>
+                        <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap dark:text-zinc-400">
+                            {hasActiveFilters ? "Filtering live analytics..." : "Showing cumulative data"}
+                        </p>
+                    </div>
+                    <RefreshButton 
+                      onRefresh={() => load(true)} 
+                      isLoading={manualLoading} 
+                      title="Refresh Compliance Data"
+                    />
                 </div>
-                <Skeleton className="h-4 w-full rounded-full bg-gray-100 dark:bg-muted" />
               </div>
-              <div className="border border-gray-100 rounded-xl overflow-hidden dark:border-white/10">
-                <Skeleton className="h-10 w-full bg-gray-50 dark:bg-card" />
-                <div className="p-4 space-y-4">
-                  {[1, 2, 3, 4, 5].map(i => (
-                    <Skeleton key={i} className="h-8 w-full bg-gray-50 dark:bg-muted" />
-                  ))}
+            }
+          />
+
+          {/* Active Filter Chips Row */}
+          {hasActiveFilters && (
+            <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+              <div className="flex flex-wrap items-center gap-2">
+                  <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-505">
+                  Active Filters:
+                  </span>
+                  {statusFilter !== "Active" && (
+                      <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 uppercase dark:bg-blue-950/30 dark:text-blue-400">
+                      Status: {statusFilter}
+                      <button
+                          onClick={() => setStatusFilter("Active")}
+                          className="ml-1 transition-colors hover:text-blue-800"
+                      >
+                          <i className="ph-bold ph-x text-[8px]"></i>
+                      </button>
+                      </div>
+                  )}
+                  {courseFilter !== "" && (
+                      <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 uppercase dark:bg-amber-950/30 dark:text-amber-400">
+                      Program: {courseFilter}
+                      <button
+                          onClick={() => setCourseFilter("")}
+                          className="ml-1 transition-colors hover:text-amber-800"
+                      >
+                          <i className="ph-bold ph-x text-[8px]"></i>
+                      </button>
+                      </div>
+                  )}
+                  {requireApproved && (
+                      <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 uppercase dark:bg-emerald-950/30 dark:text-emerald-400">
+                      Requirement: Approved Only
+                      <button
+                          onClick={() => setRequireApproved(false)}
+                          className="ml-1 transition-colors hover:text-emerald-800"
+                      >
+                          <i className="ph-bold ph-x text-[8px]"></i>
+                      </button>
+                      </div>
+                  )}
+                  {tableSearch && (
+                      <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary uppercase dark:border-white/10 dark:text-primary">
+                      Search: {tableSearch}
+                      <button
+                          onClick={() => setTableSearch("")}
+                          className="ml-1 transition-colors hover:text-pup-darkMaroon"
+                      >
+                          <i className="ph-bold ph-x text-[8px]"></i>
+                      </button>
+                      </div>
+                  )}
+                  <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleClearAll}
+                      className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-darkMaroon uppercase dark:border-white/10 dark:text-primary dark:bg-red-950/30"
+                  >
+                      CLEAR ALL FILTERS
+                  </Button>
+              </div>
+            </div>
+          )}
+
+          <div className="p-4 bg-gray-50 flex-none dark:bg-white/5">
+            <div className="flex flex-col lg:flex-row lg:items-end gap-4 justify-between">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 flex-1">
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-widest dark:text-zinc-400">
+                      Student Status
+                  </label>
+                  <Select
+                    className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-pup-maroon/20 focus:border-gray-300 hover:border-gray-400 dark:bg-card dark:text-zinc-200 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
+                    value={statusFilter}
+                    onChange={(e) => setStatusFilter(e.target.value)}
+                  >
+                    <option value="Active">Active</option>
+                    <option value="All">All</option>
+                    <option value="Inactive">Inactive</option>
+                  </Select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-bold text-gray-500 mb-1 uppercase tracking-widest dark:text-zinc-400">
+                    Course
+                  </label>
+                  <div className="relative">
+                    <Select
+                      className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-pup-maroon/20 focus:border-gray-300 hover:border-gray-400 disabled:opacity-60 dark:bg-card dark:text-zinc-200 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
+                      value={courseFilter}
+                      onChange={(e) => setCourseFilter(e.target.value)}
+                      disabled={coursesLoading}
+                    >
+                      <option value="">All</option>
+                      {courses.map((c) => (
+                        <option key={c.code || c.id} value={String(c.code || "")}>
+                          {c.code}
+                          {c.name ? ` — ${c.name}` : ""}
+                        </option>
+                      ))}
+                    </Select>
+                    {coursesLoading && (
+                      <div className="absolute right-8 top-1/2 -translate-y-1/2">
+                        <i className="ph-bold ph-spinner animate-spin text-gray-400 dark:text-zinc-550" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-end">
+                  <Toggle
+                    variant="outline"
+                    pressed={requireApproved}
+                    onPressedChange={setRequireApproved}
+                    className={cn(
+                      "h-10 px-4 gap-2 rounded-brand border border-gray-300 dark:border-white/10 font-bold text-[10px] uppercase tracking-wider transition-all select-none w-full sm:w-auto",
+                      "hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card hover:text-gray-700 dark:text-zinc-200 dark:hover:text-zinc-200 hover:border-gray-400",
+                      "data-[state=on]:bg-pup-maroon data-[state=on]:text-white data-[state=on]:border-gray-300 dark:data-[state=on]:bg-red-500/10 dark:data-[state=on]:text-red-400 dark:data-[state=on]:border-red-500/20 dark:data-[state=on]:shadow-none data-[state=on]:shadow-md"
+                    )}
+                  >
+                    <i
+                      className={cn(
+                        "ph-bold",
+                        requireApproved ? "ph-check-circle" : "ph-circle"
+                      )}
+                      aria-hidden
+                    />
+                    Approved Docs Only
+                  </Toggle>
                 </div>
               </div>
             </div>
-          ) : error ? (
+          </div>
+
+          {/* Progress bar and calculation block or their loading skeletons */}
+          <div className="p-6 border-t border-gray-100 dark:border-white/10 flex flex-col gap-6">
+            {loading && !data ? (
+              <div className="space-y-6 animate-pulse">
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-40 rounded-full bg-gray-100 dark:bg-muted" />
+                  <Skeleton className="h-4 w-full rounded-full bg-gray-100 dark:bg-muted" />
+                </div>
+                <Skeleton className="h-24 w-full rounded-2xl bg-gray-100 dark:bg-muted" />
+              </div>
+            ) : !error && data ? (
+              <div className={cn("flex flex-col gap-6 transition-all duration-500", loading && "opacity-40 blur-[1px]")}>
+                <div className="flex flex-col gap-2">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] dark:text-zinc-500">
+                      Digital Transformation Status
+                    </span>
+                    <span className="text-sm font-black text-gray-900 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100 shadow-sm dark:text-zinc-50 dark:bg-card dark:border-white/10 dark:shadow-none">
+                      {summary?.percentDigitized != null ? `${summary.percentDigitized}%` : "N/A"}
+                    </span>
+                  </div>
+                  <div className="h-4 w-full rounded-full bg-gray-100 overflow-hidden shadow-inner dark:shadow-none dark:bg-muted">
+                    <div
+                      className={cn(
+                        "h-full shadow-sm dark:shadow-none transition-all duration-1000 ease-out",
+                        summary?.percentDigitized >= 95 ? "bg-linear-to-r from-emerald-400 to-emerald-600" : summary?.percentDigitized >= 80 ? "bg-linear-to-r from-red-700 to-pup-maroon" : "bg-linear-to-r from-amber-400 to-amber-600"
+                      )}
+                      style={{ width: `${progressWidth}%` }}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-8 bg-gray-50 p-6 rounded-2xl border border-gray-100 shadow-inner dark:bg-white/5 dark:border-white/10 dark:shadow-none">
+                  <div>
+                    <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-center dark:text-zinc-500">Digitized</div>
+                    <div className="text-xl font-black text-gray-900 tracking-tight text-center dark:text-zinc-50">{summary?.totalDigitizedDocsCount?.toLocaleString() || 0}</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-center dark:text-zinc-500">Required</div>
+                    <div className="text-xl font-black text-gray-900 tracking-tight text-center dark:text-zinc-50">{summary?.totalExpectedDocsCount?.toLocaleString() || 0}</div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-center dark:text-zinc-500">Efficiency</div>
+                    <div className="text-xl font-black text-emerald-600 tracking-tight text-center dark:text-emerald-400">{summary?.fullyDigitizedRate != null ? `${summary.fullyDigitizedRate}%` : "0%"}</div>
+                  </div>
+                  <div className="sm:ml-auto">
+                    <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 italic dark:text-zinc-500">Calculation Method</div>
+                    <div className="text-[11px] font-medium text-gray-500 max-w-xs leading-relaxed dark:text-zinc-400">
+                      {meta?.definitions?.expectedCountFormula}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </Card>
+
+        {/* 3. Table / Empty / Error Area below in separated container */}
+        {loading && !data ? (
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card animate-pulse">
+            <div className="h-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/5" />
+            <div className="p-4 space-y-4">
+              {[1, 2, 3, 4, 5].map((i) => (
+                <Skeleton key={i} className="h-8 w-full bg-gray-50 dark:bg-muted" />
+              ))}
+            </div>
+          </div>
+        ) : error ? (
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6">
             <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
@@ -591,286 +746,148 @@ export default function DigitizationComplianceTab({
                 </Button>
               </EmptyHeader>
             </Empty>
-          ) : data ? (
-            <div className={cn("transition-all duration-500", loading ? "opacity-40 blur-[1px]" : "opacity-100")}>
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                {/* Completeness Card */}
-                <div className="group relative overflow-hidden rounded-xl border border-red-950 bg-linear-to-br from-red-700 to-red-950 p-5 shadow-sm transition-all dark:shadow-none">
-                  <i className="ph-duotone ph-chart-pie pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-20" />
-                  <div className="relative z-10">
-                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-red-200 uppercase">
-                      <i className="ph-bold ph-chart-pie" /> Completeness
-                    </div>
-                    <div className="text-3xl font-black text-white">
-                      {summary?.percentDigitized != null ? `${summary.percentDigitized}%` : "0%"}
-                    </div>
-                    <div className="mt-1 text-[10px] font-medium text-red-200/80">
-                      Overall record health
-                    </div>
-                    <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/5">
-                      <div
-                        className="h-full bg-linear-to-r from-emerald-400 to-emerald-500 transition-all duration-1000 ease-out"
-                        style={{ width: `${progressWidth}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="group relative overflow-hidden rounded-xl border border-blue-950 bg-linear-to-br from-blue-800 to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
-                  <i className="ph-duotone ph-users-three pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
-                  <div className="relative z-10">
-                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-blue-200 uppercase">
-                      <i className="ph-bold ph-users-three" /> Students
-                    </div>
-                    <div className="text-3xl font-black text-white">
-                      {summary?.totalStudents?.toLocaleString?.() ?? summary?.totalStudents}
-                    </div>
-                    <div className="mt-1 text-[10px] font-medium text-blue-200/80">
-                      Total Enrollment
-                    </div>
-                  </div>
-                </div>
-
-                <div className="group relative overflow-hidden rounded-xl border border-amber-950 bg-linear-to-br from-amber-700 to-amber-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
-                  <i className="ph-duotone ph-check-square-offset pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
-                  <div className="relative z-10">
-                    <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-amber-100 uppercase">
-                      <i className="ph-bold ph-check-square-offset" /> Complete
-                    </div>
-                    <div className="text-3xl font-black text-white">
-                      {summary?.digitizedStudents?.toLocaleString?.() ?? summary?.digitizedStudents}
-                    </div>
-                    <div className="mt-1 text-[10px] font-bold text-white flex items-center gap-1.5">
-                      <i className="ph-bold ph-trend-up text-emerald-400" /> 100% Validated
-                    </div>
-                  </div>
-                </div>
-
-                <div className="group relative overflow-hidden rounded-xl border border-emerald-950 bg-linear-to-br from-emerald-800 to-emerald-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
-                  <i className="ph-duotone ph-shield-check pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
-                  <div className="relative z-10">
-                    <div className="mb-1 flex items-center gap-2 text-[10px] font-bold tracking-widest text-emerald-100 uppercase">
-                      <i className="ph-bold ph-shield-check" /> Health
-                      <TooltipProvider>
-                        <Tooltip delayDuration={300}>
-                          <TooltipTrigger asChild>
-                            <i className="ph-bold ph-info text-sm text-emerald-200 transition-opacity hover:opacity-70 cursor-pointer" />
-                          </TooltipTrigger>
-                          <TooltipContent side="top" className="max-w-[240px] border-emerald-800 bg-emerald-950 p-3 text-white">
-                            <p className="font-bold leading-tight text-xs mb-1">Status Thresholds:</p>
-                            <ul className="space-y-1 text-[10px] font-medium opacity-90">
-                              <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-emerald-400" /> 95%+ Excellent</li>
-                              <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-blue-400" /> 80%+ Healthy</li>
-                              <li className="flex items-center gap-2"><span className="w-2 h-2 rounded-full bg-amber-400" /> Below 80% Action</li>
-                            </ul>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    </div>
-                    <div className="mt-1">
-                      {summary?.percentDigitized >= 95 ? (
-                        <Badge className="bg-emerald-400 text-emerald-950 border-0 font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5">
-                          Excellent
-                        </Badge>
-                      ) : summary?.percentDigitized >= 80 ? (
-                        <Badge className="bg-blue-400 text-blue-950 border-0 font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5">
-                          Healthy
-                        </Badge>
-                      ) : (
-                        <Badge className="bg-amber-400 text-amber-950 border-0 font-black text-[10px] uppercase tracking-wider px-2.5 py-0.5">
-                          Warning
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="mt-2 text-[10px] font-medium text-emerald-100/80">
-                      Overall Rating
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <span className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] dark:text-zinc-500">
-                  Digital Transformation Status
-                </span>
-                <span className="text-sm font-black text-gray-900 bg-gray-50 px-2 py-0.5 rounded-md border border-gray-100 shadow-sm dark:text-zinc-50 dark:bg-card dark:border-white/10 dark:shadow-none">
-                  {summary?.percentDigitized != null ? `${summary.percentDigitized}%` : "N/A"}
-                </span>
-              </div>
-              <div className="h-4 w-full rounded-full bg-gray-100 overflow-hidden mb-8 shadow-inner dark:shadow-none dark:bg-muted">
-                <div
-                  className={cn(
-                    "h-full shadow-sm dark:shadow-none transition-all duration-1000 ease-out",
-                    summary?.percentDigitized >= 95 ? "bg-linear-to-r from-emerald-400 to-emerald-600" : summary?.percentDigitized >= 80 ? "bg-linear-to-r from-red-700 to-pup-maroon" : "bg-linear-to-r from-amber-400 to-amber-600"
-                  )}
-                  style={{ width: `${progressWidth}%` }}
-                />
-              </div>
-
-              <div className="flex flex-wrap gap-8 mb-8 bg-gray-50 p-6 rounded-2xl border border-gray-100 shadow-inner dark:bg-white/5 dark:border-white/10 dark:shadow-none">
+          </div>
+        ) : data ? (
+          <div className={cn("overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card transition-all duration-500", loading && "opacity-40 blur-[1px]")}>
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200 dark:bg-white/5 dark:border-white/10">
+              <div className="flex items-center gap-3">
                 <div>
-                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-center dark:text-zinc-500">Digitized</div>
-                  <div className="text-xl font-black text-gray-900 tracking-tight text-center dark:text-zinc-50">{summary?.totalDigitizedDocsCount?.toLocaleString() || 0}</div>
-                </div>
-                <div>
-                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-center dark:text-zinc-500">Required</div>
-                  <div className="text-xl font-black text-gray-900 tracking-tight text-center dark:text-zinc-50">{summary?.totalExpectedDocsCount?.toLocaleString() || 0}</div>
-                </div>
-                <div>
-                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-center dark:text-zinc-500">Efficiency</div>
-                  <div className="text-xl font-black text-emerald-600 tracking-tight text-center dark:text-emerald-400">{summary?.fullyDigitizedRate != null ? `${summary.fullyDigitizedRate}%` : "0%"}</div>
-                </div>
-                <div className="sm:ml-auto">
-                  <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 italic dark:text-zinc-500">Calculation Method</div>
-                  <div className="text-[11px] font-medium text-gray-500 max-w-xs leading-relaxed dark:text-zinc-400">
-                    {meta?.definitions?.expectedCountFormula}
-                  </div>
+                    <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1 dark:text-zinc-400">
+                    Program Breakdown
+                    </h4>
+                    <div className="flex items-center gap-2">
+                        <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                            Total: <span className="text-gray-900 font-bold dark:text-zinc-50">{sortedByCourse.length}</span>
+                        </span>
+                    </div>
                 </div>
               </div>
-
-              <div className="rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card mt-6">
-                <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 px-6 py-4 bg-gray-50 border-b border-gray-200 dark:bg-white/5 dark:border-white/10">
-                  <div className="flex items-center gap-3">
-                    <div>
-                        <h4 className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1 dark:text-zinc-400">
-                        Program Breakdown
-                        </h4>
-                        <div className="flex items-center gap-2">
-                            <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">
-                                Total: <span className="text-gray-900 font-bold dark:text-zinc-50">{sortedByCourse.length}</span>
-                            </span>
-                        </div>
-                    </div>
-                  </div>
-                  <div className="min-w-[300px] flex-1 sm:max-w-md">
-                    <label className="mb-1 block text-[10px] font-bold text-gray-500 uppercase tracking-widest dark:text-zinc-400">
-                        Search Program
-                    </label>
-                    <div className="relative">
-                        <i className="ph-bold ph-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-gray-400 dark:text-zinc-500"></i>
-                        <Input
-                        type="text"
-                        placeholder="Search program..."
-                        className="h-10 w-full rounded-brand border border-gray-300 bg-white pl-10 text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none placeholder:text-gray-400 placeholder:font-normal dark:bg-card dark:text-zinc-500 dark:border-white/10"
-                        value={tableSearch}
-                        onChange={(e) => setTableSearch(e.target.value)}
-                        />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="overflow-x-auto">
-                    {sortedByCourse.length > 0 ? (
-                      <Table className="min-w-full text-sm">
-                        <TableHeader className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm dark:border-white/10 dark:bg-muted">
-                          <TableRow className="hover:bg-transparent text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
-                            <TableHead className="p-4 px-6 font-bold">
-                              <button
-                                onClick={() => handleSort("courseCode")}
-                                className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
-                              >
-                                PROGRAM <SortIndicator column="courseCode" />
-                              </button>
-                            </TableHead>
-                            <TableHead className="p-4 px-6 text-center font-bold">
-                              <button
-                                onClick={() => handleSort("total")}
-                                className="group mx-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
-                              >
-                                TOTAL STUDENTS <SortIndicator column="total" />
-                              </button>
-                            </TableHead>
-                            <TableHead className="p-4 px-6 text-center font-bold">
-                              <button
-                                onClick={() => handleSort("digitized")}
-                                className="group mx-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
-                              >
-                                FULLY DIGITIZED <SortIndicator column="digitized" />
-                              </button>
-                            </TableHead>
-                            <TableHead className="p-4 px-6 text-right font-bold">
-                              <button
-                                onClick={() => handleSort("percent")}
-                                className="group ml-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
-                              >
-                                COMPLETENESS <SortIndicator column="percent" />
-                              </button>
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody className="divide-y divide-gray-100 dark:divide-white/10">
-                          {sortedByCourse.map((row) => (
-                            <TableRow key={row.courseCode} className="group transition-all duration-200 hover:bg-gray-50/80 dark:bg-card dark:hover:bg-white/5">
-                              <TableCell className="p-4 px-6 font-inter font-bold text-pup-maroon dark:text-primary text-xs dark:text-primary">
-                                {row.courseCode || "—"}
-                              </TableCell>
-                              <TableCell className="p-4 px-6 text-gray-700 font-medium text-center dark:text-zinc-200">
-                                {row.total?.toLocaleString?.() ?? row.total}
-                              </TableCell>
-                              <TableCell className="p-4 px-6 text-center">
-                                <span className="text-emerald-600 font-black dark:text-emerald-400">
-                                  {row.digitized?.toLocaleString?.() ?? row.digitized}
-                                </span>
-                                <span className="text-[10px] text-gray-400 font-bold ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity dark:text-zinc-500">
-                                  ({row.fullyDigitizedRate}%)
-                                </span>
-                              </TableCell>
-                              <TableCell className="p-4 px-6 text-right">
-                                <div className="flex items-center justify-end gap-4">
-                                  <span className="text-gray-900 font-black text-xs dark:text-zinc-50">
-                                    {row.percent != null ? `${row.percent}%` : "0%"}
-                                  </span>
-                                  <div className="w-20 h-1.5 rounded-full bg-gray-100 overflow-hidden hidden sm:block shadow-inner dark:shadow-none dark:bg-muted">
-                                    <div
-                                      className={cn(
-                                        "h-full transition-all duration-700",
-                                        row.percent >= 90 ? "bg-linear-to-r from-emerald-400 to-emerald-600" : "bg-linear-to-r from-red-700 to-pup-maroon"
-                                      )}
-                                      style={{ width: `${Math.min(100, row.percent || 0)}%` }}
-                                    />
-                                  </div>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    ) : (
-                      <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                        <EmptyHeader className="flex flex-col items-center gap-0">
-                          <div className="relative mb-6">
-                            <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                            <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                              <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
-                            </EmptyMedia>
-                          </div>
-                          <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">No data found</EmptyTitle>
-                          <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                            {tableSearch 
-                              ? `No results found for "${tableSearch}".` 
-                              : "No student records available to analyze."}
-                          </EmptyDescription>
-                          {hasActiveFilters && (
-                              <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  onClick={handleClearAll}
-                                  className="mt-4 flex items-center gap-2 rounded-brand border border-gray-300 px-4 text-[10px] font-bold text-gray-600 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 sm:text-xs shadow-sm transition-colors dark:text-zinc-300 dark:hover:border-zinc-700 dark:bg-red-950/30 dark:shadow-none dark:border-white/10"
-                              >
-                                  <i className="ph-bold ph-x-circle"></i>
-                                  CLEAR ALL FILTERS
-                              </Button>
-                          )}
-                        </EmptyHeader>
-                      </Empty>
-                    )}
+              <div className="min-w-[300px] flex-1 sm:max-w-md">
+                <label className="mb-1 block text-[10px] font-bold text-gray-500 uppercase tracking-widest dark:text-zinc-400">
+                    Search Program
+                </label>
+                <div className="relative">
+                    <i className="ph-bold ph-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-gray-400 dark:text-zinc-505"></i>
+                    <Input
+                    type="text"
+                    placeholder="Search program..."
+                    className="h-10 w-full rounded-brand border border-gray-300 bg-white pl-10 text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none placeholder:text-gray-400 placeholder:font-normal dark:bg-card dark:text-zinc-505 dark:border-white/10"
+                    value={tableSearch}
+                    onChange={(e) => setTableSearch(e.target.value)}
+                    />
                 </div>
               </div>
             </div>
-          ) : null}
-        </CardContent>
-      </Card>
+
+            <div className="overflow-x-auto">
+                {sortedByCourse.length > 0 ? (
+                  <Table className="min-w-full text-sm">
+                    <TableHeader className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm dark:border-white/10 dark:bg-muted">
+                      <TableRow className="hover:bg-transparent text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
+                        <TableHead className="p-4 px-6 font-bold">
+                          <button
+                            onClick={() => handleSort("courseCode")}
+                            className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                          >
+                            PROGRAM <SortIndicator column="courseCode" />
+                          </button>
+                        </TableHead>
+                        <TableHead className="p-4 px-6 text-center font-bold">
+                          <button
+                            onClick={() => handleSort("total")}
+                            className="group mx-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                          >
+                            TOTAL STUDENTS <SortIndicator column="total" />
+                          </button>
+                        </TableHead>
+                        <TableHead className="p-4 px-6 text-center font-bold">
+                          <button
+                            onClick={() => handleSort("digitized")}
+                            className="group mx-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                          >
+                            FULLY DIGITIZED <SortIndicator column="digitized" />
+                          </button>
+                        </TableHead>
+                        <TableHead className="p-4 px-6 text-right font-bold">
+                          <button
+                            onClick={() => handleSort("percent")}
+                            className="group ml-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                          >
+                            COMPLETENESS <SortIndicator column="percent" />
+                          </button>
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody className="divide-y divide-gray-100 dark:divide-white/10">
+                      {sortedByCourse.map((row) => (
+                        <TableRow key={row.courseCode} className="group transition-all duration-200 hover:bg-gray-50/80 dark:bg-card dark:hover:bg-white/5">
+                          <TableCell className="p-4 px-6 font-inter font-bold text-pup-maroon dark:text-primary text-xs dark:text-primary">
+                            {row.courseCode || "—"}
+                          </TableCell>
+                          <TableCell className="p-4 px-6 text-gray-700 font-medium text-center dark:text-zinc-200">
+                            {row.total?.toLocaleString?.() ?? row.total}
+                          </TableCell>
+                          <TableCell className="p-4 px-6 text-center">
+                            <span className="text-emerald-600 font-black dark:text-emerald-400">
+                              {row.digitized?.toLocaleString?.() ?? row.digitized}
+                            </span>
+                            <span className="text-[10px] text-gray-400 font-bold ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity dark:text-zinc-505">
+                              ({row.fullyDigitizedRate}%)
+                            </span>
+                          </TableCell>
+                          <TableCell className="p-4 px-6 text-right">
+                            <div className="flex items-center justify-end gap-4">
+                              <span className="text-gray-900 font-black text-xs dark:text-zinc-50">
+                                {row.percent != null ? `${row.percent}%` : "0%"}
+                              </span>
+                              <div className="w-20 h-1.5 rounded-full bg-gray-100 overflow-hidden hidden sm:block shadow-inner dark:shadow-none dark:bg-muted">
+                                <div
+                                  className={cn(
+                                    "h-full transition-all duration-700",
+                                    row.percent >= 90 ? "bg-linear-to-r from-emerald-400 to-emerald-600" : "bg-linear-to-r from-red-700 to-pup-maroon"
+                                  )}
+                                  style={{ width: `${Math.min(100, row.percent || 0)}%` }}
+                                />
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                    <EmptyHeader className="flex flex-col items-center gap-0">
+                      <div className="relative mb-6">
+                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                        <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                          <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-650"></i>
+                        </EmptyMedia>
+                      </div>
+                      <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">No data found</EmptyTitle>
+                      <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                        {tableSearch 
+                          ? `No results found for "${tableSearch}".` 
+                          : "No student records available to analyze."}
+                      </EmptyDescription>
+                      {hasActiveFilters && (
+                          <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={handleClearAll}
+                              className="mt-4 flex items-center gap-2 rounded-brand border border-gray-300 px-4 text-[10px] font-bold text-gray-600 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 sm:text-xs shadow-sm transition-colors dark:text-zinc-300 dark:hover:border-zinc-700 dark:bg-red-950/30 dark:shadow-none dark:border-white/10"
+                          >
+                              <i className="ph-bold ph-x-circle"></i>
+                              CLEAR ALL FILTERS
+                          </Button>
+                      )}
+                    </EmptyHeader>
+                  </Empty>
+                )}
+            </div>
+          </div>
+        ) : null}
+      </div>
 
       {/* Report Preview Modal */}
       <Dialog

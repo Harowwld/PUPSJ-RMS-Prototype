@@ -423,7 +423,7 @@ export default function CoursesTab({
               </div>
             )}
 
-            <div className="relative z-10 flex-1 overflow-hidden overflow-x-auto overflow-y-auto rounded-xl border border-gray-200 bg-white shadow-sm select-none dark:border-white/10 dark:bg-card">
+            <div className="relative z-10 flex-1 overflow-hidden overflow-x-auto overflow-y-auto rounded-brand border border-gray-200 bg-white shadow-sm select-none dark:border-white/10 dark:bg-card">
               {loading ? (
                 <div className="space-y-4 p-8">
                   <Skeleton className="h-10 w-full rounded-lg dark:bg-muted" />
@@ -607,7 +607,7 @@ export default function CoursesTab({
                           </td>
                           <td className="p-4 px-6">
                             <div className="flex items-center gap-3">
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-xs font-black text-gray-500 shadow-xs dark:bg-white/5 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm transition-all uppercase">
+                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-brand bg-gray-100 text-xs font-black text-gray-500 shadow-xs dark:bg-white/5 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm transition-all uppercase">
                                 {c.code.substring(0, 2)}
                               </div>
                               <span className="text-xs font-black tracking-tight text-gray-900 dark:text-zinc-50">
@@ -661,7 +661,7 @@ export default function CoursesTab({
                                     )
                                     setIsEditCourseOpen(true)
                                   }}
-                                  className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800"
+                                  className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800"
                                 >
                                   <i className="ph-bold ph-pencil-simple text-base"></i>
                                 </Button>
@@ -686,7 +686,7 @@ export default function CoursesTab({
                                   })
                                   setConfirmOpen(true)
                                 }}
-                                className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-emerald-600 shadow-sm transition-all hover:border-emerald-600 hover:bg-emerald-50 dark:bg-white/5 dark:border-white/10 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
+                                className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-emerald-600 shadow-sm transition-all hover:border-emerald-600 hover:bg-emerald-50 dark:bg-white/5 dark:border-white/10 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
                               >
                                 <i className="ph-bold ph-arrow-counter-clockwise text-base"></i>
                               </Button>
@@ -708,7 +708,7 @@ export default function CoursesTab({
                                   })
                                   setConfirmOpen(true)
                                 }}
-                                className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10"
+                                className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10"
                               >
                                 <i className="ph-bold ph-archive text-base"></i>
                               </Button>
@@ -813,12 +813,12 @@ export default function CoursesTab({
                   size="sm"
                   disabled={pageCourse <= 1}
                   onClick={() => setPageCourse((p) => p - 1)}
-                  className="h-10 rounded-xl border-gray-200 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
+                  className="h-10 rounded-brand border-gray-200 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
                 >
                   <i className="ph-bold ph-caret-left mr-2 text-base"></i> PREV
                 </Button>
                 
-                <div className="flex h-10 min-w-[48px] items-center justify-center rounded-xl border border-gray-200 bg-gray-50 px-3 text-[11px] font-black text-gray-900 shadow-inner ring-1 ring-black/[0.02] dark:border-white/10 dark:bg-white/5 dark:text-zinc-50 dark:shadow-none">
+                <div className="flex h-10 min-w-[48px] items-center justify-center rounded-brand border border-gray-200 bg-gray-50 px-3 text-[11px] font-black text-gray-900 shadow-inner ring-1 ring-black/[0.02] dark:border-white/10 dark:bg-white/5 dark:text-zinc-50 dark:shadow-none">
                   {pageCourse}
                 </div>
 
@@ -827,7 +827,7 @@ export default function CoursesTab({
                   size="sm"
                   disabled={pageCourse >= Math.ceil(filteredCoursesFull.length / itemsPerPage)}
                   onClick={() => setPageCourse((p) => p + 1)}
-                  className="h-10 rounded-xl border-gray-200 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
+                  className="h-10 rounded-brand border-gray-200 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
                 >
                   NEXT <i className="ph-bold ph-caret-right ml-2 text-base"></i>
                 </Button>

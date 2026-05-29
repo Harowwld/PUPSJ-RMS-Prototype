@@ -721,7 +721,7 @@ export default function RecordsArchiveTab({
               ) : (
                 <div 
                   key={`table-${currentLevel}-${showArchived}`}
-                  className="flex-1 overflow-hidden overflow-auto rounded-xl border border-gray-200 bg-white shadow-sm animate-fade-up dark:border-white/10 dark:bg-card"
+                  className="flex-1 overflow-hidden overflow-auto rounded-brand border border-gray-200 bg-white shadow-sm animate-fade-up dark:border-white/10 dark:bg-card"
                 >
                   <table className="min-w-full text-sm">
                     <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">
@@ -786,7 +786,7 @@ export default function RecordsArchiveTab({
                                   setRestoreTarget(row.student)
                                   setRestoreStudentOpen(true)
                                 }}
-                                className="h-9 rounded-xl border-green-200 bg-green-50/50 px-4 text-[10px] font-black text-green-700 shadow-xs hover:bg-green-100"
+                                className="h-9 rounded-brand border-green-200 bg-green-50/50 px-4 text-[10px] font-black text-green-700 shadow-xs hover:bg-green-100"
                               >
                                 <i className="ph-bold ph-arrow-counter-clockwise mr-2"></i>
                                 RESTORE
@@ -795,7 +795,7 @@ export default function RecordsArchiveTab({
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="h-9 rounded-xl border-gray-200 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 shadow-xs transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-primary dark:text-zinc-300 dark:bg-zinc-800 dark:border-white/10"
+                                className="h-9 rounded-brand border-gray-200 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 shadow-xs transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-primary dark:text-zinc-300 dark:bg-zinc-800 dark:border-white/10"
                               >
                                 <i className="ph-bold ph-magnifying-glass-plus mr-2 text-sm"></i>
                                 LOCATE

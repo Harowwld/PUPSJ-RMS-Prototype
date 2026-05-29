@@ -79,7 +79,7 @@ export default function LogFilters({
             <Input
               type="text"
               placeholder="Search by actor, action, or details..."
-              className="h-11 w-full rounded-xl border border-gray-200 bg-white pl-10.5 text-sm font-medium transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-500"
+              className="h-11 w-full rounded-brand border border-gray-200 bg-white pl-10.5 text-sm font-medium transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-500"
               value={localSearch}
               onChange={handleSearchChange}
             />
@@ -111,7 +111,7 @@ export default function LogFilters({
                   <Button
                     variant="outline"
                     className={cn(
-                      "h-11 w-full justify-start rounded-xl border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-xs font-semibold shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card",
+                      "h-11 w-full justify-start rounded-brand border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-xs font-semibold shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card",
                       !logStartDate && "text-gray-400 dark:text-zinc-500"
                     )}
                   >
@@ -141,7 +141,7 @@ export default function LogFilters({
                   <Button
                     variant="outline"
                     className={cn(
-                      "h-11 w-full justify-start rounded-xl border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-xs font-semibold shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card",
+                      "h-11 w-full justify-start rounded-brand border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-xs font-semibold shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card",
                       !logEndDate && "text-gray-400 dark:text-zinc-500"
                     )}
                   >

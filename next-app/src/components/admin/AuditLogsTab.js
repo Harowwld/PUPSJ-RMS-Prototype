@@ -231,7 +231,7 @@ export default function AuditLogsTab({
         <StatCards isLoading={isLoading} logStats={logStats} />
 
         {/* Main Table Card */}
-        <Card className="rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-gray-200/50 backdrop-blur-xl overflow-hidden dark:border-white/10 dark:bg-card/80">
+        <Card className="flex h-auto w-full flex-col rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
           <PageHeader
             icon="ph-shield-check"
             title="Audit Logs"
@@ -363,42 +363,40 @@ export default function AuditLogsTab({
             setLogSeverityFilter={setLogSeverityFilter}
             logTotal={logTotal}
           />
-
-          <CardContent className="p-6 pt-0 pb-6 dark:bg-card">
-            <LogTable
-              isLoading={isLoading}
-              error={error}
-              displayLogs={displayLogs}
-              selectedLog={selectedLog}
-              setSelectedLog={setSelectedLog}
-              logTotal={logTotal}
-              logPage={logPage}
-              setLogPage={setLogPage}
-              itemsPerPage={itemsPerPage}
-              logsPerPage={logsPerPage}
-              setItemsPerPage={setItemsPerPage}
-              setLogsPerPage={setLogsPerPage}
-              jumpPage={jumpPage}
-              setJumpPage={setJumpPage}
-              handleSort={handleSort}
-              logSortBy={logSortBy}
-              logSortOrder={logSortOrder}
-              localSearch={localSearch}
-              logRoleFilter={logRoleFilter}
-              logSeverityFilter={logSeverityFilter}
-              logStartDate={logStartDate}
-              logEndDate={logEndDate}
-              setLocalSearch={setLocalSearch}
-              setLogSearch={setLogSearch}
-              setLogRoleFilter={setLogRoleFilter}
-              setLogSeverityFilter={setLogSeverityFilter}
-              setLogStartDate={setLogStartDate}
-              setLogEndDate={setLogEndDate}
-              handleCopy={handleCopy}
-              cn={cn}
-            />
-          </CardContent>
         </Card>
+
+        <LogTable
+          isLoading={isLoading}
+          error={error}
+          displayLogs={displayLogs}
+          selectedLog={selectedLog}
+          setSelectedLog={setSelectedLog}
+          logTotal={logTotal}
+          logPage={logPage}
+          setLogPage={setLogPage}
+          itemsPerPage={itemsPerPage}
+          logsPerPage={logsPerPage}
+          setItemsPerPage={setItemsPerPage}
+          setLogsPerPage={setLogsPerPage}
+          jumpPage={jumpPage}
+          setJumpPage={setJumpPage}
+          handleSort={handleSort}
+          logSortBy={logSortBy}
+          logSortOrder={logSortOrder}
+          localSearch={localSearch}
+          logRoleFilter={logRoleFilter}
+          logSeverityFilter={logSeverityFilter}
+          logStartDate={logStartDate}
+          logEndDate={logEndDate}
+          setLocalSearch={setLocalSearch}
+          setLogSearch={setLogSearch}
+          setLogRoleFilter={setLogRoleFilter}
+          setLogSeverityFilter={setLogSeverityFilter}
+          setLogStartDate={setLogStartDate}
+          setLogEndDate={setLogEndDate}
+          handleCopy={handleCopy}
+          cn={cn}
+        />
 
         {/* Log Detail Side Sheet */}
         <LogDetailSheet

@@ -371,8 +371,106 @@ export default function DigitalRecordsReviewTab({
   }, [records])
 
   return (
-    <div className="animate-fade-up font-inter flex h-auto w-full flex-col gap-3">
-      <Card className="flex h-auto w-full flex-col rounded-2xl border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-card dark:shadow-none">
+    <div className="animate-fade-up font-inter flex h-auto w-full flex-col gap-6">
+      {/* Color Stat Cards / Skeletons at the Top */}
+      {isLoading && records.length === 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 animate-pulse">
+          {[1, 2, 3, 4].map((i) => (
+            <Skeleton key={i} className="h-28 rounded-xl bg-gray-100 dark:bg-muted" />
+          ))}
+        </div>
+      ) : !error ? (
+        <div className={cn("transition-all duration-500", isLoading && "opacity-40 blur-[1px]")}>
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="group relative overflow-hidden rounded-xl border border-blue-950 bg-linear-to-br from-blue-800 to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+              <i className="ph-duotone ph-clock-countdown pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
+              <div className="relative z-10">
+                <div className="flex items-center justify-between">
+                  <p className="mb-1 text-[10px] font-black tracking-widest text-blue-200 uppercase">
+                    Pending
+                  </p>
+                  {stats.hasSlaBreach && !isLoading && (
+                    <div className="flex items-center gap-1.5">
+                       <span className="relative flex h-2 w-2">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                       </span>
+                       <TooltipProvider>
+                          <Tooltip delayDuration={300}>
+                            <TooltipTrigger asChild>
+                               <Badge className="bg-red-500 text-white border-0 text-[8px] font-black px-1.5 py-0 h-4 uppercase tracking-tighter cursor-help">
+                                  SLA Warning
+                               </Badge>
+                            </TooltipTrigger>
+                            <TooltipContent side="top" className="bg-red-600 text-white border-red-500 max-w-[200px]">
+                               <p className="font-bold text-xs uppercase tracking-tight">SLA Breach Detected</p>
+                               <p className="text-[10px] font-medium opacity-90 leading-tight mt-0.5">
+                                  {stats.slaBreachCount} {stats.slaBreachCount === 1 ? "record has" : "records have"} been pending for more than 48 hours.
+                               </p>
+                            </TooltipContent>
+                          </Tooltip>
+                       </TooltipProvider>
+                    </div>
+                  )}
+                </div>
+                <h3 className="text-3xl font-black text-white">
+                  {stats.pending.toLocaleString()}
+                </h3>
+                <p className="mt-0.5 text-[10px] font-medium text-blue-200/80">
+                  Awaiting decision
+                </p>
+              </div>
+            </div>
+
+            <div className="group relative overflow-hidden rounded-xl border border-emerald-950 bg-linear-to-br from-emerald-800 to-emerald-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+              <i className="ph-duotone ph-check-circle pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
+              <div className="relative z-10">
+                <p className="mb-1 text-[10px] font-black tracking-widest text-emerald-100 uppercase">
+                  Approved
+                </p>
+                <h3 className="text-3xl font-black text-white">
+                  {stats.approvedToday.toLocaleString()}
+                </h3>
+                <p className="mt-0.5 text-[10px] font-medium text-emerald-100/80">
+                  Processed today
+                </p>
+              </div>
+            </div>
+
+            <div className="group relative overflow-hidden rounded-xl border border-red-950 bg-linear-to-br from-red-700 to-red-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+              <i className="ph-duotone ph-x-circle pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
+              <div className="relative z-10">
+                <p className="mb-1 text-[10px] font-black tracking-widest text-red-200 uppercase">
+                  Declined
+                </p>
+                <h3 className="text-3xl font-black text-white">
+                  {stats.declinedToday.toLocaleString()}
+                </h3>
+                <p className="mt-0.5 text-[10px] font-medium text-red-200/80">
+                  Returned today
+                </p>
+              </div>
+            </div>
+
+            <div className="group relative overflow-hidden rounded-xl border border-amber-950 bg-linear-to-br from-amber-700 to-amber-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+              <i className="ph-duotone ph-timer pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
+              <div className="relative z-10">
+                <p className="mb-1 text-[10px] font-black tracking-widest text-amber-100 uppercase">
+                  Avg. Time
+                </p>
+                <h3 className="text-3xl font-black text-white">
+                  {stats.avgSlaHours}h
+                </h3>
+                <p className="mt-0.5 text-[10px] font-medium text-amber-100/80">
+                  Mean review duration
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <Card className="flex h-auto w-full flex-col rounded-2xl border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-seal-check"
           title="Digital Records Review"
@@ -477,7 +575,7 @@ export default function DigitalRecordsReviewTab({
         )}
 
         {/* Filter Bar */}
-        <div className="flex-none border-b border-gray-200 bg-gray-50 p-3 dark:border-white/10 dark:bg-white/5">
+        <div className="flex-none bg-gray-50 p-3 dark:bg-white/5">
           <div className="flex w-full flex-wrap items-end gap-3">
             {/* Search */}
             <div className="min-w-[400px] flex-1">
@@ -624,453 +722,351 @@ export default function DigitalRecordsReviewTab({
             </div>
           </div>
         </div>
-
-        <CardContent className="flex h-auto w-full flex-col bg-white p-6 dark:bg-card">
-          {isLoading && records.length === 0 ? (
-            <div className="space-y-8 animate-pulse">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <Skeleton key={i} className="h-28 rounded-xl bg-gray-100 dark:bg-muted" />
-                ))}
-              </div>
-              <div className="space-y-4">
-                <div className="flex justify-between">
-                   <Skeleton className="h-3 w-40 rounded-full bg-gray-100 dark:bg-muted" />
-                   <Skeleton className="h-4 w-12 rounded-full bg-gray-100 dark:bg-muted" />
-                </div>
-                <Skeleton className="h-4 w-full rounded-full bg-gray-100 dark:bg-muted" />
-              </div>
-              <div className="border border-gray-100 rounded-xl overflow-hidden dark:border-white/10">
-                <Skeleton className="h-10 w-full bg-gray-50 dark:bg-card" />
-                <div className="p-4 space-y-4">
-                  {[1, 2, 3, 4, 5].map(i => (
-                    <Skeleton key={i} className="h-8 w-full bg-gray-50 dark:bg-muted" />
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : error ? (
-            <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
-              <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
-                </EmptyMedia>
-                <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
-                  Load failed
-                </EmptyTitle>
-                <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
-                  {error}
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            <div className={cn("flex flex-1 flex-col min-h-0 transition-all duration-500", isLoading && "opacity-40 blur-[1px]")}>
-              {/* Stat Cards */}
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4 mb-6">
-                <div className="group relative overflow-hidden rounded-xl border border-blue-950 bg-linear-to-br from-blue-800 to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
-                  <i className="ph-duotone ph-clock-countdown pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between">
-                      <p className="mb-1 text-[10px] font-black tracking-widest text-blue-200 uppercase">
-                        Pending
-                      </p>
-                      {stats.hasSlaBreach && !isLoading && (
-                        <div className="flex items-center gap-1.5">
-                           <span className="relative flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                           </span>
-                           <TooltipProvider>
-                              <Tooltip delayDuration={300}>
-                                <TooltipTrigger asChild>
-                                   <Badge className="bg-red-500 text-white border-0 text-[8px] font-black px-1.5 py-0 h-4 uppercase tracking-tighter cursor-help">
-                                      SLA Warning
-                                   </Badge>
-                                </TooltipTrigger>
-                                <TooltipContent side="top" className="bg-red-600 text-white border-red-500 max-w-[200px]">
-                                   <p className="font-bold text-xs uppercase tracking-tight">SLA Breach Detected</p>
-                                   <p className="text-[10px] font-medium opacity-90 leading-tight mt-0.5">
-                                      {stats.slaBreachCount} {stats.slaBreachCount === 1 ? "record has" : "records have"} been pending for more than 48 hours.
-                                   </p>
-                                </TooltipContent>
-                              </Tooltip>
-                           </TooltipProvider>
-                        </div>
-                      )}
-                    </div>
-                    <h3 className="text-3xl font-black text-white">
-                      {stats.pending.toLocaleString()}
-                    </h3>
-                    <p className="mt-0.5 text-[10px] font-medium text-blue-200/80">
-                      Awaiting decision
-                    </p>
-                  </div>
-                </div>
-
-                <div className="group relative overflow-hidden rounded-xl border border-emerald-950 bg-linear-to-br from-emerald-800 to-emerald-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
-                  <i className="ph-duotone ph-check-circle pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
-                  <div className="relative z-10">
-                    <p className="mb-1 text-[10px] font-black tracking-widest text-emerald-100 uppercase">
-                      Approved
-                    </p>
-                    <h3 className="text-3xl font-black text-white">
-                      {stats.approvedToday.toLocaleString()}
-                    </h3>
-                    <p className="mt-0.5 text-[10px] font-medium text-emerald-100/80">
-                      Processed today
-                    </p>
-                  </div>
-                </div>
-
-                <div className="group relative overflow-hidden rounded-xl border border-red-950 bg-linear-to-br from-red-700 to-red-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
-                  <i className="ph-duotone ph-x-circle pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
-                  <div className="relative z-10">
-                    <p className="mb-1 text-[10px] font-black tracking-widest text-red-200 uppercase">
-                      Declined
-                    </p>
-                    <h3 className="text-3xl font-black text-white">
-                      {stats.declinedToday.toLocaleString()}
-                    </h3>
-                    <p className="mt-0.5 text-[10px] font-medium text-red-200/80">
-                      Returned today
-                    </p>
-                  </div>
-                </div>
-
-                <div className="group relative overflow-hidden rounded-xl border border-amber-950 bg-linear-to-br from-amber-700 to-amber-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
-                  <i className="ph-duotone ph-timer pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
-                  <div className="relative z-10">
-                    <p className="mb-1 text-[10px] font-black tracking-widest text-amber-100 uppercase">
-                      Avg. Time
-                    </p>
-                    <h3 className="text-3xl font-black text-white">
-                      {stats.avgSlaHours}h
-                    </h3>
-                    <p className="mt-0.5 text-[10px] font-medium text-amber-100/80">
-                      Mean review duration
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="h-auto w-full overflow-hidden overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
-                <table className="min-w-full text-sm">
-                  <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm dark:border-white/10 dark:bg-muted">
-                    <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
-                      <th className="w-12 p-4 text-center">
-                        <input
-                          type="checkbox"
-                          className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:text-primary dark:border-white/10"
-                          checked={
-                            paginatedRecords.length > 0 &&
-                            paginatedRecords.every((r) => selectedIds.has(r.id))
-                          }
-                          onChange={(e) => toggleSelectAll(e.target.checked)}
-                          disabled={paginatedRecords.length === 0}
+      </Card>
+       {isLoading && records.length === 0 ? (
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card animate-pulse">
+          <div className="h-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/5" />
+          <div className="p-4 space-y-4">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Skeleton key={i} className="h-8 w-full bg-gray-50 dark:bg-muted" />
+            ))}
+          </div>
+        </div>
+      ) : error ? (
+        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6">
+          <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+            <EmptyHeader className="flex flex-col items-center gap-0">
+              <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+                <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
+              </EmptyMedia>
+              <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
+                Load failed
+              </EmptyTitle>
+              <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
+                {error}
+              </EmptyDescription>
+            </EmptyHeader>
+          </Empty>
+        </div>
+      ) : (
+        <div className={cn("flex flex-1 flex-col gap-6 transition-all duration-500", isLoading && "opacity-40 blur-[1px]")}>
+          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm dark:border-white/10 dark:bg-muted">
+                  <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
+                    <th className="w-12 p-4 text-center">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:text-primary dark:border-white/10"
+                        checked={
+                          paginatedRecords.length > 0 &&
+                          paginatedRecords.every((r) => selectedIds.has(r.id))
+                        }
+                        onChange={(e) => toggleSelectAll(e.target.checked)}
+                        disabled={paginatedRecords.length === 0}
+                      />
+                    </th>
+                    <th className="p-4">
+                      <button
+                        onClick={() => handleSort("student_name")}
+                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                      >
+                        STUDENT NAME{" "}
+                        <SortIndicator
+                          column="student_name"
+                          sortBy={sortBy}
+                          sortOrder={sortOrder}
                         />
-                      </th>
-                      <th className="p-4">
-                        <button
-                          onClick={() => handleSort("student_name")}
-                          className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
-                        >
-                          STUDENT NAME{" "}
-                          <SortIndicator
-                            column="student_name"
-                            sortBy={sortBy}
-                            sortOrder={sortOrder}
-                          />
-                        </button>
-                      </th>
-                      <th className="p-4">
-                        <button
-                          onClick={() => handleSort("doc_type")}
-                          className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
-                        >
-                          DOCUMENT TYPE{" "}
-                          <SortIndicator
-                            column="doc_type"
-                            sortBy={sortBy}
-                            sortOrder={sortOrder}
-                          />
-                        </button>
-                      </th>
-                      <th className="p-4">SOURCE FILENAME</th>
-                      <th className="p-4">
-                        <button
-                          onClick={() => handleSort("approval_status")}
-                          className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
-                        >
-                          STATUS{" "}
-                          <SortIndicator
-                            column="approval_status"
-                            sortBy={sortBy}
-                            sortOrder={sortOrder}
-                          />
-                        </button>
-                      </th>
-                      <th className="p-4">
-                        <button
-                          onClick={() => handleSort("created_at")}
-                          className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
-                        >
-                          UPLOAD DATE{" "}
-                          <SortIndicator
-                            column="created_at"
-                            sortBy={sortBy}
-                            sortOrder={sortOrder}
-                          />
-                        </button>
-                      </th>
-                      <th className="p-4 text-right">ACTIONS</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-100 dark:divide-white/10">
-                    {sortedRecords.length === 0 ? (
-                      <tr className="border-0 hover:bg-transparent">
-                        <td colSpan={7} className="border-0 p-0">
-                          <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                            <EmptyHeader className="flex flex-col items-center gap-0">
-                              <div className="relative mb-6">
-                                <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                                  <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
-                                </EmptyMedia>
-                              </div>
-                              <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
-                                No records
-                              </EmptyTitle>
-                              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                                {searchQuery
-                                  ? "No records match your filters."
-                                  : "No digital records found."}
-                              </EmptyDescription>
-                              {searchQuery && (
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => {
-                                    setLocalSearch("")
-                                    setSearchQuery("")
-                                    setCurrentPage(1)
-                                  }}
-                                  className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 uppercase tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-                                >
-                                  <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                                  CLEAR SEARCH
-                                </Button>
-                              )}
-                            </EmptyHeader>
-                          </Empty>
-                        </td>
-                      </tr>
-                    ) : (
-                      paginatedRecords.map((r) => {
-                        const uploaded = formatPHDateTimeParts(r.created_at)
-                        const isSelected = selectedIds.has(r.id)
-                        const fortyEightHoursAgo = Date.now() - 48 * 60 * 60 * 1000
-                        const isSlaBreached = r.approval_status === "Pending" && new Date(r.created_at).getTime() < fortyEightHoursAgo
-
-                        return (
-                          <tr
-                            key={r.id}
-                            className={cn(
-                              "group transition-all duration-200 hover:bg-gray-50/80 dark:bg-card dark:hover:bg-white/5 select-none cursor-pointer",
-                              isSelected && "bg-amber-50 dark:bg-amber-950/40",
-                              isSlaBreached && !isSelected && "bg-amber-50 dark:bg-amber-950/10"
-                            )}
-                            onClick={() => toggleSelectRow(r.id)}
-                          >
-                            <td className="p-4 text-center">
-                              <input
-                                type="checkbox"
-                                className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10"
-                                checked={isSelected}
-                                onChange={() => {}} // Controlled by tr onClick
-                              />
-                            </td>
-                            <td className="p-4">
-                              <div className="flex items-center gap-3">
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-xs font-black text-gray-500 shadow-xs dark:bg-white/5 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm transition-all">
-                                  {(r.student_name || "U").substring(0, 2).toUpperCase()}
-                                </div>
-                                <div className="flex flex-col overflow-hidden">
-                                  <span className="truncate text-xs font-bold text-gray-900 leading-tight dark:text-zinc-50">
-                                    {r.student_name || "Unknown"}
-                                  </span>
-                                  <span className="truncate text-[10px] font-medium text-gray-500 dark:text-zinc-400 mt-0.5">
-                                    {r.student_no}
-                                  </span>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="p-4">
-                              <div className="flex w-fit items-center gap-1.5 rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-[9px] font-black text-pup-maroon tracking-wider uppercase dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
-                                <i className="ph-bold ph-file-text text-[10px]"></i>
-                                {r.doc_type}
-                              </div>
-                            </td>
-                            <td className="p-4">
-                              <span
-                                className="block max-w-[180px] truncate text-xs font-medium text-gray-600 dark:text-zinc-300"
-                                title={r.original_filename}
+                      </button>
+                    </th>
+                    <th className="p-4">
+                      <button
+                        onClick={() => handleSort("doc_type")}
+                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                      >
+                        DOCUMENT TYPE{" "}
+                        <SortIndicator
+                          column="doc_type"
+                          sortBy={sortBy}
+                          sortOrder={sortOrder}
+                        />
+                      </button>
+                    </th>
+                    <th className="p-4">SOURCE FILENAME</th>
+                    <th className="p-4">
+                      <button
+                        onClick={() => handleSort("approval_status")}
+                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                      >
+                        STATUS{" "}
+                        <SortIndicator
+                          column="approval_status"
+                          sortBy={sortBy}
+                          sortOrder={sortOrder}
+                        />
+                      </button>
+                    </th>
+                    <th className="p-4">
+                      <button
+                        onClick={() => handleSort("created_at")}
+                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                      >
+                        UPLOAD DATE{" "}
+                        <SortIndicator
+                          column="created_at"
+                          sortBy={sortBy}
+                          sortOrder={sortOrder}
+                        />
+                      </button>
+                    </th>
+                    <th className="p-4 text-right">ACTIONS</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+                  {sortedRecords.length === 0 ? (
+                    <tr className="border-0 hover:bg-transparent">
+                      <td colSpan={7} className="border-0 p-0">
+                        <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                          <EmptyHeader className="flex flex-col items-center gap-0">
+                            <div className="relative mb-6">
+                              <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                              <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                                <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
+                              </EmptyMedia>
+                            </div>
+                            <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
+                              No records
+                            </EmptyTitle>
+                            <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                              {searchQuery
+                                ? "No records match your filters."
+                                : "No digital records found."}
+                            </EmptyDescription>
+                            {searchQuery && (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => {
+                                  setLocalSearch("")
+                                  setSearchQuery("")
+                                  setCurrentPage(1)
+                                }}
+                                className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 uppercase tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                               >
-                                {r.original_filename}
-                              </span>
-                            </td>
-                            <td className="p-4">
-                              <div className="flex items-center gap-3">
-                                <div
-                                  className={cn(
-                                    "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-wider shadow-xs transition-all",
-                                    getStatusBadge(r.approval_status)
-                                  )}
-                                >
-                                  <i
-                                    className={`ph-fill ${getStatusIcon(r.approval_status)} text-[10px]`}
-                                  ></i>
-                                  {r.approval_status || "Pending"}
-                                </div>
-                                {isSlaBreached && (
-                                  <TooltipProvider>
-                                    <Tooltip>
-                                      <TooltipTrigger asChild>
-                                        <div className="flex h-5 w-5 animate-pulse items-center justify-center rounded-full bg-red-100 text-red-600 shadow-sm cursor-help dark:shadow-none">
-                                          <i className="ph-bold ph-warning-diamond text-[10px]"></i>
-                                        </div>
-                                      </TooltipTrigger>
-                                      <TooltipContent side="top" className="bg-red-600 text-white border-red-500">
-                                         <p className="text-[10px] font-bold uppercase tracking-tight">SLA Breach Detected</p>
-                                         <p className="text-[9px] font-medium opacity-90">Pending for over 48 hours.</p>
-                                      </TooltipContent>
-                                    </Tooltip>
-                                  </TooltipProvider>
-                                )}
-                              </div>
-                            </td>
-                            <td className="p-4">
-                              <div className="flex flex-col">
-                                <span className="text-xs font-bold text-gray-900 dark:text-zinc-50">
-                                  {uploaded.date}
-                                </span>
-                                <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400">
-                                  {uploaded.time}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="p-4 text-right">
-                              <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
-                                <Button
-                                  variant="outline"
-                                  size="icon"
-                                  onClick={() => handlePreview(r)}
-                                  className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800 cursor-pointer"
-                                >
-                                  <i className="ph-bold ph-eye text-lg"></i>
-                                </Button>
-                                {r.approval_status === "Pending" ? (
-                                   <>
-                                     <Button
-                                       variant="outline"
-                                       size="icon"
-                                       onClick={() => handleApprove(r.id)}
-                                       className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-emerald-600 shadow-sm transition-all hover:border-emerald-600 hover:bg-emerald-50 dark:bg-white/5 dark:border-white/10 dark:text-emerald-400 dark:hover:bg-emerald-900/20 cursor-pointer"
-                                       title="Approve Record"
-                                     >
-                                       <i className="ph-bold ph-check text-lg"></i>
-                                     </Button>
+                                <i className="ph-bold ph-arrow-counter-clockwise"></i>
+                                CLEAR SEARCH
+                              </Button>
+                            )}
+                          </EmptyHeader>
+                        </Empty>
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedRecords.map((r) => {
+                      const uploaded = formatPHDateTimeParts(r.created_at)
+                      const isSelected = selectedIds.has(r.id)
+                      const fortyEightHoursAgo = Date.now() - 48 * 60 * 60 * 1000
+                      const isSlaBreached = r.approval_status === "Pending" && new Date(r.created_at).getTime() < fortyEightHoursAgo
 
-                                     <Button
-                                       variant="outline"
-                                       size="icon"
-                                       onClick={() => onDecline(r.id)}
-                                       className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10 cursor-pointer"
-                                       title="Decline Record"
-                                     >
-                                       <i className="ph-bold ph-x text-lg"></i>
-                                     </Button>
-                                   </>
-                                 ) : (
+                      return (
+                        <tr
+                          key={r.id}
+                          className={cn(
+                            "group transition-all duration-200 hover:bg-gray-50/80 dark:bg-card dark:hover:bg-white/5 select-none cursor-pointer",
+                            isSelected && "bg-amber-50 dark:bg-amber-950/40",
+                            isSlaBreached && !isSelected && "bg-amber-50 dark:bg-amber-950/10"
+                          )}
+                          onClick={() => toggleSelectRow(r.id)}
+                        >
+                          <td className="p-4 text-center">
+                            <input
+                              type="checkbox"
+                              className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10"
+                              checked={isSelected}
+                              onChange={() => {}} // Controlled by tr onClick
+                            />
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-xs font-black text-gray-500 shadow-xs dark:bg-white/5 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm transition-all">
+                                {(r.student_name || "U").substring(0, 2).toUpperCase()}
+                              </div>
+                              <div className="flex flex-col overflow-hidden">
+                                <span className="truncate text-xs font-bold text-gray-900 leading-tight dark:text-zinc-50">
+                                  {r.student_name || "Unknown"}
+                                </span>
+                                <span className="truncate text-[10px] font-medium text-gray-500 dark:text-zinc-400 mt-0.5">
+                                  {r.student_no}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex w-fit items-center gap-1.5 rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-[9px] font-black text-pup-maroon tracking-wider uppercase dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
+                              <i className="ph-bold ph-file-text text-[10px]"></i>
+                              {r.doc_type}
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <span
+                              className="block max-w-[180px] truncate text-xs font-medium text-gray-600 dark:text-zinc-300"
+                              title={r.original_filename}
+                            >
+                              {r.original_filename}
+                            </span>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex items-center gap-3">
+                              <div
+                                className={cn(
+                                  "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-wider shadow-xs transition-all",
+                                  getStatusBadge(r.approval_status)
+                                )}
+                              >
+                                <i
+                                  className={`ph-fill ${getStatusIcon(r.approval_status)} text-[10px]`}
+                                ></i>
+                                {r.approval_status || "Pending"}
+                              </div>
+                              {isSlaBreached && (
+                                <TooltipProvider>
+                                  <Tooltip>
+                                    <TooltipTrigger asChild>
+                                      <div className="flex h-5 w-5 animate-pulse items-center justify-center rounded-full bg-red-100 text-red-600 shadow-sm cursor-help dark:shadow-none">
+                                        <i className="ph-bold ph-warning-diamond text-[10px]"></i>
+                                      </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="bg-red-600 text-white border-red-500">
+                                       <p className="text-[10px] font-bold uppercase tracking-tight">SLA Breach Detected</p>
+                                       <p className="text-[9px] font-medium opacity-90">Pending for over 48 hours.</p>
+                                    </TooltipContent>
+                                  </Tooltip>
+                                </TooltipProvider>
+                              )}
+                            </div>
+                          </td>
+                          <td className="p-4">
+                            <div className="flex flex-col">
+                              <span className="text-xs font-bold text-gray-900 dark:text-zinc-50">
+                                {uploaded.date}
+                              </span>
+                              <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400">
+                                {uploaded.time}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="p-4 text-right">
+                            <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                onClick={() => handlePreview(r)}
+                                className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800 cursor-pointer active:scale-95"
+                              >
+                                <i className="ph-bold ph-eye text-lg"></i>
+                              </Button>
+                              {r.approval_status === "Pending" ? (
+                                 <>
                                    <Button
                                      variant="outline"
                                      size="icon"
-                                     onClick={() => onSetStatus(r.id, "Pending", "Undo review action")}
-                                     className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-amber-600 shadow-sm transition-all hover:border-amber-600 hover:bg-amber-50 dark:bg-white/5 dark:border-white/10 dark:text-amber-500 dark:hover:bg-amber-900/20 cursor-pointer"
-                                     title="Revert to Pending"
+                                     onClick={() => handleApprove(r.id)}
+                                     className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-emerald-600 shadow-sm transition-all hover:border-emerald-600 hover:bg-emerald-50 dark:bg-white/5 dark:border-white/10 dark:text-emerald-400 dark:hover:bg-emerald-900/20 cursor-pointer active:scale-95"
+                                     title="Approve Record"
                                    >
-                                     <i className="ph-bold ph-arrow-counter-clockwise text-lg"></i>
+                                     <i className="ph-bold ph-check text-lg"></i>
                                    </Button>
-                                 )}
-                              </div>
-                            </td>
-                          </tr>
-                        )
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
 
-              <div className="-mx-6 mt-4 -mb-6 flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-[2rem] dark:border-white/10 dark:bg-card">
-                <div className="flex items-center gap-8">
-                  {sortedRecords.length > 0 && (
-                    <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
-                      <span>
-                        SHOWING <strong className="text-gray-900 dark:text-zinc-50">{paginatedRecords.length}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{sortedRecords.length}</strong> ENTRIES
-                      </span>
-                      <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
-                        <span className="text-[10px] opacity-60">ROWS:</span>
-                        <Select
-                          className="h-8 w-16 cursor-pointer rounded-brand border border-gray-200 bg-white px-2 text-[10px] font-black text-gray-700 shadow-xs focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10"
-                          value={itemsPerPage}
-                          onChange={(e) => {
-                            setItemsPerPage(Number(e.target.value))
-                            setCurrentPage(1)
-                          }}
-                        >
-                          <option value={10}>10</option>
-                          <option value={20}>20</option>
-                          <option value={50}>50</option>
-                          <option value={100}>100</option>
-                        </Select>
-                      </div>
-                    </div>                  )}
-                    </div>
-
-                    {sortedRecords.length > 0 && (
-                    <div className="flex shrink-0 items-center gap-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={displayPage <= 1}
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                      className="h-10 rounded-xl border-gray-200 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
-                    >
-                      <i className="ph-bold ph-caret-left mr-2 text-base"></i>
-                      PREV
-                    </Button>
-
-                    <div className="flex h-9 min-w-[48px] items-center justify-center rounded-xl border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
-                      {displayPage}
-                    </div>
-
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      disabled={displayPage >= totalPages}
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                      className="h-10 rounded-xl border-gray-200 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
-                    >
-                      NEXT
-                      <i className="ph-bold ph-caret-right mr-2 text-base"></i>
-                    </Button>
-                    </div>
-                )}
-              </div>
+                                   <Button
+                                     variant="outline"
+                                     size="icon"
+                                     onClick={() => onDecline(r.id)}
+                                     className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10 cursor-pointer active:scale-95"
+                                     title="Decline Record"
+                                   >
+                                     <i className="ph-bold ph-x text-lg"></i>
+                                   </Button>
+                                 </>
+                               ) : (
+                                 <Button
+                                   variant="outline"
+                                   size="icon"
+                                   onClick={() => onSetStatus(r.id, "Pending", "Undo review action")}
+                                   className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-amber-600 shadow-sm transition-all hover:border-amber-600 hover:bg-amber-50 dark:bg-white/5 dark:border-white/10 dark:text-amber-500 dark:hover:bg-amber-900/20 cursor-pointer active:scale-95"
+                                   title="Revert to Pending"
+                                 >
+                                   <i className="ph-bold ph-arrow-counter-clockwise text-lg"></i>
+                                 </Button>
+                               )}
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })
+                  )}
+                </tbody>
+              </table>
             </div>
-          )}
-        </CardContent>
-      </Card>
+
+            {sortedRecords.length > 0 && (
+              <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card">
+                <div className="flex items-center gap-8">
+                  <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
+                    <span>
+                      SHOWING <strong className="text-gray-900 dark:text-zinc-50">{paginatedRecords.length}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{sortedRecords.length}</strong> ENTRIES
+                    </span>
+                    <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
+                      <span className="text-[10px] opacity-60">ROWS:</span>
+                      <Select
+                        className="h-8 w-16 cursor-pointer rounded-brand border border-gray-200 bg-white px-2 text-[10px] font-black text-gray-700 shadow-xs focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10"
+                        value={itemsPerPage}
+                        onChange={(e) => {
+                          setItemsPerPage(Number(e.target.value))
+                          setCurrentPage(1)
+                        }}
+                      >
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={displayPage <= 1}
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    className="h-10 rounded-brand border-gray-200 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
+                  >
+                    <i className="ph-bold ph-caret-left mr-2 text-base"></i>
+                    PREV
+                  </Button>
+
+                  <div className="flex h-9 min-w-[48px] items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                    {displayPage}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={displayPage >= totalPages}
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    className="h-10 rounded-brand border-gray-200 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
+                  >
+                    NEXT
+                    <i className="ph-bold ph-caret-right mr-2 text-base"></i>
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Floating Bulk Action Bar */}
       {selectedIds.size > 1 && (
