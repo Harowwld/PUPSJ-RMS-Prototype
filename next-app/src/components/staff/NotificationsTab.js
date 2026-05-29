@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useState } from "react"
+import { useCallback, useEffect, useMemo, useState, useRef } from "react"
 import { cn } from "@/lib/utils"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -63,6 +63,11 @@ export default function NotificationsTab({
   isLoading,
   onRefresh,
 }) {
+  const onUnreadChangeRef = useRef(onUnreadChange)
+  useEffect(() => {
+    onUnreadChangeRef.current = onUnreadChange
+  }, [onUnreadChange])
+
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState("")
   const [items, setItems] = useState([])
@@ -101,11 +106,11 @@ export default function NotificationsTab({
       setInboxCount(Number(data.inboxCount || 0))
       setArchiveCount(Number(data.archiveCount || 0))
       setLastSeenReviewedAt(data.lastSeenReviewedAt || null)
-      onUnreadChange?.(Number(data.unreadCount || 0))
+      onUnreadChangeRef.current?.(Number(data.unreadCount || 0))
     } catch (e) {
       setError(e?.message || "Failed to load notifications")
     }
-  }, [offset, itemsPerPage, sortBy, sortOrder, activeTab, onUnreadChange])
+  }, [offset, itemsPerPage, sortBy, sortOrder, activeTab])
 
   // Refresh handler
   const handleRefresh = async () => {
@@ -166,12 +171,12 @@ export default function NotificationsTab({
       const nextUnread = Number(json?.data?.unreadCount || 0)
       setUnreadCount(nextUnread)
       setLastSeenReviewedAt(json?.data?.lastSeenReviewedAt || null)
-      onUnreadChange?.(nextUnread)
+      onUnreadChangeRef.current?.(nextUnread)
       await load()
     } catch {
       // silent
     }
-  }, [load, onUnreadChange])
+  }, [load])
 
   const handleAction = async (id, action) => {
     try {
@@ -215,7 +220,21 @@ export default function NotificationsTab({
       <Card className="flex flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-bell"
-          title="System Notifications"
+          title={
+            activeTab === "archive" ? (
+              <span className="flex items-center gap-2.5">
+                System Notifications
+                <Badge
+                  variant="outline"
+                  className="border-red-200 bg-red-50 px-2.5 py-1 text-[9px] font-black tracking-widest text-pup-maroon uppercase dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400"
+                >
+                  ARCHIVE VIEW
+                </Badge>
+              </span>
+            ) : (
+              "System Notifications"
+            )
+          }
           description="Real-time updates on document review decisions and system alerts."
           actions={
             <div className="flex items-center gap-2">
@@ -446,7 +465,7 @@ export default function NotificationsTab({
                             />
                           </button>
                         </th>
-                        <th className="w-48 p-4 text-right">ACTIONS</th>
+                        <th className="w-64 p-4 text-right">ACTIONS</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-white/10">
@@ -536,7 +555,7 @@ export default function NotificationsTab({
                                 </div>
                               </td>
                               <td className="p-4" onClick={(e) => e.stopPropagation()}>
-                                <div className="flex flex-wrap justify-end gap-1.5">
+                                <div className="flex items-center justify-end gap-1.5 flex-nowrap">
                                   <TooltipProvider>
                                     <Tooltip>
                                       <TooltipTrigger asChild>
@@ -551,7 +570,7 @@ export default function NotificationsTab({
                                               n.id
                                             )
                                           }
-                                          className="h-9 w-9 cursor-pointer rounded-full border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 dark:border-white/10 dark:bg-white/5 dark:text-zinc-500 dark:hover:border-blue-800 dark:hover:bg-blue-950/40 dark:hover:text-blue-400"
+                                          className="h-9 w-9 cursor-pointer rounded-brand border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-blue-300 hover:bg-blue-50 hover:text-blue-600 dark:border-white/10 dark:bg-white/5 dark:text-zinc-500 dark:hover:border-blue-800 dark:hover:bg-blue-950/40 dark:hover:text-blue-400"
                                         >
                                           <i className="ph-bold ph-eye text-base"></i>
                                         </Button>
@@ -560,14 +579,14 @@ export default function NotificationsTab({
                                         Preview Document
                                       </TooltipContent>
                                     </Tooltip>
-
+ 
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <Button
                                           variant="outline"
                                           size="icon"
                                           onClick={() => handleAction(n.id, isUnread ? "markRead" : "markUnread")}
-                                          className="h-9 w-9 cursor-pointer rounded-full border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600 dark:border-white/10 dark:bg-white/5 dark:text-zinc-500 dark:hover:border-emerald-800 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-400"
+                                          className="h-9 w-9 cursor-pointer rounded-brand border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-600 dark:border-white/10 dark:bg-white/5 dark:text-zinc-500 dark:hover:border-emerald-800 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-400"
                                         >
                                           <i className={cn("ph-bold text-base", isUnread ? "ph-checks" : "ph-envelope")}></i>
                                         </Button>
@@ -576,14 +595,14 @@ export default function NotificationsTab({
                                         {isUnread ? "Mark as Read" : "Mark as Unread"}
                                       </TooltipContent>
                                     </Tooltip>
-
+ 
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <Button
                                           variant="outline"
                                           size="icon"
                                           onClick={() => handleAction(n.id, activeTab === "inbox" ? "archive" : "unarchive")}
-                                          className="h-9 w-9 cursor-pointer rounded-full border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-amber-300 hover:bg-amber-50 hover:text-amber-600 dark:border-white/10 dark:bg-white/5 dark:text-zinc-500 dark:hover:border-amber-800 dark:hover:bg-amber-950/40 dark:hover:text-amber-400"
+                                          className="h-9 w-9 cursor-pointer rounded-brand border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-amber-300 hover:bg-amber-50 hover:text-amber-600 dark:border-white/10 dark:bg-white/5 dark:text-zinc-500 dark:hover:border-amber-800 dark:hover:bg-amber-950/40 dark:hover:text-amber-400"
                                         >
                                           <i className={cn("ph-bold text-base", activeTab === "inbox" ? "ph-archive" : "ph-tray")}></i>
                                         </Button>
@@ -593,7 +612,7 @@ export default function NotificationsTab({
                                       </TooltipContent>
                                     </Tooltip>
                                   </TooltipProvider>
-
+ 
                                   {n.approval_status === "Declined" &&
                                     onRescan && (
                                       <Button
@@ -608,9 +627,9 @@ export default function NotificationsTab({
                                             n.mime_type
                                           )
                                         }
-                                        className="h-9 rounded-md border-pup-maroon/30 bg-white px-3 text-xs font-bold text-pup-maroon shadow-sm transition-all hover:border-pup-maroon hover:bg-red-50 dark:bg-card dark:text-primary dark:shadow-none"
+                                        className="h-9 rounded-brand border border-pup-maroon bg-red-50/50 px-3 text-xs font-black tracking-wider text-pup-maroon shadow-xs transition-all hover:bg-pup-maroon hover:text-white dark:border-red-500/30 dark:bg-red-950/20 dark:text-red-400 dark:hover:bg-red-950/50 dark:hover:text-white active:scale-95 whitespace-nowrap"
                                       >
-                                        <i className="ph-bold ph-arrow-counter-clockwise mr-1.5"></i>
+                                        <i className="ph-bold ph-arrow-counter-clockwise mr-1.5 text-xs"></i>
                                         RE-SCAN
                                       </Button>
                                     )}

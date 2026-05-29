@@ -74,7 +74,11 @@ export default function Sidebar({ items, activeKey, onSelect }) {
                 </div>
                 <div className="flex items-center gap-2">
                   {item.badge > 0 ? (
-                    <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-600 px-1.5 text-[11px] font-extrabold text-white dark:bg-emerald-950/60 dark:text-emerald-400 dark:ring-1 dark:ring-emerald-500/20">
+                    <span className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-extrabold text-white ${
+                      item.key === "review" || item.key === "notifications"
+                        ? "bg-pup-maroon dark:bg-red-500/20 dark:text-red-400 dark:ring-1 dark:ring-red-500/30"
+                        : "bg-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 dark:ring-1 dark:ring-emerald-500/20"
+                    }`}>
                       {item.badge > 99 ? "99+" : item.badge}
                     </span>
                   ) : null}
@@ -105,7 +109,11 @@ export default function Sidebar({ items, activeKey, onSelect }) {
                         {child.label}
                       </span>
                       {child.badge > 0 ? (
-                        <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-600 px-1.5 text-[11px] font-extrabold text-white dark:bg-emerald-950/60 dark:text-emerald-400 dark:ring-1 dark:ring-emerald-500/20">
+                        <span className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-extrabold text-white ${
+                          child.key === "review" || child.key === "notifications"
+                            ? "bg-pup-maroon dark:bg-red-500/20 dark:text-red-400 dark:ring-1 dark:ring-red-500/30"
+                            : "bg-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 dark:ring-1 dark:ring-emerald-500/20"
+                        }`}>
                           {child.badge > 99 ? "99+" : child.badge}
                         </span>
                       ) : null}
@@ -128,7 +136,11 @@ export default function Sidebar({ items, activeKey, onSelect }) {
               <i className={`${item.iconClass} text-lg`}></i> {item.label}
             </span>
             {item.badge > 0 ? (
-              <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-600 px-1.5 text-[11px] font-extrabold text-white dark:bg-emerald-950/60 dark:text-emerald-400 dark:ring-1 dark:ring-emerald-500/20">
+              <span className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-extrabold text-white ${
+                item.key === "review" || item.key === "notifications"
+                  ? "bg-pup-maroon dark:bg-red-500/20 dark:text-red-400 dark:ring-1 dark:ring-red-500/30"
+                  : "bg-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 dark:ring-1 dark:ring-emerald-500/20"
+              }`}>
                 {item.badge > 99 ? "99+" : item.badge}
               </span>
             ) : null}

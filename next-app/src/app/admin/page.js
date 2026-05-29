@@ -115,6 +115,7 @@ function AdminPageContent() {
   const [backupEndDate, setBackupEndDate] = useState("")
   const [reviewRecords, setReviewRecords] = useState(null)
   const [reviewStatusFilter, setReviewStatusFilter] = useState("All")
+  const [pendingReviewCount, setPendingReviewCount] = useState(0)
 
   const [search, setSearch] = useState("")
   const [roleFilter, setRoleFilter] = useState("All")
@@ -418,6 +419,18 @@ function AdminPageContent() {
     }
   }, [backupSearch, backupStartDate, backupEndDate])
 
+  const fetchPendingReviewCount = useCallback(async () => {
+    try {
+      const res = await fetch("/api/documents?limit=200&approvalStatus=Pending")
+      const json = await res.json().catch(() => null)
+      if (res.ok && json?.ok && Array.isArray(json.data)) {
+        setPendingReviewCount(json.data.length)
+      }
+    } catch {
+      // ignore
+    }
+  }, [])
+
   const refreshReviewRecords = useCallback(async (isManual = false) => {
     if (isManual) setViewLoading((prev) => ({ ...prev, review: true }))
     setReviewLoading(true)
@@ -436,6 +449,7 @@ function AdminPageContent() {
       }
       setReviewRecords(Array.isArray(json.data) ? json.data : [])
       loadedViewsRef.current.review = true
+      fetchPendingReviewCount()
     } catch (err) {
       if (isManual) {
         showToast(
@@ -450,7 +464,7 @@ function AdminPageContent() {
       if (isManual) setViewLoading((prev) => ({ ...prev, review: false }))
       setReviewLoading(false)
     }
-  }, [reviewStatusFilter, showToast])
+  }, [reviewStatusFilter, showToast, fetchPendingReviewCount])
 
   const logAdminAction = useCallback(
     async (input, detailsInput = "") => {
@@ -532,17 +546,37 @@ function AdminPageContent() {
         setTimeout(() => {
           refreshStaff()
           refreshSystemHealth()
+          fetchPendingReviewCount()
         }, 0)
       } catch (err) {
         console.error("[AdminPage] Profile fetch failed:", err)
       }
     })()
-  }, [router, refreshStaff, refreshAuditLogs, refreshSystemHealth])
+  }, [router, refreshStaff, refreshAuditLogs, refreshSystemHealth, fetchPendingReviewCount])
 
   useEffect(() => {
     const timer = setInterval(refreshSystemHealth, 10000)
     return () => clearInterval(timer)
   }, [refreshSystemHealth])
+
+  // Poll pending review count every 10s and update on focus/visibility change
+  useEffect(() => {
+    fetchPendingReviewCount()
+    const timer = setInterval(fetchPendingReviewCount, 10000)
+    
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return
+      fetchPendingReviewCount()
+    }
+    document.addEventListener("visibilitychange", onVisible)
+    window.addEventListener("focus", onVisible)
+    
+    return () => {
+      clearInterval(timer)
+      document.removeEventListener("visibilitychange", onVisible)
+      window.removeEventListener("focus", onVisible)
+    }
+  }, [fetchPendingReviewCount])
 
   // Poll external drive status every 5s
   useEffect(() => {
@@ -1461,6 +1495,7 @@ function AdminPageContent() {
       key: "review",
       label: "Digital Records Review",
       iconClass: "ph-bold ph-seal-check",
+      badge: pendingReviewCount,
     },
     {
       key: "digitization",
