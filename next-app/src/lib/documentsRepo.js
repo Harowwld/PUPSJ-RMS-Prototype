@@ -24,6 +24,12 @@ async function ensureReviewColumns() {
     if (!names.has("review_note")) {
       await dbRun("ALTER TABLE documents ADD COLUMN review_note TEXT");
     }
+    if (!names.has("uploaded_by")) {
+      await dbRun("ALTER TABLE documents ADD COLUMN uploaded_by TEXT");
+      await dbRun(
+        "CREATE INDEX IF NOT EXISTS idx_documents_uploaded_by ON documents(uploaded_by)"
+      );
+    }
     await dbRun(
       "UPDATE documents SET approval_status = 'Approved' WHERE approval_status IS NULL OR approval_status = ''"
     );
@@ -58,6 +64,7 @@ export async function createDocument({
   sizeBytes,
   buffer,
   storageFilename: providedStorageFilename,
+  uploadedBy,
 }) {
   await ensureReviewColumns();
 
@@ -81,8 +88,9 @@ export async function createDocument({
       storage_filename,
       mime_type,
       size_bytes,
-      approval_status
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      approval_status,
+      uploaded_by
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
   `,
     [
       studentNo,
@@ -93,6 +101,7 @@ export async function createDocument({
       mimeType,
       sizeBytes,
       "Pending",
+      uploadedBy || null,
     ]
   );
 

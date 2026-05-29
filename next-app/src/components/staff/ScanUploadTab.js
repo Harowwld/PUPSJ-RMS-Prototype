@@ -99,6 +99,13 @@ export default function ScanUploadTab({
   onSelectExistingStudent,
   rotation = 0,
   setRotation,
+  phoneLinkLoading,
+  phoneLinkError,
+  phoneLinkUrl,
+  phoneSession,
+  phoneIncoming,
+  createPhoneLinkSession,
+  onUseIncomingFromPhone,
 }) {
   const [clearInboxOpen, setClearInboxOpen] = useState(false)
   const [pendingDroppedFile, setPendingDroppedFile] = useState(null)
@@ -408,7 +415,7 @@ export default function ScanUploadTab({
     if (!normalizedTypedName || normalizedTypedName.length < 2 || lockIdentity)
       return []
     const terms = normalizedTypedName.split(/\s+/).filter(Boolean)
-    const ranked = students
+    const ranked = (students || [])
       .map((s) => {
         const name = String(s?.name || "")
         const nameLower = name.toLowerCase()
@@ -424,6 +431,13 @@ export default function ScanUploadTab({
       .map((x) => x.student)
     return ranked
   }, [students, normalizedTypedName, lockIdentity])
+
+  const phoneStatus =
+    phoneSession?.status === "Paired"
+      ? phoneSession?.is_online
+        ? "Paired (online)"
+        : "Paired (offline)"
+      : phoneSession?.status || "Not linked"
 
   return (
     <div
@@ -1173,6 +1187,118 @@ export default function ScanUploadTab({
                               ) : null}
                             </EmptyHeader>
                           </Empty>
+
+                          {/* Link Phone Camera Widget */}
+                          <div className="mt-6 w-full rounded-2xl border border-gray-200 bg-gray-50/50 p-5 dark:border-white/10 dark:bg-white/5">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-pup-maroon/10 text-pup-maroon dark:bg-primary/10 dark:text-primary">
+                                <i className="ph-bold ph-aperture text-xl"></i>
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-black text-gray-900 dark:text-zinc-50 uppercase tracking-wider">
+                                  Link Phone Camera
+                                </h4>
+                                <p className="text-[11px] font-medium text-gray-500 dark:text-zinc-400">
+                                  Pair a phone to capture and upload pages directly using your camera.
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="mt-4 flex flex-col sm:flex-row gap-3 sm:items-center justify-between">
+                              <Button
+                                type="button"
+                                onClick={createPhoneLinkSession}
+                                disabled={phoneLinkLoading}
+                                className="h-10 bg-pup-maroon hover:bg-pup-darkMaroon dark:bg-primary dark:hover:bg-primary/90 text-white font-bold rounded-brand px-4 text-xs shrink-0"
+                              >
+                                {phoneLinkLoading ? (
+                                  <>
+                                    <i className="ph-bold ph-spinner animate-spin text-xs" /> Creating Link...
+                                  </>
+                                ) : (
+                                  <>
+                                    <i className="ph-bold ph-link text-xs" /> Link phone camera
+                                  </>
+                                )}
+                              </Button>
+                              <div className="flex items-center gap-2">
+                                <span className="h-2 w-2 rounded-full bg-pup-maroon animate-pulse" />
+                                <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-zinc-500">
+                                  Status: <span className="text-gray-950 dark:text-white font-black">{phoneStatus}</span>
+                                </span>
+                              </div>
+                            </div>
+
+                            {phoneLinkUrl && (
+                              <div className="mt-4 grid grid-cols-1 md:grid-cols-[130px_1fr] gap-4 border border-gray-200 rounded-xl p-3.5 bg-white dark:border-white/10 dark:bg-card">
+                                <div className="flex items-center justify-center bg-gray-50 dark:bg-muted p-1.5 rounded-lg">
+                                  <Image
+                                    src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(phoneLinkUrl)}`}
+                                    alt="Phone linking QR"
+                                    className="w-[110px] h-[110px] rounded object-contain bg-white"
+                                    width={110}
+                                    height={110}
+                                    unoptimized
+                                  />
+                                </div>
+                                <div className="min-w-0 flex flex-col justify-center">
+                                  <div className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500 mb-1">
+                                    Pairing Link
+                                  </div>
+                                  <div className="truncate text-[10px] font-mono text-gray-600 bg-gray-50 dark:bg-muted border border-gray-200 dark:border-white/10 rounded px-2.5 py-1.5 dark:text-zinc-300">
+                                    {phoneLinkUrl}
+                                  </div>
+                                  <div className="mt-2 text-[10px] text-gray-500 dark:text-zinc-400 font-medium">
+                                    Open this link on the phone or scan the QR code to pair.
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {phoneLinkError && (
+                              <div className="mt-3 p-3 rounded-brand border border-red-200 bg-red-50/50 text-red-700 text-xs font-bold dark:bg-red-950/20 dark:border-red-900/30 dark:text-red-400">
+                                <i className="ph-bold ph-warning-circle mr-1 text-xs" /> {phoneLinkError}
+                              </div>
+                            )}
+
+                            <div className="mt-4 border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-card shadow-sm">
+                              <div className="px-3.5 py-2.5 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/5 text-[10px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest">
+                                Incoming captures
+                              </div>
+                              {Array.isArray(phoneIncoming) && phoneIncoming.length > 0 ? (
+                                <div className="max-h-40 overflow-y-auto divide-y divide-gray-100 dark:divide-white/5">
+                                  {phoneIncoming.map((item) => (
+                                    <div key={item.id} className="px-4 py-3 flex items-center justify-between gap-3 text-xs hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors">
+                                      <div className="min-w-0">
+                                        <div className="font-bold text-gray-800 dark:text-zinc-100 truncate">
+                                          {item.filename || "Untitled Capture"}
+                                        </div>
+                                        <div className="text-[10px] text-gray-500 dark:text-zinc-400 font-medium mt-0.5">
+                                          {item.mime_type || "unknown mime"}
+                                          {item.size_bytes ? ` · ${(Number(item.size_bytes)/1024).toFixed(1)} KB` : ""}
+                                        </div>
+                                      </div>
+                                      {String(item.mime_type || "") === "application/pdf" && item.storage_filename ? (
+                                        <Button
+                                          type="button"
+                                          size="sm"
+                                          onClick={() => onUseIncomingFromPhone?.(item)}
+                                          className="h-8 shrink-0 bg-white hover:bg-red-50 text-gray-700 hover:text-pup-maroon border border-gray-200 rounded-brand font-bold text-[10px] tracking-wider dark:bg-zinc-800 dark:text-zinc-200 dark:border-white/10 dark:hover:bg-zinc-700"
+                                        >
+                                          USE SCAN
+                                        </Button>
+                                      ) : null}
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <div className="px-4 py-5 text-[11px] text-gray-500 dark:text-zinc-400 font-medium text-center">
+                                  <i className="ph-duotone ph-camera text-2xl text-gray-300 dark:text-zinc-700 mb-1.5 block mx-auto" />
+                                  No incoming phone captures yet.
+                                </div>
+                              )}
+                            </div>
+                          </div>
 
                           <input
                             ref={fileInputRef}

@@ -16,32 +16,13 @@ export default function SecurityQuestionsTab({
   securitySaving,
   handleSaveSecurityQuestions,
 }) {
-  // Determine how many questions to show initially
-  // We show at least 2, and then any that have content
-  const [visibleCount, setVisibleCount] = useState(2)
-
-  useEffect(() => {
-    if (securityQuestions) {
-      const lastFilledIndex = securityQuestions.findLastIndex(q => q && q.trim() !== "")
-      setVisibleCount(Math.max(2, lastFilledIndex + 1))
-    }
-  }, [securityQuestions])
-
   const handleAddQuestion = () => {
-    if (visibleCount < 5) {
-      setVisibleCount(prev => prev + 1)
-    }
+    setSecurityQuestions(prev => [...prev, ""])
   }
 
   const handleRemoveQuestion = (index) => {
-    if (visibleCount > 2) {
-      const updated = [...securityQuestions]
-      updated[index] = ""
-      // Shift questions up
-      const shifted = updated.filter((_, i) => i !== index)
-      shifted.push("")
-      setSecurityQuestions(shifted)
-      setVisibleCount(prev => prev - 1)
+    if (securityQuestions.length > 2) {
+      setSecurityQuestions(prev => prev.filter((_, i) => i !== index))
     }
   }
 
@@ -84,7 +65,7 @@ export default function SecurityQuestionsTab({
           <CardContent className="flex-1 overflow-y-auto p-8">
             <div className="max-w-4xl space-y-8">
               <div className="grid grid-cols-1 gap-6">
-                {securityQuestions.slice(0, visibleCount).map((q, i) => (
+                {securityQuestions.map((q, i) => (
                   <div key={i} className="group animate-in fade-in slide-in-from-top-2 duration-300 space-y-2">
                     <div className="flex items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
@@ -149,15 +130,13 @@ export default function SecurityQuestionsTab({
                   </div>
                 ))}
 
-                {visibleCount < 5 && (
-                  <button
-                    onClick={handleAddQuestion}
-                    className="flex w-fit items-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-xs font-bold text-gray-500 transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:text-zinc-400 dark:hover:border-zinc-700 dark:border-white/10"
-                  >
-                    <i className="ph-bold ph-plus"></i>
-                    ADD ANOTHER QUESTION
-                  </button>
-                )}
+                <button
+                  onClick={handleAddQuestion}
+                  className="flex w-fit items-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-xs font-bold text-gray-500 transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:text-zinc-400 dark:hover:border-zinc-700 dark:border-white/10"
+                >
+                  <i className="ph-bold ph-plus"></i>
+                  ADD ANOTHER QUESTION
+                </button>
               </div>
             </div>
           </CardContent>

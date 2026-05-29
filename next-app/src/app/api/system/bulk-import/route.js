@@ -19,7 +19,18 @@ export async function POST(req) {
   let successCount = 0;
   let failCount = 0;
 
-  for (const row of rows) {
+  // Sort rows to ensure dependency order: Courses (degree programs) must be processed first to satisfy foreign keys for Sections (course blocks)
+  const sortedRows = [...rows].sort((a, b) => {
+    const catA = String(a.category || "").toLowerCase().trim();
+    const catB = String(b.category || "").toLowerCase().trim();
+    if (catA === "course" && catB !== "course") return -1;
+    if (catA !== "course" && catB === "course") return 1;
+    if (catA === "section" && catB !== "section" && catB !== "course") return -1;
+    if (catA !== "section" && catA !== "course" && catB === "section") return 1;
+    return 0;
+  });
+
+  for (const row of sortedRows) {
     const { category, name, code } = row;
     const cat = String(category || "").toLowerCase().trim();
     try {

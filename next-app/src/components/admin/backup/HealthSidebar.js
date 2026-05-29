@@ -30,7 +30,6 @@ export default function HealthSidebar({
   }
 
   const diskPercent = systemHealth?.disk?.percent || 0
-  const isCritical = diskPercent > 95
 
   const getDiskColor = (percent) => {
     if (percent >= 90) return "text-red-500"
@@ -54,13 +53,13 @@ export default function HealthSidebar({
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-6">
-          {/* Main Critical Gauge: Storage */}
+          {/* Main Gauge: Storage */}
           <div className="flex flex-col items-center py-4 bg-linear-to-b from-gray-100 to-gray-50 rounded-2xl border border-gray-200 p-5 shadow-xs dark:border-white/10 dark:from-muted/50 dark:to-card/50">
             <div
-              className={`relative mx-auto flex aspect-[2/1] w-full max-w-[160px] items-end justify-center overflow-hidden rounded-t-full transition-all duration-500 ${isCritical ? "animate-pulse" : ""}`}
+              className="relative mx-auto flex aspect-[2/1] w-full max-w-[160px] items-end justify-center overflow-hidden rounded-t-full transition-all duration-500"
             >
               <svg
-                className={`absolute inset-0 h-full w-full ${isCritical ? "drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" : ""}`}
+                className="absolute inset-0 h-full w-full"
                 viewBox="0 0 100 50"
               >
                 <defs>
@@ -104,7 +103,7 @@ export default function HealthSidebar({
               </svg>
               <div className="z-10 pb-0 text-center">
                 <span
-                  className={`text-3xl font-black tracking-tighter ${isCritical ? "text-red-600" : "text-gray-900 dark:text-zinc-50"}`}
+                  className="text-3xl font-black tracking-tighter text-gray-900 dark:text-zinc-50"
                 >
                   {diskPercent}%
                 </span>

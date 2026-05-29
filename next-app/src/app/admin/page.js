@@ -105,7 +105,6 @@ function AdminPageContent() {
     disk: { total: 0, free: 0, percent: 0 },
     dbSize: "0 KB",
     dbStatus: "Healthy",
-    integrityScore: 100,
   })
   const [backups, setBackups] = useState([])
   const [backupSearch, setBackupSearch] = useState("")
@@ -1370,7 +1369,7 @@ function AdminPageContent() {
       iconClass: "ph-bold ph-warehouse",
     },
     { key: "system_data", label: "System Data", iconClass: "ph-bold ph-gear" },
-    { key: "system", label: "Back Records", iconClass: "ph-bold ph-database" },
+    { key: "system", label: "Backup", iconClass: "ph-bold ph-database" },
     { key: "logs", label: "Audit Logs", iconClass: "ph-bold ph-scroll" },
   ]
 

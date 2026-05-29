@@ -25,6 +25,7 @@ import { scanFileForSuggestion, warmupOcrWorker } from "@/lib/ocrClient";
 import { findMatchingDocument } from "@/lib/docAvailability";
 import { imageToPdf, needsConversion, mergeImagesToPdf } from "@/lib/imageToPdf";
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
+import { io } from "socket.io-client";
 
 function normalizeStudentRow(row) {
   if (!row || typeof row !== "object") return row;
@@ -123,6 +124,12 @@ function StaffPageContent() {
   const [ocrPromptOpen, setOcrPromptOpen] = useState(false);
   const [ocrError, setOcrError] = useState("");
   const [rotation, setRotation] = useState(0);
+  const [phoneLinkLoading, setPhoneLinkLoading] = useState(false);
+  const [phoneLinkError, setPhoneLinkError] = useState("");
+  const [phoneLinkUrl, setPhoneLinkUrl] = useState("");
+  const [phoneSession, setPhoneSession] = useState(null);
+  const [phoneIncoming, setPhoneIncoming] = useState([]);
+  const [phoneSocket, setPhoneSocket] = useState(null);
 
   const [newRec, setNewRec] = useState({
     studentNo: "",
@@ -317,6 +324,102 @@ function StaffPageContent() {
     // Keep staff selectors/SLV in sync with admin layout edits.
     refreshStorageLayout();
   }, [view, refreshStorageLayout]);
+
+  const refreshPhoneSession = useCallback(async (sessionId) => {
+    if (!sessionId) return;
+    try {
+      const res = await fetch(`/api/scan-session/${sessionId}`, { cache: "no-store" });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) return;
+      setPhoneSession(json.data?.session || null);
+      setPhoneIncoming(Array.isArray(json.data?.incoming) ? json.data.incoming : []);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  const createPhoneLinkSession = useCallback(async () => {
+    setPhoneLinkLoading(true);
+    setPhoneLinkError("");
+    try {
+      const res = await fetch("/api/scan-session", { method: "POST" });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || "Failed to create phone pairing session");
+      }
+      setPhoneSession(json.data?.session || null);
+      setPhoneIncoming(Array.isArray(json.data?.incoming) ? json.data.incoming : []);
+      setPhoneLinkUrl(String(json.data?.phoneLinkUrl || ""));
+      showToast("Phone link session created");
+    } catch (err) {
+      const message = err?.message || "Failed to create phone pairing session";
+      setPhoneLinkError(message);
+      showToast(message, true);
+    } finally {
+      setPhoneLinkLoading(false);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    if (view !== "upload") return;
+    let cancelled = false;
+    let sock = null;
+    (async () => {
+      try {
+        await fetch("/api/socket");
+      } catch {
+        // ignore
+      }
+      if (cancelled) return;
+      sock = io({ path: "/api/socket", addTrailingSlash: false });
+      setPhoneSocket(sock);
+      const onStatus = (payload) => {
+        if (payload?.session) setPhoneSession(payload.session);
+      };
+      const onIncoming = (payload) => {
+        if (payload?.session) setPhoneSession(payload.session);
+        if (Array.isArray(payload?.incoming)) setPhoneIncoming(payload.incoming);
+      };
+      sock.on("pairStatusChanged", onStatus);
+      sock.on("incomingUpdated", onIncoming);
+    })();
+    return () => {
+      cancelled = true;
+      if (sock) sock.disconnect();
+      setPhoneSocket(null);
+    };
+  }, [view]);
+
+  useEffect(() => {
+    if (!phoneSocket || !phoneSession?.id || view !== "upload") return;
+    phoneSocket.emit("pairSubscribe", phoneSession.id);
+    return () => {
+      phoneSocket.emit("pairUnsubscribe", phoneSession.id);
+    };
+  }, [phoneSocket, phoneSession?.id, view]);
+
+  useEffect(() => {
+    if (view !== "upload" || !phoneSession?.id) return;
+    const timer = setInterval(() => {
+      refreshPhoneSession(phoneSession.id);
+    }, 20000);
+    return () => clearInterval(timer);
+  }, [view, phoneSession?.id, refreshPhoneSession]);
+
+  useEffect(() => {
+    if (view !== "upload" || !phoneSession?.id) return;
+    const onVis = () => {
+      if (document.visibilityState === "visible") {
+        refreshPhoneSession(phoneSession.id);
+      }
+    };
+    document.addEventListener("visibilitychange", onVis);
+    window.addEventListener("focus", onVis);
+    return () => {
+      document.removeEventListener("visibilitychange", onVis);
+      window.removeEventListener("focus", onVis);
+    };
+  }, [view, phoneSession?.id, refreshPhoneSession]);
 
   // Keep locator selection valid when layout changes (rooms/cabinets can be added/removed).
   useEffect(() => {
@@ -815,6 +918,35 @@ function StaffPageContent() {
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rotation, uploadedFile]);
+
+  const onUseIncomingFromPhone = useCallback(
+    async (incomingItem) => {
+      const sessionId = phoneSession?.id;
+      const incomingId = Number(incomingItem?.id);
+      if (!sessionId || !Number.isFinite(incomingId)) {
+        showToast("No linked phone session", true);
+        return;
+      }
+      try {
+        const res = await fetch(
+          `/api/scan-session/${sessionId}/incoming/${incomingId}/file`,
+          { cache: "no-store" }
+        );
+        if (!res.ok) {
+          const json = await res.json().catch(() => null);
+          throw new Error(json?.error || "Failed to load scan file");
+        }
+        const blob = await res.blob();
+        const name = String(incomingItem?.filename || "phone-scan.pdf");
+        const file = new File([blob], name, { type: "application/pdf" });
+        await handleFileSelect(file);
+        showToast("Loaded phone scan into upload");
+      } catch (err) {
+        showToast(err?.message || "Failed to load scan file", true);
+      }
+    },
+    [phoneSession?.id, showToast, handleFileSelect]
+  );
 
   const processSubmission = async ({ onSuccess } = {}) => {
     if (!uploadedFile) {
@@ -1443,6 +1575,13 @@ function StaffPageContent() {
                 clearAllUploadFieldErrors();
                 setOcrPromptOpen(false);
               }}
+              phoneLinkLoading={phoneLinkLoading}
+              phoneLinkError={phoneLinkError}
+              phoneLinkUrl={phoneLinkUrl}
+              phoneSession={phoneSession}
+              phoneIncoming={phoneIncoming}
+              createPhoneLinkSession={createPhoneLinkSession}
+              onUseIncomingFromPhone={onUseIncomingFromPhone}
             />
           </TabsContent>
 
