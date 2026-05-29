@@ -159,6 +159,11 @@ function AdminPageContent() {
   const [restoreFile, setRestoreFile] = useState(null)
   const [restoreLoading, setRestoreLoading] = useState(false)
 
+  // External drive detection state
+  const [extDriveModalOpen, setExtDriveModalOpen] = useState(false)
+  const [extDriveEvent, setExtDriveEvent] = useState(null) // { type: 'connected'|'disconnected', label, path }
+  const extDrivePrevConnectedRef = useRef(null) // null = not yet polled
+
   const [totpModalOpen, setTotpModalOpen] = useState(false)
   const [totpModalLoading, setTotpModalLoading] = useState(false)
   const totpPendingActionRef = useRef(null)
@@ -528,6 +533,49 @@ function AdminPageContent() {
     const timer = setInterval(refreshSystemHealth, 10000)
     return () => clearInterval(timer)
   }, [refreshSystemHealth])
+
+  // Poll external drive status every 5s
+  useEffect(() => {
+    let cancelled = false
+
+    const checkDrive = async () => {
+      try {
+        const res = await fetch("/api/system/external-drive", { cache: "no-store" })
+        const json = await res.json()
+        if (!res.ok || !json?.ok || cancelled) return
+
+        const { configured, connected, label, path: drivePath } = json.data
+        if (!configured) return // No drive configured — nothing to detect
+
+        const prev = extDrivePrevConnectedRef.current
+
+        if (prev === null) {
+          // First poll — just record state without firing a modal
+          extDrivePrevConnectedRef.current = connected
+          return
+        }
+
+        if (prev !== connected) {
+          extDrivePrevConnectedRef.current = connected
+          setExtDriveEvent({
+            type: connected ? "connected" : "disconnected",
+            label: label || drivePath || "External Drive",
+            path: drivePath,
+          })
+          setExtDriveModalOpen(true)
+        }
+      } catch {
+        // silently ignore network errors
+      }
+    }
+
+    checkDrive()
+    const timer = setInterval(checkDrive, 5000)
+    return () => {
+      cancelled = true
+      clearInterval(timer)
+    }
+  }, []) // intentionally empty — runs once on mount
 
   useEffect(() => {
     if (view === "backup" || view === "system") {
@@ -1863,6 +1911,120 @@ function AdminPageContent() {
         description={totpModalDescription}
         isLoading={totpModalLoading}
       />
+
+      {/* Global External Drive Detection Modal */}
+      <Dialog open={extDriveModalOpen} onOpenChange={setExtDriveModalOpen}>
+        <DialogContent className="w-full max-w-lg overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-lg dark:border-white/10 dark:bg-card">
+          <DialogHeader className={cn(
+            "border-b p-6",
+            extDriveEvent?.type === "connected"
+              ? "border-emerald-100 bg-emerald-50 dark:border-emerald-900/30 dark:bg-emerald-950/40"
+              : "border-amber-100 bg-amber-50 dark:border-amber-900/30 dark:bg-amber-950/40"
+          )}>
+            <div className="flex items-start gap-4">
+              <div className={cn(
+                "flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border shadow-sm",
+                extDriveEvent?.type === "connected"
+                  ? "border-emerald-200 bg-white text-emerald-600 dark:border-emerald-800/50 dark:bg-emerald-900/30 dark:text-emerald-400"
+                  : "border-amber-200 bg-white text-amber-600 dark:border-amber-800/50 dark:bg-amber-900/30 dark:text-amber-400"
+              )}>
+                <i className={cn(
+                  "ph-duotone text-2xl",
+                  extDriveEvent?.type === "connected" ? "ph-usb" : "ph-usb-slash"
+                )} />
+              </div>
+              <div className="min-w-0">
+                <DialogTitle className="text-lg leading-tight font-black tracking-tight text-gray-900 dark:text-zinc-50">
+                  {extDriveEvent?.type === "connected"
+                    ? "External Drive Connected"
+                    : "External Drive Disconnected"}
+                </DialogTitle>
+                <DialogDescription className="mt-1.5 text-sm leading-relaxed font-medium text-gray-600 dark:text-zinc-300">
+                  {extDriveEvent?.type === "connected"
+                    ? "An external backup storage device has been detected and is ready for use."
+                    : "The external backup drive is no longer reachable. Backup synchronization is unavailable."}
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="space-y-4 p-6">
+            {/* Drive Info Card */}
+            <div className={cn(
+              "flex items-center gap-4 rounded-xl border p-4",
+              extDriveEvent?.type === "connected"
+                ? "border-emerald-100 bg-emerald-50/50 dark:border-emerald-900/20 dark:bg-emerald-950/20"
+                : "border-amber-100 bg-amber-50/50 dark:border-amber-900/20 dark:bg-amber-950/20"
+            )}>
+              <div className={cn(
+                "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border",
+                extDriveEvent?.type === "connected"
+                  ? "border-emerald-200 bg-white dark:border-emerald-800/40 dark:bg-card"
+                  : "border-amber-200 bg-white dark:border-amber-800/40 dark:bg-card"
+              )}>
+                <i className="ph-bold ph-hard-drive text-base text-gray-500 dark:text-zinc-400" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">Drive Label</p>
+                <p className="mt-0.5 text-sm font-black text-gray-900 truncate dark:text-zinc-50">
+                  {extDriveEvent?.label || "External Storage Device"}
+                </p>
+                {extDriveEvent?.path && (
+                  <p className="mt-0.5 font-mono text-[10px] text-gray-400 truncate dark:text-zinc-500">
+                    {extDriveEvent.path}
+                  </p>
+                )}
+              </div>
+              <div className={cn(
+                "shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest",
+                extDriveEvent?.type === "connected"
+                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400"
+                  : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400"
+              )}>
+                {extDriveEvent?.type === "connected" ? "Online" : "Offline"}
+              </div>
+            </div>
+
+            {/* Contextual hint */}
+            <div className="flex items-start gap-2 rounded-lg border border-gray-100 bg-gray-50 p-3 dark:border-white/10 dark:bg-white/5">
+              <i className={cn(
+                "ph-fill text-sm mt-0.5 shrink-0",
+                extDriveEvent?.type === "connected"
+                  ? "ph-info text-blue-500"
+                  : "ph-warning-circle text-amber-500"
+              )} />
+              <p className="text-[11px] font-medium leading-relaxed text-gray-600 dark:text-zinc-400">
+                {extDriveEvent?.type === "connected"
+                  ? "Backup archives can now be synchronized to this external drive from the Backup Records panel."
+                  : "Any pending or future backup synchronization to this drive will fail until it is reconnected."}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setExtDriveModalOpen(false)}
+              className="h-10 rounded-brand border border-gray-300 px-5 text-sm font-bold text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/5 dark:bg-white/2"
+            >
+              Dismiss
+            </Button>
+            {extDriveEvent?.type === "connected" && (
+              <Button
+                onClick={() => {
+                  setExtDriveModalOpen(false)
+                  switchView("backup")
+                }}
+                className="flex h-10 items-center gap-2 rounded-brand btn-brand-red px-5 font-bold text-white shadow-sm"
+              >
+                <i className="ph-bold ph-hard-drives" />
+                Go to Backup Records
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
