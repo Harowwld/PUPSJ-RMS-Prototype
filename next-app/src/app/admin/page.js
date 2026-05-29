@@ -506,7 +506,7 @@ function AdminPageContent() {
   }, [searchParams])
 
   useEffect(() => {
-    ;(async () => {
+    ; (async () => {
       try {
         const res = await fetch("/api/auth/me")
         const json = await res.json().catch(() => null)
@@ -570,7 +570,7 @@ function AdminPageContent() {
     }
 
     checkDrive()
-    const timer = setInterval(checkDrive, 5000)
+    const timer = setInterval(checkDrive, 500)
     return () => {
       cancelled = true
       clearInterval(timer)
@@ -727,7 +727,7 @@ function AdminPageContent() {
       }
 
       if (toastId) toast.dismiss(toastId)
-      
+
       if (!suppressToast) {
         if (results.failed === 0) {
           showToast({
@@ -1196,7 +1196,7 @@ function AdminPageContent() {
         )
       },
     })
-    
+
     return promise
   }
 
@@ -1350,7 +1350,7 @@ function AdminPageContent() {
         headers.join(","),
         ...csvRows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")),
       ].join("\n")
-      
+
       const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
       const url = URL.createObjectURL(blob)
       const link = document.createElement("a")
@@ -1556,8 +1556,8 @@ function AdminPageContent() {
           )}
 
           {view === "storage_layout" && (
-            <StorageLayoutEditorTab 
-              showToast={showToast} 
+            <StorageLayoutEditorTab
+              showToast={showToast}
               isDirty={isStorageDirty}
               setIsDirty={setIsStorageDirty}
             />
