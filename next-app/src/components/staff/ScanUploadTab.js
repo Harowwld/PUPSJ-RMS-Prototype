@@ -529,7 +529,7 @@ export default function ScanUploadTab({
               <div className="flex flex-col items-end gap-1">
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest dark:text-zinc-500">Status</p>
                 <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap dark:text-zinc-400">
-                  {uploadMode === "pdf" ? "Checking scanner..." : "Ready to upload"}
+                  {uploadMode === "pdf" ? "Scanner Inbox" : "Ready to upload"}
                 </p>
               </div>
               <RefreshButton 
@@ -763,10 +763,10 @@ export default function ScanUploadTab({
                                         onChange={() => toggleCsvRowSelected(r.index)}
                                       />
                                     </td>
-                                    <td className="px-3.5 py-3 font-mono text-[10px] text-gray-400 dark:text-zinc-500">
+                                    <td className="px-3.5 py-3 text-[10px] text-gray-400 dark:text-zinc-500">
                                       {r.index}
                                     </td>
-                                    <td className="px-3.5 py-3 font-mono font-bold text-gray-900 dark:text-zinc-50">
+                                    <td className="px-3.5 py-3 font-bold text-gray-900 dark:text-zinc-50">
                                       {r.student.studentNo}
                                     </td>
                                     <td className="px-3.5 py-3 font-bold text-gray-800 dark:text-zinc-100">
@@ -1436,7 +1436,7 @@ export default function ScanUploadTab({
                             <div className="relative">
                               <input
                                 type="text"
-                                className={`form-input w-full h-11 rounded-brand font-mono ${ring("studentNo")} ${ lockIdentity ? lockedField : "" }`}
+                                className={`form-input w-full h-11 rounded-brand ${ring("studentNo")} ${ lockIdentity ? lockedField : "" }`}
                                 placeholder="202X-XXXXX-MN-0"
                                 ref={newStudentNoInputRef}
                                 value={newRec.studentNo}
@@ -1478,7 +1478,7 @@ export default function ScanUploadTab({
                                         <div className="text-sm font-bold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
                                           {s?.name}
                                         </div>
-                                        <div className="text-[10px] text-gray-500 dark:text-zinc-400 font-mono">
+                                        <div className="text-[10px] text-gray-500 dark:text-zinc-400">
                                           {sn}
                                         </div>
                                       </button>
@@ -1544,7 +1544,7 @@ export default function ScanUploadTab({
                                           <div className="text-sm font-bold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
                                             {s?.name}
                                           </div>
-                                          <div className="text-[10px] text-gray-500 dark:text-zinc-400 font-mono">
+                                          <div className="text-[10px] text-gray-500 dark:text-zinc-400">
                                             {sn}
                                           </div>
                                         </button>

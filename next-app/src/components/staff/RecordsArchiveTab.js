@@ -57,6 +57,12 @@ export default function RecordsArchiveTab({
   const [listType, setListType] = useState("card")
   const [showArchived, setShowArchived] = useState(false)
   const [scrollTrigger, setScrollTrigger] = useState(0)
+  const [page, setPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(9) // 9 fits nicely in 3-column card grid, 10 or more in table
+
+  useEffect(() => {
+    setPage(1)
+  }, [currentLevel, showArchived, quickQuery, listType])
 
   // Restore Modal State
   const [restoreStudentOpen, setRestoreStudentOpen] = useState(false)
@@ -114,6 +120,15 @@ export default function RecordsArchiveTab({
     }
     return explorerItems
   }, [showArchived, explorerItems, archivedStudents, currentLevel, breadcrumbs])
+
+  const paginatedExplorerItems = useMemo(() => {
+    if (currentLevel !== "students") return filteredExplorerItems
+    const start = (page - 1) * itemsPerPage
+    return filteredExplorerItems.slice(start, start + itemsPerPage)
+  }, [filteredExplorerItems, currentLevel, page, itemsPerPage])
+
+  const totalItems = currentLevel === "students" ? filteredExplorerItems.length : 0
+  const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
 
   function renderStorageBody(isFullscreen) {
     const mapWrap = isFullscreen
@@ -594,7 +609,10 @@ export default function RecordsArchiveTab({
                   </EmptyContent>
                 </Empty>
               ) : currentLevel !== "students" ? (
-                <div className="animate-fade-up grid grid-cols-1 gap-4 p-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5">
+                <div 
+                  key={`folders-${showArchived}`}
+                  className="animate-fade-up grid grid-cols-1 gap-4 p-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5"
+                >
                   {filteredExplorerItems.map((it, index) => (
                     <div
                       key={index}
@@ -645,8 +663,11 @@ export default function RecordsArchiveTab({
                   </EmptyHeader>
                 </Empty>
               ) : listType === "card" ? (
-                <div className="animate-fade-up grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {filteredExplorerItems.map((row, index) => (
+                <div 
+                  key={`cards-${currentLevel}-${showArchived}`}
+                  className="animate-fade-up grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
+                >
+                  {paginatedExplorerItems.map((row, index) => (
                     <div
                       key={index}
                       className={`group relative flex cursor-pointer flex-col rounded-brand border border-gray-300 bg-white p-5 shadow-sm transition-all hover:border-gray-300 hover:shadow-md ${showArchived ? "opacity-90" : ""} dark:border-white/10 dark:bg-card dark:shadow-none dark:hover:border-zinc-700`}
@@ -740,7 +761,7 @@ export default function RecordsArchiveTab({
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-white/10">
-                      {filteredExplorerItems.map((row) => (
+                      {paginatedExplorerItems.map((row) => (
                         <tr
                           key={row.key}
                           className="group cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-white/5 dark:bg-card"
@@ -811,6 +832,63 @@ export default function RecordsArchiveTab({
                 </div>
               )}
             </div>
+
+            {currentLevel === "students" && totalItems > 0 && (
+              <div className="flex items-center justify-between border-t border-gray-200 bg-white p-6 px-8 rounded-b-brand dark:border-white/10 dark:bg-card">
+                <div className="flex items-center gap-8 select-none cursor-default">
+                  <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
+                    <span>
+                      SHOWING <strong className="text-gray-900 dark:text-zinc-50">{(page - 1) * itemsPerPage + 1}-{Math.min(page * itemsPerPage, totalItems)}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{totalItems.toLocaleString()}</strong> ENTRIES
+                    </span>
+
+                    <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
+                      <span className="text-[10px] opacity-60">ROWS:</span>
+                      <select
+                        className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
+                        value={itemsPerPage}
+                        onChange={(e) => {
+                          setItemsPerPage(Number(e.target.value))
+                          setPage(1)
+                        }}
+                      >
+                        <option value={9}>9</option>
+                        <option value={12}>12</option>
+                        <option value={24}>24</option>
+                        <option value={48}>48</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex shrink-0 items-center gap-3 select-none">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page <= 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                  >
+                    <i className="ph-bold ph-caret-left mr-2 text-base"></i>
+                    PREV
+                  </Button>
+                  
+                  <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                    {page}
+                  </div>
+
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={page >= totalPages}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                  >
+                    NEXT
+                    <i className="ph-bold ph-caret-right ml-2 text-base"></i>
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
 
           <div

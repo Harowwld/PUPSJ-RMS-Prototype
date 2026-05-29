@@ -156,7 +156,6 @@ function ensureScanSessionTables() {
 function ensureStaffNotificationStateTable() {
   if (!db) return;
   try {
-    if (tableExists("staff_notification_state")) return;
     db.exec(`
       CREATE TABLE IF NOT EXISTS staff_notification_state (
         staff_id TEXT PRIMARY KEY,
@@ -166,6 +165,18 @@ function ensureStaffNotificationStateTable() {
       );
       CREATE INDEX IF NOT EXISTS idx_staff_notification_state_updated_at
         ON staff_notification_state(updated_at);
+
+      CREATE TABLE IF NOT EXISTS staff_notification_item_states (
+        staff_id TEXT NOT NULL,
+        notification_id INTEGER NOT NULL,
+        is_read INTEGER DEFAULT 0,
+        is_archived INTEGER DEFAULT 0,
+        PRIMARY KEY (staff_id, notification_id),
+        FOREIGN KEY (staff_id) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE CASCADE,
+        FOREIGN KEY (notification_id) REFERENCES documents(id) ON UPDATE CASCADE ON DELETE CASCADE
+      );
+      CREATE INDEX IF NOT EXISTS idx_staff_notification_item_states_lookup 
+        ON staff_notification_item_states(staff_id, notification_id);
     `);
   } catch (e) {
     console.error("[DB] ensureStaffNotificationStateTable:", e);

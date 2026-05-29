@@ -49,6 +49,8 @@ export async function GET(req) {
   const studentNo = searchParams.get("studentNo") || "";
   const limit = searchParams.get("limit") || "50";
   const offset = searchParams.get("offset") || "0";
+  const sortBy = searchParams.get("sortBy") || "created_at";
+  const sortOrder = searchParams.get("sortOrder") || "DESC";
 
   const [rows, total] = await Promise.all([
     listDocumentRequests({
@@ -57,6 +59,8 @@ export async function GET(req) {
       studentNo: studentNo || undefined,
       limit,
       offset,
+      sortBy,
+      sortOrder,
     }),
     countDocumentRequests({
       q: q || undefined,

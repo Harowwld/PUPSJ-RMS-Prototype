@@ -15,6 +15,7 @@ export default function FloatingActionBar({
   selectionLabel = "Records Selected",
   selectionStatus = "Items Selected",
   customContent,
+  showOnSingle = false,
 }) {
   const [mounted, setMounted] = useState(false)
 
@@ -22,7 +23,8 @@ export default function FloatingActionBar({
     setMounted(true)
   }, [])
 
-  if (!mounted || selectedCount <= 1) return null
+  const limit = showOnSingle ? 0 : 1
+  if (!mounted || selectedCount <= limit) return null
 
   return createPortal(
     <div className="fixed bottom-10 left-1/2 z-[9999] -translate-x-1/2 animate-in fade-in slide-in-from-bottom-4 duration-300">

@@ -7,6 +7,7 @@ import {
   getStaffReviewNotificationsState,
   listDocumentReviewNotifications,
   markStaffReviewNotificationsSeen,
+  setNotificationItemState,
 } from "../../../lib/notificationsRepo";
 
 export const runtime = "nodejs";
@@ -36,6 +37,9 @@ export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const limit = searchParams.get("limit") || "20";
   const offset = searchParams.get("offset") || "0";
+  const sortBy = searchParams.get("sortBy") || "reviewed_at";
+  const sortOrder = searchParams.get("sortOrder") || "DESC";
+  const tab = searchParams.get("tab") || "inbox";
 
   const state = await getStaffReviewNotificationsState(staff.id);
   const res = await listDocumentReviewNotifications({
@@ -43,6 +47,9 @@ export async function GET(req) {
     offset,
     lastSeenReviewedAt: state.lastSeenReviewedAt,
     uploadedBy: staff.id,
+    sortBy,
+    sortOrder,
+    tab,
   });
 
   return NextResponse.json({
@@ -52,6 +59,8 @@ export async function GET(req) {
       total: res.total,
       unreadCount: res.unreadCount,
       lastSeenReviewedAt: state.lastSeenReviewedAt,
+      inboxCount: res.inboxCount,
+      archiveCount: res.archiveCount,
     },
   });
 }
@@ -69,18 +78,47 @@ export async function POST(req) {
 
   const contentType = String(req.headers.get("content-type") || "").toLowerCase();
   let action = "markSeen";
+  let ids = [];
   if (contentType.includes("application/json")) {
     const body = await req.json().catch(() => null);
-    if (body && typeof body === "object" && body.action) {
+    if (body && typeof body === "object") {
       action = String(body.action || "markSeen");
+      ids = Array.isArray(body.ids) ? body.ids : [];
     }
   }
 
-  if (action !== "markSeen") {
+  if (action === "markSeen") {
+    const allNotifications = await listDocumentReviewNotifications({
+      limit: 1000,
+      offset: 0,
+      uploadedBy: staff.id,
+    });
+    const allIds = allNotifications.items.map(n => n.id);
+    if (allIds.length > 0) {
+      await setNotificationItemState(staff.id, allIds, "read", 1);
+    }
+    await markStaffReviewNotificationsSeen(staff.id);
+  } else if (action === "markRead") {
+    if (ids.length > 0) {
+      await setNotificationItemState(staff.id, ids, "read", 1);
+    }
+  } else if (action === "markUnread") {
+    if (ids.length > 0) {
+      await setNotificationItemState(staff.id, ids, "read", 0);
+    }
+  } else if (action === "archive") {
+    if (ids.length > 0) {
+      await setNotificationItemState(staff.id, ids, "archive", 1);
+    }
+  } else if (action === "unarchive") {
+    if (ids.length > 0) {
+      await setNotificationItemState(staff.id, ids, "archive", 0);
+    }
+  } else {
     return NextResponse.json({ ok: false, error: "Invalid action" }, { status: 400 });
   }
 
-  const state = await markStaffReviewNotificationsSeen(staff.id);
+  const state = await getStaffReviewNotificationsState(staff.id);
   const meta = await listDocumentReviewNotifications({
     limit: 1,
     offset: 0,

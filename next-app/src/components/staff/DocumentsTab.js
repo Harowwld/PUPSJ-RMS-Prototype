@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,6 +25,16 @@ import ConfirmModal from "@/components/shared/ConfirmModal";
 import PageHeader from "@/components/shared/PageHeader";
 import { Select } from "@/components/ui/select"
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
+
+function SortIndicator({ column, sortBy, sortOrder }) {
+  if (sortBy !== column)
+    return <i className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60"></i>
+  return sortOrder === "ASC" ? (
+    <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
+  ) : (
+    <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
+  )
+}
 
 export default function DocumentsTab({
   docsForm,
@@ -51,6 +61,71 @@ export default function DocumentsTab({
   const [isDragActive, setIsDragActive] = useState(false);
   const [updateSaving, setUpdateSaving] = useState(false);
   const fileRef = useRef(null);
+
+  // Sorting & Pagination state
+  const [sortBy, setSortBy] = useState("student_no");
+  const [sortOrder, setSortOrder] = useState("ASC");
+  const [page, setPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [jumpPage, setJumpPage] = useState("1");
+
+  // Reset page when search parameters/docsRows change
+  useEffect(() => {
+    setPage(1);
+    setJumpPage("1");
+  }, [docsRows.length]);
+
+  const handleSort = (column) => {
+    if (sortBy === column) {
+      setSortOrder(sortOrder === "ASC" ? "DESC" : "ASC");
+    } else {
+      setSortBy(column);
+      setSortOrder("ASC");
+    }
+    setPage(1);
+    setJumpPage("1");
+  };
+
+  const sortedRows = useMemo(() => {
+    const rows = [...docsRows];
+    return rows.sort((a, b) => {
+      let valA = "";
+      let valB = "";
+
+      if (sortBy === "student_no") {
+        valA = a.student_no || "";
+        valB = b.student_no || "";
+      } else if (sortBy === "student_name") {
+        valA = a.student_name || "";
+        valB = b.student_name || "";
+      } else if (sortBy === "doc_type") {
+        valA = a.doc_type || "";
+        valB = b.doc_type || "";
+      } else if (sortBy === "status") {
+        const statusA = a.status === "uploaded" ? (a.verificationStatus || "unverified") : "missing";
+        const statusB = b.status === "uploaded" ? (b.verificationStatus || "unverified") : "missing";
+        valA = statusA;
+        valB = statusB;
+      } else if (sortBy === "file") {
+        valA = a.doc?.original_filename || "";
+        valB = b.doc?.original_filename || "";
+      } else if (sortBy === "created_at") {
+        valA = a.reviewDoc?.created_at || "";
+        valB = b.reviewDoc?.created_at || "";
+      }
+
+      if (valA < valB) return sortOrder === "ASC" ? -1 : 1;
+      if (valA > valB) return sortOrder === "ASC" ? 1 : -1;
+      return 0;
+    });
+  }, [docsRows, sortBy, sortOrder]);
+
+  const paginatedRows = useMemo(() => {
+    const start = (page - 1) * itemsPerPage;
+    return sortedRows.slice(start, start + itemsPerPage);
+  }, [sortedRows, page, itemsPerPage]);
+
+  const totalPages = Math.max(1, Math.ceil(docsRows.length / itemsPerPage));
 
   // Student Edit State
   const [editStudentOpen, setEditStudentOpen] = useState(false);
@@ -152,7 +227,7 @@ export default function DocumentsTab({
                 Student No.
               </label>
               <Input
-                className="h-11 font-mono rounded-brand border border-gray-200 bg-white px-4 text-sm transition-all placeholder:text-gray-400 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
+                className="h-11 rounded-brand border border-gray-200 bg-white px-4 text-sm transition-all placeholder:text-gray-400 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
                 value={docsForm.studentNo}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -383,12 +458,84 @@ export default function DocumentsTab({
                 <table className="min-w-full text-sm table-fixed">
                   <thead className="bg-gray-50 backdrop-blur-sm select-none dark:bg-muted">
                     <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
-                      <th className="p-4 w-40">Student No</th>
-                      <th className="p-4">Name</th>
-                      <th className="p-4 w-32">Type</th>
-                      <th className="p-4 w-32">Status</th>
-                      <th className="p-4 w-48">File</th>
-                      <th className="p-4 w-36">Created</th>
+                      <th className="p-4 w-40">
+                        <button
+                          onClick={() => handleSort("student_no")}
+                          className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+                        >
+                          Student No{" "}
+                          <SortIndicator
+                            column="student_no"
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                          />
+                        </button>
+                      </th>
+                      <th className="p-4">
+                        <button
+                          onClick={() => handleSort("student_name")}
+                          className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+                        >
+                          Name{" "}
+                          <SortIndicator
+                            column="student_name"
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                          />
+                        </button>
+                      </th>
+                      <th className="p-4 w-32">
+                        <button
+                          onClick={() => handleSort("doc_type")}
+                          className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+                        >
+                          Type{" "}
+                          <SortIndicator
+                            column="doc_type"
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                          />
+                        </button>
+                      </th>
+                      <th className="p-4 w-32">
+                        <button
+                          onClick={() => handleSort("status")}
+                          className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+                        >
+                          Status{" "}
+                          <SortIndicator
+                            column="status"
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                          />
+                        </button>
+                      </th>
+                      <th className="p-4 w-48">
+                        <button
+                          onClick={() => handleSort("file")}
+                          className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+                        >
+                          File{" "}
+                          <SortIndicator
+                            column="file"
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                          />
+                        </button>
+                      </th>
+                      <th className="p-4 w-36">
+                        <button
+                          onClick={() => handleSort("created_at")}
+                          className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+                        >
+                          Created{" "}
+                          <SortIndicator
+                            column="created_at"
+                            sortBy={sortBy}
+                            sortOrder={sortOrder}
+                          />
+                        </button>
+                      </th>
                       <th className="p-4 w-40 text-right">Actions</th>
                     </tr>
                   </thead>
@@ -438,7 +585,7 @@ export default function DocumentsTab({
                         </td>
                       </tr>
                     ) : (
-                      docsRows.map((r, idx) => (
+                      paginatedRows.map((r, idx) => (
                         <tr
                           key={r.id || idx}
                           className={cn(
@@ -448,7 +595,7 @@ export default function DocumentsTab({
                               : "bg-red-50 dark:bg-red-950/30"
                           )}
                         >
-                          <td className="p-4 font-mono font-bold text-gray-900 dark:text-zinc-50">
+                          <td className="p-4 font-bold text-gray-900 dark:text-zinc-50">
                             {r.student_no}
                           </td>
                           <td className="p-4 text-gray-800 font-medium dark:text-zinc-100">
@@ -486,7 +633,7 @@ export default function DocumentsTab({
                                 <div className="truncate font-medium text-gray-900 dark:text-zinc-50" title={r.doc.original_filename}>
                                   {r.doc.original_filename}
                                 </div>
-                                <div className="text-xs text-gray-500 font-mono dark:text-zinc-400">
+                                <div className="text-xs text-gray-500 dark:text-zinc-400">
                                   {(r.doc.size_bytes / 1024).toFixed(1)} KB
                                 </div>
                               </>
@@ -556,19 +703,72 @@ export default function DocumentsTab({
                 </table>
               </div>
 
-              <div className="mt-4 flex items-center">
-                <div className="text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
-                  {docsForm.studentNo.trim() ||
-                  docsForm.studentName.trim() ||
-                  docsForm.docType.trim() ? (
-                    <span>
-                      SHOWING <strong className="text-gray-900 dark:text-zinc-50">{docsRows.length}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{docsRows.length}</strong> ENTRIES
-                    </span>
-                  ) : (
-                    ""
-                  )}
+              {docsForm.studentNo.trim() ||
+              docsForm.studentName.trim() ||
+              docsForm.docType.trim() ? (
+                <div className="mt-4 flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-brand dark:border-white/10 dark:bg-card">
+                  <div className="flex items-center gap-8 select-none cursor-default">
+                    <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
+                      <span>
+                        SHOWING <strong className="text-gray-900 dark:text-zinc-50">{paginatedRows.length}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{docsRows.length.toLocaleString()}</strong> ENTRIES
+                      </span>
+
+                      <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
+                        <span className="text-[10px] opacity-60">ROWS:</span>
+                        <Select
+                          className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
+                          value={itemsPerPage}
+                          onChange={(e) => {
+                            const val = Number(e.target.value);
+                            setItemsPerPage(val);
+                            setPage(1);
+                            setJumpPage("1");
+                          }}
+                        >
+                          <option value={10}>10</option>
+                          <option value={20}>20</option>
+                          <option value={50}>50</option>
+                          <option value={100}>100</option>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex shrink-0 items-center gap-3 select-none">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page <= 1}
+                      onClick={() => {
+                        setPage((p) => p - 1);
+                        setJumpPage(String(page - 1));
+                      }}
+                      className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                    >
+                      <i className="ph-bold ph-caret-left mr-2 text-base"></i>
+                      PREV
+                    </Button>
+                    
+                    <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                      {page}
+                    </div>
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={page >= totalPages}
+                      onClick={() => {
+                        setPage((p) => p + 1);
+                        setJumpPage(String(page + 1));
+                      }}
+                      className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                    >
+                      NEXT
+                      <i className="ph-bold ph-caret-right ml-2 text-base"></i>
+                    </Button>
+                  </div>
                 </div>
-              </div>
+              ) : null}
             </>
           )}
         </CardContent>
@@ -609,7 +809,7 @@ export default function DocumentsTab({
               </label>
               <Input
                 disabled
-                className="bg-gray-100 font-mono text-gray-500 border-gray-200 cursor-not-allowed h-11 dark:text-zinc-400 dark:border-white/10 dark:bg-muted"
+                className="bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed h-11 dark:text-zinc-400 dark:border-white/10 dark:bg-muted"
                 value={updateStudentNo}
               />
             </div>
@@ -644,7 +844,7 @@ export default function DocumentsTab({
                     <p className="mt-1 text-xs font-medium text-gray-600 dark:text-zinc-300">
                       The new scan will replace the current file for {updateDocType}.
                     </p>
-                    <p className="mt-2 text-xs font-mono text-pup-maroon dark:text-primary font-bold truncate dark:text-primary">
+                    <p className="mt-2 text-xs text-pup-maroon dark:text-primary font-bold truncate dark:text-primary">
                       {updateFile
                         ? updateFile.name
                         : "No replacement selected"}
@@ -728,7 +928,7 @@ export default function DocumentsTab({
               <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100 pb-1 dark:text-zinc-400 dark:border-white/10">Identification</h4>
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide dark:text-zinc-200">Student Number</label>
-                <Input disabled value={currentStudent?.studentNo} className="bg-gray-100 font-mono text-gray-500 border-gray-200 cursor-not-allowed dark:text-zinc-400 dark:border-white/10 dark:bg-muted" />
+                <Input disabled value={currentStudent?.studentNo} className="bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed dark:text-zinc-400 dark:border-white/10 dark:bg-muted" />
               </div>
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide dark:text-zinc-200">Full Name <span className="text-pup-maroon dark:text-primary">*</span></label>

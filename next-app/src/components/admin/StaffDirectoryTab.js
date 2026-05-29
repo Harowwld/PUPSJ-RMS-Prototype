@@ -206,13 +206,11 @@ StaffTableRow.displayName = "StaffTableRow"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column)
-    return (
-      <i className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40"></i>
-    )
-  return sortOrder === "asc" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon dark:text-primary"></i>
+    return <i className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60"></i>
+  return sortOrder === "ASC" ? (
+    <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon dark:text-primary"></i>
+    <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
   )
 }
 
@@ -274,9 +272,9 @@ export default function StaffDirectoryTab({
     const q = search.toLowerCase()
     return staffData.filter((s) => {
       const matchesSearch =
-        `${s.fname} ${s.lname}`.toLowerCase().includes(q) ||
-        s.id.toLowerCase().includes(q) ||
-        (s.email || "").toLowerCase().includes(q)
+          `${s.fname} ${s.lname}`.toLowerCase().includes(q) ||
+          s.id.toLowerCase().includes(q) ||
+          (s.email || "").toLowerCase().includes(q)
 
       const matchesRole = roleFilter === "All" || s.role === roleFilter
 
@@ -289,19 +287,19 @@ export default function StaffDirectoryTab({
   }, [search, roleFilter, staffData, activeTab])
 
   const [sortBy, setSortBy] = useState("id")
-  const [sortOrder, setSortOrder] = useState("asc")
+  const [sortOrder, setSortOrder] = useState("ASC")
 
   const handleSort = (column) => {
     if (sortBy === column) {
-      if (sortOrder === "asc") {
-        setSortOrder("desc")
+      if (sortOrder === "ASC") {
+        setSortOrder("DESC")
       } else {
         setSortBy("id")
-        setSortOrder("asc")
+        setSortOrder("ASC")
       }
     } else {
       setSortBy(column)
-      setSortOrder("asc")
+      setSortOrder("ASC")
     }
     setCurrentPage(1)
   }
@@ -320,16 +318,19 @@ export default function StaffDirectoryTab({
         valA = `${a.fname} ${a.lname}`.toLowerCase()
         valB = `${b.fname} ${b.lname}`.toLowerCase()
       } else if (sortBy === "id") {
-        return sortOrder === "asc"
+        return sortOrder === "ASC"
           ? a.id.localeCompare(b.id, undefined, { numeric: true })
           : b.id.localeCompare(a.id, undefined, { numeric: true })
+      } else if (sortBy === "totp_enabled") {
+        valA = a.totp_enabled ? 1 : 0
+        valB = b.totp_enabled ? 1 : 0
       } else if (typeof valA === "string") {
         valA = valA.toLowerCase()
         valB = (valB || "").toLowerCase()
       }
 
-      if (valA < valB) return sortOrder === "asc" ? -1 : 1
-      if (valA > valB) return sortOrder === "asc" ? 1 : -1
+      if (valA < valB) return sortOrder === "ASC" ? -1 : 1
+      if (valA > valB) return sortOrder === "ASC" ? 1 : -1
       return 0
     })
   }, [filteredStaff, sortBy, sortOrder])
@@ -740,7 +741,19 @@ export default function StaffDirectoryTab({
                         />
                       </button>
                     </th>
-                    <th className="w-40 p-4">SECURITY</th>
+                    <th className="w-40 p-4">
+                      <button
+                        onClick={() => handleSort("totp_enabled")}
+                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                      >
+                        SECURITY{" "}
+                        <SortIndicator
+                          column="totp_enabled"
+                          sortBy={sortBy}
+                          sortOrder={sortOrder}
+                        />
+                      </button>
+                    </th>
                     <th className="w-56 p-4">
                       <button
                         onClick={() => handleSort("last_active")}

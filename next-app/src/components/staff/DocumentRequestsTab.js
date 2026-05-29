@@ -39,6 +39,16 @@ const STATUS_OPTIONS = [
   "Shredded",
 ];
 
+function SortIndicator({ column, sortBy, sortOrder }) {
+  if (sortBy !== column)
+    return <i className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60"></i>
+  return sortOrder === "ASC" ? (
+    <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
+  ) : (
+    <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
+  )
+}
+
 function statusBadgeClass(status) {
   const s = String(status || "").toUpperCase();
   if (s === "DONE" || s === "COMPLETED") return "bg-emerald-50 dark:bg-emerald-950/15 text-emerald-800 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20";
@@ -66,6 +76,8 @@ export default function DocumentRequestsTab({
   const [page, setPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(20);
   const [jumpPage, setJumpPage] = useState("1");
+  const [sortBy, setSortBy] = useState("created_at");
+  const [sortOrder, setSortOrder] = useState("DESC");
 
   const [createOpen, setCreateOpen] = useState(false);
   const [createStudentNo, setCreateStudentNo] = useState("");
@@ -136,6 +148,8 @@ export default function DocumentRequestsTab({
         qs.set("offset", String(offset));
         if (debouncedQ) qs.set("q", debouncedQ);
         if (statusFilter) qs.set("status", statusFilter);
+        qs.set("sortBy", sortBy);
+        qs.set("sortOrder", sortOrder);
         const res = await fetch(`/api/document-requests?${qs}`, {
           cache: "no-store",
         });
@@ -153,8 +167,25 @@ export default function DocumentRequestsTab({
         if (showLoading) setLoading(false);
       }
     },
-    [page, itemsPerPage, debouncedQ, statusFilter, showToast]
+    [page, itemsPerPage, debouncedQ, statusFilter, sortBy, sortOrder, showToast]
   );
+
+  const handleSort = (column) => {
+    if (sortBy === column) {
+      if (sortOrder === "ASC") {
+        setSortOrder("DESC");
+      } else if (column !== "created_at") {
+        setSortBy("created_at");
+        setSortOrder("DESC");
+      } else {
+        setSortOrder("ASC");
+      }
+    } else {
+      setSortBy(column);
+      setSortOrder("ASC");
+    }
+    setPage(1);
+  };
 
   useEffect(() => {
     loadList({ showLoading: true });
@@ -404,7 +435,7 @@ export default function DocumentRequestsTab({
                     setPage(1);
                   }}
                 >
-                  <option value="">All Statuses</option>
+                  <option value="">All</option>
                   {STATUS_OPTIONS.map((s) => (
                     <option key={s} value={s}>
                       {s}
@@ -462,8 +493,8 @@ export default function DocumentRequestsTab({
         <CardContent className="h-auto flex flex-col p-6">
           {loading ? (
             <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
-              <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0 dark:bg-card dark:border-white/10 dark:shadow-none">
-                <div className="p-6 flex-1 flex flex-col space-y-4">
+              <div className="flex flex-col min-h-0 h-full">
+                <div className="flex-1 flex flex-col min-h-0 w-full border border-gray-200 rounded-brand overflow-hidden dark:border-white/10 p-6 space-y-4">
                   <div className="border border-gray-100 rounded-brand overflow-hidden dark:border-white/10">
                     <Skeleton className="h-10 w-full rounded-none dark:bg-muted" />
                     <div className="divide-y divide-gray-100 dark:divide-white/10">
@@ -507,7 +538,7 @@ export default function DocumentRequestsTab({
               </div>
             </div>
           ) : error ? (
-            <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
+            <Empty className="flex h-[320px] flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
                   <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
@@ -520,20 +551,82 @@ export default function DocumentRequestsTab({
             </Empty>
           ) : (
             <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
-              <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-0 dark:bg-card dark:border-white/10 dark:shadow-none">
-                <div className="p-6 flex-1 flex flex-col min-h-0">
-                  <div 
-                    key={`${page}-${statusFilter}-${debouncedQ}`}
-                    className="w-full overflow-hidden overflow-auto border border-gray-200 rounded-brand animate-fade-up dark:border-white/10"
-                  >
+              <div className="flex flex-col min-h-0 h-full">
+                <div 
+                  key={`${page}-${statusFilter}-${debouncedQ}-${sortBy}-${sortOrder}`}
+                  className="flex-1 flex flex-col min-h-0 w-full overflow-hidden border border-gray-200 rounded-brand animate-fade-up dark:border-white/10"
+                >
+                  <div className="overflow-x-auto flex-1">
                     <table className="min-w-full text-sm table-fixed">
                       <thead className="bg-gray-50 backdrop-blur-sm select-none dark:bg-muted">
                         <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
-                          <th className="p-4 w-16">ID</th>
-                          <th className="p-4">Student</th>
-                          <th className="p-4">Document</th>
-                          <th className="p-4">Status</th>
-                          <th className="p-4 text-right">Created</th>
+                          <th className="p-4 w-20">
+                            <button
+                              onClick={() => handleSort("id")}
+                              className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                            >
+                              ID
+                              <SortIndicator
+                                column="id"
+                                sortBy={sortBy}
+                                sortOrder={sortOrder}
+                              />
+                            </button>
+                          </th>
+                          <th className="p-4">
+                            <button
+                              onClick={() => handleSort("student")}
+                              className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                            >
+                              Student
+                              <SortIndicator
+                                column="student"
+                                sortBy={sortBy}
+                                sortOrder={sortOrder}
+                              />
+                            </button>
+                          </th>
+                          <th className="p-4">
+                            <button
+                              onClick={() => handleSort("doc_type")}
+                              className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                            >
+                              Document
+                              <SortIndicator
+                                column="doc_type"
+                                sortBy={sortBy}
+                                sortOrder={sortOrder}
+                              />
+                            </button>
+                          </th>
+                          <th className="p-4">
+                            <button
+                              onClick={() => handleSort("status")}
+                              className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                            >
+                              Status
+                              <SortIndicator
+                                column="status"
+                                sortBy={sortBy}
+                                sortOrder={sortOrder}
+                              />
+                            </button>
+                          </th>
+                          <th className="p-4 text-right">
+                            <div className="flex justify-end">
+                              <button
+                                onClick={() => handleSort("created_at")}
+                                className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                              >
+                                Created
+                                <SortIndicator
+                                  column="created_at"
+                                  sortBy={sortBy}
+                                  sortOrder={sortOrder}
+                                />
+                              </button>
+                            </div>
+                          </th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-gray-100 dark:divide-white/10">
@@ -566,14 +659,14 @@ export default function DocumentRequestsTab({
                               )}
                               onClick={() => openDetail(r.id)}
                             >
-                              <td className="p-4 font-mono text-xs text-gray-500 dark:text-zinc-400">
+                              <td className="p-4 text-xs text-gray-500 dark:text-zinc-400">
                                 #{r.id}
                               </td>
                               <td className="p-4">
                                 <div className="font-bold text-gray-900 dark:text-zinc-50">
                                   {r.student_name || "—"}
                                 </div>
-                                <div className="font-mono text-[11px] text-gray-500 dark:text-zinc-400">
+                                <div className="text-[11px] text-gray-500 dark:text-zinc-400">
                                   {r.student_no}
                                 </div>
                               </td>
@@ -587,7 +680,7 @@ export default function DocumentRequestsTab({
                                   {r.status}
                                 </span>
                               </td>
-                              <td className="p-4 text-right text-[11px] font-mono text-gray-500 whitespace-nowrap dark:text-zinc-400">
+                              <td className="p-4 text-right text-[11px] text-gray-500 whitespace-nowrap dark:text-zinc-400">
                                 {formatPHDateTime(r.created_at)}
                               </td>
                             </tr>
@@ -596,70 +689,61 @@ export default function DocumentRequestsTab({
                       </tbody>
                     </table>
                   </div>
-                </div>
-                {total > 0 ? (
-                  <div className="p-4 border-t border-gray-100 bg-gray-50 flex items-center justify-between dark:border-white/10 dark:bg-white/5">
-                    <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
-                      <span>
-                        SHOWING{" "}
-                        <strong className="text-gray-900 dark:text-zinc-50">
-                          {(page - 1) * itemsPerPage + 1}-
-                          {Math.min(page * itemsPerPage, total)}
-                        </strong>{" "}
-                        OUT OF{" "}
-                        <strong className="text-gray-900 dark:text-zinc-50">
-                          {total.toLocaleString()}
-                        </strong>{" "}
-                        ENTRIES
-                      </span>
+                  {total > 0 ? (
+                    <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-brand dark:border-white/10 dark:bg-card">
+                      <div className="flex items-center gap-8 select-none cursor-default">
+                        <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
+                          <span>
+                            SHOWING <strong className="text-gray-900 dark:text-zinc-50">{Math.min(itemsPerPage, total - (page - 1) * itemsPerPage)}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{total.toLocaleString()}</strong> ENTRIES
+                          </span>
 
-                      <div className="flex items-center gap-2 border-l border-gray-200 pl-4 dark:border-white/10">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase dark:text-zinc-500">
-                          ROWS:
-                        </span>
-                        <Select
-                          className="h-7 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-1 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none dark:bg-card dark:text-zinc-200 dark:border-white/10"
-                          value={itemsPerPage}
-                          onChange={handleItemsPerPageChange}
-                        >
-                          <option value={10}>10</option>
-                          <option value={20}>20</option>
-                          <option value={50}>50</option>
-                          <option value={100}>100</option>
-                          <option value={200}>200</option>
-                        </Select>
+                          <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
+                            <span className="text-[10px] opacity-60">ROWS:</span>
+                            <Select
+                              className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
+                              value={itemsPerPage}
+                              onChange={handleItemsPerPageChange}
+                            >
+                              <option value={10}>10</option>
+                              <option value={20}>20</option>
+                              <option value={50}>50</option>
+                              <option value={100}>100</option>
+                              <option value={200}>200</option>
+                            </Select>
+                          </div>
+                        </div>
                       </div>
-                    </div>
 
-                    {total > 10 && (
-                      <div className="flex items-center gap-2">
+                      <div className="flex shrink-0 items-center gap-3 select-none">
                         <Button
-                          type="button"
                           variant="outline"
                           size="sm"
                           disabled={page <= 1}
                           onClick={() => setPage((p) => Math.max(1, p - 1))}
-                          className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                          className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                         >
-                          <i className="ph-bold ph-caret-left mr-1"></i> PREV
+                          <i className="ph-bold ph-caret-left mr-2 text-base"></i>
+                          PREV
                         </Button>
-                        <div className="flex h-8 min-w-[32px] items-center justify-center rounded-md border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-xs dark:border-white/10 dark:bg-card dark:text-zinc-100">
+
+                        <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
                           {page}
                         </div>
+
                         <Button
-                          type="button"
                           variant="outline"
                           size="sm"
                           disabled={page >= totalPages}
                           onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                          className="h-8 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                          className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                         >
-                          NEXT <i className="ph-bold ph-caret-right ml-1"></i>
+                          NEXT
+                          <i className="ph-bold ph-caret-right ml-2 text-base"></i>
                         </Button>
                       </div>
-                    )}
-                  </div>
-                ) : null}
+                    </div>
+                  ) : null}
+                </div>
               </div>
 
               <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0 dark:bg-card dark:border-white/10 dark:shadow-none">
@@ -721,7 +805,7 @@ export default function DocumentRequestsTab({
                           Student
                         </div>
                         <div className="font-bold text-gray-900 dark:text-zinc-50">{detail.student_name}</div>
-                        <div className="font-mono text-xs text-gray-600 dark:text-zinc-300">{detail.student_no}</div>
+                        <div className="text-xs text-gray-600 dark:text-zinc-300">{detail.student_no}</div>
                       </div>
                       <div>
                         <div className="text-xs font-bold text-gray-500 uppercase dark:text-zinc-400">
@@ -735,7 +819,7 @@ export default function DocumentRequestsTab({
                           Physical location
                         </div>
                         {studentForRequest ? (
-                          <div className="text-sm font-mono text-gray-800 dark:text-zinc-100">
+                          <div className="text-sm text-gray-800 dark:text-zinc-100">
                             Room {studentForRequest.room} · Cabinet {studentForRequest.cabinet}{" "}
                             · Drawer {studentForRequest.drawer}
                           </div>
@@ -857,7 +941,7 @@ export default function DocumentRequestsTab({
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="font-bold text-gray-900 text-sm truncate dark:text-zinc-50">{selectedStudent.name}</div>
-                      <div className="font-mono text-xs text-gray-500 mt-0.5 dark:text-zinc-400">{selectedStudent.studentNo || selectedStudent.student_no}</div>
+                      <div className="text-xs text-gray-500 mt-0.5 dark:text-zinc-400">{selectedStudent.studentNo || selectedStudent.student_no}</div>
                       <div className="text-[11px] text-gray-600 mt-1 flex flex-wrap gap-x-2 gap-y-0.5 dark:text-zinc-300">
                         <span>Course: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.courseCode || selectedStudent.course_code || "—"}</strong></span>
                         <span>Section: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.section || "—"}</strong></span>
@@ -903,7 +987,7 @@ export default function DocumentRequestsTab({
                               <div className="text-sm font-bold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
                                 {s?.name}
                               </div>
-                              <div className="text-[10px] text-gray-500 dark:text-zinc-400 font-mono flex items-center gap-1.5">
+                              <div className="text-[10px] text-gray-500 dark:text-zinc-400 flex items-center gap-1.5">
                                 <span>{sn}</span>
                                 <span className="text-gray-300 dark:text-zinc-700">•</span>
                                 <span>{s?.courseCode || s?.course_code || "—"} - {s?.section || "—"}</span>
@@ -923,7 +1007,7 @@ export default function DocumentRequestsTab({
                       <span className="text-[10px] text-gray-400 font-semibold">If student record is missing</span>
                     </div>
                     <Input
-                      className="mt-1.5 font-mono uppercase bg-white border-gray-300 rounded-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 dark:bg-zinc-900 dark:border-zinc-800 dark:focus-visible:border-zinc-700"
+                      className="mt-1.5 uppercase bg-white border-gray-300 rounded-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 dark:bg-zinc-900 dark:border-zinc-800 dark:focus-visible:border-zinc-700"
                       value={createStudentNo}
                       onChange={(e) => setCreateStudentNo(e.target.value)}
                       placeholder="202X-XXXXX-MN-0"
@@ -1005,7 +1089,7 @@ export default function DocumentRequestsTab({
                 Check physical file before releasing.
               </div>
               {studentForRequest ? (
-                <div className="rounded-brand border border-gray-200 bg-gray-50 px-4 py-3 font-mono text-gray-800 font-medium dark:border-white/10 dark:bg-card dark:text-zinc-100">
+                <div className="rounded-brand border border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 font-medium dark:border-white/10 dark:bg-card dark:text-zinc-100">
                   Room {studentForRequest.room} · Cabinet {studentForRequest.cabinet} · Drawer{" "}
                   {studentForRequest.drawer}
                 </div>

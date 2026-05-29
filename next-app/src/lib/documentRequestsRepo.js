@@ -19,6 +19,8 @@ export async function listDocumentRequests({
   studentNo = "",
   limit = 50,
   offset = 0,
+  sortBy = "created_at",
+  sortOrder = "DESC",
 } = {}) {
   const filters = [];
   const params = [];
@@ -43,6 +45,16 @@ export async function listDocumentRequests({
   const lim = Math.min(Math.max(parseInt(limit, 10) || 50, 1), 200);
   const off = Math.max(parseInt(offset, 10) || 0, 0);
 
+  const validSortCols = {
+    id: "dr.id",
+    student: "s.name",
+    doc_type: "dr.doc_type",
+    status: "dr.status",
+    created_at: "dr.created_at",
+  };
+  const sortCol = validSortCols[sortBy] || "dr.created_at";
+  const order = String(sortOrder).toUpperCase() === "ASC" ? "ASC" : "DESC";
+
   return await dbAll(
     `
     SELECT
@@ -51,7 +63,7 @@ export async function listDocumentRequests({
     FROM document_requests dr
     JOIN students s ON s.student_no = dr.student_no
     ${where}
-    ORDER BY dr.created_at DESC, dr.id DESC
+    ORDER BY ${sortCol} ${order}, dr.id DESC
     LIMIT ? OFFSET ?
     `,
     [...params, lim, off]
