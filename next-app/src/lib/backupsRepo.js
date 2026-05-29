@@ -150,13 +150,24 @@ export async function syncBackupExternally(id) {
       throw new Error(`Source file not found at: ${sourcePath}`);
     }
 
+    // Ensure PUPSJRMS Backups folder exists on the external drive
     const externalDir = getExternalBackupsDir();
-    const destPath = path.join(externalDir, backup.filename);
+    console.log(`[SYNC DEBUG] External base dir: ${externalDir}`);
+
+    // Create a dated subfolder: YYYY-MM-DD
+    const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const dailyDir = path.join(externalDir, today);
+    if (!fs.existsSync(dailyDir)) {
+      fs.mkdirSync(dailyDir, { recursive: true });
+      console.log(`[SYNC DEBUG] Created daily folder: ${dailyDir}`);
+    }
+
+    const destPath = path.join(dailyDir, backup.filename);
     console.log(`[SYNC DEBUG] Destination path: ${destPath}`);
 
     console.log(`[SYNC DEBUG] Transferring ${backup.filename} to external drive...`);
     
-    // Physical copy
+    // Physical copy into the daily subfolder
     fs.copyFileSync(sourcePath, destPath);
     console.log(`[SYNC DEBUG] Physical copy complete.`);
 
@@ -164,7 +175,7 @@ export async function syncBackupExternally(id) {
     await updateBackupStatus(id, "status_external", "Success");
     console.log(`[SYNC DEBUG] Database updated to 'Success' for ID: ${id}`);
     
-    return { ok: true, path: destPath };
+    return { ok: true, path: destPath, dailyDir };
   } catch (error) {
     console.error(`[SYNC DEBUG] ERROR for backup ${id}:`, error.message);
     try {
