@@ -38,18 +38,19 @@ export default function SecurityQuestionsTab({
           ))}
         </div>
       ) : (
-        <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">          <div className="flex shrink-0 flex-col items-center justify-between gap-4 rounded-t-brand border-b border-gray-100 bg-gray-50 p-6 sm:flex-row dark:border-white/10 dark:bg-white/5">
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex shrink-0 flex-col items-center justify-between gap-4 border-b border-gray-100 pb-6 sm:flex-row dark:border-white/10">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
                 <i className="ph-duotone ph-lock-key text-2xl"></i>
               </div>
               <div>
-                <CardTitle className="text-xl leading-none font-black tracking-tight text-gray-900 dark:text-zinc-50">
+                <h3 className="text-xl leading-none font-black tracking-tight text-gray-900 dark:text-zinc-50 uppercase">
                   SECURITY QUESTIONS
-                </CardTitle>
-                <CardDescription className="mt-1.5 text-sm font-medium text-gray-500 dark:text-zinc-400">
+                </h3>
+                <p className="mt-1.5 text-sm font-medium text-gray-500 dark:text-zinc-400">
                   Define verification challenges for personnel account recovery and setup.
-                </CardDescription>
+                </p>
               </div>
             </div>
             <Button
@@ -62,7 +63,7 @@ export default function SecurityQuestionsTab({
             </Button>
           </div>
 
-          <CardContent className="flex-1 overflow-y-auto p-8">
+          <div className="flex-1 overflow-y-auto py-8">
             <div className="max-w-4xl space-y-8">
               <div className="grid grid-cols-1 gap-6">
                 {securityQuestions.map((q, i) => (
@@ -139,8 +140,8 @@ export default function SecurityQuestionsTab({
                 </button>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
     </div>
   )
