@@ -85,8 +85,9 @@ function AdminPageContent() {
   })
 
   const [staffData, setStaffData] = useState([])
-  const [auditLogs, setAuditLogs] = useState([])
+  const [auditLogs, setAuditLogs] = useState(null)
   const [logStats, setLogStats] = useState(null)
+  const [logsLoading, setLogsLoading] = useState(false)
   const [logPage, setLogPage] = useState(1)
   const [logTotal, setLogTotal] = useState(0)
   const [logsPerPage, setLogsPerPage] = useState(20)
@@ -99,6 +100,8 @@ function AdminPageContent() {
   const [logSortOrder, setLogSortOrder] = useState("DESC")
   const [logsMineOnly, setLogsMineOnly] = useState(false)
 
+  const [reviewLoading, setReviewLoading] = useState(false)
+
   const [systemHealth, setSystemHealth] = useState({
     cpu: 0,
     memory: { percent: 0, total: 0, used: 0 },
@@ -110,7 +113,7 @@ function AdminPageContent() {
   const [backupSearch, setBackupSearch] = useState("")
   const [backupStartDate, setBackupStartDate] = useState("")
   const [backupEndDate, setBackupEndDate] = useState("")
-  const [reviewRecords, setReviewRecords] = useState([])
+  const [reviewRecords, setReviewRecords] = useState(null)
   const [reviewStatusFilter, setReviewStatusFilter] = useState("All")
 
   const [search, setSearch] = useState("")
@@ -289,6 +292,7 @@ function AdminPageContent() {
 
   const refreshAuditLogs = useCallback(async (isManual = false) => {
     if (isManual) setViewLoading((prev) => ({ ...prev, logs: true }))
+    setLogsLoading(true)
     try {
       const offset = (logPage - 1) * logsPerPage
       const mineQuery = logsMineOnly ? "&mine=1" : ""
@@ -340,6 +344,7 @@ function AdminPageContent() {
       // silent
     } finally {
       if (isManual) setViewLoading((prev) => ({ ...prev, logs: false }))
+      setLogsLoading(false)
     }
   }, [
     logPage,
@@ -355,6 +360,7 @@ function AdminPageContent() {
   ])
 
   const refreshLogStats = useCallback(async () => {
+    setLogsLoading(true)
     try {
       const res = await fetch("/api/audit-logs/stats")
       const json = await res.json()
@@ -363,6 +369,8 @@ function AdminPageContent() {
       }
     } catch {
       // ignore
+    } finally {
+      setLogsLoading(false)
     }
   }, [])
 
@@ -412,6 +420,7 @@ function AdminPageContent() {
 
   const refreshReviewRecords = useCallback(async (isManual = false) => {
     if (isManual) setViewLoading((prev) => ({ ...prev, review: true }))
+    setReviewLoading(true)
     try {
       const approvalStatus =
         reviewStatusFilter === "All"
@@ -439,6 +448,7 @@ function AdminPageContent() {
       }
     } finally {
       if (isManual) setViewLoading((prev) => ({ ...prev, review: false }))
+      setReviewLoading(false)
     }
   }, [reviewStatusFilter, showToast])
 
@@ -1519,7 +1529,8 @@ function AdminPageContent() {
             <AuditLogsTab
               displayLogs={auditLogs}
               logStats={logStats}
-              isLoading={viewLoading.logs}
+              isLoading={logsLoading}
+              isManualLoading={viewLoading.logs}
               logPage={logPage}
               setLogPage={setLogPage}
               logTotal={logTotal}
@@ -1541,7 +1552,10 @@ function AdminPageContent() {
               setLogSortOrder={setLogSortOrder}
               showToast={showToast}
               onLogAction={logAdminAction}
-              onRefresh={() => refreshAuditLogs(true)}
+              onRefresh={() => {
+                refreshAuditLogs(true)
+                refreshLogStats()
+              }}
             />
           )}
 
@@ -1566,7 +1580,8 @@ function AdminPageContent() {
           {view === "review" && (
             <DigitalRecordsReviewTab
               records={reviewRecords}
-              isLoading={viewLoading.review}
+              isLoading={reviewLoading}
+              isManualLoading={viewLoading.review}
               error={null}
               statusFilter={reviewStatusFilter}
               setStatusFilter={setReviewStatusFilter}

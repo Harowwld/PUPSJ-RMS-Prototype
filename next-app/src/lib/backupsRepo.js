@@ -1,4 +1,4 @@
-import { dbAll, dbGet, dbRun } from "./sqlite";
+import { dbAll, dbGet, dbRun, flushDb } from "./sqlite";
 import path from "node:path";
 import fs from "node:fs";
 import crypto from "node:crypto";
@@ -185,6 +185,9 @@ export async function executeBackup() {
   const backupsDir = getBackupsDir();
   const backupPath = path.join(backupsDir, backupFilename);
   console.log(`[BACKUP] Creating: ${backupPath}`);
+
+  // Flush DB to ensure disk file is up to date
+  await flushDb();
 
   const localDir = getLocalDir();
   const dbPath = path.join(localDir, "db.sqlite");

@@ -75,13 +75,6 @@ export default function StatCards({ isLoading, logStats }) {
       sublabel: "Logins & access events",
       color: "amber",
       trendData: trends.map(t => t.auth)
-    },
-    {
-      label: "Critical Alerts",
-      value: logStats?.criticalEvents || 0,
-      sublabel: "High-priority incidents",
-      color: "red",
-      trendData: trends.map(t => t.critical)
     }
   ];
 
@@ -102,17 +95,27 @@ export default function StatCards({ isLoading, logStats }) {
         text: "text-white", 
         sub: "text-amber-100", spark: "#FDE68A" 
       };
-      case "red": return { 
-        bg: "from-red-700 to-red-950", border: "border-red-950", 
-        text: "text-white", 
-        sub: "text-red-200", spark: "#FECACA" 
-      };
       default: return {};
     }
   };
 
+  if (isLoading && !logStats) {
+    return (
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 animate-pulse">
+        {[1, 2, 3].map((i) => (
+          <Skeleton key={i} className="h-28 rounded-xl bg-gray-100 dark:bg-muted" />
+        ))}
+      </div>
+    );
+  }
+
+  if (!logStats) return null;
+
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <div className={cn(
+      "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 transition-all duration-500",
+      isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+    )}>
       {stats.map((stat, i) => {
         const classes = getColorClasses(stat.color);
         return (
@@ -132,21 +135,15 @@ export default function StatCards({ isLoading, logStats }) {
                   <p className={cn("text-[10px] font-black tracking-widest uppercase", classes.sub)}>
                     {stat.label}
                   </p>
-                  {isLoading || !logStats ? (
-                    <Skeleton className="mt-1 h-8 w-24 bg-white dark:bg-muted" />
-                  ) : (
-                    <h3 className={cn("text-3xl font-black tracking-tight", classes.text)}>
-                      {stat.value.toLocaleString()}
-                    </h3>
-                  )}
-                  {!isLoading && (
-                    <p className={cn("mt-1 text-[10px] font-medium opacity-80", classes.sub)}>
-                      {stat.sublabel}
-                    </p>
-                  )}
+                  <h3 className={cn("text-3xl font-black tracking-tight", classes.text)}>
+                    {stat.value.toLocaleString()}
+                  </h3>
+                  <p className={cn("mt-1 text-[10px] font-medium opacity-80", classes.sub)}>
+                    {stat.sublabel}
+                  </p>
                 </div>
 
-                {!isLoading && stat.trendData.length > 0 && (
+                {stat.trendData.length > 0 && (
                   <div className="opacity-70 transition-opacity group-hover:opacity-100">
                     <Sparkline data={stat.trendData} color={classes.spark} />
                   </div>

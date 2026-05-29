@@ -54,7 +54,7 @@ export default function OCRPromptModal({
       <DialogContent className="max-h-[90vh] overflow-hidden border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-lg dark:border-white/10 dark:bg-card">
         <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-amber-100/30 bg-amber-50 text-amber-600 shadow-sm dark:bg-amber-950/30 dark:text-amber-400 dark:shadow-none">
+            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-amber-100/30 bg-amber-50 text-amber-600 shadow-sm dark:bg-amber-950/30 dark:text-amber-400 dark:shadow-none">
               <i className="ph-duotone ph-scanner text-2xl"></i>
             </div>
             <div className="min-w-0">

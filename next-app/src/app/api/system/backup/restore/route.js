@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+// Cache invalidation comment to trigger rebuild
 import fs from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
@@ -11,7 +12,7 @@ import {
   getLocalDir,
   listBackups,
 } from "../../../../../lib/backupsRepo";
-import { dbRun, reloadDb } from "../../../../../lib/sqlite";
+import { dbRun, reloadDb, flushDb } from "../../../../../lib/sqlite";
 import { writeAuditLog } from "../../../../../lib/auditLogRequest";
 import { requireAdmin, createAuthErrorResponse } from "../../../../../lib/authHelpers";
 import { requireTOTP, extractTOTPToken } from "../../../../../lib/totpMiddleware";
@@ -108,14 +109,24 @@ export async function POST(req) {
     const sizeBytes = encryptedSnapshot.length;
 
     // --- PHASE 2: OVERWRITE SYSTEM ---
-    console.log("[RESTORE] Overwriting system with uploaded backup...");
+    console.log("[RESTORE] Preparing to overwrite system with uploaded backup...");
+
+    // 1. Flush and reload DB BEFORE file operations
+    await reloadDb();
+    
+    // Give OS a moment to release file handles
+    await new Promise(r => setTimeout(r, 500));
 
     // Replace DB
-    fs.copyFileSync(stagedDbPath, currentDbPath);
-    console.log("[RESTORE] db.sqlite overwritten.");
-
-    // Force the application to reload the connection to the NEW database
-    reloadDb();
+    try {
+      fs.copyFileSync(stagedDbPath, currentDbPath);
+      console.log("[RESTORE] db.sqlite overwritten.");
+    } catch (copyErr) {
+      console.error("[RESTORE] Failed to overwrite db.sqlite, retrying with delay...", copyErr.message);
+      await new Promise(r => setTimeout(r, 1000));
+      fs.copyFileSync(stagedDbPath, currentDbPath);
+      console.log("[RESTORE] db.sqlite overwritten after retry.");
+    }
 
     // Replace Uploads folder
     if (fs.existsSync(stagedUploadsDir)) {
@@ -139,27 +150,11 @@ export async function POST(req) {
       // Final verification of the entire backups table
       const allBackups = await listBackups();
       console.log(`[RESTORE] Total backups now in DB: ${allBackups.length}`);
-      allBackups.forEach(b => {
-        if (b.filename === snapshotFilename) {
-          console.log(`[RESTORE] VERIFIED: Snapshot ${snapshotFilename} exists in DB.`);
-        }
-      });
-
-      // Cleanup orphaned files in the backups folder that are not in the restored DB
-      const validFilenames = new Set(allBackups.map(b => b.filename));
-      const filesOnDisk = fs.readdirSync(backupsDir);
       
-      filesOnDisk.forEach(file => {
-        if (!validFilenames.has(file)) {
-          const filePath = path.join(backupsDir, file);
-          console.log(`[RESTORE] Deleting orphaned backup file: ${file}`);
-          try {
-            fs.unlinkSync(filePath);
-          } catch (delErr) {
-            console.error(`[RESTORE] Failed to delete orphaned file ${file}:`, delErr);
-          }
-        }
-      });
+      // NOTE: We no longer delete orphaned backup files on disk here.
+      // Doing so is destructive if the user restores an older backup, 
+      // as it would delete all newer backups not known to that older DB state.
+      console.log("[RESTORE] Orphaned backup cleanup skipped to prevent data loss.");
     } catch (dbErr) {
       console.error("[RESTORE] Failed to record snapshot in DB:", dbErr);
       // We don't throw here because the restore itself was successful
@@ -189,7 +184,6 @@ export async function POST(req) {
       ok: true,
       message: "System restored successfully from backup. A safety snapshot was created."
     });
-
   } catch (error) {
     console.error("[RESTORE] Critical Error:", error);
     if (stagingDir && fs.existsSync(stagingDir)) {

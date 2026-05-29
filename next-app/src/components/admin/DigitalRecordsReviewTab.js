@@ -1,5 +1,5 @@
 "use client"
-
+// Trigger rebuild comment
 import { useState, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -45,6 +45,7 @@ function SortIndicator({ column, sortBy, sortOrder }) {
 export default function DigitalRecordsReviewTab({
   records,
   isLoading,
+  isManualLoading = false,
   error = null,
   statusFilter,
   setStatusFilter,
@@ -178,7 +179,7 @@ export default function DigitalRecordsReviewTab({
   }
 
   const sortedRecords = useMemo(() => {
-    const baseFiltered = records.filter((r) => {
+    const baseFiltered = (records || []).filter((r) => {
       if (docTypeFilter !== "All" && r.doc_type !== docTypeFilter) return false
       if (dateFrom || dateTo) {
         let createdDate = ""
@@ -389,9 +390,9 @@ export default function DigitalRecordsReviewTab({
     const today = new Date().toLocaleDateString("en-CA") // YYYY-MM-DD
     const fortyEightHoursAgo = Date.now() - 48 * 60 * 60 * 1000
 
-    const pending = records.filter((r) => r.approval_status === "Pending")
-    const approvedRecords = records.filter((r) => r.approval_status === "Approved")
-    const declinedRecords = records.filter((r) => r.approval_status === "Declined")
+    const pending = (records || []).filter((r) => r.approval_status === "Pending")
+    const approvedRecords = (records || []).filter((r) => r.approval_status === "Approved")
+    const declinedRecords = (records || []).filter((r) => r.approval_status === "Declined")
 
     const approvedToday = approvedRecords.filter((r) => {
       if (!r.reviewed_at) return false
@@ -441,16 +442,18 @@ export default function DigitalRecordsReviewTab({
   return (
     <div className="animate-fade-up font-inter flex h-auto w-full flex-col gap-6">
       {/* Color Stat Cards / Skeletons at the Top */}
-      {isLoading && records.length === 0 ? (
+      {isLoading && !records ? (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 animate-pulse">
           {[1, 2, 3].map((i) => (
             <Skeleton key={i} className="h-28 rounded-brand bg-gray-100 dark:bg-muted" />
           ))}
         </div>
       ) : !error ? (
-        <div className={cn("transition-all duration-500", isLoading && "opacity-40 blur-[1px]")}>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="group relative overflow-hidden rounded-brand border border-blue-950 bg-linear-to-br from-blue-800 to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+        <div className={cn(
+          "grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3 transition-all duration-500",
+          isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+        )}>
+          <div className="group relative overflow-hidden rounded-brand border border-blue-950 bg-linear-to-br from-blue-800 to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
               <i className="ph-duotone ph-clock-countdown pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
               <div className="relative z-10">
                 <div className="flex items-center justify-between">
@@ -520,8 +523,7 @@ export default function DigitalRecordsReviewTab({
               </div>
             </div>
           </div>
-        </div>
-      ) : null}
+        ) : null}
 
       <Card className="flex h-auto w-full flex-col rounded-brand border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
@@ -550,7 +552,7 @@ export default function DigitalRecordsReviewTab({
                 </div>
                 <RefreshButton 
                   onRefresh={onRefresh} 
-                  isLoading={isLoading} 
+                  isLoading={isManualLoading} 
                   title="Refresh Review Data"
                 />
               </div>
@@ -799,7 +801,7 @@ export default function DigitalRecordsReviewTab({
           </div>
         </div>
       </Card>
-       {isLoading && records.length === 0 ? (
+       {isLoading && (!records || records.length === 0) ? (
         <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card animate-pulse">
           <div className="h-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/5" />
           <div className="p-4 space-y-4">
@@ -824,8 +826,11 @@ export default function DigitalRecordsReviewTab({
             </EmptyHeader>
           </Empty>
         </div>
-      ) : (
-        <div className={cn("flex flex-1 flex-col gap-6 transition-all duration-500", isLoading && "opacity-40 blur-[1px]")}>
+      ) : records ? (
+        <div className={cn(
+          "flex flex-1 flex-col gap-6 transition-all duration-500",
+          isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+        )}>
           <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
             <div className="overflow-x-auto rounded-[inherit]">
               <table className="min-w-full text-sm">
@@ -1157,7 +1162,7 @@ export default function DigitalRecordsReviewTab({
             )}
           </div>
         </div>
-      )}
+      ) : null}
 
       {/* Floating Bulk Action Bar */}
       {selectedIds.size > 1 && (

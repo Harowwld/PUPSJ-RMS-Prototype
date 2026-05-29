@@ -1263,6 +1263,21 @@ export async function getDb() {
   return initializing;
 }
 
+/**
+ * Ensures all pending database writes to the file system are completed.
+ * Essential before performing file-level operations like backup or restore.
+ */
+export async function flushDb() {
+  while (writePromise || writePending) {
+    if (writePromise) {
+      await writePromise;
+    } else {
+      // Small delay to allow writePending to transition to writePromise
+      await new Promise(resolve => setTimeout(resolve, 10));
+    }
+  }
+}
+
 let writePromise = null;
 let writePending = false;
 
@@ -1285,7 +1300,9 @@ async function persistDb() {
     writePromise = null;
     if (writePending) {
       writePending = false;
-      persistDb();
+      // We use await here to ensure serial execution, but persistDb 
+      // itself is often called without await from other functions.
+      await persistDb();
     }
   }
 }
@@ -1339,18 +1356,35 @@ export async function dbRun(sql, params) {
   };
 }
 
-export function reloadDb() {
+/**
+ * Clears the in-memory database cache and ensures all pending writes are finished.
+ * This must be called before the underlying db.sqlite file is replaced.
+ */
+export async function reloadDb() {
+  console.log("[DB] Reloading database connection...");
+  
+  // 1. Wait for any pending initialization to complete
+  if (initializing) {
+    try { await initializing; } catch (e) {}
+  }
+
+  // 2. Flush any pending writes to the old database file
+  await flushDb();
+
+  // 3. Close and clear the current connection
   if (db) {
     try {
       db.close();
     } catch (e) {
-      // ignore
+      console.warn("[DB] Error closing database during reload:", e.message);
     }
   }
+  
   db = null;
   global.sqliteDb = null;
   initializing = null;
-  console.log("[DB] In-memory database cache cleared for reload.");
+  
+  console.log("[DB] In-memory database cache cleared and ready for new connection.");
 }
 
 function ensureSerialKeyColumn() {

@@ -70,7 +70,7 @@ export default function UserGuideModal({ open, onClose }) {
                     {activeTab === 'admin' && "Technical procedures for system administrators and records heads."}
                   </DialogDescription>
                 </div>
-                <div className="w-12 h-12 rounded-full border border-red-100 bg-red-50 text-pup-maroon dark:text-primary flex items-center justify-center shrink-0 dark:bg-red-950/30">
+                <div className="w-12 h-12 rounded-xl border border-red-100 bg-red-50 text-pup-maroon dark:text-primary flex items-center justify-center shrink-0 dark:bg-red-950/30">
                   <i className={`${TABS.find(t => t.id === activeTab)?.icon.replace('ph-bold', 'ph-duotone')} text-2xl`}></i>
                 </div>
               </div>

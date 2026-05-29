@@ -371,7 +371,10 @@ export default function DigitizationComplianceTab({
           ))}
         </div>
       ) : !error && data ? (
-        <div className={cn("transition-all duration-500", loading && "opacity-40 blur-[1px]")}>
+        <div className={cn(
+          "transition-all duration-500", 
+          loading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+        )}>
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* Completeness Card */}
@@ -662,7 +665,10 @@ export default function DigitizationComplianceTab({
                 <Skeleton className="h-24 w-full rounded-2xl bg-gray-100 dark:bg-muted" />
               </div>
             ) : !error && data ? (
-              <div className={cn("transition-all duration-500", loading && "opacity-40 blur-[1px]")}>
+              <div className={cn(
+                "transition-all duration-500", 
+                loading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+              )}>
                 <div className="flex flex-wrap gap-8 bg-gray-50 p-6 rounded-2xl border border-gray-100 shadow-inner dark:bg-white/5 dark:border-white/10 dark:shadow-none">
                   <div>
                     <div className="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1.5 text-center dark:text-zinc-500">Digitized</div>
@@ -718,7 +724,10 @@ export default function DigitizationComplianceTab({
             </Empty>
           </div>
         ) : data ? (
-          <div className={cn("overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card transition-all duration-500", loading && "opacity-40 blur-[1px]")}>
+          <div className={cn(
+            "overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card transition-all duration-500", 
+            loading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+          )}>
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 p-4 bg-white border-b border-gray-200 dark:bg-card/50 dark:border-white/10">
               {/* ... (Search and header content) ... */}
               <div className="flex items-center gap-3">

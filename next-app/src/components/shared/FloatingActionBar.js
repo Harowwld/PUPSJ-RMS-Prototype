@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { Button } from "@/components/ui/button"
+import { cn } from "@/lib/utils"
 
 export default function FloatingActionBar({
   selectedCount,
@@ -53,7 +54,12 @@ export default function FloatingActionBar({
                 <Button
                   size="sm"
                   onClick={onAction}
-                  className={`btn-brand-red flex h-10 items-center gap-2 rounded-brand px-6 text-xs font-black uppercase text-white shadow-lg transition-all active:scale-95 ${ actionVariant === "success" ? "bg-linear-to-b from-emerald-500 to-emerald-700 border-4 border-emerald-800 shadow-emerald-600/20 hover:from-emerald-400 hover:to-emerald-600" : "" }`}
+                  className={cn(
+                    "flex h-10 items-center gap-2 rounded-brand px-6 text-xs font-black uppercase text-white shadow-lg transition-all active:scale-95",
+                    actionVariant === "success" 
+                      ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-900/20" 
+                      : "btn-brand-red"
+                  )}
                 >
                   {actionIcon && <i className={`ph-bold ${actionIcon} text-sm`}></i>}
                   {actionLabel}
