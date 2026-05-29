@@ -226,6 +226,30 @@ export async function setStaffStatus(id, status) {
   return await getStaffById(id);
 }
 
+/**
+ * Updates a staff member's preferences.
+ */
+export async function updateStaffPreferences(staffId, prefs) {
+  const staff = await getStaffById(staffId);
+  if (!staff) return null;
+
+  let currentPrefs = {};
+  try {
+    currentPrefs = JSON.parse(staff.preferences || "{}");
+  } catch (e) {
+    currentPrefs = {};
+  }
+
+  const nextPrefs = { ...currentPrefs, ...prefs };
+  
+  await dbRun(
+    "UPDATE staff SET preferences = ?, updated_at = datetime('now') WHERE id = ?",
+    [JSON.stringify(nextPrefs), staffId]
+  );
+
+  return nextPrefs;
+}
+
 export function getStaffDisplayName(staff) {
   if (!staff) return "System";
   const fullName = `${staff.fname || ""} ${staff.lname || ""}`.trim();

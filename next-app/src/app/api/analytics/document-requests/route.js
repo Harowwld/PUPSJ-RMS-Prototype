@@ -16,6 +16,10 @@ export async function GET(req) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(req.url);
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+
     const rows = await dbAll(`
       SELECT 
         id, 
@@ -30,66 +34,45 @@ export async function GET(req) {
     const statusCounts = { Pending: 0, InProgress: 0, Ready: 0, Completed: 0, Cancelled: 0 };
     const docTypeCounts = {};
     
-    // SLA metrics (in hours)
+    // Summary metrics
     let totalCompleted = 0;
-    let totalTurnaroundHours = 0;
-
-    // Volume trend by month (last 6 months)
-    const now = new Date();
-    const trendMap = {};
-    const formatter = new Intl.DateTimeFormat('en-US', { month: 'short', year: '2-digit' });
-    
-    for (let i = 5; i >= 0; i--) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const sortKey = d.toISOString().substring(0, 7); // YYYY-MM
-        const label = formatter.format(d); // e.g. "Apr 24"
-        trendMap[sortKey] = { label, sortKey, received: 0, completed: 0 };
-    }
+    let filteredTotalRequests = 0;
 
     for (const r of (rows || [])) {
+      // Lexicographical date filtering (User Recommendation)
+      const createdDate = r.created_at ? String(r.created_at).substring(0, 10) : "";
+      if (startDate && createdDate < startDate) continue;
+      if (endDate && createdDate > endDate) continue;
+
+      filteredTotalRequests++;
       statusCounts[r.status] = (statusCounts[r.status] || 0) + 1;
       
       const dt = r.doc_type || "Unknown";
       docTypeCounts[dt] = (docTypeCounts[dt] || 0) + 1;
 
-      const created = new Date(r.created_at);
-      const updated = r.updated_at ? new Date(r.updated_at) : null;
-      
-      // Map to trend
-      const monthKey = created.toISOString().substring(0, 7);
-      if (trendMap[monthKey]) {
-          trendMap[monthKey].received++;
-      }
-
-      if (r.status === "Completed" && updated) {
-          const completedMonthKey = updated.toISOString().substring(0, 7);
-          if (trendMap[completedMonthKey]) {
-              trendMap[completedMonthKey].completed++;
-          }
-          const hours = Math.max(0, (updated - created) / (1000 * 60 * 60));
-          totalTurnaroundHours += hours;
+      if (r.status === "Completed") {
           totalCompleted++;
       }
     }
 
-    const averageTurnaroundHours = totalCompleted > 0 ? (totalTurnaroundHours / totalCompleted) : null;
-
-    const topDocTypes = Object.entries(docTypeCounts)
+    const sortedDocTypes = Object.entries(docTypeCounts)
       .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
+      .sort((a, b) => b.count - a.count);
 
-    const volumeTrend = Object.values(trendMap);
+    let topDocTypes = sortedDocTypes.slice(0, 7);
+    
+    if (sortedDocTypes.length > 7) {
+        const othersCount = sortedDocTypes.slice(7).reduce((acc, curr) => acc + curr.count, 0);
+        topDocTypes.push({ name: "Others", count: othersCount });
+    }
 
     return NextResponse.json({
         ok: true,
         data: {
-            totalRequests: rows?.length || 0,
+            totalRequests: filteredTotalRequests,
             statusCounts,
             topDocTypes,
-            volumeTrend,
             sla: {
-                averageTurnaroundHours,
                 totalCompleted
             }
         }

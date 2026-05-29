@@ -88,7 +88,7 @@ function getSeverityConfig(sev) {
   }
 }
 
-const LogRow = React.memo(({
+const LogRow = React.memo(function LogRow({
   log,
   isSelected,
   isExpanded,
@@ -96,7 +96,7 @@ const LogRow = React.memo(({
   setSelectedLog,
   handleCopy,
   cn
-}) => {
+}) {
   const sevConfig = getSeverityConfig(log.severity)
   const uploaded = formatPHDateTimeParts(log.created_at || log.time)
 
@@ -361,10 +361,10 @@ export default function LogTable({
           isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
         )}
       >
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto rounded-[inherit]">
           <table className="min-w-full table-fixed text-sm">
-            <thead className="border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">
-              <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
+            <thead className="bg-gray-50 backdrop-blur-sm select-none dark:bg-muted">
+              <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
                 <th className="w-[50px] p-4 text-center">
                   <i className="ph-bold ph-hash text-[11px] dark:text-zinc-300"></i>
                 </th>

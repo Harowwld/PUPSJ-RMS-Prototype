@@ -52,6 +52,14 @@ export default function ConfirmModal({
       confirmVariant: "destructive",
       buttonIcon: "ph-bold ph-trash",
     },
+    brand: {
+      icon: "ph-duotone ph-user-gear",
+      iconWrap: "bg-red-50 dark:bg-red-950/30 border-red-100 text-pup-maroon shadow-sm dark:border-white/10",
+      title: "text-gray-900 dark:text-zinc-50",
+      description: "text-gray-600 dark:text-zinc-300",
+      confirmVariant: "default",
+      buttonIcon: "ph-bold ph-check",
+    },
     warning: {
       icon: "ph-duotone ph-warning",
       iconWrap: "bg-amber-50 dark:bg-amber-950/30 border-amber-100 text-amber-600 shadow-sm dark:border-white/10",
@@ -132,7 +140,7 @@ export default function ConfirmModal({
           (!selectedItems.length && !isVerificationEnabled) && "pb-5 border-b-0"
         )}>
           <div className="flex items-start gap-4 w-full">
-            <div className={`w-12 h-12 rounded-full border flex items-center justify-center shrink-0 ${v.iconWrap}`}>
+            <div className={`w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 ${v.iconWrap}`}>
               <i className={`${displayIcon} text-2xl`}></i>
             </div>
             <div className="min-w-0 flex-1">

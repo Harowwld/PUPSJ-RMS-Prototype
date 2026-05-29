@@ -51,64 +51,41 @@ export default function SlaFilters({
   }
 
   return (
-    <div className="border-b border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-muted/30">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center justify-between gap-4">
+    <div className="bg-white border-t border-b border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
+      <div className="flex flex-wrap items-end justify-end gap-5">
+        <div className="w-full max-w-[600px]">
+          <div className="mb-1.5 flex items-center justify-between">
             <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
-              Filter by Period
+              Time Period
             </label>
             <div className="flex items-center gap-2">
-              <button
-                onClick={() => handleQuickRange("today")}
-                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500"
-              >
-                Today
-              </button>
-              <span className="text-[9px] text-gray-300 dark:text-zinc-600">•</span>
-              <button
-                onClick={() => handleQuickRange("yesterday")}
-                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500"
-              >
-                Yesterday
-              </button>
-              <span className="text-[9px] text-gray-300 dark:text-zinc-600">•</span>
-              <button
-                onClick={() => handleQuickRange("last7")}
-                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500"
-              >
-                Last 7 Days
-              </button>
-              <span className="text-[9px] text-gray-300 dark:text-zinc-600">•</span>
-              <button
-                onClick={() => handleQuickRange("last30")}
-                className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500"
-              >
-                Last 30 Days
-              </button>
+              {["today", "yesterday", "last7", "last30"].map((range) => (
+                <button
+                  key={range}
+                  onClick={() => handleQuickRange(range)}
+                  className="rounded-md bg-gray-100 px-2 py-0.5 text-[9px] font-black text-gray-500 uppercase transition-all hover:bg-pup-maroon hover:text-white dark:text-zinc-400 dark:bg-muted"
+                >
+                  {range.replace("last", "Last ")}
+                </button>
+              ))}
             </div>
           </div>
-
-          <div className="flex items-center gap-2">
-            <div className="w-60">
+          <div className="flex gap-2">
+            <div className="flex-1">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
-                    variant={"outline"}
+                    variant="outline"
                     className={cn(
-                      "h-9 w-full justify-start rounded-brand border-gray-300 dark:border-white/10 text-left text-xs font-medium bg-white dark:bg-card",
+                      "h-11 w-full justify-start rounded-brand border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-xs font-semibold shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card",
                       !startDate && "text-gray-400 dark:text-zinc-500"
                     )}
                   >
-                    <i className="ph-bold ph-calendar-dots mr-2 text-base text-gray-400 dark:text-zinc-500"></i>
-                    {startDate ? (
-                      format(new Date(startDate), "MMM dd, yyyy")
-                    ) : (
-                      "Start Date"
-                    )}
+                    <i className="ph-bold ph-calendar-blank mr-2 text-base text-gray-400 dark:text-zinc-500"></i>
+                    {startDate ? format(new Date(startDate), "MMM d, yyyy") : "Start Date"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto rounded-brand p-0 shadow-2xl" align="start">
+                <PopoverContent className="w-auto rounded-2xl p-0 shadow-2xl" align="start">
                   <Calendar
                     mode="single"
                     selected={startDate ? new Date(startDate) : undefined}
@@ -120,26 +97,24 @@ export default function SlaFilters({
                 </PopoverContent>
               </Popover>
             </div>
-            <span className="text-gray-400 text-xs font-bold dark:text-zinc-500">TO</span>
-            <div className="w-60">
+            <div className="flex items-center text-gray-300 dark:text-zinc-600">
+               <i className="ph-bold ph-arrow-right"></i>
+            </div>
+            <div className="flex-1">
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
-                    variant={"outline"}
+                    variant="outline"
                     className={cn(
-                      "h-9 w-full justify-start rounded-brand border-gray-300 dark:border-white/10 text-left text-xs font-medium bg-white dark:bg-card",
+                      "h-11 w-full justify-start rounded-brand border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-xs font-semibold shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card",
                       !endDate && "text-gray-400 dark:text-zinc-500"
                     )}
                   >
-                    <i className="ph-bold ph-calendar-dots mr-2 text-base text-gray-400 dark:text-zinc-500"></i>
-                    {endDate ? (
-                      format(new Date(endDate), "MMM dd, yyyy")
-                    ) : (
-                      "End Date"
-                    )}
+                    <i className="ph-bold ph-calendar-blank mr-2 text-base text-gray-400 dark:text-zinc-500"></i>
+                    {endDate ? format(new Date(endDate), "MMM d, yyyy") : "End Date"}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto rounded-brand p-0 shadow-2xl" align="start">
+                <PopoverContent className="w-auto rounded-2xl p-0 shadow-2xl" align="start">
                   <Calendar
                     mode="single"
                     selected={endDate ? new Date(endDate) : undefined}

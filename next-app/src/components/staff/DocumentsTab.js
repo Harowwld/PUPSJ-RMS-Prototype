@@ -62,6 +62,7 @@ export default function DocumentsTab({
     room: "",
     cabinet: "",
     drawer: "",
+    status: "Active",
   });
 
   // Archive Student Confirmation
@@ -127,6 +128,7 @@ export default function DocumentsTab({
       room: currentStudent.room || "",
       cabinet: currentStudent.cabinet || "",
       drawer: currentStudent.drawer || "",
+      status: currentStudent.status || "Active",
     });
     setEditStudentOpen(true);
   };
@@ -143,16 +145,14 @@ export default function DocumentsTab({
           description="Search and view digitized student records."
         />
 
-        <div className="p-4 bg-gray-50 flex-none border-b border-gray-200 dark:bg-white/5 dark:border-white/10">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-end">
-            <div className="lg:col-span-1">
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">
-                  Student No
-                </label>
-              </div>
+        <div className="bg-white border-t border-b border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
+          <div className="flex w-full flex-wrap items-end gap-6">
+            <div className="flex-1 min-w-[240px]">
+              <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                Student No.
+              </label>
               <Input
-                className="h-10 font-mono bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 transition-colors dark:bg-card dark:focus:border-zinc-700 dark:border-white/10"
+                className="h-11 font-mono rounded-brand border border-gray-200 bg-white px-4 text-sm transition-all placeholder:text-gray-400 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
                 value={docsForm.studentNo}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -167,12 +167,12 @@ export default function DocumentsTab({
               />
             </div>
 
-            <div className="lg:col-span-1">
-              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase dark:text-zinc-200">
+            <div className="flex-1 min-w-[240px]">
+              <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
                 Student Name
               </label>
               <Input
-                className="h-10 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 transition-colors dark:bg-card dark:focus:border-zinc-700 dark:border-white/10"
+                className="h-11 rounded-brand border border-gray-200 bg-white px-4 text-sm transition-all placeholder:text-gray-400 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
                 value={docsForm.studentName}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -186,12 +186,11 @@ export default function DocumentsTab({
               />
             </div>
 
-            <div className="lg:col-span-1">
-              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase dark:text-zinc-200">
+            <div className="w-full sm:w-56">
+              <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
                 Document Type
               </label>
               <Select
-                className="w-full h-10 bg-white border border-gray-300 rounded-brand text-sm px-4 py-2 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 transition-colors dark:bg-card dark:focus:border-zinc-700 dark:border-white/10"
                 value={docsForm.docType}
                 onChange={(e) => {
                   const v = e.target.value;
@@ -377,13 +376,13 @@ export default function DocumentsTab({
                   </div>
                 </div>
               )}
-              <div 
+              <div
                 key={`${docsForm.studentNo}-${docsForm.docType}`}
-                className="w-full overflow-auto border border-gray-200 rounded-brand animate-fade-up dark:border-white/10"
+                className="w-full overflow-hidden overflow-auto border border-gray-200 rounded-brand animate-fade-up dark:border-white/10"
               >
                 <table className="min-w-full text-sm table-fixed">
-                  <thead className="border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">
-                    <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
+                  <thead className="bg-gray-50 backdrop-blur-sm select-none dark:bg-muted">
+                    <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
                       <th className="p-4 w-40">Student No</th>
                       <th className="p-4">Name</th>
                       <th className="p-4 w-32">Type</th>
@@ -431,7 +430,7 @@ export default function DocumentsTab({
                               </div>
                               <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">No Results Found</EmptyTitle>
                               <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                                We couldn't find any documents matching your
+                                We couldn&apos;t find any documents matching your
                                 search criteria.
                               </EmptyDescription>
                             </EmptyHeader>
@@ -444,8 +443,8 @@ export default function DocumentsTab({
                           key={r.id || idx}
                           className={cn(
                             "group transition-all duration-200 hover:bg-gray-50 dark:bg-card dark:hover:bg-white/5 select-none",
-                            r.status === "uploaded" 
-                              ? (r.verificationStatus === "unverified" ? "bg-amber-50 dark:bg-amber-950/40" : "bg-green-50/40 dark:bg-emerald-950/30") 
+                            r.status === "uploaded"
+                              ? (r.verificationStatus === "unverified" ? "bg-amber-50 dark:bg-amber-950/40" : "bg-green-50/40 dark:bg-emerald-950/30")
                               : "bg-red-50 dark:bg-red-950/30"
                           )}
                         >
@@ -761,6 +760,21 @@ export default function DocumentsTab({
                   className="h-11 bg-white border border-gray-300 rounded-brand text-sm focus-visible:ring-pup-maroon focus-visible:border-gray-300 dark:bg-card dark:border-white/10"
                   required
                 />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide dark:text-zinc-200">Account Status <span className="text-pup-maroon dark:text-primary">*</span></label>
+                <Select
+                  className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 dark:bg-card dark:text-zinc-50 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
+                  value={editStudentForm.status}
+                  onChange={e => setEditStudentForm(p => ({ ...p, status: e.target.value }))}
+                  required
+                >
+                  <option value="Active">Active</option>
+                  <option value="Graduated">Graduated</option>
+                  <option value="Withdrawn">Withdrawn</option>
+                  <option value="Transferred">Transferred</option>
+                  <option value="Archived">Archived (Generic)</option>
+                </Select>
               </div>
             </div>
 

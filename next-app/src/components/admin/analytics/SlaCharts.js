@@ -80,17 +80,17 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
 
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-      {/* Volume Trend Chart */}
+      {/* Document Demand Chart */}
       <div className="rounded-brand border border-gray-200 bg-white p-5 shadow-xs lg:col-span-2 dark:border-white/10 dark:bg-card">
         <h3 className="mb-4 text-xs font-bold tracking-widest text-gray-500 uppercase dark:text-zinc-400">
-          6-Month Volume Trend
+          Document Demand (By Type)
         </h3>
         <div className="h-72 w-full">
-          {data?.volumeTrend?.length > 0 ? (
+          {data?.topDocTypes?.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
-                data={data.volumeTrend}
-                margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
+                data={data.topDocTypes}
+                margin={{ top: 10, right: 10, left: -20, bottom: 40 }}
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
@@ -98,11 +98,11 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                   stroke={isDark ? "rgba(255,255,255,0.05)" : "#e5e7eb"}
                 />
                 <XAxis
-                  dataKey="label"
+                  dataKey="name"
                   tick={{ fontSize: 10, fill: isDark ? "#a1a1aa" : "#6b7280", angle: -45, textAnchor: "end" }}
                   axisLine={false}
                   tickLine={false}
-                  height={60}
+                  interval={0}
                 />
                 <YAxis
                   tick={{ fontSize: 10, fill: isDark ? "#a1a1aa" : "#6b7280" }}
@@ -113,44 +113,27 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                   content={<CustomBarTooltip />} 
                   cursor={{ fill: isDark ? "rgba(255,255,255,0.05)" : "#f9fafb" }} 
                 />
-                <Legend
-                  wrapperStyle={{
-                    fontSize: "10px",
-                    paddingTop: "20px",
-                    fontWeight: "bold",
-                    textTransform: "uppercase",
-                    letterSpacing: "0.05em",
-                  }}
-                  iconType="circle"
-                />
                 <Bar
-                  dataKey="received"
-                  name="Received"
-                  fill="#cbd5e1"
-                  radius={[4, 4, 0, 0]}
-                  barSize={20}
-                />
-                <Bar
-                  dataKey="completed"
-                  name="Completed"
+                  dataKey="count"
+                  name="Requests"
                   fill={isDark ? "#ef4444" : "#800000"}
                   radius={[4, 4, 0, 0]}
-                  barSize={20}
+                  barSize={40}
                 />
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-400 dark:text-zinc-500">
+            <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-400 dark:text-zinc-505">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
                   <i className="ph-bold ph-chart-bar text-2xl text-pup-maroon dark:text-primary"></i>
                 </EmptyMedia>
                 <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
-                  No trend data available
+                  No requests found
                 </EmptyTitle>
                 <EmptyDescription className="mt-1 text-sm font-medium text-gray-600 dark:text-zinc-300">
-                  Once requests are processed over time, volume trends
-                  will appear here.
+                  Select a different date range or wait for new requests
+                  to see the demand breakdown.
                 </EmptyDescription>
                 <Button 
                   variant="outline" 
@@ -158,7 +141,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                   className="mt-4 h-9 rounded-brand border-gray-300 font-bold text-xs dark:border-white/10"
                   onClick={() => onSwitchView?.('review')}
                 >
-                  CHECK INCOMING REQUESTS
+                  <i className="ph-bold ph-arrow-right mr-1.5" aria-hidden /> CHECK INCOMING REQUESTS
                 </Button>
               </EmptyHeader>
             </Empty>
@@ -220,7 +203,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                     className="h-8 rounded-brand border-gray-300 font-bold text-[10px] dark:border-white/10"
                     onClick={() => onSwitchView?.('review')}
                   >
-                    VIEW REQUESTS
+                    <i className="ph-bold ph-arrow-right mr-1.5" aria-hidden /> VIEW REQUESTS
                   </Button>
                 </EmptyHeader>
               </Empty>
@@ -298,7 +281,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                     className="h-8 rounded-brand border-gray-300 font-bold text-[10px] dark:border-white/10"
                     onClick={() => onSwitchView?.('review')}
                   >
-                    GO TO REVIEWS
+                    <i className="ph-bold ph-arrow-right mr-1.5" aria-hidden /> GO TO REVIEWS
                   </Button>
                 </EmptyHeader>
               </Empty>

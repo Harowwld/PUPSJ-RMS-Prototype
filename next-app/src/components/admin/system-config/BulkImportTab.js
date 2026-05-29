@@ -97,18 +97,6 @@ export default function BulkImportTab({
 
   return (
     <div className="flex flex-col p-6 font-inter animate-fade-up">
-      <div className="mb-6 flex justify-end">
-        <div className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-2 shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-          <div className="flex flex-col items-end gap-0.5 px-2">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest dark:text-zinc-500">
-              Dataset Sync
-            </p>
-            <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap dark:text-zinc-400">
-              Last update: just now
-            </p>
-          </div>
-        </div>
-      </div>
       {importStatus === "idle" ? (
         <div className="grid flex-1 grid-cols-1 gap-6 lg:grid-cols-12">
           {/* Protocol card - Redesigned as a structured sidebar */}
@@ -296,7 +284,7 @@ export default function BulkImportTab({
                 />
                 <Empty className="pointer-events-none flex flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                   <EmptyHeader className="flex flex-col items-center gap-0">
-                    <EmptyMedia className="mb-4 flex h-20 w-20 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm transition-transform group-hover:scale-110 dark:border-white/10 dark:bg-card dark:shadow-none">
+                    <EmptyMedia className="mb-4 flex h-20 w-20 items-center justify-center rounded-3xl border border-gray-200 bg-white shadow-sm transition-transform group-hover:scale-110 dark:border-white/10 dark:bg-card dark:shadow-none">
                       <i className="ph-duotone ph-file-arrow-up text-4xl text-pup-maroon dark:text-primary"></i>
                     </EmptyMedia>
                     <EmptyTitle className="text-xl font-bold tracking-tight text-gray-900 uppercase dark:text-zinc-50">
@@ -312,7 +300,7 @@ export default function BulkImportTab({
           </Card>
         </div>
       ) : importStatus === "preview" ? (
-      <div className="animate-in fade-in slide-in-from-bottom-2 flex flex-1 flex-col gap-4 duration-300">
+      <div className="animate-in fade-in slide-in-from-bottom-2 flex flex-1 min-h-[500px] flex-col gap-4 duration-300">
         <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
           <div className="flex items-center gap-4">
             <Button
@@ -363,7 +351,7 @@ export default function BulkImportTab({
           </div>
 
           <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
-            <div className="flex-1 overflow-auto bg-white dark:bg-card">
+            <div className="flex-1 overflow-hidden overflow-auto bg-white dark:bg-card rounded-[inherit]">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-20 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
                   <tr className="text-left text-[11px] font-black tracking-wider text-gray-500 uppercase dark:text-zinc-400 dark:border-white/10">
@@ -533,7 +521,8 @@ export default function BulkImportTab({
                             />
                           ) : (
                             <div
-                              className={`text-sm font-bold ${row.error && !row.name ? "text-red-400 italic" : "text-gray-900 dark:text-zinc-50"}`}
+                              className={`text-sm font-bold truncate max-w-[400px] ${row.error && !row.name ? "text-red-400 italic" : "text-gray-900 dark:text-zinc-50"}`}
+                              title={row.name}
                             >
                               {row.name || "(Required field missing)"}
                             </div>
@@ -679,7 +668,7 @@ export default function BulkImportTab({
           </Card>
         </div>
       ) : importStatus === "importing" ? (
-        <div className="animate-fade-up flex flex-1 flex-col items-center justify-center rounded-brand border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
+        <div className="animate-fade-up flex flex-1 min-h-[500px] flex-col items-center justify-center rounded-brand border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
           <div className="flex max-w-sm flex-col items-center gap-6 text-center">
             <div className="relative">
               <div className="h-20 w-20 animate-spin rounded-full border-4 border-gray-300 border-t-pup-maroon dark:border-white/10"></div>
@@ -694,13 +683,13 @@ export default function BulkImportTab({
           </div>
         </div>
       ) : (
-        <div className="animate-in zoom-in-95 flex flex-1 flex-col items-center justify-center rounded-brand border border-gray-300 bg-white shadow-sm duration-300 dark:bg-card dark:shadow-none dark:border-white/10">
+        <div className="animate-in zoom-in-95 flex flex-1 min-h-[500px] flex-col items-center justify-center rounded-brand border border-gray-300 bg-white shadow-sm duration-300 dark:bg-card dark:shadow-none dark:border-white/10">
           <div className="flex w-full max-w-md flex-col items-center gap-8 px-6 text-center">
             <div className="relative">
-              <div className="flex h-24 w-24 items-center justify-center rounded-full border-4 border-white bg-red-50 text-pup-maroon dark:text-primary shadow-xl dark:bg-red-950/30 dark:text-primary dark:shadow-none">
+              <div className="flex h-24 w-24 items-center justify-center rounded-3xl border-4 border-white bg-red-50 text-pup-maroon shadow-xl dark:bg-red-950/30 dark:border-white/10">
                 <i className="ph-fill ph-database text-5xl"></i>
               </div>
-              <div className="absolute -right-1 -bottom-1 flex h-8 w-8 items-center justify-center rounded-full border-4 border-white bg-emerald-500 text-white shadow-sm dark:shadow-none">
+              <div className="absolute -right-1 -bottom-1 flex h-8 w-8 items-center justify-center rounded-full border-4 border-white bg-emerald-500 text-white shadow-sm dark:border-card">
                 <i className="ph-bold ph-check text-xs"></i>
               </div>
             </div>

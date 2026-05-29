@@ -71,6 +71,7 @@ export default function DigitalRecordsReviewTab({
   const [dateTo, setDateTo] = useState("")
   const [isExporting, setIsExporting] = useState(false)
   const [selectedIds, setSelectedIds] = useState(new Set())
+  const [lastSelectedId, setLastSelectedId] = useState(null)
 
   const hasActiveFilters = localSearch !== "" || statusFilter !== "All" || docTypeFilter !== "All" || !!dateFrom || !!dateTo;
 
@@ -89,6 +90,12 @@ export default function DigitalRecordsReviewTab({
   useEffect(() => {
     setJumpPage(String(currentPage))
   }, [currentPage])
+
+  // Clear selection when changing pages or status filter
+  useEffect(() => {
+    setSelectedIds(new Set())
+    setLastSelectedId(null)
+  }, [currentPage, statusFilter, docTypeFilter, searchQuery, dateFrom, dateTo])
 
   useEffect(() => {
     let cancelled = false
@@ -173,13 +180,21 @@ export default function DigitalRecordsReviewTab({
   const sortedRecords = useMemo(() => {
     const baseFiltered = records.filter((r) => {
       if (docTypeFilter !== "All" && r.doc_type !== docTypeFilter) return false
-      if (dateFrom) {
-        const created = r.created_at ? r.created_at.split("T")[0] : ""
-        if (created < dateFrom) return false
-      }
-      if (dateTo) {
-        const created = r.created_at ? r.created_at.split("T")[0] : ""
-        if (created > dateTo) return false
+      if (dateFrom || dateTo) {
+        let createdDate = ""
+        if (r.created_at) {
+          try {
+            const d = new Date(r.created_at)
+            if (!isNaN(d.getTime())) {
+              createdDate = format(d, "yyyy-MM-dd")
+            }
+          } catch (e) {
+            createdDate = String(r.created_at).substring(0, 10)
+          }
+        }
+        
+        if (dateFrom && createdDate < dateFrom) return false
+        if (dateTo && createdDate > dateTo) return false
       }
       if (!searchQuery.trim()) return true
       const query = searchQuery.toLowerCase()
@@ -238,12 +253,55 @@ export default function DigitalRecordsReviewTab({
     } else {
       setSelectedIds(new Set())
     }
+    setLastSelectedId(null)
   }
 
-  const toggleSelectRow = (id) => {
+  const toggleSelectRow = (id, event) => {
+    const isSelected = selectedIds.has(id)
+
+    if (event?.shiftKey && lastSelectedId) {
+      if (isSelected) {
+        if (selectedIds.size > 1) {
+          // If Shift+Clicking an already selected item among multiple, deselect others
+          setSelectedIds(new Set([id]))
+          setLastSelectedId(id)
+        } else {
+          // If Shift+Clicking the ONLY selected item, deselect it completely
+          setSelectedIds(new Set())
+          setLastSelectedId(null)
+        }
+        return
+      }
+
+      // Normal Shift+Click Range Selection
+      const currentIdx = paginatedRecords.findIndex((r) => r.id === id)
+      const lastIdx = paginatedRecords.findIndex((r) => r.id === lastSelectedId)
+
+      if (currentIdx !== -1 && lastIdx !== -1) {
+        const start = Math.min(currentIdx, lastIdx)
+        const end = Math.max(currentIdx, lastIdx)
+        const idsInRange = paginatedRecords
+          .slice(start, end + 1)
+          .map((r) => r.id)
+
+        const next = new Set(selectedIds)
+        idsInRange.forEach((rangeId) => next.add(rangeId))
+        
+        setSelectedIds(next)
+        setLastSelectedId(id)
+        return
+      }
+    }
+
+    // Plain Click: Additive Toggle
     const next = new Set(selectedIds)
-    if (next.has(id)) next.delete(id)
-    else next.add(id)
+    if (next.has(id)) {
+      next.delete(id)
+      if (lastSelectedId === id) setLastSelectedId(null)
+    } else {
+      next.add(id)
+      setLastSelectedId(id)
+    }
     setSelectedIds(next)
   }
 
@@ -331,40 +389,50 @@ export default function DigitalRecordsReviewTab({
     const today = new Date().toLocaleDateString("en-CA") // YYYY-MM-DD
     const fortyEightHoursAgo = Date.now() - 48 * 60 * 60 * 1000
 
-    const pending = records.filter((r) => r.approval_status === "Pending").length
-    const approvedToday = records.filter(
-      (r) =>
-        r.approval_status === "Approved" && r.reviewed_at?.startsWith(today)
-    ).length
-    const declinedToday = records.filter(
-      (r) =>
-        r.approval_status === "Declined" && r.reviewed_at?.startsWith(today)
-    ).length
+    const pending = records.filter((r) => r.approval_status === "Pending")
+    const approvedRecords = records.filter((r) => r.approval_status === "Approved")
+    const declinedRecords = records.filter((r) => r.approval_status === "Declined")
 
-    const slaBreachRecords = records.filter(
-      (r) =>
-        r.approval_status === "Pending" &&
-        new Date(r.created_at).getTime() < fortyEightHoursAgo
-    )
+    const approvedToday = approvedRecords.filter((r) => {
+      if (!r.reviewed_at) return false
+      const raw = String(r.reviewed_at)
+      let dStr = ""
+      if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+        dStr = raw.substring(0, 10)
+      } else {
+        try {
+          const d = new Date(r.reviewed_at)
+          if (!isNaN(d.getTime())) dStr = format(d, "yyyy-MM-dd")
+        } catch (e) {}
+      }
+      return dStr === today
+    }).length
 
-    const reviewedRecords = records.filter(
-      (r) => r.reviewed_at && r.created_at && r.approval_status !== "Pending"
+    const declinedToday = declinedRecords.filter((r) => {
+      if (!r.reviewed_at) return false
+      const raw = String(r.reviewed_at)
+      let dStr = ""
+      if (/^\d{4}-\d{2}-\d{2}/.test(raw)) {
+        dStr = raw.substring(0, 10)
+      } else {
+        try {
+          const d = new Date(r.reviewed_at)
+          if (!isNaN(d.getTime())) dStr = format(d, "yyyy-MM-dd")
+        } catch (e) {}
+      }
+      return dStr === today
+    }).length
+
+    const slaBreachRecords = pending.filter(
+      (r) => new Date(r.created_at).getTime() < fortyEightHoursAgo
     )
-    let avgSlaHours = 0
-    if (reviewedRecords.length > 0) {
-      const totalSlaMs = reviewedRecords.reduce((acc, r) => {
-        const created = new Date(r.created_at).getTime()
-        const reviewed = new Date(r.reviewed_at).getTime()
-        return acc + (reviewed - created)
-      }, 0)
-      avgSlaHours = totalSlaMs / reviewedRecords.length / (1000 * 60 * 60)
-    }
 
     return {
-      pending,
+      pending: pending.length,
       approvedToday,
+      totalApproved: approvedRecords.length,
       declinedToday,
-      avgSlaHours: avgSlaHours.toFixed(1),
+      totalDeclined: declinedRecords.length,
       hasSlaBreach: slaBreachRecords.length > 0,
       slaBreachCount: slaBreachRecords.length,
     }
@@ -374,20 +442,20 @@ export default function DigitalRecordsReviewTab({
     <div className="animate-fade-up font-inter flex h-auto w-full flex-col gap-6">
       {/* Color Stat Cards / Skeletons at the Top */}
       {isLoading && records.length === 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 animate-pulse">
-          {[1, 2, 3, 4].map((i) => (
-            <Skeleton key={i} className="h-28 rounded-xl bg-gray-100 dark:bg-muted" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 animate-pulse">
+          {[1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-28 rounded-brand bg-gray-100 dark:bg-muted" />
           ))}
         </div>
       ) : !error ? (
         <div className={cn("transition-all duration-500", isLoading && "opacity-40 blur-[1px]")}>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="group relative overflow-hidden rounded-xl border border-blue-950 bg-linear-to-br from-blue-800 to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="group relative overflow-hidden rounded-brand border border-blue-950 bg-linear-to-br from-blue-800 to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
               <i className="ph-duotone ph-clock-countdown pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
               <div className="relative z-10">
                 <div className="flex items-center justify-between">
                   <p className="mb-1 text-[10px] font-black tracking-widest text-blue-200 uppercase">
-                    Pending
+                    Pending Review
                   </p>
                   {stats.hasSlaBreach && !isLoading && (
                     <div className="flex items-center gap-1.5">
@@ -417,52 +485,37 @@ export default function DigitalRecordsReviewTab({
                   {stats.pending.toLocaleString()}
                 </h3>
                 <p className="mt-0.5 text-[10px] font-medium text-blue-200/80">
-                  Awaiting decision
+                  Waiting to be checked
                 </p>
               </div>
             </div>
 
-            <div className="group relative overflow-hidden rounded-xl border border-emerald-950 bg-linear-to-br from-emerald-800 to-emerald-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+            <div className="group relative overflow-hidden rounded-brand border border-emerald-950 bg-linear-to-br from-emerald-800 to-emerald-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
               <i className="ph-duotone ph-check-circle pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
               <div className="relative z-10">
                 <p className="mb-1 text-[10px] font-black tracking-widest text-emerald-100 uppercase">
-                  Approved
+                  Approved Today
                 </p>
                 <h3 className="text-3xl font-black text-white">
                   {stats.approvedToday.toLocaleString()}
                 </h3>
                 <p className="mt-0.5 text-[10px] font-medium text-emerald-100/80">
-                  Processed today
+                  Verified correct ({stats.totalApproved.toLocaleString()} total)
                 </p>
               </div>
             </div>
 
-            <div className="group relative overflow-hidden rounded-xl border border-red-950 bg-linear-to-br from-red-700 to-red-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+            <div className="group relative overflow-hidden rounded-brand border border-red-950 bg-linear-to-br from-red-700 to-red-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
               <i className="ph-duotone ph-x-circle pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
               <div className="relative z-10">
                 <p className="mb-1 text-[10px] font-black tracking-widest text-red-200 uppercase">
-                  Declined
+                  Returned Today
                 </p>
                 <h3 className="text-3xl font-black text-white">
                   {stats.declinedToday.toLocaleString()}
                 </h3>
                 <p className="mt-0.5 text-[10px] font-medium text-red-200/80">
-                  Returned today
-                </p>
-              </div>
-            </div>
-
-            <div className="group relative overflow-hidden rounded-xl border border-amber-950 bg-linear-to-br from-amber-700 to-amber-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
-              <i className="ph-duotone ph-timer pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
-              <div className="relative z-10">
-                <p className="mb-1 text-[10px] font-black tracking-widest text-amber-100 uppercase">
-                  Avg. Time
-                </p>
-                <h3 className="text-3xl font-black text-white">
-                  {stats.avgSlaHours}h
-                </h3>
-                <p className="mt-0.5 text-[10px] font-medium text-amber-100/80">
-                  Mean review duration
+                  Found with errors ({stats.totalDeclined.toLocaleString()} total)
                 </p>
               </div>
             </div>
@@ -470,7 +523,7 @@ export default function DigitalRecordsReviewTab({
         </div>
       ) : null}
 
-      <Card className="flex h-auto w-full flex-col rounded-2xl border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="flex h-auto w-full flex-col rounded-brand border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-seal-check"
           title="Digital Records Review"
@@ -575,156 +628,179 @@ export default function DigitalRecordsReviewTab({
         )}
 
         {/* Filter Bar */}
-        <div className="flex-none bg-gray-50 p-3 dark:bg-white/5">
-          <div className="flex w-full flex-wrap items-end gap-3">
+        <div className="bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
+          <div className="flex w-full flex-wrap items-end gap-5">
             {/* Search */}
-            <div className="min-w-[400px] flex-1">
-              <label className="mb-1 block text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">Search</label>
-              <div className="relative">
-                <i className="ph-bold ph-magnifying-glass absolute top-1/2 left-3 -translate-y-1/2 text-gray-400 dark:text-zinc-500"></i>
+            <div className="min-w-[280px] flex-1">
+              <div className="mb-1.5 flex items-center justify-between">
+                <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                  Global Search
+                </label>
+                <span className="text-[9px] font-bold text-pup-maroon dark:text-primary/50">
+                  {sortedRecords.length > 0 ? `${sortedRecords.length.toLocaleString()} MATCHES` : "NO RESULTS"}
+                </span>
+              </div>
+              <div className="group relative">
+                <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
+                  <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500"></i>
+                </div>
                 <Input
                   type="text"
                   placeholder="Student, doc type, filename..."
-                  className="h-10 w-full rounded-brand border border-gray-300 bg-white pl-10 text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none dark:bg-card dark:border-white/10"
+                  className="h-11 w-full rounded-brand border border-gray-200 bg-white pl-10.5 text-sm font-medium transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
                   value={localSearch}
                   onChange={(e) => setLocalSearch(e.target.value)}
                 />
               </div>
             </div>
 
+            {/* Quick Select Filters */}
+            <div className="flex shrink-0 gap-3">
+              <div className="w-32">
+                <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                  Status
+                </label>
+                <Select
+                  value={statusFilter}
+                  onChange={(e) => { 
+                    setStatusFilter(e.target.value); 
+                    setCurrentPage(1);
+                  }}
+                >
+                  <option value="All">All</option>
+                  <option value="Pending">Pending</option>
+                  <option value="Approved">Approved</option>
+                  <option value="Declined">Declined</option>
+                </Select>
+              </div>
 
-            {/* Status Filter */}
-            <div className="w-36 shrink-0">
-              <label className="mb-1 block text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">Status</label>
-              <Select
-                className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon focus:outline-none dark:bg-card dark:text-zinc-200 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
-                value={statusFilter}
-                onChange={(e) => { 
-                  setStatusFilter(e.target.value); 
-                  setCurrentPage(1);
-                }}
-              >
-                <option value="All">All</option>
-                <option value="Pending">Pending</option>
-                <option value="Approved">Approved</option>
-                <option value="Declined">Declined</option>
-              </Select>
+              <div className="w-72">
+                <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                  Doc Type
+                </label>
+                <Select
+                  value={docTypeFilter}
+                  onChange={(e) => { 
+                    setDocTypeFilter(e.target.value); 
+                    setCurrentPage(1);
+                  }}
+                >
+                  <option value="All">All</option>
+                  {activeDocTypes.map((docTypeName) => (
+                    <option key={docTypeName} value={docTypeName}>{docTypeName}</option>
+                  ))}
+                </Select>
+              </div>
             </div>
 
-            {/* Doc Type Filter */}
-            <div className="w-44 shrink-0">
-              <label className="mb-1 block text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">Doc Type</label>
-              <Select
-                className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 shadow-sm transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon focus:outline-none dark:bg-card dark:text-zinc-200 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
-                value={docTypeFilter}
-                onChange={(e) => { 
-                  setDocTypeFilter(e.target.value); 
-                  setCurrentPage(1);
-                }}
-              >
-                <option value="All">All</option>
-                {activeDocTypes.map((docTypeName) => (
-                  <option key={docTypeName} value={docTypeName}>{docTypeName}</option>
-                ))}
-              </Select>
-            </div>
-
-            {/* Date Range */}
-            <div className="flex min-w-[280px] flex-1 flex-col gap-1">
-              <div className="flex items-center justify-between">
-                <label className="block text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">Date Range</label>
-                <div className="flex items-center gap-1.5">
-                  {[
-                    { label: "Today", range: "today" },
-                    { label: "Yesterday", range: "yesterday" },
-                    { label: "Last 7 Days", range: "last7" },
-                    { label: "Last 30 Days", range: "last30" }
-                  ].map(({ label, range }, idx, arr) => (
-                    <div key={range} className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => {
-                          const end = new Date()
-                          let start = new Date()
-                          switch (range) {
-                            case "today":
-                              start.setHours(0, 0, 0, 0)
-                              break
-                            case "yesterday":
-                              start.setDate(start.getDate() - 1)
-                              start.setHours(0, 0, 0, 0)
-                              end.setDate(end.getDate() - 1)
-                              end.setHours(23, 59, 59, 999)
-                              break
-                            case "last7":
-                              start.setDate(start.getDate() - 7)
-                              start.setHours(0, 0, 0, 0)
-                              break
-                            case "last30":
-                              start.setDate(start.getDate() - 30)
-                              start.setHours(0, 0, 0, 0)
-                              break
-                          }
-                          setDateFrom(format(start, "yyyy-MM-dd"))
-                          setDateTo(format(end, "yyyy-MM-dd"))
-                          setCurrentPage(1)
-                        }}
-                        className="text-[9px] font-black text-gray-400 uppercase transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500"
-                      >
-                        {label}
-                      </button>
-                      {idx < arr.length - 1 && (
-                        <span className="text-[8px] text-gray-300 font-bold dark:text-zinc-600">•</span>
-                      )}
-                    </div>
+            {/* Date Range Picker Section */}
+            <div className="min-w-[320px] flex-1">
+              <div className="mb-1.5 flex items-center justify-between">
+                <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                  Time Period
+                </label>
+                <div className="flex items-center gap-2">
+                  {["today", "yesterday", "last7", "last30"].map((range) => (
+                    <button
+                      key={range}
+                      onClick={() => {
+                        const end = new Date()
+                        let start = new Date()
+                        switch (range) {
+                          case "today":
+                            start.setHours(0, 0, 0, 0)
+                            break
+                          case "yesterday":
+                            start.setDate(start.getDate() - 1)
+                            start.setHours(0, 0, 0, 0)
+                            end.setDate(end.getDate() - 1)
+                            end.setHours(23, 59, 59, 999)
+                            break
+                          case "last7":
+                            start.setDate(start.getDate() - 7)
+                            start.setHours(0, 0, 0, 0)
+                            break
+                          case "last30":
+                            start.setDate(start.getDate() - 30)
+                            start.setHours(0, 0, 0, 0)
+                            break
+                        }
+                        setDateFrom(format(start, "yyyy-MM-dd"))
+                        setDateTo(format(end, "yyyy-MM-dd"))
+                        setCurrentPage(1)
+                      }}
+                      className="rounded-md bg-gray-100 px-2 py-0.5 text-[9px] font-black text-gray-500 uppercase transition-all hover:bg-pup-maroon hover:text-white dark:text-zinc-400 dark:bg-muted"
+                    >
+                      {range.replace("last", "Last ")}
+                    </button>
                   ))}
                 </div>
               </div>
-              <div className="flex gap-3">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn("h-10 flex-1 justify-start rounded-brand border border-gray-300 dark:border-white/10 text-left text-xs font-medium", !dateFrom && "text-muted-foreground")}
-                    >
-                      <i className="ph-bold ph-calendar-dots mr-2 text-base"></i>
-                      {dateFrom ? format(new Date(dateFrom), "PPP") : <span className="text-[10px] font-bold tracking-tight uppercase opacity-60">Start</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-brand p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dateFrom ? new Date(dateFrom) : undefined}
-                      onSelect={(date) => { setDateFrom(date ? format(date, "yyyy-MM-dd") : ""); setCurrentPage(1) }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn("h-10 flex-1 justify-start rounded-brand border border-gray-300 dark:border-white/10 text-left text-xs font-medium", !dateTo && "text-muted-foreground")}
-                    >
-                      <i className="ph-bold ph-calendar-dots mr-2 text-base"></i>
-                      {dateTo ? format(new Date(dateTo), "PPP") : <span className="text-[10px] font-bold tracking-tight uppercase opacity-60">End</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-brand p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={dateTo ? new Date(dateTo) : undefined}
-                      onSelect={(date) => { setDateTo(date ? format(date, "yyyy-MM-dd") : ""); setCurrentPage(1) }}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
+              <div className="flex gap-2">
+                <div className="flex-1">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "h-11 w-full justify-start rounded-brand border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-xs font-semibold shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card",
+                          !dateFrom && "text-gray-400 dark:text-zinc-500"
+                        )}
+                      >
+                        <i className="ph-bold ph-calendar-blank mr-2 text-base text-gray-400 dark:text-zinc-500"></i>
+                        {dateFrom ? format(new Date(dateFrom), "MMM d, yyyy") : "Start Date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto rounded-2xl p-0 shadow-2xl" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dateFrom ? new Date(dateFrom) : undefined}
+                        onSelect={(date) => {
+                          setDateFrom(date ? format(date, "yyyy-MM-dd") : "")
+                          setCurrentPage(1)
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="flex items-center text-gray-300 dark:text-zinc-600">
+                   <i className="ph-bold ph-arrow-right"></i>
+                </div>
+                <div className="flex-1">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "h-11 w-full justify-start rounded-brand border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-xs font-semibold shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card",
+                          !dateTo && "text-gray-400 dark:text-zinc-500"
+                        )}
+                      >
+                        <i className="ph-bold ph-calendar-blank mr-2 text-base text-gray-400 dark:text-zinc-500"></i>
+                        {dateTo ? format(new Date(dateTo), "MMM d, yyyy") : "End Date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto rounded-2xl p-0 shadow-2xl" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={dateTo ? new Date(dateTo) : undefined}
+                        onSelect={(date) => {
+                          setDateTo(date ? format(date, "yyyy-MM-dd") : "")
+                          setCurrentPage(1)
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </Card>
        {isLoading && records.length === 0 ? (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card animate-pulse">
+        <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card animate-pulse">
           <div className="h-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/5" />
           <div className="p-4 space-y-4">
             {[1, 2, 3, 4, 5].map((i) => (
@@ -733,7 +809,7 @@ export default function DigitalRecordsReviewTab({
           </div>
         </div>
       ) : error ? (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6">
+        <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6">
           <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
             <EmptyHeader className="flex flex-col items-center gap-0">
               <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
@@ -750,8 +826,8 @@ export default function DigitalRecordsReviewTab({
         </div>
       ) : (
         <div className={cn("flex flex-1 flex-col gap-6 transition-all duration-500", isLoading && "opacity-40 blur-[1px]")}>
-          <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
-            <div className="overflow-x-auto">
+          <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
+            <div className="overflow-x-auto rounded-[inherit]">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm dark:border-white/10 dark:bg-muted">
                   <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
@@ -836,20 +912,24 @@ export default function DigitalRecordsReviewTab({
                               </EmptyMedia>
                             </div>
                             <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
-                              No records
+                              {hasActiveFilters ? "No records found" : "No records yet"}
                             </EmptyTitle>
                             <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                              {searchQuery
-                                ? "No records match your filters."
-                                : "No digital records found."}
+                              {hasActiveFilters
+                                ? "Try adjusting your search filters to find what you're looking for."
+                                : "There are currently no digital records in the system."}
                             </EmptyDescription>
-                            {searchQuery && (
+                            {hasActiveFilters && (
                               <Button
                                 variant="outline"
                                 size="sm"
                                 onClick={() => {
                                   setLocalSearch("")
                                   setSearchQuery("")
+                                  setStatusFilter("All")
+                                  setDocTypeFilter("All")
+                                  setDateFrom("")
+                                  setDateTo("")
                                   setCurrentPage(1)
                                 }}
                                 className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 uppercase tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
@@ -877,7 +957,7 @@ export default function DigitalRecordsReviewTab({
                             isSelected && "bg-amber-50 dark:bg-amber-950/40",
                             isSlaBreached && !isSelected && "bg-amber-50 dark:bg-amber-950/10"
                           )}
-                          onClick={() => toggleSelectRow(r.id)}
+                          onClick={(e) => toggleSelectRow(r.id, e)}
                         >
                           <td className="p-4 text-center">
                             <input
@@ -889,7 +969,7 @@ export default function DigitalRecordsReviewTab({
                           </td>
                           <td className="p-4">
                             <div className="flex items-center gap-3">
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-xs font-black text-gray-500 shadow-xs dark:bg-white/5 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm transition-all">
+                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-brand bg-gray-100 text-xs font-black text-gray-500 shadow-xs dark:bg-white/5 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm transition-all">
                                 {(r.student_name || "U").substring(0, 2).toUpperCase()}
                               </div>
                               <div className="flex flex-col overflow-hidden">
@@ -989,15 +1069,26 @@ export default function DigitalRecordsReviewTab({
                                    </Button>
                                  </>
                                ) : (
-                                 <Button
-                                   variant="outline"
-                                   size="icon"
-                                   onClick={() => onSetStatus(r.id, "Pending", "Undo review action")}
-                                   className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-amber-600 shadow-sm transition-all hover:border-amber-600 hover:bg-amber-50 dark:bg-white/5 dark:border-white/10 dark:text-amber-500 dark:hover:bg-amber-900/20 cursor-pointer active:scale-95"
-                                   title="Revert to Pending"
-                                 >
-                                   <i className="ph-bold ph-arrow-counter-clockwise text-lg"></i>
-                                 </Button>
+                                 // Grace Period Logic: Only allow revert within 10 minutes of review
+                                 (() => {
+                                   const reviewedAt = r.reviewed_at ? new Date(r.reviewed_at.replace(" ", "T")).getTime() : 0
+                                   const now = Date.now()
+                                   const isWithinGracePeriod = now - reviewedAt < 10 * 60 * 1000 // 10 minutes
+
+                                   if (!isWithinGracePeriod) return null
+
+                                   return (
+                                     <Button
+                                       variant="outline"
+                                       size="icon"
+                                       onClick={() => onSetStatus(r.id, "Pending", "Undo review action")}
+                                       className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-amber-600 shadow-sm transition-all hover:border-amber-600 hover:bg-amber-50 dark:bg-white/5 dark:border-white/10 dark:text-amber-500 dark:hover:bg-amber-900/20 cursor-pointer active:scale-95"
+                                       title="Revert to Pending"
+                                     >
+                                       <i className="ph-bold ph-arrow-counter-clockwise text-lg"></i>
+                                     </Button>
+                                   )
+                                 })()
                                )}
                             </div>
                           </td>
@@ -1083,6 +1174,15 @@ export default function DigitalRecordsReviewTab({
                 customContent={
                   <div className="flex items-center gap-3">
                     <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setSelectedIds(new Set())}
+                      className="h-9 rounded-full px-4 text-xs font-bold text-gray-500 hover:bg-gray-100 active:scale-95 dark:text-zinc-400 dark:bg-muted dark:hover:bg-white/10"
+                    >
+                      DESELECT ALL
+                    </Button>
+                    <div className="h-4 w-[1px] bg-gray-200 dark:bg-white/10 mx-1" />
+                    <Button
                       size="sm"
                       onClick={handleBulkApprove}
                       className="h-9 rounded-full bg-green-600 px-4 text-xs font-bold text-white shadow-sm hover:bg-green-700 active:scale-95 dark:shadow-none"
@@ -1121,7 +1221,7 @@ export default function DigitalRecordsReviewTab({
                     onClick={() => setSelectedIds(new Set())}
                     className="h-9 rounded-full px-4 text-xs font-bold text-gray-500 hover:bg-gray-100 active:scale-95 dark:text-zinc-400 dark:bg-muted dark:hover:bg-white/10"
                   >
-                    CLEAR
+                    DESELECT ALL
                   </Button>
                 </div>
               }

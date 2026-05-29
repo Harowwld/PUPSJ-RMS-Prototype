@@ -593,7 +593,7 @@ export default function ScanUploadTab({
                     <div className="flex h-full w-full flex-col overflow-hidden bg-white transition-all duration-300 rounded-brand border border-gray-200 dark:bg-card dark:border-white/10">
                       <div className="flex flex-col items-center justify-between gap-4 border-b border-gray-100 bg-gray-50/50 p-6 px-8 sm:flex-row dark:border-white/10 dark:bg-white/5">
                         <div className="flex items-center gap-4">
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
+                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-brand border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
                             <i className="ph-duotone ph-table text-2xl"></i>
                           </div>
                           <div>
@@ -1206,7 +1206,7 @@ export default function ScanUploadTab({
                           {/* Link Phone Camera Widget */}
                           <div className="mt-6 w-full rounded-2xl border border-gray-200 bg-gray-50/50 p-5 dark:border-white/10 dark:bg-white/5">
                             <div className="flex items-center gap-3">
-                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-pup-maroon/10 text-pup-maroon dark:bg-primary/10 dark:text-primary">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-brand bg-pup-maroon/10 text-pup-maroon dark:bg-primary/10 dark:text-primary">
                                 <i className="ph-bold ph-aperture text-xl"></i>
                               </div>
                               <div>
@@ -1245,7 +1245,7 @@ export default function ScanUploadTab({
                             </div>
 
                             {phoneLinkUrl && (
-                              <div className="mt-4 grid grid-cols-1 md:grid-cols-[130px_1fr] gap-4 border border-gray-200 rounded-xl p-3.5 bg-white dark:border-white/10 dark:bg-card">
+                              <div className="mt-4 grid grid-cols-1 md:grid-cols-[130px_1fr] gap-4 border border-gray-200 rounded-brand p-3.5 bg-white dark:border-white/10 dark:bg-card">
                                 <div className="flex items-center justify-center bg-gray-50 dark:bg-muted p-1.5 rounded-lg">
                                   <Image
                                     src={`https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(phoneLinkUrl)}`}
@@ -1276,12 +1276,12 @@ export default function ScanUploadTab({
                               </div>
                             )}
 
-                            <div className="mt-4 border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden bg-white dark:bg-card shadow-sm">
+                            <div className="mt-4 border border-gray-200 dark:border-white/10 rounded-brand overflow-hidden bg-white dark:bg-card shadow-sm">
                               <div className="px-3.5 py-2.5 border-b border-gray-100 dark:border-white/5 bg-gray-50/50 dark:bg-white/5 text-[10px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest">
                                 Incoming captures
                               </div>
                               {Array.isArray(phoneIncoming) && phoneIncoming.length > 0 ? (
-                                <div className="max-h-40 overflow-y-auto divide-y divide-gray-100 dark:divide-white/5">
+                                <div className="max-h-40 overflow-y-auto divide-y divide-gray-100 dark:divide-white/5 rounded-[inherit]">
                                   {phoneIncoming.map((item) => (
                                     <div key={item.id} className="px-4 py-3 flex items-center justify-between gap-3 text-xs hover:bg-gray-50/50 dark:hover:bg-white/5 transition-colors">
                                       <div className="min-w-0">

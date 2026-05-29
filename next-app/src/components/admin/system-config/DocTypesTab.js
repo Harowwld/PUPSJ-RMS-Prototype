@@ -215,21 +215,25 @@ export default function DocTypesTab({
     }
   })
 
-  const selectedCount = Object.values(selectedDocTypes).filter(Boolean).length
+  const totalInView = docTypes.filter((dt) => 
+    showArchived ? dt.status === "Archived" : dt.status !== "Archived"
+  ).length
+
+  const selectedCount = Object.values(selectedDocTypes || {}).filter(Boolean).length
   const selectedNames = filteredDocTypes
     .filter((dt) => selectedDocTypes[dt.id])
     .map((dt) => dt.name)
 
   const handleBulkAction = () => {
     setConfirmPayload({
-      title: showArchived ? "Restore Selected Document Types" : "Archive Selected Document Types",
+      title: showArchived ? "Restore Selected Types" : "Archive Selected Types",
       message: `Apply ${showArchived ? "restoration" : "archival"} to the following ${selectedCount} document types?`,
       confirmLabel: showArchived ? "Restore Selected" : "Archive Selected",
       variant: showArchived ? "success" : "danger",
       buttonIcon: showArchived ? "ph-bold ph-arrow-counter-clockwise" : "ph-bold ph-archive",
       icon: showArchived ? "ph-duotone ph-arrow-counter-clockwise" : "ph-duotone ph-archive",
       selectedItems: selectedNames,
-      onConfirm: () => executeBulkTaxonomyAction("DocumentType", showArchived ? "restore" : "delete"),
+      onConfirm: () => executeBulkTaxonomyAction("DocType", showArchived ? "restore" : "delete"),
     })
     setConfirmOpen(true)
   }
@@ -266,6 +270,7 @@ export default function DocTypesTab({
           description="Manage formal document categories and digitization requirements."
           searchPlaceholder="Filter document name..."
           searchLabel="Search Document Types"
+          searchCount={filteredDocTypesFull.length > 0 ? `${filteredDocTypesFull.length.toLocaleString()} MATCHES` : "NO RESULTS"}
           searchValue={localSearch}
           onSearchChange={setLocalSearch}
           filters={
@@ -326,7 +331,7 @@ export default function DocTypesTab({
         />
 
         {/* Active Filter Chips Row */}
-        {(localSearch !== "" || showArchived) && (
+        {(localSearch !== "") && (
           <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
             <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">Active Filters:</span>
@@ -341,24 +346,12 @@ export default function DocTypesTab({
                   </button>
                 </div>
               )}
-              {showArchived && (
-                <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 uppercase dark:bg-amber-950/30 dark:text-amber-400">
-                  Mode: Archived Records
-                  <button
-                    onClick={() => { setShowArchived(false); setPageDoc(1); }}
-                    className="ml-1 hover:text-amber-800 transition-colors"
-                  >
-                    <i className="ph-bold ph-x text-[8px]"></i>
-                  </button>
-                </div>
-              )}
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => {
                   setLocalSearch("")
                   setDocSearch("")
-                  setShowArchived(false)
                   setPageDoc(1)
                 }}
                 className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon uppercase dark:border-white/10 dark:text-primary dark:bg-red-950/30"
@@ -638,21 +631,16 @@ export default function DocTypesTab({
                                 </EmptyMedia>
                               </div>
                               <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
-                                No document types found
+                                {totalInView > 0 ? "No matches found" : "No activity found"}
                               </EmptyTitle>
                               <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                                {docSearch
-                                  ? `No results matching "${docSearch}" in the current view.`
+                                {totalInView > 0
+                                  ? "Try adjusting your search filters to find what you're looking for."
                                   : showArchived
-                                    ? "There are no archived document types yet."
+                                    ? "There are currently no archived document types in the system."
                                     : "Add Document Type to structure the digital repository."}
                               </EmptyDescription>
-                              {docSearch ||
-                              docTypes.some((dt) =>
-                                showArchived
-                                  ? dt.status === "Archived"
-                                  : dt.status !== "Archived"
-                              ) ? (
+                              {totalInView > 0 ? (
                                 <Button
                                   variant="outline"
                                   onClick={() => {
@@ -688,60 +676,56 @@ export default function DocTypesTab({
         </CardContent>
 
         {filteredDocTypesFull.length > 0 && (
-          <div className="-mx-6 mt-0 -mb-6 flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-2xl dark:border-white/10 dark:bg-card">
+          <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-2xl dark:border-white/10 dark:bg-card">
             <div className="flex items-center gap-8 select-none cursor-default">
               <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
                 <span>
-                  Showing <strong className="text-gray-900 dark:text-zinc-50">{filteredDocTypes.length}</strong> out of{" "}
-                  <strong className="text-gray-900 dark:text-zinc-50">{filteredDocTypesFull.length}</strong>{" "}
-                  {showArchived ? "Archived" : "Active"} Types
+                  SHOWING <strong className="text-gray-900 dark:text-zinc-50">{filteredDocTypes.length}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{filteredDocTypesFull.length}</strong> ENTRIES
                 </span>
 
-                {filteredDocTypesFull.length > 10 && (
-                  <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
-                    <span className="text-[10px] opacity-60">Rows:</span>
-                    <Select
-                      className="h-8 w-16 cursor-pointer rounded-brand border border-gray-200 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
-                      value={itemsPerPage}
-                      onChange={handleItemsPerPageChange}
-                    >
-                      <option value={10}>10</option>
-                      <option value={20}>20</option>
-                      <option value={50}>50</option>
-                      <option value={100}>100</option>
-                    </Select>
-                  </div>
-                )}
+                <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
+                  <span className="text-[10px] opacity-60">ROWS:</span>
+                  <Select
+                    className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
+                    value={itemsPerPage}
+                    onChange={handleItemsPerPageChange}
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </Select>
+                </div>
               </div>
             </div>
 
-            {Math.ceil(filteredDocTypesFull.length / itemsPerPage) > 1 && (
-              <div className="flex shrink-0 items-center gap-2 select-none">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={pageDoc <= 1}
-                  onClick={() => setPageDoc((p) => p - 1)}
-                  className="h-10 rounded-brand border-gray-200 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
-                >
-                  <i className="ph-bold ph-caret-left mr-2 text-base"></i> PREV
-                </Button>
-                
-                <div className="flex h-10 min-w-[48px] items-center justify-center rounded-brand border border-gray-200 bg-gray-50 px-3 text-[11px] font-black text-gray-900 shadow-inner ring-1 ring-black/[0.02] dark:border-white/10 dark:bg-white/5 dark:text-zinc-50 dark:shadow-none">
-                  {pageDoc}
-                </div>
+            <div className="flex shrink-0 items-center gap-3 select-none">
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={pageDoc <= 1}
+                onClick={() => setPageDoc((p) => p - 1)}
+                className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+              >
+                <i className="ph-bold ph-caret-left mr-2 text-base"></i>
+                PREV
+              </Button>
 
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={pageDoc >= Math.ceil(filteredDocTypesFull.length / itemsPerPage)}
-                  onClick={() => setPageDoc((p) => p + 1)}
-                  className="h-10 rounded-brand border-gray-200 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
-                >
-                  NEXT <i className="ph-bold ph-caret-right ml-2 text-base"></i>
-                </Button>
+              <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                {pageDoc}
               </div>
-            )}
+
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={pageDoc >= Math.ceil(filteredDocTypesFull.length / itemsPerPage)}
+                onClick={() => setPageDoc((p) => p + 1)}
+                className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+              >
+                NEXT
+                <i className="ph-bold ph-caret-right ml-2 text-base"></i>
+              </Button>
+            </div>
           </div>
         )}
       </Card>
@@ -766,7 +750,7 @@ export default function DocTypesTab({
         <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
           <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30 dark:text-primary dark:shadow-none">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon shadow-sm dark:bg-red-950/30 dark:border-white/10">
                 <i className="ph-duotone ph-pencil-line text-2xl"></i>
               </div>
               <div className="min-w-0">
@@ -828,7 +812,7 @@ export default function DocTypesTab({
         <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
           <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30 dark:text-primary dark:shadow-none">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon shadow-sm dark:bg-red-950/30 dark:border-white/10">
                 <i className="ph-duotone ph-pencil-line text-2xl"></i>
               </div>
               <div className="min-w-0">

@@ -1447,6 +1447,7 @@ function AdminPageContent() {
 
           {view === "create" && (
             <RegisterAccountTab
+              authUser={authUser}
               createForm={createForm}
               setCreateForm={setCreateForm}
               staffCount={staffData.length}
@@ -1689,8 +1690,8 @@ function AdminPageContent() {
 
       <PromptModal
         open={declinePromptOpen}
-        title="Decline Reason"
-        message="Provide a reason for declining this document (optional)."
+        title="Decline Digital Record"
+        message="Please provide a brief reason for declining this digital record. This will be sent as a notification to the student."
         value={declineReason}
         onChange={setDeclineReason}
         onConfirm={submitDeclineWithReason}
@@ -1699,8 +1700,11 @@ function AdminPageContent() {
           setPendingDeclineDocId(null)
           setDeclineReason("")
         }}
-        confirmLabel="Submit Decline"
-        placeholder="Enter reason..."
+        variant="danger"
+        confirmLabel="Confirm Decline"
+        buttonIcon="ph-bold ph-x"
+        inputLabel="Reason for Rejection"
+        placeholder="e.g., Image is too blurry, incorrect document type..."
         multiline
       />
 
@@ -1711,13 +1715,16 @@ function AdminPageContent() {
           setBulkDeclineOpen(false)
           setBulkDeclineReason("")
         }}
-        title="Bulk Decline Documents"
-        message={`You are declining ${bulkDeclineIds.length} records. Please provide a reason that will be applied to all selected items.`}
+        title="Bulk Decline Records"
+        message={`You are about to decline ${bulkDeclineIds.length} digital records. This action will notify all impacted students.`}
         value={bulkDeclineReason}
         onChange={setBulkDeclineReason}
-        placeholder="Reason for bulk rejection (e.g., missing signatures, invalid ID)..."
+        variant="danger"
+        buttonIcon="ph-bold ph-x"
+        inputLabel="Common Rejection Reason"
+        placeholder="Reason for bulk rejection (applied to all selected)..."
         onConfirm={submitBulkDecline}
-        confirmLabel="Decline All"
+        confirmLabel="Decline All Records"
         multiline
       />
 
@@ -1776,7 +1783,7 @@ function AdminPageContent() {
         <DialogContent className="w-full max-w-2xl overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-white/10 dark:bg-card">
           <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-red-100 dark:border-primary/20 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-primary/10">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 dark:border-primary/20 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-primary/10">
                 <i className="ph-duotone ph-key text-2xl"></i>
               </div>
               <div className="min-w-0">

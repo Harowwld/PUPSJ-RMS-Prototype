@@ -79,7 +79,7 @@ const Select = React.forwardRef(({ className, children, value, onChange, placeho
   }
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full min-w-0">
       <button
         type="button"
         ref={(el) => {
@@ -91,12 +91,15 @@ const Select = React.forwardRef(({ className, children, value, onChange, placeho
         }}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex h-11 w-full items-center justify-between rounded-brand border border-gray-300 bg-white px-3 text-xs font-bold text-gray-700 shadow-xs outline-none transition-all hover:bg-gray-50 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-zinc-900 dark:text-zinc-200 dark:hover:bg-zinc-800",
+          "flex h-11 w-full items-center justify-between overflow-hidden rounded-brand border border-gray-300 bg-white px-3 text-xs font-bold text-gray-700 shadow-xs outline-none transition-all hover:bg-gray-50 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-zinc-800 min-w-0",
           className
         )}
         {...props}
       >
-        <span className="flex-1 text-left truncate">
+        <span 
+          className="flex-1 text-left truncate min-w-0"
+          title={selectedOption ? selectedOption.label : ""}
+        >
           {selectedOption ? selectedOption.label : (placeholder !== undefined ? placeholder : (options[0]?.label || "Select..."))}
         </span>
         <i
@@ -118,11 +121,11 @@ const Select = React.forwardRef(({ className, children, value, onChange, placeho
             zIndex: 9999,
           }}
           className={cn(
-            "transition-[opacity,transform] animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden rounded-brand border border-gray-200 bg-white p-1 shadow-2xl dark:border-white/10 dark:bg-zinc-900",
+            "transition-[opacity,transform] animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden rounded-brand border border-gray-200 bg-white p-1 shadow-2xl dark:border-white/10 dark:bg-card",
             menuClassName
           )}
         >
-          <div className="max-h-60 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-zinc-800">
+          <div className="max-h-60 overflow-y-auto overflow-x-hidden w-full scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-zinc-800">
             {options.map((option) => (
               <button
                 key={option.value}
@@ -130,15 +133,16 @@ const Select = React.forwardRef(({ className, children, value, onChange, placeho
                 disabled={option.disabled}
                 onClick={() => handleSelect(option.value)}
                 className={cn(
-                  "flex w-full items-center rounded-lg px-3 py-2 text-left text-xs font-semibold whitespace-nowrap transition-colors",
+                  "flex w-full items-center rounded-lg px-3 py-2 text-left text-xs font-semibold transition-colors min-w-0",
                   String(value) === String(option.value)
                     ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-400"
                     : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/5",
                   option.disabled && "opacity-50 cursor-not-allowed",
                   optionClassName
                 )}
+                title={option.label}
               >
-                {option.label}
+                <span className="truncate flex-1">{option.label}</span>
               </button>
             ))}
           </div>

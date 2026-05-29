@@ -32,6 +32,13 @@ export async function GET(req) {
     const currentStatus = staff?.status || "Inactive";
     const hasSecurity = userId ? await hasAllSecurityAnswers(userId) : true;
 
+    let preferences = {};
+    try {
+      preferences = JSON.parse(staff?.preferences || "{}");
+    } catch (e) {
+      preferences = {};
+    }
+
     return addSecurityHeaders(NextResponse.json({
       ok: true,
       data: {
@@ -46,6 +53,7 @@ export async function GET(req) {
         totp_enabled: Boolean(staff?.totp_enabled),
         last_active: payload.last_active || null,
         password_last_changed: staff?.password_last_changed || null,
+        preferences,
       },
     }));
   } catch (err) {

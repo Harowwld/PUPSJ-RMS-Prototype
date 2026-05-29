@@ -224,7 +224,7 @@ function StaffPageContent() {
       const allFetched = Array.isArray(aData.data) ? aData.data : [];
       setArchivedStudents(
         allFetched
-          .filter(s => s.status === "Archived")
+          .filter(s => s.status !== "Active")
           .map(normalizeStudentRow)
       );
 

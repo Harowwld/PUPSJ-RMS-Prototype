@@ -231,7 +231,7 @@ export default function AuditLogsTab({
         <StatCards isLoading={isLoading} logStats={logStats} />
 
         {/* Main Table Card */}
-        <Card className="flex h-auto w-full flex-col rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+        <Card className="flex h-auto w-full flex-col rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
           <PageHeader
             icon="ph-shield-check"
             title="Audit Logs"

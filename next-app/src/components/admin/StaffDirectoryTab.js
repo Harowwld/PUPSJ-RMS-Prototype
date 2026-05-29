@@ -75,7 +75,7 @@ const StaffTableRow = React.memo(({
         <div className="flex items-center gap-3">
           <div
             className={cn(
-              "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl font-black text-xs transition-all shadow-xs",
+              "flex h-9 w-9 shrink-0 items-center justify-center rounded-brand font-black text-xs transition-all shadow-xs",
               isSelected 
                 ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-primary shadow-sm" 
                 : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm"
@@ -100,7 +100,7 @@ const StaffTableRow = React.memo(({
           </div>
         </div>
       </td>
-      <td className="p-4 text-xs font-bold font-mono tracking-tight text-gray-700 whitespace-nowrap dark:text-zinc-300">
+      <td className="p-4 text-xs font-bold tracking-tight text-gray-700 whitespace-nowrap dark:text-zinc-300">
         {s.id}
       </td>
       <td className="p-4">
@@ -156,7 +156,7 @@ const StaffTableRow = React.memo(({
               variant="outline"
               size="sm"
               onClick={() => (window.location.href = "/account")}
-              className="h-9 w-full max-w-[140px] gap-2 rounded-xl border-gray-200 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-white/5 dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+              className="h-9 w-full max-w-[140px] gap-2 rounded-brand border-gray-200 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-white/5 dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
             >
               <i className="ph-bold ph-user-circle text-base"></i>
               ACCOUNT
@@ -168,7 +168,7 @@ const StaffTableRow = React.memo(({
                   variant="outline"
                   size="icon"
                   onClick={() => onEditUser(s.id)}
-                  className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800 cursor-pointer active:scale-95"
+                  className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800 cursor-pointer active:scale-95"
                 >
                   <i className="ph-bold ph-pencil-simple text-base"></i>
                 </Button>
@@ -179,7 +179,7 @@ const StaffTableRow = React.memo(({
                   variant="outline"
                   size="icon"
                   onClick={() => onRestoreUser(s.id)}
-                  className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-emerald-600 shadow-sm transition-all hover:border-emerald-600 hover:bg-emerald-50 dark:bg-white/5 dark:border-white/10 dark:text-emerald-400 dark:hover:bg-emerald-900/20 cursor-pointer active:scale-95"
+                  className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-emerald-600 shadow-sm transition-all hover:border-emerald-600 hover:bg-emerald-50 dark:bg-white/5 dark:border-white/10 dark:text-emerald-400 dark:hover:bg-emerald-900/20 cursor-pointer active:scale-95"
                 >
                   <i className="ph-bold ph-arrow-counter-clockwise text-base"></i>
                 </Button>
@@ -188,7 +188,7 @@ const StaffTableRow = React.memo(({
                   variant="outline"
                   size="icon"
                   onClick={() => onDeleteUser(s.id)}
-                  className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10 cursor-pointer active:scale-95"
+                  className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10 cursor-pointer active:scale-95"
                 >
                   <i className="ph-bold ph-archive text-base"></i>
                 </Button>
@@ -242,6 +242,8 @@ export default function StaffDirectoryTab({
   const [jumpPage, setJumpPage] = useState("1")
   const [lastSelectedId, setLastSelectedId] = useState(null)
 
+  const hasActiveFilters = localSearch !== "" || roleFilter !== "All";
+
   // Sync local search with external search prop initially
   useEffect(() => {
     if (search && !localSearch) setLocalSearch(search)
@@ -285,7 +287,7 @@ export default function StaffDirectoryTab({
     })
   }, [search, roleFilter, staffData, activeTab])
 
-  const [sortBy, setSortBy] = useState("fname")
+  const [sortBy, setSortBy] = useState("id")
   const [sortOrder, setSortOrder] = useState("asc")
 
   const handleSort = (column) => {
@@ -293,7 +295,7 @@ export default function StaffDirectoryTab({
       if (sortOrder === "asc") {
         setSortOrder("desc")
       } else {
-        setSortBy("fname")
+        setSortBy("id")
         setSortOrder("asc")
       }
     } else {
@@ -316,6 +318,10 @@ export default function StaffDirectoryTab({
       if (sortBy === "fname") {
         valA = `${a.fname} ${a.lname}`.toLowerCase()
         valB = `${b.fname} ${b.lname}`.toLowerCase()
+      } else if (sortBy === "id") {
+        return sortOrder === "asc"
+          ? a.id.localeCompare(b.id, undefined, { numeric: true })
+          : b.id.localeCompare(a.id, undefined, { numeric: true })
       } else if (typeof valA === "string") {
         valA = valA.toLowerCase()
         valB = (valB || "").toLowerCase()
@@ -445,7 +451,16 @@ export default function StaffDirectoryTab({
       <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-users-three"
-          title="Staff Directory"
+          title={
+            <div className="flex items-center gap-2">
+              Staff Directory
+              {activeTab === "archived" && (
+                <Badge className="border-red-100 bg-red-50 text-[10px] font-black text-red-700 dark:border-white/10 dark:bg-red-950/30 dark:text-red-400">
+                  RESTORE MODE
+                </Badge>
+              )}
+            </div>
+          }
           description="Manage system staff and administrative access."
           actions={
             <div className="flex items-center gap-3">
@@ -461,10 +476,60 @@ export default function StaffDirectoryTab({
           }
         />
 
+        {hasActiveFilters && (
+          <div className="flex-none border-t border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">Active Filters:</span>
+              {localSearch && (
+                <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary uppercase dark:border-white/10 dark:text-primary">
+                  Search: {localSearch}
+                  <button
+                    onClick={() => { 
+                      setLocalSearch(""); 
+                      setSearch("");
+                      setCurrentPage(1); 
+                    }}
+                    className="ml-1 hover:text-pup-darkMaroon transition-colors"
+                  >
+                    <i className="ph-bold ph-x text-[8px]"></i>
+                  </button>
+                </div>
+              )}
+              {roleFilter !== "All" && (
+                <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 uppercase dark:bg-blue-950/30 dark:text-blue-400">
+                  Role: {roleFilter}
+                  <button
+                    onClick={() => { setRoleFilter("All"); setCurrentPage(1); }}
+                    className="ml-1 hover:text-blue-800 transition-colors"
+                  >
+                    <i className="ph-bold ph-x text-[8px]"></i>
+                  </button>
+                </div>
+              )}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setLocalSearch("")
+                  setSearch("")
+                  setRoleFilter("All")
+                  setCurrentPage(1)
+                }}
+                className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon uppercase dark:border-white/10 dark:text-primary dark:bg-red-950/30"
+              >
+                CLEAR ALL FILTERS
+              </Button>
+            </div>
+          </div>
+        )}
+
         {!isLoading && !error && (
-          <CardContent className="font-inter bg-white p-6 pt-0 dark:bg-card border-t border-gray-100 dark:border-white/10">
-            <div className="mt-6 flex shrink-0 select-none flex-col items-center justify-between gap-3 sm:flex-row">
-              <div className="flex w-full items-center sm:w-auto">
+          <CardContent className="font-inter bg-white p-4 dark:bg-card/50 backdrop-blur-md border-t border-gray-100 dark:border-white/10">
+            <div className="flex shrink-0 select-none flex-wrap items-end justify-between gap-6">
+              <div className="flex w-full flex-col gap-1.5 sm:w-auto">
+                <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                  Status View
+                </label>
                 <div className="flex w-full cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 backdrop-blur-sm sm:w-auto dark:border-white/10 dark:bg-muted/50">
                   <button
                     type="button"
@@ -521,19 +586,31 @@ export default function StaffDirectoryTab({
                 </div>
               </div>
 
-              <div className="flex w-full items-center gap-3 sm:w-auto">
-                <div className="relative flex-1 sm:w-[300px] sm:flex-none">
-                  <i className="ph-bold ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"></i>
+              <div className="flex flex-1 flex-col gap-1.5 min-w-[300px]">
+                <div className="flex items-center justify-between">
+                  <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                    Search
+                  </label>
+                  <span className="text-[9px] font-black text-pup-maroon dark:text-primary/70">
+                    {filteredStaff.length > 0 ? `${filteredStaff.length.toLocaleString()} MATCHES` : "NO RESULTS"}
+                  </span>
+                </div>
+                <div className="relative group">
+                  <i className="ph-bold ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500"></i>
                   <Input
                     placeholder="Search name, email or ID..."
-                    className="h-11 rounded-brand border-gray-200 bg-gray-50/50 pl-11 pr-4 text-sm transition-all focus:border-pup-maroon focus:bg-white dark:border-white/10 dark:bg-white/5 dark:text-zinc-300 dark:focus:border-primary"
+                    className="h-11 rounded-brand border border-gray-200 bg-white pl-11 pr-4 text-sm font-medium transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
                     value={localSearch}
                     onChange={(e) => setLocalSearch(e.target.value)}
                   />
                 </div>
+              </div>
 
+              <div className="flex flex-col gap-1.5 w-full sm:w-44">
+                <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                  Role
+                </label>
                 <Select
-                  className="h-11 w-44 rounded-brand border border-gray-200 bg-gray-50/50 px-4 text-sm font-bold text-gray-600 transition-all hover:bg-gray-100 dark:border-white/10 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
                   value={roleFilter}
                   onChange={(e) => setRoleFilter(e.target.value)}
                 >
@@ -549,7 +626,7 @@ export default function StaffDirectoryTab({
 
       {/* Main Table Grid & Pagination (No outer background card) */}
       {isLoading ? (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
+        <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
           <div className="h-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/5" />
           <div className="divide-y divide-gray-100 dark:divide-white/10">
             {[1, 2, 3, 4, 5, 6].map((i) => (
@@ -573,7 +650,7 @@ export default function StaffDirectoryTab({
           </div>
         </div>
       ) : error ? (
-        <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6">
+        <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6">
           <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
             <EmptyHeader className="flex flex-col items-center gap-0">
               <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
@@ -599,11 +676,11 @@ export default function StaffDirectoryTab({
             key={activeTab}
             className="outline-none animate-fade-up"
           >
-            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
+            <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
               <table className="min-w-full table-fixed text-sm">
                 <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm dark:border-white/10 dark:bg-muted">
                   <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
-                    <th className="w-12 p-4 text-center">
+                    <th className="w-16 p-4 text-center">
                       <input
                         type="checkbox"
                         className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:text-primary dark:border-white/10"
@@ -624,7 +701,7 @@ export default function StaffDirectoryTab({
                         }
                       />
                     </th>
-                    <th className="w-72 p-4">
+                    <th className="p-4 min-w-[280px]">
                       <button
                         onClick={() => handleSort("fname")}
                         className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
@@ -637,7 +714,7 @@ export default function StaffDirectoryTab({
                         />
                       </button>
                     </th>
-                    <th className="w-40 p-4">
+                    <th className="w-48 p-4">
                       <button
                         onClick={() => handleSort("id")}
                         className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
@@ -650,7 +727,7 @@ export default function StaffDirectoryTab({
                         />
                       </button>
                     </th>
-                    <th className="w-40 p-4">
+                    <th className="w-48 p-4">
                       <button
                         onClick={() => handleSort("role")}
                         className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
@@ -663,8 +740,8 @@ export default function StaffDirectoryTab({
                         />
                       </button>
                     </th>
-                    <th className="w-32 p-4">SECURITY</th>
-                    <th className="p-4">
+                    <th className="w-40 p-4">SECURITY</th>
+                    <th className="w-56 p-4">
                       <button
                         onClick={() => handleSort("last_active")}
                         className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
@@ -677,7 +754,7 @@ export default function StaffDirectoryTab({
                         />
                       </button>
                     </th>
-                    <th className="w-24 p-4 text-right">
+                    <th className="w-32 p-4 text-right">
                       ACTIONS
                     </th>
                   </tr>
@@ -695,12 +772,14 @@ export default function StaffDirectoryTab({
                               </EmptyMedia>
                             </div>
                             <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
-                              No activity found
+                              {hasActiveFilters || search !== "" ? "No matches found" : "No activity found"}
                             </EmptyTitle>
                             <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                              Try adjusting your search filters to find what you&apos;re looking for.
+                              {hasActiveFilters || search !== ""
+                                ? "Try adjusting your search filters to find what you're looking for."
+                                : "There are currently no personnel records in the system."}
                             </EmptyDescription>
-                            {localSearch !== "" || roleFilter !== "All" ? (
+                            {hasActiveFilters || search !== "" ? (
                               <Button
                                 variant="outline"
                                 size="sm"
@@ -716,7 +795,7 @@ export default function StaffDirectoryTab({
                                 CLEAR SEARCH
                               </Button>
                             ) : (
-                              activeTab === "active" && (
+                              activeTab === "active" && staffData.filter(s => s.status !== "Archived").length === 0 && (
                                 <Button
                                   onClick={() => onSwitchView("create")}
                                   className="mt-6 flex h-10 items-center gap-3 rounded-brand btn-brand-red px-6 text-xs font-bold text-white transition-all dark:shadow-none"
@@ -759,70 +838,58 @@ export default function StaffDirectoryTab({
                   <div className="flex items-center gap-8 select-none cursor-default">
                     <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
                       <span>
-                        Showing{" "}
-                        <strong className="text-gray-900 dark:text-zinc-50">
-                          {paginatedStaff.length}
-                        </strong>{" "}
-                        out of{" "}
-                        <strong className="text-gray-900 dark:text-zinc-50">
-                          {filteredStaff.length}
-                        </strong>{" "}
-                        {activeTab === "active" ? "Active" : "Archived"} Staff
+                        SHOWING <strong className="text-gray-900 dark:text-zinc-50">{paginatedStaff.length}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{filteredStaff.length}</strong> ENTRIES
                       </span>
 
-                      {filteredStaff.length > 10 && (
-                        <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
-                          <span className="text-[10px] opacity-60">Rows:</span>
-                          <Select
-                            className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
-                            value={itemsPerPage}
-                            onChange={(e) => {
-                              setItemsPerPage(Number(e.target.value))
-                              setCurrentPage(1)
-                            }}
-                          >
-                            <option value={10}>10</option>
-                            <option value={20}>20</option>
-                            <option value={50}>50</option>
-                          </Select>
-                        </div>
-                      )}
+                      <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
+                        <span className="text-[10px] opacity-60">ROWS:</span>
+                        <Select
+                          className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
+                          value={itemsPerPage}
+                          onChange={(e) => {
+                            setItemsPerPage(Number(e.target.value))
+                            setCurrentPage(1)
+                          }}
+                        >
+                          <option value={10}>10</option>
+                          <option value={20}>20</option>
+                          <option value={50}>50</option>
+                        </Select>
+                      </div>
                     </div>
                   </div>
 
-                  {totalPages > 1 && (
-                    <div className="flex shrink-0 items-center gap-3 select-none">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={displayPage <= 1}
-                        onClick={() =>
-                          setCurrentPage((p) => Math.max(1, p - 1))
-                        }
-                        className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-                      >
-                        <i className="ph-bold ph-caret-left mr-2 text-base"></i>
-                        PREV
-                      </Button>
+                  <div className="flex shrink-0 items-center gap-3 select-none">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={displayPage <= 1}
+                      onClick={() =>
+                        setCurrentPage((p) => Math.max(1, p - 1))
+                      }
+                      className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                    >
+                      <i className="ph-bold ph-caret-left mr-2 text-base"></i>
+                      PREV
+                    </Button>
 
-                      <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
-                        {displayPage}
-                      </div>
-
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={displayPage >= totalPages}
-                        onClick={() =>
-                          setCurrentPage((p) => Math.min(totalPages, p + 1))
-                        }
-                        className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-                      >
-                        NEXT
-                        <i className="ph-bold ph-caret-right ml-2 text-base"></i>
-                      </Button>
+                    <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                      {displayPage}
                     </div>
-                  )}
+
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={displayPage >= totalPages}
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
+                      className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                    >
+                      NEXT
+                      <i className="ph-bold ph-caret-right ml-2 text-base"></i>
+                    </Button>
+                  </div>
                 </div>
               )}
             </div>

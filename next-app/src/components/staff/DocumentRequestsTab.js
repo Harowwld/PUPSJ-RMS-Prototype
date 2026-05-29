@@ -366,45 +366,52 @@ export default function DocumentRequestsTab({
         />
         
         {!loading && !error && (
-          <div className="p-4 bg-gray-50 border-b border-gray-200 flex flex-col lg:flex-row gap-3 lg:items-end dark:bg-white/5 dark:border-white/10">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between mb-1">
-                <label className="block text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">
-                  Search
-                </label>
+          <div className="bg-white border-t border-b border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
+            <div className="flex w-full flex-wrap items-end gap-6">
+              {/* Global Search */}
+              <div className="flex-1 min-w-[320px]">
+                <div className="mb-1.5 flex items-center justify-between">
+                  <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                    Search Requests
+                  </label>
+                  <span className="text-[9px] font-black text-pup-maroon dark:text-primary/70">
+                    {total > 0 ? `${total.toLocaleString()} MATCHES` : "NO RESULTS"}
+                  </span>
+                </div>
+                <div className="relative group">
+                  <i className="ph-bold ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500"></i>
+                  <Input
+                    className="h-11 rounded-brand border border-gray-200 bg-white pl-11 pr-4 text-sm font-medium transition-all placeholder:text-gray-400 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
+                    placeholder="Student no., name, document type…"
+                    value={q}
+                    onChange={(e) => {
+                      setQ(e.target.value);
+                      setPage(1);
+                    }}
+                  />
+                </div>
               </div>
-              <div className="relative">
-                <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500"></i>
-                <Input
-                  className="h-10 pl-10 rounded-brand border-gray-300 bg-white text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 transition-colors dark:bg-card dark:border-white/10"
-                  placeholder="Student no., name, document type…"
-                  value={q}
+
+              {/* Status Filter */}
+              <div className="w-full sm:w-48">
+                <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                  Status
+                </label>
+                <Select
+                  value={statusFilter}
                   onChange={(e) => {
-                    setQ(e.target.value);
+                    setStatusFilter(e.target.value);
                     setPage(1);
                   }}
-                />
+                >
+                  <option value="">All Statuses</option>
+                  {STATUS_OPTIONS.map((s) => (
+                    <option key={s} value={s}>
+                      {s}
+                    </option>
+                  ))}
+                </Select>
               </div>
-            </div>
-            <div className="w-full sm:w-48">
-              <label className="block text-xs font-bold text-gray-700 mb-1 uppercase dark:text-zinc-200">
-                Status
-              </label>
-              <Select
-                className="h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 transition-colors dark:bg-card dark:text-zinc-100 dark:focus:border-zinc-700 dark:border-white/10"
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setPage(1);
-                }}
-              >
-                <option value="">All</option>
-                {STATUS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </Select>
             </div>
           </div>
         )}
@@ -517,11 +524,11 @@ export default function DocumentRequestsTab({
                 <div className="p-6 flex-1 flex flex-col min-h-0">
                   <div 
                     key={`${page}-${statusFilter}-${debouncedQ}`}
-                    className="w-full overflow-auto border border-gray-200 rounded-brand animate-fade-up dark:border-white/10"
+                    className="w-full overflow-hidden overflow-auto border border-gray-200 rounded-brand animate-fade-up dark:border-white/10"
                   >
                     <table className="min-w-full text-sm table-fixed">
-                      <thead className="border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">
-                        <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
+                      <thead className="bg-gray-50 backdrop-blur-sm select-none dark:bg-muted">
+                        <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
                           <th className="p-4 w-16">ID</th>
                           <th className="p-4">Student</th>
                           <th className="p-4">Document</th>
