@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 // Cache invalidation comment to trigger rebuild
 import fs from "node:fs";
 import path from "node:path";
+import Database from "better-sqlite3";
 import crypto from "node:crypto";
 import AdmZip from "adm-zip";
 import {
@@ -12,7 +13,7 @@ import {
   getLocalDir,
   listBackups,
 } from "../../../../../lib/backupsRepo";
-import { dbRun, reloadDb, flushDb } from "../../../../../lib/sqlite";
+import { dbRun, reloadDb, flushDb, getDb, setMaintenanceMode } from "../../../../../lib/sqlite";
 import { writeAuditLog } from "../../../../../lib/auditLogRequest";
 import { requireAdmin, createAuthErrorResponse } from "../../../../../lib/authHelpers";
 import { requireTOTP, extractTOTPToken } from "../../../../../lib/totpMiddleware";
@@ -118,21 +119,35 @@ export async function POST(req) {
       console.error("[RESTORE] WAL checkpoint failed:", checkpointErr.message);
     }
 
-    // Force the application to close our connection so we don't lock it during overwrite
-    reloadDb();
+    // Enable database lock / maintenance mode so concurrent background requests cannot run writes during restoration
+    setMaintenanceMode(true);
 
     // Give OS a moment to release file handles
     await new Promise(r => setTimeout(r, 500));
 
-    // Replace DB with retry logic
+    // Replace DB using SQLite's Online Backup API
+    // This allows page-by-page overwrite that seamlessly handles active WAL logs 
+    // and handles locks automatically, preventing SQLITE_IOERR_SHORT_READ or file lock errors.
+    let stagedDbInstance = null;
     try {
+      stagedDbInstance = new Database(stagedDbPath);
+      await stagedDbInstance.backup(currentDbPath);
+      console.log("[RESTORE] Live database cleanly overwritten via SQLite Online Backup API.");
+    } catch (backupErr) {
+      console.error("[RESTORE] Online Backup API failed, falling back to manual copy...", backupErr.message);
+      
+      // Fallback: Delete WAL/SHM and copy
+      const walPath = `${currentDbPath}-wal`;
+      const shmPath = `${currentDbPath}-shm`;
+      try {
+        if (fs.existsSync(walPath)) fs.unlinkSync(walPath);
+        if (fs.existsSync(shmPath)) fs.unlinkSync(shmPath);
+      } catch (e) {}
       fs.copyFileSync(stagedDbPath, currentDbPath);
-      console.log("[RESTORE] db.sqlite overwritten.");
-    } catch (copyErr) {
-      console.error("[RESTORE] Failed to overwrite db.sqlite, retrying with delay...", copyErr.message);
-      await new Promise(r => setTimeout(r, 1000));
-      fs.copyFileSync(stagedDbPath, currentDbPath);
-      console.log("[RESTORE] db.sqlite overwritten after retry.");
+    } finally {
+      if (stagedDbInstance) {
+        try { stagedDbInstance.close(); } catch (e) {}
+      }
     }
 
     // Replace Uploads folder
@@ -143,6 +158,9 @@ export async function POST(req) {
       }
       fs.cpSync(stagedUploadsDir, currentUploadsDir, { recursive: true });
     }
+
+    // Release maintenance mode lock to allow queries against the restored database
+    setMaintenanceMode(false);
 
     // --- PHASE 3: RECORD SNAPSHOT IN THE NEW DATABASE ---
     console.log("[RESTORE] Recording snapshot in the restored database...");
@@ -193,6 +211,8 @@ export async function POST(req) {
     });
   } catch (error) {
     console.error("[RESTORE] Critical Error:", error);
+    // Make sure we release the maintenance mode lock on error!
+    setMaintenanceMode(false);
     if (stagingDir && fs.existsSync(stagingDir)) {
       try { fs.rmSync(stagingDir, { recursive: true, force: true }); } catch (e) {}
     }
