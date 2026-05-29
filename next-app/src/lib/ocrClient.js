@@ -293,7 +293,7 @@ function stripTrailing(s) {
  * @param {{ engine?: string }} opts  engine: "apple-vision"|"windows-media"|"unknown"
  * @returns {string}
  */
-function detectName(lines, { engine = "unknown" } = {}) {
+function detectName(lines, { engine = "unknown", nlp = null } = {}) {
   const full = lines.join(" ");
   /** @type {{ name: string; score: number; strategy: string }[]} */
   const candidates = [];
@@ -654,6 +654,21 @@ function detectName(lines, { engine = "unknown" } = {}) {
     if (m?.[1]) addCandidate(m[1], 40, "5-raw-caps-lastname-first");
   }
 
+  // ── Strategy NLP (45): Natural Language processing (compromise.js) ──
+  if (nlp) {
+    try {
+      const doc = nlp(full);
+      const people = doc.people().out("array");
+      for (const p of people) {
+        if (p && p.trim().length >= 4) {
+          addCandidate(p, 45, "NLP-compromise");
+        }
+      }
+    } catch (e) {
+      console.warn("[OCR] NLP compromise failed:", e);
+    }
+  }
+
   if (candidates.length === 0) return "";
   candidates.sort((a, b) => b.score - a.score);
   console.log("[OCR Name] candidates:", candidates.map((c) => `${c.strategy}(${c.score}):${c.name}`).join(" | "));
@@ -696,6 +711,34 @@ export function normalizeExtractedName(raw) {
   const surname = w.slice(si).join(" ");
   const given = w.slice(0, si).join(" ");
   return given ? `${surname}, ${given}` : surname;
+}
+
+export function formatToLNFnMi(name) {
+  if (!name) return "";
+  const normalized = normalizeExtractedName(name);
+  if (!normalized) return "";
+  
+  const { firstName, middleName, lastName } = splitNameComponents(normalized);
+  if (!lastName) return normalized;
+  
+  let cleanFirst = firstName.trim();
+  let mi = "";
+  if (middleName) {
+    const cleanMid = middleName.replace(/[^A-Z]/g, "");
+    if (cleanMid.length > 0) {
+      mi = ` ${cleanMid[0]}.`;
+    }
+  } else {
+    const words = cleanFirst.split(/\s+/);
+    if (words.length > 1) {
+      const lastWord = words[words.length - 1].replace(/\.$/, "");
+      if (lastWord.length === 1 && /^[A-Z]$/.test(lastWord)) {
+        mi = ` ${lastWord}.`;
+        cleanFirst = words.slice(0, -1).join(" ");
+      }
+    }
+  }
+  return `${lastName}, ${cleanFirst}${mi}`;
 }
 
 export function splitNameComponents(fullName) {
@@ -1050,6 +1093,9 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
     }
   }
 
+  // ── Load NLP engine if available ──
+  const nlp = await loadNlp().catch(() => null);
+
   // ── Detect name (fallback when student number did not match) ──
   if (!matchedStudent) {
     if (Array.isArray(students)) {
@@ -1059,9 +1105,15 @@ export async function scanFileForSuggestion({ file, students, docTypes, rotation
   }
 
   // ── Build final suggested name ──
-  const suggestedName = matchedStudent
-    ? up(matchedStudent.name || matchedStudent.Name || "").trim()
-    : "";
+  let suggestedName = "";
+  if (matchedStudent) {
+    suggestedName = up(matchedStudent.name || matchedStudent.Name || "").trim();
+  } else {
+    const rawExtracted = detectName(lines, { engine: ocrEngine, nlp });
+    if (rawExtracted) {
+      suggestedName = formatToLNFnMi(rawExtracted);
+    }
+  }
 
   const nameComponents = splitNameComponents(suggestedName);
 

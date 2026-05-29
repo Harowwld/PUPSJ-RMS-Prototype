@@ -145,6 +145,51 @@ export default function ScanUploadTab({
     setCsvPage(1)
   }, [csvFile])
 
+  useEffect(() => {
+    if (uploadMode !== "pdf") return
+
+    const handleWindowPaste = (e) => {
+      const target = e.target
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      ) {
+        return
+      }
+
+      const items = e.clipboardData?.items
+      if (!items) return
+
+      const files = []
+      for (const item of items) {
+        if (item.kind === "file") {
+          const file = item.getAsFile()
+          if (file) {
+            const isPdf =
+              file.type === "application/pdf" ||
+              file.name.toLowerCase().endsWith(".pdf")
+            const isImg = file.type.startsWith("image/")
+            if (isPdf || isImg) {
+              files.push(file)
+            }
+          }
+        }
+      }
+
+      if (files.length > 0) {
+        e.preventDefault()
+        handlePdfFileSelect(files)
+        showToast("File pasted from clipboard!")
+      }
+    }
+
+    window.addEventListener("paste", handleWindowPaste)
+    return () => {
+      window.removeEventListener("paste", handleWindowPaste)
+    }
+  }, [uploadMode, showToast])
+
   const fe = uploadFieldErrors || {}
   const ring = (key) =>
     fe[key] ? "ring-2 ring-orange-400 border-orange-400" : ""
@@ -438,6 +483,33 @@ export default function ScanUploadTab({
 
     if (validFiles.length === 0) return
     handlePdfFileSelect(validFiles)
+  }
+
+  const handlePasteButtonClick = async (e) => {
+    e.stopPropagation()
+    try {
+      const clipboardItems = await navigator.clipboard.read()
+      const files = []
+      for (const item of clipboardItems) {
+        for (const type of item.types) {
+          if (type.startsWith("text/")) continue
+          if (type === "application/pdf" || type.startsWith("image/")) {
+            const blob = await item.getType(type)
+            const extension = type === "application/pdf" ? "pdf" : type.split("/")[1] || "png"
+            const file = new File([blob], `pasted_file_${Date.now()}.${extension}`, { type })
+            files.push(file)
+          }
+        }
+      }
+      if (files.length > 0) {
+        handlePdfFileSelect(files)
+        showToast("File pasted from clipboard!")
+      } else {
+        showToast("No valid image or PDF in clipboard", "warning")
+      }
+    } catch (err) {
+      showToast("Cannot read clipboard automatically. Try pressing Ctrl+V or Cmd+V.", "warning")
+    }
   }
 
   const phoneStatus =
@@ -1196,7 +1268,21 @@ export default function ScanUploadTab({
                             </EmptyHeader>
                           </Empty>
 
-
+                          <div className="mt-4 flex flex-col items-center gap-1.5 select-none" onClick={(e) => e.stopPropagation()}>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={handlePasteButtonClick}
+                              className="flex items-center gap-2 h-9 rounded-brand border-gray-300 bg-white font-bold hover:bg-gray-100 dark:bg-card dark:hover:bg-zinc-800 dark:border-white/10"
+                            >
+                              <i className="ph-bold ph-clipboard-text text-sm"></i>
+                              PASTE FROM CLIPBOARD
+                            </Button>
+                            <span className="text-[10px] text-gray-400 font-medium dark:text-zinc-500">
+                              Or press Ctrl+V / Cmd+V anywhere on this page
+                            </span>
+                          </div>
 
                           <input
                             ref={fileInputRef}
