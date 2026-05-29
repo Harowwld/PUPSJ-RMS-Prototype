@@ -32,12 +32,30 @@ export default function RegisterAccountTab({
   isLoading = false,
   onResetForm,
   onCreateAccount,
+  onSwitchView,
 }) {
   const [showDefaultPw, setShowDefaultPw] = useState(false)
   const [lastAutoFilled, setLastAutoFilled] = useState({ id: false, email: false })
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [countdown, setCountdown] = useState(3)
+  const [skipCountdown, setSkipCountdown] = useState(false)
   const fnameRef = useRef(null)
+
+  // Fetch preferences
+  useEffect(() => {
+    const fetchPrefs = async () => {
+      try {
+        const res = await fetch("/api/system/settings")
+        const json = await res.json()
+        if (json.ok) {
+          setSkipCountdown(json.data.skip_registration_countdown === "true")
+        }
+      } catch (err) {
+        console.error("Failed to fetch registration preferences:", err)
+      }
+    }
+    fetchPrefs()
+  }, [])
 
   const [isIdManual, setIsIdManual] = useState(false)
   const [isEmailManual, setIsEmailManual] = useState(false)
@@ -88,17 +106,17 @@ export default function RegisterAccountTab({
 
   useEffect(() => {
     let timer
-    if (showConfirmModal && countdown > 0) {
+    if (showConfirmModal && !skipCountdown && countdown > 0) {
       timer = setInterval(() => {
         setCountdown((prev) => prev - 1)
       }, 1000)
     }
     return () => clearInterval(timer)
-  }, [showConfirmModal, countdown])
+  }, [showConfirmModal, countdown, skipCountdown])
 
   const handleOpenConfirm = (e) => {
     e.preventDefault()
-    setCountdown(3)
+    setCountdown(skipCountdown ? 0 : 3)
     setShowConfirmModal(true)
   }
 
@@ -146,16 +164,27 @@ export default function RegisterAccountTab({
                     <i className="ph-bold ph-list-plus text-pup-maroon dark:text-primary"></i>{" "}
                     Registration Form
                   </h3>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    disabled={isLoading}
-                    onClick={handleClearForm}
-                    className="h-9 rounded-md border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-                  >
-                    <i className="ph-bold ph-arrow-counter-clockwise mr-1.5 text-xs"></i>
-                    RESET FORM
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onSwitchView?.("directory")}
+                      className="h-9 rounded-md border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-white/10 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                    >
+                      <i className="ph-bold ph-arrow-left mr-1.5 text-xs"></i>
+                      BACK TO DIRECTORY
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      disabled={isLoading}
+                      onClick={handleClearForm}
+                      className="h-9 rounded-md border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                    >
+                      <i className="ph-bold ph-arrow-counter-clockwise mr-1.5 text-xs"></i>
+                      RESET FORM
+                    </Button>
+                  </div>
                 </div>
                 <CardContent className="bg-white p-8 dark:bg-card">
                   <form onSubmit={handleOpenConfirm} className="space-y-8">

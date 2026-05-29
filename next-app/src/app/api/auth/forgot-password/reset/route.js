@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { dbGet, dbRun } from "@/lib/sqlite";
 import { writeAuditLog } from "@/lib/auditLogRequest";
-import { checkAuthForgotPasswordRateLimit } from "@/lib/rateLimiter";
+import { checkAuthForgotPasswordRateLimit, resetAuthForgotPasswordRateLimit } from "@/lib/rateLimiter";
 import crypto from "node:crypto";
 
 export const runtime = "nodejs";
@@ -79,6 +79,9 @@ export async function POST(req) {
     await dbRun("UPDATE staff SET password_hash = ?, updated_at = (datetime('now')), password_last_changed = (datetime('now')) WHERE id = ?", [
       newPasswordHash, staff.id
     ]);
+
+    // Reset forgot password rate limit on success
+    await resetAuthForgotPasswordRateLimit(ipAddress);
 
     await writeAuditLog(req, "Reset Password via Security Question", {
       actor: `${staff.fname || ""} ${staff.lname || ""}`.trim() || staff.id,

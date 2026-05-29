@@ -342,9 +342,8 @@ export default function DocumentRequestsTab({
     setItemsPerPage(Number(e.target.value));
     setPage(1);
   };
-
   return (
-    <div className="flex flex-col h-full min-h-0 gap-4 animate-fade-up font-inter">
+    <div className="flex flex-col h-auto gap-4 animate-fade-up font-inter">
       <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-tray"
@@ -518,7 +517,7 @@ export default function DocumentRequestsTab({
                 <div className="p-6 flex-1 flex flex-col min-h-0">
                   <div 
                     key={`${page}-${statusFilter}-${debouncedQ}`}
-                    className="h-auto w-full overflow-hidden overflow-x-auto border border-gray-200 rounded-xl animate-fade-up dark:border-white/10"
+                    className="w-full overflow-auto border border-gray-200 rounded-xl animate-fade-up dark:border-white/10"
                   >
                     <table className="min-w-full text-sm table-fixed">
                       <thead className="border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">

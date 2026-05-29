@@ -222,7 +222,7 @@ export default function NotificationsTab({
           ) : (
             <>
               <div className="rounded-xl border border-gray-200 dark:border-white/10 overflow-hidden bg-white dark:bg-card">
-                <div className="relative h-auto w-full overflow-x-auto">
+                <div className="relative w-full overflow-auto">
                   {isRefreshing && (
                     <div className="absolute inset-0 z-20 flex h-full w-full flex-col items-center justify-center bg-white p-10 dark:bg-card">
                       <div className="flex flex-col items-center gap-4">

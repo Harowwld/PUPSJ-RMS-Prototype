@@ -9,7 +9,7 @@ import { getSessionCookieName, signSessionToken } from "../../../../lib/jwt";
 import { createSession } from "../../../../lib/sessionStore";
 import { broadcastToAdmins } from "../../../../pages/api/socket";
 import { writeAuditLog } from "../../../../lib/auditLogRequest";
-import { checkAuthLoginRateLimit } from "../../../../lib/rateLimiter";
+import { checkAuthLoginRateLimit, resetAuthLoginRateLimit } from "../../../../lib/rateLimiter";
 import { LoginSchema } from "../../../../lib/authSchemas";
 
 export const runtime = "nodejs";
@@ -118,6 +118,9 @@ export async function POST(req) {
 
   // Check if 2FA is enabled
   if (touched.totp_enabled) {
+    // Reset login rate limit as they successfully provided correct password
+    await resetAuthLoginRateLimit(ipAddress);
+
     // Generate a temporary token for 2FA verification
     const tempPayload = {
       sub: touched.id,
@@ -152,6 +155,9 @@ export async function POST(req) {
   const token = await signSessionToken(sessionPayload);
   createSession(token, touched.id, touched.role || "Staff", touched.email);
   
+  // Reset login rate limit on full successful login
+  await resetAuthLoginRateLimit(ipAddress);
+
   await writeAuditLog(req, `User Login`, { 
     details: `personnel '${getStaffDisplayName(touched)}' successfully authenticated into the system repository`, 
     actor: getStaffDisplayName(touched),

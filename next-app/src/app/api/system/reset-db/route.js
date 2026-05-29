@@ -73,7 +73,9 @@ export async function GET(req) {
       "sections",
       "document_requests",
       "staff_security_answers",
-      "security_questions"
+      "security_questions",
+      "rate_limit_hits",
+      "rate_limit_violations"
     ];
 
     for (const table of tables) {
@@ -83,6 +85,14 @@ export async function GET(req) {
       } catch (e) {
         console.error(`Error clearing table ${table}:`, e);
       }
+    }
+
+    // Reset the in-memory rate limiter cache
+    try {
+      const { destroyRateLimiter } = await import("../../../../lib/rateLimiter");
+      destroyRateLimiter();
+    } catch (limiterErr) {
+      console.error("Failed to destroy rate limiter:", limiterErr);
     }
 
     // Set schema version back to current (14) so migrations don't re-run and cause double seeding

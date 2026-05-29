@@ -134,7 +134,7 @@ export default function DocumentsTab({
   return (
     <div
       id="view-documents"
-      className="flex flex-col w-full h-full gap-4 animate-fade-up font-inter"
+      className="flex flex-col w-full h-auto gap-4 animate-fade-up font-inter"
     >
       <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
@@ -379,7 +379,7 @@ export default function DocumentsTab({
               )}
               <div 
                 key={`${docsForm.studentNo}-${docsForm.docType}`}
-                className="h-auto w-full overflow-hidden overflow-x-auto border border-gray-200 rounded-xl animate-fade-up dark:border-white/10"
+                className="w-full overflow-auto border border-gray-200 rounded-xl animate-fade-up dark:border-white/10"
               >
                 <table className="min-w-full text-sm table-fixed">
                   <thead className="border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">

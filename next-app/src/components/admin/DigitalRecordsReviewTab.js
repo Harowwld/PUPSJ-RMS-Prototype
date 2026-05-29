@@ -968,28 +968,39 @@ export default function DigitalRecordsReviewTab({
                                 >
                                   <i className="ph-bold ph-eye text-lg"></i>
                                 </Button>
+                                {r.approval_status === "Pending" ? (
+                                   <>
+                                     <Button
+                                       variant="outline"
+                                       size="icon"
+                                       onClick={() => handleApprove(r.id)}
+                                       className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-emerald-600 shadow-sm transition-all hover:border-emerald-600 hover:bg-emerald-50 dark:bg-white/5 dark:border-white/10 dark:text-emerald-400 dark:hover:bg-emerald-900/20 cursor-pointer"
+                                       title="Approve Record"
+                                     >
+                                       <i className="ph-bold ph-check text-lg"></i>
+                                     </Button>
 
-                                {r.approval_status === "Pending" && (
-                                  <>
-                                    <Button
-                                      variant="outline"
-                                      size="icon"
-                                      onClick={() => handleApprove(r.id)}
-                                      className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-emerald-600 shadow-sm transition-all hover:border-emerald-600 hover:bg-emerald-50 dark:bg-white/5 dark:border-white/10 dark:text-emerald-400 dark:hover:bg-emerald-900/20 cursor-pointer"
-                                    >
-                                      <i className="ph-bold ph-check text-lg"></i>
-                                    </Button>
-
-                                    <Button
-                                      variant="outline"
-                                      size="icon"
-                                      onClick={() => onDecline(r.id)}
-                                      className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10 cursor-pointer"
-                                    >
-                                      <i className="ph-bold ph-x text-lg"></i>
-                                    </Button>
-                                  </>
-                                )}
+                                     <Button
+                                       variant="outline"
+                                       size="icon"
+                                       onClick={() => onDecline(r.id)}
+                                       className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10 cursor-pointer"
+                                       title="Decline Record"
+                                     >
+                                       <i className="ph-bold ph-x text-lg"></i>
+                                     </Button>
+                                   </>
+                                 ) : (
+                                   <Button
+                                     variant="outline"
+                                     size="icon"
+                                     onClick={() => onSetStatus(r.id, "Pending", "Undo review action")}
+                                     className="h-9 w-9 rounded-xl border-gray-200 bg-white p-0 text-amber-600 shadow-sm transition-all hover:border-amber-600 hover:bg-amber-50 dark:bg-white/5 dark:border-white/10 dark:text-amber-500 dark:hover:bg-amber-900/20 cursor-pointer"
+                                     title="Revert to Pending"
+                                   >
+                                     <i className="ph-bold ph-arrow-counter-clockwise text-lg"></i>
+                                   </Button>
+                                 )}
                               </div>
                             </td>
                           </tr>
