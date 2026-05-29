@@ -280,7 +280,7 @@ After calling `GET /api/system/reset-db`, the system seeds a default admin:
 | **Staff ID** | `PUPREGISTRAR-001` |
 | **First Name** | Elias |
 | **Last Name** | Austria |
-| **Email** | `admin.eli@pup.local` |
+| **Email** | `admin.default@pup.local` |
 | **Role** | Admin |
 | **Section** | Administrative |
 | **Status** | Active |

@@ -106,7 +106,7 @@ export async function GET(req) {
       const role = "Admin";
       const section = "Administrative";
       const status = "Active";
-      const email = "admin.eli@pup.local";
+      const email = "admin.default@pup.local";
       const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
       const passwordHash = hashPasswordForStorage(defaultPassword).replace(/'/g, "''");
       const idEsc = id.replace(/'/g, "''");
@@ -159,7 +159,7 @@ export async function GET(req) {
     const defaultPasswordForMessage = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
     return NextResponse.json({
       ok: true,
-      message: `Database wiped and physical uploads cleared successfully. Please RESTART your Next.js server now. The default admin account is: admin.eli@pup.local / ${defaultPasswordForMessage}`
+      message: `Database wiped and physical uploads cleared successfully. Please RESTART your Next.js server now. The default admin account is: admin.default@pup.local / ${defaultPasswordForMessage}`
     });
   } catch (error) {
     return NextResponse.json({ ok: false, error: error.message }, { status: 500 });

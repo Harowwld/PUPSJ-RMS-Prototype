@@ -43,7 +43,7 @@ export async function populateSampleData({ force = false } = {}) {
   }
 
   // Ensure bootstrap admin exists (or skip if we're just seeding data)
-  const bootstrapAdmin = await dbGet("SELECT id FROM staff WHERE email = ?", ["admin.eli@pup.local"]);
+  const bootstrapAdmin = await dbGet("SELECT id FROM staff WHERE email = ?", ["admin.default@pup.local"]);
   if (!bootstrapAdmin) {
     console.warn("[seedRepo] No default admin found. Seeding may be incomplete if staff relationships are required.");
   }
@@ -234,8 +234,8 @@ export async function populateSampleData({ force = false } = {}) {
       "Diploma",
       "Pending",
       "Sample: alumni counter request",
-      "admin.eli@pup.local",
-      "admin.eli@pup.local",
+      "admin.default@pup.local",
+      "admin.default@pup.local",
     ],
   );
 

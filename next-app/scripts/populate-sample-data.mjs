@@ -60,12 +60,12 @@ async function main() {
   }
 
   const bootstrapAdmin = await dbGet("SELECT id FROM staff WHERE id = ? OR email = ?", [
-    "admin.eli@pup.local",
-    "admin.eli@pup.local",
+    "admin.default@pup.local",
+    "admin.default@pup.local",
   ]);
   if (!bootstrapAdmin) {
     throw new Error(
-      "[populate-sample-data] No default admin (admin.eli@pup.local). " +
+      "[populate-sample-data] No default admin (admin.default@pup.local). " +
         "Run `pnpm reset-db` with the app running, then restart the server, then run this script again.",
     );
   }
@@ -267,7 +267,7 @@ async function main() {
 
   console.log("[populate-sample-data] Done.");
   console.log(
-    "  Logins: admin.eli@pup.local / pupstaff   |   records.marcus@pup.local / pupstaff",
+    "  Logins: admin.default@pup.local / pupstaff   |   records.marcus@pup.local / pupstaff",
   );
   console.log("[populate-sample-data] Restart the Next.js server if it was running so it reloads the DB file.");
 }
