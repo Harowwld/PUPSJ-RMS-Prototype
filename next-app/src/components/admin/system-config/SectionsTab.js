@@ -280,8 +280,8 @@ export default function SectionsTab({
   }
 
   return (
-    <div className="animate-fade-up font-inter flex h-full w-full flex-col">
-      <Card className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl dark:border-white/10 dark:bg-card dark:shadow-none">
+    <div className="font-inter flex w-full flex-col gap-6">
+      <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
         <PageHeader
           icon="ph-list-numbers"
           title={
@@ -295,71 +295,98 @@ export default function SectionsTab({
             </div>
           }
           description="Manage academic cohorts, sections, and organizational blocks."
-          searchPlaceholder="Filter block name..."
-          searchLabel={
-            <div className="flex items-center justify-between w-full">
-              <span>Search Course Blocks</span>
-              <span className="text-[9px] font-black text-pup-maroon dark:text-primary/70 uppercase">
-                {filteredSectionsFull.length > 0 ? `${filteredSectionsFull.length.toLocaleString()} MATCHES` : "NO RESULTS"}
-              </span>
-            </div>
-          }
-          searchValue={localSearch}
-          onSearchChange={setLocalSearch}
-          filters={
-            <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
-              {programFilter}
-              <div className="flex h-full flex-col gap-1.5">
-                <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
-                  Status View
-                </label>
-                <div className="inline-flex h-10 items-center rounded-lg border border-gray-200 bg-gray-100 p-1 shadow-sm dark:border-white/10 dark:shadow-none dark:bg-muted">
-                  <button
-                    onClick={() => setShowArchived(false)}
-                    className={`flex h-full items-center gap-2 rounded-md px-3 text-[10px] font-black tracking-widest uppercase transition-all ${ 
-                      !showArchived 
-                        ? "bg-white text-pup-maroon shadow-sm ring-1 ring-black/5 dark:bg-card dark:text-primary" 
-                        : "text-gray-500 hover:text-gray-700 dark:text-zinc-500 dark:hover:text-zinc-200" 
-                    }`}
-                  >
+        />
+
+        <CardContent className="font-inter bg-white p-4 dark:bg-card/50 backdrop-blur-md border-t border-gray-100 dark:border-white/10">
+          <div className="flex shrink-0 select-none flex-wrap items-end justify-between gap-6">
+            <div className="flex w-full flex-col gap-1.5 sm:w-auto">
+              <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                Status View
+              </label>
+              <div className="flex w-full cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 backdrop-blur-sm sm:w-auto dark:border-white/10 dark:bg-muted/50">
+                <button
+                  type="button"
+                  onClick={() => setShowArchived(false)}
+                  className={`group flex h-11 flex-1 cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] sm:w-[200px] sm:flex-none ${
+                    !showArchived
+                      ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
+                      : "text-gray-500 ring-transparent hover:bg-white/55 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
+                  }`}
+                >
+                  <i
+                    className={`ph-bold ph-check ${!showArchived ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
+                  ></i>
+                  <span className="whitespace-nowrap tracking-wide">
                     ACTIVE
-                  </button>
-                  <button
-                    onClick={() => setShowArchived(true)}
-                    className={`flex h-full items-center gap-2 rounded-md px-3 text-[10px] font-black tracking-widest uppercase transition-all ${ 
-                      showArchived 
-                        ? "bg-amber-600 text-white shadow-sm ring-1 ring-black/5 dark:bg-card dark:text-amber-400" 
-                        : "text-gray-500 hover:text-gray-700 dark:text-zinc-500 dark:hover:text-zinc-200" 
-                    }`}
-                  >
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowArchived(true)}
+                  className={`group flex h-11 flex-1 cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] sm:w-[200px] sm:flex-none ${
+                    showArchived
+                      ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
+                      : "text-gray-500 ring-transparent hover:bg-white/55 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
+                  }`}
+                >
+                  <i
+                    className={`ph-bold ph-archive ${showArchived ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
+                  ></i>
+                  <span className="whitespace-nowrap tracking-wide">
                     ARCHIVED
-                  </button>
-                </div>
+                  </span>
+                </button>
               </div>
             </div>
-          }
-          actions={
-            <div className="flex items-center gap-2">
+
+            {programFilter}
+
+            <div className="flex flex-1 flex-col gap-1.5 min-w-[300px]">
+              <div className="flex items-center justify-between">
+                <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                  Search Course Blocks
+                </label>
+                <span className="text-[9px] font-black text-pup-maroon dark:text-primary/70 uppercase">
+                  {filteredSectionsFull.length > 0 ? `${filteredSectionsFull.length.toLocaleString()} MATCHES` : "NO RESULTS"}
+                </span>
+              </div>
+              <div className="relative group">
+                <i className="ph-bold ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500"></i>
+                <Input
+                  placeholder="Filter block name..."
+                  className="h-11 rounded-brand border border-gray-200 bg-white pl-11 pr-4 text-sm font-medium transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
+                  value={localSearch}
+                  onChange={(e) => setLocalSearch(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handleExportSections}
-                className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-white text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:border-white/10"
+                className="flex h-11 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-white text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:border-white/10"
               >
                 <i className="ph-bold ph-file-csv text-base"></i>
                 EXPORT
               </Button>
+
               <Button
                 onClick={() => setIsAddSectionOpen(true)}
                 disabled={showArchived}
-                className="flex h-10 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md px-5 font-bold text-white shadow-sm active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
+                className="flex h-11 items-center gap-2 rounded-brand btn-brand-red active:scale-95 disabled:opacity-50 transition-all dark:shadow-none uppercase text-[10px] font-black tracking-widest px-6"
               >
                 <i className="ph-bold ph-plus"></i>
-                <span className="hidden sm:inline uppercase text-[10px] font-black tracking-widest">Add Course Block</span>
+                ADD COURSE BLOCK
               </Button>
             </div>
-          }
-        />
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Main Table Container (No outer card background/shadow) */}
+      <div key={showArchived} className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card w-full animate-fade-up">
 
         {/* Active Filter Chips Row */}
         {(localSearch !== "" || selectedCourseFilter) && (
@@ -405,16 +432,7 @@ export default function SectionsTab({
           </div>
         )}
 
-        <CardContent className="flex flex-1 flex-col overflow-hidden bg-white dark:bg-card p-6">
-          <div key={showArchived} className="relative flex flex-1 flex-col overflow-hidden animate-fade-up">
-            {/* Archive Mode Overlay Pattern */}
-            {showArchived && (
-              <div className="pointer-events-none absolute inset-0 z-0 flex items-center justify-center opacity-[0.03]">
-                <i className="ph-fill ph-archive text-[320px]"></i>
-              </div>
-            )}
-
-            <div className="relative z-10 flex-1 overflow-hidden overflow-x-auto overflow-y-auto rounded-brand border border-gray-200 bg-white shadow-sm select-none dark:border-white/10 dark:bg-card">
+          <div className="relative z-10 flex-1 overflow-x-auto overflow-y-auto select-none">
               {loading ? (
                 <div className="space-y-4 p-8">
                   <Skeleton className="h-10 w-full rounded-lg dark:bg-muted" />
@@ -745,8 +763,6 @@ export default function SectionsTab({
                 </table>
               )}
             </div>
-          </div>
-        </CardContent>
 
         {filteredSectionsFull.length > 0 && (
           <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-2xl dark:border-white/10 dark:bg-card">
@@ -801,7 +817,7 @@ export default function SectionsTab({
             </div>
           </div>
         )}
-      </Card>
+      </div>
 
       <FloatingActionBar
         selectedCount={selectedCount}

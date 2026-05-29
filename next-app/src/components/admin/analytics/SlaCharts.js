@@ -81,11 +81,11 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
   return (
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       {/* Document Demand Chart */}
-      <div className="rounded-brand border border-gray-200 bg-white p-5 shadow-xs lg:col-span-2 dark:border-white/10 dark:bg-card">
+      <div className="rounded-brand border border-gray-200 bg-white p-5 shadow-xs lg:col-span-2 dark:border-white/10 dark:bg-card flex flex-col">
         <h3 className="mb-4 text-xs font-bold tracking-widest text-gray-500 uppercase dark:text-zinc-400">
           Document Demand (By Type)
         </h3>
-        <div className="h-72 w-full">
+        <div className="flex-1 min-h-[288px] w-full flex flex-col justify-center">
           {data?.topDocTypes?.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
@@ -123,25 +123,27 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-400 dark:text-zinc-505">
+            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
               <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                  <i className="ph-bold ph-chart-bar text-2xl text-pup-maroon dark:text-primary"></i>
-                </EmptyMedia>
-                <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
+                <div className="relative mb-6 mx-auto w-24 h-24">
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 rounded-full bg-gray-100/50 dark:bg-zinc-800/30"></div>
+                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                    <i className="ph-duotone ph-chart-bar text-5xl text-gray-300 dark:text-zinc-600"></i>
+                  </EmptyMedia>
+                </div>
+                <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
                   No requests found
                 </EmptyTitle>
-                <EmptyDescription className="mt-1 text-sm font-medium text-gray-600 dark:text-zinc-300">
-                  Select a different date range or wait for new requests
-                  to see the demand breakdown.
+                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                  Select a different date range or wait for new requests to see the demand breakdown.
                 </EmptyDescription>
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="mt-4 h-9 rounded-brand border-gray-300 font-bold text-xs dark:border-white/10"
+                  className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 uppercase tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                   onClick={() => onSwitchView?.('review')}
                 >
-                  <i className="ph-bold ph-arrow-right mr-1.5" aria-hidden /> CHECK INCOMING REQUESTS
+                  <i className="ph-bold ph-arrow-right text-base" aria-hidden /> CHECK INCOMING REQUESTS
                 </Button>
               </EmptyHeader>
             </Empty>
@@ -186,24 +188,27 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-400 dark:text-zinc-500">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                    <i className="ph-bold ph-chart-pie-slice text-2xl text-pup-maroon dark:text-primary"></i>
-                  </EmptyMedia>
-                  <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
+              <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center p-0">
+                <EmptyHeader className="flex flex-col items-center gap-0 max-w-[240px]">
+                  <div className="relative mb-3 mx-auto w-12 h-12">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-gray-100/50 dark:bg-zinc-800/30"></div>
+                    <EmptyMedia className="relative z-10 flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-md rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                      <i className="ph-duotone ph-chart-pie-slice text-2xl text-gray-300 dark:text-zinc-600"></i>
+                    </EmptyMedia>
+                  </div>
+                  <EmptyTitle className="text-sm font-black text-gray-900 dark:text-zinc-50">
                     No status data
                   </EmptyTitle>
-                  <EmptyDescription className="mt-1 text-sm font-medium text-gray-600 mb-4 dark:text-zinc-300">
-                    Status breakdown requires active request data.
+                  <EmptyDescription className="max-w-[200px] text-[10px] font-medium text-gray-500 dark:text-zinc-400 mt-0.5 leading-normal">
+                    Status distribution requires active request logs.
                   </EmptyDescription>
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="h-8 rounded-brand border-gray-300 font-bold text-[10px] dark:border-white/10"
+                    className="mt-3 flex h-8 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-[9px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 uppercase tracking-wider dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                     onClick={() => onSwitchView?.('review')}
                   >
-                    <i className="ph-bold ph-arrow-right mr-1.5" aria-hidden /> VIEW REQUESTS
+                    <i className="ph-bold ph-arrow-right text-xs" aria-hidden /> VIEW REQUESTS
                   </Button>
                 </EmptyHeader>
               </Empty>
@@ -264,24 +269,27 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                 </div>
               ))
             ) : (
-              <Empty className="flex flex-col items-center justify-center border-0 py-8 text-center text-gray-400 dark:text-zinc-500">
-                <EmptyHeader className="flex flex-col items-center gap-0">
-                  <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                    <i className="ph-bold ph-file-text text-2xl text-pup-maroon dark:text-primary"></i>
-                  </EmptyMedia>
-                  <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
+              <Empty className="flex flex-col items-center justify-center border-0 bg-transparent py-4 text-center p-0">
+                <EmptyHeader className="flex flex-col items-center gap-0 max-w-[240px]">
+                  <div className="relative mb-3 mx-auto w-12 h-12">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 rounded-full bg-gray-100/50 dark:bg-zinc-800/30"></div>
+                    <EmptyMedia className="relative z-10 flex h-12 w-12 items-center justify-center rounded-2xl border border-gray-100 bg-white shadow-md rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                      <i className="ph-duotone ph-file-text text-2xl text-gray-300 dark:text-zinc-600"></i>
+                    </EmptyMedia>
+                  </div>
+                  <EmptyTitle className="text-sm font-black text-gray-900 dark:text-zinc-50">
                     No requests recorded yet
                   </EmptyTitle>
-                  <EmptyDescription className="mt-1 text-sm font-medium text-gray-600 mb-4 dark:text-zinc-300">
-                    Data will show once requests are made.
+                  <EmptyDescription className="max-w-[200px] text-[10px] font-medium text-gray-500 dark:text-zinc-400 mt-0.5 leading-normal">
+                    Document breakdown will display once requests are processed.
                   </EmptyDescription>
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="h-8 rounded-brand border-gray-300 font-bold text-[10px] dark:border-white/10"
+                    className="mt-3 flex h-8 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-[9px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 uppercase tracking-wider dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                     onClick={() => onSwitchView?.('review')}
                   >
-                    <i className="ph-bold ph-arrow-right mr-1.5" aria-hidden /> GO TO REVIEWS
+                    <i className="ph-bold ph-arrow-right text-xs" aria-hidden /> GO TO REVIEWS
                   </Button>
                 </EmptyHeader>
               </Empty>

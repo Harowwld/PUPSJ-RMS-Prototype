@@ -537,7 +537,7 @@ export default function DigitalRecordsReviewTab({
                 size="sm"
                 onClick={handleExportCSV}
                 disabled={isLoading || isExporting}
-                className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:text-zinc-300 dark:shadow-none dark:bg-red-950/30 dark:border-white/10"
+                className="flex h-11 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-white text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:border-white/10"
               >
                 <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv"} text-base`}></i>
                 {isExporting ? "PREPARING..." : "EXPORT"}
@@ -633,7 +633,7 @@ export default function DigitalRecordsReviewTab({
         <div className="bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
           <div className="flex w-full flex-wrap items-end gap-5">
             {/* Search */}
-            <div className="min-w-[280px] flex-1">
+            <div className="flex-[2] min-w-[280px]">
               <div className="mb-1.5 flex items-center justify-between">
                 <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
                   Global Search
@@ -656,43 +656,42 @@ export default function DigitalRecordsReviewTab({
               </div>
             </div>
 
-            {/* Quick Select Filters */}
-            <div className="flex shrink-0 gap-3">
-              <div className="w-32">
-                <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
-                  Status
-                </label>
-                <Select
-                  value={statusFilter}
-                  onChange={(e) => { 
-                    setStatusFilter(e.target.value); 
-                    setCurrentPage(1);
-                  }}
-                >
-                  <option value="All">All</option>
-                  <option value="Pending">Pending</option>
-                  <option value="Approved">Approved</option>
-                  <option value="Declined">Declined</option>
-                </Select>
-              </div>
+            {/* Status Select */}
+            <div className="flex-1 min-w-[128px]">
+              <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                Status
+              </label>
+              <Select
+                value={statusFilter}
+                onChange={(e) => { 
+                  setStatusFilter(e.target.value); 
+                  setCurrentPage(1);
+                }}
+              >
+                <option value="All">All</option>
+                <option value="Pending">Pending</option>
+                <option value="Approved">Approved</option>
+                <option value="Declined">Declined</option>
+              </Select>
+            </div>
 
-              <div className="w-72">
-                <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
-                  Doc Type
-                </label>
-                <Select
-                  value={docTypeFilter}
-                  onChange={(e) => { 
-                    setDocTypeFilter(e.target.value); 
-                    setCurrentPage(1);
-                  }}
-                >
-                  <option value="All">All</option>
-                  {activeDocTypes.map((docTypeName) => (
-                    <option key={docTypeName} value={docTypeName}>{docTypeName}</option>
-                  ))}
-                </Select>
-              </div>
+            {/* Doc Type Select */}
+            <div className="flex-[1.5] min-w-[200px]">
+              <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                Doc Type
+              </label>
+              <Select
+                value={docTypeFilter}
+                onChange={(e) => { 
+                  setDocTypeFilter(e.target.value); 
+                  setCurrentPage(1);
+                }}
+              >
+                <option value="All">All</option>
+                {activeDocTypes.map((docTypeName) => (
+                  <option key={docTypeName} value={docTypeName}>{docTypeName}</option>
+                ))}
+              </Select>
             </div>
 
             {/* Date Range Picker Section */}

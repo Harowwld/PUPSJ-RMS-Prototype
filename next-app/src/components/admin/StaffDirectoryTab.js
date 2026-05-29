@@ -63,13 +63,14 @@ const StaffTableRow = React.memo(({
       )}
     >
       <td className="p-4 text-center">
-        <input
-          type="checkbox"
-          className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:border-white/10 dark:text-primary"
-          checked={isSelected}
-          onChange={() => {}} // Controlled by tr onClick
-          disabled={isCurrentUser}
-        />
+        {!isCurrentUser && (
+          <input
+            type="checkbox"
+            className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:border-white/10 dark:text-primary"
+            checked={isSelected}
+            onChange={() => {}} // Controlled by tr onClick
+          />
+        )}
       </td>
       <td className="p-4">
         <div className="flex items-center gap-3">

@@ -469,7 +469,7 @@ export default function DigitizationComplianceTab({
                   size="sm"
                   onClick={downloadCsv}
                   disabled={loading || !data || isExportingCsv}
-                  className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:text-zinc-300 dark:shadow-none dark:bg-red-950/30 dark:border-white/10"
+                  className="flex h-11 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-white text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:border-white/10"
                 >
                   <i className={cn("ph-bold text-base", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
                   {isExportingCsv ? "PREPARING..." : "EXPORT"}
@@ -556,8 +556,8 @@ export default function DigitizationComplianceTab({
           )}
 
           <div className="bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
-            <div className="flex w-full flex-wrap items-end justify-end gap-5">
-              <div className="w-48">
+            <div className="flex w-full flex-wrap items-end gap-5">
+              <div className="flex-1 min-w-[192px]">
                 <div className="mb-1.5 flex items-center gap-2">
                   <TooltipProvider delayDuration={200}>
                     <Tooltip>
@@ -591,7 +591,7 @@ export default function DigitizationComplianceTab({
                 </Select>
               </div>
 
-              <div className="w-auto min-w-[200px]">
+              <div className="flex-1 min-w-[200px]">
                 <div className="mb-1.5 flex items-center gap-2">
                   <TooltipProvider delayDuration={200}>
                     <Tooltip>
@@ -620,7 +620,7 @@ export default function DigitizationComplianceTab({
                   pressed={requireApproved}
                   onPressedChange={setRequireApproved}
                   className={cn(
-                    "h-11 px-4 gap-2 rounded-brand border border-gray-200 dark:border-white/10 font-bold text-[10px] uppercase tracking-widest transition-all select-none w-full sm:w-auto bg-white dark:bg-card",
+                    "h-11 px-4 gap-2 rounded-brand border border-gray-200 dark:border-white/10 font-bold text-[10px] uppercase tracking-widest transition-all select-none w-full bg-white dark:bg-card",
                     "hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-700 dark:text-zinc-200",
                     "data-[state=on]:bg-pup-maroon data-[state=on]:text-white data-[state=on]:border-pup-maroon dark:data-[state=on]:bg-red-500/10 dark:data-[state=on]:text-red-400 dark:data-[state=on]:border-red-400/20 shadow-sm"
                   )}
@@ -630,7 +630,7 @@ export default function DigitizationComplianceTab({
                 </Toggle>
               </div>
 
-              <div className="w-96">
+              <div className="flex-[2] min-w-[280px]">
                 <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
                   Academic Program
                 </label>
@@ -843,10 +843,10 @@ export default function DigitizationComplianceTab({
                 ) : (
                   <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
                     <EmptyHeader className="flex flex-col items-center gap-0">
-                      <div className="relative mb-6">
-                        <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                      <div className="relative mb-6 mx-auto w-24 h-24">
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 rounded-full bg-gray-100/50 dark:bg-zinc-800/30"></div>
                         <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                          <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-650"></i>
+                          <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
                         </EmptyMedia>
                       </div>
                       <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">No data found</EmptyTitle>

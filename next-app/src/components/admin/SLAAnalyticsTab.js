@@ -206,7 +206,7 @@ export default function SLAAnalyticsTab({
                 size="sm"
                 onClick={handleCsvExport}
                 disabled={loading || !data || isExportingCsv}
-                className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:text-zinc-300 dark:shadow-none dark:bg-red-950/30 dark:border-white/10"
+                className="flex h-11 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-white text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:border-white/10"
               >
                 <i className={cn("ph-bold text-base", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
                 {isExportingCsv ? "PREPARING..." : "EXPORT"}

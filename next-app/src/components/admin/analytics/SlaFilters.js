@@ -52,8 +52,8 @@ export default function SlaFilters({
 
   return (
     <div className="bg-white border-t border-b border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
-      <div className="flex flex-wrap items-end justify-end gap-5">
-        <div className="w-full max-w-[600px]">
+      <div className="flex flex-wrap items-end gap-5">
+        <div className="w-full">
           <div className="mb-1.5 flex items-center justify-between">
             <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
               Time Period

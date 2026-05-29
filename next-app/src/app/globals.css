@@ -193,12 +193,6 @@
     @apply font-sans;
   }
 
-/* Modern Card Styling Overrides for Dark Mode */
-.dark .rounded-brand {
-    background-image: linear-gradient(135deg, rgba(255,255,255,0.01) 0%, transparent 100%);
-    box-shadow: 0 8px 30px -10px rgba(0,0,0,0.5);
-}
-
 .dark .border-gray-200, 
 .dark .border-gray-100, 
 .dark .border-zinc-800 {
@@ -213,7 +207,11 @@
     background-color: var(--muted); /* Use the lighter gray muted shade */
 }
 
-/* Premium Scrollbar */
+/* Modern Card Styling Overrides for Dark Mode */
+.dark .rounded-brand:not([class*="bg-linear"]):not([class*="bg-gradient"]) {
+    background-image: linear-gradient(135deg, rgba(255,255,255,0.01) 0%, transparent 100%);
+    box-shadow: none;
+}
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -307,7 +305,7 @@
 }
 
 .dark .stats-card:hover {
-    box-shadow: 0 15px 35px -10px rgba(0, 0, 0, 0.6);
+    box-shadow: none;
     background-color: oklch(0.25 0 0);
 }
 
@@ -418,24 +416,27 @@
 
 /* Brand Buttons */
 .btn-brand-red {
-  background-image: linear-gradient(to bottom, var(--color-red-800), var(--color-pup-maroon));
-  @apply border-pup-darkMaroon text-white font-black uppercase transition-all active:scale-95 shadow-lg shadow-red-900/20 disabled:opacity-50;
-  border-width: 4px;
+  background-image: linear-gradient(to bottom, var(--color-red-800), var(--color-pup-maroon)) !important;
+  border-color: var(--color-pup-darkMaroon) !important;
+  color: #ffffff !important;
+  border-width: 4px !important;
+  border-style: solid !important;
+  @apply font-black uppercase transition-all active:scale-95 shadow-lg shadow-red-900/20 disabled:opacity-50;
 }
 
 .dark .btn-brand-red {
-  background-image: linear-gradient(to bottom, #a03030, #601010); /* Pastel red to light maroon */
-  border-color: #400000;
-  box-shadow: none;
+  background-image: linear-gradient(to bottom, #a03030, #601010) !important; /* Pastel red to light maroon */
+  border-color: #400000 !important;
+  box-shadow: none !important;
 }
 
 .btn-brand-red:hover {
-  background-image: linear-gradient(to bottom, var(--color-red-700), var(--color-red-900));
+  background-image: linear-gradient(to bottom, var(--color-red-700), var(--color-red-900)) !important;
   @apply shadow-xl;
 }
 
 .dark .btn-brand-red:hover {
-  background-image: linear-gradient(to bottom, #b04040, #702020);
+  background-image: linear-gradient(to bottom, #b04040, #702020) !important;
 }
 
 /* Global Table Header Dark Mode Styling */

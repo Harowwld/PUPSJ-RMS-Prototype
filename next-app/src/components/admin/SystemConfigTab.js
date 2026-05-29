@@ -1048,7 +1048,7 @@ export default function SystemConfigTab({
             </div>
           </div>
 
-          <Card className="relative mt-4 flex flex-col rounded-brand border border-gray-300 bg-white p-0 shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
+          <div className="relative mt-4 flex flex-col p-0 w-full gap-6">
             <TabsContent
               value="document-types"
               className="m-0 flex flex-col border-0 focus-visible:ring-0"
@@ -1183,7 +1183,7 @@ export default function SystemConfigTab({
                 courses={courses}
               />
             </TabsContent>
-          </Card>
+          </div>
         </Tabs>
 
         {/* MODALS */}

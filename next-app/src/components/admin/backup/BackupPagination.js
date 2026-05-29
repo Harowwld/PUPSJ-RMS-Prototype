@@ -22,7 +22,7 @@ export default function BackupPagination({
   handleItemsPerPageChange,
 }) {
   return (
-    <div className="-mx-5 mt-4 -mb-5 flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-brand dark:border-white/10 dark:bg-card">
+    <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-2xl dark:border-white/10 dark:bg-card">
       <div className="flex items-center gap-8 select-none cursor-default">
         <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
           <span>

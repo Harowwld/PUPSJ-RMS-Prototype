@@ -63,8 +63,8 @@ export default function BackupTable({
           "flex-1 overflow-hidden overflow-x-auto overflow-y-auto select-none min-h-[400px]"
         )}
       >
-        <table className="min-w-full text-sm">
-          <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm dark:border-white/10 dark:bg-muted">
+        <table className="min-w-full table-fixed text-sm">
+          <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm dark:border-white/20 dark:bg-muted">
             <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
               <th className="w-16 p-4 text-center">
                 <input
@@ -78,7 +78,7 @@ export default function BackupTable({
                   disabled={backups.length === 0}
                 />
               </th>
-              <th className="w-1/3 p-4">
+              <th className="p-4 min-w-[280px]">
                 <button
                   onClick={() => handleSort("filename")}
                   className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
@@ -91,7 +91,7 @@ export default function BackupTable({
                   />
                 </button>
               </th>
-              <th className="p-4 text-center">
+              <th className="w-32 p-4 text-center">
                 <button
                   onClick={() => handleSort("size_bytes")}
                   className="group mx-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
@@ -104,7 +104,7 @@ export default function BackupTable({
                   />
                 </button>
               </th>
-              <th className="p-4">
+              <th className="w-56 p-4">
                 <button
                   onClick={() => handleSort("created_at")}
                   className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
@@ -117,13 +117,13 @@ export default function BackupTable({
                   />
                 </button>
               </th>
-              <th className="p-4 text-center font-bold whitespace-nowrap">
+              <th className="w-56 p-4 text-center font-bold whitespace-nowrap">
                 STORAGE LOCATIONS
               </th>
-              <th className="p-4 text-right">ACTIONS</th>
+              <th className="w-32 p-4 text-right">ACTIONS</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+          <tbody className="divide-y divide-gray-100 dark:divide-white/20">
             {sortedAndPaginatedBackups.length === 0 ? (
               <tr className="border-0 hover:bg-transparent">
                 <td colSpan={6} className="border-0 p-0">
@@ -192,7 +192,12 @@ export default function BackupTable({
                     </td>
                     <td className="p-4">
                         <div className="flex items-center gap-3">
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-brand bg-gray-100 text-xs font-black text-gray-500 shadow-xs dark:bg-white/5 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm transition-all">
+                            <div className={cn(
+                                "flex h-9 w-9 shrink-0 items-center justify-center rounded-brand text-xs font-black transition-all shadow-xs",
+                                isSelected 
+                                  ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-primary shadow-sm" 
+                                  : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm"
+                            )}>
                                 <i className="ph-duotone ph-file-zip text-lg"></i>
                             </div>
                             <span className="text-xs font-bold text-gray-900 dark:text-zinc-50 max-w-[280px] truncate" title={b.filename}>
