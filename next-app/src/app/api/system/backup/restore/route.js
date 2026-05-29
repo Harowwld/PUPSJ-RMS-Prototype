@@ -12,7 +12,7 @@ import {
   getLocalDir,
   listBackups,
 } from "../../../../../lib/backupsRepo";
-import { dbRun, reloadDb, flushDb } from "../../../../../lib/sqlite";
+import { dbRun, reloadDb, flushDb, getDb } from "../../../../../lib/sqlite";
 import { writeAuditLog } from "../../../../../lib/auditLogRequest";
 import { requireAdmin, createAuthErrorResponse } from "../../../../../lib/authHelpers";
 import { requireTOTP, extractTOTPToken } from "../../../../../lib/totpMiddleware";
@@ -123,6 +123,22 @@ export async function POST(req) {
 
     // Give OS a moment to release file handles
     await new Promise(r => setTimeout(r, 500));
+
+    // Delete WAL and SHM files if they exist to prevent SQLite from recovering old WAL data
+    const walPath = `${currentDbPath}-wal`;
+    const shmPath = `${currentDbPath}-shm`;
+    try {
+      if (fs.existsSync(walPath)) {
+        fs.unlinkSync(walPath);
+        console.log("[RESTORE] Existing WAL file deleted.");
+      }
+      if (fs.existsSync(shmPath)) {
+        fs.unlinkSync(shmPath);
+        console.log("[RESTORE] Existing SHM file deleted.");
+      }
+    } catch (unlinkErr) {
+      console.warn("[RESTORE] Failed to clean up WAL/SHM files:", unlinkErr.message);
+    }
 
     // Replace DB with retry logic
     try {
