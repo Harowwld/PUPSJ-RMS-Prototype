@@ -106,6 +106,68 @@ function ensureIngestQueueTable() {
   }
 }
 
+function ensureScanSessionTables() {
+  if (!db) return;
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS scan_sessions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        staff_id TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'Pending',
+        pair_token_hash TEXT,
+        token_expires_at TEXT,
+        paired_at TEXT,
+        last_heartbeat_at TEXT,
+        phone_label TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+        FOREIGN KEY (staff_id) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE CASCADE
+      );
+      CREATE INDEX IF NOT EXISTS idx_scan_sessions_staff_created ON scan_sessions(staff_id, created_at DESC);
+      CREATE INDEX IF NOT EXISTS idx_scan_sessions_token_hash ON scan_sessions(pair_token_hash);
+
+      CREATE TABLE IF NOT EXISTS scan_session_incoming (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        session_id INTEGER NOT NULL,
+        client_ref TEXT,
+        storage_filename TEXT,
+        filename TEXT,
+        mime_type TEXT,
+        size_bytes INTEGER,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        FOREIGN KEY (session_id) REFERENCES scan_sessions(id) ON UPDATE CASCADE ON DELETE CASCADE
+      );
+      CREATE INDEX IF NOT EXISTS idx_scan_session_incoming_session_created ON scan_session_incoming(session_id, created_at DESC);
+    `);
+    try {
+      const ver = db.exec("SELECT value FROM settings WHERE key = 'schema_version'");
+      const v =
+        ver?.[0]?.values?.[0]?.[0] != null
+          ? parseInt(String(ver[0].values[0][0]), 10)
+          : 0;
+      if (!Number.isFinite(v) || v < 6) {
+        db.exec("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '6')");
+      }
+    } catch {
+      // ignore
+    }
+    try {
+      const pragma = db.exec("PRAGMA table_info(scan_session_incoming)");
+      const cols = new Set(
+        (pragma?.[0]?.values || []).map((r) => String(r?.[1] || ""))
+      );
+      if (!cols.has("storage_filename")) {
+        db.exec("ALTER TABLE scan_session_incoming ADD COLUMN storage_filename TEXT");
+      }
+    } catch {
+      // ignore
+    }
+    persistDb();
+  } catch (e) {
+    console.error("[DB] ensureScanSessionTables:", e);
+  }
+}
+
 function ensureStaffNotificationStateTable() {
   if (!db) return;
   try {
@@ -1165,6 +1227,7 @@ export async function getDb() {
       ensureRecoveryCodesTable();
       ensureSerialKeyColumn();
       ensureBirthCertificateDocType();
+      ensureScanSessionTables();
 
       initializing = null;
       return db;
