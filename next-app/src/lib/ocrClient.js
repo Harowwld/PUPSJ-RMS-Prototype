@@ -308,6 +308,76 @@ function detectName(lines, { engine = "unknown", nlp = null } = {}) {
     candidates.push({ name: cleaned, score, strategy });
   }
 
+  // ── Strategy A0-PSA-BirthCert-Scattered (98): Birth Certificate Scattered Column Matching ──
+  // Specifically designed to handle layout-bounded multi-column reads from NSO/PSA Birth Certificates.
+  // When OCR outputs first, middle, and last name columns in a split/scattered vertical sequence,
+  // we look for specific column/field headers and capture the values underneath.
+  {
+    let firstName = "";
+    let middleName = "";
+    let lastName = "";
+    
+    let firstIdx = -1;
+    let middleIdx = -1;
+    let lastIdx = -1;
+
+    for (let i = 0; i < lines.length; i++) {
+      const lineUpper = up(lines[i]).trim();
+      
+      // Stop scanning child's name once we hit parent sections (maiden name, father, informant, etc.)
+      if (/\b(?:MAIDEN|FATHER|MOTHER|PARENT|INFORMANT|ATTENDANT)\b/i.test(lineUpper)) {
+        break;
+      }
+      
+      const cleanLine = lineUpper.replace(/[^A-Z0-9]/g, "");
+
+      // Match First Name labels (e.g. First), (First), PIST, Fist, 1st)
+      if (firstIdx === -1 && /^(?:FIRST|GIVEN|PIST|FIST|PIRST|1ST|F1ST)$/i.test(cleanLine)) {
+        firstIdx = i;
+      }
+      // Match Middle Name labels (e.g. (Modie), (Middle), (Middie), (Miidie))
+      if (middleIdx === -1 && /^(?:MIDDLE|MIDDIE|MIIDIE|MODIE|NIDDIE|NIDDE)$/i.test(cleanLine)) {
+        middleIdx = i;
+      }
+      // Match Last Name labels (e.g. (Last), (LAST), LAST)
+      if (lastIdx === -1 && /^(?:LAST|SURNAME)$/i.test(cleanLine)) {
+        lastIdx = i;
+      }
+    }
+
+    const extractValue = (idx) => {
+      if (idx === -1) return "";
+      for (let j = 1; j <= 3; j++) {
+        if (idx + j >= lines.length) break;
+        const cand = stripTrailing(norm(lines[idx + j]));
+        if (!cand) continue;
+        
+        const candUpper = up(cand).trim();
+        // Skip label-like lines or lines that start/end with parentheses
+        if (candUpper.startsWith("(") && candUpper.endsWith(")")) continue;
+        if (/^(?:NAME|PIST|FIRST|GIVEN|MIDDLE|MIDDIE|MIIDIE|LAST|SURNAME|SEX|DATE|DOB|PLACE|MALE|FEMALE|SINGLE|TWIN|TRIPLET|2\.\s*SEX|3\.\s*DATE|4\.\s*PLACE|Sa\.)/i.test(candUpper)) continue;
+        
+        if (isPlausibleNameComponent(cand)) {
+          return cand;
+        }
+      }
+      return "";
+    };
+
+    if (firstIdx !== -1 || middleIdx !== -1 || lastIdx !== -1) {
+      firstName = extractValue(firstIdx);
+      middleName = extractValue(middleIdx);
+      lastName = extractValue(lastIdx);
+      
+      if (firstName && lastName) {
+        const combined = middleName
+          ? `${lastName}, ${firstName} ${middleName}`
+          : `${lastName}, ${firstName}`;
+        addCandidate(combined, 98, "A0-PSA-BirthCert-Scattered");
+      }
+    }
+  }
+
   // ── Strategy A0-PSA-Area (95): Area-Bounded Name Scan ──
   // This is a premium layout-bounded scanner. It isolates the lines between
   // the "1. NAME" header block and the "2. SEX" field, ensuring that any

@@ -645,13 +645,7 @@ function StaffPageContent() {
         ? String(derivedYear)
         : String(s.yearLevel ?? "").trim();
     const sec = String(s.section ?? "").trim();
-    let sectionPart = "";
-    if (yearStr && sec.startsWith(`${yearStr}-`)) {
-      sectionPart = sec.slice(yearStr.length + 1);
-    } else if (sec) {
-      const parts = sec.split("-");
-      sectionPart = parts.length > 1 ? parts.slice(1).join("-") : sec;
-    }
+    let sectionPart = sec;
     setNewRec((p) => ({
       ...p,
       studentNo: s.studentNo ?? "",
@@ -700,14 +694,14 @@ function StaffPageContent() {
     setOcrSuggestion(null);
 
     if (uploadMode === "pdf" && !skipOcr) {
-      // Run OCR only if the file is the very first page of the document
-      const isLeadPage =
-        uploadedFiles.length === 0
-          ? activeFile === incomingFiles[0]
-          : activeFile === uploadedFiles[0];
+      // In merge mode (multiple pages), only run OCR autofill for the very first page.
+      // We capture the queue length *before* the new file was enqueued (skipQueue path
+      // bypasses the setUploadedFiles call, so we can rely on the pre-call snapshot).
+      const wasQueueEmpty = uploadedFiles.length === 0;
+      const isLeadPage = wasQueueEmpty || skipQueue;
 
       if (!isLeadPage) {
-        console.log("[OCR] Skipping OCR: file is not the lead page.");
+        console.log("[OCR] Skipping OCR autofill: not the lead page (page 2+).");
         return;
       }
 
