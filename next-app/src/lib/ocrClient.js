@@ -126,6 +126,7 @@ const DOC_CLUSTERS = [
     id: "diploma",
     phrases: [
       "diploma",
+      "this certifies that",
       "has conferred",
       "is hereby conferred",
       "conferred upon",

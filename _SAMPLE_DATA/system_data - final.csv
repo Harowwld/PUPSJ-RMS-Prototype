@@ -9,6 +9,8 @@ DocumentType,Grade 12 Report Card,
 DocumentType,Certification of Graduation,
 DocumentType,Certificate of Good Moral Character,
 DocumentType,PSA Birth Certificate,
+DocumentType,Diploma,
+DocumentType,Form 137,
 Course,Bachelor of Science in Business Administration major in Financial Management,BSBA-FM
 Course,Bachelor of Science in Entrepreneurship,BSENT
 Course,Bachelor of Science in Information Technology,BSIT

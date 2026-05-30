@@ -695,12 +695,13 @@ export default function AccountActivityPage() {
       </main>
 
       <PdfPreviewDialog
-        open={pdfPreviewOpen}
-        setOpen={setPdfPreviewOpen}
+        pdfPreviewOpen={pdfPreviewOpen}
+        setPdfPreviewOpen={setPdfPreviewOpen}
         pdfBlobUrl={pdfBlobUrl}
-        onDownload={handleDownloadFromPreview}
+        setPdfPreviewUrl={setPdfPreviewUrl}
         previewFrameReady={previewFrameReady}
         setPreviewFrameReady={setPreviewFrameReady}
+        handleDownloadFromPreview={handleDownloadFromPreview}
         isFullscreenPreview={isFullscreenPreview}
         setIsFullscreenPreview={setIsFullscreenPreview}
       />
