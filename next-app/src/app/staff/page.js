@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTheme } from "next-themes";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Sidebar from "@/components/shared/Sidebar";
@@ -26,6 +27,7 @@ import { scanFileForSuggestion, warmupOcrWorker, splitNameComponents } from "@/l
 import { findMatchingDocument } from "@/lib/docAvailability";
 import { imageToPdf, needsConversion, mergeImagesToPdf } from "@/lib/imageToPdf";
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
+import { cn } from "@/lib/utils";
 
 
 function normalizeStudentRow(row) {
@@ -60,6 +62,7 @@ function getStudentNoYear(studentNo) {
 
 function StaffPageContent() {
   const router = useRouter();
+  const { theme, setTheme } = useTheme();
   const searchParams = useSearchParams();
   const coreDataLoadedRef = useRef(false);
   const docsLoadedRef = useRef(false);
@@ -279,6 +282,9 @@ function StaffPageContent() {
           return;
         }
         setAuthUser(json.data);
+        if (json.data?.preferences?.theme) {
+          setTheme(json.data.preferences.theme);
+        }
         // Render first, then hydrate data in background.
         setLoading(false);
         setTimeout(() => {
@@ -308,6 +314,27 @@ function StaffPageContent() {
       window.removeEventListener("focus", onVisible);
     };
   }, [fetchAllDocs, fetchNotificationsUnread]);
+
+  // Sync navigation layout preferences across tabs
+  useEffect(() => {
+    if (!authUser?.id) return;
+    const handleStorageChange = (e) => {
+      if (e.key === `pup_nav_layout_pref_${authUser.id}`) {
+        setAuthUser((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            preferences: {
+              ...(prev.preferences || {}),
+              navigation_layout: e.newValue,
+            },
+          };
+        });
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [authUser?.id]);
 
   useEffect(() => {
     // Load document list lazily when search view is visible.
@@ -1160,10 +1187,45 @@ function StaffPageContent() {
       <Tabs
         value={view}
         onValueChange={switchView}
-        orientation="vertical"
-        className="flex-1 flex flex-row overflow-hidden w-full gap-0 relative"
+        orientation={authUser?.preferences?.navigation_layout === "topbar" ? "horizontal" : "vertical"}
+        className={cn("flex-1 overflow-hidden w-full gap-0 relative flex", authUser?.preferences?.navigation_layout === "topbar" ? "flex-col" : "flex-row")}
       >
-        <Sidebar items={sidebarItems} activeKey={view} onSelect={switchView} />
+        {authUser?.preferences?.navigation_layout === "topbar" ? (
+          <div className="w-full bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-white/5 py-2.5 px-4 flex items-center justify-center gap-2 overflow-x-auto shadow-xs select-none shrink-0 scrollbar-none">
+            {sidebarItems.map((item, idx) => {
+              if (item.type === "header") {
+                return (
+                  <div key={`header-${idx}`} className="text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500 whitespace-nowrap ml-4 first:ml-0 border-l border-gray-200 dark:border-white/5 pl-4 first:border-0 first:pl-0">
+                    {item.label}
+                  </div>
+                );
+              }
+              const active = view === item.key;
+              return (
+                <button
+                  key={item.key}
+                  onClick={() => switchView(item.key)}
+                  className={cn(
+                    "px-3 py-1.5 text-xs font-bold rounded-xl flex items-center gap-2 transition-colors duration-300 whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 cursor-pointer shrink-0",
+                    active
+                      ? "bg-red-50 text-pup-maroon dark:bg-red-500/10 dark:text-primary shadow-xs"
+                      : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
+                  )}
+                >
+                  <i className={cn(item.iconClass, "text-sm")}></i>
+                  {item.label}
+                  {item.badge > 0 && (
+                    <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-extrabold text-white bg-pup-maroon dark:bg-red-500/20 dark:text-red-400">
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <Sidebar items={sidebarItems} activeKey={view} onSelect={switchView} />
+        )}
 
         <main className="flex-1 overflow-y-auto p-4 relative w-full min-w-0">
           <TabsContent value="search" className="h-full m-0 border-0 focus-visible:ring-0">

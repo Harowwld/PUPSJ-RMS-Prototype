@@ -5,6 +5,16 @@ import { useRouter } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
 import { isAdminRole, isStaffRole } from "@/lib/roleUtils"
 
+function applyAccessibility(highContrast) {
+  if (typeof window === "undefined") return;
+  
+  if (highContrast) {
+    document.documentElement.classList.add("high-contrast");
+  } else {
+    document.documentElement.classList.remove("high-contrast");
+  }
+}
+
 /**
  * Higher-order component that protects routes requiring authentication
  * @param {object} props
@@ -51,6 +61,21 @@ export function AuthGuard({ allowedRoles = [], children, redirectTo = "/" }) {
         }
 
         const user = json.data
+
+        // Setup accessibility scaling and high contrast preferences
+        if (user && user.id) {
+          const hcKey = `pup_high_contrast_${user.id}`;
+          
+          let highContrast = user.preferences?.high_contrast;
+          
+          if (localStorage.getItem(hcKey) !== null) {
+            highContrast = localStorage.getItem(hcKey) === "true";
+          } else {
+            localStorage.setItem(hcKey, String(!!highContrast));
+          }
+          
+          applyAccessibility(highContrast);
+        }
 
         // Check if user is active (case-insensitive for safety)
         if (String(user.status || "").toLowerCase() !== "active") {
@@ -106,6 +131,29 @@ export function AuthGuard({ allowedRoles = [], children, redirectTo = "/" }) {
 
     checkAuth()
   }, [router, allowedRoles, redirectTo])
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      // Re-read storage/preferences and apply
+      fetch("/api/auth/me")
+        .then(res => res.json())
+        .then(json => {
+          if (json?.ok && json?.data) {
+            const user = json.data;
+            const hcKey = `pup_high_contrast_${user.id}`;
+            
+            const highContrast = localStorage.getItem(hcKey) === "true";
+            
+            applyAccessibility(highContrast);
+          }
+        })
+        .catch(err => console.error(err));
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, []);
 
   // Show loading skeleton while checking authentication
   if (isLoading) {

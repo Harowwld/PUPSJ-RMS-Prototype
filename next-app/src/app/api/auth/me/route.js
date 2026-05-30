@@ -32,11 +32,21 @@ export async function GET(req) {
     const currentStatus = staff?.status || "Inactive";
     const hasSecurity = userId ? await hasAllSecurityAnswers(userId) : true;
 
+    const defaultPreferences = {
+      theme: "light",
+      navigation_layout: "sidebar",
+      skip_registration_confirmation: false,
+      high_contrast: false
+    };
+
     let preferences = {};
     try {
-      preferences = JSON.parse(staff?.preferences || "{}");
+      preferences = {
+        ...defaultPreferences,
+        ...JSON.parse(staff?.preferences || "{}")
+      };
     } catch (e) {
-      preferences = {};
+      preferences = defaultPreferences;
     }
 
     return addSecurityHeaders(NextResponse.json({

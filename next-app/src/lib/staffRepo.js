@@ -226,12 +226,16 @@ export async function setStaffStatus(id, status) {
   return await getStaffById(id);
 }
 
-/**
- * Updates a staff member's preferences.
- */
 export async function updateStaffPreferences(staffId, prefs) {
   const staff = await getStaffById(staffId);
   if (!staff) return null;
+
+  const defaultPreferences = {
+    theme: "light",
+    navigation_layout: "sidebar",
+    skip_registration_confirmation: false,
+    high_contrast: false
+  };
 
   let currentPrefs = {};
   try {
@@ -240,7 +244,7 @@ export async function updateStaffPreferences(staffId, prefs) {
     currentPrefs = {};
   }
 
-  const nextPrefs = { ...currentPrefs, ...prefs };
+  const nextPrefs = { ...defaultPreferences, ...currentPrefs, ...prefs };
   
   await dbRun(
     "UPDATE staff SET preferences = ?, updated_at = datetime('now') WHERE id = ?",

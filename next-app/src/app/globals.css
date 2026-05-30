@@ -433,3 +433,43 @@ button,
   text-transform: none !important;
   letter-spacing: normal !important;
 }
+
+/* Accessibility Options overrides */
+.high-contrast {
+  --background: #ffffff !important;
+  --foreground: #000000 !important;
+  --card: #ffffff !important;
+  --card-foreground: #000000 !important;
+  --popover: #ffffff !important;
+  --popover-foreground: #000000 !important;
+  --muted: #f4f4f5 !important;
+  --muted-foreground: #000000 !important;
+  --border: #000000 !important;
+  --input: #000000 !important;
+  --primary: #000000 !important;
+}
+
+.high-contrast.dark {
+  --background: #000000 !important;
+  --foreground: #ffffff !important;
+  --card: #000000 !important;
+  --card-foreground: #ffffff !important;
+  --popover: #000000 !important;
+  --popover-foreground: #ffffff !important;
+  --muted: #18181b !important;
+  --muted-foreground: #ffffff !important;
+  --border: #ffffff !important;
+  --input: #ffffff !important;
+  --primary: #ffffff !important;
+}
+
+.high-contrast * {
+  text-shadow: none !important;
+}
+
+.high-contrast button:focus-visible, 
+.high-contrast [role="button"]:focus-visible, 
+.high-contrast a:focus-visible {
+  outline: 2px solid currentColor !important;
+  outline-offset: 2px !important;
+}

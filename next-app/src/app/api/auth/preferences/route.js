@@ -26,11 +26,21 @@ export async function GET(req) {
     }
 
     const staff = await getStaffById(userId);
+    const defaultPreferences = {
+      theme: "light",
+      navigation_layout: "sidebar",
+      skip_registration_confirmation: false,
+      high_contrast: false
+    };
+
     let preferences = {};
     try {
-      preferences = JSON.parse(staff?.preferences || "{}");
+      preferences = {
+        ...defaultPreferences,
+        ...JSON.parse(staff?.preferences || "{}")
+      };
     } catch (e) {
-      preferences = {};
+      preferences = defaultPreferences;
     }
 
     return NextResponse.json({ ok: true, data: preferences });

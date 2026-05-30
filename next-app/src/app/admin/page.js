@@ -11,6 +11,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 
+import { useTheme } from "next-themes"
 import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import Sidebar from "@/components/shared/Sidebar"
@@ -46,6 +47,7 @@ import { cn } from "@/lib/utils"
 
 function AdminPageContent() {
   const router = useRouter()
+  const { theme, setTheme } = useTheme()
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
   const loadedViewsRef = useRef({
@@ -541,6 +543,9 @@ function AdminPageContent() {
           return
         }
         setAuthUser(json.data)
+        if (json.data?.preferences?.theme) {
+          setTheme(json.data.preferences.theme)
+        }
         // Render first, then hydrate data in background.
         setLoading(false)
         setTimeout(() => {
@@ -577,6 +582,27 @@ function AdminPageContent() {
       window.removeEventListener("focus", onVisible)
     }
   }, [fetchPendingReviewCount])
+
+  // Sync navigation layout preferences across tabs
+  useEffect(() => {
+    if (!authUser?.id) return;
+    const handleStorageChange = (e) => {
+      if (e.key === `pup_nav_layout_pref_${authUser.id}`) {
+        setAuthUser((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            preferences: {
+              ...(prev.preferences || {}),
+              navigation_layout: e.newValue,
+            },
+          };
+        });
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, [authUser?.id]);
 
   // Poll external drive status every 5s
   useEffect(() => {
@@ -1484,12 +1510,49 @@ function AdminPageContent() {
     <div className="font-inter flex h-screen flex-col overflow-hidden bg-gray-50 transition-colors duration-300 dark:bg-background">
       <Header authUser={authUser} onLogout={handleLogout} />
 
-      <div className="flex min-h-0 w-full flex-1">
-        <Sidebar
-          items={sidebarItems}
-          activeKey={sidebarActiveKey}
-          onSelect={switchView}
-        />
+      {authUser?.preferences?.navigation_layout === "topbar" && (
+        <div className="w-full bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-white/5 py-2.5 px-4 flex items-center justify-center gap-2 overflow-x-auto shadow-xs select-none shrink-0 scrollbar-none">
+          {sidebarItems.map((item, idx) => {
+            if (item.type === "header") {
+              return (
+                <div key={`header-${idx}`} className="text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500 whitespace-nowrap ml-4 first:ml-0 border-l border-gray-200 dark:border-white/5 pl-4 first:border-0 first:pl-0">
+                  {item.label}
+                </div>
+              );
+            }
+            const active = sidebarActiveKey === item.key;
+            return (
+              <button
+                key={item.key}
+                onClick={() => switchView(item.key)}
+                className={cn(
+                  "px-3 py-1.5 text-xs font-bold rounded-xl flex items-center gap-2 transition-colors duration-300 whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 cursor-pointer shrink-0",
+                  active
+                    ? "bg-red-50 text-pup-maroon dark:bg-red-500/10 dark:text-primary shadow-xs"
+                    : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
+                )}
+              >
+                <i className={cn(item.iconClass, "text-sm")}></i>
+                {item.label}
+                {item.badge > 0 && (
+                  <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-extrabold text-white bg-pup-maroon dark:bg-red-500/20 dark:text-red-400">
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      <div className={cn("flex min-h-0 w-full flex-1", authUser?.preferences?.navigation_layout === "topbar" ? "flex-col" : "flex-row")}>
+        {authUser?.preferences?.navigation_layout !== "topbar" && (
+          <Sidebar
+            items={sidebarItems}
+            activeKey={sidebarActiveKey}
+            onSelect={switchView}
+          />
+        )}
 
         <main className="relative w-full min-w-0 flex-1 overflow-y-auto p-4">
           {view === "directory" && (

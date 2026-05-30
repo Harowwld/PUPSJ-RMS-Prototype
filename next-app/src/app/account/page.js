@@ -115,6 +115,9 @@ function AccountPageContent() {
         setLname(user.lname || "");
         setUsername(user.email || user.username || "");
         setUserPreferences(user.preferences || {});
+        if (user.preferences?.theme) {
+          setTheme(user.preferences.theme);
+        }
 
         // If admin, fetch global system settings
         if (isAdminRole(user.role)) {
@@ -154,6 +157,10 @@ function AccountPageContent() {
     const oldPrefs = { ...userPreferences };
     setUserPreferences((prev) => ({ ...prev, [key]: newValue }));
     
+    if (key === "navigation_layout" && authUser?.id) {
+      localStorage.setItem(`pup_nav_layout_pref_${authUser.id}`, newValue);
+    }
+    
     try {
       const res = await fetch("/api/auth/preferences", {
         method: "POST",
@@ -165,6 +172,41 @@ function AccountPageContent() {
       toast.success("Preference Saved", {
         description: "Your settings have been successfully updated."
       });
+    } catch (error) {
+      setUserPreferences(oldPrefs);
+      toast.error("Save Failed", {
+        description: error.message || "Could not update your preference."
+      });
+    }
+  };
+
+  const handleAccessibilityToggle = async (key, val) => {
+    const oldPrefs = { ...userPreferences };
+    setUserPreferences((prev) => ({ ...prev, [key]: val }));
+    
+    if (authUser?.id) {
+      if (key === "high_contrast") {
+        localStorage.setItem(`pup_high_contrast_${authUser.id}`, String(val));
+        if (val) {
+          document.documentElement.classList.add("high-contrast");
+        } else {
+          document.documentElement.classList.remove("high-contrast");
+        }
+      }
+    }
+    
+    try {
+      const res = await fetch("/api/auth/preferences", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ preferences: { [key]: val } }),
+      });
+      const json = await res.json();
+      if (!json.ok) throw new Error(json.error);
+      toast.success("Preference Saved", {
+        description: "Your accessibility settings have been updated successfully."
+      });
+      window.dispatchEvent(new Event("storage"));
     } catch (error) {
       setUserPreferences(oldPrefs);
       toast.error("Save Failed", {
@@ -1334,6 +1376,111 @@ function AccountPageContent() {
                         <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-4 ml-1 dark:text-zinc-500">
                            <i className="ph-bold ph-info mr-1.5"></i>
                            Choose your preferred color theme for the interface.
+                        </p>
+                      </div>
+
+                      <Separator className="bg-gray-100 dark:bg-white/5" />
+
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between px-1">
+                          <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">
+                            Navigation Layout
+                          </label>
+                          <Badge variant="outline" className="h-5 px-2 bg-gray-50 border-gray-200 text-gray-500 font-black text-[9px] uppercase dark:bg-muted dark:border-white/10 dark:text-zinc-400">
+                             Layout
+                          </Badge>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                           {[
+                             { key: 'sidebar', label: 'Sidebar Navigation', icon: 'ph-sidebar-simple', desc: 'Traditional left-hand sidebar navigation layout.' },
+                             { key: 'topbar', label: 'Top Navbar', icon: 'ph-navigation-arrow', desc: 'Modern top navigation bar layout.' }
+                           ].map((item) => {
+                             const isActive = item.key === 'topbar' 
+                               ? userPreferences.navigation_layout === 'topbar' 
+                               : (!userPreferences.navigation_layout || userPreferences.navigation_layout === 'sidebar');
+                             return (
+                               <button
+                                  key={item.key}
+                                  onClick={() => handleUserPreferenceToggle("navigation_layout", item.key)}
+                                  className={cn(
+                                    "relative flex flex-col items-start gap-2 p-5 rounded-brand border-2 text-left transition-all group overflow-hidden cursor-pointer",
+                                    isActive
+                                      ? "border-pup-maroon bg-red-50/50 dark:border-pup-maroon dark:bg-pup-maroon/10" 
+                                      : "border-gray-100 bg-gray-50 hover:border-gray-200 dark:border-white/5 dark:bg-card dark:hover:border-white/10"
+                                  )}
+                               >
+                                  <div className="flex items-center gap-3 w-full">
+                                    <div className={cn(
+                                      "w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-all shadow-xs shrink-0",
+                                      isActive 
+                                        ? "bg-pup-maroon text-white dark:bg-pup-maroon" 
+                                        : "bg-white text-gray-400 dark:bg-zinc-800 dark:text-zinc-500 group-hover:text-gray-600 dark:group-hover:text-zinc-300"
+                                    )}>
+                                       <i className={cn("ph-bold", item.icon)}></i>
+                                    </div>
+                                    <div>
+                                      <span className={cn(
+                                        "text-xs font-black uppercase tracking-widest block",
+                                        isActive ? "text-pup-maroon dark:text-pup-maroon/90" : "text-gray-500 dark:text-zinc-400"
+                                      )}>
+                                         {item.label}
+                                      </span>
+                                      <p className="text-[10px] text-gray-400 dark:text-zinc-500 font-bold mt-0.5">
+                                         {item.desc}
+                                      </p>
+                                    </div>
+                                  </div>
+                                  {isActive && (
+                                     <div className="absolute top-2 right-2 w-5 h-5 bg-pup-maroon dark:bg-pup-maroon rounded-full flex items-center justify-center text-white text-[10px] animate-in zoom-in duration-300">
+                                        <i className="ph-bold ph-check"></i>
+                                     </div>
+                                  )}
+                               </button>
+                             );
+                           })}
+                        </div>
+                        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-4 ml-1 dark:text-zinc-500">
+                           <i className="ph-bold ph-info mr-1.5"></i>
+                           Choose between sidebar and top navbar navigation layouts.
+                        </p>
+                      </div>
+
+                      <Separator className="bg-gray-100 dark:bg-white/5" />
+
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between px-1">
+                          <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">
+                            Accessibility Options
+                          </label>
+                          <Badge variant="outline" className="h-5 px-2 bg-gray-50 border-gray-200 text-gray-500 font-black text-[9px] uppercase dark:bg-muted dark:border-white/10 dark:text-zinc-400">
+                             Visual
+                          </Badge>
+                        </div>
+
+                        <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 dark:bg-white/5 dark:border-white/10">
+                          <div className="flex items-center justify-between gap-6">
+                            <div className="space-y-1.5">
+                              <h4 className="text-sm font-black text-gray-900 dark:text-zinc-50 uppercase tracking-tight">High Contrast Mode</h4>
+                              <p className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 leading-relaxed max-w-md">
+                                Increases visibility by showing highly contrasting colors.
+                              </p>
+                            </div>
+                            <label className="relative inline-flex cursor-pointer items-center shrink-0">
+                              <input 
+                                type="checkbox" 
+                                className="sr-only peer"
+                                checked={!!userPreferences.high_contrast}
+                                onChange={(e) => handleAccessibilityToggle("high_contrast", e.target.checked)}
+                              />
+                              <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-pup-maroon peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:border-gray-600 dark:bg-zinc-700 dark:peer-focus:ring-red-800"></div>
+                            </label>
+                          </div>
+                        </div>
+
+                        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-4 ml-1 dark:text-zinc-500">
+                           <i className="ph-bold ph-info mr-1.5"></i>
+                           Customize your visual preferences for higher clarity.
                         </p>
                       </div>
 

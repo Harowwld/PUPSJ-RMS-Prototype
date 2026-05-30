@@ -214,8 +214,8 @@ export default function RecordsArchiveTab({
               {activeStudent && (
                 <div className="flex items-center gap-3">
                   <div className="flex flex-col text-right hidden sm:flex">
-                    <span className="text-[9px] font-black text-gray-400 dark:text-zinc-500 uppercase tracking-widest leading-none">Locating Target</span>
-                    <span className="text-xs font-bold text-pup-maroon dark:text-red-400 leading-tight mt-0.5">{activeStudent.name}</span>
+                    <span className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 uppercase tracking-widest leading-none mb-1">Locating Target</span>
+                    <span className="text-lg sm:text-xl font-black text-pup-maroon dark:text-red-400 uppercase leading-none tracking-tight">{activeStudent.name}</span>
                   </div>
                   <Button
                     type="button"
@@ -224,9 +224,9 @@ export default function RecordsArchiveTab({
                     onClick={() => {
                       onUnfocusStudent?.();
                     }}
-                    className="h-8 rounded-brand border-red-200 text-[10px] font-black tracking-widest text-red-600 shadow-xs hover:bg-red-50 dark:border-red-950 dark:hover:bg-red-950/30 cursor-pointer uppercase"
+                    className="h-10 px-4 rounded-brand border-red-200 text-xs font-black tracking-widest text-red-600 shadow-xs hover:bg-red-50 dark:border-red-950 dark:hover:bg-red-950/30 cursor-pointer uppercase"
                   >
-                    <i className="ph-bold ph-eye-slash mr-1.5 text-xs" />
+                    <i className="ph-bold ph-eye-slash mr-1.5 text-sm" />
                     Unfocus
                   </Button>
                 </div>
@@ -393,7 +393,7 @@ export default function RecordsArchiveTab({
           </div>
 
           {/* Global Search Card */}
-          <section className="flex flex-1 min-h-[580px] flex-col overflow-hidden rounded-2xl border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
+          <section className="flex flex-col overflow-hidden rounded-2xl border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
             <div className="space-y-3 border-b border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-card">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
@@ -429,12 +429,6 @@ export default function RecordsArchiveTab({
               {quickQuery.trim().length < 2 && !showArchived ? (
                 <Empty className="m-auto flex flex-col items-center border-0 py-6 text-center">
                   <EmptyHeader className="flex flex-col items-center gap-0">
-                    <div className="relative mb-6">
-                      <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                        <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
-                      </EmptyMedia>
-                    </div>
                     <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
                       Search Records
                     </EmptyTitle>
@@ -463,14 +457,6 @@ export default function RecordsArchiveTab({
               ) : filteredQuickResults.length === 0 ? (
                 <Empty className="m-auto flex flex-col items-center justify-center border-0 py-6 text-center text-gray-500 dark:text-zinc-400">
                   <EmptyHeader className="flex flex-col items-center gap-0">
-                    <div className="relative mb-6">
-                      <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                        <i
-                          className={`ph-duotone ${showArchived ? "ph-archive" : "ph-list-magnifying-glass"} text-5xl text-gray-300 dark:text-zinc-600`}
-                        ></i>
-                      </EmptyMedia>
-                    </div>
                     <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
                       {showArchived ? "No archived records" : "No records found"}
                     </EmptyTitle>
