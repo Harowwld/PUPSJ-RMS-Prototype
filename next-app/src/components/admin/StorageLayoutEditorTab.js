@@ -389,17 +389,25 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         finalY = clamp(rawY, 0, 1 - 0.20)
       }
 
-      updateRoom(activeRoom.id, (r) => ({
-        ...r,
-        door: {
-          ...r.door,
-          x: finalX,
-          y: finalY,
-          w: finalW,
-          h: finalH,
-          rotation: finalRot
-        }
-      }))
+      if (
+        activeRoom.door?.x !== finalX ||
+        activeRoom.door?.y !== finalY ||
+        activeRoom.door?.w !== finalW ||
+        activeRoom.door?.h !== finalH ||
+        activeRoom.door?.rotation !== finalRot
+      ) {
+        updateRoom(activeRoom.id, (r) => ({
+          ...r,
+          door: {
+            ...r.door,
+            x: finalX,
+            y: finalY,
+            w: finalW,
+            h: finalH,
+            rotation: finalRot
+          }
+        }))
+      }
     } else if (mode === "marquee") {
       setSelectionBox({
         x1: startX,
@@ -413,17 +421,22 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       initialPositions.forEach((pos) => {
         const nextX = snapValue(pos.x + dx, snapToGrid, 'x')
         const nextY = snapValue(pos.y + dy, snapToGrid, 'y')
-        updateCabinet(activeRoom.id, pos.id, (c) =>
-          clampToRoom({ ...c, rect: { ...c.rect, x: nextX, y: nextY } })
-        )
+        const currentCab = activeRoom.cabinets.find(c => c.id === pos.id)
+        if (currentCab && (currentCab.rect.x !== nextX || currentCab.rect.y !== nextY)) {
+          updateCabinet(activeRoom.id, pos.id, (c) =>
+            clampToRoom({ ...c, rect: { ...c.rect, x: nextX, y: nextY } })
+          )
+        }
       })
     } else if (mode === "resize" && selectedCabinet) {
       const dw = relX - selectedCabinet.rect.x
       const nw = snapValue(clamp(dw, MIN_SIZE, MAX_SIZE), snapToGrid, 'x')
       const nh = nw * CABINET_ASPECT_RATIO 
-      updateCabinet(activeRoom.id, selectedCabinet.id, (c) =>
-        clampToRoom({ ...c, rect: { ...c.rect, w: nw, h: nh } })
-      )
+      if (selectedCabinet.rect.w !== nw || selectedCabinet.rect.h !== nh) {
+        updateCabinet(activeRoom.id, selectedCabinet.id, (c) =>
+          clampToRoom({ ...c, rect: { ...c.rect, w: nw, h: nh } })
+        )
+      }
     }
   }, [activeRoom, selectedCabinet, snapToGrid, updateCabinet, updateRoom, CABINET_ASPECT_RATIO, MIN_SIZE, MAX_SIZE])
 
@@ -921,7 +934,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
 
         <div className="flex flex-col gap-1">
           <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">Add Tools</label>
-          <Button type="button" variant="outline" onClick={addCabinet} className="h-10 rounded-brand border border-gray-200 bg-white px-5 font-black text-[10px] tracking-widest text-gray-600 shadow-xs hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300" disabled={!activeRoom}><i className="ph-bold ph-plus-square mr-2 text-base" />NEW CABINET</Button>
+          <Button type="button" variant="outline" onClick={addCabinet} className="h-10 rounded-brand border border-gray-200 bg-white px-5 font-black text-[10px] tracking-widest text-gray-600 shadow-xs hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300" disabled={!activeRoom}><i className="ph-bold ph-plus-square mr-2 text-base" />New cabinet</Button>
         </div>
       </div>
 
@@ -944,29 +957,12 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
               className="h-8 w-full rounded-brand btn-brand-red text-[9px] font-black tracking-widest uppercase text-white shadow-sm active:scale-95 transition-all dark:shadow-none" 
               disabled={!activeRoom}
             >
-              USE TEMPLATE
+              Use template
             </Button>
           </div>
         </div>
 
-        <div className="flex flex-col gap-1">
-          <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">View Settings</label>
-          <div className="flex h-10 items-center gap-4 rounded-brand border border-gray-200 bg-white px-4 shadow-xs dark:border-white/10 dark:bg-card">
-            <div className="flex items-center gap-2">
-              <span className="text-[9px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">Grid</span>
-              <div role="button" tabIndex={0} onClick={() => setShowGrid(!showGrid)} className={cn("relative inline-flex h-4 w-8 items-center rounded-full transition-all duration-300", showGrid ? "bg-pup-maroon dark:bg-red-500/20 dark:ring-1 dark:ring-red-500/30" : "bg-gray-200 dark:bg-zinc-800")}>
-                <span className={cn("inline-block h-2.5 w-2.5 transform rounded-full transition-all duration-300 shadow-xs", showGrid ? "translate-x-4.5 bg-white dark:bg-red-400" : "translate-x-1 bg-white dark:bg-zinc-500")} />
-              </div>
-            </div>
-            <Separator orientation="vertical" className="h-3.5 bg-gray-100 dark:bg-muted" />
-            <div className="flex items-center gap-2">
-              <span className="text-[9px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">Snap</span>
-              <div role="button" tabIndex={0} onClick={() => setSnapToGrid(!snapToGrid)} className={cn("relative inline-flex h-4 w-8 items-center rounded-full transition-all duration-300", snapToGrid ? "bg-pup-maroon dark:bg-red-500/20 dark:ring-1 dark:ring-red-500/30" : "bg-gray-200 dark:bg-zinc-800")}>
-                <span className={cn("inline-block h-2.5 w-2.5 transform rounded-full transition-all duration-300 shadow-xs", snapToGrid ? "translate-x-4.5 bg-white dark:bg-red-400" : "translate-x-1 bg-white dark:bg-zinc-500")} />
-              </div>
-            </div>
-          </div>
-        </div>
+
       </div>
     </div>
   )
@@ -989,7 +985,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
                       className="flex h-11 items-center gap-2 btn-brand-red active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none"
                     >
                       <i className={`ph-bold ${saving ? "ph-spinner animate-spin" : "ph-floppy-disk"} text-lg`} />
-                      {saving ? "SAVING..." : "SAVE"}
+                      {saving ? "Saving..." : "Save"}
                     </Button>
                   </div>
                 </TooltipTrigger>
@@ -1054,12 +1050,12 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         {renderEditorContent()}
       </Card>
 
-      <FloatingActionBar selectedCount={selectedCabinetIds.size} onCancel={() => setSelectedCabinetIds(new Set())} actionLabel="DELETE SELECTED" actionIcon="ph-trash" onAction={() => setBulkConfirmOpen(true)} selectionStatus="Selected Cabinets" />
+      <FloatingActionBar selectedCount={selectedCabinetIds.size} onCancel={() => setSelectedCabinetIds(new Set())} actionLabel="Delete selected" actionIcon="ph-trash" onAction={() => setBulkConfirmOpen(true)} selectionStatus="Selected Cabinets" />
 
-      <ConfirmModal open={bulkConfirmOpen} onCancel={() => setBulkConfirmOpen(false)} title="Delete" message="Delete selected cabinets?" confirmLabel="DELETE" variant="danger" onConfirm={bulkDeleteCabinets} />
-      <ConfirmModal open={deleteRoomConfirmOpen} onCancel={() => setDeleteRoomConfirmOpen(false)} title="Delete Room" message="Delete this room?" confirmLabel="DELETE" variant="danger" onConfirm={() => { removeActiveRoom(); setDeleteRoomConfirmOpen(false); }} />
-      <ConfirmModal open={resetRoomConfirmOpen} onCancel={() => setResetRoomConfirmOpen(false)} title="Reset Room" message="Clear layout?" confirmLabel="RESET" variant="warning" onConfirm={() => { resetActiveRoomCabinets(); setResetRoomConfirmOpen(false); }} />
-      <ConfirmModal open={templateApplyConfirmOpen} onCancel={() => setTemplateApplyConfirmOpen(false)} title="Use Template" message="Apply template?" confirmLabel="USE" variant="warning" onConfirm={() => { applyTemplateToActiveRoom(); setTemplateApplyConfirmOpen(false); }} />
+      <ConfirmModal open={bulkConfirmOpen} onCancel={() => setBulkConfirmOpen(false)} title="Delete" message="Delete selected cabinets?" confirmLabel="Delete" variant="danger" onConfirm={bulkDeleteCabinets} />
+      <ConfirmModal open={deleteRoomConfirmOpen} onCancel={() => setDeleteRoomConfirmOpen(false)} title="Delete Room" message="Delete this room?" confirmLabel="Delete" variant="danger" onConfirm={() => { removeActiveRoom(); setDeleteRoomConfirmOpen(false); }} />
+      <ConfirmModal open={resetRoomConfirmOpen} onCancel={() => setResetRoomConfirmOpen(false)} title="Reset Room" message="Clear layout?" confirmLabel="Reset" variant="warning" onConfirm={() => { resetActiveRoomCabinets(); setResetRoomConfirmOpen(false); }} />
+      <ConfirmModal open={templateApplyConfirmOpen} onCancel={() => setTemplateApplyConfirmOpen(false)} title="Use Template" message="Apply template?" confirmLabel="Use" variant="warning" onConfirm={() => { applyTemplateToActiveRoom(); setTemplateApplyConfirmOpen(false); }} />
     </div>
   )
 }

@@ -558,7 +558,7 @@ export default function ScanUploadTab({
                 open={clearInboxOpen}
                 title="Clear scanner inbox?"
                 message={`This will remove ${hf.rows.length} queued item(s) from the scanner inbox. You can’t undo this.`}
-                confirmLabel="CLEAR INBOX"
+                confirmLabel="Clear inbox"
                 onConfirm={async () => {
                   await hf.clearInbox()
                   setClearInboxOpen(false)
@@ -572,7 +572,7 @@ export default function ScanUploadTab({
                 open={confirmDropOpen}
                 title="Replace loaded document?"
                 message="An existing document is already loaded in the preview area. Are you sure you want to replace it with the new file?"
-                confirmLabel="REPLACE FILE"
+                confirmLabel="Replace file"
                 onConfirm={() => {
                   if (pendingDroppedFile) {
                     handlePdfFileSelect(pendingDroppedFile)
@@ -625,7 +625,7 @@ export default function ScanUploadTab({
                 </div>
               </div>
 
-              <div className="flex flex-col gap-6 h-auto lg:flex-row lg:items-stretch">
+              <div className="flex flex-col gap-6 h-auto lg:flex-row lg:items-start">
                 <section
                   className={cn(
                     "relative flex h-auto min-h-[580px] flex-col transition-all duration-300",
@@ -668,10 +668,10 @@ export default function ScanUploadTab({
                               variant="outline"
                               size="sm"
                               onClick={() => handleCsvFileSelect(null)}
-                              className="h-9 shrink-0 rounded-brand border-gray-300 px-4 text-[10px] font-black tracking-widest text-gray-700 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:bg-zinc-800/30 dark:border-white/10"
+                              className="h-9 shrink-0 rounded-brand border-gray-300 px-4 text-[10px] font-black tracking-widest text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:bg-zinc-800/30 dark:border-white/10"
                             >
                               <i className="ph-bold ph-x-circle mr-1.5 text-xs" />
-                              CLEAR FILE
+                              Clear file
                             </Button>
                           )}
                         </div>
@@ -952,20 +952,9 @@ export default function ScanUploadTab({
                       </div>
                     </div>
                   ) : (
-                    <div
-                      className={`group relative flex h-full min-h-[580px] w-full flex-col overflow-hidden rounded-brand border border-dashed bg-gray-50 transition-all ${ fe.pdfFile ? "border-orange-400 bg-orange-50/30 ring-2 ring-orange-400" : "border-gray-300 hover:border-pup-maroon/40 hover:bg-red-50" } ${dropActive ? "bg-red-50 border-pup-maroon/40" : ""} dark:bg-white/5 dark:border-white/10`}
-                      onDragOver={(e) => {
-                        e.preventDefault()
-                        setDropActive(true)
-                      }}
-                      onDragLeave={(e) => {
-                        e.preventDefault()
-                        setDropActive(false)
-                      }}
-                      onDrop={onPdfDrop}
-                    >
+                    <div className="flex flex-col gap-4 w-full h-full">
                       {uploadMode === "pdf" && (
-                        <div className="z-10 shrink-0 border-b border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-card/95">
+                        <Card className="z-10 shrink-0 border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-card/95 shadow-sm rounded-xl">
                           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                             <div>
                               <div className="text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
@@ -994,7 +983,7 @@ export default function ScanUploadTab({
                                     setClearInboxOpen(true)
                                   }}
                                 >
-                                  CLEAR INBOX
+                                  Clear inbox
                                 </button>
                               )}
                               <RefreshButton 
@@ -1041,39 +1030,50 @@ export default function ScanUploadTab({
                               No files waiting. Dropping scanned documents into the hot folder will automatically queue them here.
                             </div>
                           )}
-                        </div>
+                        </Card>
                       )}
 
-                      {uploadedFile ? (
-                        <div
-                          className={`relative flex-1 flex flex-col overflow-hidden rounded-brand bg-white border transition-all duration-200 ${ dropActive ? "border-pup-maroon ring-2 ring-pup-maroon/20 bg-red-50" : "border-gray-200" } dark:bg-card dark:border-white/10`}
-                          onDragOver={(e) => {
-                            e.preventDefault()
-                            setDropActive(true)
-                          }}
-                          onDragLeave={(e) => {
-                            e.preventDefault()
-                            setDropActive(false)
-                          }}
-                          onDrop={onPdfDrop}
-                        >
-                          <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-4 py-2.5 dark:border-white/10 dark:bg-card">
-                        <div className="min-w-0">
-                          <div className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
-                            {hf.selectedRow ? "Scanner preview" : "Document preview"}
+                      <div
+                        className={`group relative flex flex-1 min-h-[480px] w-full flex-col overflow-hidden rounded-brand border border-dashed bg-gray-50 transition-all ${ fe.pdfFile ? "border-orange-400 bg-orange-50/30 ring-2 ring-orange-400" : "border-gray-300 hover:border-pup-maroon/40 hover:bg-red-50" } ${dropActive ? "bg-red-50 border-pup-maroon/40" : ""} dark:bg-white/5 dark:border-white/10`}
+                        onDragOver={(e) => {
+                          e.preventDefault()
+                          setDropActive(true)
+                        }}
+                        onDragLeave={(e) => {
+                          e.preventDefault()
+                          setDropActive(false)
+                        }}
+                        onDrop={onPdfDrop}
+                      >
+                        {uploadedFile ? (
+                          <div
+                            className={`relative flex-1 flex flex-col overflow-hidden rounded-brand bg-white border transition-all duration-200 ${ dropActive ? "border-pup-maroon ring-2 ring-pup-maroon/20 bg-red-50" : "border-gray-200" } dark:bg-card dark:border-white/10`}
+                            onDragOver={(e) => {
+                              e.preventDefault()
+                              setDropActive(true)
+                            }}
+                            onDragLeave={(e) => {
+                              e.preventDefault()
+                              setDropActive(false)
+                            }}
+                            onDrop={onPdfDrop}
+                          >
+                            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-4 py-2.5 dark:border-white/10 dark:bg-card">
+                          <div className="min-w-0">
+                            <div className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                              {hf.selectedRow ? "Scanner preview" : "Document preview"}
+                            </div>
+                            <div className="truncate text-sm font-bold text-gray-900 dark:text-zinc-50">
+                              {hf.selectedRow?.original_filename || uploadedFile?.name}
+                            </div>
                           </div>
-                          <div className="truncate text-sm font-bold text-gray-900 dark:text-zinc-50">
-                            {hf.selectedRow?.original_filename || uploadedFile?.name}
-                          </div>
-                        </div>
-                        <div className="flex shrink-0 items-center gap-2">
-                          {(hf.ocrLoading || ocrLoading) && (
-                            <span className="flex items-center gap-2 text-xs font-bold text-pup-maroon dark:text-primary">
-                              <div className="h-3 w-3 animate-spin rounded-full border border-gray-300 border-t-pup-maroon dark:border-white/10" />
-                              Scanning…
-                            </span>
-                          )}
-                          <div className="flex items-center gap-1.5 border-l border-gray-200 pl-2 dark:border-white/10">
+                          <div className="flex shrink-0 items-center gap-2">
+                            {(hf.ocrLoading || ocrLoading) && (
+                              <div className="flex items-center gap-1.5 px-2 py-1 rounded bg-amber-50 border border-amber-100 text-amber-700 font-bold text-[9px] uppercase tracking-wider animate-pulse dark:bg-amber-950/20 dark:border-amber-900/30">
+                                <i className="ph-bold ph-spinner animate-spin" />
+                                OCR Active
+                              </div>
+                            )}
                             <button
                               type="button"
                               className="flex h-8 w-8 items-center justify-center rounded-brand border border-gray-300 bg-white text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
@@ -1092,7 +1092,7 @@ export default function ScanUploadTab({
                             </button>
                             <button
                               type="button"
-                              className="ml-1 flex h-8 items-center gap-2 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-700 uppercase transition-all hover:border-red-600 hover:bg-red-50 hover:text-red-700 dark:bg-card dark:text-zinc-200 dark:border-white/10"
+                              className="ml-1 flex h-8 items-center gap-2 rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black tracking-widest text-gray-700 transition-all hover:border-red-600 hover:bg-red-50 hover:text-red-700 dark:bg-card dark:text-zinc-200 dark:border-white/10"
                               onClick={() => {
                                 if (hf.selectedRow) {
                                   hf.clearIngestSelection()
@@ -1105,216 +1105,216 @@ export default function ScanUploadTab({
                             </button>
                           </div>
                         </div>
-                      </div>
-                      <div className="min-h-0 flex-1 flex overflow-hidden bg-gray-100 relative dark:bg-muted">
-                        {uploadedFiles && uploadedFiles.length > 1 && !hf.selectedRow && (
-                          <div className="w-1/3 min-w-[200px] max-w-[280px] border-r border-gray-200 bg-white/95 backdrop-blur-md flex flex-col min-h-0 overflow-y-auto p-4 gap-3 dark:border-white/10 dark:bg-card/95 shrink-0 z-10">
-                            <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-white/5">
-                              <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
-                                Scan Pages ({uploadedFiles.length})
-                              </span>
-                              <span className="text-[9px] font-bold text-pup-maroon dark:text-primary uppercase bg-red-50 dark:bg-red-950/30 px-1.5 py-0.5 rounded-full">
-                                COMBINE PAGES
-                              </span>
-                            </div>
-                            <div className="flex-1 space-y-1.5 overflow-y-auto pr-1">
-                              {uploadedFiles.map((file, idx) => {
-                                const isSelected = selectedQueuedFileIndex === idx;
-                                return (
-                                  <div
-                                    key={idx}
-                                    onClick={() => {
-                                      setSelectedQueuedFileIndex(idx);
-                                      onFileSelect(file, true, undefined, true);
-                                    }}
-                                    className={`group flex flex-col gap-1 rounded-brand border p-3 text-left cursor-pointer transition-all ${ isSelected ? "border-pup-maroon bg-red-50/40 dark:border-primary dark:bg-zinc-800" : "border-transparent bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10" }`}
-                                  >
-                                    <div className="flex items-center justify-between gap-1.5">
-                                      <span className="truncate text-xs font-black text-gray-900 dark:text-zinc-50">
-                                        Page {idx + 1}
-                                      </span>
-                                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <button
-                                          type="button"
-                                          disabled={idx === 0}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            onReorderQueuedFiles(idx, -1);
-                                          }}
-                                          className="p-0.5 text-gray-400 hover:text-gray-900 disabled:opacity-30 dark:hover:text-zinc-200"
-                                          title="Move Up"
-                                        >
-                                          <i className="ph-bold ph-caret-up text-xs" />
-                                        </button>
-                                        <button
-                                          type="button"
-                                          disabled={idx === uploadedFiles.length - 1}
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            onReorderQueuedFiles(idx, 1);
-                                          }}
-                                          className="p-0.5 text-gray-400 hover:text-gray-900 disabled:opacity-30 dark:hover:text-zinc-200"
-                                          title="Move Down"
-                                        >
-                                          <i className="ph-bold ph-caret-down text-xs" />
-                                        </button>
-                                        <button
-                                          type="button"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            onRemoveQueuedFile(idx);
-                                          }}
-                                          className="p-0.5 text-red-500 hover:text-red-700"
-                                          title="Remove Page"
-                                        >
-                                          <i className="ph-bold ph-trash text-xs" />
-                                        </button>
+                        <div className="min-h-0 flex-1 flex overflow-hidden bg-gray-100 relative dark:bg-muted">
+                          {uploadedFiles && uploadedFiles.length > 1 && !hf.selectedRow && (
+                            <div className="w-1/3 min-w-[200px] max-w-[280px] border-r border-gray-200 bg-white/95 backdrop-blur-md flex flex-col min-h-0 overflow-y-auto p-4 gap-3 dark:border-white/10 dark:bg-card/95 shrink-0 z-10">
+                              <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-white/5">
+                                <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                                  Scan Pages ({uploadedFiles.length})
+                                </span>
+                                <span className="text-[9px] font-bold text-pup-maroon dark:text-primary uppercase bg-red-50 dark:bg-red-950/30 px-1.5 py-0.5 rounded-full">
+                                  COMBINE PAGES
+                                </span>
+                              </div>
+                              <div className="flex-1 space-y-1.5 overflow-y-auto pr-1">
+                                {uploadedFiles.map((file, idx) => {
+                                  const isSelected = selectedQueuedFileIndex === idx;
+                                  return (
+                                    <div
+                                      key={idx}
+                                      onClick={() => {
+                                        setSelectedQueuedFileIndex(idx);
+                                        onFileSelect(file, true, undefined, true);
+                                      }}
+                                      className={`group flex flex-col gap-1 rounded-brand border p-3 text-left cursor-pointer transition-all ${ isSelected ? "border-pup-maroon bg-red-50/40 dark:border-primary dark:bg-zinc-800" : "border-transparent bg-gray-50 hover:bg-gray-100 dark:bg-white/5 dark:hover:bg-white/10" }`}
+                                    >
+                                      <div className="flex items-center justify-between gap-1.5">
+                                        <span className="truncate text-xs font-black text-gray-900 dark:text-zinc-50">
+                                          Page {idx + 1}
+                                        </span>
+                                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                          <button
+                                            type="button"
+                                            disabled={idx === 0}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              onReorderQueuedFiles(idx, -1);
+                                            }}
+                                            className="p-0.5 text-gray-400 hover:text-gray-900 disabled:opacity-30 dark:hover:text-zinc-200"
+                                            title="Move Up"
+                                          >
+                                            <i className="ph-bold ph-caret-up text-xs" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            disabled={idx === uploadedFiles.length - 1}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              onReorderQueuedFiles(idx, 1);
+                                            }}
+                                            className="p-0.5 text-gray-400 hover:text-gray-900 disabled:opacity-30 dark:hover:text-zinc-200"
+                                            title="Move Down"
+                                          >
+                                            <i className="ph-bold ph-caret-down text-xs" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              onRemoveQueuedFile(idx);
+                                            }}
+                                            className="p-0.5 text-red-500 hover:text-red-700"
+                                            title="Remove Page"
+                                          >
+                                            <i className="ph-bold ph-trash text-xs" />
+                                          </button>
+                                        </div>
                                       </div>
+                                      <span className="truncate text-[10px] text-gray-500 dark:text-zinc-400" title={file.name}>
+                                        {file.name}
+                                      </span>
                                     </div>
-                                    <span className="truncate text-[10px] text-gray-500 dark:text-zinc-400" title={file.name}>
-                                      {file.name}
-                                    </span>
-                                  </div>
-                                );
-                              })}
+                                  );
+                                })}
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="mt-auto flex h-10 items-center justify-center gap-1.5 rounded-brand border border-dashed border-gray-300 bg-white text-[10px] font-black tracking-widest text-gray-600 uppercase transition-all hover:bg-gray-50 dark:bg-card dark:border-white/10 dark:text-zinc-300"
+                              >
+                                <i className="ph-bold ph-plus text-xs" /> Add Page
+                              </button>
                             </div>
-                            <button
-                              type="button"
-                              onClick={() => fileInputRef.current?.click()}
-                              className="mt-auto flex h-10 items-center justify-center gap-1.5 rounded-brand border border-dashed border-gray-300 bg-white text-[10px] font-black tracking-widest text-gray-600 uppercase transition-all hover:bg-gray-50 dark:bg-card dark:border-white/10 dark:text-zinc-300"
-                            >
-                              <i className="ph-bold ph-plus text-xs" /> Add Page
-                            </button>
-                          </div>
-                        )}
+                          )}
 
-                        <div className="flex-1 relative flex h-full items-center justify-center p-4">
-                          {(() => {
-                            const url = hf.selectedRow ? hf.previewUrl : manualPreviewUrl
-                            const mime = hf.selectedRow ? hf.previewMime : uploadedFile?.type
-                            const isImg = String(mime || "").startsWith("image/")
+                          <div className="flex-1 relative flex h-full items-center justify-center p-4">
+                            {(() => {
+                              const url = hf.selectedRow ? hf.previewUrl : manualPreviewUrl
+                              const mime = hf.selectedRow ? hf.previewMime : uploadedFile?.type
+                              const isImg = String(mime || "").startsWith("image/")
 
-                            if (isImg || pdfPreviewDataUrl) {
+                              if (isImg || pdfPreviewDataUrl) {
+                                return (
+                                  <img
+                                    src={isImg ? url : pdfPreviewDataUrl}
+                                    alt="Preview"
+                                    className="max-h-full max-w-full rounded-md object-contain shadow-2xl transition-transform duration-300"
+                                    draggable="false"
+                                    style={{ transform: `rotate(${rotation}deg)` }}
+                                  />
+                                )
+                              }
+
+                            if (pdfRendering) {
                               return (
-                                <img
-                                  src={isImg ? url : pdfPreviewDataUrl}
-                                  alt="Preview"
-                                  className="max-h-full max-w-full rounded-md object-contain shadow-2xl transition-transform duration-300"
-                                  draggable="false"
-                                  style={{ transform: `rotate(${rotation}deg)` }}
-                                />
+                                <div className="flex h-full w-full flex-col items-center justify-center bg-gray-100 p-8 dark:bg-muted">
+                                  <div className="h-10 w-10 animate-spin rounded-full border border-gray-300 border-t-pup-maroon mb-3 dark:border-white/10" />
+                                  <div className="text-xs font-bold text-gray-500 uppercase tracking-widest animate-pulse dark:text-zinc-400">
+                                    Loading Preview…
+                                  </div>
+                                </div>
                               )
                             }
 
-                          if (pdfRendering) {
                             return (
-                              <div className="flex h-full w-full flex-col items-center justify-center bg-gray-100 p-8 dark:bg-muted">
-                                <div className="h-10 w-10 animate-spin rounded-full border border-gray-300 border-t-pup-maroon mb-3 dark:border-white/10" />
-                                <div className="text-xs font-bold text-gray-500 uppercase tracking-widest animate-pulse dark:text-zinc-400">
-                                  Loading Preview…
-                                </div>
+                              <div className="flex h-full w-full items-center justify-center bg-gray-100 p-8 text-xs font-bold text-gray-400 dark:text-zinc-500 dark:bg-muted">
+                                PREVIEW NOT AVAILABLE
                               </div>
                             )
-                          }
+                          })()}
+                          </div>
 
-                          return (
-                            <div className="flex h-full w-full items-center justify-center bg-gray-100 p-8 text-xs font-bold text-gray-400 dark:text-zinc-500 dark:bg-muted">
-                              PREVIEW NOT AVAILABLE
+                          {windowDragActive && (
+                            <div
+                              className="absolute inset-0 z-30 flex items-center justify-center bg-pup-maroon backdrop-blur-md border border-pup-maroon/20 rounded-brand animate-fade-up dark:bg-red-600/[0.04]"
+                              onDragOver={(e) => {
+                                e.preventDefault()
+                                setDropActive(true)
+                              }}
+                              onDragLeave={(e) => {
+                                e.preventDefault()
+                                setDropActive(false)
+                              }}
+                              onDrop={(e) => {
+                                setWindowDragActive(false)
+                                setDropActive(false)
+                                onPdfDrop(e)
+                              }}
+                            >
+                              <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-gray-200 shadow-2xl max-w-xs text-center pointer-events-none animate-scale-up dark:bg-card/95 dark:border-white/10">
+                                <div className="w-14 h-14 rounded-full bg-red-50 border border-red-100 flex items-center justify-center mb-3 dark:bg-red-950/30">
+                                  <i className="ph-duotone ph-file-arrow-up text-2xl text-pup-maroon dark:text-primary animate-bounce dark:text-primary"></i>
+                                </div>
+                                <p className="text-sm font-bold text-gray-900 leading-tight dark:text-zinc-50">
+                                  Drop file here to replace preview
+                                </p>
+                                <p className="text-[11px] font-bold text-pup-maroon dark:text-primary mt-1.5 uppercase tracking-wider dark:text-primary">
+                                  Requires Confirmation
+                                </p>
+                              </div>
                             </div>
-                          )
-                        })()}
+                          )}
                         </div>
-
-                        {windowDragActive && (
+                        </div>
+                        ) : (
                           <div
-                            className="absolute inset-0 z-30 flex items-center justify-center bg-pup-maroon backdrop-blur-md border border-pup-maroon/20 rounded-brand animate-fade-up dark:bg-red-600/[0.04]"
-                            onDragOver={(e) => {
-                              e.preventDefault()
-                              setDropActive(true)
-                            }}
-                            onDragLeave={(e) => {
-                              e.preventDefault()
-                              setDropActive(false)
-                            }}
-                            onDrop={(e) => {
-                              setWindowDragActive(false)
-                              setDropActive(false)
-                              onPdfDrop(e)
+                            className="relative flex min-h-[500px] flex-1 cursor-pointer flex-col items-center justify-center p-6"
+                            onClick={() => {
+                              if (fileInputRef.current) fileInputRef.current.click()
                             }}
                           >
-                            <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-gray-200 shadow-2xl max-w-xs text-center pointer-events-none animate-scale-up dark:bg-card/95 dark:border-white/10">
-                              <div className="w-14 h-14 rounded-full bg-red-50 border border-red-100 flex items-center justify-center mb-3 dark:bg-red-950/30">
-                                <i className="ph-duotone ph-file-arrow-up text-2xl text-pup-maroon dark:text-primary animate-bounce dark:text-primary"></i>
-                              </div>
-                              <p className="text-sm font-bold text-gray-900 leading-tight dark:text-zinc-50">
-                                Drop file here to replace preview
-                              </p>
-                              <p className="text-[11px] font-bold text-pup-maroon dark:text-primary mt-1.5 uppercase tracking-wider dark:text-primary">
-                                Requires Confirmation
-                              </p>
+                            <Empty className="pointer-events-none flex flex-col items-center justify-center border-0 bg-transparent text-center">
+                              <EmptyHeader className="flex flex-col items-center gap-0">
+                                <div className="relative mb-6">
+                                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 transition-transform group-hover:scale-105 dark:border-white/10 dark:bg-card dark:shadow-none">
+                                    <i className="ph-duotone ph-file-arrow-up text-5xl text-gray-300 dark:text-zinc-600"></i>
+                                  </EmptyMedia>
+                                </div>
+                                <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
+                                  Drop Document or Image here
+                                </EmptyTitle>
+                                <EmptyDescription className="mt-2 max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                                  or click to browse local files (PDF, JPG, PNG)
+                                </EmptyDescription>
+                                {hf.rows.length > 0 ? (
+                                  <EmptyDescription className="mx-auto mt-4 max-w-xs text-xs font-medium text-gray-500 dark:text-zinc-400">
+                                    This area still accepts manual drops and clicks even
+                                    while the scanner inbox is shown above.
+                                  </EmptyDescription>
+                                ) : null}
+                              </EmptyHeader>
+                            </Empty>
+
+                            <div className="mt-4 flex flex-col items-center gap-1.5 select-none" onClick={(e) => e.stopPropagation()}>
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={handlePasteButtonClick}
+                                className="flex items-center gap-2 h-9 rounded-brand border-gray-300 bg-white font-bold hover:bg-gray-100 dark:bg-card dark:hover:bg-zinc-800 dark:border-white/10"
+                              >
+                                <i className="ph-bold ph-clipboard-text text-sm"></i>
+                                Paste from clipboard
+                              </Button>
+                              <span className="text-[10px] text-gray-400 font-medium dark:text-zinc-500">
+                                Or press Ctrl+V / Cmd+V anywhere on this page
+                              </span>
                             </div>
+
+
+
                           </div>
                         )}
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          className="hidden"
+                          accept=".pdf,image/*"
+                          multiple
+                          onChange={(e) => handlePdfFileSelect(e.target.files)}
+                        />
                       </div>
-                      </div>
-                      ) : (
-                        <div
-                          className="relative flex min-h-[500px] flex-1 cursor-pointer flex-col items-center justify-center p-6"
-                          onClick={() => {
-                            if (fileInputRef.current) fileInputRef.current.click()
-                          }}
-                        >
-                          <Empty className="pointer-events-none flex flex-col items-center justify-center border-0 bg-transparent text-center">
-                            <EmptyHeader className="flex flex-col items-center gap-0">
-                              <div className="relative mb-6">
-                                <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 transition-transform group-hover:scale-105 dark:border-white/10 dark:bg-card dark:shadow-none">
-                                  <i className="ph-duotone ph-file-arrow-up text-5xl text-gray-300 dark:text-zinc-600"></i>
-                                </EmptyMedia>
-                              </div>
-                              <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
-                                Drop Document or Image here
-                              </EmptyTitle>
-                              <EmptyDescription className="mt-2 max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                                or click to browse local files (PDF, JPG, PNG)
-                              </EmptyDescription>
-                              {hf.rows.length > 0 ? (
-                                <EmptyDescription className="mx-auto mt-4 max-w-xs text-xs font-medium text-gray-500 dark:text-zinc-400">
-                                  This area still accepts manual drops and clicks even
-                                  while the scanner inbox is shown above.
-                                </EmptyDescription>
-                              ) : null}
-                            </EmptyHeader>
-                          </Empty>
-
-                          <div className="mt-4 flex flex-col items-center gap-1.5 select-none" onClick={(e) => e.stopPropagation()}>
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={handlePasteButtonClick}
-                              className="flex items-center gap-2 h-9 rounded-brand border-gray-300 bg-white font-bold hover:bg-gray-100 dark:bg-card dark:hover:bg-zinc-800 dark:border-white/10"
-                            >
-                              <i className="ph-bold ph-clipboard-text text-sm"></i>
-                              PASTE FROM CLIPBOARD
-                            </Button>
-                            <span className="text-[10px] text-gray-400 font-medium dark:text-zinc-500">
-                              Or press Ctrl+V / Cmd+V anywhere on this page
-                            </span>
-                          </div>
-
-
-
-                        </div>
-                      )}
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        className="hidden"
-                        accept=".pdf,image/*"
-                        multiple
-                        onChange={(e) => handlePdfFileSelect(e.target.files)}
-                      />
                     </div>
                   )}
                   {uploadMode === "pdf" && (ocrLoading || hf.ocrLoading) ? (
@@ -1894,26 +1894,26 @@ export default function ScanUploadTab({
                               <button
                                 type="button"
                                 onClick={applyCsvBulkLocation}
-                                className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-brand btn-brand-red text-[10px] font-black tracking-widest text-white uppercase transition-all dark:shadow-none"
+                                className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-brand btn-brand-red text-[10px] font-black tracking-widest text-white transition-all dark:shadow-none"
                                 disabled={
                                   Object.values(csvSelected).filter(Boolean)
                                     .length === 0
                                 }
                               >
                                 <i className="ph-bold ph-check text-xs" />
-                                APPLY
+                                Apply
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setCsvSelected({})}
-                                className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-white text-[10px] font-black tracking-widest text-gray-700 uppercase transition-all hover:border-gray-300 hover:text-pup-maroon dark:hover:text-red-500 disabled:opacity-40 dark:bg-card dark:text-zinc-200 dark:hover:border-zinc-700 dark:border-white/10"
+                                className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-white text-[10px] font-black tracking-widest text-gray-700 transition-all hover:border-gray-300 hover:text-pup-maroon dark:hover:text-red-500 disabled:opacity-40 dark:bg-card dark:text-zinc-200 dark:hover:border-zinc-700 dark:border-white/10"
                                 disabled={
                                   Object.values(csvSelected).filter(Boolean)
                                     .length === 0
                                 }
                               >
                                 <i className="ph-bold ph-trash text-xs" />
-                                CLEAR
+                                Clear
                               </button>
                             </div>
                           </div>
@@ -1932,19 +1932,19 @@ export default function ScanUploadTab({
                                 onClick={importCsvStudents}
                                 disabled={importDisabled}
                                 className={cn(
-                                  "flex h-11 w-full items-center justify-center gap-2 rounded-brand btn-brand-red text-xs font-black tracking-widest text-white uppercase transition-all dark:shadow-none",
+                                  "flex h-11 w-full items-center justify-center gap-2 rounded-brand btn-brand-red text-xs font-black tracking-widest text-white transition-all dark:shadow-none",
                                   importDisabled && "cursor-not-allowed grayscale-[0.5]"
                                 )}
                               >
                                 {csvLoading ? (
                                   <>
                                     <div className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-white" />
-                                    <span>PROCESSING...</span>
+                                    <span>Processing...</span>
                                   </>
                                 ) : (
                                   <>
                                     <i className="ph-bold ph-upload-simple text-base" />{" "}
-                                    IMPORT RECORDS
+                                    Import records
                                   </>
                                 )}
                               </button>

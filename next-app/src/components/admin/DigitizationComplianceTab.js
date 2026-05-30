@@ -378,8 +378,8 @@ export default function DigitizationComplianceTab({
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Completeness Card */}
-            <div className="group relative overflow-hidden rounded-xl border border-red-950 bg-linear-to-br from-red-700 to-red-950 p-5 shadow-sm transition-all dark:shadow-none">
-              <i className="ph-duotone ph-chart-pie pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-20" />
+            <div className="group relative overflow-hidden rounded-xl border-none bg-linear-to-br from-red-500 to-red-700 dark:from-red-700 dark:to-red-950 p-5 shadow-sm transition-all dark:shadow-none">
+              <i className="ph-duotone ph-chart-pie pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
               <div className="relative z-10">
                 <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-red-200 uppercase">
                   <i className="ph-bold ph-chart-pie" /> Completeness
@@ -410,8 +410,8 @@ export default function DigitizationComplianceTab({
               </div>
             </div>
 
-            <div className="group relative overflow-hidden rounded-xl border border-blue-950 bg-linear-to-br from-blue-800 to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
-              <i className="ph-duotone ph-users-three pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
+            <div className="group relative overflow-hidden rounded-xl border-none bg-linear-to-br from-blue-600 to-blue-800 dark:from-blue-800 dark:to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+              <i className="ph-duotone ph-users-three pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
               <div className="relative z-10">
                 <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-blue-200 uppercase">
                   <i className="ph-bold ph-users-three" /> Students
@@ -425,17 +425,17 @@ export default function DigitizationComplianceTab({
               </div>
             </div>
 
-            <div className="group relative overflow-hidden rounded-xl border border-amber-950 bg-linear-to-br from-amber-700 to-amber-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
-              <i className="ph-duotone ph-check-square-offset pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
+            <div className="group relative overflow-hidden rounded-xl border-none bg-linear-to-br from-emerald-500 to-emerald-700 dark:from-amber-700 dark:to-amber-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+              <i className="ph-duotone ph-check-square-offset pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
               <div className="relative z-10">
-                <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-amber-100 uppercase">
+                <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-emerald-100 uppercase">
                   <i className="ph-bold ph-check-square-offset" /> Complete
                 </div>
                 <div className="text-3xl font-black text-white">
                   {summary?.digitizedStudents?.toLocaleString?.() ?? summary?.digitizedStudents}
                 </div>
                 <div className="mt-1 text-[10px] font-bold text-white flex items-center gap-1.5">
-                  <i className="ph-bold ph-trend-up text-emerald-400" /> 100% Validated
+                  <i className="ph-bold ph-trend-up text-emerald-200" /> 100% Validated
                 </div>
               </div>
             </div>

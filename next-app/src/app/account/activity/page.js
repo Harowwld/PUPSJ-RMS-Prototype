@@ -42,7 +42,7 @@ function getActionIcon(action) {
   if (act.includes("archive")) return "ph-duotone ph-archive";
   if (act.includes("rotate") || act.includes("password")) return "ph-duotone ph-key";
   if (act.includes("backup")) return "ph-duotone ph-database";
-  return "ph-duotone ph-activity";
+  return "ph-duotone ph-pulse";
 }
 
 function getSeverityConfig(sev) {
@@ -320,24 +320,24 @@ export default function AccountActivityPage() {
             actions={
               <div className="flex items-center gap-2">
                 <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDownloadCSV}
-                  disabled={total === 0 || isExporting}
-                  className="flex h-10 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:text-zinc-300 dark:shadow-none dark:bg-red-950/30 dark:border-white/10"
-                >
-                  <i className={cn("ph-bold text-base", isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv")} aria-hidden />
-                  {isExporting ? "PREPARING..." : "EXPORT"}
-                </Button>
-                <Button
                   variant="default"
                   size="sm"
                   onClick={handlePreviewPDF}
                   disabled={total === 0 || isExporting}
-                  className="flex h-10 px-5 items-center justify-center gap-2 btn-brand-red hover:-translate-y-0.5 text-[11px] font-black text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
+                  className="flex h-11 px-5 items-center justify-center gap-2 btn-brand-red hover:-translate-y-0.5 text-[11px] font-black text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
                 >
                   <i className={cn("ph-bold text-base", isExporting ? "ph-circle-notch animate-spin" : "ph-file-pdf")} aria-hidden />
                   {isExporting ? "GENERATING..." : "GENERATE REPORT"}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDownloadCSV}
+                  disabled={total === 0 || isExporting}
+                  className="flex h-11 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-white text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:border-white/10"
+                >
+                  <i className={cn("ph-bold text-base", isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv")} aria-hidden />
+                  {isExporting ? "PREPARING..." : "EXPORT"}
                 </Button>
                 <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4 dark:border-white/10">
                   <Button
@@ -361,7 +361,8 @@ export default function AccountActivityPage() {
           {/* Stats Bar */}
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Total Activity - Blue */}
-            <div className="rounded-2xl p-6 border transition-all duration-300 shadow-sm dark:shadow-none bg-linear-to-br from-blue-800 to-blue-950 border-blue-950 relative overflow-hidden group">
+            <div className="rounded-2xl p-6 border-none transition-all duration-300 shadow-sm dark:shadow-none bg-linear-to-br from-blue-500 to-blue-700 dark:from-blue-800 dark:to-blue-950 relative overflow-hidden group">
+              <i className="ph-duotone ph-chart-line-up pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
               <div className="relative z-10">
                 <div className="flex items-end justify-between">
                   <div>
@@ -377,17 +378,13 @@ export default function AccountActivityPage() {
                       </>
                     )}
                   </div>
-                  {stats?.trends && (
-                    <div className="opacity-70 transition-opacity group-hover:opacity-100">
-                      <Sparkline data={stats.trends.map(t => t.total)} color="#BFDBFE" />
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
 
             {/* Actions Today - Green */}
-            <div className="rounded-2xl p-6 border transition-all duration-300 shadow-sm dark:shadow-none bg-linear-to-br from-emerald-800 to-emerald-950 border-emerald-950 relative overflow-hidden group">
+            <div className="rounded-2xl p-6 border-none transition-all duration-300 shadow-sm dark:shadow-none bg-linear-to-br from-emerald-500 to-emerald-700 dark:from-emerald-800 dark:to-emerald-950 relative overflow-hidden group">
+              <i className="ph-duotone ph-calendar-check pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
               <div className="relative z-10">
                 <div className="flex items-end justify-between">
                   <div>
@@ -403,17 +400,13 @@ export default function AccountActivityPage() {
                       </>
                     )}
                   </div>
-                  {stats?.trends && (
-                    <div className="opacity-70 transition-opacity group-hover:opacity-100">
-                      <Sparkline data={stats.trends.map(t => t.total)} color="#A7F3D0" />
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
 
             {/* Auth History - Yellow/Amber */}
-            <div className="rounded-2xl p-6 border transition-all duration-300 shadow-sm dark:shadow-none bg-linear-to-br from-amber-700 to-amber-950 border-amber-950 relative overflow-hidden group">
+            <div className="rounded-2xl p-6 border-none transition-all duration-300 shadow-sm dark:shadow-none bg-linear-to-br from-amber-500 to-amber-700 dark:from-amber-700 dark:to-amber-950 relative overflow-hidden group">
+              <i className="ph-duotone ph-fingerprint pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
               <div className="relative z-10">
                 <div className="flex items-end justify-between">
                   <div>
@@ -429,17 +422,13 @@ export default function AccountActivityPage() {
                       </>
                     )}
                   </div>
-                  {stats?.trends && (
-                    <div className="opacity-70 transition-opacity group-hover:opacity-100">
-                      <Sparkline data={stats.trends.map(t => t.auth)} color="#FDE68A" />
-                    </div>
-                  )}
                 </div>
               </div>
             </div>
 
             {/* Security Level - Red */}
-            <div className="rounded-2xl p-6 border transition-all duration-300 shadow-sm dark:shadow-none bg-linear-to-br from-red-700 to-red-950 border-red-950 relative overflow-hidden group">
+            <div className="rounded-2xl p-6 border-none transition-all duration-300 shadow-sm dark:shadow-none bg-linear-to-br from-red-500 to-red-700 dark:from-red-700 dark:to-red-950 relative overflow-hidden group">
+              <i className="ph-duotone ph-shield-warning pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
               <div className="relative z-10">
                 <div className="flex items-end justify-between">
                   <div>
@@ -455,11 +444,6 @@ export default function AccountActivityPage() {
                       </>
                     )}
                   </div>
-                  {stats?.trends && (
-                    <div className="opacity-70 transition-opacity group-hover:opacity-100">
-                      <Sparkline data={stats.trends.map(t => t.critical)} color="#FECACA" />
-                    </div>
-                  )}
                 </div>
               </div>
             </div>

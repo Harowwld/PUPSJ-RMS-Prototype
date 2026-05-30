@@ -201,23 +201,14 @@ const CabinetSidebar = memo(({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+                <label className="mb-1 block text-xs font-bold tracking-wide text-gray-700 uppercase opacity-50 dark:text-zinc-200">
                   Width (%)
                 </label>
                 <Input
                   type="number"
-                  step="1"
+                  disabled
                   value={toPct(selectedCabinet.rect.w)}
-                  onChange={(e) => {
-                    if (e.target.value === "") return
-                    const val = Number(e.target.value)
-                    if (!Number.isFinite(val)) return
-                    updateSelectedSizeNormalized(
-                      fromPct(val),
-                      selectedCabinet.rect.h
-                    )
-                  }}
-                  className="h-10 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none dark:bg-card dark:border-white/10"
+                  className="h-10 rounded-brand border border-gray-300 bg-gray-50 text-sm opacity-50 cursor-not-allowed dark:bg-card dark:border-white/10"
                 />
               </div>
               <div>

@@ -1369,9 +1369,9 @@ function AccountPageContent() {
                           </div>
                         </div>
 
-                        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-4 ml-1 dark:text-zinc-500 italic">
+                        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-4 ml-1 dark:text-zinc-500">
                            <i className="ph-bold ph-info mr-1.5"></i>
-                           Note: These settings only affect your personal administrative experience.
+                           These settings only affect your personal administrative experience.
                         </p>
                       </div>
                    </div>

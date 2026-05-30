@@ -1710,7 +1710,7 @@ function AdminPageContent() {
           setDiscardConfirmOpen(false)
           setPendingView(null)
         }}
-        confirmClassName="bg-linear-to-b from-orange-700 to-orange-500 border-4 border-orange-900 hover:from-orange-600 hover:to-orange-800 text-white font-black uppercase tracking-widest text-[10px] h-11 px-8 rounded-xl shadow-lg shadow-orange-900/20 active:scale-95 transition-all"
+        confirmClassName="btn-brand-red text-white h-11 px-8 rounded-lg shadow-md active:scale-95 transition-all"
       />
 
       <EditUserModal

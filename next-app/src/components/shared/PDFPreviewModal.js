@@ -5,10 +5,11 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 
 function PDFFrame({ docId }) {
@@ -40,6 +41,16 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
   const [isFullscreen, setIsFullscreen] = useState(false)
 
   const docId = preview?.docId
+
+  useEffect(() => {
+    if (!open) {
+      setIsFullscreen(false)
+      if (typeof document !== "undefined") {
+        document.body.style.pointerEvents = ""
+        document.body.style.overflow = ""
+      }
+    }
+  }, [open])
 
   return (
     <Dialog 
@@ -121,13 +132,15 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
           </Button>
 
           <div className="flex items-center gap-3">
-            <Button
-              variant="outline"
-              onClick={onClose}
-              className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 uppercase hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:text-zinc-300 dark:hover:border-zinc-700 dark:bg-red-950/30 dark:shadow-none dark:border-white/10"
-            >
-              Close Preview
-            </Button>
+            <DialogClose asChild>
+              <Button
+                variant="outline"
+                onClick={onClose}
+                className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 uppercase hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:text-zinc-300 dark:hover:border-zinc-700 dark:bg-red-950/30 dark:shadow-none dark:border-white/10"
+              >
+                Close Preview
+              </Button>
+            </DialogClose>
             {docId ? (
               <a
                 href={`/api/documents/${docId}`}

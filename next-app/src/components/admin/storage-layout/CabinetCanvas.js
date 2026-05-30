@@ -125,7 +125,7 @@ const CabinetCanvas = memo(({
       {/* Orientation marker (Entrance Block) */}
       <div
         className={cn(
-          "group absolute z-20 cursor-move transition-all duration-200",
+          "group absolute z-20 cursor-move",
           selectedCabinetIds.has("DOOR") ? "ring-2 ring-cyan-500 ring-offset-2 ring-offset-[#f8fafc] rounded-lg" : ""
         )}
         style={{
@@ -255,7 +255,7 @@ const CabinetElement = memo(({
   return (
     <div
       className={cn(
-        "absolute border-2 transition-all duration-75 rounded-sm",
+        "absolute border-2 rounded-sm",
         isSelected 
           ? "z-10 border-cyan-500 bg-cyan-100 shadow-[0_0_0_4px_rgba(6,182,212,0.2)] dark:border-cyan-300 dark:bg-cyan-400 dark:shadow-[0_0_0_4px_rgba(34,211,238,0.2)]" 
           : isConflict 
@@ -321,7 +321,10 @@ const CabinetElement = memo(({
     >
       {isSelected && selectedCabinetIds.size === 1 && (
         <div
-          className="animate-scale-in absolute bottom-full left-1/2 z-50 mb-2 -translate-x-1/2"
+          className={cn(
+            "animate-scale-in absolute left-1/2 z-50 -translate-x-1/2",
+            cab.rect.y < 0.12 ? "top-full mt-2" : "bottom-full mb-2"
+          )}
           onPointerDown={(e) => e.stopPropagation()}
         >
           <div className="flex items-center gap-1 rounded-full border border-gray-200 bg-white p-1 shadow-xl dark:border-white/10 dark:bg-card dark:shadow-none">
@@ -379,39 +382,7 @@ const CabinetElement = memo(({
         )} />
       </div>
 
-      {isSelected ? (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div
-              role="button"
-              tabIndex={0}
-              className="absolute -right-1.5 -bottom-1.5 flex h-5 w-5 cursor-se-resize items-center justify-center rounded-sm border border-gray-300 bg-white leading-none text-pup-maroon dark:text-primary shadow dark:bg-card dark:text-primary dark:border-white/10"
-              onPointerDown={(e) => {
-                const container = e.currentTarget.closest('[data-slot="storage-canvas"]')
-                if (!container) return
-                e.preventDefault()
-                e.stopPropagation()
-                pushHistory(layout)
-                setSelectedCabinetIds(new Set([cab.id]))
-                dragRef.current = {
-                  pointerId: e.pointerId,
-                  mode: "resize",
-                }
-                try {
-                  e.currentTarget.setPointerCapture(e.pointerId)
-                } catch {
-                  // ignore
-                }
-              }}
-            >
-              <i className="ph-bold ph-corners-out text-[11px]" />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="right">
-            Resize Cabinet
-          </TooltipContent>
-        </Tooltip>
-      ) : null}
+
     </div>
   )
 })

@@ -60,38 +60,41 @@ export default function StatCards({ isLoading, logStats }) {
       value: logStats?.totalLogs || 0,
       sublabel: "Cumulative system logs",
       color: "blue",
-      trendData: trends.map(t => t.total)
+      trendData: trends.map(t => t.total),
+      iconClass: "ph-database"
     },
     {
       label: "Activity Today",
       value: logStats?.logsToday || 0,
       sublabel: "Events recorded today",
       color: "emerald",
-      trendData: trends.map(t => t.total)
+      trendData: trends.map(t => t.total),
+      iconClass: "ph-calendar-check"
     },
     {
       label: "Auth Attempts",
       value: logStats?.authEvents || 0,
       sublabel: "Logins & access events",
       color: "amber",
-      trendData: trends.map(t => t.auth)
+      trendData: trends.map(t => t.auth),
+      iconClass: "ph-fingerprint"
     }
   ];
 
   const getColorClasses = (color) => {
     switch (color) {
       case "blue": return { 
-        bg: "from-blue-800 to-blue-950", border: "border-blue-950", 
+        bg: "from-blue-500 to-blue-700 dark:from-blue-800 dark:to-blue-950", border: "border-blue-950", 
         text: "text-white", 
         sub: "text-blue-200", spark: "#BFDBFE" 
       };
       case "emerald": return { 
-        bg: "from-emerald-800 to-emerald-950", border: "border-emerald-950", 
+        bg: "from-emerald-500 to-emerald-700 dark:from-emerald-800 dark:to-emerald-950", border: "border-emerald-950", 
         text: "text-white", 
         sub: "text-emerald-100", spark: "#A7F3D0" 
       };
       case "amber": return { 
-        bg: "from-amber-700 to-amber-950", border: "border-amber-950", 
+        bg: "from-amber-500 to-amber-700 dark:from-amber-700 dark:to-amber-950", border: "border-amber-950", 
         text: "text-white", 
         sub: "text-amber-100", spark: "#FDE68A" 
       };
@@ -122,12 +125,12 @@ export default function StatCards({ isLoading, logStats }) {
           <div 
             key={i} 
             className={cn(
-              "group relative overflow-hidden rounded-xl border p-5 shadow-sm dark:shadow-none transition-all duration-300 hover:shadow-md dark:shadow-none bg-linear-to-br",
-              classes.bg,
-              classes.border
+              "group relative overflow-hidden rounded-xl border-none p-5 shadow-sm dark:shadow-none transition-all duration-300 hover:shadow-md dark:shadow-none bg-linear-to-br",
+              classes.bg
             )}
           >
-            {/* Background Decorative Icon Removed */}
+            {/* Background Decorative Icon */}
+            <i className={cn("ph-duotone pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]", stat.iconClass)} />
             
             <div className="relative z-10">
               <div className="flex items-end justify-between">
@@ -143,11 +146,6 @@ export default function StatCards({ isLoading, logStats }) {
                   </p>
                 </div>
 
-                {stat.trendData.length > 0 && (
-                  <div className="opacity-70 transition-opacity group-hover:opacity-100">
-                    <Sparkline data={stat.trendData} color={classes.spark} />
-                  </div>
-                )}
               </div>
             </div>
           </div>

@@ -723,7 +723,7 @@ export default function RecordsArchiveTab({
                               className="h-8 rounded-brand border-green-200 px-2.5 text-[9px] font-bold text-green-700 shadow-xs hover:bg-green-50"
                             >
                               <i className="ph-bold ph-arrow-counter-clockwise mr-1"></i>
-                              RESTORE
+                              Restore
                             </Button>
                           ) : (
                             <>
@@ -800,30 +800,30 @@ export default function RecordsArchiveTab({
                             </div>
                           </td>
                           <td className="p-4 text-right">
-                            {showArchived ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setRestoreTarget(row.student)
-                                  setRestoreStudentOpen(true)
-                                }}
-                                className="h-9 rounded-brand border-green-200 bg-green-50/50 px-4 text-[10px] font-black text-green-700 shadow-xs hover:bg-green-100"
-                              >
-                                <i className="ph-bold ph-arrow-counter-clockwise mr-2"></i>
-                                RESTORE
-                              </Button>
-                            ) : (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="h-9 rounded-brand border-gray-200 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 shadow-xs transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-primary dark:text-zinc-300 dark:bg-zinc-800 dark:border-white/10"
-                              >
-                                <i className="ph-bold ph-magnifying-glass-plus mr-2 text-sm"></i>
-                                LOCATE
-                              </Button>
-                            )}
+                             {showArchived ? (
+                               <Button
+                                 variant="outline"
+                                 size="sm"
+                                 onClick={(e) => {
+                                   e.stopPropagation()
+                                   setRestoreTarget(row.student)
+                                   setRestoreStudentOpen(true)
+                                 }}
+                                 className="h-9 rounded-brand border-green-200 bg-green-50/50 px-4 text-[10px] font-black text-green-700 shadow-xs hover:bg-green-100"
+                               >
+                                 <i className="ph-bold ph-arrow-counter-clockwise mr-2"></i>
+                                 Restore
+                               </Button>
+                             ) : (
+                               <Button
+                                 variant="outline"
+                                 size="sm"
+                                 className="h-9 rounded-brand border-gray-200 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 shadow-xs transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-primary dark:text-zinc-300 dark:bg-zinc-800 dark:border-white/10"
+                               >
+                                 <i className="ph-bold ph-magnifying-glass-plus mr-2 text-sm"></i>
+                                 Locate
+                               </Button>
+                             )}
                           </td>
                         </tr>
                       ))}
@@ -908,7 +908,7 @@ export default function RecordsArchiveTab({
         }}
         title="Restore Student Record"
         message={`Restore record for ${restoreTarget?.name} (${restoreTarget?.studentNo})? This will make the student active and visible in all modules again.`}
-        confirmLabel="RESTORE RECORD"
+        confirmLabel="Restore record"
         variant="success"
         onConfirm={async () => {
           if (restoreTarget) {

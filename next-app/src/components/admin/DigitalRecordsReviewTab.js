@@ -454,8 +454,8 @@ export default function DigitalRecordsReviewTab({
             "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 transition-all duration-500",
             isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
           )}>
-            <div className="group relative overflow-hidden rounded-brand border border-blue-950 bg-linear-to-br from-blue-800 to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
-                <i className="ph-duotone ph-clock-countdown pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
+            <div className="group relative overflow-hidden rounded-brand border-none bg-linear-to-br from-blue-600 to-blue-800 dark:from-blue-800 dark:to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+                <i className="ph-duotone ph-clock-countdown pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
                 <div className="relative z-10">
                   <div className="flex items-center justify-between">
                     <p className="mb-1 text-[10px] font-black tracking-widest text-blue-200 uppercase">
@@ -492,8 +492,8 @@ export default function DigitalRecordsReviewTab({
                 </div>
               </div>
 
-            <div className="group relative overflow-hidden rounded-brand border border-emerald-950 bg-linear-to-br from-emerald-800 to-emerald-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
-              <i className="ph-duotone ph-check-circle pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
+            <div className="group relative overflow-hidden rounded-brand border-none bg-linear-to-br from-emerald-600 to-emerald-800 dark:from-emerald-800 dark:to-emerald-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+              <i className="ph-duotone ph-check-circle pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
               <div className="relative z-10">
                 <p className="mb-1 text-[10px] font-black tracking-widest text-emerald-100 uppercase">
                   Approved Today
@@ -507,8 +507,8 @@ export default function DigitalRecordsReviewTab({
               </div>
             </div>
 
-            <div className="group relative overflow-hidden rounded-brand border border-red-950 bg-linear-to-br from-red-700 to-red-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
-              <i className="ph-duotone ph-x-circle pointer-events-none absolute -right-3 -bottom-3 rotate-12 text-[60px] text-white opacity-10" />
+            <div className="group relative overflow-hidden rounded-brand border-none bg-linear-to-br from-red-500 to-red-700 dark:from-red-700 dark:to-red-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+              <i className="ph-duotone ph-x-circle pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
               <div className="relative z-10">
                 <p className="mb-1 text-[10px] font-black tracking-widest text-red-200 uppercase">
                   Returned Today
