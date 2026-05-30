@@ -393,7 +393,7 @@ export default function RecordsArchiveTab({
           </div>
 
           {/* Global Search Card */}
-          <section className="flex flex-1 flex-col overflow-hidden rounded-2xl border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
+          <section className="flex flex-1 min-h-[580px] flex-col overflow-hidden rounded-2xl border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
             <div className="space-y-3 border-b border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-card">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
@@ -425,9 +425,9 @@ export default function RecordsArchiveTab({
               </div>
             </div>
 
-            <div className="flex-1 space-y-1 overflow-y-auto p-2">
+            <div className="flex-1 flex flex-col overflow-y-auto p-2">
               {quickQuery.trim().length < 2 && !showArchived ? (
-                <Empty className="mt-32 flex flex-col items-center border-0 py-10 text-center">
+                <Empty className="m-auto flex flex-col items-center border-0 py-6 text-center">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
@@ -452,8 +452,8 @@ export default function RecordsArchiveTab({
                         className="flex items-center gap-3 border-b border-gray-200 p-3 dark:border-white/10"
                       >
                         <div className="flex-1 space-y-2">
-                          <Skeleton className="h-4 w-40 dark:bg-muted" />
-                          <Skeleton className="h-3 w-28 dark:bg-muted" />
+                           <Skeleton className="h-4 w-40 dark:bg-muted" />
+                           <Skeleton className="h-3 w-28 dark:bg-muted" />
                         </div>
                         <Skeleton className="h-4 w-4 dark:bg-muted" />
                       </div>
@@ -461,7 +461,7 @@ export default function RecordsArchiveTab({
                   </div>
                 </div>
               ) : filteredQuickResults.length === 0 ? (
-                <Empty className="mt-32 flex flex-col items-center justify-center border-0 py-8 text-center text-gray-500 dark:text-zinc-400">
+                <Empty className="m-auto flex flex-col items-center justify-center border-0 py-6 text-center text-gray-500 dark:text-zinc-400">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>

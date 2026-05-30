@@ -524,23 +524,6 @@ export default function ScanUploadTab({
           icon="ph-scan"
           title="Scan & Upload"
           description="Scan student records or import files to save them digitally."
-          actions={
-            <div className="flex items-center gap-3">
-              <div className="flex flex-col items-end gap-1">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest dark:text-zinc-500">Status</p>
-                <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap dark:text-zinc-400">
-                  {uploadMode === "pdf" ? "Scanner Inbox" : "Ready to upload"}
-                </p>
-              </div>
-              <RefreshButton 
-                onRefresh={() => {
-                  if (uploadMode === "pdf") hf.refresh()
-                }} 
-                isLoading={hf.loading} 
-                title="Refresh Inbox"
-              />
-            </div>
-          }
         />
 
         <CardContent className="flex flex-col p-6 pt-4">
@@ -1389,8 +1372,8 @@ export default function ScanUploadTab({
                     {uploadMode === "pdf" ? (
                       <div className="space-y-5">
                         {uploadStudentIsExisting && (
-                          <div className="flex flex-col gap-2 rounded-brand border border-emerald-200 bg-emerald-50 px-3 py-2.5 dark:bg-emerald-950/90">
-                            <span className="inline-flex items-start gap-2 text-xs font-bold text-emerald-900">
+                          <div className="flex flex-col gap-2 rounded-brand border border-emerald-200 bg-emerald-50 px-3 py-2.5 dark:border-emerald-500/20 dark:bg-emerald-950/20">
+                            <span className="inline-flex items-start gap-2 text-xs font-bold text-emerald-900 dark:text-emerald-400">
                               <i
                                 className="ph-bold ph-check-circle mt-0.5 shrink-0"
                                 aria-hidden
@@ -1403,7 +1386,7 @@ export default function ScanUploadTab({
                             </span>
                             <button
                               type="button"
-                              className="shrink-0 text-left text-xs font-bold text-pup-maroon dark:text-primary underline-offset-2 hover:underline dark:text-primary"
+                              className="shrink-0 text-left text-xs font-bold text-pup-maroon dark:text-red-400 underline-offset-2 hover:underline"
                               onClick={() => {
                                 setUploadStudentIsExisting(false)
                                 clearAllUploadFieldErrors?.()

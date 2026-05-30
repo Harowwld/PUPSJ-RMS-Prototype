@@ -214,9 +214,9 @@ export default function SLAAnalyticsTab({
 
               <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4 dark:border-white/10">
                   <div className="flex flex-col items-end gap-1">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest dark:text-zinc-505">Dataset Sync</p>
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest dark:text-zinc-500">Refresh Status</p>
                       <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap dark:text-zinc-400">
-                          {hasActiveFilters ? "Filtering live analytics..." : "Showing cumulative data"}
+                          {hasActiveFilters ? "Filtering live analytics..." : "Get latest database updates"}
                       </p>
                   </div>
                   <RefreshButton 

@@ -375,7 +375,8 @@ export default function DocumentRequestsTab({
   };
   return (
     <div className="flex flex-col h-auto gap-6 animate-fade-up font-inter">
-      <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+      {/* 1. Alumni Request Card (Header & Filters) */}
+      <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden">
         <PageHeader
           icon="ph-tray"
           title="Alumni Requests"
@@ -397,7 +398,7 @@ export default function DocumentRequestsTab({
         />
         
         {!loading && !error && (
-          <div className="bg-white border-t border-b border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
+          <div className="bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
             <div className="flex w-full flex-wrap items-end gap-6">
               {/* Global Search */}
               <div className="flex-1 min-w-[320px]">
@@ -449,7 +450,7 @@ export default function DocumentRequestsTab({
 
         {/* Active Filter Chips Row */}
         {!loading && !error && (q !== "" || statusFilter !== "") && (
-          <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+          <div className="border-t border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
             <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">Active Filters:</span>
               {q && (
@@ -489,317 +490,325 @@ export default function DocumentRequestsTab({
             </div>
           </div>
         )}
+      </Card>
 
-        <CardContent className="h-auto flex flex-col p-6">
-          {loading ? (
-            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
-              <div className="flex flex-col min-h-0 h-full">
-                <div className="flex-1 flex flex-col min-h-0 w-full border border-gray-200 rounded-brand overflow-hidden dark:border-white/10 p-6 space-y-4">
-                  <div className="border border-gray-100 rounded-brand overflow-hidden dark:border-white/10">
-                    <Skeleton className="h-10 w-full rounded-none dark:bg-muted" />
-                    <div className="divide-y divide-gray-100 dark:divide-white/10">
-                      {[1, 2, 3, 4, 5, 6].map((i) => (
-                        <div key={i} className="p-4 flex items-center justify-between">
-                          <div className="space-y-2 flex-1">
-                            <Skeleton className="h-4 w-1/4 dark:bg-muted" />
-                            <Skeleton className="h-3 w-1/3 dark:bg-muted" />
-                          </div>
-                          <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
+      {/* 2. Columns layout for Request Table and Request Details */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 items-start">
+        
+        {/* Table Card (Left Column) */}
+        <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden flex flex-col w-full">
+          <CardContent className="p-0 h-auto flex flex-col">
+            {loading ? (
+              <div className="p-6 space-y-4">
+                <div className="border border-gray-100 rounded-brand overflow-hidden dark:border-white/10">
+                  <Skeleton className="h-10 w-full rounded-none dark:bg-muted" />
+                  <div className="divide-y divide-gray-100 dark:divide-white/10">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                      <div key={i} className="p-4 flex items-center justify-between">
+                        <div className="space-y-2 flex-1">
+                          <Skeleton className="h-4 w-1/4 dark:bg-muted" />
+                          <Skeleton className="h-3 w-1/3 dark:bg-muted" />
                         </div>
-                      ))}
-                    </div>
+                        <Skeleton className="h-6 w-20 rounded-full dark:bg-muted" />
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
-              <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0 dark:bg-card dark:border-white/10 dark:shadow-none">
-                <div className="p-4 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-muted/30">
-                  <Skeleton className="h-3 w-24 dark:bg-muted" />
-                </div>
-                <div className="p-6 space-y-6">
-                  <div className="space-y-2">
-                    <Skeleton className="h-3 w-16 dark:bg-muted" />
-                    <Skeleton className="h-5 w-3/4 dark:bg-muted" />
-                    <Skeleton className="h-3 w-1/2 dark:bg-muted" />
-                  </div>
-                  <div className="space-y-2">
-                    <Skeleton className="h-3 w-24 dark:bg-muted" />
-                    <Skeleton className="h-5 w-1/2 dark:bg-muted" />
-                  </div>
-                  <Skeleton className="h-32 w-full rounded-brand dark:bg-muted" />
-                  <div className="space-y-2">
-                    <Skeleton className="h-3 w-16 dark:bg-muted" />
-                    <Skeleton className="h-10 w-full rounded-brand dark:bg-muted" />
-                  </div>
-                  <div className="space-y-2">
-                    <Skeleton className="h-3 w-16 dark:bg-muted" />
-                    <Skeleton className="h-20 w-full rounded-brand dark:bg-muted" />
-                  </div>
-                </div>
+            ) : error ? (
+              <div className="p-6">
+                <Empty className="flex h-[320px] flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
+                  <EmptyHeader className="flex flex-col items-center gap-0">
+                    <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
+                      <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
+                    </EmptyMedia>
+                    <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">Could not load report</EmptyTitle>
+                    <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md dark:text-zinc-300">
+                      {error}
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               </div>
-            </div>
-          ) : error ? (
-            <Empty className="flex h-[320px] flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
-              <EmptyHeader className="flex flex-col items-center gap-0">
-                <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
-                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
-                </EmptyMedia>
-                <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">Could not load report</EmptyTitle>
-                <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md dark:text-zinc-300">
-                  {error}
-                </EmptyDescription>
-              </EmptyHeader>
-            </Empty>
-          ) : (
-            <div className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
-              <div className="flex flex-col min-h-0 h-full">
-                <div 
-                  key={`${page}-${statusFilter}-${debouncedQ}-${sortBy}-${sortOrder}`}
-                  className="flex-1 flex flex-col min-h-0 w-full overflow-hidden border border-gray-200 rounded-brand animate-fade-up dark:border-white/10"
-                >
-                  <div className="overflow-x-auto flex-1">
-                    <table className="min-w-full text-sm table-fixed">
-                      <thead className="bg-gray-50 backdrop-blur-sm select-none dark:bg-muted">
-                        <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
-                          <th className="p-4 w-20">
+            ) : (
+              <div 
+                key={`${page}-${statusFilter}-${debouncedQ}-${sortBy}-${sortOrder}`}
+                className="flex-1 flex flex-col min-h-0 w-full overflow-hidden animate-fade-up"
+              >
+                <div className="overflow-x-auto flex-1">
+                  <table className="min-w-full text-sm table-fixed">
+                    <thead className="bg-gray-50 backdrop-blur-sm select-none dark:bg-muted">
+                      <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
+                        <th className="p-4 w-20">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("id")}
+                            className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+                          >
+                            ID
+                            <SortIndicator
+                              column="id"
+                              sortBy={sortBy}
+                              sortOrder={sortOrder}
+                            />
+                          </button>
+                        </th>
+                        <th className="p-4">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("student")}
+                            className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+                          >
+                            Student
+                            <SortIndicator
+                              column="student"
+                              sortBy={sortBy}
+                              sortOrder={sortOrder}
+                            />
+                          </button>
+                        </th>
+                        <th className="p-4">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("doc_type")}
+                            className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+                          >
+                            Document
+                            <SortIndicator
+                              column="doc_type"
+                              sortBy={sortBy}
+                              sortOrder={sortOrder}
+                            />
+                          </button>
+                        </th>
+                        <th className="p-4">
+                          <button
+                            type="button"
+                            onClick={() => handleSort("status")}
+                            className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+                          >
+                            Status
+                            <SortIndicator
+                              column="status"
+                              sortBy={sortBy}
+                              sortOrder={sortOrder}
+                            />
+                          </button>
+                        </th>
+                        <th className="p-4 text-right">
+                          <div className="flex justify-end">
                             <button
-                              onClick={() => handleSort("id")}
-                              className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                              type="button"
+                              onClick={() => handleSort("created_at")}
+                              className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
                             >
-                              ID
+                              Created
                               <SortIndicator
-                                column="id"
+                                column="created_at"
                                 sortBy={sortBy}
                                 sortOrder={sortOrder}
                               />
                             </button>
-                          </th>
-                          <th className="p-4">
-                            <button
-                              onClick={() => handleSort("student")}
-                              className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
-                            >
-                              Student
-                              <SortIndicator
-                                column="student"
-                                sortBy={sortBy}
-                                sortOrder={sortOrder}
-                              />
-                            </button>
-                          </th>
-                          <th className="p-4">
-                            <button
-                              onClick={() => handleSort("doc_type")}
-                              className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
-                            >
-                              Document
-                              <SortIndicator
-                                column="doc_type"
-                                sortBy={sortBy}
-                                sortOrder={sortOrder}
-                              />
-                            </button>
-                          </th>
-                          <th className="p-4">
-                            <button
-                              onClick={() => handleSort("status")}
-                              className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
-                            >
-                              Status
-                              <SortIndicator
-                                column="status"
-                                sortBy={sortBy}
-                                sortOrder={sortOrder}
-                              />
-                            </button>
-                          </th>
-                          <th className="p-4 text-right">
-                            <div className="flex justify-end">
-                              <button
-                                onClick={() => handleSort("created_at")}
-                                className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
-                              >
-                                Created
-                                <SortIndicator
-                                  column="created_at"
-                                  sortBy={sortBy}
-                                  sortOrder={sortOrder}
-                                />
-                              </button>
-                            </div>
-                          </th>
+                          </div>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+                      {rows.length === 0 ? (
+                        <tr className="border-0 hover:bg-transparent">
+                          <td colSpan={5} className="p-0 border-0">
+                            <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                              <EmptyHeader className="flex flex-col items-center gap-0">
+                                <div className="relative mb-6">
+                                  <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                                  <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                                    <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
+                                  </EmptyMedia>
+                                </div>
+                                <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">No alumni requests yet</EmptyTitle>
+                                <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                                  Create a request for alumni. Track status and find the physical file using the map.
+                                </EmptyDescription>
+                              </EmptyHeader>
+                            </Empty>
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100 dark:divide-white/10">
-                        {rows.length === 0 ? (
-                          <tr className="border-0 hover:bg-transparent">
-                            <td colSpan={5} className="p-0 border-0">
-                              <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                                <EmptyHeader className="flex flex-col items-center gap-0">
-                                  <div className="relative mb-6">
-                                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                                      <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
-                                    </EmptyMedia>
-                                  </div>
-                                  <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">No alumni requests yet</EmptyTitle>
-                                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                                    Create a request for alumni. Track status and find the physical file using the map.
-                                  </EmptyDescription>
-                                </EmptyHeader>
-                              </Empty>
+                      ) : (
+                        rows.map((r) => (
+                          <tr
+                            key={r.id}
+                            className={cn(
+                              "group border-l-2 border-transparent transition-all duration-200 hover:bg-gray-50 dark:bg-card dark:hover:bg-white/5 select-none cursor-pointer",
+                              selectedId === r.id && "border-amber-400 bg-amber-50 dark:bg-amber-950/40"
+                            )}
+                            onClick={() => openDetail(r.id)}
+                          >
+                            <td className="p-4 text-xs text-gray-500 dark:text-zinc-400">
+                              #{r.id}
+                            </td>
+                            <td className="p-4">
+                              <div className="font-bold text-gray-900 dark:text-zinc-50">
+                                {r.student_name || "—"}
+                              </div>
+                              <div className="text-[11px] text-gray-500 dark:text-zinc-400">
+                                {r.student_no}
+                              </div>
+                            </td>
+                            <td className="p-4 font-medium text-gray-800 dark:text-zinc-100">
+                              {r.doc_type}
+                            </td>
+                            <td className="p-4">
+                              <span
+                                className={`inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full border ${statusBadgeClass(r.status)}`}
+                              >
+                                {r.status}
+                              </span>
+                            </td>
+                            <td className="p-4 text-right text-[11px] text-gray-500 whitespace-nowrap dark:text-zinc-400">
+                              {formatPHDateTime(r.created_at)}
                             </td>
                           </tr>
-                        ) : (
-                          rows.map((r) => (
-                            <tr
-                              key={r.id}
-                              className={cn(
-                                "group transition-all duration-200 hover:bg-gray-50 dark:bg-card dark:hover:bg-white/5 select-none cursor-pointer",
-                                selectedId === r.id && "bg-amber-50 dark:bg-amber-950/40"
-                              )}
-                              onClick={() => openDetail(r.id)}
-                            >
-                              <td className="p-4 text-xs text-gray-500 dark:text-zinc-400">
-                                #{r.id}
-                              </td>
-                              <td className="p-4">
-                                <div className="font-bold text-gray-900 dark:text-zinc-50">
-                                  {r.student_name || "—"}
-                                </div>
-                                <div className="text-[11px] text-gray-500 dark:text-zinc-400">
-                                  {r.student_no}
-                                </div>
-                              </td>
-                              <td className="p-4 font-medium text-gray-800 dark:text-zinc-100">
-                                {r.doc_type}
-                              </td>
-                              <td className="p-4">
-                                <span
-                                  className={`inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full border ${statusBadgeClass(r.status)}`}
-                                >
-                                  {r.status}
-                                </span>
-                              </td>
-                              <td className="p-4 text-right text-[11px] text-gray-500 whitespace-nowrap dark:text-zinc-400">
-                                {formatPHDateTime(r.created_at)}
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                  {total > 0 ? (
-                    <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-brand dark:border-white/10 dark:bg-card">
-                      <div className="flex items-center gap-8 select-none cursor-default">
-                        <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
-                          <span>
-                            SHOWING <strong className="text-gray-900 dark:text-zinc-50">{Math.min(itemsPerPage, total - (page - 1) * itemsPerPage)}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{total.toLocaleString()}</strong> ENTRIES
-                          </span>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+                {total > 0 ? (
+                  <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-brand dark:border-white/10 dark:bg-card">
+                    <div className="flex items-center gap-8 select-none cursor-default">
+                      <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
+                        <span>
+                          SHOWING <strong className="text-gray-900 dark:text-zinc-50">{Math.min(itemsPerPage, total - (page - 1) * itemsPerPage)}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{total.toLocaleString()}</strong> ENTRIES
+                        </span>
 
-                          <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
-                            <span className="text-[10px] opacity-60">ROWS:</span>
-                            <Select
-                              className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
-                              value={itemsPerPage}
-                              onChange={handleItemsPerPageChange}
-                            >
-                              <option value={10}>10</option>
-                              <option value={20}>20</option>
-                              <option value={50}>50</option>
-                              <option value={100}>100</option>
-                              <option value={200}>200</option>
-                            </Select>
-                          </div>
+                        <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
+                          <span className="text-[10px] opacity-60">ROWS:</span>
+                          <Select
+                            className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
+                            value={itemsPerPage}
+                            onChange={handleItemsPerPageChange}
+                          >
+                            <option value={10}>10</option>
+                            <option value={20}>20</option>
+                            <option value={50}>50</option>
+                            <option value={100}>100</option>
+                            <option value={200}>200</option>
+                          </Select>
                         </div>
-                      </div>
-
-                      <div className="flex shrink-0 items-center gap-3 select-none">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={page <= 1}
-                          onClick={() => setPage((p) => Math.max(1, p - 1))}
-                          className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-                        >
-                          <i className="ph-bold ph-caret-left mr-2 text-base"></i>
-                          PREV
-                        </Button>
-
-                        <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
-                          {page}
-                        </div>
-
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={page >= totalPages}
-                          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                          className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-                        >
-                          NEXT
-                          <i className="ph-bold ph-caret-right ml-2 text-base"></i>
-                        </Button>
                       </div>
                     </div>
-                  ) : null}
+
+                    <div className="flex shrink-0 items-center gap-3 select-none">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page <= 1}
+                        onClick={() => setPage((p) => Math.max(1, p - 1))}
+                        className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                      >
+                        <i className="ph-bold ph-caret-left mr-2 text-base"></i>
+                        PREV
+                      </Button>
+
+                      <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                        {page}
+                      </div>
+
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={page >= totalPages}
+                        onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                        className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                      >
+                        NEXT
+                        <i className="ph-bold ph-caret-right ml-2 text-base"></i>
+                      </Button>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* 3. Request Details Card (Right Column) */}
+        <Card className="rounded-brand border border-gray-200 bg-white shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0 dark:bg-card dark:border-white/10 dark:shadow-none">
+          <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between dark:border-white/10 dark:bg-muted/30">
+            <div className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
+              Request Details
+            </div>
+            {hasEdits && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2 text-[10px] font-black text-gray-500 hover:text-gray-700 uppercase dark:text-zinc-400 dark:hover:text-zinc-200"
+                  onClick={handleResetEdits}
+                  disabled={saving}
+                >
+                  RESET
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  className="h-7 px-3 text-[10px] font-black btn-brand-red text-white uppercase shadow-sm dark:shadow-none"
+                  onClick={handleManualSave}
+                  disabled={saving}
+                >
+                  {saving ? "SAVING..." : "SAVE CHANGES"}
+                </Button>
+              </div>
+            )}
+          </div>
+          <CardContent className="p-4 flex-grow flex flex-col">
+            {loading ? (
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-16 dark:bg-muted" />
+                  <Skeleton className="h-5 w-3/4 dark:bg-muted" />
+                  <Skeleton className="h-3 w-1/2 dark:bg-muted" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-24 dark:bg-muted" />
+                  <Skeleton className="h-5 w-1/2 dark:bg-muted" />
+                </div>
+                <Skeleton className="h-32 w-full rounded-brand dark:bg-muted" />
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-16 dark:bg-muted" />
+                  <Skeleton className="h-10 w-full rounded-brand dark:bg-muted" />
+                </div>
+                <div className="space-y-2">
+                  <Skeleton className="h-3 w-16 dark:bg-muted" />
+                  <Skeleton className="h-20 w-full rounded-brand dark:bg-muted" />
                 </div>
               </div>
-
-              <div className="bg-white rounded-brand border border-gray-200 shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0 dark:bg-card dark:border-white/10 dark:shadow-none">
-                <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between dark:border-white/10 dark:bg-muted/30">
-                  <div className="text-xs font-bold uppercase tracking-wider text-gray-500 dark:text-zinc-400">
-                    Request Details
+            ) : error ? (
+              <div className="py-8 text-center text-red-500 font-medium">
+                {error}
+              </div>
+            ) : !selectedId ? (
+              <Empty className="flex-1 flex flex-col items-center justify-center border-0 bg-transparent text-center">
+                <EmptyHeader className="flex flex-col items-center gap-0">
+                  <div className="relative mb-6">
+                    <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                    <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                      <i className="ph-duotone ph-file-text text-5xl text-gray-300 dark:text-zinc-600"></i>
+                    </EmptyMedia>
                   </div>
-                  {hasEdits && (
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 px-2 text-[10px] font-black text-gray-500 hover:text-gray-700 uppercase dark:text-zinc-400 dark:hover:text-zinc-200"
-                        onClick={handleResetEdits}
-                        disabled={saving}
-                      >
-                        RESET
-                      </Button>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        className="h-7 px-3 text-[10px] font-black btn-brand-red text-white uppercase shadow-sm dark:shadow-none"
-                        onClick={handleManualSave}
-                        disabled={saving}
-                      >
-                        {saving ? "SAVING..." : "SAVE CHANGES"}
-                      </Button>
-                    </div>
-                  )}
-                </div>
-                <div className="p-4 flex-1 overflow-auto flex flex-col">
-                  {!selectedId && (
-                    <Empty className="flex-1 flex flex-col items-center justify-center border-0 bg-transparent text-center">
-                      <EmptyHeader className="flex flex-col items-center gap-0">
-                        <div className="relative mb-6">
-                          <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                          <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                            <i className="ph-duotone ph-file-text text-5xl text-gray-300 dark:text-zinc-600"></i>
-                          </EmptyMedia>
-                        </div>
-                        <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">Select a Request</EmptyTitle>
-                        <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                          Select a request to see details and location.
-                        </EmptyDescription>
-                      </EmptyHeader>
-                    </Empty>
-                  )}
-                  {selectedId && detailLoading && (
-                    <div className="space-y-3">
-                      <Skeleton className="h-6 w-3/4 dark:bg-muted" />
-                      <Skeleton className="h-4 w-full dark:bg-muted" />
-                      <Skeleton className="h-4 w-full dark:bg-muted" />
-                    </div>
-                  )}
-                  {detail && !detailLoading && (
-                    <div className="space-y-4">
+                  <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">Select a Request</EmptyTitle>
+                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                    Select a request to see details and location.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            ) : detailLoading ? (
+              <div className="space-y-3">
+                <Skeleton className="h-6 w-3/4 dark:bg-muted" />
+                <Skeleton className="h-4 w-full dark:bg-muted" />
+                <Skeleton className="h-4 w-full dark:bg-muted" />
+              </div>
+            ) : (
+              <div className="space-y-4 animate-fade-up">
                       <div>
                         <div className="text-xs font-bold text-gray-500 uppercase dark:text-zinc-400">
                           Student
@@ -899,12 +908,9 @@ export default function DocumentRequestsTab({
                       </div>
                     </div>
                   )}
-                </div>
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
         <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10">

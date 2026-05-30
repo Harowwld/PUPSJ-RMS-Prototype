@@ -241,10 +241,10 @@ export default function NotificationsTab({
               <div className="flex items-center gap-2">
                 <div className="mr-2 flex flex-col items-end gap-1">
                   <p className="text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">
-                    Dataset Sync
+                    Refresh Status
                   </p>
                   <p className="text-[10px] font-medium whitespace-nowrap text-gray-500 dark:text-zinc-400">
-                    Showing real-time alerts
+                    Get latest database updates
                   </p>
                 </div>
                 <RefreshButton
