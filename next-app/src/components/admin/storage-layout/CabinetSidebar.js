@@ -117,7 +117,7 @@ const CabinetSidebar = memo(({
 
             {!selectedCabinet.isDoor && (
               <div>
-                <div className="mb-2 text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+                <div className="mb-2 text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
                   Drawer count
                 </div>
                 <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 p-1 dark:border-white/10 dark:bg-card">
@@ -138,7 +138,7 @@ const CabinetSidebar = memo(({
                     <span className="text-lg font-black text-gray-900 dark:text-zinc-50">
                       {(selectedCabinet.drawerIds || []).length}
                     </span>
-                    <span className="ml-2 text-xs font-bold tracking-tight text-gray-500 uppercase dark:text-zinc-400">
+                    <span className="ml-2 text-xs font-bold tracking-tight text-gray-500 dark:text-zinc-400">
                       Drawers
                     </span>
                   </div>
@@ -158,7 +158,7 @@ const CabinetSidebar = memo(({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+                <label className="mb-1 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
                   X Position (%)
                 </label>
                 <Input
@@ -178,7 +178,7 @@ const CabinetSidebar = memo(({
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+                <label className="mb-1 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
                   Y Position (%)
                 </label>
                 <Input
@@ -201,7 +201,7 @@ const CabinetSidebar = memo(({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="mb-1 block text-xs font-bold tracking-wide text-gray-700 uppercase opacity-50 dark:text-zinc-200">
+                <label className="mb-1 block text-xs font-bold tracking-wide text-gray-700 opacity-50 dark:text-zinc-200">
                   Width (%)
                 </label>
                 <Input
@@ -212,7 +212,7 @@ const CabinetSidebar = memo(({
                 />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-bold tracking-wide text-gray-700 uppercase opacity-50 dark:text-zinc-200">
+                <label className="mb-1 block text-xs font-bold tracking-wide text-gray-700 opacity-50 dark:text-zinc-200">
                   Height (%)
                 </label>
                 <Input

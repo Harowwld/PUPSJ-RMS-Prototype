@@ -39,7 +39,7 @@ export default function UserGuideModal({ open, onClose }) {
           <aside className="w-full lg:w-64 bg-gray-50 border-b lg:border-b-0 lg:border-r border-gray-200 p-4 shrink-0 dark:bg-card dark:border-white/10">
             <div className="mb-6 px-2 hidden lg:block">
               <h2 className="text-xl font-black text-pup-maroon dark:text-primary tracking-tight">User Guide</h2>
-              <p className="text-[10px] text-gray-500 uppercase font-black tracking-widest mt-1 dark:text-zinc-400">Documentation</p>
+              <p className="text-[10px] text-gray-500 font-black tracking-widest mt-1 dark:text-zinc-400">Documentation</p>
             </div>
 
             <TabsList className="flex lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0 h-auto bg-transparent rounded-none">
@@ -82,7 +82,7 @@ export default function UserGuideModal({ open, onClose }) {
                   <div className="bg-blue-50 border border-blue-100 rounded-brand p-4 flex gap-4 dark:bg-blue-950/30">
                     <i className="ph-fill ph-info text-blue-500 text-2xl shrink-0"></i>
                     <div>
-                      <h4 className="font-black text-blue-900 text-sm uppercase tracking-wide">Notice</h4>
+                      <h4 className="font-black text-blue-900 text-sm tracking-wide">Notice</h4>
                       <p className="text-sm text-blue-800 font-medium leading-relaxed mt-1">
                         This guide covers the digital mechanics of the Records Keeping System Prototype. For institutional policies, refer to the official PUP Records Management Manual.
                       </p>
@@ -122,8 +122,8 @@ export default function UserGuideModal({ open, onClose }) {
                     </h3>
                     <div className="bg-white rounded-brand border border-gray-200 overflow-hidden shadow-sm dark:bg-card dark:border-white/10">
                       <div className="p-4 bg-gray-50 border-b border-gray-200 flex items-center justify-between dark:bg-card dark:border-white/10">
-                        <span className="text-xs font-black text-gray-700 uppercase dark:text-zinc-200">Workflow</span>
-                        <span className="px-2 py-0.5 rounded bg-pup-maroon text-[9px] font-black text-white uppercase tracking-widest">Standard</span>
+                        <span className="text-xs font-black text-gray-700 dark:text-zinc-200">Workflow</span>
+                        <span className="px-2 py-0.5 rounded bg-pup-maroon text-[9px] font-black text-white tracking-widest">Standard</span>
                       </div>
                       <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-3">

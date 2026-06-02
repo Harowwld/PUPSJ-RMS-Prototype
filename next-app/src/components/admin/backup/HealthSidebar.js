@@ -46,7 +46,7 @@ export default function HealthSidebar({
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
               <i className="ph-duotone ph-pulse text-2xl"></i>
             </div>
-            <h3 className="text-xl font-black tracking-tight text-gray-900 uppercase leading-none dark:text-zinc-50">
+            <h3 className="text-xl font-black tracking-tight text-gray-900 leading-none dark:text-zinc-50">
               System Health
             </h3>
           </div>
@@ -110,7 +110,7 @@ export default function HealthSidebar({
               </div>
             </div>
             <div className="mt-4 text-center">
-              <p className="text-[9px] font-black tracking-[0.2em] text-gray-400 uppercase dark:text-zinc-500">
+              <p className="text-[9px] font-black tracking-[0.2em] text-gray-400 dark:text-zinc-500">
                 Repository Volume
               </p>
               <p className="mt-0.5 text-xs font-black text-gray-700 dark:text-zinc-200">
@@ -124,7 +124,7 @@ export default function HealthSidebar({
           <div className="space-y-6 px-1">
             {/* Memory Usage */}
             <div className="space-y-2">
-              <div className="flex justify-between text-[9px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">
+              <div className="flex justify-between text-[9px] font-black tracking-widest text-gray-500 dark:text-zinc-400">
                 <div className="flex items-center gap-2">
                   <i className="ph-bold ph-memory text-base text-blue-500"></i>
                   <span className="text-gray-800 dark:text-zinc-100">RAM</span>
@@ -141,7 +141,7 @@ export default function HealthSidebar({
 
             {/* Computation */}
             <div className="space-y-2">
-              <div className="flex justify-between text-[9px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">
+              <div className="flex justify-between text-[9px] font-black tracking-widest text-gray-500 dark:text-zinc-400">
                 <div className="flex items-center gap-2">
                   <i className="ph-bold ph-cpu text-base text-amber-500"></i>
                   <span className="text-gray-800 dark:text-zinc-100">CPU</span>
@@ -166,20 +166,20 @@ export default function HealthSidebar({
           <div className="pt-4 border-t border-gray-100 space-y-2 dark:border-white/10">
             <div className="grid grid-cols-1 gap-1.5">
               <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50 border border-gray-100 dark:bg-white/5 dark:border-white/10">
-                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">Last Sync</span>
-                <span className="text-[10px] font-black text-gray-800 uppercase dark:text-zinc-100">{lastBackupTime}</span>
+                <span className="text-[9px] font-black text-gray-400 tracking-widest dark:text-zinc-500">Last Sync</span>
+                <span className="text-[10px] font-black text-gray-800 dark:text-zinc-100">{lastBackupTime}</span>
               </div>
               <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50 border border-gray-100 dark:bg-white/5 dark:border-white/10">
-                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">Restore Node</span>
-                <span className={`text-[10px] font-black uppercase ${systemHealth.lastRestorationAt ? "text-gray-800" : "text-gray-400 dark:text-zinc-100"}`}>
+                <span className="text-[9px] font-black text-gray-400 tracking-widest dark:text-zinc-500">Restore Node</span>
+                <span className={`text-[10px] font-black ${systemHealth.lastRestorationAt ? "text-gray-800" : "text-gray-400 dark:text-zinc-100"}`}>
                   {systemHealth.lastRestorationAt
                     ? formatPHDateTime(systemHealth.lastRestorationAt).split(',')[0]
                     : "NONE"}
                 </span>
               </div>
               <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50 border border-gray-100 dark:bg-white/5 dark:border-white/10">
-                <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">Protocol</span>
-                <span className="text-[9px] font-black text-emerald-600 uppercase dark:text-emerald-400">AES-256-GCM</span>
+                <span className="text-[9px] font-black text-gray-400 tracking-widest dark:text-zinc-500">Protocol</span>
+                <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400">AES-256-GCM</span>
               </div>
             </div>
           </div>

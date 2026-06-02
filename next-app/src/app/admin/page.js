@@ -74,7 +74,7 @@ function AdminPageContent() {
   ]
   const initialView = validViews.includes(searchParams?.get("view"))
     ? searchParams.get("view")
-    : "directory"
+    : "review"
 
   const [view, setView] = useState(initialView)
   const [viewLoading, setViewLoading] = useState({
@@ -1515,7 +1515,7 @@ function AdminPageContent() {
           {sidebarItems.map((item, idx) => {
             if (item.type === "header") {
               return (
-                <div key={`header-${idx}`} className="text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500 whitespace-nowrap ml-4 first:ml-0 border-l border-gray-200 dark:border-white/5 pl-4 first:border-0 first:pl-0">
+                <div key={`header-${idx}`} className="text-[9px] font-black tracking-widest text-gray-400 dark:text-zinc-500 whitespace-nowrap ml-4 first:ml-0 border-l border-gray-200 dark:border-white/5 pl-4 first:border-0 first:pl-0">
                   {item.label}
                 </div>
               );
@@ -1961,7 +1961,7 @@ function AdminPageContent() {
 
           <div className="space-y-6 p-8">
             <div className="rounded-xl border border-amber-100 dark:border-amber-900/30 bg-amber-50 p-6 shadow-sm dark:bg-amber-950/50">
-              <label className="mb-3 block text-[10px] font-black tracking-widest text-amber-900 dark:text-amber-400 uppercase opacity-60 dark:opacity-100">
+              <label className="mb-3 block text-[10px] font-black tracking-widest text-amber-900 dark:text-amber-400 opacity-60 dark:opacity-100">
                 Temporary Password for{" "}
                 <span className="text-pup-maroon dark:text-primary">
                   {defaultPwUserLabel}
@@ -2078,7 +2078,7 @@ function AdminPageContent() {
                 <i className="ph-bold ph-hard-drive text-base text-gray-500 dark:text-zinc-400" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">Drive Label</p>
+                <p className="text-xs font-black tracking-widest text-gray-400 dark:text-zinc-500">Drive Label</p>
                 <p className="mt-0.5 text-sm font-black text-gray-900 truncate dark:text-zinc-50">
                   {extDriveEvent?.label || "External Storage Device"}
                 </p>
@@ -2089,7 +2089,7 @@ function AdminPageContent() {
                 )}
               </div>
               <div className={cn(
-                "shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black uppercase tracking-widest",
+                "shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black  tracking-widest",
                 extDriveEvent?.type === "connected"
                   ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400"
                   : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400"

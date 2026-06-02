@@ -26,7 +26,7 @@ export default function LogPagination({
   return (
     <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-brand dark:border-white/10 dark:bg-card">
       <div className="flex items-center gap-8 select-none cursor-default">
-        <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
+        <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 tracking-widest dark:text-zinc-500">
           <span>
             SHOWING <strong className="text-gray-900 dark:text-zinc-50">{endItem - startItem + 1}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{logTotal.toLocaleString()}</strong> ENTRIES
           </span>
@@ -53,11 +53,9 @@ export default function LogPagination({
           size="sm"
           disabled={logPage <= 1}
           onClick={() => setLogPage((p) => p - 1)}
-          className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+          className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
         >
-          <i className="ph-bold ph-caret-left mr-2 text-base"></i>
-          PREV
-        </Button>
+          <i className="ph-bold ph-caret-left mr-2 text-base"></i>Prev</Button>
         
         <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
           {logPage}
@@ -68,10 +66,8 @@ export default function LogPagination({
           size="sm"
           disabled={logPage >= totalPages}
           onClick={() => setLogPage((p) => p + 1)}
-          className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-        >
-          NEXT
-          <i className="ph-bold ph-caret-right ml-2 text-base"></i>
+          className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+        >Next<i className="ph-bold ph-caret-right ml-2 text-base"></i>
         </Button>
       </div>
     </div>

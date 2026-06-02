@@ -135,7 +135,7 @@ export default function StatCards({ isLoading, logStats }) {
             <div className="relative z-10">
               <div className="flex items-end justify-between">
                 <div>
-                  <p className={cn("text-[10px] font-black tracking-widest uppercase", classes.sub)}>
+                  <p className={cn("text-[10px] font-black tracking-widest ", classes.sub)}>
                     {stat.label}
                   </p>
                   <h3 className={cn("text-3xl font-black tracking-tight", classes.text)}>

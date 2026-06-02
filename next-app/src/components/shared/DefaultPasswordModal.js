@@ -55,7 +55,7 @@ export default function DefaultPasswordModal({
               <i className="ph-bold ph-user text-lg text-pup-maroon dark:text-primary"></i>
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold tracking-wider text-gray-500 uppercase dark:text-zinc-400">
+              <p className="text-xs font-bold tracking-wider text-gray-500 dark:text-zinc-400">
                 New Account
               </p>
               <p className="truncate text-sm font-bold text-gray-900 dark:text-zinc-50">
@@ -66,7 +66,7 @@ export default function DefaultPasswordModal({
 
           {/* Password display - prominent style */}
           <div className="space-y-2">
-            <label className="block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+            <label className="block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
               Temporary Password
             </label>
             <div className="relative">

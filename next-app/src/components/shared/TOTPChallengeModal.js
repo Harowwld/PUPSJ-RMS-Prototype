@@ -88,7 +88,7 @@ export function TOTPChallengeModal({
             )}
 
             <div className="space-y-3">
-              <label className="ml-1 text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+              <label className="ml-1 text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
                 Security Verification Code
               </label>
               <Input
@@ -114,7 +114,7 @@ export function TOTPChallengeModal({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold tracking-wider text-gray-700 uppercase hover:bg-gray-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card"
+              className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold tracking-wider text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card"
             >
               Cancel
             </Button>

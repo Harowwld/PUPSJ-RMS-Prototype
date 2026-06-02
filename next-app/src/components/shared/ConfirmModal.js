@@ -166,7 +166,7 @@ export default function ConfirmModal({
           <div className="p-6 space-y-5 bg-white min-w-0 dark:bg-card">
             {selectedItems.length > 0 && (
               <div>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1.5 dark:text-zinc-500">
+                <p className="text-[10px] font-bold text-gray-400 tracking-widest mb-1.5 dark:text-zinc-500">
                   Selected Items ({selectedItems.length})
                 </p>
                 <div className="relative w-full">
@@ -193,7 +193,7 @@ export default function ConfirmModal({
               <div className="rounded-xl border border-red-100 bg-red-50 p-5 shadow-xs dark:bg-red-950/30 dark:border-zinc-800">
                 <div className="flex flex-col items-center gap-5">
                   <div className="text-center">
-                    <label className="mb-2 block text-[9px] font-black tracking-widest text-red-800/60 uppercase dark:text-red-500/60">
+                    <label className="mb-2 block text-[9px] font-black tracking-widest text-red-800/60 dark:text-red-500/60">
                       Security Authorization Code
                     </label>
                     <div className="flex h-12 items-center justify-center rounded-xl border-2 border-dashed border-red-200 bg-white px-8 font-mono text-2xl font-black tracking-[0.5em] text-red-700 shadow-inner dark:bg-card dark:shadow-none dark:border-zinc-800 dark:text-red-400">
@@ -202,7 +202,7 @@ export default function ConfirmModal({
                   </div>
 
                   <div className="w-full">
-                    <label className="mb-3 block text-center text-[9px] font-black tracking-widest text-red-800/60 uppercase dark:text-red-500/60">
+                    <label className="mb-3 block text-center text-[9px] font-black tracking-widest text-red-800/60 dark:text-red-500/60">
                       Input Matching Digits
                     </label>
                     <div className="flex justify-center gap-3">
@@ -240,7 +240,7 @@ export default function ConfirmModal({
             type="button"
             variant="outline"
             onClick={onCancel}
-            className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 uppercase hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:border-white/10 dark:text-zinc-300 dark:hover:border-zinc-700 dark:bg-red-950/30"
+            className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:border-white/10 dark:text-zinc-300 dark:hover:border-zinc-700 dark:bg-red-950/30"
             disabled={isLoading}
           >
             {cancelLabel}
@@ -251,7 +251,7 @@ export default function ConfirmModal({
             onClick={onConfirm}
             disabled={isLoading || disabled || !isVerified}
             className={cn(
-              "h-11 px-6 text-sm font-black shadow-sm rounded-brand gap-2 flex items-center transition-all active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed uppercase",
+              "h-11 px-6 text-sm font-black shadow-sm rounded-brand gap-2 flex items-center transition-all active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed ",
               variant === "success" && "bg-green-600 hover:bg-green-700 text-white",
               variant === "warning" && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white"),
               v.confirmVariant === "destructive" && "btn-brand-red",

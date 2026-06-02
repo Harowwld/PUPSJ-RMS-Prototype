@@ -41,10 +41,10 @@ export default function EditUserModal({
 
         <form onSubmit={onSubmit}>
           <div className="space-y-6 p-6">
-            {/* Part 1: Full Name */}
+            {/* Part 1: Full name */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+                <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
                   First Name <span className="text-pup-maroon dark:text-primary">*</span>
                 </label>
                 <Input
@@ -59,7 +59,7 @@ export default function EditUserModal({
                 />
               </div>
               <div>
-                <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+                <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
                   Last Name <span className="text-pup-maroon dark:text-primary">*</span>
                 </label>
                 <Input
@@ -77,7 +77,7 @@ export default function EditUserModal({
 
             {/* Part 2: Role Selection */}
             <div>
-              <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+              <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
                 System Role <span className="text-pup-maroon dark:text-primary">*</span>
               </label>
               <Select
@@ -99,7 +99,7 @@ export default function EditUserModal({
             {/* Part 3: System Identifiers */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+                <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
                   Employee ID <span className="text-pup-maroon dark:text-primary">*</span>
                 </label>
                 <Input
@@ -111,7 +111,7 @@ export default function EditUserModal({
                 />
               </div>
               <div>
-                <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+                <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
                   Institutional Email
                 </label>
                 <Input
@@ -141,7 +141,7 @@ export default function EditUserModal({
               className="flex h-11 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-black text-white shadow-sm dark:shadow-none"
             >
               <i className="ph-bold ph-floppy-disk"></i>
-              {isLoading ? "Saving Changes..." : "Save Changes"}
+              {isLoading ? "Saving Changes..." : "Save changes"}
             </Button>
           </div>
         </form>

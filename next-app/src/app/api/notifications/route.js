@@ -8,6 +8,7 @@ import {
   listDocumentReviewNotifications,
   markStaffReviewNotificationsSeen,
   setNotificationItemState,
+  markAllStaffNotificationsReadState,
 } from "../../../lib/notificationsRepo";
 
 export const runtime = "nodejs";
@@ -88,16 +89,10 @@ export async function POST(req) {
   }
 
   if (action === "markSeen") {
-    const allNotifications = await listDocumentReviewNotifications({
-      limit: 1000,
-      offset: 0,
-      uploadedBy: staff.id,
-    });
-    const allIds = allNotifications.items.map(n => n.id);
-    if (allIds.length > 0) {
-      await setNotificationItemState(staff.id, allIds, "read", 1);
-    }
+    await markAllStaffNotificationsReadState(staff.id, true);
     await markStaffReviewNotificationsSeen(staff.id);
+  } else if (action === "markAllUnread") {
+    await markAllStaffNotificationsReadState(staff.id, false);
   } else if (action === "markRead") {
     if (ids.length > 0) {
       await setNotificationItemState(staff.id, ids, "read", 1);

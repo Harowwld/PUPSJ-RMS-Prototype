@@ -57,7 +57,7 @@ export default function FloatingActionBar({
                   size="sm"
                   onClick={onAction}
                   className={cn(
-                    "flex h-10 items-center gap-2 rounded-brand px-6 text-xs font-black uppercase text-white shadow-lg transition-all active:scale-95",
+                    "flex h-10 items-center gap-2 rounded-brand px-6 text-xs font-black  text-white shadow-lg transition-all active:scale-95",
                     actionVariant === "success" 
                       ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-900/20" 
                       : "btn-brand-red"

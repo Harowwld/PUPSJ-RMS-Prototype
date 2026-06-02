@@ -184,22 +184,22 @@ export default function RateLimitingTab() {
             <table className="w-full">
               <thead className="border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
                 <tr>
-                  <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
+                  <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
                     Type
                   </th>
-                  <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
+                  <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
                     Identifier
                   </th>
-                  <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
+                  <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
                     IP Address
                   </th>
-                  <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
+                  <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
                     Violations
                   </th>
-                  <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
+                  <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
                     Lockout Until
                   </th>
-                  <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
+                  <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
                     Actions
                   </th>
                 </tr>
@@ -257,16 +257,16 @@ export default function RateLimitingTab() {
         <table className="w-full">
           <thead className="border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
             <tr>
-              <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
+              <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
                 Endpoint Type
               </th>
-              <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
+              <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
                 Window (seconds)
               </th>
-              <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
+              <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
                 Max Requests
               </th>
-              <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
+              <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
                 Actions
               </th>
             </tr>
@@ -307,19 +307,19 @@ export default function RateLimitingTab() {
           <table className="w-full">
             <thead className="border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
               <tr>
-                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
+                <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
                   IP Address
                 </th>
-                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
+                <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
                   Risk Level
                 </th>
-                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
+                <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
                   Failed Logins
                 </th>
-                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
+                <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
                   Unique Users
                 </th>
-                <th className="p-3 text-left text-xs font-bold text-gray-600 uppercase dark:text-zinc-300">
+                <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
                   Last Seen
                 </th>
               </tr>

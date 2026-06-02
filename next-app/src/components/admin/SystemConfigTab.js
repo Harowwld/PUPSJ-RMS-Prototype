@@ -979,10 +979,10 @@ export default function SystemConfigTab({
                 type="button"
                 onClick={() => setActiveSubTab("document-types")}
                 className={`group flex h-11 min-w-[180px] cursor-pointer items-center justify-center gap-3 px-6 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${
-                  activeSubTab === "document-types"
-                    ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
-                    : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
-                }`}
+ activeSubTab === "document-types"
+ ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
+ : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
+ }`}
               >
                 <i
                   className={`ph-bold ph-files ${activeSubTab === "document-types" ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
@@ -993,10 +993,10 @@ export default function SystemConfigTab({
                 type="button"
                 onClick={() => setActiveSubTab("degree-programs")}
                 className={`group flex h-11 min-w-[180px] cursor-pointer items-center justify-center gap-3 rounded-none px-6 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${
-                  activeSubTab === "degree-programs"
-                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
-                    : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
-                }`}
+ activeSubTab === "degree-programs"
+ ? "bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
+ : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
+ }`}
               >
                 <i
                   className={`ph-bold ph-books ${activeSubTab === "degree-programs" ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
@@ -1007,10 +1007,10 @@ export default function SystemConfigTab({
                 type="button"
                 onClick={() => setActiveSubTab("course-blocks")}
                 className={`group flex h-11 min-w-[180px] cursor-pointer items-center justify-center gap-3 rounded-none px-6 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${
-                  activeSubTab === "course-blocks"
-                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
-                    : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
-                }`}
+ activeSubTab === "course-blocks"
+ ? "bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
+ : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
+ }`}
               >
                 <i
                   className={`ph-bold ph-list-numbers ${activeSubTab === "course-blocks" ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
@@ -1021,10 +1021,10 @@ export default function SystemConfigTab({
                 type="button"
                 onClick={() => setActiveSubTab("security-questions")}
                 className={`group flex h-11 min-w-[180px] cursor-pointer items-center justify-center gap-3 rounded-none px-6 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${
-                  activeSubTab === "security-questions"
-                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
-                    : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
-                }`}
+ activeSubTab === "security-questions"
+ ? "bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
+ : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
+ }`}
               >
                 <i
                   className={`ph-bold ph-shield-check ${activeSubTab === "security-questions" ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
@@ -1035,10 +1035,10 @@ export default function SystemConfigTab({
                 type="button"
                 onClick={() => setActiveSubTab("bulk-import")}
                 className={`group flex h-11 min-w-[180px] cursor-pointer items-center justify-center gap-3 px-6 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${
-                  activeSubTab === "bulk-import"
-                    ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
-                    : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
-                }`}
+ activeSubTab === "bulk-import"
+ ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
+ : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
+ }`}
               >
                 <i
                   className={`ph-bold ph-upload-simple ${activeSubTab === "bulk-import" ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}

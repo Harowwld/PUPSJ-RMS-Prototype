@@ -605,7 +605,7 @@ function AccountPageContent() {
                 const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
                 router.push(path);
               }}
-              className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-gray-300 bg-white hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center gap-2 rounded-brand dark:border-white/10 dark:bg-card dark:text-zinc-300"
+              className="h-10 px-5 font-black tracking-widest text-[10px] border-gray-300 bg-white hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center gap-2 rounded-brand dark:border-white/10 dark:bg-card dark:text-zinc-300"
             >
               <i className="ph-bold ph-caret-left"></i>
               Return to Dashboard
@@ -655,12 +655,12 @@ function AccountPageContent() {
                     {fname} {lname}
                   </h3>
                   <div className="flex flex-col items-center gap-1">
-                    <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest dark:text-zinc-400">
+                    <p className="text-[11px] font-bold text-gray-500 tracking-widest dark:text-zinc-400">
                       {authUser?.email || authUser?.username}
                     </p>
                     <div
                       className={cn(
-                        "mt-3 px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] border shadow-xs flex items-center gap-2",
+                        "mt-3 px-4 py-1 rounded-full text-[10px] font-black  tracking-[0.2em] border shadow-xs flex items-center gap-2",
                         roleBadgeColor
                       )}
                     >
@@ -729,7 +729,7 @@ function AccountPageContent() {
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1 dark:text-zinc-400">
+                        <label className="text-[10px] font-black tracking-widest text-gray-500 px-1 dark:text-zinc-400">
                           First Name
                         </label>
                         <Input
@@ -742,7 +742,7 @@ function AccountPageContent() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1 dark:text-zinc-400">
+                        <label className="text-[10px] font-black tracking-widest text-gray-500 px-1 dark:text-zinc-400">
                           Last Name
                         </label>
                         <Input
@@ -757,7 +757,7 @@ function AccountPageContent() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1 dark:text-zinc-400">
+                      <label className="text-[10px] font-black tracking-widest text-gray-500 px-1 dark:text-zinc-400">
                         Email Address
                       </label>
                       <div className="relative group">
@@ -771,7 +771,7 @@ function AccountPageContent() {
                           readOnly
                         />
                       </div>
-                      <p className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold uppercase tracking-wider mt-3 ml-1 dark:text-zinc-500">
+                      <p className="flex items-center gap-1.5 text-[10px] text-gray-400 font-bold tracking-wider mt-3 ml-1 dark:text-zinc-500">
                         <i className="ph-bold ph-lock"></i>
                         Your email is managed by administrators and cannot be changed.
                       </p>
@@ -781,7 +781,7 @@ function AccountPageContent() {
                       <Button
                         type="submit"
                         disabled={profileLoading}
-                        className="h-12 px-10 btn-brand-red text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-brand active:scale-95 disabled:opacity-50"
+                        className="h-12 px-10 btn-brand-red text-white font-black tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-brand active:scale-95 disabled:opacity-50"
                       >
                         {profileLoading ? (
                           <i className="ph-bold ph-spinner animate-spin text-xl"></i>
@@ -812,7 +812,7 @@ function AccountPageContent() {
                         <CardDescription className="font-medium text-gray-500 text-sm mt-1 dark:text-zinc-400">
                           Update your sign-in details.
                           {authUser?.password_last_changed && (
-                            <span className="flex items-center gap-1.5 mt-2 text-[10px] text-pup-maroon dark:text-red-400 font-black uppercase tracking-wider bg-red-50 dark:bg-red-400/10 w-fit px-2 py-0.5 rounded border border-red-100 dark:border-red-400/20">
+                            <span className="flex items-center gap-1.5 mt-2 text-[10px] text-pup-maroon dark:text-red-400 font-black tracking-wider bg-red-50 dark:bg-red-400/10 w-fit px-2 py-0.5 rounded border border-red-100 dark:border-red-400/20">
                               <i className="ph-bold ph-calendar"></i>
                               Last Updated: {formatPHDateTime(authUser.password_last_changed)}
                             </span>
@@ -833,7 +833,7 @@ function AccountPageContent() {
 
                       <div className="grid grid-cols-1 gap-8">
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1 dark:text-zinc-400">
+                          <label className="text-[10px] font-black tracking-widest text-gray-500 px-1 dark:text-zinc-400">
                             Current Password
                           </label>
                           <div className="relative group">
@@ -857,7 +857,7 @@ function AccountPageContent() {
 
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                           <div className="space-y-2">
-                            <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1 dark:text-zinc-400">
+                            <label className="text-[10px] font-black tracking-widest text-gray-500 px-1 dark:text-zinc-400">
                               New Password
                             </label>
                             <div className="relative group">
@@ -879,7 +879,7 @@ function AccountPageContent() {
                             </div>
                           </div>
                           <div className="space-y-2">
-                            <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1 dark:text-zinc-400">
+                            <label className="text-[10px] font-black tracking-widest text-gray-500 px-1 dark:text-zinc-400">
                               Confirm Password
                             </label>
                             <div className="relative group">
@@ -907,7 +907,7 @@ function AccountPageContent() {
                         <Button
                           type="submit"
                           disabled={pwLoading}
-                          className="h-12 px-10 btn-brand-red text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-brand active:scale-95 disabled:opacity-50"
+                          className="h-12 px-10 btn-brand-red text-white font-black tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-brand active:scale-95 disabled:opacity-50"
                         >
                           {pwLoading ? (
                             <i className="ph-bold ph-spinner animate-spin text-xl"></i>
@@ -976,7 +976,7 @@ function AccountPageContent() {
                             return (
                               <div key={q.id} className="relative group">
                                 <div className="flex items-center justify-between mb-3 px-1">
-                                  <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase flex items-center gap-2 dark:text-zinc-400">
+                                  <label className="text-[10px] font-black tracking-widest text-gray-500 flex items-center gap-2 dark:text-zinc-400">
                                     <span className="w-5 h-5 rounded bg-gray-100 flex items-center justify-center text-[10px] text-gray-400 font-black dark:bg-zinc-800 dark:text-zinc-500">{idx + 1}</span>
                                     {q.question}
                                   </label>
@@ -993,9 +993,9 @@ function AccountPageContent() {
                                           });
                                         }
                                       }}
-                                      className={`text-[9px] font-black uppercase tracking-[0.15em] px-3 py-1 rounded-lg transition-all ${ isEditing ? "bg-gray-100 text-gray-600 hover:bg-gray-200" : "bg-red-50 text-pup-maroon dark:text-primary hover:bg-pup-maroon hover:text-white" } dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700`}
+                                      className={`text-[9px] font-black tracking-[0.15em] px-3 py-1 rounded-lg transition-all ${ isEditing ? "bg-gray-100 text-gray-600 hover:bg-gray-200" : "bg-red-50 text-pup-maroon dark:text-primary hover:bg-pup-maroon hover:text-white" } dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700`}
                                     >
-                                      {isEditing ? "Cancel" : "Change Answer"}
+                                      {isEditing ? "Cancel" : "Change answer"}
                                     </button>
                                   )}
                                 </div>
@@ -1027,7 +1027,7 @@ function AccountPageContent() {
                         <Button
                           type="submit"
                           disabled={secLoading || globalQuestions.length === 0}
-                          className="h-12 px-10 btn-brand-red text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-brand active:scale-95 disabled:opacity-50"
+                          className="h-12 px-10 btn-brand-red text-white font-black tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-brand active:scale-95 disabled:opacity-50"
                         >
                           {secLoading ? (
                             <i className="ph-bold ph-spinner animate-spin text-xl"></i>
@@ -1071,11 +1071,11 @@ function AccountPageContent() {
                             
                             <div className="space-y-2 mt-4">
                                <div className="bg-white px-4 py-3 rounded-xl border border-gray-200 flex flex-col gap-1.5 shadow-xs dark:bg-card dark:border-white/10">
-                                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">Secret Key</span>
+                                  <span className="text-[9px] font-black text-gray-400 tracking-widest dark:text-zinc-500">Secret key</span>
                                   <code className="text-sm font-black text-pup-maroon dark:text-primary tracking-wider break-all">{totpSetupData.secret}</code>
                                </div>
                                <div className="bg-white px-4 py-3 rounded-xl border border-gray-200 flex flex-col gap-1.5 shadow-xs dark:bg-card dark:border-white/10">
-                                  <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">Serial Key (Backup)</span>
+                                  <span className="text-[9px] font-black text-gray-400 tracking-widest dark:text-zinc-500">Serial key (Backup)</span>
                                   <code className="text-sm font-black text-gray-900 tracking-wider break-all dark:text-zinc-50">{totpSetupData.serialKey}</code>
                                </div>
                             </div>
@@ -1088,12 +1088,12 @@ function AccountPageContent() {
                                 className="w-44 h-44"
                               />
                             </div>
-                            <span className="mt-4 text-[10px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">Scan QR Code</span>
+                            <span className="mt-4 text-[10px] font-black text-gray-400 tracking-widest dark:text-zinc-500">Scan QR code</span>
                           </div>
                         </div>
 
                         <div className="space-y-2">
-                          <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1 dark:text-zinc-400">
+                          <label className="text-[10px] font-black tracking-widest text-gray-500 px-1 dark:text-zinc-400">
                             Enter Verification Code
                           </label>
                           <Input
@@ -1119,14 +1119,14 @@ function AccountPageContent() {
                             onClick={cancelTOTPSetup}
                             disabled={totpLoading}
                             variant="outline"
-                            className="h-12 px-8 font-black uppercase tracking-widest text-[11px] border-gray-200 bg-white rounded-xl hover:bg-gray-50 transition-all shadow-xs dark:border-white/10 dark:bg-card dark:hover:bg-white/10"
+                            className="h-12 px-8 font-black tracking-widest text-[11px] border-gray-200 bg-white rounded-xl hover:bg-gray-50 transition-all shadow-xs dark:border-white/10 dark:bg-card dark:hover:bg-white/10"
                           >
                             Cancel
                           </Button>
                           <Button
                             onClick={verifyTOTP}
                             disabled={totpLoading || totpToken.length !== 6}
-                            className="h-12 px-10 btn-brand-red text-white font-black uppercase tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-xl active:scale-95"
+                            className="h-12 px-10 btn-brand-red text-white font-black tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-xl active:scale-95"
                           >
                             {totpLoading ? (
                               <i className="ph-bold ph-spinner animate-spin text-xl"></i>
@@ -1149,9 +1149,9 @@ function AccountPageContent() {
                               <h4 className="font-black text-gray-900 text-base dark:text-zinc-50 flex items-center gap-2">
                                 Authenticator App (TOTP)
                                 {totpEnabled ? (
-                                  <Badge className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded">Active</Badge>
+                                  <Badge className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[9px] font-black tracking-wider px-2 py-0.5 rounded">Active</Badge>
                                 ) : (
-                                  <Badge variant="outline" className="bg-gray-100/50 text-gray-400 border border-gray-200 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded dark:bg-white/5 dark:border-white/10">Inactive</Badge>
+                                  <Badge variant="outline" className="bg-gray-100/50 text-gray-400 border border-gray-200 text-[9px] font-black tracking-wider px-2 py-0.5 rounded dark:bg-white/5 dark:border-white/10">Inactive</Badge>
                                 )}
                               </h4>
                               <p className="text-xs font-medium text-gray-500 mt-1 max-w-md leading-relaxed dark:text-zinc-400">
@@ -1163,7 +1163,7 @@ function AccountPageContent() {
                             {totpEnabled ? (
                               <Button
                                 onClick={() => setTotpStep("disable-flow")}
-                                className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-4 border-red-900 bg-linear-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-brand shadow-xs transition-all flex items-center gap-2"
+                                className="h-10 px-5 font-black tracking-widest text-[10px] border-4 border-red-900 bg-linear-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-brand shadow-xs transition-all flex items-center gap-2"
                               >
                                 Disable App
                               </Button>
@@ -1171,7 +1171,7 @@ function AccountPageContent() {
                               <Button
                                 onClick={startTOTPSetup}
                                 disabled={totpLoading}
-                                className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-4 border-red-900 bg-linear-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-brand shadow-xs transition-all flex items-center gap-2"
+                                className="h-10 px-5 font-black tracking-widest text-[10px] border-4 border-red-900 bg-linear-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-brand shadow-xs transition-all flex items-center gap-2"
                               >
                                 {totpLoading ? <i className="ph-bold ph-spinner animate-spin" /> : <i className="ph-bold ph-shield-plus" />}
                                 Setup App
@@ -1184,7 +1184,7 @@ function AccountPageContent() {
                         {totpStep === "disable-flow" && (
                           <div className="bg-gray-50 rounded-2xl border border-gray-100 p-8 space-y-6 animate-in zoom-in-95 duration-300 dark:bg-white/5 dark:border-white/10">
                              <div className="space-y-2">
-                                <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase px-1 dark:text-zinc-400">
+                                <label className="text-[10px] font-black tracking-widest text-gray-500 px-1 dark:text-zinc-400">
                                   Enter Authenticator Code to Disable
                                 </label>
                                 <Input
@@ -1209,7 +1209,7 @@ function AccountPageContent() {
                                 <Button
                                   onClick={() => { setTotpStep("idle"); setTotpToken(""); setTotpError(""); }}
                                   variant="outline"
-                                  className="h-12 px-6 font-black uppercase tracking-widest text-[10px] border-gray-300 rounded-xl"
+                                  className="h-12 px-6 font-black tracking-widest text-[10px] border-gray-300 rounded-xl"
                                 >
                                   Cancel
                                 </Button>
@@ -1219,7 +1219,7 @@ function AccountPageContent() {
                                     setTotpStep("idle");
                                   }}
                                   disabled={totpLoading || totpToken.length !== 6}
-                                  className="h-12 px-8 bg-linear-to-b from-red-600 to-red-800 border-4 border-red-900 hover:from-red-500 hover:to-red-700 text-white font-black uppercase tracking-widest shadow-lg rounded-xl active:scale-95 disabled:opacity-50"
+                                  className="h-12 px-8 bg-linear-to-b from-red-600 to-red-800 border-4 border-red-900 hover:from-red-500 hover:to-red-700 text-white font-black tracking-widest shadow-lg rounded-xl active:scale-95 disabled:opacity-50"
                                 >
                                   {totpLoading ? <i className="ph-bold ph-spinner animate-spin text-xl" /> : <i className="ph-bold ph-shield-slash text-xl" />}
                                   Confirm Disable
@@ -1238,9 +1238,9 @@ function AccountPageContent() {
                               <h4 className="font-black text-gray-900 text-base dark:text-zinc-50 flex items-center gap-2">
                                 Backup Recovery Codes
                                 {recoveryCodesCount > 0 ? (
-                                  <Badge className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded">Active ({recoveryCodesCount} left)</Badge>
+                                  <Badge className="bg-emerald-500/10 text-emerald-600 border border-emerald-500/20 text-[9px] font-black tracking-wider px-2 py-0.5 rounded">Active ({recoveryCodesCount} left)</Badge>
                                 ) : (
-                                  <Badge variant="outline" className="bg-gray-100/50 text-gray-400 border border-gray-200 text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded dark:bg-white/5 dark:border-white/10">Inactive</Badge>
+                                  <Badge variant="outline" className="bg-gray-100/50 text-gray-400 border border-gray-200 text-[9px] font-black tracking-wider px-2 py-0.5 rounded dark:bg-white/5 dark:border-white/10">Inactive</Badge>
                                 )}
                               </h4>
                               <p className="text-xs font-medium text-gray-500 mt-1 max-w-md leading-relaxed dark:text-zinc-400">
@@ -1284,7 +1284,7 @@ function AccountPageContent() {
                                 }}
                                 disabled={totpLoading}
                                 variant="outline"
-                                className="h-10 px-4 font-black uppercase tracking-widest text-[10px] border-gray-300 hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 bg-white rounded-brand transition-all"
+                                className="h-10 px-4 font-black tracking-widest text-[10px] border-gray-300 hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 bg-white rounded-brand transition-all"
                               >
                                 Disable Codes
                               </Button>
@@ -1292,7 +1292,7 @@ function AccountPageContent() {
                             <Button
                               onClick={generateNewRecoveryCodes}
                               disabled={totpLoading}
-                              className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-4 border-red-900 bg-linear-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-brand shadow-xs transition-all flex items-center gap-2"
+                              className="h-10 px-5 font-black tracking-widest text-[10px] border-4 border-red-900 bg-linear-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-brand shadow-xs transition-all flex items-center gap-2"
                             >
                               {totpLoading ? <i className="ph-bold ph-spinner animate-spin" /> : <i className="ph-bold ph-arrows-clockwise" />}
                               {recoveryCodesCount > 0 ? "Regenerate Codes" : "Generate Codes"}
@@ -1328,10 +1328,10 @@ function AccountPageContent() {
                    <div className="space-y-10">
                       <div className="space-y-4">
                         <div className="flex items-center justify-between px-1">
-                          <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">
+                          <label className="text-[10px] font-black tracking-widest text-gray-500 dark:text-zinc-400">
                             Interface Theme
                           </label>
-                          <Badge variant="outline" className="h-5 px-2 bg-gray-50 border-gray-200 text-gray-500 font-black text-[9px] uppercase dark:bg-muted dark:border-white/10 dark:text-zinc-400">
+                          <Badge variant="outline" className="h-5 px-2 bg-gray-50 border-gray-200 text-gray-500 font-black text-[9px] dark:bg-muted dark:border-white/10 dark:text-zinc-400">
                              Visuals
                           </Badge>
                         </div>
@@ -1360,7 +1360,7 @@ function AccountPageContent() {
                                    )}></i>
                                 </div>
                                 <span className={cn(
-                                  "text-xs font-black uppercase tracking-widest",
+                                  "text-xs font-black  tracking-widest",
                                   theme === t ? "text-pup-maroon dark:text-pup-maroon/90" : "text-gray-500 dark:text-zinc-400"
                                 )}>
                                    {t}
@@ -1373,7 +1373,7 @@ function AccountPageContent() {
                              </button>
                            ))}
                         </div>
-                        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-4 ml-1 dark:text-zinc-500">
+                        <p className="text-[11px] text-gray-400 font-bold tracking-wider mt-4 ml-1 dark:text-zinc-500">
                            <i className="ph-bold ph-info mr-1.5"></i>
                            Choose your preferred color theme for the interface.
                         </p>
@@ -1383,10 +1383,10 @@ function AccountPageContent() {
 
                       <div className="space-y-4">
                         <div className="flex items-center justify-between px-1">
-                          <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">
+                          <label className="text-[10px] font-black tracking-widest text-gray-500 dark:text-zinc-400">
                             Navigation Layout
                           </label>
-                          <Badge variant="outline" className="h-5 px-2 bg-gray-50 border-gray-200 text-gray-500 font-black text-[9px] uppercase dark:bg-muted dark:border-white/10 dark:text-zinc-400">
+                          <Badge variant="outline" className="h-5 px-2 bg-gray-50 border-gray-200 text-gray-500 font-black text-[9px] dark:bg-muted dark:border-white/10 dark:text-zinc-400">
                              Layout
                           </Badge>
                         </div>
@@ -1421,7 +1421,7 @@ function AccountPageContent() {
                                     </div>
                                     <div>
                                       <span className={cn(
-                                        "text-xs font-black uppercase tracking-widest block",
+                                        "text-xs font-black  tracking-widest block",
                                         isActive ? "text-pup-maroon dark:text-pup-maroon/90" : "text-gray-500 dark:text-zinc-400"
                                       )}>
                                          {item.label}
@@ -1440,7 +1440,7 @@ function AccountPageContent() {
                              );
                            })}
                         </div>
-                        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-4 ml-1 dark:text-zinc-500">
+                        <p className="text-[11px] text-gray-400 font-bold tracking-wider mt-4 ml-1 dark:text-zinc-500">
                            <i className="ph-bold ph-info mr-1.5"></i>
                            Choose between sidebar and top navbar navigation layouts.
                         </p>
@@ -1450,10 +1450,10 @@ function AccountPageContent() {
 
                       <div className="space-y-4">
                         <div className="flex items-center justify-between px-1">
-                          <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">
+                          <label className="text-[10px] font-black tracking-widest text-gray-500 dark:text-zinc-400">
                             Accessibility Options
                           </label>
-                          <Badge variant="outline" className="h-5 px-2 bg-gray-50 border-gray-200 text-gray-500 font-black text-[9px] uppercase dark:bg-muted dark:border-white/10 dark:text-zinc-400">
+                          <Badge variant="outline" className="h-5 px-2 bg-gray-50 border-gray-200 text-gray-500 font-black text-[9px] dark:bg-muted dark:border-white/10 dark:text-zinc-400">
                              Visual
                           </Badge>
                         </div>
@@ -1461,7 +1461,7 @@ function AccountPageContent() {
                         <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 dark:bg-white/5 dark:border-white/10">
                           <div className="flex items-center justify-between gap-6">
                             <div className="space-y-1.5">
-                              <h4 className="text-sm font-black text-gray-900 dark:text-zinc-50 uppercase tracking-tight">High Contrast Mode</h4>
+                              <h4 className="text-sm font-black text-gray-900 dark:text-zinc-50 tracking-tight">High Contrast Mode</h4>
                               <p className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 leading-relaxed max-w-md">
                                 Increases visibility by showing highly contrasting colors.
                               </p>
@@ -1478,7 +1478,7 @@ function AccountPageContent() {
                           </div>
                         </div>
 
-                        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-4 ml-1 dark:text-zinc-500">
+                        <p className="text-[11px] text-gray-400 font-bold tracking-wider mt-4 ml-1 dark:text-zinc-500">
                            <i className="ph-bold ph-info mr-1.5"></i>
                            Customize your visual preferences for higher clarity.
                         </p>
@@ -1488,10 +1488,10 @@ function AccountPageContent() {
 
                       <div className="space-y-6">
                         <div className="flex items-center justify-between px-1">
-                          <label className="text-[10px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">
+                          <label className="text-[10px] font-black tracking-widest text-gray-500 dark:text-zinc-400">
                             Workflow Preferences
                           </label>
-                          <Badge variant="outline" className="h-5 px-2 bg-red-50 border-red-200 text-red-600 font-black text-[9px] uppercase dark:bg-red-950/30 dark:border-red-900/30 dark:text-red-400">
+                          <Badge variant="outline" className="h-5 px-2 bg-red-50 border-red-200 text-red-600 font-black text-[9px] dark:bg-red-950/30 dark:border-red-900/30 dark:text-red-400">
                              Personal
                           </Badge>
                         </div>
@@ -1499,7 +1499,7 @@ function AccountPageContent() {
                         <div className="p-6 bg-gray-50 rounded-2xl border border-gray-100 dark:bg-white/5 dark:border-white/10">
                           <div className="flex items-center justify-between gap-6">
                             <div className="space-y-1.5">
-                              <h4 className="text-sm font-black text-gray-900 dark:text-zinc-50 uppercase tracking-tight">Skip Registration Confirmation</h4>
+                              <h4 className="text-sm font-black text-gray-900 dark:text-zinc-50 tracking-tight">Skip Registration Confirmation</h4>
                               <p className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 leading-relaxed max-w-md">
                                 When enabled, the final review modal is bypassed for faster account provisioning.
                               </p>
@@ -1516,7 +1516,7 @@ function AccountPageContent() {
                           </div>
                         </div>
 
-                        <p className="text-[11px] text-gray-400 font-bold uppercase tracking-wider mt-4 ml-1 dark:text-zinc-500">
+                        <p className="text-[11px] text-gray-400 font-bold tracking-wider mt-4 ml-1 dark:text-zinc-500">
                            <i className="ph-bold ph-info mr-1.5"></i>
                            These settings only affect your personal administrative experience.
                         </p>
@@ -1544,7 +1544,7 @@ function AccountPageContent() {
               <div className="bg-gray-50 p-6 rounded-2xl border-2 border-gray-100 shadow-inner grid grid-cols-2 gap-4 dark:bg-card dark:border-white/10 dark:shadow-none">
                 {recoveryCodes.map((code, idx) => (
                   <div key={idx} className="font-mono text-sm font-black text-gray-700 flex items-center gap-3 bg-white p-2 rounded-lg border border-gray-100 shadow-xs dark:text-zinc-200 dark:bg-card dark:border-white/10">
-                    <span className="text-[10px] text-pup-maroon dark:text-primary font-black bg-red-50 w-5 h-5 flex items-center justify-center rounded uppercase dark:data-[state=active]:bg-red-500/10">{idx + 1}</span>
+                    <span className="text-[10px] text-pup-maroon dark:text-primary font-black bg-red-50 w-5 h-5 flex items-center justify-center rounded dark:data-[state=active]:bg-red-500/10">{idx + 1}</span>
                     <span className="tracking-widest">{code}</span>
                   </div>
                 ))}
@@ -1562,21 +1562,21 @@ function AccountPageContent() {
                   <Button 
                     onClick={copyRecoveryCodes}
                     variant="outline" 
-                    className="flex-1 h-12 font-black uppercase tracking-widest text-[10px] border-gray-300 rounded-xl hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center justify-center gap-2 dark:border-white/10"
+                    className="flex-1 h-12 font-black tracking-widest text-[10px] border-gray-300 rounded-xl hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center justify-center gap-2 dark:border-white/10"
                   >
                     <i className="ph-bold ph-copy text-lg"></i> Clipboard
                   </Button>
                   <Button 
                     onClick={downloadRecoveryCodes}
                     variant="outline" 
-                    className="flex-1 h-12 font-black uppercase tracking-widest text-[10px] border-gray-300 rounded-xl hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center justify-center gap-2 dark:border-white/10"
+                    className="flex-1 h-12 font-black tracking-widest text-[10px] border-gray-300 rounded-xl hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center justify-center gap-2 dark:border-white/10"
                   >
                     <i className="ph-bold ph-download-simple text-lg"></i> Save File
                   </Button>
                 </div>
                 <Button 
                   onClick={() => setShowRecoveryCodesDialog(false)}
-                  className="w-full h-14 bg-linear-to-b from-gray-900 to-black border-4 border-gray-800 hover:bg-gray-800 hover:shadow-xl transition-all text-white font-black uppercase tracking-widest rounded-xl shadow-lg active:scale-95"
+                  className="w-full h-14 bg-linear-to-b from-gray-900 to-black border-4 border-gray-800 hover:bg-gray-800 hover:shadow-xl transition-all text-white font-black tracking-widest rounded-xl shadow-lg active:scale-95"
                 >
                   Confirm Codes Secured
                 </Button>

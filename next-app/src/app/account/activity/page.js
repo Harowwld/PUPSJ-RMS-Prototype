@@ -346,7 +346,7 @@ export default function AccountActivityPage() {
                       const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
                       router.push(path);
                     }}
-                    className="h-10 px-5 font-black uppercase tracking-widest text-[10px] border-gray-300 bg-white hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center gap-2 rounded-xl active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300"
+                    className="h-10 px-5 font-black tracking-widest text-[10px] border-gray-300 bg-white hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center gap-2 rounded-xl active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300"
                   >
                     <i className="ph-bold ph-caret-left"></i>
                     Return to Dashboard
@@ -366,7 +366,7 @@ export default function AccountActivityPage() {
               <div className="relative z-10">
                 <div className="flex items-end justify-between">
                   <div>
-                    <p className="text-[10px] font-black text-blue-200 uppercase tracking-widest mb-1.5">Total Activity</p>
+                    <p className="text-[10px] font-black text-blue-200 tracking-widest mb-1.5">Total Activity</p>
                     {!stats ? (
                       <Skeleton className="h-8 w-20 bg-white/20" />
                     ) : (
@@ -388,7 +388,7 @@ export default function AccountActivityPage() {
               <div className="relative z-10">
                 <div className="flex items-end justify-between">
                   <div>
-                    <p className="text-[10px] font-black text-emerald-100 uppercase tracking-widest mb-1.5">Actions Today</p>
+                    <p className="text-[10px] font-black text-emerald-100 tracking-widest mb-1.5">Actions Today</p>
                     {!stats ? (
                       <Skeleton className="h-8 w-20 bg-white/20" />
                     ) : (
@@ -410,7 +410,7 @@ export default function AccountActivityPage() {
               <div className="relative z-10">
                 <div className="flex items-end justify-between">
                   <div>
-                    <p className="text-[10px] font-black text-amber-100 uppercase tracking-widest mb-1.5">Auth History</p>
+                    <p className="text-[10px] font-black text-amber-100 tracking-widest mb-1.5">Auth History</p>
                     {!stats ? (
                       <Skeleton className="h-8 w-20 bg-white/20" />
                     ) : (
@@ -432,7 +432,7 @@ export default function AccountActivityPage() {
               <div className="relative z-10">
                 <div className="flex items-end justify-between">
                   <div>
-                    <p className="text-[10px] font-black text-red-200 uppercase tracking-widest mb-1.5">Security Level</p>
+                    <p className="text-[10px] font-black text-red-200 tracking-widest mb-1.5">Security Level</p>
                     {!stats ? (
                       <Skeleton className="h-8 w-20 bg-white/20" />
                     ) : (
@@ -455,7 +455,7 @@ export default function AccountActivityPage() {
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-end">
                 <div className="lg:col-span-6">
                   <div className="flex items-center justify-between mb-2 px-1">
-                    <label className="block text-[10px] font-black text-gray-500 uppercase tracking-widest dark:text-zinc-300">
+                    <label className="block text-[10px] font-black text-gray-500 tracking-widest dark:text-zinc-300">
                       SEARCH AUDIT TRACE
                     </label>
                     {(search !== "" || severityFilter !== "All") && (
@@ -467,7 +467,7 @@ export default function AccountActivityPage() {
                           setSeverityFilter("All");
                           setPage(1);
                         }}
-                        className="h-5 px-1.5 text-[9px] font-black text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon uppercase tracking-tighter dark:bg-red-950/30"
+                        className="h-5 px-1.5 text-[9px] font-black text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon tracking-tighter dark:bg-red-950/30"
                       >
                         Clear Filters
                       </Button>
@@ -489,7 +489,7 @@ export default function AccountActivityPage() {
                 </div>
 
                 <div className="lg:col-span-4">
-                  <label className="block text-[10px] font-black text-gray-500 mb-2 uppercase tracking-widest ml-1 dark:text-zinc-300">
+                  <label className="block text-[10px] font-black text-gray-500 mb-2 tracking-widest ml-1 dark:text-zinc-300">
                     SEVERITY
                   </label>
                   <Select
@@ -508,7 +508,7 @@ export default function AccountActivityPage() {
                 </div>
 
                 <div className="lg:col-span-2">
-                  <label className="block text-[10px] font-black text-gray-500 mb-2 uppercase tracking-widest ml-1 dark:text-zinc-300">
+                  <label className="block text-[10px] font-black text-gray-500 mb-2 tracking-widest ml-1 dark:text-zinc-300">
                     DISPLAY
                   </label>
                   <Select
@@ -532,7 +532,7 @@ export default function AccountActivityPage() {
               <div className="overflow-x-auto select-none">
                 <table className="min-w-full">
                   <thead className="bg-gray-50 border-b border-gray-100 dark:bg-muted dark:border-white/10">
-                    <tr className="text-left text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-300">
+                    <tr className="text-left text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-300">
                       <th className="p-4 px-6">TIMESTAMP</th>
                       <th className="p-4 px-6">SEVERITY</th>
                       <th className="p-4 px-6">EVENT / ACTION</th>
@@ -584,7 +584,7 @@ export default function AccountActivityPage() {
                             </td>
                             <td className="p-4 px-6">
                               <div className={cn(
-                                "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-wider transition-all",
+                                "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black  tracking-wider transition-all",
                                 sev.bg, sev.text, sev.border
                               )}>
                                 <i className={cn(sev.icon, "text-[10px]")}></i>
@@ -596,7 +596,7 @@ export default function AccountActivityPage() {
                                 <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50 text-gray-500 group-hover:bg-white group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 shadow-xs transition-colors dark:bg-zinc-800 dark:text-zinc-400 dark:group-hover:bg-white/5 dark:hover:bg-white/5">
                                   <i className={cn(getActionIcon(r.action), "text-base")}></i>
                                 </div>
-                                <span className="text-xs font-bold tracking-tight text-gray-700 uppercase dark:text-zinc-300">{r.action}</span>
+                                <span className="text-xs font-bold tracking-tight text-gray-700 dark:text-zinc-300">{r.action}</span>
                               </div>
                             </td>
                             <td className="p-4 px-6">
@@ -607,7 +607,7 @@ export default function AccountActivityPage() {
                                 {(r.entity_type || r.entity_id) && (
                                   <div className="flex items-center gap-2 mt-1">
                                      {r.entity_type && (
-                                       <Badge variant="outline" className="text-[9px] font-black bg-gray-100 border-0 text-gray-500 uppercase h-4 px-1.5 rounded-sm dark:bg-zinc-800 dark:text-zinc-400">
+                                       <Badge variant="outline" className="text-[9px] font-black bg-gray-100 border-0 text-gray-500 h-4 px-1.5 rounded-sm dark:bg-zinc-800 dark:text-zinc-400">
                                          {r.entity_type}
                                        </Badge>
                                      )}
@@ -643,7 +643,7 @@ export default function AccountActivityPage() {
               {/* Pagination */}
               {total > 0 && (
                 <div className="p-6 bg-gray-50 border-t border-gray-100 flex items-center justify-between dark:bg-white/5 dark:border-white/10">
-                  <div className="text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
+                  <div className="text-[11px] font-black text-gray-400 tracking-widest dark:text-zinc-500">
                     Showing <strong className="text-gray-900 dark:text-zinc-50">{rows.length}</strong> of <strong className="text-gray-900 dark:text-zinc-50">{total.toLocaleString()}</strong> Activity Logs
                   </div>
                   <div className="flex items-center gap-2">
@@ -652,7 +652,7 @@ export default function AccountActivityPage() {
                       size="sm"
                       disabled={displayPage <= 1 || loading}
                       onClick={() => setPage(p => Math.max(1, p - 1))}
-                      className="h-9 rounded-xl border-gray-300 bg-white px-4 text-[10px] font-black text-gray-600 uppercase shadow-xs transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 disabled:opacity-30 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300"
+                      className="h-9 rounded-xl border-gray-300 bg-white px-4 text-[10px] font-black text-gray-600 shadow-xs transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 disabled:opacity-30 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300"
                     >
                       <i className="ph-bold ph-caret-left mr-2"></i>
                       Prev
@@ -665,7 +665,7 @@ export default function AccountActivityPage() {
                       size="sm"
                       disabled={displayPage >= totalPages || loading}
                       onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                      className="h-9 rounded-xl border-gray-300 bg-white px-4 text-[10px] font-black text-gray-600 uppercase shadow-xs transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 disabled:opacity-30 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300"
+                      className="h-9 rounded-xl border-gray-300 bg-white px-4 text-[10px] font-black text-gray-600 shadow-xs transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 disabled:opacity-30 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300"
                     >
                       Next
                       <i className="ph-bold ph-caret-right ml-2"></i>

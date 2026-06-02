@@ -84,6 +84,8 @@ export async function PATCH(req, ctx) {
   let approvalStatus;
   let reviewNote;
 
+  let isPreviewed;
+
   if (contentType.includes("multipart/form-data")) {
     const form = await req.formData().catch(() => null);
     if (!form) {
@@ -99,6 +101,7 @@ export async function PATCH(req, ctx) {
     docType = String(form.get("docType") || "").trim() || undefined;
     approvalStatus = String(form.get("approvalStatus") || "").trim() || undefined;
     reviewNote = String(form.get("reviewNote") || "").trim() || undefined;
+    isPreviewed = form.get("isPreviewed") !== null ? (form.get("isPreviewed") === "true") : undefined;
   } else {
     body = await req.json().catch(() => null);
     if (!body || typeof body !== "object") {
@@ -116,6 +119,7 @@ export async function PATCH(req, ctx) {
       body.approvalStatus === undefined ? undefined : String(body.approvalStatus).trim();
     reviewNote =
       body.reviewNote === undefined ? undefined : String(body.reviewNote).trim();
+    isPreviewed = body.isPreviewed === undefined ? undefined : !!body.isPreviewed;
     if (body.file && typeof body.file !== "string") {
       replacementFile = body.file;
     }
@@ -176,7 +180,7 @@ export async function PATCH(req, ctx) {
     return NextResponse.json({ ok: true, data: row });
   }
 
-  let row = await updateDocumentMetadata(id, { studentNo, studentName, docType });
+  let row = await updateDocumentMetadata(id, { studentNo, studentName, docType, isPreviewed });
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }

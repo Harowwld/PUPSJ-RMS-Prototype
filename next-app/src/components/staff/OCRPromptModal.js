@@ -59,7 +59,7 @@ export default function OCRPromptModal({
             </div>
             <div className="min-w-0">
               <DialogTitle className="text-lg font-black tracking-tight text-gray-900 dark:text-zinc-50">
-                OCR Match Resolution Required
+                OCR match resolution required
               </DialogTitle>
               <DialogDescription className="mt-1 text-sm font-medium text-gray-600 dark:text-zinc-300">
                 The optical character recognition system detected multiple
@@ -72,16 +72,16 @@ export default function OCRPromptModal({
 
         <div className="p-6">
           <div className="mb-4">
-            <div className="mb-2 text-[11px] font-bold tracking-widest text-gray-500 uppercase dark:text-zinc-400">
-              Detected Name from Document
+            <div className="mb-2 text-[11px] font-bold tracking-widest text-gray-500 dark:text-zinc-400">
+              Detected name from document
             </div>
             <div className="rounded-brand border border-red-100 dark:border-none bg-red-50 px-3 py-2 text-sm font-bold text-pup-maroon dark:bg-red-950/30 dark:text-primary">
               {detectedName}
             </div>
           </div>
 
-          <div className="mb-2 text-[11px] font-bold tracking-widest text-gray-500 uppercase dark:text-zinc-400">
-            Select Correct Student Record
+          <div className="mb-2 text-[11px] font-bold tracking-widest text-gray-500 dark:text-zinc-400">
+            Select correct student record
           </div>
           <div className="flex max-h-64 flex-col gap-2 overflow-y-auto rounded-brand border border-gray-200 p-2 dark:border-white/10">
             {nameMatches.map((s) => {
@@ -131,7 +131,7 @@ export default function OCRPromptModal({
             disabled={!selected}
             className={`h-11 rounded-brand px-5 text-sm font-bold shadow-sm transition-all ${ selected ? "btn-brand-red" : "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-muted dark:text-zinc-500" }`}
           >
-            Confirm Selection
+            Confirm selection
           </button>
         </div>
       </DialogContent>

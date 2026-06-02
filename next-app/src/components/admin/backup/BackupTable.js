@@ -65,7 +65,7 @@ export default function BackupTable({
       >
         <table className="min-w-full table-fixed text-sm">
           <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm dark:border-white/20 dark:bg-muted">
-            <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
+            <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 dark:text-zinc-300">
               <th className="w-16 p-4 text-center">
                 <input
                   type="checkbox"
@@ -148,7 +148,7 @@ export default function BackupTable({
                           variant="outline"
                           size="sm"
                           onClick={onClearFilters}
-                          className="mt-6 flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 uppercase tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                          className="mt-6 flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                         >
                           <i className="ph-bold ph-arrow-counter-clockwise"></i>
                           CLEAR SEARCH
@@ -156,7 +156,7 @@ export default function BackupTable({
                       ) : (
                         <Button
                           onClick={handleGenerateBackup}
-                          className="mt-6 flex h-10 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-black tracking-widest text-white shadow-lg active:scale-95 transition-all dark:shadow-none uppercase"
+                          className="mt-6 flex h-10 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-black tracking-widest text-white shadow-lg active:scale-95 transition-all dark:shadow-none"
                         >
                           <i className="ph-bold ph-lightning"></i>
                           CREATE FULL BACKUP
@@ -232,7 +232,7 @@ export default function BackupTable({
                               <i
                                 className={cn("ph-bold text-[10px]", b.status_local === "Success" ? "ph-check-circle" : "ph-warning-circle")}
                               ></i>
-                              <span className="text-[9px] font-black tracking-wider uppercase">
+                              <span className="text-[9px] font-black tracking-wider">
                                 Local
                               </span>
                             </div>
@@ -253,7 +253,7 @@ export default function BackupTable({
                             <TooltipTrigger asChild>
                               <div className="flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-blue-700 shadow-xs transition-all dark:bg-blue-950/20 dark:border-blue-800/20 dark:text-blue-400">
                                 <i className="ph-bold ph-hard-drives text-[10px]"></i>
-                                <span className="text-[9px] font-black tracking-wider uppercase">
+                                <span className="text-[9px] font-black tracking-wider">
                                   External
                                 </span>
                               </div>
@@ -270,7 +270,7 @@ export default function BackupTable({
                                 onClick={() => handleSyncExternal(b.id)}
                                 disabled={localLoading.syncingId === b.id}
                                 className={cn(
-                                    "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black tracking-wider uppercase shadow-xs transition-all active:scale-95 disabled:opacity-50",
+                                    "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black tracking-wider  shadow-xs transition-all active:scale-95 disabled:opacity-50",
                                     b.status_external === "Failed" ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/30 dark:border-amber-800/30" : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50 dark:bg-card dark:border-white/10 dark:text-zinc-400 dark:hover:bg-zinc-800"
                                 )}
                               >

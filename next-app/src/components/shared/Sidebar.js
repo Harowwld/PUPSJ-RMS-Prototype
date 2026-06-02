@@ -51,7 +51,7 @@ export default function Sidebar({ items, activeKey, onSelect }) {
           return (
             <div
               key={`header-${idx}`}
-              className="mt-4 mb-2 px-2 text-[10px] font-bold tracking-widest text-gray-400 uppercase first:mt-0 dark:text-zinc-500"
+              className="mt-4 mb-2 px-2 text-[10px] font-bold tracking-widest text-gray-400 first:mt-0 dark:text-zinc-500"
             >
               {item.label}
             </div>
@@ -75,10 +75,10 @@ export default function Sidebar({ items, activeKey, onSelect }) {
                 <div className="flex items-center gap-2">
                   {item.badge > 0 ? (
                     <span className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-extrabold text-white ${
-                      item.key === "review" || item.key === "notifications"
-                        ? "bg-pup-maroon dark:bg-red-500/20 dark:text-red-400 dark:ring-1 dark:ring-red-500/30"
-                        : "bg-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 dark:ring-1 dark:ring-emerald-500/20"
-                    }`}>
+ item.key === "review" || item.key === "notifications"
+ ? "bg-pup-maroon dark:bg-red-500/20 dark:text-red-400 dark:ring-1 dark:ring-red-500/30"
+ : "bg-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 dark:ring-1 dark:ring-emerald-500/20"
+ }`}>
                       {item.badge > 99 ? "99+" : item.badge}
                     </span>
                   ) : null}
@@ -110,10 +110,10 @@ export default function Sidebar({ items, activeKey, onSelect }) {
                       </span>
                       {child.badge > 0 ? (
                         <span className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-extrabold text-white ${
-                          child.key === "review" || child.key === "notifications"
-                            ? "bg-pup-maroon dark:bg-red-500/20 dark:text-red-400 dark:ring-1 dark:ring-red-500/30"
-                            : "bg-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 dark:ring-1 dark:ring-emerald-500/20"
-                        }`}>
+ child.key === "review" || child.key === "notifications"
+ ? "bg-pup-maroon dark:bg-red-500/20 dark:text-red-400 dark:ring-1 dark:ring-red-500/30"
+ : "bg-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 dark:ring-1 dark:ring-emerald-500/20"
+ }`}>
                           {child.badge > 99 ? "99+" : child.badge}
                         </span>
                       ) : null}
@@ -137,10 +137,10 @@ export default function Sidebar({ items, activeKey, onSelect }) {
             </span>
             {item.badge > 0 ? (
               <span className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[11px] font-extrabold text-white ${
-                item.key === "review" || item.key === "notifications"
-                  ? "bg-pup-maroon dark:bg-red-500/20 dark:text-red-400 dark:ring-1 dark:ring-red-500/30"
-                  : "bg-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 dark:ring-1 dark:ring-emerald-500/20"
-              }`}>
+ item.key === "review" || item.key === "notifications"
+ ? "bg-pup-maroon dark:bg-red-500/20 dark:text-red-400 dark:ring-1 dark:ring-red-500/30"
+ : "bg-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400 dark:ring-1 dark:ring-emerald-500/20"
+ }`}>
                 {item.badge > 99 ? "99+" : item.badge}
               </span>
             ) : null}

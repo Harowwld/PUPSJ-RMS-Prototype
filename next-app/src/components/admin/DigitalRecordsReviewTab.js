@@ -135,7 +135,7 @@ export default function DigitalRecordsReviewTab({
     setIsExporting(true)
     try {
       const rows = sortedRecords
-      const headers = ["Record ID", "Student No.", "Student Name", "Document Type", "Filename", "Status", "Reviewed By", "Reviewed At", "Uploaded At"]
+      const headers = ["Record ID", "Student no.", "Student Name", "Document Type", "Filename", "Status", "Reviewed By", "Reviewed At", "Uploaded At"]
       const csvRows = rows.map((r) => [
         r.id,
         r.student_no || "—",
@@ -375,6 +375,20 @@ export default function DigitalRecordsReviewTab({
   }
 
   const handlePreview = (record) => {
+    // Fire non-blocking PATCH to mark document as previewed
+    fetch(`/api/documents/${record.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isPreviewed: true }),
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json?.ok && onRefresh) {
+          onRefresh();
+        }
+      })
+      .catch((err) => console.error("[Preview PATCH Error]", err));
+
     if (onPreviewDocument) {
       onPreviewDocument({
         docId: record.id,
@@ -458,7 +472,7 @@ export default function DigitalRecordsReviewTab({
                 <i className="ph-duotone ph-clock-countdown pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
                 <div className="relative z-10">
                   <div className="flex items-center justify-between">
-                    <p className="mb-1 text-[10px] font-black tracking-widest text-blue-200 uppercase">
+                    <p className="mb-1 text-[10px] font-black tracking-widest text-blue-200">
                       Pending Review
                     </p>
                     {stats.hasSlaBreach && !isLoading && (
@@ -469,12 +483,12 @@ export default function DigitalRecordsReviewTab({
                          </span>
                           <Tooltip>
                             <TooltipTrigger asChild>
-                               <Badge className="bg-red-500 text-white border-0 text-[8px] font-black px-1.5 py-0 h-4 uppercase tracking-tighter cursor-help">
+                               <Badge className="bg-red-500 text-white border-0 text-[8px] font-black px-1.5 py-0 h-4 tracking-tighter cursor-help">
                                   SLA Warning
                                </Badge>
                             </TooltipTrigger>
                             <TooltipContent side="top" className="bg-red-600 text-white border-red-500 max-w-[200px]">
-                               <p className="font-bold text-xs uppercase tracking-tight">SLA Breach Detected</p>
+                               <p className="font-bold text-xs tracking-tight">SLA Breach Detected</p>
                                <p className="text-[10px] font-medium opacity-90 leading-tight mt-0.5">
                                   {stats.slaBreachCount} {stats.slaBreachCount === 1 ? "record has" : "records have"} been pending for more than 48 hours.
                                </p>
@@ -495,7 +509,7 @@ export default function DigitalRecordsReviewTab({
             <div className="group relative overflow-hidden rounded-brand border-none bg-linear-to-br from-emerald-600 to-emerald-800 dark:from-emerald-800 dark:to-emerald-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
               <i className="ph-duotone ph-check-circle pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
               <div className="relative z-10">
-                <p className="mb-1 text-[10px] font-black tracking-widest text-emerald-100 uppercase">
+                <p className="mb-1 text-[10px] font-black tracking-widest text-emerald-100">
                   Approved Today
                 </p>
                 <h3 className="text-3xl font-black text-white">
@@ -510,7 +524,7 @@ export default function DigitalRecordsReviewTab({
             <div className="group relative overflow-hidden rounded-brand border-none bg-linear-to-br from-red-500 to-red-700 dark:from-red-700 dark:to-red-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
               <i className="ph-duotone ph-x-circle pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
               <div className="relative z-10">
-                <p className="mb-1 text-[10px] font-black tracking-widest text-red-200 uppercase">
+                <p className="mb-1 text-[10px] font-black tracking-widest text-red-200">
                   Returned Today
                 </p>
                 <h3 className="text-3xl font-black text-white">
@@ -544,7 +558,7 @@ export default function DigitalRecordsReviewTab({
 
               <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4 dark:border-white/10">
                 <div className="flex flex-col items-end gap-1">
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest dark:text-zinc-500">Refresh Status</p>
+                  <p className="text-[10px] font-bold text-gray-400 tracking-widest dark:text-zinc-500">Refresh Status</p>
                   <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap dark:text-zinc-400">
                     {hasActiveFilters ? "Filtering live records..." : "Get latest database updates"}
                   </p>
@@ -563,9 +577,9 @@ export default function DigitalRecordsReviewTab({
         {(localSearch !== "" || statusFilter !== "All" || docTypeFilter !== "All" || dateFrom || dateTo) && (
           <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">Active Filters:</span>
+              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 dark:text-zinc-500">Active filters:</span>
               {localSearch && (
-                <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary uppercase dark:border-white/10 dark:text-primary">
+                <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
                   Search: {localSearch}
                   <button
                     onClick={() => { setSearchQuery(""); setLocalSearch(""); setCurrentPage(1); }}
@@ -576,7 +590,7 @@ export default function DigitalRecordsReviewTab({
                 </div>
               )}
               {statusFilter !== "All" && (
-                <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 uppercase dark:bg-blue-950/30 dark:text-blue-400">
+                <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
                   Status: {statusFilter}
                   <button
                     onClick={() => { setStatusFilter("All"); setCurrentPage(1); }}
@@ -587,7 +601,7 @@ export default function DigitalRecordsReviewTab({
                 </div>
               )}
               {docTypeFilter !== "All" && (
-                <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 uppercase dark:bg-amber-950/30 dark:text-amber-400">
+                <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
                   Type: {docTypeFilter}
                   <button
                     onClick={() => { setDocTypeFilter("All"); setCurrentPage(1); }}
@@ -598,7 +612,7 @@ export default function DigitalRecordsReviewTab({
                 </div>
               )}
               {(dateFrom || dateTo) && (
-                <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 uppercase dark:bg-emerald-950/30 dark:text-emerald-400">
+                <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
                   Range: {dateFrom || "..."} to {dateTo || "..."}
                   <button
                     onClick={() => { setDateFrom(""); setDateTo(""); setCurrentPage(1); }}
@@ -620,7 +634,7 @@ export default function DigitalRecordsReviewTab({
                   setDateTo("")
                   setCurrentPage(1)
                 }}
-                className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon uppercase dark:border-white/10 dark:text-primary dark:bg-red-950/30"
+                className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
               >
                 CLEAR ALL FILTERS
               </Button>
@@ -634,7 +648,7 @@ export default function DigitalRecordsReviewTab({
             {/* Search */}
             <div className="flex-[2] min-w-[280px]">
               <div className="mb-1.5 flex items-center justify-between">
-                <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                <label className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
                   Global Search
                 </label>
                 <span className="text-[9px] font-bold text-pup-maroon dark:text-primary/50">
@@ -657,7 +671,7 @@ export default function DigitalRecordsReviewTab({
 
             {/* Status Select */}
             <div className="flex-1 min-w-[128px]">
-              <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+              <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
                 Status
               </label>
               <Select
@@ -676,7 +690,7 @@ export default function DigitalRecordsReviewTab({
 
             {/* Doc Type Select */}
             <div className="flex-[1.5] min-w-[200px]">
-              <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+              <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
                 Doc Type
               </label>
               <Select
@@ -696,7 +710,7 @@ export default function DigitalRecordsReviewTab({
             {/* Date Range Picker Section */}
             <div className="min-w-[320px] flex-1">
               <div className="mb-1.5 flex items-center justify-between">
-                <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                <label className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
                   Time Period
                 </label>
                 <div className="flex items-center gap-2">
@@ -729,7 +743,7 @@ export default function DigitalRecordsReviewTab({
                         setDateTo(format(end, "yyyy-MM-dd"))
                         setCurrentPage(1)
                       }}
-                      className="rounded-md bg-gray-100 px-2 py-0.5 text-[9px] font-black text-gray-500 uppercase transition-all hover:bg-pup-maroon hover:text-white dark:text-zinc-400 dark:bg-muted"
+                      className="rounded-md bg-gray-100 px-2 py-0.5 text-[9px] font-black text-gray-500 transition-all hover:bg-pup-maroon hover:text-white dark:text-zinc-400 dark:bg-muted"
                     >
                       {range.replace("last", "Last ")}
                     </button>
@@ -833,7 +847,7 @@ export default function DigitalRecordsReviewTab({
             <div className="overflow-x-auto rounded-[inherit]">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm dark:border-white/10 dark:bg-muted">
-                  <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
+                  <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 dark:text-zinc-300">
                     <th className="w-12 p-4 text-center">
                       <input
                         type="checkbox"
@@ -935,7 +949,7 @@ export default function DigitalRecordsReviewTab({
                                   setDateTo("")
                                   setCurrentPage(1)
                                 }}
-                                className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 uppercase tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                                className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                               >
                                 <i className="ph-bold ph-arrow-counter-clockwise"></i>
                                 CLEAR SEARCH
@@ -986,7 +1000,7 @@ export default function DigitalRecordsReviewTab({
                             </div>
                           </td>
                           <td className="p-4">
-                            <div className="flex w-fit items-center gap-1.5 rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-[9px] font-black text-pup-maroon tracking-wider uppercase dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
+                            <div className="flex w-fit items-center gap-1.5 rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-[9px] font-black text-pup-maroon tracking-wider dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
                               <i className="ph-bold ph-file-text text-[10px]"></i>
                               {r.doc_type}
                             </div>
@@ -1003,7 +1017,7 @@ export default function DigitalRecordsReviewTab({
                             <div className="flex items-center gap-3">
                               <div
                                 className={cn(
-                                  "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-wider shadow-xs transition-all",
+                                  "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black  tracking-wider shadow-xs transition-all",
                                   getStatusBadge(r.approval_status)
                                 )}
                               >
@@ -1020,7 +1034,7 @@ export default function DigitalRecordsReviewTab({
                                     </div>
                                   </TooltipTrigger>
                                   <TooltipContent side="top" className="bg-red-600 text-white border-red-500">
-                                     <p className="text-[10px] font-bold uppercase tracking-tight">SLA Breach Detected</p>
+                                     <p className="text-[10px] font-bold tracking-tight">SLA Breach Detected</p>
                                      <p className="text-[9px] font-medium opacity-90">Pending for over 48 hours.</p>
                                   </TooltipContent>
                                 </Tooltip>
@@ -1134,7 +1148,7 @@ export default function DigitalRecordsReviewTab({
             {sortedRecords.length > 0 && (
               <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card">
                 <div className="flex items-center gap-8">
-                  <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
+                  <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 tracking-widest dark:text-zinc-500">
                     <span>
                       SHOWING <strong className="text-gray-900 dark:text-zinc-50">{paginatedRecords.length}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{sortedRecords.length}</strong> ENTRIES
                     </span>
@@ -1163,11 +1177,9 @@ export default function DigitalRecordsReviewTab({
                     size="sm"
                     disabled={displayPage <= 1}
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    className="h-10 rounded-brand border-gray-200 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
+                    className="h-10 rounded-brand border-gray-200 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
                   >
-                    <i className="ph-bold ph-caret-left mr-2 text-base"></i>
-                    PREV
-                  </Button>
+                    <i className="ph-bold ph-caret-left mr-2 text-base"></i>Prev</Button>
 
                   <div className="flex h-9 min-w-[48px] items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
                     {displayPage}
@@ -1178,10 +1190,8 @@ export default function DigitalRecordsReviewTab({
                     size="sm"
                     disabled={displayPage >= totalPages}
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    className="h-10 rounded-brand border-gray-200 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
-                  >
-                    NEXT
-                    <i className="ph-bold ph-caret-right mr-2 text-base"></i>
+                    className="h-10 rounded-brand border-gray-200 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
+                  >Next<i className="ph-bold ph-caret-right mr-2 text-base"></i>
                   </Button>
                 </div>
               </div>

@@ -57,7 +57,7 @@ export default function BackupFilters({
       <div className="flex w-full flex-wrap items-end gap-4">
         {/* Search */}
         <div className="min-w-[400px] flex-1">
-          <label className="mb-1 block text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">
+          <label className="mb-1 block text-xs font-bold text-gray-700 dark:text-zinc-200">
             Search Backups
           </label>
           <div className="relative">
@@ -75,34 +75,34 @@ export default function BackupFilters({
         {/* Date Range Picker */}
         <div className="flex min-w-[450px] flex-[2] flex-col gap-1">
           <div className="flex items-center justify-between">
-            <label className="block text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">
+            <label className="block text-xs font-bold text-gray-700 dark:text-zinc-200">
               Capture Date Range
             </label>
             <div className="flex gap-1.5">
               <button
                 onClick={() => handleQuickRange("today")}
-                className="text-[9px] font-black text-gray-400 uppercase hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500"
+                className="text-[9px] font-black text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500"
               >
                 Today
               </button>
               <span className="text-gray-300 text-[9px] dark:text-zinc-600">•</span>
               <button
                 onClick={() => handleQuickRange("yesterday")}
-                className="text-[9px] font-black text-gray-400 uppercase hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500"
+                className="text-[9px] font-black text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500"
               >
                 Yesterday
               </button>
               <span className="text-gray-300 text-[9px] dark:text-zinc-600">•</span>
               <button
                 onClick={() => handleQuickRange("last7")}
-                className="text-[9px] font-black text-gray-400 uppercase hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500"
+                className="text-[9px] font-black text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500"
               >
                 Last 7 Days
               </button>
               <span className="text-gray-300 text-[9px] dark:text-zinc-600">•</span>
               <button
                 onClick={() => handleQuickRange("last30")}
-                className="text-[9px] font-black text-gray-400 uppercase hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500"
+                className="text-[9px] font-black text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500"
               >
                 Last 30 Days
               </button>
@@ -123,7 +123,7 @@ export default function BackupFilters({
                     {backupStartDate ? (
                       format(new Date(backupStartDate), "PPP")
                     ) : (
-                      <span className="text-[10px] font-bold tracking-tight uppercase opacity-60">
+                      <span className="text-[10px] font-bold tracking-tight opacity-60">
                         Start Date
                       </span>
                     )}{" "}
@@ -156,7 +156,7 @@ export default function BackupFilters({
                     {backupEndDate ? (
                       format(new Date(backupEndDate), "PPP")
                     ) : (
-                      <span className="text-[10px] font-bold tracking-tight uppercase opacity-60">
+                      <span className="text-[10px] font-bold tracking-tight opacity-60">
                         End Date
                       </span>
                     )}
