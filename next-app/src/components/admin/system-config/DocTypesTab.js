@@ -274,7 +274,7 @@ export default function DocTypesTab({
           <CardContent className="font-inter bg-white p-4 dark:bg-card/50 backdrop-blur-md border-t border-gray-100 dark:border-white/10">
             <div className="flex shrink-0 select-none flex-wrap items-end justify-between gap-6">
               <div className="flex w-full flex-col gap-1.5 sm:w-auto">
-                <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                <label className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
                   Status View
                 </label>
                 <div className="flex w-full cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 backdrop-blur-sm sm:w-auto dark:border-white/10 dark:bg-muted/50">
@@ -282,10 +282,10 @@ export default function DocTypesTab({
                     type="button"
                     onClick={() => setShowArchived(false)}
                     className={`group flex h-11 flex-1 cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] sm:w-[200px] sm:flex-none ${
-                      !showArchived
-                        ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
-                        : "text-gray-500 ring-transparent hover:bg-white/55 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
-                    }`}
+ !showArchived
+ ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
+ : "text-gray-500 ring-transparent hover:bg-white/55 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
+ }`}
                   >
                     <i
                       className={`ph-bold ph-check ${!showArchived ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
@@ -298,10 +298,10 @@ export default function DocTypesTab({
                     type="button"
                     onClick={() => setShowArchived(true)}
                     className={`group flex h-11 flex-1 cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] sm:w-[200px] sm:flex-none ${
-                      showArchived
-                        ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
-                        : "text-gray-500 ring-transparent hover:bg-white/55 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
-                    }`}
+ showArchived
+ ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
+ : "text-gray-500 ring-transparent hover:bg-white/55 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
+ }`}
                   >
                     <i
                       className={`ph-bold ph-archive ${showArchived ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
@@ -315,10 +315,10 @@ export default function DocTypesTab({
 
               <div className="flex flex-1 flex-col gap-1.5 min-w-[300px]">
                 <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                  <label className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
                     Search Document Types
                   </label>
-                  <span className="text-[9px] font-black text-pup-maroon dark:text-primary/70 uppercase">
+                  <span className="text-[9px] font-black text-pup-maroon dark:text-primary/70">
                     {filteredDocTypesFull.length > 0 ? `${filteredDocTypesFull.length.toLocaleString()} MATCHES` : "NO RESULTS"}
                   </span>
                 </div>
@@ -347,7 +347,7 @@ export default function DocTypesTab({
                 <Button
                   onClick={() => setIsAddDocTypeOpen(true)}
                   disabled={showArchived}
-                  className="flex h-11 items-center gap-2 rounded-brand btn-brand-red active:scale-95 disabled:opacity-50 transition-all dark:shadow-none uppercase text-[10px] font-black tracking-widest px-6"
+                  className="flex h-11 items-center gap-2 rounded-brand btn-brand-red active:scale-95 disabled:opacity-50 transition-all dark:shadow-none text-[10px] font-black tracking-widest px-6"
                 >
                   <i className="ph-bold ph-plus"></i>
                   ADD DOCUMENT TYPE
@@ -363,9 +363,9 @@ export default function DocTypesTab({
           {(localSearch !== "") && (
             <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">Active Filters:</span>
+                <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 dark:text-zinc-500">Active filters:</span>
                 {localSearch && (
-                  <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary uppercase dark:border-white/10 dark:text-primary">
+                  <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
                     Search: {localSearch}
                     <button
                       onClick={() => { setLocalSearch(""); setDocSearch(""); setPageDoc(1); }}
@@ -383,7 +383,7 @@ export default function DocTypesTab({
                     setDocSearch("")
                     setPageDoc(1)
                   }}
-                  className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon uppercase dark:border-white/10 dark:text-primary dark:bg-red-950/30"
+                  className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
                 >
                   CLEAR ALL FILTERS
                 </Button>
@@ -402,7 +402,7 @@ export default function DocTypesTab({
               ) : (
                 <table className="min-w-full text-sm">
                   <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm dark:border-white/10 dark:bg-muted">
-                    <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
+                    <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 dark:text-zinc-300">
                       <th className="w-16 p-4 text-center">
                         <input
                           type="checkbox"
@@ -477,7 +477,7 @@ export default function DocTypesTab({
                                 !newDocTypeName.trim() || isQuickAddLoading
                               }
                               onClick={() => addDocType(null, newDocTypeName)}
-                              className="h-9 rounded-brand px-4 text-[10px] font-black tracking-widest text-white shadow-sm active:scale-95 disabled:opacity-50 transition-all dark:shadow-none uppercase btn-brand-red"
+                              className="h-9 rounded-brand px-4 text-[10px] font-black tracking-widest text-white shadow-sm active:scale-95 disabled:opacity-50 transition-all dark:shadow-none btn-brand-red"
                             >
                               {isQuickAddLoading ? (
                                 <i className="ph-bold ph-spinner animate-spin"></i>
@@ -494,14 +494,14 @@ export default function DocTypesTab({
                           {newDocTypeName.trim() ? (
                             <Badge
                               variant="outline"
-                              className="animate-pulse border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-black tracking-wider text-amber-700 uppercase dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-500/50"
+                              className="animate-pulse border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-black tracking-wider text-amber-700 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-500/50"
                             >
                               UNSAVED DRAFT
                             </Badge>
                           ) : (
                             <Badge
                               variant="outline"
-                              className="border-gray-200 bg-gray-100 px-2.5 py-1 text-[9px] font-bold tracking-wider text-gray-400 uppercase dark:border-white/10 dark:text-zinc-500 dark:bg-muted"
+                              className="border-gray-200 bg-gray-100 px-2.5 py-1 text-[9px] font-bold tracking-wider text-gray-400 dark:border-white/10 dark:text-zinc-500 dark:bg-muted"
                             >
                               NEW RECORD
                             </Badge>
@@ -556,14 +556,14 @@ export default function DocTypesTab({
                             {dt.status === "Archived" ? (
                               <Badge
                                 variant="outline"
-                                className="border-red-200 bg-red-50 px-2.5 py-1 text-[9px] font-black tracking-wider text-red-700 uppercase dark:border-red-500/20 dark:bg-red-500/10 dark:text-primary"
+                                className="border-red-200 bg-red-50 px-2.5 py-1 text-[9px] font-black tracking-wider text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-primary"
                               >
                                 ARCHIVED
                               </Badge>
                             ) : (
                               <Badge
                                 variant="outline"
-                                className="border-green-200 bg-green-50 px-2.5 py-1 text-[9px] font-black tracking-wider text-green-700 uppercase dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400"
+                                className="border-green-200 bg-green-50 px-2.5 py-1 text-[9px] font-black tracking-wider text-green-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400"
                               >
                                 ACTIVE
                               </Badge>
@@ -697,7 +697,7 @@ export default function DocTypesTab({
         {filteredDocTypesFull.length > 0 && (
           <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-2xl dark:border-white/10 dark:bg-card">
             <div className="flex items-center gap-8 select-none cursor-default">
-              <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
+              <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 tracking-widest dark:text-zinc-500">
                 <span>
                   SHOWING <strong className="text-gray-900 dark:text-zinc-50">{filteredDocTypes.length}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{filteredDocTypesFull.length}</strong> ENTRIES
                 </span>
@@ -724,11 +724,9 @@ export default function DocTypesTab({
                 size="sm"
                 disabled={pageDoc <= 1}
                 onClick={() => setPageDoc((p) => p - 1)}
-                className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
               >
-                <i className="ph-bold ph-caret-left mr-2 text-base"></i>
-                PREV
-              </Button>
+                <i className="ph-bold ph-caret-left mr-2 text-base"></i>Prev</Button>
 
               <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
                 {pageDoc}
@@ -739,10 +737,8 @@ export default function DocTypesTab({
                 size="sm"
                 disabled={pageDoc >= Math.ceil(filteredDocTypesFull.length / itemsPerPage)}
                 onClick={() => setPageDoc((p) => p + 1)}
-                className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-              >
-                NEXT
-                <i className="ph-bold ph-caret-right ml-2 text-base"></i>
+                className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+              >Next<i className="ph-bold ph-caret-right ml-2 text-base"></i>
               </Button>
             </div>
           </div>
@@ -785,7 +781,7 @@ export default function DocTypesTab({
           </DialogHeader>
           <form onSubmit={addDocType}>
             <div className="p-6">
-              <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+              <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
                 Document Name <span className="text-pup-maroon dark:text-primary">*</span>
               </label>
               <Input
@@ -805,10 +801,8 @@ export default function DocTypesTab({
                   setIsAddDocTypeOpen(false)
                   setNewDocTypeName("")
                 }}
-                className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
-              >
-                CANCEL
-              </Button>
+                className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+              >Cancel</Button>
               <Button
                 type="submit"
                 className="flex h-11 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-black text-white shadow-sm dark:shadow-none"
@@ -846,7 +840,7 @@ export default function DocTypesTab({
           </DialogHeader>
           <form onSubmit={updDocType}>
             <div className="p-6">
-              <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+              <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
                 Document Type Name <span className="text-pup-maroon dark:text-primary">*</span>
               </label>
               <Input
@@ -870,10 +864,8 @@ export default function DocTypesTab({
                   setIsEditDocTypeOpen(false)
                   setEditDocType({ id: null, name: "" })
                 }}
-                className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 uppercase shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
-              >
-                CANCEL
-              </Button>
+                className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+              >Cancel</Button>
               <Button
                 type="submit"
                 className="flex h-11 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-black text-white shadow-sm dark:shadow-none"

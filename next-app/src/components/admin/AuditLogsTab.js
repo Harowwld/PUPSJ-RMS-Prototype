@@ -263,7 +263,7 @@ export default function AuditLogsTab({
 
                 <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4 dark:border-white/10">
                   <div className="flex flex-col items-end gap-1">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest dark:text-zinc-500">Refresh Status</p>
+                    <p className="text-[10px] font-bold text-gray-400 tracking-widest dark:text-zinc-500">Refresh Status</p>
                     <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap dark:text-zinc-400">
                       {hasActiveFilters ? "Filtering live logs..." : "Get latest database updates"}
                     </p>
@@ -285,9 +285,9 @@ export default function AuditLogsTab({
               isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
             )}>
               <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">Active Filters:</span>
+                <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 dark:text-zinc-500">Active filters:</span>
                 {localSearch && (
-                  <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary uppercase dark:border-white/10 dark:text-primary">
+                  <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
                     Search: {localSearch}
                     <button
                       onClick={() => { setLocalSearch(""); setLogSearch(""); setLogPage(1); }}
@@ -298,7 +298,7 @@ export default function AuditLogsTab({
                   </div>
                 )}
                 {logRoleFilter !== "All" && (
-                  <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 uppercase dark:bg-blue-950/30 dark:text-blue-400">
+                  <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
                     Role: {logRoleFilter}
                     <button
                       onClick={() => { setLogRoleFilter("All"); setLogPage(1); }}
@@ -309,7 +309,7 @@ export default function AuditLogsTab({
                   </div>
                 )}
                 {logSeverityFilter !== "All" && (
-                  <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 uppercase dark:bg-amber-950/30 dark:text-amber-400">
+                  <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
                     Severity: {logSeverityFilter}
                     <button
                       onClick={() => { setLogSeverityFilter("All"); setLogPage(1); }}
@@ -320,7 +320,7 @@ export default function AuditLogsTab({
                   </div>
                 )}
                 {(logStartDate || logEndDate) && (
-                  <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 uppercase dark:bg-emerald-950/30 dark:text-emerald-400">
+                  <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
                     Range: {logStartDate || "..."} to {logEndDate || "..."}
                     <button
                       onClick={() => { setLogStartDate(""); setLogEndDate(""); setLogPage(1); }}
@@ -342,7 +342,7 @@ export default function AuditLogsTab({
                     setLogEndDate("")
                     setLogPage(1)
                   }}
-                  className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon uppercase dark:border-white/10 dark:text-primary dark:bg-red-950/30"
+                  className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
                 >
                   CLEAR ALL FILTERS
                 </Button>

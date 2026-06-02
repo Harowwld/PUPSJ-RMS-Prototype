@@ -9,6 +9,12 @@ import {
 } from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 
@@ -72,7 +78,7 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
                 <i className="ph-duotone ph-file-pdf text-2xl"></i>
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-left text-xl leading-none font-black tracking-tight text-gray-900 uppercase dark:text-zinc-50">
+                <DialogTitle className="text-left text-xl leading-none font-black tracking-tight text-gray-900 dark:text-zinc-50">
                   Document Preview: {preview?.docType || "Loading..."}
                 </DialogTitle>
                 <p className="mt-1.5 text-left text-sm font-medium text-gray-500 dark:text-zinc-400">
@@ -118,42 +124,52 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
           )}
         </div>
 
-        <div className="flex shrink-0 justify-between items-center gap-3 border-t border-gray-100 bg-white p-4 dark:border-white/10 dark:bg-card">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => setIsFullscreen(!isFullscreen)}
-            className={cn(
-              "h-11 w-11 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card transition-all hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card shadow-sm dark:shadow-none",
-              isFullscreen && "bg-pup-maroon dark:bg-red-600 text-white hover:bg-pup-darkMaroon border-pup-darkMaroon"
-            )}
-          >
-            <i className={cn("ph-bold text-xl", isFullscreen ? "ph-corners-in" : "ph-corners-out")}></i>
-          </Button>
+        <TooltipProvider delayDuration={200}>
+          <div className="flex shrink-0 justify-between items-center gap-3 border-t border-gray-100 bg-white p-4 dark:border-white/10 dark:bg-card">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setIsFullscreen(!isFullscreen)}
+                  className={cn(
+                    "h-11 w-11 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card transition-all hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card shadow-sm dark:shadow-none",
+                    isFullscreen && "bg-pup-maroon dark:bg-red-600 text-white hover:bg-pup-darkMaroon border-pup-darkMaroon"
+                  )}
+                >
+                  <i className={cn("ph-bold text-xl", isFullscreen ? "ph-corners-in" : "ph-corners-out")}></i>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
+                <p className="text-[10px] font-bold">Document Zoom</p>
+                <p className="text-[9px] opacity-80">Toggle high-focus preview mode</p>
+              </TooltipContent>
+            </Tooltip>
 
-          <div className="flex items-center gap-3">
-            <DialogClose asChild>
-              <Button
-                variant="outline"
-                onClick={onClose}
-                className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 uppercase hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:text-zinc-300 dark:hover:border-zinc-700 dark:bg-red-950/30 dark:shadow-none dark:border-white/10"
-              >
-                Close Preview
-              </Button>
-            </DialogClose>
-            {docId ? (
-              <a
-                href={`/api/documents/${docId}`}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex h-11 items-center rounded-brand border border-gray-300 bg-white px-6 text-sm font-bold tracking-wide text-pup-maroon dark:text-primary uppercase shadow-sm transition-colors hover:bg-red-50 dark:border-white/10 dark:bg-card"
-              >
-                <i className="ph-bold ph-arrow-square-out mr-2 text-lg"></i>
-                Open Full View
-              </a>
-            ) : null}
+            <div className="flex items-center gap-3">
+              <DialogClose asChild>
+                <Button
+                  variant="outline"
+                  onClick={onClose}
+                  className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:text-zinc-300 dark:hover:border-zinc-700 dark:bg-red-950/30 dark:shadow-none dark:border-white/10"
+                >
+                  Close Preview
+                </Button>
+              </DialogClose>
+              {docId ? (
+                <a
+                  href={`/api/documents/${docId}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex h-11 items-center rounded-brand border border-gray-300 bg-white px-6 text-sm font-bold tracking-wide text-pup-maroon dark:text-primary shadow-sm transition-colors hover:bg-red-50 dark:border-white/10 dark:bg-card"
+                >
+                  <i className="ph-bold ph-arrow-square-out mr-2 text-lg"></i>
+                  Open Full View
+                </a>
+              ) : null}
+            </div>
           </div>
-        </div>
+        </TooltipProvider>
       </DialogContent>
     </Dialog>
   )

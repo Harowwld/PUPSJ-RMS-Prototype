@@ -42,7 +42,7 @@ export default function DocTypeModal({
         </DialogHeader>
 
         <div className="p-6">
-          <label className="mb-1 block text-xs font-bold text-gray-700 uppercase dark:text-zinc-200">
+          <label className="mb-1 block text-xs font-bold text-gray-700 dark:text-zinc-200">
             Document Type
           </label>
           <Input

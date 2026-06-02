@@ -42,6 +42,28 @@ export async function setNotificationItemState(staffId, notificationIds, field, 
   }
 }
 
+export async function markAllStaffNotificationsReadState(staffId, isRead) {
+  if (!staffId) return;
+  const value = isRead ? 1 : 0;
+  
+  // We insert/update for notifications that belong to this staff (uploaded_by) 
+  // and have been reviewed, but ONLY if they are NOT archived.
+  await dbRun(
+    `
+      INSERT INTO staff_notification_item_states (staff_id, notification_id, is_read)
+      SELECT ?, d.id, ? FROM documents d
+      LEFT JOIN staff_notification_item_states ns ON d.id = ns.notification_id AND ns.staff_id = ?
+      WHERE d.uploaded_by = ? 
+        AND d.reviewed_at IS NOT NULL 
+        AND d.approval_status IN ('Approved', 'Declined')
+        AND COALESCE(ns.is_archived, 0) = 0
+      ON CONFLICT(staff_id, notification_id) DO UPDATE SET
+        is_read = excluded.is_read
+    `,
+    [staffId, value, staffId, staffId]
+  );
+}
+
 export async function listDocumentReviewNotifications({
   limit = 20,
   offset = 0,
@@ -136,8 +158,10 @@ export async function listDocumentReviewNotifications({
         d.reviewed_by,
         d.reviewed_at,
         d.review_note,
+        d.mime_type,
         d.created_at,
         d.uploaded_by,
+        d.is_previewed,
         COALESCE(ns.is_read, 0) AS is_read,
         COALESCE(ns.is_archived, 0) AS is_archived
       FROM documents d

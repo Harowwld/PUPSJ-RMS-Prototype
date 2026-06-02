@@ -31,7 +31,7 @@ const CustomBarTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
       <div className="rounded-lg border border-gray-100 bg-white p-3 shadow-xl dark:border-white/10 dark:bg-card dark:shadow-none">
-        <p className="mb-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest dark:text-zinc-500">{label}</p>
+        <p className="mb-2 text-[10px] font-bold text-gray-400 tracking-widest dark:text-zinc-500">{label}</p>
         <div className="space-y-1.5">
           {payload.map((entry, index) => (
             <div key={index} className="flex items-center gap-2">
@@ -72,7 +72,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
     const { payload } = entry
     const percent = totalSlaRequests > 0 ? ((payload.value / totalSlaRequests) * 100).toFixed(0) : 0
     return (
-      <span className="text-[10px] font-bold text-gray-600 uppercase dark:text-zinc-300">
+      <span className="text-[10px] font-bold text-gray-600 dark:text-zinc-300">
         {value} ({payload.value}) — {percent}%
       </span>
     )
@@ -82,7 +82,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       {/* Document Demand Chart */}
       <div className="rounded-brand border border-gray-200 bg-white p-5 shadow-xs lg:col-span-2 dark:border-white/10 dark:bg-card flex flex-col">
-        <h3 className="mb-4 text-xs font-bold tracking-widest text-gray-500 uppercase dark:text-zinc-400">
+        <h3 className="mb-4 text-xs font-bold tracking-widest text-gray-500 dark:text-zinc-400">
           Document Demand (By Type)
         </h3>
         <div className="flex-1 min-h-[288px] w-full flex flex-col justify-center">
@@ -140,7 +140,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 uppercase tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                  className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                   onClick={() => onSwitchView?.('review')}
                 >
                   <i className="ph-bold ph-arrow-right text-base" aria-hidden /> CHECK INCOMING REQUESTS
@@ -154,7 +154,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
       <div className="flex flex-col gap-6">
         {/* Status Breakdown Pie */}
         <div className="flex-1 rounded-brand border border-gray-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-card">
-          <h3 className="mb-2 text-xs font-bold tracking-widest text-gray-500 uppercase dark:text-zinc-400">
+          <h3 className="mb-2 text-xs font-bold tracking-widest text-gray-500 dark:text-zinc-400">
             Status Distribution
           </h3>
           <div className="h-44 w-full">
@@ -205,7 +205,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="mt-3 flex h-8 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-[9px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 uppercase tracking-wider dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                    className="mt-3 flex h-8 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-[9px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wider dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                     onClick={() => onSwitchView?.('review')}
                   >
                     <i className="ph-bold ph-arrow-right text-xs" aria-hidden /> VIEW REQUESTS
@@ -229,7 +229,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                         backgroundColor: STATUS_COLORS[d.name] || "#ccc",
                       }}
                     ></div>
-                    <span className="font-bold uppercase tracking-tight">
+                    <span className="font-bold tracking-tight">
                       {d.name}
                     </span>
                   </div>
@@ -245,7 +245,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
 
         {/* Top Requested Docs lists */}
         <div className="flex-1 rounded-brand border border-gray-200 bg-gray-50 p-5 shadow-xs dark:border-white/10 dark:bg-white/5">
-          <h3 className="mb-3 text-xs font-bold tracking-widest text-gray-500 uppercase dark:text-zinc-400">
+          <h3 className="mb-3 text-xs font-bold tracking-widest text-gray-500 dark:text-zinc-400">
             Top Requested Documents
           </h3>
           <div className="space-y-3">
@@ -286,7 +286,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    className="mt-3 flex h-8 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-[9px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 uppercase tracking-wider dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                    className="mt-3 flex h-8 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-[9px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wider dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                     onClick={() => onSwitchView?.('review')}
                   >
                     <i className="ph-bold ph-arrow-right text-xs" aria-hidden /> GO TO REVIEWS

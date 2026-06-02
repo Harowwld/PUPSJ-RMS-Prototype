@@ -95,10 +95,10 @@ export async function POST(req) {
     methodUsed = "Recovery Code";
   }
 
-  // 4. Try Serial Key (16 or 19 chars) if not valid yet
+  // 4. Try Serial key (16 or 19 chars) if not valid yet
   if (!isValid && (code.trim().length === 16 || code.trim().length === 19)) {
     isValid = await verifySerialKey(userId, code);
-    methodUsed = "Serial Key";
+    methodUsed = "Serial key";
   }
 
   if (!isValid) {

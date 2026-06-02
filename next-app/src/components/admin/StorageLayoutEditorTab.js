@@ -899,7 +899,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       <div className="flex items-center gap-6">
         <div className="flex items-center gap-4">
           <div className="flex flex-col gap-1">
-            <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">Current Room</label>
+            <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 dark:text-zinc-500">Current Room</label>
             <div className="flex items-center gap-2">
               <div className="relative group">
                 <i className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 transition-all duration-300", activeRoomId ? "ph-fill ph-door-open text-pup-maroon dark:text-primary" : "ph-bold ph-door-open text-gray-400 dark:text-zinc-500", "group-focus-within:text-pup-maroon dark:text-primary")} />
@@ -933,14 +933,14 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         </div>
 
         <div className="flex flex-col gap-1">
-          <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">Add Tools</label>
+          <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 dark:text-zinc-500">Add Tools</label>
           <Button type="button" variant="outline" onClick={addCabinet} className="h-10 rounded-brand border border-gray-200 bg-white px-5 font-black text-[10px] tracking-widest text-gray-600 shadow-xs hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300" disabled={!activeRoom}><i className="ph-bold ph-plus-square mr-2 text-base" />New cabinet</Button>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-6">
         <div className="flex flex-col gap-1 w-48">
-          <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">Templates</label>
+          <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 dark:text-zinc-500">Templates</label>
           <div className="flex flex-col gap-1.5">
             <Select
               menuClassName="min-w-max"
@@ -954,7 +954,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
             <Button 
               type="button" 
               onClick={() => setTemplateApplyConfirmOpen(true)} 
-              className="h-8 w-full rounded-brand btn-brand-red text-[9px] font-black tracking-widest uppercase text-white shadow-sm active:scale-95 transition-all dark:shadow-none" 
+              className="h-8 w-full rounded-brand btn-brand-red text-[9px] font-black tracking-widest text-white shadow-sm active:scale-95 transition-all dark:shadow-none" 
               disabled={!activeRoom}
             >
               Use template
@@ -1053,9 +1053,9 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       <FloatingActionBar selectedCount={selectedCabinetIds.size} onCancel={() => setSelectedCabinetIds(new Set())} actionLabel="Delete selected" actionIcon="ph-trash" onAction={() => setBulkConfirmOpen(true)} selectionStatus="Selected Cabinets" />
 
       <ConfirmModal open={bulkConfirmOpen} onCancel={() => setBulkConfirmOpen(false)} title="Delete" message="Delete selected cabinets?" confirmLabel="Delete" variant="danger" onConfirm={bulkDeleteCabinets} />
-      <ConfirmModal open={deleteRoomConfirmOpen} onCancel={() => setDeleteRoomConfirmOpen(false)} title="Delete Room" message="Delete this room?" confirmLabel="Delete" variant="danger" onConfirm={() => { removeActiveRoom(); setDeleteRoomConfirmOpen(false); }} />
-      <ConfirmModal open={resetRoomConfirmOpen} onCancel={() => setResetRoomConfirmOpen(false)} title="Reset Room" message="Clear layout?" confirmLabel="Reset" variant="warning" onConfirm={() => { resetActiveRoomCabinets(); setResetRoomConfirmOpen(false); }} />
-      <ConfirmModal open={templateApplyConfirmOpen} onCancel={() => setTemplateApplyConfirmOpen(false)} title="Use Template" message="Apply template?" confirmLabel="Use" variant="warning" onConfirm={() => { applyTemplateToActiveRoom(); setTemplateApplyConfirmOpen(false); }} />
+      <ConfirmModal open={deleteRoomConfirmOpen} onCancel={() => setDeleteRoomConfirmOpen(false)} title="Delete room" message="Delete this room?" confirmLabel="Delete" variant="danger" onConfirm={() => { removeActiveRoom(); setDeleteRoomConfirmOpen(false); }} />
+      <ConfirmModal open={resetRoomConfirmOpen} onCancel={() => setResetRoomConfirmOpen(false)} title="Reset room" message="Clear layout?" confirmLabel="Reset" variant="warning" onConfirm={() => { resetActiveRoomCabinets(); setResetRoomConfirmOpen(false); }} />
+      <ConfirmModal open={templateApplyConfirmOpen} onCancel={() => setTemplateApplyConfirmOpen(false)} title="Use template" message="Apply template?" confirmLabel="Use" variant="warning" onConfirm={() => { applyTemplateToActiveRoom(); setTemplateApplyConfirmOpen(false); }} />
     </div>
   )
 }

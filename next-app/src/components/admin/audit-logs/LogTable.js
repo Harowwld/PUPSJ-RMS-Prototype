@@ -138,7 +138,7 @@ const LogRow = React.memo(function LogRow({
         </td>
         <td className="p-4">
           <div className={cn(
-            "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black uppercase tracking-wider transition-all",
+            "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black  tracking-wider transition-all",
             sevConfig.bg,
             sevConfig.text,
             sevConfig.border
@@ -161,7 +161,7 @@ const LogRow = React.memo(function LogRow({
               <span className="truncate text-xs font-bold text-gray-900 dark:text-zinc-50">
                 {log.user}
               </span>
-              <span className="text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-400">
+              <span className="text-[9px] font-black tracking-widest text-gray-400 dark:text-zinc-400">
                 {log.role}
               </span>
             </div>
@@ -175,7 +175,7 @@ const LogRow = React.memo(function LogRow({
             )}>
               <i className={cn(getActionIcon(log.action), "text-base")}></i>
             </div>
-            <span className="text-xs font-bold tracking-tight text-gray-700 uppercase dark:text-zinc-300">
+            <span className="text-xs font-bold tracking-tight text-gray-700 dark:text-zinc-300">
               {log.action}
             </span>
           </div>
@@ -364,7 +364,7 @@ export default function LogTable({
         <div className="overflow-x-auto rounded-[inherit]">
           <table className="min-w-full table-fixed text-sm">
             <thead className="bg-gray-50 backdrop-blur-sm select-none dark:bg-muted">
-              <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
+              <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 dark:text-zinc-300">
                 <th className="w-[50px] p-4 text-center">
                   <i className="ph-bold ph-hash text-[11px] dark:text-zinc-300"></i>
                 </th>
@@ -461,7 +461,7 @@ export default function LogTable({
                               setLogEndDate("")
                               setLogPage(1)
                             }}
-                            className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 uppercase tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                            className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                           >
                             <i className="ph-bold ph-arrow-counter-clockwise"></i>
                             CLEAR SEARCH

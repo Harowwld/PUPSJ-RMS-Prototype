@@ -186,14 +186,14 @@ const CabinetCanvas = memo(({
         {selectedCabinet && (
           <div className="animate-in fade-in slide-in-from-right-2 flex flex-col items-end gap-1 rounded bg-slate-900/80 p-2 font-mono text-[10px] text-white backdrop-blur-sm">
             <div className="flex items-center gap-2">
-              <span className="opacity-60 uppercase">Pos:</span>
+              <span className="opacity-60">Pos:</span>
               <span>
                 {toPct(selectedCabinet.rect.x)}%,{" "}
                 {toPct(selectedCabinet.rect.y)}%
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="opacity-60 uppercase">Dim:</span>
+              <span className="opacity-60">Dim:</span>
               <span>
                 {toPct(selectedCabinet.rect.w)}% x{" "}
                 {toPct(selectedCabinet.rect.h)}%
@@ -201,7 +201,7 @@ const CabinetCanvas = memo(({
             </div>
           </div>
         )}
-        <div className="rounded bg-slate-800/40 px-2 py-1 font-mono text-[9px] text-slate-200 uppercase tracking-tighter">
+        <div className="rounded bg-slate-800/40 px-2 py-1 font-mono text-[9px] text-slate-200 tracking-tighter">
           GRID: {toPct(SNAP_STEP_X)}% x {toPct(SNAP_STEP_Y)}%
         </div>
       </div>
@@ -371,7 +371,7 @@ const CabinetElement = memo(({
 
       <div className="absolute inset-0 flex flex-col items-center justify-center p-2 pointer-events-none">
         <span className={cn(
-          "text-[10px] font-black text-gray-700 uppercase tracking-tighter dark:text-zinc-900",
+          "text-[10px] font-black text-gray-700  tracking-tighter dark:text-zinc-900",
           isSelected && "dark:text-cyan-50"
         )}>
           {cab.id}

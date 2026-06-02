@@ -247,7 +247,7 @@ export default function SectionsTab({
 
   const programFilter = (
     <div className="flex w-full flex-col gap-1.5 sm:w-64 min-w-0">
-      <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+      <label className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
         Filter by Program
       </label>
       <Select
@@ -300,7 +300,7 @@ export default function SectionsTab({
         <CardContent className="font-inter bg-white p-4 dark:bg-card/50 backdrop-blur-md border-t border-gray-100 dark:border-white/10">
           <div className="flex shrink-0 select-none flex-wrap items-end justify-between gap-6">
             <div className="flex w-full flex-col gap-1.5 sm:w-auto">
-              <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+              <label className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
                 Status View
               </label>
               <div className="flex w-full cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 backdrop-blur-sm sm:w-auto dark:border-white/10 dark:bg-muted/50">
@@ -308,10 +308,10 @@ export default function SectionsTab({
                   type="button"
                   onClick={() => setShowArchived(false)}
                   className={`group flex h-11 flex-1 cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] sm:w-[200px] sm:flex-none ${
-                    !showArchived
-                      ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
-                      : "text-gray-500 ring-transparent hover:bg-white/55 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
-                  }`}
+ !showArchived
+ ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
+ : "text-gray-500 ring-transparent hover:bg-white/55 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
+ }`}
                 >
                   <i
                     className={`ph-bold ph-check ${!showArchived ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
@@ -324,10 +324,10 @@ export default function SectionsTab({
                   type="button"
                   onClick={() => setShowArchived(true)}
                   className={`group flex h-11 flex-1 cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] sm:w-[200px] sm:flex-none ${
-                    showArchived
-                      ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
-                      : "text-gray-500 ring-transparent hover:bg-white/55 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
-                  }`}
+ showArchived
+ ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
+ : "text-gray-500 ring-transparent hover:bg-white/55 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
+ }`}
                 >
                   <i
                     className={`ph-bold ph-archive ${showArchived ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
@@ -341,10 +341,10 @@ export default function SectionsTab({
 
             <div className="flex flex-1 flex-col gap-1.5 min-w-[300px]">
               <div className="flex items-center justify-between">
-                <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
+                <label className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
                   Search Course Blocks
                 </label>
-                <span className="text-[9px] font-black text-pup-maroon dark:text-primary/70 uppercase">
+                <span className="text-[9px] font-black text-pup-maroon dark:text-primary/70">
                   {filteredSectionsFull.length > 0 ? `${filteredSectionsFull.length.toLocaleString()} MATCHES` : "NO RESULTS"}
                 </span>
               </div>
@@ -375,7 +375,7 @@ export default function SectionsTab({
               <Button
                 onClick={() => setIsAddSectionOpen(true)}
                 disabled={showArchived}
-                className="flex h-11 items-center gap-2 rounded-brand btn-brand-red active:scale-95 disabled:opacity-50 transition-all dark:shadow-none uppercase text-[10px] font-black tracking-widest px-6"
+                className="flex h-11 items-center gap-2 rounded-brand btn-brand-red active:scale-95 disabled:opacity-50 transition-all dark:shadow-none text-[10px] font-black tracking-widest px-6"
               >
                 <i className="ph-bold ph-plus"></i>
                 ADD COURSE BLOCK
@@ -392,9 +392,9 @@ export default function SectionsTab({
         {(localSearch !== "" || selectedCourseFilter) && (
           <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-500">Active Filters:</span>
+              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 dark:text-zinc-500">Active filters:</span>
               {localSearch && (
-                <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary uppercase dark:border-white/10 dark:text-primary">
+                <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
                   Search: {localSearch}
                   <button
                     onClick={() => { setLocalSearch(""); setSectionSearch(""); setPageSection(1); }}
@@ -405,7 +405,7 @@ export default function SectionsTab({
                 </div>
               )}
               {selectedCourseFilter && (
-                <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 uppercase dark:bg-blue-950/30 dark:text-blue-400">
+                <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
                   Program: {selectedCourseFilter}
                   <button
                     onClick={() => { setSelectedCourseFilter(""); setPageSection(1); }}
@@ -424,7 +424,7 @@ export default function SectionsTab({
                   setSelectedCourseFilter("")
                   setPageSection(1)
                 }}
-                className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon uppercase dark:border-white/10 dark:text-primary dark:bg-red-950/30"
+                className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
               >
                 CLEAR ALL FILTERS
               </Button>
@@ -443,7 +443,7 @@ export default function SectionsTab({
               ) : (
                 <table className="min-w-full text-sm">
                   <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm dark:border-white/10 dark:bg-muted">
-                    <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 uppercase dark:text-zinc-300">
+                    <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 dark:text-zinc-300">
                       <th className="w-16 p-4 text-center">
                         <input
                           type="checkbox"
@@ -498,7 +498,7 @@ export default function SectionsTab({
                         <td className="p-4 px-6">
                           <Select
                             className={cn(
-                              "h-9 w-full rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black uppercase text-gray-700 transition-all focus:border-gray-300 focus:ring-pup-maroon",
+                              "h-9 w-full rounded-brand border border-gray-300 bg-white px-3 text-[10px] font-black  text-gray-700 transition-all focus:border-gray-300 focus:ring-pup-maroon",
                               secCourseCode ? "ring-1 ring-amber-100" : "dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:focus:border-zinc-700"
                             )}
                             value={secCourseCode}
@@ -533,7 +533,7 @@ export default function SectionsTab({
                               size="sm"
                               disabled={!secCourseCode || !newSectionName.trim() || isQuickAddLoading}
                               onClick={() => addSection(null, { courseCode: secCourseCode, name: newSectionName })}
-                              className="h-9 rounded-brand px-4 text-[10px] font-black tracking-widest text-white shadow-sm active:scale-95 disabled:opacity-50 transition-all dark:shadow-none uppercase btn-brand-red"
+                              className="h-9 rounded-brand px-4 text-[10px] font-black tracking-widest text-white shadow-sm active:scale-95 disabled:opacity-50 transition-all dark:shadow-none btn-brand-red"
                             >
                             {isQuickAddLoading ? (
                               <i className="ph-bold ph-spinner animate-spin"></i>
@@ -550,14 +550,14 @@ export default function SectionsTab({
                           {(secCourseCode || newSectionName.trim()) ? (
                             <Badge
                               variant="outline"
-                              className="border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-black tracking-wider text-amber-700 uppercase animate-pulse dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-500/50"
+                              className="border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-black tracking-wider text-amber-700 animate-pulse dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-500/50"
                             >
                               UNSAVED DRAFT
                             </Badge>
                           ) : (
                             <Badge
                               variant="outline"
-                              className="border-gray-200 bg-gray-100 px-2.5 py-1 text-[9px] font-bold tracking-wider text-gray-400 uppercase dark:border-white/10 dark:text-zinc-500 dark:bg-muted"
+                              className="border-gray-200 bg-gray-100 px-2.5 py-1 text-[9px] font-bold tracking-wider text-gray-400 dark:border-white/10 dark:text-zinc-500 dark:bg-muted"
                             >
                               NEW RECORD
                             </Badge>
@@ -600,7 +600,7 @@ export default function SectionsTab({
                           </td>
                           <td className="p-4 px-6">
                             <div className="flex items-center gap-3">
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-brand bg-gray-100 text-xs font-black text-gray-500 shadow-xs dark:bg-white/5 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm transition-all uppercase">
+                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-brand bg-gray-100 text-xs font-black text-gray-500 shadow-xs dark:bg-white/5 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm transition-all">
                                 {sec.course_code?.substring(0, 2) || "U"}
                               </div>
                               <span className="text-xs font-black tracking-tight text-gray-900 dark:text-zinc-50">
@@ -617,14 +617,14 @@ export default function SectionsTab({
                             {sec.status === "Archived" ? (
                               <Badge
                                 variant="outline"
-                                className="border-red-200 bg-red-50 px-2.5 py-1 text-[9px] font-bold tracking-wider text-red-700 uppercase dark:border-red-500/20 dark:bg-red-500/10 dark:text-primary"
+                                className="border-red-200 bg-red-50 px-2.5 py-1 text-[9px] font-bold tracking-wider text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-primary"
                               >
                                 ARCHIVED
                               </Badge>
                             ) : (
                               <Badge
                                 variant="outline"
-                                className="border-green-200 bg-green-50 px-2.5 py-1 text-[9px] font-bold tracking-wider text-green-700 uppercase dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400"
+                                className="border-green-200 bg-green-50 px-2.5 py-1 text-[9px] font-bold tracking-wider text-green-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400"
                               >
                                 ACTIVE
                               </Badge>
@@ -767,7 +767,7 @@ export default function SectionsTab({
         {filteredSectionsFull.length > 0 && (
           <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-2xl dark:border-white/10 dark:bg-card">
             <div className="flex items-center gap-8 select-none cursor-default">
-              <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 uppercase tracking-widest dark:text-zinc-500">
+              <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 tracking-widest dark:text-zinc-500">
                 <span>
                   SHOWING <strong className="text-gray-900 dark:text-zinc-50">{filteredSections.length}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{filteredSectionsFull.length}</strong> ENTRIES
                 </span>
@@ -794,11 +794,9 @@ export default function SectionsTab({
                 size="sm"
                 disabled={pageSection <= 1}
                 onClick={() => setPageSection((p) => p - 1)}
-                className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
               >
-                <i className="ph-bold ph-caret-left mr-2 text-base"></i>
-                PREV
-              </Button>
+                <i className="ph-bold ph-caret-left mr-2 text-base"></i>Prev</Button>
 
               <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
                 {pageSection}
@@ -809,10 +807,8 @@ export default function SectionsTab({
                 size="sm"
                 disabled={pageSection >= Math.ceil(filteredSectionsFull.length / itemsPerPage)}
                 onClick={() => setPageSection((p) => p + 1)}
-                className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 uppercase shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-              >
-                NEXT
-                <i className="ph-bold ph-caret-right ml-2 text-base"></i>
+                className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+              >Next<i className="ph-bold ph-caret-right ml-2 text-base"></i>
               </Button>
             </div>
           </div>
@@ -847,7 +843,7 @@ export default function SectionsTab({
               </div>
               <div className="min-w-0">
                 <DialogTitle className="text-lg leading-tight font-black tracking-tight text-gray-900 dark:text-zinc-50">
-                  New Course Block
+                  New course Block
                 </DialogTitle>
                 <DialogDescription className="mt-1.5 text-sm leading-relaxed font-medium text-gray-600 dark:text-zinc-300">
                   Create a new organizational section for degree program
@@ -859,7 +855,7 @@ export default function SectionsTab({
           <form onSubmit={addSection} className="w-full min-w-0 overflow-hidden">
             <div className="p-6 space-y-6">
               <div className="w-full min-w-0">
-                <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+                <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
                   Degree Program <span className="text-pup-maroon dark:text-primary">*</span>
                 </label>
                 <Select
@@ -877,7 +873,7 @@ export default function SectionsTab({
                 </Select>
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+                <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
                   Block Name <span className="text-pup-maroon dark:text-primary">*</span>
                 </label>
                 <Input
@@ -899,10 +895,8 @@ export default function SectionsTab({
                   setNewSectionName("")
                   setSecCourseCode("")
                 }}
-                className="h-11 rounded-brand border border-gray-300 px-6 text-sm font-bold text-gray-600 uppercase hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:text-zinc-300 dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
-              >
-                CANCEL
-              </Button>
+                className="h-11 rounded-brand border border-gray-300 px-6 text-sm font-bold text-gray-600 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:text-zinc-300 dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+              >Cancel</Button>
               <Button
                 type="submit"
                 className="flex h-11 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-black text-white shadow-sm dark:shadow-none"
@@ -941,7 +935,7 @@ export default function SectionsTab({
           <form onSubmit={updSection} className="w-full min-w-0 overflow-hidden">
             <div className="p-6 space-y-6">
               <div className="w-full min-w-0">
-                <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+                <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
                   Degree Program <span className="text-pup-maroon dark:text-primary">*</span>
                 </label>
                 <Select
@@ -964,7 +958,7 @@ export default function SectionsTab({
                 </Select>
               </div>
               <div className="min-w-0">
-                <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+                <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
                   Block Name <span className="text-pup-maroon dark:text-primary">*</span>
                 </label>
                 <Input
@@ -989,10 +983,8 @@ export default function SectionsTab({
                   setIsEditSectionOpen(false)
                   setEditSection({ id: null, name: "", courseCode: "" })
                 }}
-                className="h-11 rounded-brand border border-gray-300 px-6 text-sm font-bold text-gray-600 uppercase hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:text-zinc-300 dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
-              >
-                CANCEL
-              </Button>
+                className="h-11 rounded-brand border border-gray-300 px-6 text-sm font-bold text-gray-600 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:text-zinc-300 dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+              >Cancel</Button>
               <Button
                 type="submit"
                 className="flex h-11 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-black text-white shadow-sm dark:shadow-none"

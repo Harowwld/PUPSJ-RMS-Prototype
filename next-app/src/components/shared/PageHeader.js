@@ -46,7 +46,7 @@ export default function PageHeader({
           )}
           
           <div>
-            <CardTitle className="flex items-center gap-2 text-xl leading-none font-black tracking-tight text-gray-900 uppercase transition-colors dark:text-zinc-50">
+            <CardTitle className="flex items-center gap-2 text-xl leading-none font-black tracking-tight text-gray-900 transition-colors dark:text-zinc-50">
               {title}
             </CardTitle>
             {description && (
@@ -65,11 +65,11 @@ export default function PageHeader({
             {(onSearchChange || searchValue !== undefined) && (
               <div className="w-full sm:w-64">
                 <div className="mb-1 flex items-center justify-between">
-                  <label className="block text-[10px] font-bold text-gray-700 uppercase tracking-wide transition-colors dark:text-zinc-200">
+                  <label className="block text-[10px] font-bold text-gray-700 tracking-wide transition-colors dark:text-zinc-200">
                     {searchLabel}
                   </label>
                   {searchCount && (
-                    <span className="text-[9px] font-black text-pup-maroon dark:text-primary/70 uppercase">
+                    <span className="text-[9px] font-black text-pup-maroon dark:text-primary/70">
                       {searchCount}
                     </span>
                   )}

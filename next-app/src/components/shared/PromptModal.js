@@ -80,7 +80,7 @@ export default function PromptModal({
         <div className="space-y-4 p-6">
           {itemsList && itemsList.length > 0 && (
             <div className="relative w-full">
-              <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-1.5 dark:text-zinc-400">
+              <p className="text-[11px] font-bold text-gray-500 tracking-widest mb-1.5 dark:text-zinc-400">
                 Impacted Items ({itemsList.length})
               </p>
               <div className="max-h-[120px] overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-2 space-y-1 custom-scrollbar dark:border-white/10 dark:bg-white/5">
@@ -103,7 +103,7 @@ export default function PromptModal({
 
           <div className="space-y-2">
             {inputLabel && (
-              <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide dark:text-zinc-400 mb-1.5">
+              <label className="block text-xs font-bold text-gray-700 tracking-wide dark:text-zinc-400 mb-1.5">
                 {inputLabel}
               </label>
             )}

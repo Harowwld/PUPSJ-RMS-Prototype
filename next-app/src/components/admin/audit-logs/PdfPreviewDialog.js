@@ -45,7 +45,7 @@ export default function PdfPreviewDialog({
                 <i className="ph-duotone ph-file-pdf text-2xl"></i>
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-left text-xl leading-none font-black tracking-tight text-gray-900 uppercase dark:text-zinc-50">
+                <DialogTitle className="text-left text-xl leading-none font-black tracking-tight text-gray-900 dark:text-zinc-50">
                   Audit Logs Report Preview
                 </DialogTitle>
                 <p className="mt-1.5 text-left text-sm font-medium text-gray-500 dark:text-zinc-400">
@@ -94,7 +94,7 @@ export default function PdfPreviewDialog({
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-card">
                   <i className="ph-bold ph-circle-notch animate-spin text-3xl text-pup-maroon dark:text-primary"></i>
                 </div>
-                <p className="text-sm font-bold text-gray-600 uppercase dark:text-zinc-300">
+                <p className="text-sm font-bold text-gray-600 dark:text-zinc-300">
                   Preparing report...
                 </p>
                 <p className="mt-1 text-xs text-gray-400 dark:text-zinc-500">
@@ -122,9 +122,9 @@ export default function PdfPreviewDialog({
             <Button
               variant="outline"
               onClick={() => setPdfPreviewOpen(false)}
-              className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 uppercase hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:text-zinc-300 dark:hover:border-zinc-700 dark:bg-red-950/30 dark:shadow-none dark:border-white/10"
+              className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:text-zinc-300 dark:hover:border-zinc-700 dark:bg-red-950/30 dark:shadow-none dark:border-white/10"
             >
-              Cancel Preview
+              Cancel preview
             </Button>
             <Button
               onClick={handleDownloadFromPreview}

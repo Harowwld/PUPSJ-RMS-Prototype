@@ -231,10 +231,10 @@ export default function Home() {
             <div className="inline-flex items-center justify-center w-24 h-24 bg-white rounded-3xl shadow-md mb-4 border border-pup-border dark:bg-white/5 dark:border-white/10">
               <i className="ph-bold ph-bank text-5xl text-pup-maroon dark:text-primary"></i>
             </div>
-            <h1 className="text-3xl font-black text-pup-maroon dark:text-primary tracking-tighter uppercase leading-none">
+            <h1 className="text-3xl font-black text-pup-maroon dark:text-primary tracking-tighter leading-none">
               PUP E-Manage
             </h1>
-            <p className="text-sm font-bold text-gray-500 uppercase tracking-[0.2em] mt-2 dark:text-zinc-400">
+            <p className="text-sm font-bold text-gray-500 tracking-[0.2em] mt-2 dark:text-zinc-400">
               Student Record Keeping System
             </p>
           </div>
@@ -252,7 +252,7 @@ export default function Home() {
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div>
                     <div className="relative group">
-                      <label className="absolute left-4 top-1.5 text-[8px] font-black uppercase tracking-[0.15em] text-gray-400 pointer-events-none transition-all duration-300 group-focus-within:text-pup-maroon dark:text-zinc-500 dark:group-focus-within:text-primary">
+                      <label className="absolute left-4 top-1.5 text-[8px] font-black tracking-[0.15em] text-gray-400 pointer-events-none transition-all duration-300 group-focus-within:text-pup-maroon dark:text-zinc-500 dark:group-focus-within:text-primary">
                         Email Address
                       </label>
                       <Input
@@ -270,7 +270,7 @@ export default function Home() {
 
                   <div>
                     <div className="relative group">
-                      <label className="absolute left-4 top-1.5 text-[8px] font-black uppercase tracking-[0.15em] text-gray-400 pointer-events-none transition-all duration-300 group-focus-within:text-pup-maroon dark:text-zinc-500 dark:group-focus-within:text-primary">
+                      <label className="absolute left-4 top-1.5 text-[8px] font-black tracking-[0.15em] text-gray-400 pointer-events-none transition-all duration-300 group-focus-within:text-pup-maroon dark:text-zinc-500 dark:group-focus-within:text-primary">
                         Password
                       </label>                      <Input
                         type={showPassword ? "text" : "password"}
@@ -311,7 +311,7 @@ export default function Home() {
                          <span>Authenticating...</span>
                       </div>
                     ) : (
-                      <div className="flex items-center gap-2 uppercase tracking-widest font-black text-xs">
+                      <div className="flex items-center gap-2 tracking-widest font-black text-xs">
                          <span>Log In</span>
                          <i className="ph-bold ph-arrow-right group-hover:translate-x-1 transition-transform"></i>
                       </div>
@@ -321,7 +321,7 @@ export default function Home() {
                     <button
                       type="button"
                       onClick={() => setView("forgot")}
-                      className="text-[9px] font-black tracking-widest text-gray-400 hover:text-pup-maroon dark:hover:text-primary transition-colors uppercase dark:text-zinc-500"
+                      className="text-[9px] font-black tracking-widest text-gray-400 hover:text-pup-maroon dark:hover:text-primary transition-colors dark:text-zinc-500"
                     >
                       Account Recovery
                     </button>
@@ -347,7 +347,7 @@ export default function Home() {
                       </div>
                     )}
                     <div className="relative group">
-                      <label className="absolute left-4 top-1.5 text-[8px] font-black uppercase tracking-[0.15em] text-gray-400 pointer-events-none transition-all duration-300 group-focus-within:text-pup-maroon dark:text-zinc-500 dark:group-focus-within:text-primary">
+                      <label className="absolute left-4 top-1.5 text-[8px] font-black tracking-[0.15em] text-gray-400 pointer-events-none transition-all duration-300 group-focus-within:text-pup-maroon dark:text-zinc-500 dark:group-focus-within:text-primary">
                         Identifier
                       </label>
                       <Input
@@ -372,7 +372,7 @@ export default function Home() {
                              <span>Locating...</span>
                            </div>
                         ) : (
-                          <div className="flex items-center gap-2 uppercase tracking-widest font-black text-xs">
+                          <div className="flex items-center gap-2 tracking-widest font-black text-xs">
                              <span>Locate Account</span>
                              <i className="ph-bold ph-magnifying-glass group-hover:scale-110 transition-transform"></i>
                           </div>
@@ -385,7 +385,7 @@ export default function Home() {
                             setView("login");
                             resetForgotState();
                           }}
-                          className="text-[9px] font-black tracking-widest text-gray-400 hover:text-pup-maroon dark:hover:text-primary transition-colors uppercase dark:text-zinc-500"
+                          className="text-[9px] font-black tracking-widest text-gray-400 hover:text-pup-maroon dark:hover:text-primary transition-colors dark:text-zinc-500"
                         >
                           Back to Login
                         </button>
@@ -401,7 +401,7 @@ export default function Home() {
                     )}
 
                     <div className="relative group">
-                      <label className="absolute left-4 top-1.5 text-[8px] font-black uppercase tracking-[0.15em] text-gray-400 pointer-events-none transition-all duration-300 group-focus-within:text-pup-maroon dark:text-zinc-500 dark:group-focus-within:text-primary">
+                      <label className="absolute left-4 top-1.5 text-[8px] font-black tracking-[0.15em] text-gray-400 pointer-events-none transition-all duration-300 group-focus-within:text-pup-maroon dark:text-zinc-500 dark:group-focus-within:text-primary">
                         Challenge Question
                       </label>
                       <Select
@@ -416,7 +416,7 @@ export default function Home() {
                     </div>
 
                     <div className="relative group">
-                      <label className="absolute left-4 top-1.5 text-[8px] font-black uppercase tracking-[0.15em] text-gray-400 pointer-events-none transition-all duration-300 group-focus-within:text-pup-maroon dark:text-zinc-500 dark:group-focus-within:text-primary">
+                      <label className="absolute left-4 top-1.5 text-[8px] font-black tracking-[0.15em] text-gray-400 pointer-events-none transition-all duration-300 group-focus-within:text-pup-maroon dark:text-zinc-500 dark:group-focus-within:text-primary">
                         Security Answer
                       </label>
                       <Input
@@ -431,7 +431,7 @@ export default function Home() {
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div className="relative group">
-                        <label className="absolute left-4 top-1.5 text-[8px] font-black uppercase tracking-[0.15em] text-gray-400 pointer-events-none transition-all duration-300 group-focus-within:text-pup-maroon dark:text-zinc-500 dark:group-focus-within:text-primary">
+                        <label className="absolute left-4 top-1.5 text-[8px] font-black tracking-[0.15em] text-gray-400 pointer-events-none transition-all duration-300 group-focus-within:text-pup-maroon dark:text-zinc-500 dark:group-focus-within:text-primary">
                           New Key
                         </label>
                         <Input
@@ -444,7 +444,7 @@ export default function Home() {
                         />
                       </div>
                       <div className="relative group">
-                        <label className="absolute left-4 top-1.5 text-[8px] font-black uppercase tracking-[0.15em] text-gray-400 pointer-events-none transition-all duration-300 group-focus-within:text-pup-maroon dark:text-zinc-500 dark:group-focus-within:text-primary">
+                        <label className="absolute left-4 top-1.5 text-[8px] font-black tracking-[0.15em] text-gray-400 pointer-events-none transition-all duration-300 group-focus-within:text-pup-maroon dark:text-zinc-500 dark:group-focus-within:text-primary">
                           Confirm
                         </label>
                         <Input
@@ -470,7 +470,7 @@ export default function Home() {
                              <span>Updating...</span>
                            </div>
                         ) : (
-                          <div className="flex items-center gap-2 uppercase tracking-widest font-black text-xs">
+                          <div className="flex items-center gap-2 tracking-widest font-black text-xs">
                              <span>Reset Password</span>
                              <i className="ph-bold ph-shield-check group-hover:scale-110 transition-transform"></i>
                           </div>
@@ -480,7 +480,7 @@ export default function Home() {
                         <button
                           type="button"
                           onClick={() => setForgotStep(1)}
-                          className="text-[9px] font-black tracking-widest text-gray-400 hover:text-pup-maroon dark:hover:text-primary transition-colors uppercase dark:text-zinc-500"
+                          className="text-[9px] font-black tracking-widest text-gray-400 hover:text-pup-maroon dark:hover:text-primary transition-colors dark:text-zinc-500"
                         >
                           Previous Step
                         </button>
@@ -491,7 +491,7 @@ export default function Home() {
               </>
             ) }
 
-            <div className="text-center mt-8 pt-6 border-t border-gray-100 text-[10px] text-gray-400 uppercase tracking-widest font-bold dark:border-white/5 dark:text-zinc-500">
+            <div className="text-center mt-8 pt-6 border-t border-gray-100 text-[10px] text-gray-400 tracking-widest font-bold dark:border-white/5 dark:text-zinc-500">
               <p>&copy; 2026 Polytechnic University of the Philippines</p>
             </div>
           </div>
@@ -508,7 +508,7 @@ export default function Home() {
                 Two-Factor Authentication
               </DialogTitle>
               <DialogDescription className="font-medium text-gray-500 dark:text-zinc-400">
-                Enter the 6-digit code from your authenticator app, a recovery code, or your Serial Key.
+                Enter the 6-digit code from your authenticator app, a recovery code, or your Serial key.
               </DialogDescription>
             </DialogHeader>
 
@@ -520,12 +520,12 @@ export default function Home() {
               )}
               
               <div className="space-y-2">
-                <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide ml-1 dark:text-zinc-200">
+                <label className="block text-xs font-bold text-gray-700 tracking-wide ml-1 dark:text-zinc-200">
                   Verification Code
                 </label>
                 <Input
                   type="text"
-                  placeholder="000000, Recovery Code, or Serial Key"
+                  placeholder="000000, Recovery Code, or Serial key"
                   className="w-full bg-white border border-gray-300 rounded-brand text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 text-center tracking-widest font-black h-12 text-lg dark:bg-white/5 dark:border-white/10 dark:focus-visible:ring-primary dark:focus-visible:border-white/20 dark:text-zinc-100"
                   value={twoFactorCode}
                   onChange={(e) => setTwoFactorCode(e.target.value)}

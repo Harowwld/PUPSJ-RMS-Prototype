@@ -54,7 +54,7 @@ const ConflictResolutionModals = memo(({
             <div className="max-h-[50vh] overflow-hidden overflow-auto rounded-brand border border-gray-200 dark:border-white/10">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
-                  <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
+                  <tr className="text-left text-xs tracking-wider text-gray-600 dark:text-zinc-300 dark:border-white/10">
                     <th className="p-3 font-bold">From</th>
                     <th className="p-3 font-bold">To</th>
                     <th className="p-3 font-bold">Moved</th>
@@ -97,7 +97,7 @@ const ConflictResolutionModals = memo(({
               type="button"
               variant="outline"
               onClick={() => setApplyReportOpen(false)}
-              className="h-11 border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 uppercase hover:bg-gray-50 rounded-brand dark:text-zinc-300 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
+              className="h-11 border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 hover:bg-gray-50 rounded-brand dark:text-zinc-300 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
             >
               Close
             </Button>
@@ -127,7 +127,7 @@ const ConflictResolutionModals = memo(({
           </DialogHeader>
           <div className="p-6 space-y-4">
             <div className="rounded-brand border border-gray-200 bg-gray-50 p-3 dark:border-white/10 dark:bg-muted/30">
-              <div className="mb-2 text-[10px] font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">
+              <div className="mb-2 text-[10px] font-black tracking-widest text-gray-500 dark:text-zinc-400">
                 Reassignment Mode
               </div>
               <div className="flex gap-2">
@@ -155,7 +155,7 @@ const ConflictResolutionModals = memo(({
             <div className="max-h-[45vh] overflow-hidden overflow-auto rounded-brand border border-gray-200 shadow-inner dark:border-white/10 dark:shadow-none">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
-                  <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
+                  <tr className="text-left text-xs tracking-wider text-gray-600 dark:text-zinc-300 dark:border-white/10">
                     <th className="p-3 font-bold">Current Drawer</th>
                     <th className="p-3 font-bold">Records</th>
                     <th className="p-3 font-bold">Move To</th>
@@ -235,7 +235,7 @@ const ConflictResolutionModals = memo(({
               type="button"
               variant="outline"
               onClick={() => setTemplateConflictOpen(false)}
-              className="h-11 border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 uppercase hover:bg-gray-50 rounded-brand dark:text-zinc-300 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
+              className="h-11 border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 hover:bg-gray-50 rounded-brand dark:text-zinc-300 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
             >
               Cancel
             </Button>
@@ -271,7 +271,7 @@ const ConflictResolutionModals = memo(({
             <div className="max-h-[50vh] overflow-hidden overflow-auto rounded-brand border border-gray-200 shadow-inner dark:border-white/10 dark:shadow-none">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
-                  <tr className="text-left text-xs tracking-wider text-gray-600 uppercase dark:text-zinc-300 dark:border-white/10">
+                  <tr className="text-left text-xs tracking-wider text-gray-600 dark:text-zinc-300 dark:border-white/10">
                     <th className="p-3 font-bold">Before</th>
                     <th className="p-3 font-bold">After</th>
                     <th className="p-3 font-bold text-center">Records</th>
@@ -301,7 +301,7 @@ const ConflictResolutionModals = memo(({
               type="button"
               variant="outline"
               onClick={() => setApplyPreviewOpen(false)}
-              className="h-11 border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 uppercase hover:bg-gray-50 rounded-brand dark:text-zinc-300 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
+              className="h-11 border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 hover:bg-gray-50 rounded-brand dark:text-zinc-300 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
             >
               Back
             </Button>

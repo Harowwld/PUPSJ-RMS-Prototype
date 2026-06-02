@@ -176,7 +176,7 @@ export default function AccountSetupModal({ authUser }) {
         {/* Sidebar Tabs */}
         <div className="flex w-full shrink-0 flex-col gap-3 overflow-y-auto border-r border-gray-200 bg-gray-50 p-6 md:w-1/3 dark:border-white/10 dark:bg-card">
           <div className="mb-2">
-            <h3 className="px-1 text-xs font-black tracking-widest text-gray-500 uppercase dark:text-zinc-400">
+            <h3 className="px-1 text-xs font-black tracking-widest text-gray-500 dark:text-zinc-400">
               Account Setup
             </h3>
             <p className="mt-0.5 px-1 text-[11px] leading-tight font-medium text-gray-400 dark:text-zinc-500">
@@ -195,7 +195,7 @@ export default function AccountSetupModal({ authUser }) {
                 <span className="text-sm font-black text-gray-900 dark:text-zinc-50">Step 1</span>
               </div>
               {needsPassword && step > 1 && (
-                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold tracking-wider text-emerald-600 uppercase dark:bg-emerald-950/30 dark:text-emerald-400">
+                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold tracking-wider text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
                   Done
                 </span>
               )}
@@ -250,7 +250,7 @@ export default function AccountSetupModal({ authUser }) {
                   )}
                   <div className="space-y-4">
                     <div>
-                      <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+                      <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
                         Current Password <span className="text-pup-maroon dark:text-primary">*</span>
                       </label>
                       <div className="relative group">
@@ -272,7 +272,7 @@ export default function AccountSetupModal({ authUser }) {
                       </div>
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+                      <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
                         New Password <span className="text-pup-maroon dark:text-primary">*</span>
                       </label>
                       <div className="relative group">
@@ -294,7 +294,7 @@ export default function AccountSetupModal({ authUser }) {
                       </div>
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+                      <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
                         Confirm New Password <span className="text-pup-maroon dark:text-primary">*</span>
                       </label>
                       <div className="relative group">
@@ -321,7 +321,7 @@ export default function AccountSetupModal({ authUser }) {
                   <Button
                     type="submit"
                     disabled={pwLoading}
-                    className="h-11 btn-brand-red px-6 text-xs font-bold tracking-widest text-white uppercase shadow-sm transition-colors"
+                    className="h-11 btn-brand-red px-6 text-xs font-bold tracking-widest text-white shadow-sm transition-colors"
                   >
                     {pwLoading
                       ? "Saving..."
@@ -370,7 +370,7 @@ export default function AccountSetupModal({ authUser }) {
                   ) : (
                     questions.map((q) => (
                       <div key={q.id}>
-                        <label className="mb-1.5 block text-xs leading-tight font-bold tracking-wide text-gray-700 uppercase dark:text-zinc-200">
+                        <label className="mb-1.5 block text-xs leading-tight font-bold tracking-wide text-gray-700 dark:text-zinc-200">
                           {q.question}{" "}
                           {q.is_required ? (
                             <span className="text-pup-maroon dark:text-primary">*</span>
@@ -400,7 +400,7 @@ export default function AccountSetupModal({ authUser }) {
                     disabled={
                       secLoading || secSubmitting || questions.length === 0
                     }
-                    className="h-11 btn-brand-red px-6 text-xs font-bold tracking-widest text-white uppercase shadow-sm transition-colors"
+                    className="h-11 btn-brand-red px-6 text-xs font-bold tracking-widest text-white shadow-sm transition-colors"
                   >                    {secSubmitting ? "Saving..." : "Complete Setup & Enter"}
                   </Button>
                 </div>

@@ -36,7 +36,7 @@ function normalizeStudentRow(row) {
   const cabRaw = row.cabinet ?? "";
   const drawerRaw = row.drawer ?? "";
 
-  // Normalize cabinet so that it is always a clean uppercase letter (no prefixes, trimmed)
+  // Normalize cabinet so that it is always a clean  letter (no prefixes, trimmed)
   const cleanCabinet = canonicalizeCabinetId(cabRaw);
 
   return {
@@ -1159,13 +1159,13 @@ function StaffPageContent() {
     ]);
   const sidebarItems = [
     { type: "header", label: "Operations" },
-    { key: "requests", label: "Alumni Requests", iconClass: "ph-bold ph-tray-arrow-up" },
-    { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
+    { key: "requests", label: "Alumni requests", iconClass: "ph-bold ph-tray-arrow-up" },
+    { key: "upload", label: "Scan & upload", iconClass: "ph-bold ph-scan" },
     { key: "documents", label: "Documents", iconClass: "ph-bold ph-file-text" },
     { key: "notifications", label: "Notifications", iconClass: "ph-bold ph-bell", badge: notificationsUnread },
 
-    { type: "header", label: "Records Archive" },
-    { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
+    { type: "header", label: "Records archive" },
+    { key: "search", label: "Records & archive", iconClass: "ph-bold ph-archive-box" },
   ];
 
   if (loading) {
@@ -1195,7 +1195,7 @@ function StaffPageContent() {
             {sidebarItems.map((item, idx) => {
               if (item.type === "header") {
                 return (
-                  <div key={`header-${idx}`} className="text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500 whitespace-nowrap ml-4 first:ml-0 border-l border-gray-200 dark:border-white/5 pl-4 first:border-0 first:pl-0">
+                  <div key={`header-${idx}`} className="text-[9px] font-black tracking-widest text-gray-400 dark:text-zinc-500 whitespace-nowrap ml-4 first:ml-0 border-l border-gray-200 dark:border-white/5 pl-4 first:border-0 first:pl-0">
                     {item.label}
                   </div>
                 );
@@ -1749,7 +1749,7 @@ function StaffPageContent() {
         title="Duplicate Document Warning"
         message={`A document of type "${newRec.docType}" already exists for student ${newRec.studentNo}.`}
         confirmLabel="Acknowledge"
-        cancelLabel="Clear Form"
+        cancelLabel="Clear form"
         onConfirm={() => {
           setDuplicateConfirmOpen(false);
         }}

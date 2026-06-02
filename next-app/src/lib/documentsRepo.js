@@ -30,6 +30,11 @@ async function ensureReviewColumns() {
         "CREATE INDEX IF NOT EXISTS idx_documents_uploaded_by ON documents(uploaded_by)"
       );
     }
+    if (!names.has("is_previewed")) {
+      await dbRun(
+        "ALTER TABLE documents ADD COLUMN is_previewed INTEGER NOT NULL DEFAULT 0"
+      );
+    }
     await dbRun(
       "UPDATE documents SET approval_status = 'Approved' WHERE approval_status IS NULL OR approval_status = ''"
     );
@@ -170,7 +175,7 @@ export async function getDocumentById(id) {
   return row || null;
 }
 
-export async function updateDocumentMetadata(id, { studentNo, studentName, docType }) {
+export async function updateDocumentMetadata(id, { studentNo, studentName, docType, isPreviewed }) {
   await ensureReviewColumns();
   const existing = await getDocumentById(id);
   if (!existing) return null;
@@ -178,12 +183,13 @@ export async function updateDocumentMetadata(id, { studentNo, studentName, docTy
   const nextStudentNo = studentNo ?? existing.student_no;
   const nextStudentName = studentName ?? existing.student_name;
   const nextDocType = docType ?? existing.doc_type;
+  const nextIsPreviewed = isPreviewed !== undefined ? (isPreviewed ? 1 : 0) : (existing.is_previewed ?? 0);
 
   await dbRun(
     `UPDATE documents
-     SET student_no = ?, student_name = ?, doc_type = ?
+     SET student_no = ?, student_name = ?, doc_type = ?, is_previewed = ?
      WHERE id = ?`,
-    [nextStudentNo, nextStudentName, nextDocType, id]
+    [nextStudentNo, nextStudentName, nextDocType, nextIsPreviewed, id]
   );
 
   return await getDocumentById(id);

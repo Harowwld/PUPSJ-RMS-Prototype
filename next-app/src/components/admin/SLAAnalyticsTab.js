@@ -195,7 +195,7 @@ export default function SLAAnalyticsTab({
                 size="sm"
                 onClick={handlePreview}
                 disabled={loading || !data || isGeneratingPdf}
-                className="h-10 px-6 font-black text-[10px] tracking-widest btn-brand-red active:scale-95 disabled:opacity-60 rounded-brand uppercase transition-all dark:shadow-none"
+                className="h-10 px-6 font-black text-[10px] tracking-widest btn-brand-red active:scale-95 disabled:opacity-60 rounded-brand transition-all dark:shadow-none"
               >
                 <i className={cn("ph-bold text-base mr-2", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
                 {isGeneratingPdf ? "Generating..." : "Generate Report"}
@@ -214,7 +214,7 @@ export default function SLAAnalyticsTab({
 
               <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4 dark:border-white/10">
                   <div className="flex flex-col items-end gap-1">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest dark:text-zinc-500">Refresh Status</p>
+                      <p className="text-[10px] font-bold text-gray-400 tracking-widest dark:text-zinc-500">Refresh Status</p>
                       <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap dark:text-zinc-400">
                           {hasActiveFilters ? "Filtering live analytics..." : "Get latest database updates"}
                       </p>
@@ -233,9 +233,9 @@ export default function SLAAnalyticsTab({
         {hasActiveFilters && (
           <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 uppercase dark:text-zinc-505">Active Filters:</span>
+              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 dark:text-zinc-505">Active filters:</span>
               {(startDate || endDate) && (
-                <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 uppercase dark:bg-emerald-950/30 dark:text-emerald-400">
+                <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
                   Range: {startDate || "..."} to {endDate || "..."}
                   <button
                     onClick={() => { setStartDate(""); setEndDate(""); }}
@@ -252,7 +252,7 @@ export default function SLAAnalyticsTab({
                   setStartDate("")
                   setEndDate("")
                 }}
-                className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon uppercase dark:border-white/10 dark:text-primary dark:bg-red-950/30"
+                className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
               >
                 CLEAR ALL FILTERS
               </Button>
@@ -365,7 +365,7 @@ export default function SLAAnalyticsTab({
               <div className="flex h-full w-full flex-col items-center justify-center bg-white p-10 dark:bg-card">
                 <div className="flex flex-col items-center gap-4">
                   <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary" />
-                  <p className="text-sm font-bold text-gray-500 uppercase tracking-widest dark:text-zinc-400">
+                  <p className="text-sm font-bold text-gray-500 tracking-widest dark:text-zinc-400">
                     Generating Report Preview...
                   </p>
                 </div>

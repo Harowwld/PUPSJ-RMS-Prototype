@@ -341,8 +341,8 @@ export default function RoomMap2D({
         }}
       >
         <div className="relative flex h-full w-full items-center justify-center rounded-sm bg-pup-maroon shadow-md dark:bg-red-600 dark:shadow-none">
-          <span className="text-[9px] font-black tracking-widest text-white whitespace-nowrap uppercase">
-            ENTRANCE
+          <span className="text-[9px] font-black tracking-widest text-white whitespace-nowrap">
+            Entrance
           </span>
         </div>
       </div>
@@ -385,7 +385,7 @@ export default function RoomMap2D({
             {/* Cabinet Label always rendered cleanly inside */}
             <div className="absolute inset-0 flex flex-col items-center justify-center p-2 pointer-events-none select-none">
               <span className={cn(
-                "text-[10px] font-black uppercase tracking-tighter",
+                "text-[10px] font-black tracking-tighter",
                 isTarget
                   ? "text-red-800 dark:text-red-400"
                   : isSelected
@@ -395,7 +395,7 @@ export default function RoomMap2D({
                 {c.cab}
               </span>
               <span className="text-[8px] font-bold text-gray-500 dark:text-zinc-400 mt-0.5">
-                {c.occupiedCount} Recs
+                {c.occupiedCount} recs
               </span>
             </div>
           </div>
@@ -421,7 +421,7 @@ export default function RoomMap2D({
           >
             <div className="flex items-center gap-2 pointer-events-none">
               <i className="ph-fill ph-archive-box text-pup-maroon dark:text-primary text-base"></i>
-              <h5 className="font-black text-xs text-gray-900 dark:text-zinc-50 uppercase tracking-tight">
+              <h5 className="font-black text-xs text-gray-900 dark:text-zinc-50 tracking-tight">
                 Cabinet {selectedCabinetId}
               </h5>
             </div>
@@ -442,8 +442,8 @@ export default function RoomMap2D({
           </div>
 
           <div className="space-y-2">
-            <span className="text-[9px] font-black tracking-widest text-gray-400 uppercase dark:text-zinc-500">
-              Drawer Slots
+            <span className="text-[9px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+              Drawer slots
             </span>
             <div className="flex flex-col gap-1.5 max-h-[300px] overflow-y-auto pr-1">
               {drawerSlots?.map((d) => {
@@ -490,8 +490,8 @@ export default function RoomMap2D({
                           Drawer {d.drawer}
                         </span>
                       </div>
-                      <span className="text-[9px] font-black uppercase tracking-wider">
-                        {isDrawerTarget ? "TARGET" : hasOccupants ? `${d.count} Recs` : "Empty"}
+                      <span className="text-[9px] font-black tracking-wider">
+                        {isDrawerTarget ? "Target" : hasOccupants ? `${d.count} recs` : "Empty"}
                       </span>
                     </div>
 
@@ -556,7 +556,7 @@ export default function RoomMap2D({
                                           </span>
                                         </div>
                                         <span className={cn(
-                                          "text-[6px] font-black uppercase px-1 rounded-full border shrink-0 scale-90 origin-right",
+                                          "text-[6px] font-black px-1 rounded-full border shrink-0 scale-90 origin-right",
                                           doc.approvalStatus === "Approved"
                                             ? "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900"
                                             : "bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900"

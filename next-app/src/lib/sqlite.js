@@ -260,6 +260,7 @@ export async function getDb() {
         reviewed_at TEXT,
         review_note TEXT,
         uploaded_by TEXT,
+        is_previewed INTEGER NOT NULL DEFAULT 0,
         created_at TEXT NOT NULL DEFAULT (datetime('now')),
         FOREIGN KEY (student_no) REFERENCES students(student_no) ON UPDATE CASCADE ON DELETE RESTRICT,
         FOREIGN KEY (doc_type) REFERENCES document_types(name) ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -920,6 +921,9 @@ export async function getDb() {
       }
       if (!columnExists("documents", "review_note")) {
         db.exec("ALTER TABLE documents ADD COLUMN review_note TEXT");
+      }
+      if (!columnExists("documents", "is_previewed")) {
+        db.exec("ALTER TABLE documents ADD COLUMN is_previewed INTEGER NOT NULL DEFAULT 0");
       }
       db.exec("UPDATE documents SET approval_status = 'Approved' WHERE approval_status IS NULL OR approval_status = ''");
       db.exec("CREATE INDEX IF NOT EXISTS idx_documents_approval_status ON documents(approval_status)");

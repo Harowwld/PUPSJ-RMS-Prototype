@@ -226,7 +226,7 @@ export default function BackupTab({
                       <Button
                         onClick={handleGenerateBackup}
                         disabled={localLoading.generating}
-                        className="flex h-10 items-center gap-2 rounded-brand btn-brand-red shadow-sm active:scale-95 transition-all dark:shadow-none px-5 text-[10px] font-bold tracking-widest uppercase tracking-widest"
+                        className="flex h-10 items-center gap-2 rounded-brand btn-brand-red shadow-sm active:scale-95 transition-all dark:shadow-none px-5 text-[10px] font-bold tracking-widest tracking-widest"
                       >
                         <i
                           className={cn("ph-bold text-base", localLoading.generating ? "ph-arrows-clockwise animate-spin" : "ph-download-simple")}
@@ -242,7 +242,7 @@ export default function BackupTab({
                           restoreFileRef.current.click()
                         }
                         disabled={localLoading.uploading}
-                        className="flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-bold tracking-widest uppercase tracking-widest text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:border-white/10"
+                        className="flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-bold tracking-widest tracking-widest text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:border-white/10"
                       >
                         <i
                           className={cn("ph-bold text-base", localLoading.uploading ? "ph-arrows-clockwise animate-spin" : "ph-arrow-counter-clockwise")}
@@ -262,7 +262,7 @@ export default function BackupTab({
 
                     <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4 dark:border-white/10">
                       <div className="flex flex-col items-end gap-1">
-                        <p className="text-[10px] font-bold tracking-widest uppercase text-gray-400 dark:text-zinc-500">Refresh Status</p>
+                        <p className="text-[10px] font-bold tracking-widest text-gray-400 dark:text-zinc-500">Refresh Status</p>
                         <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap dark:text-zinc-400">
                           {isFilterActive ? "Filtering live records..." : "Get latest database updates"}
                         </p>
@@ -282,7 +282,7 @@ export default function BackupTab({
               <div className="flex-1 flex h-fit min-h-[600px] flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-10">
                 <div className="flex flex-col items-center gap-4">
                   <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary" />
-                  <p className="text-sm font-bold text-gray-500 uppercase tracking-widest dark:text-zinc-400">
+                  <p className="text-sm font-bold text-gray-500 tracking-widest dark:text-zinc-400">
                     Loading...
                   </p>
                 </div>
@@ -324,8 +324,8 @@ export default function BackupTab({
                 backupEndDate !== "") && (
                 <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="mr-1 text-[10px] font-bold tracking-widest  uppercase text-gray-400 uppercase dark:text-zinc-550">
-                      Active Filters:
+                    <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 dark:text-zinc-550">
+                      Active filters:
                     </span>
                     {localSearch && (
                       <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold tracking-widest text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
@@ -368,7 +368,7 @@ export default function BackupTab({
                         setBackupEndDate("")
                         setPage(1)
                       }}
-                      className="h-6 rounded-full border border-dashed border-gray-300 px-3 text-[10px] font-bold tracking-widest uppercase text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
+                      className="h-6 rounded-full border border-dashed border-gray-300 px-3 text-[10px] font-bold tracking-widest text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
                     >
                       CLEAR ALL FILTERS
                     </Button>
