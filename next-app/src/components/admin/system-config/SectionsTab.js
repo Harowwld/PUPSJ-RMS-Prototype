@@ -461,7 +461,7 @@ export default function SectionsTab({
                           onClick={() => onSort("course_code")}
                           className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                         >
-                          DEGREE PROGRAM <SortIndicator column="course_code" />
+                          Degree Program <SortIndicator column="course_code" />
                         </button>
                       </th>
                       <th className="p-4 px-6">
@@ -469,11 +469,11 @@ export default function SectionsTab({
                           onClick={() => onSort("name")}
                           className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                         >
-                          BLOCK NAME <SortIndicator column="name" />
+                          Block Name <SortIndicator column="name" />
                         </button>
                       </th>
-                      <th className="w-40 p-4 px-6">STATUS</th>
-                      <th className="w-32 p-4 px-6 text-right">ACTIONS</th>
+                      <th className="w-40 p-4 px-6">Status</th>
+                      <th className="w-32 p-4 px-6 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-white/10">
@@ -540,7 +540,7 @@ export default function SectionsTab({
                             ) : (
                               <>
                                 <i className="ph-bold ph-plus mr-2"></i> 
-                                ADD
+                                Add
                               </>
                             )}
                             </Button>
@@ -552,14 +552,14 @@ export default function SectionsTab({
                               variant="outline"
                               className="border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-black tracking-wider text-amber-700 animate-pulse dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-500/50"
                             >
-                              UNSAVED DRAFT
+                              Unsaved Draft
                             </Badge>
                           ) : (
                             <Badge
                               variant="outline"
                               className="border-gray-200 bg-gray-100 px-2.5 py-1 text-[9px] font-bold tracking-wider text-gray-400 dark:border-white/10 dark:text-zinc-500 dark:bg-muted"
                             >
-                              NEW RECORD
+                              New Record
                             </Badge>
                           )}
                         </td>

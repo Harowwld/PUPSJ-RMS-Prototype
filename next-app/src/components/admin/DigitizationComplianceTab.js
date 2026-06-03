@@ -461,7 +461,7 @@ export default function DigitizationComplianceTab({
                   className="h-10 px-6 font-black text-[10px] tracking-widest btn-brand-red active:scale-95 disabled:opacity-60 rounded-brand transition-all dark:shadow-none"
                 >
                   <i className={cn("ph-bold text-base mr-2", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
-                  {isGeneratingPdf ? "GENERATING..." : "GENERATE REPORT"}
+                  {isGeneratingPdf ? "Generating..." : "Generate Report"}
                 </Button>
                 <Button
                   type="button"
@@ -472,7 +472,7 @@ export default function DigitizationComplianceTab({
                   className="flex h-11 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-white text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:border-white/10"
                 >
                   <i className={cn("ph-bold text-base", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
-                  {isExportingCsv ? "PREPARING..." : "EXPORT"}
+                  {isExportingCsv ? "Preparing..." : "Export"}
                 </Button>
 
                 <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4 dark:border-white/10">
@@ -549,7 +549,7 @@ export default function DigitizationComplianceTab({
                       onClick={handleClearAll}
                       className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-darkMaroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
                   >
-                      CLEAR ALL FILTERS
+                      Clear All Filters
                   </Button>
               </div>
             </div>
@@ -737,7 +737,7 @@ export default function DigitizationComplianceTab({
                   </h4>
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-bold tracking-widest text-gray-400 dark:text-zinc-500">
-                      RECORDS: <span className="text-gray-900 font-black dark:text-zinc-50">{sortedByCourse.length}</span>
+                      Records: <span className="text-gray-900 font-black dark:text-zinc-50">{sortedByCourse.length}</span>
                     </span>
                   </div>
                 </div>
@@ -748,7 +748,7 @@ export default function DigitizationComplianceTab({
                     Filter Results
                   </label>
                   <span className="text-[9px] font-black text-pup-maroon dark:text-primary/70">
-                    {tableSearch ? (sortedByCourse.length > 0 ? `${sortedByCourse.length} MATCHES` : "NO RESULTS") : ""}
+                    {tableSearch ? (sortedByCourse.length > 0 ? `${sortedByCourse.length} matches` : "No results") : ""}
                   </span>
                 </div>
                 <div className="relative group">
@@ -774,7 +774,7 @@ export default function DigitizationComplianceTab({
                             onClick={() => handleSort("courseCode")}
                             className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                           >
-                            PROGRAM <SortIndicator column="courseCode" />
+                            Program <SortIndicator column="courseCode" />
                           </button>
                         </TableHead>
                         <TableHead className="p-4 px-6 text-center font-bold">
@@ -782,7 +782,7 @@ export default function DigitizationComplianceTab({
                             onClick={() => handleSort("total")}
                             className="group mx-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                           >
-                            TOTAL STUDENTS <SortIndicator column="total" />
+                            Total Students <SortIndicator column="total" />
                           </button>
                         </TableHead>
                         <TableHead className="p-4 px-6 text-center font-bold">
@@ -790,7 +790,7 @@ export default function DigitizationComplianceTab({
                             onClick={() => handleSort("digitized")}
                             className="group mx-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                           >
-                            FULLY DIGITIZED <SortIndicator column="digitized" />
+                            Fully Digitized <SortIndicator column="digitized" />
                           </button>
                         </TableHead>
                         <TableHead className="p-4 px-6 text-right font-bold">
@@ -798,7 +798,7 @@ export default function DigitizationComplianceTab({
                             onClick={() => handleSort("percent")}
                             className="group ml-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                           >
-                            COMPLETENESS <SortIndicator column="percent" />
+                            Completeness <SortIndicator column="percent" />
                           </button>
                         </TableHead>
                       </TableRow>
@@ -863,7 +863,7 @@ export default function DigitizationComplianceTab({
                               className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                           >
                               <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                              CLEAR ALL FILTERS
+                              Clear All Filters
                           </Button>
                       )}
                     </EmptyHeader>
@@ -888,7 +888,7 @@ export default function DigitizationComplianceTab({
         }}
       >
         <DialogContent
-          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out font-inter xl:max-w-[1200px] rounded-2xl dark:border-white/10 dark:bg-muted"
+          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out font-inter xl:max-w-[1200px] rounded-brand dark:border-white/10 dark:bg-muted"
         >
           <DialogHeader className="shrink-0 border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-center justify-between gap-4">
@@ -950,7 +950,7 @@ export default function DigitizationComplianceTab({
             )}
           </div>
 
-          <div className="flex shrink-0 justify-between items-center gap-3 border-t border-gray-100 bg-white p-4 px-8 rounded-b-[2rem] dark:border-white/10 dark:bg-card">
+          <div className="flex shrink-0 justify-between items-center gap-3 border-t border-gray-100 bg-white p-4 px-8 dark:border-white/10 dark:bg-card">
             <Button
               variant="outline"
               size="icon"
@@ -969,14 +969,14 @@ export default function DigitizationComplianceTab({
                 onClick={() => setReportOpen(false)}
                 className="h-11 px-6 font-bold border-gray-300 shadow-sm hover:border-gray-300 hover:bg-red-50 rounded-brand transition-colors dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
               >
-                CLOSE
+                Close
               </Button>
               <Button
                 onClick={handlePrint}
                 disabled={!pdfBlobUrl}
                 className="flex h-11 items-center gap-2 btn-brand-red px-8 font-black text-white shadow-sm rounded-brand transition-colors dark:shadow-none"
               >
-                <i className="ph-bold ph-floppy-disk text-lg"></i> SAVE TO DEVICE
+                <i className="ph-bold ph-floppy-disk text-lg"></i> Save to Device
               </Button>
             </div>
           </div>

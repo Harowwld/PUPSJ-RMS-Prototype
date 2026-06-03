@@ -36,14 +36,11 @@ export default function Header({ authUser, onLogout, children }) {
     // Only admins have a choice of view
     if (isAdminRole(authUser?.role)) {
       const stored = localStorage.getItem("pup_admin_view_pref");
-      if (stored) {
-        setPreferredView(stored);
-      } else {
-        // Default to admin if we're on an admin page, or staff otherwise
-        const initial = pathname?.startsWith("/admin") ? "admin" : "staff";
-
-        setPreferredView(initial);
-      }
+      const target = stored || (pathname?.startsWith("/admin") ? "admin" : "staff");
+      const timer = setTimeout(() => {
+        setPreferredView(target);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [authUser?.role, pathname]);
 

@@ -1249,7 +1249,7 @@ function AdminPageContent() {
           <div className="flex flex-col gap-1">
             <p className="text-sm font-semibold text-emerald-700">Backup Successful</p>
             <p className="text-xs font-normal">
-              Archive '{json?.data?.filename || "backup package"}' has been secured.
+              Archive &apos;{json?.data?.filename || "backup package"}&apos; has been secured.
             </p>
           </div>
         )

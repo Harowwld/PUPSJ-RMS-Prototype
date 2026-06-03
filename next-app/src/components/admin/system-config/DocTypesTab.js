@@ -420,14 +420,14 @@ export default function DocTypesTab({
                           onClick={() => onSort("name")}
                           className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                         >
-                          NAME / LABEL <SortIndicator column="name" />
+                          Name / Label <SortIndicator column="name" />
                         </button>
                       </th>
                       <th className="w-40 p-4 px-6">
-                        STATUS
+                        Status
                       </th>
                       <th className="w-32 p-4 px-6 text-right">
-                        ACTIONS
+                        Actions
                       </th>
                     </tr>
                   </thead>
@@ -484,7 +484,7 @@ export default function DocTypesTab({
                               ) : (
                                 <>
                                   <i className="ph-bold ph-plus mr-2"></i>
-                                  ADD
+                                  Add
                                 </>
                               )}
                             </Button>
@@ -496,7 +496,7 @@ export default function DocTypesTab({
                               variant="outline"
                               className="animate-pulse border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-black tracking-wider text-amber-700 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-500/50"
                             >
-                              UNSAVED DRAFT
+                              Unsaved Draft
                             </Badge>
                           ) : (
                             <Badge

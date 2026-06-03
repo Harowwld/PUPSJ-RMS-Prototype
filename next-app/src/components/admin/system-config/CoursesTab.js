@@ -455,7 +455,7 @@ export default function CoursesTab({
                           onClick={() => onSort("code")}
                           className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                         >
-                          CODE <SortIndicator column="code" />
+                          Code <SortIndicator column="code" />
                         </button>
                       </th>
                       <th className="p-4 px-6">
@@ -463,14 +463,14 @@ export default function CoursesTab({
                           onClick={() => onSort("name")}
                           className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                         >
-                          DESIGNATION <SortIndicator column="name" />
+                          Designation <SortIndicator column="name" />
                         </button>
                       </th>
                       <th className="w-40 p-4 px-6">
-                        STATUS
+                        Status
                       </th>
                       <th className="w-32 p-4 px-6 text-right">
-                        ACTIONS
+                        Actions
                       </th>
                     </tr>
                   </thead>

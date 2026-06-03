@@ -553,7 +553,7 @@ export default function DigitalRecordsReviewTab({
                 className="flex h-11 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-white text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:border-white/10"
               >
                 <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv"} text-base`}></i>
-                {isExporting ? "PREPARING..." : "EXPORT"}
+                {isExporting ? "Preparing..." : "Export"}
               </Button>
 
               <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4 dark:border-white/10">
@@ -865,7 +865,7 @@ export default function DigitalRecordsReviewTab({
                         onClick={() => handleSort("student_name")}
                         className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                       >
-                        STUDENT NAME{" "}
+                        Student Name{" "}
                         <SortIndicator
                           column="student_name"
                           sortBy={sortBy}
@@ -878,7 +878,7 @@ export default function DigitalRecordsReviewTab({
                         onClick={() => handleSort("doc_type")}
                         className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                       >
-                        DOCUMENT TYPE{" "}
+                        Document Type{" "}
                         <SortIndicator
                           column="doc_type"
                           sortBy={sortBy}
@@ -886,13 +886,13 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4">SOURCE FILENAME</th>
+                    <th className="p-4">Source Filename</th>
                     <th className="p-4">
                       <button
                         onClick={() => handleSort("approval_status")}
                         className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                       >
-                        STATUS{" "}
+                        Status{" "}
                         <SortIndicator
                           column="approval_status"
                           sortBy={sortBy}
@@ -905,7 +905,7 @@ export default function DigitalRecordsReviewTab({
                         onClick={() => handleSort("created_at")}
                         className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                       >
-                        UPLOAD DATE{" "}
+                        Upload Date{" "}
                         <SortIndicator
                           column="created_at"
                           sortBy={sortBy}
@@ -913,7 +913,7 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 text-right">ACTIONS</th>
+                    <th className="p-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/10">
@@ -929,7 +929,7 @@ export default function DigitalRecordsReviewTab({
                               </EmptyMedia>
                             </div>
                             <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
-                              {hasActiveFilters ? "No records found" : "No records yet"}
+                              {hasActiveFilters ? "No Records Found" : "No Records Yet"}
                             </EmptyTitle>
                             <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                               {hasActiveFilters
@@ -952,7 +952,7 @@ export default function DigitalRecordsReviewTab({
                                 className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                               >
                                 <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                                CLEAR SEARCH
+                                Clear Search
                               </Button>
                             )}
                           </EmptyHeader>
@@ -1000,10 +1000,13 @@ export default function DigitalRecordsReviewTab({
                             </div>
                           </td>
                           <td className="p-4">
-                            <div className="flex w-fit items-center gap-1.5 rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-[9px] font-black text-pup-maroon tracking-wider dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
+                            <Badge
+                              variant="outline"
+                              className="flex w-fit items-center gap-1.5 rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-[9px] font-black text-pup-maroon tracking-wider dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400 shadow-none"
+                            >
                               <i className="ph-bold ph-file-text text-[10px]"></i>
                               {r.doc_type}
-                            </div>
+                            </Badge>
                           </td>
                           <td className="p-4">
                             <span
@@ -1015,9 +1018,10 @@ export default function DigitalRecordsReviewTab({
                           </td>
                           <td className="p-4">
                             <div className="flex items-center gap-3">
-                              <div
+                              <Badge
+                                variant="outline"
                                 className={cn(
-                                  "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black  tracking-wider shadow-xs transition-all",
+                                  "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black  tracking-wider shadow-none transition-all",
                                   getStatusBadge(r.approval_status)
                                 )}
                               >
@@ -1025,7 +1029,7 @@ export default function DigitalRecordsReviewTab({
                                   className={`ph-fill ${getStatusIcon(r.approval_status)} text-[10px]`}
                                 ></i>
                                 {r.approval_status || "Pending"}
-                              </div>
+                              </Badge>
                               {isSlaBreached && (
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -1150,10 +1154,10 @@ export default function DigitalRecordsReviewTab({
                 <div className="flex items-center gap-8">
                   <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 tracking-widest dark:text-zinc-500">
                     <span>
-                      SHOWING <strong className="text-gray-900 dark:text-zinc-50">{paginatedRecords.length}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{sortedRecords.length}</strong> ENTRIES
+                      Showing <strong className="text-gray-900 dark:text-zinc-50">{paginatedRecords.length}</strong> out of <strong className="text-gray-900 dark:text-zinc-50">{sortedRecords.length}</strong> entries
                     </span>
                     <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
-                      <span className="text-[10px] opacity-60">ROWS:</span>
+                      <span className="text-[10px] opacity-60">Rows:</span>
                       <Select
                         className="h-8 w-16 cursor-pointer rounded-brand border border-gray-200 bg-white px-2 text-[10px] font-black text-gray-700 shadow-xs focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10"
                         value={itemsPerPage}

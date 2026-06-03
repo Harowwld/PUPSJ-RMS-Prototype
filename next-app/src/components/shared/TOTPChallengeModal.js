@@ -25,14 +25,10 @@ export function TOTPChallengeModal({
   const [token, setToken] = useState("")
   const [error, setError] = useState("")
 
-  useEffect(() => {
-    console.log("[TOTP MODAL] open changed to:", open)
-    if (!open) {
-      setToken("")
-
-      setError("")
-    }
-  }, [open])
+  if (!open && (token !== "" || error !== "")) {
+    setToken("")
+    setError("")
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()

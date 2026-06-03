@@ -60,10 +60,22 @@ export default function RecordsArchiveTab({
   const [page, setPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(9) // 9 fits nicely in 3-column card grid, 10 or more in table
 
-  useEffect(() => {
-    setPage(1)
-  }, [currentLevel, showArchived, quickQuery, listType])
+  const [prevFilters, setPrevFilters] = useState({
+    currentLevel,
+    showArchived,
+    quickQuery,
+    listType
+  })
 
+  if (
+    prevFilters.currentLevel !== currentLevel ||
+    prevFilters.showArchived !== showArchived ||
+    prevFilters.quickQuery !== quickQuery ||
+    prevFilters.listType !== listType
+  ) {
+    setPrevFilters({ currentLevel, showArchived, quickQuery, listType })
+    setPage(1)
+  }
   // Restore Modal State
   const [restoreStudentOpen, setRestoreStudentOpen] = useState(false)
   const [restoreTarget, setRestoreTarget] = useState(null)
@@ -149,7 +161,7 @@ export default function RecordsArchiveTab({
             {/* Storage Explorer Unified Header with Browser-style Back & Forward Buttons */}
             <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-white/10 pb-6">
               <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">Storage explorer</span>
+                <span className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">Storage Explorer</span>
                 
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   {/* Back Navigation Button */}
@@ -196,7 +208,7 @@ export default function RecordsArchiveTab({
                   
                   {/* Location Path Text */}
                   <h4 className="text-xl sm:text-2xl font-black tracking-tight text-gray-900 dark:text-zinc-50 flex items-center select-none ml-1.5 leading-none">
-                    {currentLocatorLevel === "rooms" && "Storage rooms"}
+                    {currentLocatorLevel === "rooms" && "Storage Rooms"}
                     {currentLocatorLevel === "cabinets" && (
                       <>
                         Room {selectedRoom} <span className="text-gray-300 dark:text-zinc-700 mx-2">/</span> Layout
@@ -214,7 +226,7 @@ export default function RecordsArchiveTab({
               {activeStudent && (
                 <div className="flex items-center gap-3">
                   <div className="flex flex-col text-right hidden sm:flex">
-                    <span className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 tracking-widest leading-none mb-1">Locating target</span>
+                    <span className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 tracking-widest leading-none mb-1">Locating Target</span>
                     <span className="text-lg sm:text-xl font-black text-pup-maroon dark:text-red-400 leading-none tracking-tight">{activeStudent.name}</span>
                   </div>
                   <Button
@@ -343,7 +355,7 @@ export default function RecordsArchiveTab({
       <div className="flex flex-1 flex-col items-stretch gap-6 lg:flex-row">
         <div className="flex w-full flex-shrink-0 flex-col gap-6 lg:w-1/4 h-auto">
           {/* Pill Tabs Container (Standalone) */}
-          <div className="flex w-full cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 shadow-xs backdrop-blur-sm dark:border-white/10 dark:bg-muted/50 dark:shadow-none">
+          <div className="flex w-full cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 shadow-xs backdrop-blur-sm sm:w-auto dark:border-white/10 dark:bg-muted/50 dark:shadow-none">
             <button
               type="button"
               onClick={() => setShowArchived(false)}
@@ -393,11 +405,11 @@ export default function RecordsArchiveTab({
           </div>
 
           {/* Global Search Card */}
-          <section className="flex flex-col overflow-hidden rounded-2xl border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
+          <section className="flex flex-col overflow-hidden rounded-2xl border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10 mb-4">
             <div className="space-y-3 border-b border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-card">
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
-                  Global search
+                  Global Search
                 </span>
               </div>
               <div className="group relative">
@@ -430,7 +442,7 @@ export default function RecordsArchiveTab({
                 <Empty className="m-auto flex flex-col items-center border-0 py-6 text-center">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
-                      Search records
+                      Search Records
                     </EmptyTitle>
                     <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                       Enter a student name or ID to quickly locate their records.
@@ -458,7 +470,7 @@ export default function RecordsArchiveTab({
                 <Empty className="m-auto flex flex-col items-center justify-center border-0 py-6 text-center text-gray-500 dark:text-zinc-400">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
-                      {showArchived ? "No archived records" : "No records found"}
+                      {showArchived ? "No Archived Records" : "No Records Found"}
                     </EmptyTitle>
                     <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                       {showArchived
@@ -491,7 +503,7 @@ export default function RecordsArchiveTab({
         </div>
 
         <section className="flex h-auto w-full flex-1 flex-col gap-6 lg:w-3/4">
-          <div className="relative flex min-h-[250px] shrink-0 flex-col rounded-2xl overflow-hidden border border-gray-300 bg-white shadow-sm dark:bg-[#202020] dark:shadow-none dark:border-white/10">
+          <div className="relative flex min-h-[250px] shrink-0 flex-col rounded-2xl overflow-hidden border border-gray-300 bg-white shadow-sm dark:bg-[#202020] dark:shadow-none dark:border-white/10 mb-4">
             <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-gray-200 bg-white p-4 text-sm dark:border-white/10 dark:bg-[#202020]">
               <div className="flex items-center gap-2">
                 <Button
@@ -533,7 +545,7 @@ export default function RecordsArchiveTab({
                         </BreadcrumbSeparator>
                         <BreadcrumbItem>
                           <Badge className="border-red-100 bg-red-50 text-[10px] font-black text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
-                            Archive view
+                            Archive View
                           </Badge>
                         </BreadcrumbItem>
                       </div>
@@ -575,7 +587,7 @@ export default function RecordsArchiveTab({
                       </EmptyMedia>
                     </div>
                     <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
-                      No student records yet
+                      No Student Records Yet
                     </EmptyTitle>
                     <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                       Register your first student record in the Upload tab.
@@ -589,8 +601,7 @@ export default function RecordsArchiveTab({
                       onClick={() => onSwitchView("upload")}
                       className="mt-4 flex h-10 items-center gap-2 rounded-brand btn-brand-red active:scale-95 transition-all dark:shadow-none"
                     >
-                      <i className="ph-bold ph-upload-simple"></i> Go to
-                      register / upload
+                      <i className="ph-bold ph-upload-simple"></i> Go To Register / Upload
                     </Button>
                   </EmptyContent>
                 </Empty>
@@ -638,8 +649,8 @@ export default function RecordsArchiveTab({
                     </div>
                     <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
                       {showArchived
-                        ? "No archived students"
-                        : "No students in this year"}
+                        ? "No Archived Students"
+                        : "No Students In This Year"}
                     </EmptyTitle>
                     <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                       {showArchived
@@ -738,9 +749,9 @@ export default function RecordsArchiveTab({
                         <th className="w-[80px] p-4 text-center">
                           <i className="ph-bold ph-user-circle text-[11px]"></i>
                         </th>
-                        <th className="w-48 p-4">Student no.</th>
-                        <th className="p-4">Full name</th>
-                        <th className="w-56 p-4">Physical location</th>
+                        <th className="w-48 p-4">Student No.</th>
+                        <th className="p-4">Full Name</th>
+                        <th className="w-56 p-4">Physical Location</th>
                         <th className="w-40 p-4 text-right">
                            <i className="ph-bold ph-dots-three-outline text-[11px]"></i>
                         </th>
@@ -770,7 +781,7 @@ export default function RecordsArchiveTab({
                               </span>
                               {showArchived && (
                                 <Badge className="mt-1 w-fit border-red-100 bg-red-50 px-1.5 text-[8px] font-black text-red-700 dark:bg-red-950/30">
-                                  Archived record
+                                  Archived Record
                                 </Badge>
                               )}
                             </div>
@@ -879,7 +890,7 @@ export default function RecordsArchiveTab({
 
           <div
             id="storage-layout-section"
-            className="relative flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm scroll-mt-6 shrink-0 dark:bg-card dark:shadow-none dark:border-white/10"
+            className="relative flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm scroll-mt-6 shrink-0 dark:bg-card dark:shadow-none dark:border-white/10 mb-4"
           >
             {renderStorageBody(false)}
           </div>
@@ -892,9 +903,9 @@ export default function RecordsArchiveTab({
           setRestoreStudentOpen(false)
           setRestoreTarget(null)
         }}
-        title="Restore student record"
+        title="Restore Student Record"
         message={`Restore record for ${restoreTarget?.name} (${restoreTarget?.studentNo})? This will make the student active and visible in all modules again.`}
-        confirmLabel="Restore record"
+        confirmLabel="Restore Record"
         variant="success"
         onConfirm={async () => {
           if (restoreTarget) {
