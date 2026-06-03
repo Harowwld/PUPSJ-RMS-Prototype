@@ -345,7 +345,7 @@ export default function LogTable({
             className="mt-6 rounded-full border-gray-200 font-bold hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/10 dark:bg-card"
           >
             <i className="ph-bold ph-arrows-clockwise mr-2 animate-spin"></i>
-            RETRY LOADING
+            Retry Loading
           </Button>
         </EmptyHeader>
       </Empty>
@@ -373,7 +373,7 @@ export default function LogTable({
                     onClick={() => handleSort("created_at")}
                     className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
                   >
-                    TIMESTAMP{" "}
+                    Timestamp{" "}
                     <SortIndicator
                       column="created_at"
                       logSortBy={logSortBy}
@@ -386,7 +386,7 @@ export default function LogTable({
                     onClick={() => handleSort("severity")}
                     className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
                   >
-                    SEVERITY{" "}
+                    Severity{" "}
                     <SortIndicator
                       column="severity"
                       logSortBy={logSortBy}
@@ -399,7 +399,7 @@ export default function LogTable({
                     onClick={() => handleSort("actor")}
                     className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
                   >
-                    ACTOR{" "}
+                    Actor{" "}
                     <SortIndicator
                       column="actor"
                       logSortBy={logSortBy}
@@ -412,7 +412,7 @@ export default function LogTable({
                     onClick={() => handleSort("action")}
                     className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
                   >
-                    EVENT / ACTION{" "}
+                    Event / Action{" "}
                     <SortIndicator
                       column="action"
                       logSortBy={logSortBy}
@@ -420,7 +420,7 @@ export default function LogTable({
                     />
                   </button>
                 </th>
-                <th className="min-w-[300px] p-4 dark:text-zinc-300">DESCRIPTION</th>
+                <th className="min-w-[300px] p-4 dark:text-zinc-300">Description</th>
                 <th className="w-[80px] p-4 text-center">
                    <i className="ph-bold ph-dots-three-outline text-[11px]"></i>
                 </th>
@@ -439,7 +439,7 @@ export default function LogTable({
                           </EmptyMedia>
                         </div>
                         <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
-                          No activity found
+                          No Activity Found
                         </EmptyTitle>
                         <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                           Try adjusting your search filters to find what you&apos;re looking for.
@@ -464,7 +464,7 @@ export default function LogTable({
                             className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                           >
                             <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                            CLEAR SEARCH
+                            Clear Search
                           </Button>
                         )}
                       </EmptyHeader>

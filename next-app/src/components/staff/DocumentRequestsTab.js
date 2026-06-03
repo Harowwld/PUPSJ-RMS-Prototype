@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/tooltip";
 import PageHeader from "@/components/shared/PageHeader";
 import { Select } from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
 
 const STATUS_OPTIONS = [
   "Pending",
@@ -51,12 +52,24 @@ function SortIndicator({ column, sortBy, sortOrder }) {
 
 function statusBadgeClass(status) {
   const s = String(status || "").toUpperCase();
+  if (s === "PENDING") return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50";
   if (s === "DONE" || s === "COMPLETED") return "bg-emerald-50 dark:bg-emerald-950/15 text-emerald-800 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20";
   if (s === "CANCELLED") return "bg-gray-100 dark:bg-zinc-800/40 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-800/65";
   if (s === "READY") return "bg-sky-50 dark:bg-sky-950/15 text-sky-800 dark:text-sky-400 border-sky-200 dark:border-sky-500/20";
   if (s === "SHREDDED") return "bg-rose-50 dark:bg-rose-950/15 text-rose-800 dark:text-rose-400 border-rose-200 dark:border-rose-500/20";
   if (s === "PROCESSING" || s === "INPROGRESS") return "bg-amber-50 dark:bg-amber-950/15 text-amber-900 dark:text-amber-400 border-amber-200 dark:border-amber-500/20";
   return "bg-red-50 dark:bg-red-950/15 text-pup-maroon dark:text-red-400 border-red-100 dark:border-red-500/20";
+}
+
+function statusBadgeIcon(status) {
+  const s = String(status || "").toUpperCase();
+  if (s === "PENDING") return "ph-clock";
+  if (s === "PROCESSING" || s === "INPROGRESS") return "ph-gear-six";
+  if (s === "READY") return "ph-bell";
+  if (s === "DONE" || s === "COMPLETED") return "ph-check-circle";
+  if (s === "CANCELLED") return "ph-x-circle";
+  if (s === "SHREDDED") return "ph-trash";
+  return "ph-clock";
 }
 
 export default function DocumentRequestsTab({
@@ -379,7 +392,7 @@ export default function DocumentRequestsTab({
       <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden">
         <PageHeader
           icon="ph-tray"
-          title="Alumni requests"
+          title="Alumni Requests"
           description="Manage and track alumni requests."
           actions={
             <div className="flex items-center gap-3">
@@ -390,7 +403,7 @@ export default function DocumentRequestsTab({
                   onClick={() => setCreateOpen(true)}
                 >
                   <i className="ph-bold ph-plus mr-1.5"></i>
-                  New request
+                  New Request
                 </Button>
               )}
             </div>
@@ -404,7 +417,7 @@ export default function DocumentRequestsTab({
               <div className="flex-1 min-w-[320px]">
                 <div className="mb-1.5 flex items-center justify-between">
                   <label className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
-                    Search requests
+                    Search Requests
                   </label>
                   <span className="text-[9px] font-black text-pup-maroon dark:text-primary/70">
                     {total > 0 ? `${total.toLocaleString()} matches` : "No results"}
@@ -485,7 +498,7 @@ export default function DocumentRequestsTab({
                 }}
                 className="h-6 rounded-full border border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
               >
-                Clear all FILTERS
+                Clear All Filters
               </Button>
             </div>
           </div>
@@ -496,7 +509,7 @@ export default function DocumentRequestsTab({
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6 items-start">
         
         {/* Table Card (Left Column) */}
-        <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden flex flex-col w-full p-0">
+        <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden flex flex-col w-full p-0 mb-4">
           <CardContent className="p-0 h-auto flex flex-col">
             {loading ? (
               <div className="p-6 space-y-4">
@@ -522,7 +535,7 @@ export default function DocumentRequestsTab({
                     <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
                       <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
                     </EmptyMedia>
-                    <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">Could not load report</EmptyTitle>
+                    <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">Could Not Load Report</EmptyTitle>
                     <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md dark:text-zinc-300">
                       {error}
                     </EmptyDescription>
@@ -544,7 +557,7 @@ export default function DocumentRequestsTab({
                             onClick={() => handleSort("id")}
                             className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
                           >
-                            Id
+                            ID
                             <SortIndicator
                               column="id"
                               sortBy={sortBy}
@@ -572,7 +585,7 @@ export default function DocumentRequestsTab({
                             onClick={() => handleSort("doc_type")}
                             className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
                           >
-                            Document
+                            Document Type
                             <SortIndicator
                               column="doc_type"
                               sortBy={sortBy}
@@ -624,7 +637,7 @@ export default function DocumentRequestsTab({
                                     <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
                                   </EmptyMedia>
                                 </div>
-                                <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">No alumni requests yet</EmptyTitle>
+                                <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">No Alumni Requests Yet</EmptyTitle>
                                 <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                                   Create a request for alumni. Track status and find the physical file using the map.
                                 </EmptyDescription>
@@ -653,16 +666,24 @@ export default function DocumentRequestsTab({
                                 {r.student_no}
                               </div>
                             </td>
-                            <td className="p-4 font-medium text-gray-800 dark:text-zinc-100">
-                              {r.doc_type}
-                            </td>
                             <td className="p-4">
-                              <span
-                                className={`inline-flex items-center text-[11px] font-bold px-2 py-0.5 rounded-full border ${statusBadgeClass(r.status)}`}
-                              >
-                                {r.status}
-                              </span>
-                            </td>
+                               <Badge
+                                 variant="outline"
+                                 className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[9px] font-black tracking-wider text-pup-maroon whitespace-nowrap dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
+                               >
+                                 <i className="ph-bold ph-file-text text-[10px]"></i>
+                                 {r.doc_type}
+                               </Badge>
+                             </td>
+                             <td className="p-4">
+                               <Badge
+                                 variant="outline"
+                                 className={cn("flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black tracking-wider shadow-none transition-all", statusBadgeClass(r.status))}
+                               >
+                                 <i className={cn("ph-fill text-[10px]", statusBadgeIcon(r.status))}></i>
+                                 {r.status}
+                               </Badge>
+                             </td>
                             <td className="p-4 text-right text-[11px] text-gray-500 whitespace-nowrap dark:text-zinc-400">
                               {formatPHDateTime(r.created_at)}
                             </td>
@@ -732,10 +753,10 @@ export default function DocumentRequestsTab({
         </Card>
 
         {/* 3. Request details Card (Right Column) */}
-        <Card className="rounded-brand border border-gray-200 bg-white shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0 dark:bg-card dark:border-white/10 dark:shadow-none p-0">
+        <Card className="rounded-brand border border-gray-200 bg-white shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0 dark:bg-card dark:border-white/10 dark:shadow-none p-0 mb-4">
           <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between dark:border-white/10 dark:bg-muted/30">
             <div className="text-xs font-bold tracking-wider text-gray-500 dark:text-zinc-400">
-              Request details
+              Request Details
             </div>
             {hasEdits && (
               <div className="flex items-center gap-2">
@@ -755,7 +776,7 @@ export default function DocumentRequestsTab({
                   onClick={handleManualSave}
                   disabled={saving}
                 >
-                  {saving ? "Saving..." : "Save changes"}
+                  {saving ? "Saving..." : "Save Changes"}
                 </Button>
               </div>
             )}
@@ -818,15 +839,16 @@ export default function DocumentRequestsTab({
                       </div>
                       <div>
                         <div className="text-xs font-bold text-gray-500 dark:text-zinc-400">
-                          Document type
+                          Document Type
                         </div>
                         <div className="font-semibold text-gray-900 dark:text-zinc-50">{detail.doc_type}</div>
                       </div>
 
                       <div className="rounded-brand border border-gray-200 p-3 dark:border-white/10">
                         <div className="text-xs font-bold text-gray-600 mb-1 dark:text-zinc-300">
-                          Physical location
+                          Physical Location
                         </div>
+
                         {studentForRequest ? (
                           <div className="text-sm text-gray-800 dark:text-zinc-100">
                             Room {studentForRequest.room} · Cabinet {studentForRequest.cabinet}{" "}
@@ -851,7 +873,7 @@ export default function DocumentRequestsTab({
                           }}
                         >
                           <i className="ph-bold ph-map-pin mr-2"></i>
-                          Locate on storage map
+                          Locate On Storage Map
                         </Button>
                       </div>
 
@@ -1008,7 +1030,7 @@ export default function DocumentRequestsTab({
                   <div>
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-bold text-gray-700 dark:text-zinc-200">
-                        Or enter custom student number
+                        Or Enter Custom Student Number
                       </label>
                       <span className="text-[10px] text-gray-400 font-semibold">If student record is missing</span>
                     </div>
@@ -1023,7 +1045,7 @@ export default function DocumentRequestsTab({
               )}
               <div>
                 <label className="text-xs font-bold text-gray-700 dark:text-zinc-200">
-                  Document type
+                  Document Type
                 </label>
                 <Select
                   className="mt-1.5 h-10 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 dark:bg-card dark:border-white/10"
@@ -1041,7 +1063,7 @@ export default function DocumentRequestsTab({
               </div>
               <div>
                 <label className="text-xs font-bold text-gray-700 dark:text-zinc-200">
-                  Notes (optional)
+                  Notes (Optional)
                 </label>
                 <textarea
                   className="mt-1.5 w-full min-h-[72px] rounded-brand border border-gray-300 p-2.5 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-gray-300 dark:bg-zinc-900 dark:border-zinc-800 dark:focus-visible:border-zinc-700"
@@ -1066,7 +1088,7 @@ export default function DocumentRequestsTab({
                 disabled={submitting}
               >
                 <i className="ph-bold ph-plus-circle text-lg"></i>
-                {submitting ? "Saving..." : "Create request"}
+                {submitting ? "Saving..." : "Create Request"}
               </Button>
             </div>
           </form>
@@ -1105,7 +1127,7 @@ export default function DocumentRequestsTab({
                     <EmptyMedia>
                       <i className="ph-bold ph-warning-circle text-2xl text-red-600"></i>
                     </EmptyMedia>
-                    <EmptyTitle className="text-sm">No mapped storage location</EmptyTitle>
+                    <EmptyTitle className="text-sm">No Mapped Storage Location</EmptyTitle>
                     <EmptyDescription className="text-red-700/70 text-xs">
                       This student record has no physical drawer assignment.
                     </EmptyDescription>
@@ -1121,8 +1143,9 @@ export default function DocumentRequestsTab({
               className="px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
               onClick={() => setFileWarningOpen(false)}
             >
-              CLOSE
+              Close
             </Button>
+
             {studentForRequest ? (
               <Button
                 type="button"
@@ -1133,7 +1156,7 @@ export default function DocumentRequestsTab({
                 }}
               >
                 <i className="ph-bold ph-map-pin text-lg"></i>
-                Check storage map anyway
+                Check Storage Map Anyway
               </Button>
             ) : null}
           </div>

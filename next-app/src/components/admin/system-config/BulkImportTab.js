@@ -47,7 +47,7 @@ export default function BulkImportTab({
   const [isRefreshing, setIsRefreshing] = useState(false)
 
   const [quickAdd, setQuickAdd] = useState({
-    category: "DOCUMENT TYPE",
+    category: "DocumentType",
     name: "",
     code: "",
   })
@@ -64,7 +64,7 @@ export default function BulkImportTab({
     if (!quickAdd.name) return
     if (onAddRow) {
       onAddRow(quickAdd)
-      setQuickAdd({ category: "DOCUMENT TYPE", name: "", code: "" })
+      setQuickAdd({ category: "DocumentType", name: "", code: "" })
     }
   }
 
@@ -188,7 +188,7 @@ export default function BulkImportTab({
                 <div className="grid grid-cols-1 gap-2.5">
                   {[
                     {
-                      label: "DOCUMENT TYPE",
+                      label: "Document Type",
                       desc: "ID code optional. Only 'Name' required.",
                       icon: "ph-files",
                     },
@@ -309,7 +309,7 @@ export default function BulkImportTab({
               onClick={resetImport}
               className="h-9 shrink-0 rounded-brand border-gray-300 px-3 text-gray-600 transition-all hover:border-gray-300 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:text-zinc-300 dark:hover:border-zinc-700 dark:border-white/10"
             >
-              <i className="ph-bold ph-arrow-left mr-2"></i> BACK
+              <i className="ph-bold ph-arrow-left mr-2"></i> Back
             </Button>
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
@@ -330,7 +330,7 @@ export default function BulkImportTab({
           </div>            <div className="flex items-center gap-3">
               <div className="flex items-center gap-4 rounded-full border border-gray-200 bg-white px-3 py-1.5 shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
                 <span className="border-r border-gray-100 pr-4 text-[10px] font-black tracking-widest text-gray-400 dark:border-white/10 dark:text-zinc-300">
-                  SUMMARY
+                  Summary
                 </span>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1.5">
@@ -366,11 +366,11 @@ export default function BulkImportTab({
                         onChange={(e) => toggleImportSelectAll(e.target.checked)}
                       />
                     </th>
-                    <th className="w-12 p-4 text-center dark:text-zinc-300">ROW</th>
-                    <th className="w-48 p-4 dark:text-zinc-300">CATEGORY</th>
-                    <th className="p-4 min-w-[200px] dark:text-zinc-300">NAME / LABEL</th>
-                    <th className="w-48 p-4 dark:text-zinc-300">IDENTIFIER</th>
-                    <th className="w-40 p-4 text-right dark:text-zinc-300">VALIDATION</th>
+                    <th className="w-12 p-4 text-center dark:text-zinc-300">Row</th>
+                    <th className="w-48 p-4 dark:text-zinc-300">Category</th>
+                    <th className="p-4 min-w-[200px] dark:text-zinc-300">Name / Label</th>
+                    <th className="w-48 p-4 dark:text-zinc-300">Identifier</th>
+                    <th className="w-40 p-4 text-right dark:text-zinc-300">Validation</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/10">
@@ -381,7 +381,7 @@ export default function BulkImportTab({
                       </div>
                     </td>
                     <td className="p-4 text-center font-mono text-[11px] text-gray-400 italic dark:text-zinc-500">
-                      NEW
+                      New
                     </td>
                     <td className="p-4">
                       <Select
@@ -394,7 +394,7 @@ export default function BulkImportTab({
                           }))
                         }
                       >
-                        <option value="DOCUMENT TYPE">DOCUMENT TYPE</option>
+                        <option value="DocumentType">Document Type</option>
                         <option value="Course">Course</option>
                         <option value="Section">Section</option>
                       </Select>
@@ -458,7 +458,7 @@ export default function BulkImportTab({
                         onClick={handleQuickAdd}
                         className="h-8 rounded-md btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-4 text-[10px] font-black text-white dark:shadow-none"
                       >
-                        <i className="ph-bold ph-plus mr-1"></i> ADD ROW
+                        <i className="ph-bold ph-plus mr-1"></i> Add Row
                       </Button>
                     </td>
                   </tr>
@@ -493,7 +493,7 @@ export default function BulkImportTab({
                                 }))
                               }
                             >
-                              <option value="DOCUMENT TYPE">DOCUMENT TYPE</option>
+                              <option value="DocumentType">Document Type</option>
                               <option value="Course">Course</option>
                               <option value="Section">Section</option>
                             </Select>
@@ -502,7 +502,7 @@ export default function BulkImportTab({
                               variant="outline"
                               className={`border-0 px-2 py-0.5 text-[9px] font-black tracking-widest ${ row.category.toLowerCase() === "documenttype" ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" : row.category.toLowerCase() === "course" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" }`}
                             >
-                              {row.category || "MISSING"}
+                              {row.category === "DocumentType" ? "Document Type" : (row.category || "Missing")}
                             </Badge>
                           )}
                         </td>
@@ -651,7 +651,7 @@ export default function BulkImportTab({
                   className="h-9 px-4 text-xs font-bold text-gray-500 transition-colors hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-400 dark:bg-red-950/30"
                 >
                   <i className="ph-bold ph-trash-simple text-sm mr-2"></i>
-                  CANCEL IMPORT
+                  Cancel Import
                 </Button>
                 <Button
                   onClick={executeBulkImport}

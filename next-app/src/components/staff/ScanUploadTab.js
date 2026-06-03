@@ -106,6 +106,29 @@ export default function ScanUploadTab({
   const [confirmDropOpen, setConfirmDropOpen] = useState(false)
   const [windowDragActive, setWindowDragActive] = useState(false)
   const [csvPage, setCsvPage] = useState(1)
+  const [csvRowsPerPage, setCsvRowsPerPage] = useState(10)
+  const [csvSearch, setCsvSearch] = useState("")
+  const [localCsvSearch, setLocalCsvSearch] = useState("")
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setCsvSearch(localCsvSearch)
+      setCsvPage(1)
+    }, 300)
+    return () => clearTimeout(handler)
+  }, [localCsvSearch])
+
+  const filteredCsvRows = useMemo(() => {
+    if (!csvSearch) return csvRows
+    const q = csvSearch.toLowerCase()
+    return csvRows.filter(r => {
+      return (
+        String(r.student?.studentNo || "").toLowerCase().includes(q) ||
+        String(r.student?.name || "").toLowerCase().includes(q) ||
+        String(r.student?.courseCode || "").toLowerCase().includes(q)
+      )
+    })
+  }, [csvRows, csvSearch])
 
   const [showStudentNoSuggestions, setShowStudentNoSuggestions] = useState(false)
   const [showNameSuggestions, setShowNameSuggestions] = useState(false)
@@ -122,12 +145,12 @@ export default function ScanUploadTab({
   const filteredNameSuggestions = useMemo(() => {
     const q = (newRec.name || "").trim();
     if (!q || uploadStudentIsExisting) return [];
-    
+
     const fuzzyMatches = findStudentsByOcrName(q, students);
     if (fuzzyMatches && fuzzyMatches.length > 0) {
       return fuzzyMatches.slice(0, 5);
     }
-    
+
     const qLo = q.toLowerCase();
     return students.filter(s => {
       const name = String(s.name || "").toLowerCase();
@@ -233,7 +256,7 @@ export default function ScanUploadTab({
   const mergeSelectedCabinetId = (roomIdRaw, cabIdRaw) => {
     const cabId = canonicalizeCabinetId(cabIdRaw)
     const ids = getCabinetsForRoom(roomIdRaw).map((c) => canonicalizeCabinetId(c.id))
-    
+
     // If no room is selected or invalid, provide all possible cabinet IDs from the system as options
     if (ids.length === 0) {
       const allCabs = Array.from(new Set(storageLayout?.rooms?.flatMap(r => r.cabinets.map(c => canonicalizeCabinetId(c.id))) || []))
@@ -291,10 +314,9 @@ export default function ScanUploadTab({
   }, [manualPreviewUrl])
 
   const paginatedCsvRows = useMemo(() => {
-    const itemsPerPage = 10
-    const startIndex = (csvPage - 1) * itemsPerPage
-    return csvRows.slice(startIndex, startIndex + itemsPerPage)
-  }, [csvRows, csvPage])
+    const startIndex = (csvPage - 1) * csvRowsPerPage
+    return filteredCsvRows.slice(startIndex, startIndex + csvRowsPerPage)
+  }, [filteredCsvRows, csvPage, csvRowsPerPage])
 
   const hf = useHotFolderInbox({
     enabled: uploadMode === "pdf",
@@ -519,7 +541,7 @@ export default function ScanUploadTab({
       id="view-upload"
       className="animate-fade-up font-inter flex h-auto w-full flex-col"
     >
-      <Card className="flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-gray-200/50 backdrop-blur-xl dark:border-white/10 dark:bg-card/80 dark:shadow-none">
+      <Card className="flex flex-col mb-4 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl shadow-gray-200/50 backdrop-blur-xl dark:border-white/10 dark:bg-card/80 dark:shadow-none">
         <PageHeader
           icon="ph-scan"
           title="Scan & Upload"
@@ -556,9 +578,9 @@ export default function ScanUploadTab({
             <>
               <ConfirmModal
                 open={clearInboxOpen}
-                title="Clear scanner inbox?"
+                title="Clear Scanner Inbox?"
                 message={`This will remove ${hf.rows.length} queued item(s) from the scanner inbox. You can’t undo this.`}
-                confirmLabel="Clear inbox"
+                confirmLabel="Clear Inbox"
                 onConfirm={async () => {
                   await hf.clearInbox()
                   setClearInboxOpen(false)
@@ -570,9 +592,9 @@ export default function ScanUploadTab({
 
               <ConfirmModal
                 open={confirmDropOpen}
-                title="Replace loaded document?"
+                title="Replace Loaded Document?"
                 message="An existing document is already loaded in the preview area. Are you sure you want to replace it with the new file?"
-                confirmLabel="Replace file"
+                confirmLabel="Replace File"
                 onConfirm={() => {
                   if (pendingDroppedFile) {
                     handlePdfFileSelect(pendingDroppedFile)
@@ -619,13 +641,13 @@ export default function ScanUploadTab({
                       <i
                         className={`ph-bold ph-file-csv ${uploadMode === "csv" ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
                       />
-                      <span className="whitespace-nowrap tracking-wide">BATCH (CSV)</span>
+                      <span className="whitespace-nowrap tracking-wide">Batch (CSV)</span>
                     </button>
                   </div>
                 </div>
               </div>
 
-              <div className="flex flex-col gap-6 h-auto lg:flex-row lg:items-start">
+              <div className="flex flex-col gap-6 h-auto lg:flex-row lg:items-stretch">
                 <section
                   className={cn(
                     "relative flex h-auto min-h-[580px] flex-col transition-all duration-300",
@@ -641,7 +663,7 @@ export default function ScanUploadTab({
                           </div>
                           <div>
                             <h3 className="text-lg font-black tracking-tight text-gray-900 dark:text-zinc-50">
-                              CSV preview
+                              CSV Preview
                             </h3>
                             <div className="mt-0.5 text-xs leading-tight font-medium text-gray-500 dark:text-zinc-400">
                               {csvFile ? (
@@ -662,7 +684,21 @@ export default function ScanUploadTab({
                             </div>
                           </div>
                         </div>
-                        <div className="flex shrink-0 items-center gap-2">
+                        <div className="flex shrink-0 items-center gap-4">
+                          {csvFile && (
+                            <div className="relative group w-48 sm:w-64">
+                              <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <i className="ph-bold ph-magnifying-glass text-gray-400 group-focus-within:text-pup-maroon dark:text-zinc-500 transition-colors"></i>
+                              </div>
+                              <input
+                                type="text"
+                                className="h-9 w-full rounded-brand border border-gray-200 bg-white pl-9 pr-3 text-xs font-bold transition-all placeholder:text-gray-400 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-300"
+                                placeholder="Search records..."
+                                value={localCsvSearch}
+                                onChange={(e) => setLocalCsvSearch(e.target.value)}
+                              />
+                            </div>
+                          )}
                           {csvFile && (
                             <Button
                               variant="outline"
@@ -671,7 +707,7 @@ export default function ScanUploadTab({
                               className="h-9 shrink-0 rounded-brand border-gray-300 px-4 text-[10px] font-black tracking-widest text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:bg-zinc-800/30 dark:border-white/10"
                             >
                               <i className="ph-bold ph-x-circle mr-1.5 text-xs" />
-                              Clear file
+                              Clear File
                             </Button>
                           )}
                         </div>
@@ -686,7 +722,7 @@ export default function ScanUploadTab({
                       >
                         {csvDropActive && (
                           <div
-                            className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-pup-maroon/10 backdrop-blur-xs border-2 border-dashed border-pup-maroon/50 rounded-brand animate-fade-up dark:bg-red-600/[0.04] dark:border-primary/50"
+                            className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-pup-maroon/10 backdrop-blur-xs border-2 border-dashed border-pup-maroon/40 rounded-brand animate-fade-up dark:bg-red-600/[0.04] dark:border-primary/50"
                             onDragOver={(e) => {
                               e.preventDefault()
                               setCsvDropActive(true)
@@ -724,7 +760,7 @@ export default function ScanUploadTab({
                             </div>
                           </div>
                         )}
-                        {csvRows.length ? (
+                        {filteredCsvRows.length ? (
                           <table className="min-w-full text-[12px] table-auto">
                             <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
                               <tr className="text-left text-[10px] font-black tracking-wider text-gray-500 dark:text-zinc-400 dark:border-white/10">
@@ -733,17 +769,22 @@ export default function ScanUploadTab({
                                     type="checkbox"
                                     className="h-3.5 w-3.5 cursor-pointer rounded border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10"
                                     checked={
-                                      csvRows.length > 0 &&
-                                      Object.values(csvSelected).filter(Boolean)
-                                        .length === csvRows.length
+                                      filteredCsvRows.length > 0 &&
+                                      Object.keys(csvSelected).filter(k => csvSelected[k]).length >= filteredCsvRows.length &&
+                                      filteredCsvRows.every(r => csvSelected[r.index])
                                     }
-                                    onChange={(e) =>
-                                      toggleCsvSelectAll(e.target.checked)
-                                    }
+                                    onChange={(e) => {
+                                      const checked = e.target.checked
+                                      const next = { ...csvSelected }
+                                      filteredCsvRows.forEach(r => {
+                                        next[r.index] = checked
+                                      })
+                                      setCsvSelected(next)
+                                    }}
                                   />
                                 </th>
                                 <th className="px-3.5 py-3">#</th>
-                                <th className="px-3.5 py-3">Student no</th>
+                                <th className="px-3.5 py-3">Student No</th>
                                 <th className="px-3.5 py-3">Name</th>
                                 <th className="px-3.5 py-3">Course</th>
                                 <th className="px-3.5 py-3">Year</th>
@@ -896,9 +937,27 @@ export default function ScanUploadTab({
                               })}
                             </tbody>
                           </table>
+                        ) : csvRows.length > 0 ? (
+                          <div className="flex flex-col items-center justify-center p-20 text-center bg-white dark:bg-card">
+                            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-50 dark:bg-muted">
+                              <i className="ph-duotone ph-magnifying-glass text-4xl text-gray-300 dark:text-zinc-600"></i>
+                            </div>
+                            <h3 className="text-lg font-black text-gray-900 dark:text-zinc-50 tracking-tight">No matches found</h3>
+                            <p className="mt-1 text-sm font-medium text-gray-500 dark:text-zinc-400">
+                              We couldn&apos;t find any rows matching &quot;{csvSearch}&quot;.
+                            </p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => setLocalCsvSearch("")}
+                              className="mt-6 h-9 rounded-brand border-gray-300 px-6 font-bold text-xs tracking-widest text-pup-maroon hover:bg-red-50 dark:text-primary dark:border-white/10"
+                            >
+                              CLEAR SEARCH
+                            </Button>
+                          </div>
                         ) : (
                           <div
-                            className={`group flex h-full cursor-pointer items-center justify-center rounded-brand border-2 border-dashed p-12 transition-all ${ csvDropActive ? "border-gray-300 bg-red-50 shadow-inner" : "bg-gray-50 hover:border-gray-300 hover:bg-red-50" } dark:border-white/10 dark:bg-zinc-900/30 dark:shadow-none dark:hover:border-zinc-700`}
+                            className={`group flex h-full cursor-pointer items-center justify-center rounded-brand border-2 border-dashed p-12 transition-all ${ csvDropActive ? "border-pup-maroon/40 bg-red-50 shadow-inner" : "border-gray-300 bg-gray-50 hover:border-pup-maroon/40 hover:bg-red-50" } dark:border-white/10 dark:bg-zinc-900/30 dark:shadow-none dark:hover:border-zinc-700`}
                             onClick={() => csvInputRef.current?.click()}
                           >
                             <Empty className="pointer-events-none flex flex-col items-center justify-center border-0 bg-transparent text-center">
@@ -910,7 +969,7 @@ export default function ScanUploadTab({
                                   </EmptyMedia>
                                 </div>
                                 <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
-                                  Drop CSV file here
+                                  Drop CSV File Here
                                 </EmptyTitle>
                                 <EmptyDescription className="mt-2 max-w-xs text-sm font-medium text-gray-600 dark:text-zinc-300">
                                   or click to browse local files (.csv)
@@ -919,32 +978,53 @@ export default function ScanUploadTab({
                             </Empty>
                           </div>
                         )}
-                        {csvRows.length > 0 && (
-                          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-gray-200 p-4 bg-gray-50/50 dark:border-white/10 dark:bg-white/5 select-none shrink-0">
-                            <div className="text-xs font-medium text-gray-500">
-                              Showing <strong>{(csvPage - 1) * 10 + 1}</strong> to <strong>{Math.min(csvPage * 10, csvRows.length)}</strong> of <strong>{csvRows.length.toLocaleString()}</strong> entries
+                        {filteredCsvRows.length > 0 && (
+                          <div className="flex flex-wrap items-center justify-between border-t border-gray-100 bg-white px-6 py-3 rounded-b-brand dark:border-white/10 dark:bg-card select-none shrink-0">
+                            <div className="flex items-center gap-8 cursor-default">
+                              <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 tracking-widest dark:text-zinc-500">
+                                <span>
+                                  Showing <strong className="text-gray-900 dark:text-zinc-50">{Math.min(csvRowsPerPage, filteredCsvRows.length - (csvPage - 1) * csvRowsPerPage)}</strong> Out Of <strong className="text-gray-900 dark:text-zinc-50">{filteredCsvRows.length.toLocaleString()}</strong> Entries
+                                </span>
+                                <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
+                                  <span className="text-[10px] opacity-60">Rows:</span>
+                                  <Select
+                                    className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
+                                    value={csvRowsPerPage}
+                                    onChange={(e) => {
+                                      setCsvRowsPerPage(Number(e.target.value))
+                                      setCsvPage(1)
+                                    }}
+                                  >
+                                    {[10, 20, 50, 100, 200].map((n) => (
+                                      <option key={n} value={n}>
+                                        {n}
+                                      </option>
+                                    ))}
+                                  </Select>
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex shrink-0 items-center gap-3">
                               <Button
                                 variant="outline"
                                 size="sm"
                                 disabled={csvPage <= 1}
                                 onClick={() => setCsvPage((p) => p - 1)}
-                                className="h-8 rounded-brand text-xs border border-gray-300 bg-white font-bold hover:bg-gray-100 dark:bg-card dark:hover:bg-zinc-800 dark:border-white/10"
+                                className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                               >
-                                <i className="ph-bold ph-caret-left mr-1" /> Previous
+                                <i className="ph-bold ph-caret-left mr-2 text-base" /> Prev
                               </Button>
-                              <div className="px-3 text-xs font-bold text-gray-700 bg-white border border-gray-200 rounded-md h-8 flex items-center dark:bg-card dark:text-zinc-200 dark:border-white/10">
-                                Page {csvPage} of {Math.ceil(csvRows.length / 10) || 1}
+                              <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                                {csvPage}
                               </div>
                               <Button
                                 variant="outline"
                                 size="sm"
-                                disabled={csvPage >= (Math.ceil(csvRows.length / 10) || 1)}
+                                disabled={csvPage >= (Math.ceil(filteredCsvRows.length / csvRowsPerPage) || 1)}
                                 onClick={() => setCsvPage((p) => p + 1)}
-                                className="h-8 rounded-brand text-xs border border-gray-300 bg-white font-bold hover:bg-gray-100 dark:bg-card dark:hover:bg-zinc-800 dark:border-white/10"
+                                className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                               >
-                                Next <i className="ph-bold ph-caret-right ml-1" />
+                                Next <i className="ph-bold ph-caret-right ml-2 text-base" />
                               </Button>
                             </div>
                           </div>
@@ -958,7 +1038,7 @@ export default function ScanUploadTab({
                           <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
                             <div>
                               <div className="text-xs font-bold text-gray-600 dark:text-zinc-300">
-                                Scanner files
+                                Scanner Files
                               </div>
                               <div className="text-sm font-bold text-gray-900 dark:text-zinc-50 flex items-center gap-2">
                                 <span className="relative flex h-2 w-2">
@@ -983,15 +1063,15 @@ export default function ScanUploadTab({
                                     setClearInboxOpen(true)
                                   }}
                                 >
-                                  Clear inbox
+                                  Clear Inbox
                                 </button>
                               )}
-                              <RefreshButton 
+                              <RefreshButton
                                 onRefresh={(e) => {
                                   e.stopPropagation()
                                   hf.refresh()
-                                }} 
-                                isLoading={hf.loading} 
+                                }}
+                                isLoading={hf.loading}
                                 className="h-8 w-8"
                               />
                             </div>
@@ -1034,7 +1114,7 @@ export default function ScanUploadTab({
                       )}
 
                       <div
-                        className={`group relative flex flex-1 min-h-[480px] w-full flex-col overflow-hidden rounded-brand border border-dashed bg-gray-50 transition-all ${ fe.pdfFile ? "border-orange-400 bg-orange-50/30 ring-2 ring-orange-400" : "border-gray-300 hover:border-pup-maroon/40 hover:bg-red-50" } ${dropActive ? "bg-red-50 border-pup-maroon/40" : ""} dark:bg-white/5 dark:border-white/10`}
+                        className={`group relative flex flex-1 min-h-[480px] w-full flex-col overflow-hidden rounded-brand border-2 border-dashed bg-gray-50 transition-all ${ fe.pdfFile ? "border-orange-400 bg-orange-50/30 ring-2 ring-orange-400" : "border-gray-300 hover:border-pup-maroon/40 hover:bg-red-50" } ${dropActive ? "bg-red-50 border-pup-maroon/40" : ""} dark:bg-white/5 dark:border-white/10`}
                         onDragOver={(e) => {
                           e.preventDefault()
                           setDropActive(true)
@@ -1061,7 +1141,7 @@ export default function ScanUploadTab({
                             <div className="flex shrink-0 items-center justify-between gap-2 border-b border-gray-200 bg-gray-50 px-4 py-2.5 dark:border-white/10 dark:bg-card">
                           <div className="min-w-0">
                             <div className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
-                              {hf.selectedRow ? "Scanner preview" : "Document preview"}
+                              {hf.selectedRow ? "Scanner Preview" : "Document Preview"}
                             </div>
                             <div className="truncate text-sm font-bold text-gray-900 dark:text-zinc-50">
                               {hf.selectedRow?.original_filename || uploadedFile?.name}
@@ -1113,7 +1193,7 @@ export default function ScanUploadTab({
                                   Scan Pages ({uploadedFiles.length})
                                 </span>
                                 <span className="text-[9px] font-bold text-pup-maroon dark:text-primary bg-red-50 dark:bg-red-950/30 px-1.5 py-0.5 rounded-full">
-                                  COMBINE PAGES
+                                  Combine Pages
                                 </span>
                               </div>
                               <div className="flex-1 space-y-1.5 overflow-y-auto pr-1">
@@ -1180,7 +1260,7 @@ export default function ScanUploadTab({
                               <button
                                 type="button"
                                 onClick={() => fileInputRef.current?.click()}
-                                className="mt-auto flex h-10 items-center justify-center gap-1.5 rounded-brand border border-dashed border-gray-300 bg-white text-[10px] font-black tracking-widest text-gray-600 transition-all hover:bg-gray-50 dark:bg-card dark:border-white/10 dark:text-zinc-300"
+                                className="mt-auto flex h-10 items-center justify-center gap-1.5 rounded-brand border-2 border-dashed border-gray-300 bg-white text-[10px] font-black tracking-widest text-gray-600 transition-all hover:bg-gray-50 dark:bg-card dark:border-white/10 dark:text-zinc-300"
                               >
                                 <i className="ph-bold ph-plus text-xs" /> Add Page
                               </button>
@@ -1218,7 +1298,7 @@ export default function ScanUploadTab({
 
                             return (
                               <div className="flex h-full w-full items-center justify-center bg-gray-100 p-8 text-xs font-bold text-gray-400 dark:text-zinc-500 dark:bg-muted">
-                                PREVIEW NOT AVAILABLE
+                                Preview Not Available
                               </div>
                             )
                           })()}
@@ -1272,7 +1352,7 @@ export default function ScanUploadTab({
                                   </EmptyMedia>
                                 </div>
                                 <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
-                                  Drop Document or Image here
+                                  Drop Document Or Image Here
                                 </EmptyTitle>
                                 <EmptyDescription className="mt-2 max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                                   or click to browse local files (PDF, JPG, PNG)
@@ -1344,7 +1424,7 @@ export default function ScanUploadTab({
                 </section>
 
                 <section
-                  className={`font-inter flex h-auto flex-col rounded-brand border border-gray-300 bg-white shadow-sm transition-all duration-300 ${ uploadMode === "csv" ? "w-full lg:w-[32%]" : "lg:w-[52%]" } dark:border-white/10 dark:bg-card dark:shadow-none`}
+                  className={`font-inter flex h-auto flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm transition-all duration-300 ${ uploadMode === "csv" ? "w-full lg:w-[32%]" : "lg:w-[52%]" } dark:border-white/10 dark:bg-card dark:shadow-none`}
                 >
                   <CardHeader className="flex flex-col items-center justify-between gap-4 border-b border-gray-100 bg-gray-50/50 p-6 px-8 sm:flex-row dark:border-white/10 dark:bg-white/5">
                     <div className="flex items-center gap-4">
@@ -1368,7 +1448,7 @@ export default function ScanUploadTab({
                     </div>
                   </CardHeader>
 
-                  <div className="bg-gray-50 p-6 dark:bg-white/5">
+                  <div className="flex-1 bg-gray-50 p-6 dark:bg-white/5">
                     {uploadMode === "pdf" ? (
                       <div className="space-y-5">
                         {uploadStudentIsExisting && (
@@ -1403,7 +1483,7 @@ export default function ScanUploadTab({
                               <label
                                 className={`block text-xs font-bold ${ lockIdentity ? lockedLabel : "text-gray-700" } dark:text-zinc-200`}
                               >
-                                Student number
+                                Student Number
                               </label>
                               {(newRec.studentNo ||
                                 newRec.name ||
@@ -1437,7 +1517,7 @@ export default function ScanUploadTab({
                                   }}
                                   className="h-5 rounded-brand px-1.5 text-[9px] font-bold text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon dark:text-primary dark:bg-red-950/30"
                                 >
-                                  Clear all
+                                  Clear All
                                 </Button>
                               )}
                             </div>
@@ -1506,7 +1586,7 @@ export default function ScanUploadTab({
                               <label
                                 className={`mb-1.5 block text-xs font-bold ${lockedLabel} dark:text-zinc-200`}
                               >
-                                Full name
+                                Full Name
                               </label>
                               <input
                                 type="text"
@@ -1520,7 +1600,7 @@ export default function ScanUploadTab({
                               <label
                                 className="mb-1.5 block text-xs font-bold text-gray-700 dark:text-zinc-200"
                               >
-                                Full name (LN, FN MI.)
+                                Full Name (LN, FN MI.)
                               </label>
                                <div className="relative">
                                 <input
@@ -1570,7 +1650,7 @@ export default function ScanUploadTab({
                           <label
                             className={`mb-1.5 block text-xs font-bold ${ lockIdentity ? lockedLabel : "text-gray-700" } dark:text-zinc-200`}
                           >
-                            Course / program
+                            Course / Program
                           </label>
                           <Select
                             placeholder="Select Course"
@@ -1705,7 +1785,7 @@ export default function ScanUploadTab({
 
                         <div className="border-t border-gray-200 pt-4 dark:border-white/10">
                           <label className="mb-1.5 block text-xs font-bold text-gray-700 dark:text-zinc-200">
-                            Document type
+                            Document Type
                           </label>
                           <Select
                             placeholder="Select Document type"
@@ -1724,7 +1804,7 @@ export default function ScanUploadTab({
                           </Select>
                         </div>
 
-                        <button
+                          <button
                           type="button"
                           onClick={() =>
                             processSubmission({
@@ -1739,7 +1819,7 @@ export default function ScanUploadTab({
                           }
                           className="flex h-10 w-full items-center justify-center gap-2 rounded-brand btn-brand-red text-sm font-bold text-white transition-all dark:shadow-none"
                         >
-                          <i className="ph-bold ph-upload-simple" /> Submit upload
+                          <i className="ph-bold ph-upload-simple" /> Submit Upload
                         </button>
 
                         {uploadError ? (
@@ -1752,7 +1832,7 @@ export default function ScanUploadTab({
                       <div className="space-y-5">
                         <div>
                           <label className="mb-2 block text-xs font-bold tracking-wider text-gray-700 dark:text-zinc-200">
-                            Source file
+                            Source File
                           </label>
                           <div className="flex items-center gap-2">
                             <div className="relative flex-1">
@@ -1765,7 +1845,7 @@ export default function ScanUploadTab({
                                   handleCsvFileSelect(e.target.files?.[0] || null)
                                 }
                               />
-                              <div className="flex h-11 items-center gap-2 rounded-brand border border-dashed border-gray-300 bg-white px-3 dark:bg-card dark:border-white/10">
+                              <div className="flex h-11 items-center gap-2 rounded-brand border-2 border-dashed border-gray-300 bg-white px-3 dark:bg-card dark:border-white/10">
                                 <i className="ph-bold ph-file-csv text-pup-maroon dark:text-primary"></i>
                                 <span className="truncate text-xs font-bold text-gray-600 dark:text-zinc-300">
                                   {csvFile ? csvFile.name : "Select CSV..."}
@@ -1777,7 +1857,7 @@ export default function ScanUploadTab({
                                 type="button"
                                 onClick={() => handleCsvFileSelect(null)}
                                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-brand border border-gray-300 bg-white text-gray-500 shadow-sm transition-all hover:border-red-600 hover:text-red-600 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:border-white/10"
-                                title="Clear file"
+                                title="Clear File"
                               >
                                 <i className="ph-bold ph-trash text-lg" />
                               </button>
@@ -1794,7 +1874,7 @@ export default function ScanUploadTab({
                         <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
                           <div className="border-b border-gray-100 bg-gray-50 p-4 dark:border-white/10 dark:bg-muted/30">
                             <div className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
-                              Bulk edit
+                              Bulk Edit
                             </div>
                             <div className="mt-1 text-sm font-black text-gray-900 dark:text-zinc-50">
                               {Object.values(csvSelected).filter(Boolean).length}{" "}
@@ -1944,16 +2024,16 @@ export default function ScanUploadTab({
                                 ) : (
                                   <>
                                     <i className="ph-bold ph-upload-simple text-base" />{" "}
-                                    Import records
+                                    Import Records
                                   </>
                                 )}
                               </button>
-                              
+
                               {hasInvalidSelected && (
                                 <div className="mt-3 flex items-start gap-2 rounded-brand border border-orange-200 bg-orange-50 p-3 text-[10px] font-bold text-orange-800 animate-in fade-in slide-in-from-top-2 dark:bg-orange-950/20 dark:border-orange-900/30">
                                   <i className="ph-fill ph-warning-circle text-sm shrink-0" />
                                   <p>
-                                    Cannot import: One or more selected rows have storage locations that do not exist in the system. 
+                                    Cannot import: One or more selected rows have storage locations that do not exist in the system.
                                     Use the dropdowns or Bulk edit to assign valid physical rooms, cabinets, and drawers.
                                   </p>
                                 </div>
@@ -1965,7 +2045,7 @@ export default function ScanUploadTab({
                         {csvResults.length > 0 && (
                           <div className="rounded-brand border border-gray-200 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
                             <div className="mb-2 text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
-                              Import summary
+                              Import Summary
                             </div>
                             <div className="space-y-1.5">
                               <div className="flex items-center justify-between text-xs font-bold text-gray-700 dark:text-zinc-200">

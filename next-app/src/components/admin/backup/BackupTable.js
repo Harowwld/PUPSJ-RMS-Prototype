@@ -83,7 +83,7 @@ export default function BackupTable({
                   onClick={() => handleSort("filename")}
                   className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                 >
-                  BACKUP ARCHIVE{" "}
+                  Backup Archive{" "}
                   <SortIndicator
                     column="filename"
                     sortBy={sortBy}
@@ -96,7 +96,7 @@ export default function BackupTable({
                   onClick={() => handleSort("size_bytes")}
                   className="group mx-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                 >
-                  SIZE{" "}
+                  Size{" "}
                   <SortIndicator
                     column="size_bytes"
                     sortBy={sortBy}
@@ -109,7 +109,7 @@ export default function BackupTable({
                   onClick={() => handleSort("created_at")}
                   className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                 >
-                  CREATION DATE{" "}
+                  Creation Date{" "}
                   <SortIndicator
                     column="created_at"
                     sortBy={sortBy}
@@ -118,9 +118,9 @@ export default function BackupTable({
                 </button>
               </th>
               <th className="w-56 p-4 text-center font-bold whitespace-nowrap">
-                STORAGE LOCATIONS
+                Storage Locations
               </th>
-              <th className="w-32 p-4 text-right">ACTIONS</th>
+              <th className="w-32 p-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-white/20">
@@ -151,7 +151,7 @@ export default function BackupTable({
                           className="mt-6 flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                         >
                           <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                          CLEAR SEARCH
+                          Clear Search
                         </Button>
                       ) : (
                         <Button
@@ -159,7 +159,7 @@ export default function BackupTable({
                           className="mt-6 flex h-10 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-black tracking-widest text-white shadow-lg active:scale-95 transition-all dark:shadow-none"
                         >
                           <i className="ph-bold ph-lightning"></i>
-                          CREATE FULL BACKUP
+                          Create Full Backup
                         </Button>
                       )}
                     </EmptyHeader>
@@ -281,8 +281,8 @@ export default function BackupTable({
                                   {localLoading.syncingId === b.id
                                     ? localLoading.syncStatus || "..."
                                     : b.status_external === "Failed"
-                                      ? "RETRY SYNC"
-                                      : "SYNC"}
+                                      ? "Retry Sync"
+                                      : "Sync"}
                                 </span>
                               </button>
                             </TooltipTrigger>

@@ -130,10 +130,10 @@ export default function BackupTab({
     setLocalLoading((prev) => ({
       ...prev,
       generating: true,
-      generatingStatus: "PACKING...",
+      generatingStatus: "Packing...",
     }))
     const timer = setTimeout(() => {
-      setLocalLoading((prev) => ({ ...prev, generatingStatus: "ENCRYPTING..." }))
+      setLocalLoading((prev) => ({ ...prev, generatingStatus: "Encrypting..." }))
     }, 1500)
 
     try {
@@ -152,7 +152,7 @@ export default function BackupTab({
     setLocalLoading((prev) => ({
       ...prev,
       syncingId: id,
-      syncStatus: "TRANSFERRING...",
+      syncStatus: "Transferring...",
     }))
     try {
       await onSyncExternal(id)
@@ -232,8 +232,8 @@ export default function BackupTab({
                           className={cn("ph-bold text-base", localLoading.generating ? "ph-arrows-clockwise animate-spin" : "ph-download-simple")}
                         ></i>
                         {localLoading.generating
-                          ? localLoading.generatingStatus || "WORKING..."
-                          : "CREATE BACKUP"}
+                          ? localLoading.generatingStatus || "Working..."
+                          : "Create Backup"}
                       </Button>
                       <Button
                         variant="outline"
@@ -248,8 +248,8 @@ export default function BackupTab({
                           className={cn("ph-bold text-base", localLoading.uploading ? "ph-arrows-clockwise animate-spin" : "ph-arrow-counter-clockwise")}
                         ></i>{" "}
                         {localLoading.uploading
-                          ? "READING FILE..."
-                          : "RESTORE BACKUP"}
+                          ? "Reading file..."
+                          : "Restore Backup"}
                       </Button>
                       <input
                         ref={restoreFileRef}
@@ -310,7 +310,7 @@ export default function BackupTab({
                         className="mt-6 rounded-full border-gray-200 font-bold hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/10 dark:bg-card"
                       >
                         <i className="ph-bold ph-arrows-clockwise mr-2"></i>
-                        RETRY LOADING
+                        Retry Loading
                       </Button>
                     </EmptyHeader>
                   </Empty>
@@ -370,7 +370,7 @@ export default function BackupTab({
                       }}
                       className="h-6 rounded-full border border-dashed border-gray-300 px-3 text-[10px] font-bold tracking-widest text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
                     >
-                      CLEAR ALL FILTERS
+                      Clear All Filters
                     </Button>
                   </div>
                 </div>
@@ -428,7 +428,7 @@ export default function BackupTab({
           selectionStatus="Selected Backups"
           onCancel={() => setSelectedBackupIds([])}
           onAction={() => onDeleteBackup(selectedBackupIds)}
-          actionLabel="DELETE PERMANENTLY"
+          actionLabel="Delete Permanently"
           actionIcon="ph-trash"
         />
       </div>

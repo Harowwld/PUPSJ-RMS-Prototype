@@ -987,7 +987,7 @@ export default function SystemConfigTab({
                 <i
                   className={`ph-bold ph-files ${activeSubTab === "document-types" ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
                 ></i>
-                <span className="whitespace-nowrap tracking-wide">DOCUMENT TYPES</span>
+                <span className="whitespace-nowrap tracking-wide">Document Types</span>
               </button>
               <button
                 type="button"
@@ -1001,7 +1001,7 @@ export default function SystemConfigTab({
                 <i
                   className={`ph-bold ph-books ${activeSubTab === "degree-programs" ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
                 ></i>
-                <span className="whitespace-nowrap tracking-wide">DEGREE PROGRAMS</span>
+                <span className="whitespace-nowrap tracking-wide">Degree Programs</span>
               </button>
               <button
                 type="button"
@@ -1015,7 +1015,7 @@ export default function SystemConfigTab({
                 <i
                   className={`ph-bold ph-list-numbers ${activeSubTab === "course-blocks" ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
                 ></i>
-                <span className="whitespace-nowrap tracking-wide">COURSE BLOCKS</span>
+                <span className="whitespace-nowrap tracking-wide">Course Blocks</span>
               </button>
               <button
                 type="button"
@@ -1029,7 +1029,7 @@ export default function SystemConfigTab({
                 <i
                   className={`ph-bold ph-shield-check ${activeSubTab === "security-questions" ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
                 ></i>
-                <span className="whitespace-nowrap tracking-wide">SECURITY QUESTIONS</span>
+                <span className="whitespace-nowrap tracking-wide">Security Questions</span>
               </button>
               <button
                 type="button"
@@ -1043,7 +1043,7 @@ export default function SystemConfigTab({
                 <i
                   className={`ph-bold ph-upload-simple ${activeSubTab === "bulk-import" ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
                 ></i>
-                <span className="whitespace-nowrap tracking-wide">IMPORTS</span>
+                <span className="whitespace-nowrap tracking-wide">Imports</span>
               </button>
             </div>
           </div>
