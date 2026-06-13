@@ -32,9 +32,13 @@ export default function PageHeader({
   filters,
   actions,
   extraChips, // Optional array of { label, value, onClear }
+  showBorder = true,
 }) {
   return (
-    <div className="border-b border-gray-100 bg-gray-50 p-6 rounded-t-brand select-none transition-colors duration-300 dark:border-white/5 dark:bg-white/2">
+    <div className={cn(
+      "bg-transparent p-6 rounded-t-brand select-none transition-colors duration-300 dark:bg-transparent",
+      showBorder && "border-b border-gray-100 dark:border-white/5"
+    )}>
       <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
         <div className="flex items-center gap-4">
           {leftAction}

@@ -50,7 +50,7 @@ import {
   canonicalizeCabinetId,
 } from "@/lib/storageLayoutUtils"
 
-export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty, error = null }) {
+export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty, error = null, className }) {
   // 1. BASE STATE
   const [layout, setLayout] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -1140,31 +1140,33 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
 
   const renderToolbar = () => (
     <div className={cn(
-      "flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-muted/30 backdrop-blur-md select-none",
+      "flex flex-wrap items-end justify-between gap-4 p-4 border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-muted/30 backdrop-blur-md select-none",
       className
     )}>
       <div className="flex items-center gap-2">
         <Button
           type="button"
+          variant="outline"
           onClick={undo}
           disabled={historyIndex <= 0}
-          className="flex h-11 items-center gap-2 rounded-brand btn-brand-red active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none px-6"
+          className="flex h-10 items-center gap-2 rounded-brand border border-gray-200 bg-white dark:border-white/10 dark:bg-card px-6 text-xs font-bold text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-50 active:scale-95 disabled:opacity-30 disabled:grayscale transition-all shadow-xs"
         >
           <i className="ph-bold ph-arrow-u-up-left text-lg" />
           Undo
         </Button>
         <Button
           type="button"
+          variant="outline"
           onClick={redo}
           disabled={historyIndex >= history.length - 1}
-          className="flex h-11 items-center gap-2 rounded-brand btn-brand-red active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none px-6"
+          className="flex h-10 items-center gap-2 rounded-brand border border-gray-200 bg-white dark:border-white/10 dark:bg-card px-6 text-xs font-bold text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-50 active:scale-95 disabled:opacity-30 disabled:grayscale transition-all shadow-xs"
         >
           <i className="ph-bold ph-arrow-u-up-right text-lg" />
           Redo
         </Button>
       </div>
 
-      <div className="flex flex-wrap items-center gap-6">
+      <div className="flex flex-wrap items-end gap-6">
         <div className="flex items-center gap-4">
           <div className="flex flex-col gap-1">
             <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 dark:text-zinc-500">Current Room</label>

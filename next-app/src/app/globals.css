@@ -443,6 +443,58 @@
   border-style: none !important;
 }
 
+/* Brand Green Button */
+.btn-brand-green {
+  background-color: #16a34a !important; /* green-600 */
+  background-image: none !important;
+  border: none !important;
+  border-width: 0px !important;
+  border-style: none !important;
+  color: #ffffff !important;
+  border-radius: 12px !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.22), 
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4), 
+    0 1px 3px rgba(0, 0, 0, 0.2), 
+    0 1px 2px -1px rgba(0, 0, 0, 0.1) !important;
+  font-weight: 600 !important;
+  @apply normal-case transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2;
+}
+
+.dark .btn-brand-green {
+  background-color: #059669 !important; /* emerald-600 */
+  background-image: none !important;
+  border: none !important;
+  border-width: 0px !important;
+  border-style: none !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.25), 
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5), 
+    0 1px 3px rgba(0, 0, 0, 0.4), 
+    0 1px 2px -1px rgba(0, 0, 0, 0.2) !important;
+}
+
+.btn-brand-green:hover {
+  background-color: #15803d !important; /* green-700 */
+  background-image: none !important;
+  border: none !important;
+  border-width: 0px !important;
+  border-style: none !important;
+  box-shadow: 
+    inset 0 1px 0 rgba(255, 255, 255, 0.25), 
+    inset 0 -1.5px 0 rgba(0, 0, 0, 0.45), 
+    0 2px 4px rgba(0, 0, 0, 0.2), 
+    0 1px 2px -1px rgba(0, 0, 0, 0.1) !important;
+}
+
+.dark .btn-brand-green:hover {
+  background-color: #047857 !important; /* emerald-700 */
+  background-image: none !important;
+  border: none !important;
+  border-width: 0px !important;
+  border-style: none !important;
+}
+
 /* Global Table Header Dark Mode Styling */
 .dark thead,
 .dark thead tr,

@@ -216,14 +216,15 @@ export default function BackupTab({
           {/* MAIN CONTENT */}
           <div className="flex-1 flex flex-col gap-6">
             {/* Page Header Card */}
-            <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
+            <Card className="p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
               <PageHeader
                 icon="ph-hard-drives"
                 title="Backup Records"
                 description="Manage system archives and secure copies."
+                showBorder={false}
                 actions={
-                  <div className="flex items-center gap-2">
-                    <div className="mr-2 flex items-center gap-2 border-r border-gray-200 pr-2 dark:border-white/10">
+                  <div className="flex items-center gap-6">
+                    <div className="flex items-center gap-2">
                       <Button
                         onClick={handleGenerateBackup}
                         disabled={localLoading.generating}
@@ -236,14 +237,14 @@ export default function BackupTab({
                           ? localLoading.generatingStatus || "Working..."
                           : "Create Backup"}
                       </Button>
-                      <Button
+                       <Button
                         variant="outline"
                         onClick={() =>
                           restoreFileRef.current &&
                           restoreFileRef.current.click()
                         }
                         disabled={localLoading.uploading}
-                        className="flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-bold tracking-widest tracking-widest text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:border-white/10"
+                        className="flex h-9 items-center gap-2 rounded-brand border border-gray-300 bg-transparent px-4 text-[10px] font-bold tracking-widest text-gray-600 transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
                       >
                         <i
                           className={cn("ph-bold text-base", localLoading.uploading ? "ph-arrows-clockwise animate-spin" : "ph-arrow-counter-clockwise")}
@@ -261,19 +262,13 @@ export default function BackupTab({
                       />
                     </div>
 
-                    <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4 dark:border-white/10">
-                      <div className="flex flex-col items-end gap-1">
-                        <p className="text-[10px] font-bold tracking-widest text-gray-400 dark:text-zinc-500">Refresh Status</p>
-                        <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap dark:text-zinc-400">
-                          {isFilterActive ? "Filtering live records..." : "Get latest database updates"}
-                        </p>
-                      </div>
-                      <RefreshButton 
-                        onRefresh={onRefresh} 
-                        isLoading={isLoading} 
-                        title="Refresh Backup Records"
-                      />
-                    </div>
+                    <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+
+                    <RefreshButton 
+                      onRefresh={onRefresh} 
+                      isLoading={isLoading} 
+                      title="Refresh Backup Records"
+                    />
                   </div>
                 }
               />

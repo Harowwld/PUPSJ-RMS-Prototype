@@ -188,49 +188,46 @@ export default function SLAAnalyticsTab({
       ) : null}
 
       {/* 2. Main Page Card */}
-      <Card className="rounded-brand border border-gray-200 bg-white shadow-2xl shadow-gray-200/50 backdrop-blur-xl dark:border-white/10 dark:bg-card/80 dark:shadow-none w-full">
+      <Card className="p-0 gap-0 overflow-hidden rounded-brand border border-gray-200 bg-white shadow-2xl shadow-gray-200/50 backdrop-blur-xl dark:border-white/10 dark:bg-card/80 dark:shadow-none w-full">
         <PageHeader
           icon="ph-chart-line-up"
           title="Request Analysis"
           description="Monitor request metrics and turnaround times."
+          showBorder={false}
           actions={
-            <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="default"
-                size="sm"
-                onClick={handlePreview}
-                disabled={loading || !data || isGeneratingPdf}
-                className="flex h-11 px-5 items-center justify-center gap-2 btn-brand-red text-[11px] font-black text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
-              >
-                <i className={cn("ph-bold text-base", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
-                {isGeneratingPdf ? "GENERATING..." : "GENERATE REPORT"}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleCsvExport}
-                disabled={loading || !data || isExportingCsv}
-                className="flex h-11 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-white text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:border-white/10"
-              >
-                <i className={cn("ph-bold text-base", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
-                {isExportingCsv ? "Preparing..." : "Export"}
-              </Button>
-
-              <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4 dark:border-white/10">
-                  <div className="flex flex-col items-end gap-1">
-                      <p className="text-[10px] font-bold text-gray-400 tracking-widest dark:text-zinc-500">Refresh Status</p>
-                      <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap dark:text-zinc-400">
-                          {hasActiveFilters ? "Filtering live analytics..." : "Get latest database updates"}
-                      </p>
-                  </div>
-                  <RefreshButton 
-                    onRefresh={handleRefresh} 
-                    isLoading={manualLoading} 
-                    title="Refresh Analytics"
-                  />
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                  onClick={handlePreview}
+                  disabled={loading || !data || isGeneratingPdf}
+                  className="flex h-11 px-5 items-center justify-center gap-2 btn-brand-red text-[11px] font-black text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
+                >
+                  <i className={cn("ph-bold text-base", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
+                  {isGeneratingPdf ? "Generating..." : "Generate Report"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCsvExport}
+                  disabled={loading || !data || isExportingCsv}
+                  className="flex h-9 px-4 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-transparent text-[10px] font-bold text-gray-600 transition-colors hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
+                >
+                  <i className={cn("ph-bold text-sm", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
+                  {isExportingCsv ? "Preparing..." : "Export"}
+                </Button>
               </div>
+
+              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+
+              <RefreshButton 
+                onRefresh={handleRefresh} 
+                isLoading={manualLoading} 
+                title="Refresh Analytics"
+              />
             </div>
           }
         />

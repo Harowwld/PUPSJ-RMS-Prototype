@@ -92,28 +92,28 @@ const Toaster = ({
           toast.dismiss(t.id);
         },
         classNames: {
-          toast: "cn-toast group/toast relative flex w-full items-start overflow-hidden p-0 cursor-pointer select-none border border-gray-200 bg-white shadow-xl dark:bg-zinc-900 dark:border-zinc-800 dark:shadow-2xl rounded-xl",
-          title: "text-[13px] font-black text-gray-900 leading-snug dark:text-zinc-50 tracking-tight group-[.success]:!text-emerald-950 dark:group-[.success]:!text-emerald-200 group-[.error]:!text-red-950 dark:group-[.error]:!text-red-200 group-[.warning]:!text-amber-950 dark:group-[.warning]:!text-amber-200",
-          description: "text-[11px] font-medium !text-gray-500 leading-relaxed dark:!text-zinc-400 mt-1 group-[.success]:!text-emerald-800 dark:group-[.success]:!text-emerald-300 group-[.error]:!text-red-800 dark:group-[.error]:!text-red-300 group-[.warning]:!text-amber-800 dark:group-[.warning]:!text-amber-300",
-          content: "flex-1 py-4 px-4",
-          success: "!bg-[#f0fdf4] !border-[#16a34a] dark:!bg-[#022c22] dark:!border-[#047857] border-l-4 !border-l-[#15803d] dark:!border-l-[#059669] [--normal-bg:#f0fdf4] dark:[--normal-bg:#022c22] [--normal-border:#16a34a] dark:[--normal-border:#047857]",
-          warning: "!bg-[#fefce8] !border-[#d97706] dark:!bg-[#451a03] dark:!border-[#b45309] border-l-4 !border-l-[#b45309] dark:!border-l-[#d97706] [--normal-bg:#fefce8] dark:[--normal-bg:#451a03] [--normal-border:#d97706] dark:[--normal-border:#b45309]",
-          error: "!bg-[#fef2f2] !border-[#dc2626] dark:!bg-[#450a0a] dark:!border-[#b91c1c] border-l-4 !border-l-[#b91c1c] dark:!border-l-[#dc2626] [--normal-bg:#fef2f2] dark:[--normal-bg:#450a0a] [--normal-border:#dc2626] dark:[--normal-border:#b91c1c]",
-          info: "border-l-4 border-l-blue-500",
-          loading: "border-l-4 border-l-gray-400",
+          toast: "cn-toast group/toast relative flex w-full items-start overflow-hidden p-0 cursor-pointer select-none border border-gray-200 bg-white shadow-md dark:bg-zinc-900 dark:border-zinc-800 dark:shadow-md/50 rounded-xl",
+          title: "text-[13px] font-black text-gray-900 leading-snug dark:text-zinc-50 tracking-tight",
+          description: "text-[11px] font-medium !text-gray-500 leading-relaxed dark:!text-zinc-400 mt-0.5",
+          content: "flex-1 py-3 px-3.5",
+          success: "!bg-white dark:!bg-zinc-900 !border-gray-200 dark:!border-zinc-800 border-l-[3px] !border-l-[#16a34a] dark:!border-l-[#10b981] [--normal-bg:#ffffff] dark:[--normal-bg:#18181b] [--normal-border:#e5e7eb] dark:[--normal-border:#27272a]",
+          warning: "!bg-white dark:!bg-zinc-900 !border-gray-200 dark:!border-zinc-800 border-l-[3px] !border-l-[#d97706] dark:!border-l-[#f59e0b] [--normal-bg:#ffffff] dark:[--normal-bg:#18181b] [--normal-border:#e5e7eb] dark:[--normal-border:#27272a]",
+          error: "!bg-white dark:!bg-zinc-900 !border-gray-200 dark:!border-zinc-800 border-l-[3px] !border-l-[#dc2626] dark:!border-l-[#ef4444] [--normal-bg:#ffffff] dark:[--normal-bg:#18181b] [--normal-border:#e5e7eb] dark:[--normal-border:#27272a]",
+          info: "border-l-[3px] border-l-blue-500",
+          loading: "border-l-[3px] border-l-gray-400",
         },
       }}
       icons={{
-        success: <i className="ph-fill ph-check-circle text-xl ml-4 mt-4 text-emerald-500" />,
-        info: <i className="ph-fill ph-info text-xl ml-4 mt-4 text-blue-500" />,
-        warning: <i className="ph-fill ph-warning-circle text-xl ml-4 mt-4 text-amber-500" />,
-        error: <i className="ph-fill ph-warning-octagon text-xl ml-4 mt-4 text-red-600" />,
-        loading: <i className="ph-bold ph-spinner animate-spin text-xl ml-4 mt-4 text-gray-400" />,
+        success: <i className="ph-fill ph-check-circle text-lg ml-3.5 mt-3.5 text-emerald-500" />,
+        info: <i className="ph-fill ph-info text-lg ml-3.5 mt-3.5 text-blue-500" />,
+        warning: <i className="ph-fill ph-warning-circle text-lg ml-3.5 mt-3.5 text-amber-500" />,
+        error: <i className="ph-fill ph-warning-octagon text-lg ml-3.5 mt-3.5 text-red-650" />,
+        loading: <i className="ph-bold ph-spinner animate-spin text-lg ml-3.5 mt-3.5 text-gray-400" />,
       }}
       style={{
-        "--normal-bg": "var(--popover)",
+        "--normal-bg": "#ffffff",
         "--normal-text": "var(--popover-foreground)",
-        "--normal-border": "var(--border)",
+        "--normal-border": "#e5e7eb",
         "--border-radius": "12px",
         "--toast-transition-duration": "500ms"
       }}

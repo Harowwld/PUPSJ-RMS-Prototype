@@ -3,6 +3,7 @@
 import React from "react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 
 /**
  * A standardized refresh button component.
@@ -19,25 +20,30 @@ export function RefreshButton({
   title = "Refresh",
 }) {
   return (
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={onRefresh}
-      disabled={isLoading}
-      className={cn(
-        "flex h-10 w-10 items-center justify-center rounded-brand border border-gray-300 dark:border-white/10 dark:border-white/10 bg-white dark:bg-card p-0 text-gray-600 dark:text-zinc-300 dark:text-zinc-400 shadow-sm dark:shadow-none transition-all hover:border-gray-300 dark:border-white/10 dark:hover:border-zinc-700 hover:bg-red-50 dark:bg-red-950/30 dark:hover:bg-red-900/20 hover:text-pup-maroon dark:hover:text-red-500 dark:hover:text-red-500 active:scale-95 disabled:opacity-50",
-        isLoading && "animate-refresh-glow",
-        className
-      )}
-      title={title}
-    >
-      <i
-        className={cn(
-          "ph-bold ph-arrows-clockwise text-base",
-          isLoading && "animate-spin inline-block"
-        )}
-      ></i>
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onRefresh}
+          disabled={isLoading}
+          className={cn(
+            "flex h-9 w-9 items-center justify-center rounded-full p-0 text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:text-primary dark:hover:bg-white/5 active:scale-95 disabled:opacity-50",
+            isLoading && "animate-refresh-glow",
+            className
+          )}
+        >
+          <i
+            className={cn(
+              "ph-bold ph-arrows-clockwise text-base",
+              isLoading && "animate-spin inline-block"
+            )}
+          ></i>
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
+        <p className="text-[10px] font-bold">{title}</p>
+      </TooltipContent>
+    </Tooltip>
   )
 }
-

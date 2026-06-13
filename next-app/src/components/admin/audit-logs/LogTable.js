@@ -153,7 +153,7 @@ const LogRow = React.memo(function LogRow({
               <span className="truncate text-xs font-bold text-gray-900 dark:text-zinc-50">
                 {log.user}
               </span>
-              <span className="text-[9px] font-black tracking-widest text-gray-400 dark:text-zinc-400">
+              <span className="text-[11px] font-black tracking-widest text-gray-400 dark:text-zinc-400">
                 {log.role}
               </span>
             </div>
@@ -350,7 +350,7 @@ export default function LogTable({
         <div className="overflow-x-auto rounded-[inherit]">
           <table className="min-w-full table-fixed text-sm">
             <thead className="bg-gray-50 backdrop-blur-sm select-none dark:bg-muted">
-              <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 dark:text-zinc-300">
+              <tr className="text-left text-[11px] font-black tracking-wider text-gray-800 dark:text-zinc-250">
                 <th className="w-[50px] p-4 text-center">
                 </th>
                  <th className="w-[180px] p-4">
@@ -405,7 +405,7 @@ export default function LogTable({
                     />
                   </button>
                 </th>
-                <th className="min-w-[300px] p-4 dark:text-zinc-300">Description</th>
+                <th className="min-w-[300px] p-4 dark:text-zinc-200">Description</th>
                 <th className="w-[80px] p-4 text-center">
                 </th>
               </tr>

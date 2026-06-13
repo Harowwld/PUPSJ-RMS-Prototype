@@ -786,16 +786,16 @@ export default function StaffDirectoryTab({
                             <div className="relative mb-6">
                               <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                               <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                                <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
+                                <i className={activeTab === "archived" && !hasActiveFilters && search === "" ? "ph-archive" : "ph-magnifying-glass"}></i>
                               </EmptyMedia>
                             </div>
                             <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
-                              {hasActiveFilters || search !== "" ? "No Matches Found" : "No Activity Found"}
+                              {hasActiveFilters || search !== "" ? "No Matches Found" : (activeTab === "archived" ? "No archive found" : "No Activity Found")}
                             </EmptyTitle>
                             <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                               {hasActiveFilters || search !== ""
                                 ? "Try adjusting your search filters to find what you're looking for."
-                                : "There are currently no personnel records in the system."}
+                                : (activeTab === "archived" ? "There are currently no archived personnel records in the system." : "There are currently no personnel records in the system.")}
                             </EmptyDescription>
                             {hasActiveFilters || search !== "" ? (
                               <Button
@@ -940,7 +940,7 @@ export default function StaffDirectoryTab({
                   onClick={() => {
                     onBulkRestore(Array.from(selectedIds))
                   }}
-                  className="flex h-10 items-center gap-3 rounded-brand bg-emerald-600 px-6 text-xs font-black text-white shadow-lg shadow-emerald-900/20 active:scale-95 transition-all hover:bg-emerald-700 dark:bg-emerald-600 dark:shadow-none"
+                  className="flex h-10 items-center gap-3 rounded-brand btn-brand-green px-6 text-xs font-black text-white active:scale-95 transition-all dark:shadow-none"
                 >
                   <i className="ph-bold ph-arrow-counter-clockwise text-sm"></i>
                   Restore Selected

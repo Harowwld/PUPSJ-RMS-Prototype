@@ -329,40 +329,37 @@ export default function NotificationsTab({
             }
             description="Real-time updates on document review decisions and system alerts."
             actions={
-              <div className="flex items-center gap-2">
-                <div className="mr-2 flex flex-col items-end gap-1">
-                  <p className="text-[10px] font-bold tracking-widest text-gray-400 dark:text-zinc-500">
-                    Refresh status
-                  </p>
-                  <p className="text-[10px] font-medium whitespace-nowrap text-gray-500 dark:text-zinc-400">
-                    Get latest database updates
-                  </p>
+              <div className="flex items-center gap-6">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={unreadCount <= 0 || activeTab === "archive"}
+                    onClick={markAllRead}
+                    className="h-10 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:border-white/10 dark:bg-red-950/30 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:hover:text-red-500"
+                  >
+                    <i className="ph-bold ph-checks mr-1.5"></i>
+                    Mark all as read
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={total <= 0 || activeTab === "archive"}
+                    onClick={markAllUnread}
+                    className="h-10 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-amber-50 hover:text-amber-600 dark:border-white/10 dark:bg-amber-950/30 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:hover:text-amber-500"
+                  >
+                    <i className="ph-bold ph-envelope mr-1.5"></i>
+                    Mark all as unread
+                  </Button>
                 </div>
+
+                <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+
                 <RefreshButton
                   onRefresh={handleRefresh}
                   isLoading={isRefreshing}
                   title="Refresh notifications"
                 />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={unreadCount <= 0 || activeTab === "archive"}
-                  onClick={markAllRead}
-                  className="h-10 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:border-white/10 dark:bg-red-950/30 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:hover:text-red-500"
-                >
-                  <i className="ph-bold ph-checks mr-1.5"></i>
-                  Mark all as read
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={total <= 0 || activeTab === "archive"}
-                  onClick={markAllUnread}
-                  className="h-10 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-amber-50 hover:text-amber-600 dark:border-white/10 dark:bg-amber-950/30 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:hover:text-amber-500"
-                >
-                  <i className="ph-bold ph-envelope mr-1.5"></i>
-                  Mark all as unread
-                </Button>
               </div>
             }
           />

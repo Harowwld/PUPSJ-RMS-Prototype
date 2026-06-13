@@ -252,7 +252,7 @@ export default function ConfirmModal({
             disabled={isLoading || disabled || !isVerified}
             className={cn(
               "h-11 px-6 text-sm font-black shadow-sm rounded-brand gap-2 flex items-center transition-all active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed ",
-              variant === "success" && "bg-green-600 hover:bg-green-700 text-white",
+              variant === "success" && "btn-brand-green",
               variant === "warning" && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white"),
               (variant === "brand") && "btn-brand-red hover:from-red-700 hover:to-red-900",
               v.confirmVariant === "destructive" && "btn-brand-red",

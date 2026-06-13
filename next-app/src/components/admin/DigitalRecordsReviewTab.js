@@ -538,37 +538,34 @@ export default function DigitalRecordsReviewTab({
           </div>
         ) : null}
 
-      <Card className="flex h-auto w-full flex-col rounded-brand border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-brand border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-seal-check"
           title="Digital Records Review"
           description="Verify student record submissions."
+          showBorder={false}
           actions={
-            <div className="flex items-center gap-3">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleExportCSV}
-                disabled={isLoading || isExporting}
-                className="flex h-11 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-white text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:border-white/10"
-              >
-                <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv"} text-base`}></i>
-                {isExporting ? "Preparing..." : "Export"}
-              </Button>
-
-              <div className="ml-2 flex items-center gap-3 border-l border-gray-200 pl-4 dark:border-white/10">
-                <div className="flex flex-col items-end gap-1">
-                  <p className="text-[10px] font-bold text-gray-400 tracking-widest dark:text-zinc-500">Refresh Status</p>
-                  <p className="text-[10px] font-medium text-gray-500 whitespace-nowrap dark:text-zinc-400">
-                    {hasActiveFilters ? "Filtering live records..." : "Get latest database updates"}
-                  </p>
-                </div>
-                <RefreshButton 
-                  onRefresh={onRefresh} 
-                  isLoading={isManualLoading} 
-                  title="Refresh Review Data"
-                />
+            <div className="flex items-center gap-6">
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportCSV}
+                  disabled={isLoading || isExporting}
+                  className="flex h-9 px-4 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-transparent text-[10px] font-bold text-gray-600 transition-colors hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
+                >
+                  <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv"} text-sm`}></i>
+                  {isExporting ? "Preparing..." : "Export"}
+                </Button>
               </div>
+
+              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+
+              <RefreshButton 
+                onRefresh={onRefresh} 
+                isLoading={isManualLoading} 
+                title="Refresh Review Data"
+              />
             </div>
           }
         />

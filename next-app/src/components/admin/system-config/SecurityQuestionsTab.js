@@ -59,9 +59,10 @@ export default function SecurityQuestionsTab({
       ) : (
         <>
           {/* Card 1: Header Card */}
-          <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
+          <Card className="p-0 gap-0 overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
             <PageHeader
               icon="ph-lock-key"
+              showBorder={false}
               title="Security Questions"
               description="Define verification challenges for personnel account recovery and setup."
               actions={
@@ -71,7 +72,7 @@ export default function SecurityQuestionsTab({
                   className="btn-brand-red active:scale-95 sm:w-auto transition-all dark:shadow-none"
                 >
                   <i className={`ph-bold ${securitySaving ? "ph-spinner animate-spin" : "ph-check"} mr-1.5`}></i>
-                  {securitySaving ? "SAVING..." : "SAVE QUESTIONS"}
+                  {securitySaving ? "Saving..." : "Save Questions"}
                 </Button>
               }
             />

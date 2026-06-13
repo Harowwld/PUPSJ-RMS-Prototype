@@ -289,15 +289,16 @@ export default function CoursesTab({
 
   return (
     <div className="font-inter flex w-full flex-col gap-6 animate-fade-up">
-      <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
+      <Card className="p-0 gap-0 overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
         <PageHeader
           icon="ph-books"
+          showBorder={false}
           title={
             <div className="flex items-center gap-2">
               Degree Programs
               {showArchived && (
                 <Badge className="border-red-100 bg-red-50 text-[10px] font-black text-red-700 dark:border-white/10 dark:bg-red-950/30 dark:text-red-400">
-                  RESTORE MODE
+                  Restore Mode
                 </Badge>
               )}
             </div>
@@ -319,7 +320,7 @@ export default function CoursesTab({
  }`}
                 >
                   <span className="whitespace-nowrap tracking-wide">
-                    ACTIVE
+                    Active
                   </span>
                   <span
                     className={cn(
@@ -342,7 +343,7 @@ export default function CoursesTab({
  }`}
                 >
                   <span className="whitespace-nowrap tracking-wide">
-                    ARCHIVED
+                    Archived
                   </span>
                   <span
                     className={cn(
@@ -383,10 +384,10 @@ export default function CoursesTab({
                 variant="outline"
                 size="sm"
                 onClick={handleExportCourses}
-                className="flex h-11 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-white text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:border-white/10"
+                className="flex h-9 px-4 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-transparent text-[10px] font-bold text-gray-600 transition-colors hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
               >
-                <i className="ph-bold ph-file-csv text-base"></i>
-                EXPORT
+                <i className="ph-bold ph-file-csv text-sm"></i>
+                Export
               </Button>
 
               <Button
@@ -395,7 +396,7 @@ export default function CoursesTab({
                 className="flex h-11 items-center gap-2 rounded-brand btn-brand-red active:scale-95 disabled:opacity-50 transition-all dark:shadow-none text-[10px] font-black tracking-widest px-6"
               >
                 <i className="ph-bold ph-plus"></i>
-                ADD DEGREE PROGRAM
+                Add
               </Button>
             </div>
           </div>
@@ -561,7 +562,7 @@ export default function CoursesTab({
                               ) : (
                                 <>
                                   <i className="ph-bold ph-plus mr-2"></i>
-                                  ADD
+                                  Add
                                 </>
                               )}
                             </Button>
@@ -607,10 +608,14 @@ export default function CoursesTab({
                           )}
                         >
                           <td className="p-4 text-center">
-                            <input
+                              <input
                               type="checkbox"
                               className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20 dark:text-primary dark:border-white/10"
                               checked={isSelected}
+                              onClick={(e) => {
+                                // Prevent click bubbling to tr
+                                e.stopPropagation();
+                              }}
                               onChange={(e) => {
                                 // tr onClick handles it
                                 e.stopPropagation();
@@ -736,11 +741,11 @@ export default function CoursesTab({
                               <div className="relative mb-6">
                                 <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                                 <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                                  <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
+                                  <i className={showArchived && totalInView === 0 ? "ph-archive" : "ph-magnifying-glass"}></i>
                                 </EmptyMedia>
                               </div>
                               <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
-                                {totalInView > 0 ? "No matches found" : "No activity found"}
+                                {totalInView > 0 ? "No matches found" : (showArchived ? "No archive found" : "No activity found")}
                               </EmptyTitle>
                               <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                                 {totalInView > 0
@@ -768,7 +773,7 @@ export default function CoursesTab({
                                     className="mt-4 flex h-10 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-black tracking-widest text-white shadow-lg shadow-red-900/20 active:scale-95 transition-all dark:shadow-none"
                                   >
                                     <i className="ph-bold ph-plus text-lg"></i>
-                                    ADD DEGREE PROGRAM
+                                    ADD
                                   </Button>
                                 )
                               )}

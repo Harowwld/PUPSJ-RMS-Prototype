@@ -41,26 +41,22 @@ export default function HealthSidebar({
   const diskColorClass = getDiskColor(diskPercent)
 
   return (
-    <div className="w-[350px] shrink-0 flex flex-col gap-4 animate-in fade-in slide-in-from-right-4 duration-500">
-      <Card className="flex flex-col border border-gray-200 bg-white shadow-sm h-full rounded-brand overflow-hidden dark:border-white/10 dark:bg-card dark:shadow-none">        <div className="border-b border-gray-100 bg-transparent p-6 dark:border-white/10 dark:bg-transparent">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
-              <i className="ph-duotone ph-pulse text-2xl"></i>
-            </div>
-            <div className="flex flex-col">
-              <h3 className="text-xl font-black tracking-tight text-gray-900 leading-none dark:text-zinc-50">
-                System Health
-              </h3>
-              <p className="mt-1.5 text-sm font-medium text-gray-500 transition-colors dark:text-zinc-400">
-                Monitor database operations and resources.
-              </p>
-            </div>
+    <div className="w-[350px] shrink-0 flex flex-col gap-4 animate-in fade-in slide-in-from-right-4 duration-500 h-fit">
+      <Card className="flex flex-col border border-gray-200 bg-white shadow-sm rounded-brand overflow-hidden dark:border-white/10 dark:bg-card dark:shadow-none">
+        <div className="border-b border-gray-100 bg-transparent p-6 dark:border-white/10 dark:bg-transparent">
+          <div className="flex flex-col">
+            <h3 className="text-xl font-black tracking-tight text-gray-900 leading-none dark:text-zinc-50">
+              System Health
+            </h3>
+            <p className="mt-1.5 text-sm font-medium text-gray-500 transition-colors dark:text-zinc-400">
+              Monitor database operations and resources.
+            </p>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
+        <div className="p-4 space-y-6">
           {/* Main Gauge: Storage */}
-          <div className="flex flex-col items-center py-4 bg-linear-to-b from-gray-100 to-gray-50 rounded-2xl border border-gray-200 p-5 shadow-xs dark:border-white/10 dark:from-muted/50 dark:to-card/50">
+          <div className="flex flex-col items-center py-4 bg-transparent border-0 shadow-none p-5">
             <div
               className="relative mx-auto flex aspect-[2/1] w-full max-w-[160px] items-end justify-center overflow-hidden rounded-t-full transition-all duration-500"
             >
@@ -116,7 +112,7 @@ export default function HealthSidebar({
               </div>
             </div>
             <div className="mt-4 text-center">
-              <p className="text-[9px] font-black tracking-[0.2em] text-gray-400 dark:text-zinc-500">
+              <p className="text-[9px] font-black tracking-normal text-gray-400 dark:text-zinc-500">
                 Repository Volume
               </p>
               <p className="mt-0.5 text-xs font-black text-gray-700 dark:text-zinc-200">
@@ -139,7 +135,14 @@ export default function HealthSidebar({
               </div>
               <div className="h-6 w-full overflow-hidden rounded-full bg-gray-300 shadow-inner border border-gray-200 dark:shadow-none dark:border-white/10 dark:bg-muted">
                 <div
-                  className="h-full rounded-full bg-linear-to-r from-blue-400 to-indigo-600 transition-all duration-1000"
+                  className={cn(
+                    "h-full rounded-full transition-all duration-1000",
+                    (systemHealth.memory?.percent || 0) > 85
+                      ? "bg-red-500"
+                      : (systemHealth.memory?.percent || 0) >= 60
+                      ? "bg-amber-500"
+                      : "bg-emerald-500"
+                  )}
                   style={{ width: `${systemHealth.memory?.percent || 0}%` }}
                 />
               </div>
@@ -158,9 +161,11 @@ export default function HealthSidebar({
                 <div
                   className={cn(
                     "h-full rounded-full transition-all duration-1000",
-                    systemHealth.cpu > 80 
-                      ? "bg-linear-to-r from-red-500 to-red-700" 
-                      : "bg-linear-to-r from-amber-400 to-orange-500"
+                    systemHealth.cpu > 85
+                      ? "bg-red-500"
+                      : systemHealth.cpu >= 60
+                      ? "bg-amber-500"
+                      : "bg-emerald-500"
                   )}
                   style={{ width: `${systemHealth.cpu}%` }}
                 />

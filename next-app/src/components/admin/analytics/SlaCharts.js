@@ -143,7 +143,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                   className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                   onClick={() => onSwitchView?.('review')}
                 >
-                  <i className="ph-bold ph-arrow-right text-base" aria-hidden /> CHECK INCOMING REQUESTS
+                  Check Incoming Requests
                 </Button>
               </EmptyHeader>
             </Empty>
@@ -208,7 +208,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                     className="mt-3 flex h-8 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-[9px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wider dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                     onClick={() => onSwitchView?.('review')}
                   >
-                    <i className="ph-bold ph-arrow-right text-xs" aria-hidden /> VIEW REQUESTS
+                    View Requests
                   </Button>
                 </EmptyHeader>
               </Empty>
@@ -289,7 +289,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                     className="mt-3 flex h-8 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-[9px] font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wider dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                     onClick={() => onSwitchView?.('review')}
                   >
-                    <i className="ph-bold ph-arrow-right text-xs" aria-hidden /> GO TO REVIEWS
+                    Go to Reviews
                   </Button>
                 </EmptyHeader>
               </Empty>

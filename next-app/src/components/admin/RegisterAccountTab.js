@@ -155,45 +155,39 @@ export default function RegisterAccountTab({
   return (
     <TooltipProvider delay={200}>
       <div className="animate-fade-up font-inter flex w-full flex-1 flex-col gap-6 min-h-0">
-        <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
+        {/* Main Registration Form - merged with header */}
+        <Card className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-md dark:border-white/10 dark:bg-card dark:shadow-none w-full h-fit">
           <PageHeader
             icon="ph-user-plus"
             title="Register Account"
             description="Create new user credentials for registrar personnel and administrators."
+            showBorder={true}
+            actions={
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onSwitchView?.("directory")}
+                  className="h-9 rounded-md border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-white/10 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                >
+                  <i className="ph-bold ph-arrow-left mr-1.5 text-xs"></i>
+                  Back to Directory
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={isLoading}
+                  onClick={handleClearForm}
+                  className="h-9 rounded-md border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                >
+                  <i className="ph-bold ph-arrow-counter-clockwise mr-1.5 text-xs"></i>
+                  Reset Form
+                </Button>
+              </div>
+            }
           />
-        </Card>
-
-        {/* Main Registration Form */}
-        <Card className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-md dark:border-white/10 dark:bg-card dark:shadow-none w-full flex flex-col flex-1">
-          <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 p-5 px-8 dark:border-white/10 dark:bg-white/5">
-            <h3 className="flex items-center gap-2 text-sm font-black tracking-widest text-gray-900 dark:text-zinc-50">
-              <i className="ph-bold ph-list-plus text-pup-maroon dark:text-primary"></i>{" "}
-              Registration Form
-            </h3>
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onSwitchView?.("directory")}
-                className="h-9 rounded-md border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-white/10 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-              >
-                <i className="ph-bold ph-arrow-left mr-1.5 text-xs"></i>
-                Back to Directory
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={isLoading}
-                onClick={handleClearForm}
-                className="h-9 rounded-md border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-              >
-                <i className="ph-bold ph-arrow-counter-clockwise mr-1.5 text-xs"></i>
-                Reset Form
-              </Button>
-            </div>
-          </div>
-          <CardContent className="bg-white p-8 dark:bg-card flex-grow flex flex-col">
-            <form onSubmit={handleOpenConfirm} className="space-y-8 flex-1 flex flex-col justify-between">
+          <CardContent className="bg-white p-8 dark:bg-card">
+            <form onSubmit={handleOpenConfirm} className="space-y-6">
               {/* Part 1: Full name */}
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2">
@@ -205,7 +199,7 @@ export default function RegisterAccountTab({
                     required
                     ref={fnameRef}
                     disabled={isLoading}
-                    className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:bg-card dark:text-zinc-50 dark:border-white/10 dark:focus-visible:ring-[#b94642] dark:focus-visible:border-[#b94642]"
+                    className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon/30 focus-visible:outline-none text-gray-900 dark:bg-card dark:text-zinc-50 dark:border-white/10 dark:focus-visible:ring-red-500/30 dark:focus-visible:border-red-500"
                     placeholder="Juan"
                     value={createForm.fname}
                     onChange={(e) =>
@@ -224,7 +218,7 @@ export default function RegisterAccountTab({
                     type="text"
                     required
                     disabled={isLoading}
-                    className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:bg-card dark:text-zinc-50 dark:border-white/10 dark:focus-visible:ring-[#b94642] dark:focus-visible:border-[#b94642]"
+                    className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon/30 focus-visible:outline-none text-gray-900 dark:bg-card dark:text-zinc-50 dark:border-white/10 dark:focus-visible:ring-red-500/30 dark:focus-visible:border-red-500"
                     placeholder="Dela Cruz"
                     value={createForm.lname}
                     onChange={(e) =>
@@ -243,66 +237,53 @@ export default function RegisterAccountTab({
                   Assigned Role
                 </label>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={isLoading}
-                      onClick={() => setCreateForm(f => ({ ...f, role: f.role === "Staff" ? "" : "Staff" }))}
-                      className={cn(
-                        "h-12 w-full rounded-md border-2 text-[11px] font-black tracking-widest  transition-all",
-                        createForm.role === "Staff"
-                          ? "border-amber-600 bg-amber-50 dark:border-amber-500/50 dark:bg-amber-500/20 text-amber-700 dark:text-amber-400 shadow-sm dark:shadow-none"
-                          : "border-gray-200 dark:border-white/10 text-gray-500 dark:text-zinc-500 hover:border-amber-200 hover:bg-amber-50 dark:bg-transparent dark:hover:bg-amber-500/5"
-                      )}
-                    >
-                      <i className={cn("ph-bold mr-2 text-base", createForm.role === "Staff" ? "ph-user-gear" : "ph-user")} />
-                      Registrar Staff
-                    </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={isLoading}
+                    onClick={() => setCreateForm(f => ({ ...f, role: f.role === "Staff" ? "" : "Staff" }))}
+                    className={cn(
+                      "h-12 w-full rounded-md border-2 text-[11px] font-black tracking-widest transition-all flex items-center justify-between gap-2 px-4",
+                      createForm.role === "Staff"
+                        ? "border-amber-600 bg-amber-600 text-white dark:border-amber-500 dark:bg-amber-600 shadow-md"
+                        : "border-gray-200 dark:border-white/10 text-gray-500 dark:text-zinc-500 hover:border-amber-200 hover:bg-amber-50 dark:bg-transparent dark:hover:bg-amber-500/5"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <i className={cn("text-base", createForm.role === "Staff" ? "ph-bold ph-check-circle" : "ph-bold ph-user")} />
+                      <span>Registrar Staff</span>
+                    </div>
                     {createForm.role === "Staff" && (
-                      <div className="animate-in fade-in flex flex-col gap-1.5 px-1 duration-200">
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-black tracking-tight text-amber-700 shadow-sm dark:bg-amber-950/30 dark:shadow-none">
-                            <i className="ph-fill ph-user-gear mr-1 text-xs" />
-                            Standard
-                          </span>
-                          <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400">
-                            General operational access.
-                          </span>
-                        </div>
-                      </div>
+                      <span className="inline-flex items-center rounded-full border border-amber-500 bg-amber-800/50 px-2 py-0.5 text-[9px] font-black tracking-tight text-white shadow-sm">
+                        <i className="ph-fill ph-user-gear mr-1 text-xs" />
+                        Standard
+                      </span>
                     )}
-                  </div>
-                  <div className="space-y-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      disabled={isLoading}
-                      onClick={() => setCreateForm(f => ({ ...f, role: f.role === "Admin" ? "" : "Admin" }))}
-                      className={cn(
-                        "flex h-12 w-full items-center justify-center rounded-md border-2 text-[11px] font-black tracking-widest  transition-all",
-                        createForm.role === "Admin"
-                          ? "border-gray-300 dark:border-red-500/50 bg-red-50 dark:bg-red-500/20 text-pup-maroon dark:text-primary shadow-sm dark:shadow-none"
-                          : "border-gray-200 dark:border-white/10 text-gray-500 dark:text-zinc-500 hover:border-red-200 hover:bg-red-50 dark:bg-transparent dark:hover:bg-red-500/5"
-                      )}
-                    >
-                      <i className={cn("ph-bold mr-2 text-base", createForm.role === "Admin" ? "ph-shield-star" : "ph-shield")} />
-                      Administrator
-                    </Button>
+                  </Button>
+
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={isLoading}
+                    onClick={() => setCreateForm(f => ({ ...f, role: f.role === "Admin" ? "" : "Admin" }))}
+                    className={cn(
+                      "flex h-12 w-full items-center justify-between rounded-md border-2 text-[11px] font-black tracking-widest transition-all gap-2 px-4",
+                      createForm.role === "Admin"
+                        ? "border-pup-maroon bg-pup-maroon text-white dark:border-[#b94642] dark:bg-pup-darkMaroon shadow-md"
+                        : "border-gray-200 dark:border-white/10 text-gray-500 dark:text-zinc-500 hover:border-red-200 hover:bg-red-50 dark:bg-transparent dark:hover:bg-red-500/5"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <i className={cn("text-base", createForm.role === "Admin" ? "ph-bold ph-check-circle" : "ph-bold ph-shield")} />
+                      <span>Administrator</span>
+                    </div>
                     {createForm.role === "Admin" && (
-                      <div className="animate-in fade-in flex flex-col gap-1.5 px-1 duration-200">
-                        <div className="flex items-center gap-2">
-                          <span className="inline-flex items-center rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-black tracking-tight text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30 dark:text-primary dark:shadow-none">
-                            <i className="ph-fill ph-shield-star mr-1 text-xs" />
-                            Full Control
-                          </span>
-                          <span className="text-[10px] font-bold text-gray-500 dark:text-zinc-400">
-                            Complete management access.
-                          </span>
-                        </div>
-                      </div>
+                      <span className="inline-flex items-center rounded-full border border-red-200 bg-red-900/50 dark:bg-red-950/80 px-2 py-0.5 text-[9px] font-black tracking-tight text-white dark:text-primary shadow-sm">
+                        <i className="ph-fill ph-shield-star mr-1 text-xs" />
+                        Full Control
+                      </span>
                     )}
-                  </div>
+                  </Button>
                 </div>
               </div>
 
@@ -340,7 +321,7 @@ export default function RegisterAccountTab({
                       required
                       disabled={isLoading}
                       className={cn(
-                        "h-10 w-full rounded-md border border-gray-300 dark:border-white/10 bg-white dark:bg-card px-3 text-sm transition-all focus-visible:border-gray-300 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:text-zinc-50 dark:text-zinc-100 dark:focus-visible:ring-[#b94642] dark:focus-visible:border-[#b94642]",
+                        "h-10 w-full rounded-md border border-gray-300 dark:border-white/10 bg-white dark:bg-card px-3 text-sm transition-all focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon/30 focus-visible:outline-none text-gray-900 dark:text-zinc-50 dark:text-zinc-100 dark:focus-visible:ring-red-500/30 dark:focus-visible:border-red-500",
                         lastAutoFilled.id &&
                           "border-emerald-500 ring-2 ring-emerald-500/20"
                       )}
@@ -390,7 +371,7 @@ export default function RegisterAccountTab({
                       required
                       disabled={isLoading}
                       className={cn(
-                        "h-10 w-full rounded-md border border-gray-300 dark:border-white/10 bg-white dark:bg-card px-3 text-sm transition-all focus-visible:border-gray-300 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:text-zinc-50 dark:text-zinc-100 dark:focus-visible:ring-[#b94642] dark:focus-visible:border-[#b94642]",
+                        "h-10 w-full rounded-md border border-gray-300 dark:border-white/10 bg-white dark:bg-card px-3 text-sm transition-all focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon/30 focus-visible:outline-none text-gray-900 dark:text-zinc-50 dark:text-zinc-100 dark:focus-visible:ring-red-500/30 dark:focus-visible:border-red-500",
                         lastAutoFilled.email &&
                           "border-emerald-500 ring-2 ring-emerald-500/20"
                       )}
@@ -408,11 +389,11 @@ export default function RegisterAccountTab({
                   </div>
                 </div>
               </div>
-              <div className="flex items-center justify-center border-t border-gray-100 pt-8 dark:border-white/10">
+              <div className="flex items-center justify-end border-t border-gray-100 pt-6 dark:border-white/10">
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="h-12 w-full gap-2 rounded-md btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md px-16 text-xs font-black tracking-widest text-white shadow-lg active:scale-95 sm:w-auto transition-all dark:shadow-none"
+                  className="h-12 w-auto gap-2 rounded-md btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md px-16 text-xs font-black tracking-widest text-white shadow-lg active:scale-95 transition-all dark:shadow-none"
                 >
                   {isLoading ? (
                     <>

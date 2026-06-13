@@ -501,7 +501,7 @@ export default function SystemConfigTab({
     if (isManual) setLoading(true)
     setError(null)
     try {
-      const q = showArchived ? "includeArchived=true" : ""
+      const q = "includeArchived=true"
 
       const [rDoc, rCourse, rSec, rSecQ] = await Promise.all([
         fetch(`/api/doc-types?admin=true${q ? "&" + q : ""}`),
@@ -923,8 +923,7 @@ export default function SystemConfigTab({
       "Category,Name,Code\nDocumentType,Transcript of Records,\nDocumentType,Diploma,\nCourse,Bachelor of Science in Information Technology,BSIT\nCourse,Bachelor of Science in Accountancy,BSA\nSection,Block 1,BSIT\nSection,Section 1,BSA"
     navigator.clipboard.writeText(sample)
     showToast({
-      title: "Copied to Clipboard",
-      description: "The CSV sample data has been successfully copied to your clipboard.",
+      title: "CSV sample copied to clipboard.",
     })
   }
 
