@@ -1,6 +1,7 @@
 "use client"
 
 import { useMemo, useState, useEffect, useCallback } from "react"
+import { useRouter } from "next/navigation"
 
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -52,6 +53,7 @@ const StaffTableRow = React.memo(({
   onDeleteUser, 
   activeTab 
 }) => {
+  const router = useRouter()
   return (
     <tr
       onClick={(e) => !isCurrentUser && toggleSelect(s.id, e)}
@@ -156,7 +158,7 @@ const StaffTableRow = React.memo(({
             <Button
               variant="outline"
               size="sm"
-              onClick={() => (window.location.href = "/account")}
+              onClick={() => router.push("/account")}
               className="h-9 w-full max-w-[140px] gap-2 rounded-brand border-gray-200 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-white/5 dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
             >
               <i className="ph-bold ph-user-circle text-base"></i>
@@ -542,9 +544,6 @@ export default function StaffDirectoryTab({
           <CardContent className="font-inter bg-white p-4 dark:bg-card/50 backdrop-blur-md border-t border-gray-100 dark:border-white/10">
             <div className="flex shrink-0 select-none flex-wrap items-end justify-between gap-6">
               <div className="flex w-full flex-col gap-1.5 sm:w-auto">
-                <label className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
-                  Status View
-                </label>
                 <div className="flex w-full cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 backdrop-blur-sm sm:w-auto dark:border-white/10 dark:bg-muted/50">
                   <button
                     type="button"
@@ -732,20 +731,20 @@ export default function StaffDirectoryTab({
                         onClick={() => handleSort("fname")}
                         className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                       >
-                        STAFF NAME{" "}
+                        Staff Name{" "}
                         <SortIndicator
                           column="fname"
                           sortBy={sortBy}
                           sortOrder={sortOrder}
                         />
                       </button>
-                    </th>
+                    </th >
                     <th className="w-48 p-4">
                       <button
                         onClick={() => handleSort("id")}
                         className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                       >
-                        EMPLOYEE ID{" "}
+                        Employee ID{" "}
                         <SortIndicator
                           column="id"
                           sortBy={sortBy}
@@ -758,7 +757,7 @@ export default function StaffDirectoryTab({
                         onClick={() => handleSort("role")}
                         className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                       >
-                        SYSTEM ROLE{" "}
+                        System Role{" "}
                         <SortIndicator
                           column="role"
                           sortBy={sortBy}
@@ -771,7 +770,7 @@ export default function StaffDirectoryTab({
                         onClick={() => handleSort("totp_enabled")}
                         className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                       >
-                        SECURITY{" "}
+                        Security{" "}
                         <SortIndicator
                           column="totp_enabled"
                           sortBy={sortBy}
@@ -784,7 +783,7 @@ export default function StaffDirectoryTab({
                         onClick={() => handleSort("last_active")}
                         className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                       >
-                        LAST LOGIN{" "}
+                        Last Login{" "}
                         <SortIndicator
                           column="last_active"
                           sortBy={sortBy}
@@ -793,7 +792,7 @@ export default function StaffDirectoryTab({
                       </button>
                     </th>
                     <th className="w-32 p-4 text-right">
-                      ACTIONS
+                      Actions
                     </th>
                   </tr>
                 </thead>

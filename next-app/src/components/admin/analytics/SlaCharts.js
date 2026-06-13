@@ -82,7 +82,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
     <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
       {/* Document Demand Chart */}
       <div className="rounded-brand border border-gray-200 bg-white p-5 shadow-xs lg:col-span-2 dark:border-white/10 dark:bg-card flex flex-col">
-        <h3 className="mb-4 text-xs font-bold tracking-widest text-gray-500 dark:text-zinc-400">
+        <h3 className="mb-4 text-xs font-bold tracking-normal text-gray-500 dark:text-zinc-400">
           Document Demand (By Type)
         </h3>
         <div className="flex-1 min-h-[288px] w-full flex flex-col justify-center">
@@ -154,7 +154,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
       <div className="flex flex-col gap-6">
         {/* Status Breakdown Pie */}
         <div className="flex-1 rounded-brand border border-gray-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-card">
-          <h3 className="mb-2 text-xs font-bold tracking-widest text-gray-500 dark:text-zinc-400">
+          <h3 className="mb-2 text-xs font-bold tracking-normal text-gray-500 dark:text-zinc-400">
             Status Distribution
           </h3>
           <div className="h-44 w-full">
@@ -245,7 +245,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
 
         {/* Top Requested Docs lists */}
         <div className="flex-1 rounded-brand border border-gray-200 bg-gray-50 p-5 shadow-xs dark:border-white/10 dark:bg-white/5">
-          <h3 className="mb-3 text-xs font-bold tracking-widest text-gray-500 dark:text-zinc-400">
+          <h3 className="mb-3 text-xs font-bold tracking-normal text-gray-500 dark:text-zinc-400">
             Top Requested Documents
           </h3>
           <div className="space-y-3">

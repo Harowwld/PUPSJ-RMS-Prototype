@@ -457,7 +457,7 @@ export default function DigitalRecordsReviewTab({
     <TooltipProvider delayDuration={200}>
       <div className="animate-fade-up font-inter flex h-auto w-full flex-col gap-6">
         {/* Color Stat Cards / Skeletons at the Top */}
-        {isLoading && !records ? (
+        {(isLoading && !isManualLoading) && !records ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
             {[1, 2, 3].map((i) => (
               <Skeleton key={i} className="h-28 rounded-brand bg-gray-100 dark:bg-muted" />
@@ -466,7 +466,7 @@ export default function DigitalRecordsReviewTab({
         ) : !error ? (
           <div className={cn(
             "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 transition-all duration-500",
-            isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+            (isLoading && !isManualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
           )}>
             <div className="group relative overflow-hidden rounded-brand border-none bg-linear-to-br from-blue-600 to-blue-800 dark:from-blue-800 dark:to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
                 <i className="ph-duotone ph-clock-countdown pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
@@ -813,7 +813,7 @@ export default function DigitalRecordsReviewTab({
           </div>
         </div>
       </Card>
-       {isLoading && (!records || records.length === 0) ? (
+       {(isLoading && !isManualLoading) && (!records || records.length === 0) ? (
         <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card animate-pulse">
           <div className="h-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/5" />
           <div className="p-4 space-y-4">
@@ -841,7 +841,7 @@ export default function DigitalRecordsReviewTab({
       ) : records ? (
         <div className={cn(
           "flex flex-1 flex-col gap-6 transition-all duration-500",
-          isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+          (isLoading && !isManualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
         )}>
           <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
             <div className="overflow-x-auto rounded-[inherit]">
@@ -865,7 +865,7 @@ export default function DigitalRecordsReviewTab({
                         onClick={() => handleSort("student_name")}
                         className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                       >
-                        STUDENT NAME{" "}
+                        Student Name{" "}
                         <SortIndicator
                           column="student_name"
                           sortBy={sortBy}
@@ -878,7 +878,7 @@ export default function DigitalRecordsReviewTab({
                         onClick={() => handleSort("doc_type")}
                         className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                       >
-                        DOCUMENT TYPE{" "}
+                        Document Type{" "}
                         <SortIndicator
                           column="doc_type"
                           sortBy={sortBy}
@@ -886,13 +886,13 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4">SOURCE FILENAME</th>
+                    <th className="p-4">Source Filename</th>
                     <th className="p-4">
                       <button
                         onClick={() => handleSort("approval_status")}
                         className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                       >
-                        STATUS{" "}
+                        Status{" "}
                         <SortIndicator
                           column="approval_status"
                           sortBy={sortBy}
@@ -905,7 +905,7 @@ export default function DigitalRecordsReviewTab({
                         onClick={() => handleSort("created_at")}
                         className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                       >
-                        UPLOAD DATE{" "}
+                        Upload Date{" "}
                         <SortIndicator
                           column="created_at"
                           sortBy={sortBy}
@@ -913,7 +913,7 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 text-right">ACTIONS</th>
+                    <th className="p-4 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100 dark:divide-white/10">

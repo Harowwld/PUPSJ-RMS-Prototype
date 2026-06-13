@@ -1124,17 +1124,17 @@ function AccountPageContent() {
                             Cancel
                           </Button>
                           <Button
-                            onClick={verifyTOTP}
-                            disabled={totpLoading || totpToken.length !== 6}
-                            className="h-12 px-10 btn-brand-red text-white font-black tracking-widest shadow-lg shadow-red-900/20 flex items-center gap-3 rounded-xl active:scale-95"
-                          >
-                            {totpLoading ? (
-                              <i className="ph-bold ph-spinner animate-spin text-xl"></i>
-                            ) : (
-                              <i className="ph-bold ph-shield-check text-xl"></i>
-                            )}
-                            Activate 2FA
-                          </Button>
+                             onClick={verifyTOTP}
+                             disabled={totpLoading || totpToken.length !== 6}
+                             className="h-12 px-10 btn-brand-red font-bold text-sm shadow-md"
+                           >
+                             {totpLoading ? (
+                               <i className="ph-bold ph-spinner animate-spin text-xl"></i>
+                             ) : (
+                               <i className="ph-bold ph-shield-check text-xl"></i>
+                             )}
+                             Activate 2FA
+                           </Button>
                         </div>
                       </div>
                     ) : (
@@ -1160,24 +1160,24 @@ function AccountPageContent() {
                             </div>
                           </div>
                           <div className="shrink-0 w-full md:w-auto flex justify-end">
-                            {totpEnabled ? (
-                              <Button
-                                onClick={() => setTotpStep("disable-flow")}
-                                className="h-10 px-5 font-black tracking-widest text-[10px] border-4 border-red-900 bg-linear-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-brand shadow-xs transition-all flex items-center gap-2"
-                              >
-                                Disable App
-                              </Button>
-                            ) : (
-                              <Button
-                                onClick={startTOTPSetup}
-                                disabled={totpLoading}
-                                className="h-10 px-5 font-black tracking-widest text-[10px] border-4 border-red-900 bg-linear-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-brand shadow-xs transition-all flex items-center gap-2"
-                              >
-                                {totpLoading ? <i className="ph-bold ph-spinner animate-spin" /> : <i className="ph-bold ph-shield-plus" />}
-                                Setup App
-                              </Button>
-                            )}
-                          </div>
+                             {totpEnabled ? (
+                               <Button
+                                 onClick={() => setTotpStep("disable-flow")}
+                                 className="h-10 px-5 btn-brand-red font-bold text-xs shadow-sm"
+                               >
+                                 Disable App
+                               </Button>
+                             ) : (
+                               <Button
+                                 onClick={startTOTPSetup}
+                                 disabled={totpLoading}
+                                 className="h-10 px-5 btn-brand-red font-bold text-xs shadow-sm"
+                               >
+                                 {totpLoading ? <i className="ph-bold ph-spinner animate-spin" /> : <i className="ph-bold ph-shield-plus" />}
+                                 Setup App
+                               </Button>
+                             )}
+                           </div>
                         </div>
 
                         {/* TOTP Disable Form Flow */}
@@ -1213,17 +1213,17 @@ function AccountPageContent() {
                                 >
                                   Cancel
                                 </Button>
-                                <Button
-                                  onClick={async (e) => {
-                                    await disableTOTP();
-                                    setTotpStep("idle");
-                                  }}
-                                  disabled={totpLoading || totpToken.length !== 6}
-                                  className="h-12 px-8 bg-linear-to-b from-red-600 to-red-800 border-4 border-red-900 hover:from-red-500 hover:to-red-700 text-white font-black tracking-widest shadow-lg rounded-xl active:scale-95 disabled:opacity-50"
-                                >
-                                  {totpLoading ? <i className="ph-bold ph-spinner animate-spin text-xl" /> : <i className="ph-bold ph-shield-slash text-xl" />}
-                                  Confirm Disable
-                                </Button>
+                                 <Button
+                                   onClick={async (e) => {
+                                     await disableTOTP();
+                                     setTotpStep("idle");
+                                   }}
+                                   disabled={totpLoading || totpToken.length !== 6}
+                                   className="h-12 px-8 btn-brand-red font-bold text-sm shadow-md"
+                                 >
+                                   {totpLoading ? <i className="ph-bold ph-spinner animate-spin text-xl" /> : <i className="ph-bold ph-shield-slash text-xl" />}
+                                   Confirm Disable
+                                 </Button>
                              </div>
                           </div>
                         )}
@@ -1290,13 +1290,13 @@ function AccountPageContent() {
                               </Button>
                             )}
                             <Button
-                              onClick={generateNewRecoveryCodes}
-                              disabled={totpLoading}
-                              className="h-10 px-5 font-black tracking-widest text-[10px] border-4 border-red-900 bg-linear-to-b from-red-600 to-red-800 hover:from-red-500 hover:to-red-700 text-white rounded-brand shadow-xs transition-all flex items-center gap-2"
-                            >
-                              {totpLoading ? <i className="ph-bold ph-spinner animate-spin" /> : <i className="ph-bold ph-arrows-clockwise" />}
-                              {recoveryCodesCount > 0 ? "Regenerate Codes" : "Generate Codes"}
-                            </Button>
+                               onClick={generateNewRecoveryCodes}
+                               disabled={totpLoading}
+                               className="h-10 px-5 btn-brand-red font-bold text-xs shadow-sm"
+                             >
+                               {totpLoading ? <i className="ph-bold ph-spinner animate-spin" /> : <i className="ph-bold ph-arrows-clockwise" />}
+                               {recoveryCodesCount > 0 ? "Regenerate Codes" : "Generate Codes"}
+                             </Button>
                           </div>
                         </div>
                       </div>
@@ -1337,21 +1337,21 @@ function AccountPageContent() {
                         </div>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                           {['system', 'light', 'dark'].map((t) => (
+                            {['system', 'light', 'dark'].map((t) => (
                              <button
                                 key={t}
                                 onClick={() => handleThemeChange({ target: { value: t } })}
                                 className={cn(
                                   "relative flex flex-col items-center gap-3 p-6 rounded-brand border-2 transition-all group overflow-hidden",
                                   theme === t 
-                                    ? "border-pup-maroon bg-red-50/50 dark:border-pup-maroon dark:bg-pup-maroon/10" 
+                                    ? "border-pup-maroon bg-red-50/50 dark:border-[#b94642]/50 dark:bg-[#b94642]/5" 
                                     : "border-gray-100 bg-gray-50 hover:border-gray-200 dark:border-white/5 dark:bg-card dark:hover:border-white/10"
                                 )}
                              >
                                 <div className={cn(
                                   "w-12 h-12 rounded-xl flex items-center justify-center text-2xl transition-all shadow-xs",
                                   theme === t 
-                                    ? "bg-pup-maroon text-white dark:bg-pup-maroon" 
+                                    ? "bg-pup-maroon text-white dark:bg-[#b94642]" 
                                     : "bg-white text-gray-400 dark:bg-zinc-800 dark:text-zinc-500 group-hover:text-gray-600 dark:group-hover:text-zinc-300"
                                 )}>
                                    <i className={cn(
@@ -1361,12 +1361,12 @@ function AccountPageContent() {
                                 </div>
                                 <span className={cn(
                                   "text-xs font-black  tracking-widest",
-                                  theme === t ? "text-pup-maroon dark:text-pup-maroon/90" : "text-gray-500 dark:text-zinc-400"
+                                  theme === t ? "text-pup-maroon dark:text-[#b94642]" : "text-gray-500 dark:text-zinc-400"
                                 )}>
-                                   {t}
+                                   {t.charAt(0).toUpperCase() + t.slice(1)}
                                 </span>
                                 {theme === t && (
-                                   <div className="absolute top-2 right-2 w-5 h-5 bg-pup-maroon dark:bg-pup-maroon rounded-full flex items-center justify-center text-white text-[10px] animate-in zoom-in duration-300">
+                                   <div className="absolute top-2 right-2 w-5 h-5 bg-pup-maroon dark:bg-[#b94642] rounded-full flex items-center justify-center text-white text-[10px] animate-in zoom-in duration-300">
                                       <i className="ph-bold ph-check"></i>
                                    </div>
                                 )}
@@ -1392,7 +1392,7 @@ function AccountPageContent() {
                         </div>
                         
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                           {[
+                            {[
                              { key: 'sidebar', label: 'Sidebar Navigation', icon: 'ph-sidebar-simple', desc: 'Traditional left-hand sidebar navigation layout.' },
                              { key: 'topbar', label: 'Top Navbar', icon: 'ph-navigation-arrow', desc: 'Modern top navigation bar layout.' }
                            ].map((item) => {
@@ -1406,7 +1406,7 @@ function AccountPageContent() {
                                   className={cn(
                                     "relative flex flex-col items-start gap-2 p-5 rounded-brand border-2 text-left transition-all group overflow-hidden cursor-pointer",
                                     isActive
-                                      ? "border-pup-maroon bg-red-50/50 dark:border-pup-maroon dark:bg-pup-maroon/10" 
+                                      ? "border-pup-maroon bg-red-50/50 dark:border-[#b94642]/50 dark:bg-[#b94642]/5" 
                                       : "border-gray-100 bg-gray-50 hover:border-gray-200 dark:border-white/5 dark:bg-card dark:hover:border-white/10"
                                   )}
                                >
@@ -1414,7 +1414,7 @@ function AccountPageContent() {
                                     <div className={cn(
                                       "w-10 h-10 rounded-lg flex items-center justify-center text-xl transition-all shadow-xs shrink-0",
                                       isActive 
-                                        ? "bg-pup-maroon text-white dark:bg-pup-maroon" 
+                                        ? "bg-pup-maroon text-white dark:bg-[#b94642]" 
                                         : "bg-white text-gray-400 dark:bg-zinc-800 dark:text-zinc-500 group-hover:text-gray-600 dark:group-hover:text-zinc-300"
                                     )}>
                                        <i className={cn("ph-bold", item.icon)}></i>
@@ -1422,17 +1422,20 @@ function AccountPageContent() {
                                     <div>
                                       <span className={cn(
                                         "text-xs font-black  tracking-widest block",
-                                        isActive ? "text-pup-maroon dark:text-pup-maroon/90" : "text-gray-500 dark:text-zinc-400"
+                                        isActive ? "text-pup-maroon dark:text-[#b94642]" : "text-gray-500 dark:text-zinc-400"
                                       )}>
                                          {item.label}
                                       </span>
-                                      <p className="text-[10px] text-gray-400 dark:text-zinc-500 font-bold mt-0.5">
+                                      <p className={cn(
+                                        "text-[10px] font-bold mt-0.5",
+                                        isActive ? "text-gray-500 dark:text-zinc-400" : "text-gray-400 dark:text-zinc-500"
+                                      )}>
                                          {item.desc}
                                       </p>
                                     </div>
                                   </div>
                                   {isActive && (
-                                     <div className="absolute top-2 right-2 w-5 h-5 bg-pup-maroon dark:bg-pup-maroon rounded-full flex items-center justify-center text-white text-[10px] animate-in zoom-in duration-300">
+                                     <div className="absolute top-2 right-2 w-5 h-5 bg-pup-maroon dark:bg-[#b94642] rounded-full flex items-center justify-center text-white text-[10px] animate-in zoom-in duration-300">
                                         <i className="ph-bold ph-check"></i>
                                      </div>
                                   )}

@@ -83,7 +83,7 @@ export default function BackupTable({
                   onClick={() => handleSort("filename")}
                   className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                 >
-                  BACKUP ARCHIVE{" "}
+                  Backup Archive{" "}
                   <SortIndicator
                     column="filename"
                     sortBy={sortBy}
@@ -96,7 +96,7 @@ export default function BackupTable({
                   onClick={() => handleSort("size_bytes")}
                   className="group mx-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                 >
-                  SIZE{" "}
+                  Size{" "}
                   <SortIndicator
                     column="size_bytes"
                     sortBy={sortBy}
@@ -109,7 +109,7 @@ export default function BackupTable({
                   onClick={() => handleSort("created_at")}
                   className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                 >
-                  CREATION DATE{" "}
+                  Creation Date{" "}
                   <SortIndicator
                     column="created_at"
                     sortBy={sortBy}
@@ -118,9 +118,9 @@ export default function BackupTable({
                 </button>
               </th>
               <th className="w-56 p-4 text-center font-bold whitespace-nowrap">
-                STORAGE LOCATIONS
+                Storage Locations
               </th>
-              <th className="w-32 p-4 text-right">ACTIONS</th>
+              <th className="w-32 p-4 text-right">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-white/20">
@@ -281,8 +281,8 @@ export default function BackupTable({
                                   {localLoading.syncingId === b.id
                                     ? localLoading.syncStatus || "..."
                                     : b.status_external === "Failed"
-                                      ? "RETRY SYNC"
-                                      : "SYNC"}
+                                      ? "Retry Sync"
+                                      : "Sync"}
                                 </span>
                               </button>
                             </TooltipTrigger>

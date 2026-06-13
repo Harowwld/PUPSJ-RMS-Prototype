@@ -28,8 +28,12 @@ export default function RoomMap2D({
 
   useEffect(() => {
     setInspectorPos(null)
-    setExpandedDrawer(null)
-  }, [selectedCabinetId])
+    if (activeStudent && String(activeStudent.cabinet) === String(selectedCabinetId)) {
+      setExpandedDrawer(activeStudent.drawer)
+    } else {
+      setExpandedDrawer(null)
+    }
+  }, [selectedCabinetId, activeStudent])
 
   // Sequential Drawing Effect
   useEffect(() => {
@@ -289,11 +293,11 @@ export default function RoomMap2D({
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full overflow-hidden rounded-brand border border-gray-300 dark:border-white/10 bg-[#f8fafc] dark:bg-zinc-800 shadow-inner dark:shadow-none transition-all duration-300"
+      className="relative h-full w-full overflow-hidden rounded-brand border border-gray-300 dark:border-white/10 bg-[#f8fafc] dark:bg-zinc-600/30 shadow-inner dark:shadow-none transition-all duration-300"
     >
       {/* AutoCAD-inspired precision grid */}
       <div
-        className="pointer-events-none absolute inset-0 text-slate-400/20 dark:text-zinc-600/30"
+        className="pointer-events-none absolute inset-0 text-slate-400/20 dark:text-[#292929]"
         style={{
           backgroundImage: `
             linear-gradient(to right, currentColor 1px, transparent 1px),
@@ -340,7 +344,7 @@ export default function RoomMap2D({
           height: `${(roomDoor?.h ?? 0.04) * 100}%`,
         }}
       >
-        <div className="relative flex h-full w-full items-center justify-center rounded-sm bg-pup-maroon shadow-md dark:bg-red-600 dark:shadow-none">
+        <div className="relative flex h-full w-full items-center justify-center rounded-sm bg-pup-maroon shadow-md dark:bg-[#b94642] dark:shadow-none">
           <span className="text-[9px] font-black tracking-widest text-white whitespace-nowrap">
             Entrance
           </span>
@@ -364,7 +368,7 @@ export default function RoomMap2D({
                 ? "border-red-600 bg-red-100 shadow-[0_0_0_4px_rgba(220,38,38,0.2)] dark:border-red-500 dark:bg-red-950/40 dark:shadow-[0_0_0_4px_rgba(239,68,68,0.2)]"
                 : isSelected
                   ? "z-10 border-cyan-500 bg-cyan-50 shadow-[0_0_0_4px_rgba(6,182,212,0.2)] dark:border-cyan-300 dark:bg-cyan-950/40"
-                  : "border-gray-500 bg-gray-100 hover:bg-gray-200 dark:border-zinc-500 dark:bg-zinc-700 dark:hover:bg-zinc-600"
+                  : "border-gray-500 bg-gray-100 hover:bg-gray-200 dark:border-zinc-400 dark:bg-[#949494] dark:hover:bg-zinc-300"
             )}
             style={{
               left: `${rect.x * 100}%`,

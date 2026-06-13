@@ -41,7 +41,8 @@ import SlaFilters from "./analytics/SlaFilters"
 export default function SLAAnalyticsTab({
  showToast, onLogAction, onSwitchView }) {
   const [data, setData] = useState(null)
-  const [loading, setLoading] = useState(true)
+   const [loading, setLoading] = useState(true)
+  const [manualLoading, setManualLoading] = useState(false)
   const [error, setError] = useState("")
   const [reportOpen, setReportOpen] = useState(false)
   const [pdfBlobUrl, setPdfPreviewUrl] = useState(null)
@@ -54,7 +55,11 @@ export default function SLAAnalyticsTab({
   const [isFullscreenPreview, setIsFullscreenPreview] = useState(false)
 
   const loadData = async (isManual = false) => {
-    setLoading(true)
+    if (isManual) {
+      setManualLoading(true)
+    } else {
+      setLoading(true)
+    }
     setError("")
     try {
       const params = new URLSearchParams()
@@ -73,6 +78,7 @@ export default function SLAAnalyticsTab({
       setError(e.message)
     } finally {
       setLoading(false)
+      setManualLoading(false)
     }
   }
 
@@ -175,7 +181,7 @@ export default function SLAAnalyticsTab({
       ) : !error && data ? (
         <div className={cn(
           "transition-all duration-500", 
-          loading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+          (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
         )}>
           <SlaKpiCards total={total} completionRate={completionRate} />
         </div>
@@ -195,10 +201,10 @@ export default function SLAAnalyticsTab({
                 size="sm"
                 onClick={handlePreview}
                 disabled={loading || !data || isGeneratingPdf}
-                className="h-10 px-6 font-black text-[10px] tracking-widest btn-brand-red active:scale-95 disabled:opacity-60 rounded-brand transition-all dark:shadow-none"
+                className="flex h-11 px-5 items-center justify-center gap-2 btn-brand-red text-[11px] font-black text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
               >
-                <i className={cn("ph-bold text-base mr-2", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
-                {isGeneratingPdf ? "Generating..." : "Generate Report"}
+                <i className={cn("ph-bold text-base", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
+                {isGeneratingPdf ? "GENERATING..." : "GENERATE REPORT"}
               </Button>
               <Button
                 type="button"
@@ -221,7 +227,7 @@ export default function SLAAnalyticsTab({
                   </div>
                   <RefreshButton 
                     onRefresh={handleRefresh} 
-                    isLoading={loading} 
+                    isLoading={manualLoading} 
                     title="Refresh Analytics"
                   />
               </div>

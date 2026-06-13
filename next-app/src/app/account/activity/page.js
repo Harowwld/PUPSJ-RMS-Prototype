@@ -324,7 +324,7 @@ export default function AccountActivityPage() {
                   size="sm"
                   onClick={handlePreviewPDF}
                   disabled={total === 0 || isExporting}
-                  className="flex h-11 px-5 items-center justify-center gap-2 btn-brand-red hover:-translate-y-0.5 text-[11px] font-black text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
+                  className="flex h-11 px-5 items-center justify-center gap-2 rounded-[12px] btn-brand-red hover:-translate-y-0.5 text-[11px] font-black text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
                 >
                   <i className={cn("ph-bold text-base", isExporting ? "ph-circle-notch animate-spin" : "ph-file-pdf")} aria-hidden />
                   {isExporting ? "GENERATING..." : "GENERATE REPORT"}
@@ -334,7 +334,7 @@ export default function AccountActivityPage() {
                   size="sm"
                   onClick={handleDownloadCSV}
                   disabled={total === 0 || isExporting}
-                  className="flex h-11 w-32 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-white text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:border-white/10"
+                  className="flex h-11 w-32 items-center justify-center gap-1.5 rounded-[12px] border border-gray-300 bg-white text-[10px] font-bold text-gray-600 shadow-sm transition-colors hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:border-white/10"
                 >
                   <i className={cn("ph-bold text-base", isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv")} aria-hidden />
                   {isExporting ? "PREPARING..." : "EXPORT"}
@@ -346,7 +346,7 @@ export default function AccountActivityPage() {
                       const path = isAdminRole(authUser?.role) ? "/admin" : "/staff";
                       router.push(path);
                     }}
-                    className="h-10 px-5 font-black tracking-widest text-[10px] border-gray-300 bg-white hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center gap-2 rounded-xl active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300"
+                    className="h-10 px-5 font-black tracking-widest text-[10px] border-gray-300 bg-white hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center gap-2 rounded-[12px] active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300"
                   >
                     <i className="ph-bold ph-caret-left"></i>
                     Return to Dashboard
@@ -533,11 +533,11 @@ export default function AccountActivityPage() {
                 <table className="min-w-full">
                   <thead className="bg-gray-50 border-b border-gray-100 dark:bg-muted dark:border-white/10">
                     <tr className="text-left text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-300">
-                      <th className="p-4 px-6">TIMESTAMP</th>
-                      <th className="p-4 px-6">SEVERITY</th>
-                      <th className="p-4 px-6">EVENT / ACTION</th>
-                      <th className="p-4 px-6">TRACE DETAILS</th>
-                      <th className="p-4 px-6 text-right">IDENTIFIER</th>
+                      <th className="p-4 px-6">Timestamp</th>
+                      <th className="p-4 px-6">Severity</th>
+                      <th className="p-4 px-6">Event / Action</th>
+                      <th className="p-4 px-6">Trace Details</th>
+                      <th className="p-4 px-6 text-right">Identifier</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-white/10">
@@ -652,12 +652,12 @@ export default function AccountActivityPage() {
                       size="sm"
                       disabled={displayPage <= 1 || loading}
                       onClick={() => setPage(p => Math.max(1, p - 1))}
-                      className="h-9 rounded-xl border-gray-300 bg-white px-4 text-[10px] font-black text-gray-600 shadow-xs transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 disabled:opacity-30 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300"
+                      className="h-9 rounded-[12px] border-gray-300 bg-white px-4 text-[10px] font-black text-gray-600 shadow-xs transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 disabled:opacity-30 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300"
                     >
                       <i className="ph-bold ph-caret-left mr-2"></i>
                       Prev
                     </Button>
-                    <div className="h-9 min-w-[36px] flex items-center justify-center rounded-xl bg-white border border-gray-300 shadow-xs px-3 text-[11px] font-black text-gray-900 select-none dark:bg-card dark:border-white/10 dark:text-zinc-50">
+                    <div className="h-9 min-w-[36px] flex items-center justify-center rounded-[12px] bg-white border border-gray-300 shadow-xs px-3 text-[11px] font-black text-gray-900 select-none dark:bg-card dark:border-white/10 dark:text-zinc-50">
                       {displayPage}
                     </div>
                     <Button
@@ -665,7 +665,7 @@ export default function AccountActivityPage() {
                       size="sm"
                       disabled={displayPage >= totalPages || loading}
                       onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                      className="h-9 rounded-xl border-gray-300 bg-white px-4 text-[10px] font-black text-gray-600 shadow-xs transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 disabled:opacity-30 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300"
+                      className="h-9 rounded-[12px] border-gray-300 bg-white px-4 text-[10px] font-black text-gray-600 shadow-xs transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 disabled:opacity-30 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300"
                     >
                       Next
                       <i className="ph-bold ph-caret-right ml-2"></i>

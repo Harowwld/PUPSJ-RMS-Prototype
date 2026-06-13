@@ -62,7 +62,7 @@ export default function SecurityQuestionsTab({
           <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
             <PageHeader
               icon="ph-lock-key"
-              title="SECURITY QUESTIONS"
+              title="Security Questions"
               description="Define verification challenges for personnel account recovery and setup."
               actions={
                 <Button

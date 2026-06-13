@@ -30,7 +30,7 @@ export default function FloatingActionBar({
     <div className="fixed bottom-10 left-1/2 z-[9999] -translate-x-1/2 animate-in fade-in slide-in-from-bottom-4 duration-300">
       <div className="flex items-center gap-6 rounded-brand border border-gray-200 bg-white p-3 px-6 shadow-[0_20px_50px_rgba(0,0,0,0.15)] backdrop-blur-md dark:border-white/10 dark:bg-card/95">
         <div className="flex items-center gap-3 border-r border-gray-100 pr-6 dark:border-white/10">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-pup-maroon text-white shadow-sm">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-pup-maroon dark:bg-[#b94642] text-white shadow-sm">
             <span className="text-xs font-bold">{selectedCount}</span>
           </div>
           <span className="text-sm font-bold text-gray-700 dark:text-zinc-200">

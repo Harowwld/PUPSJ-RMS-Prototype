@@ -52,15 +52,14 @@ export async function getDigitizationComplianceSummary({
   const docQualifies = buildDocQualifiesSql(Boolean(requireApproved));
   const { where, params } = buildStudentWhere({ studentStatus, courseCode });
 
-  // 2. Fetch students and their unique document counts using an optimized JOIN
-  // This avoids the O(N*M) correlated subquery bottleneck by grouping documents first.
-  const students = await dbAll(
+  // 2. Fetch course aggregation stats
+  const courseRows = await dbAll(
     `
     SELECT
-      s.student_no,
       s.course_code,
-      s.year_level,
-      COALESCE(d_counts.actual_count, 0) AS actual_count
+      COUNT(s.student_no) AS total_students,
+      SUM(CASE WHEN COALESCE(d_counts.actual_count, 0) >= ? THEN 1 ELSE 0 END) AS fully_digitized_count,
+      SUM(COALESCE(d_counts.actual_count, 0)) AS total_digitized_docs
     FROM students s
     LEFT JOIN (
       SELECT student_no, COUNT(DISTINCT doc_type) AS actual_count
@@ -70,61 +69,58 @@ export async function getDigitizationComplianceSummary({
       GROUP BY student_no
     ) d_counts ON s.student_no = d_counts.student_no
     ${where}
+    GROUP BY s.course_code
     `,
-    [...(allDocTypes.length ? allDocTypes : []), ...params]
+    [expectedCountPerStudent, ...(allDocTypes.length ? allDocTypes : []), ...params]
   );
 
-  let totalStudents = students.length;
+  // 3. Fetch year aggregation stats
+  const yearRows = await dbAll(
+    `
+    SELECT
+      s.year_level,
+      COUNT(s.student_no) AS count
+    FROM students s
+    ${where}
+    GROUP BY s.year_level
+    `,
+    params
+  );
+
+  let totalStudents = 0;
   let fullyDigitizedCount = 0;
-  let totalCompletenessRatio = 0;
   let totalDigitizedDocsCount = 0;
-  let totalExpectedDocsCount = totalStudents * expectedCountPerStudent;
 
-  const courseStats = {};
-  const yearStats = {};
+  const byCourse = courseRows.map((row) => {
+    const total = Number(row.total_students) || 0;
+    const digitized = Number(row.fully_digitized_count) || 0;
+    const digitizedDocs = Number(row.total_digitized_docs) || 0;
 
-  students.forEach((s) => {
-    const actual = Number(s.actual_count) || 0;
-    
-    // 100% completion is the goal
-    const completeness = expectedCountPerStudent > 0 ? Math.min(1.0, actual / expectedCountPerStudent) : 1.0;
-    const isFullyDigitized = completeness >= 1.0;
+    totalStudents += total;
+    fullyDigitizedCount += digitized;
+    totalDigitizedDocsCount += digitizedDocs;
 
-    if (isFullyDigitized) fullyDigitizedCount++;
-    totalCompletenessRatio += completeness;
-    totalDigitizedDocsCount += actual;
+    const courseCompleteness = expectedCountPerStudent > 0 ? (digitizedDocs / expectedCountPerStudent) : total;
 
-    const cc = String(s.course_code || "").trim();
-    if (!courseStats[cc]) {
-      courseStats[cc] = { total: 0, fullyDigitized: 0, completeness: 0, digitizedDocs: 0 };
-    }
-    courseStats[cc].total++;
-    if (isFullyDigitized) courseStats[cc].fullyDigitized++;
-    courseStats[cc].completeness += completeness;
-    courseStats[cc].digitizedDocs += actual;
+    return {
+      courseCode: String(row.course_code || "").trim(),
+      total,
+      digitized,
+      percent: total > 0 ? roundPercent(courseCompleteness / total) : null,
+      fullyDigitizedRate: total > 0 ? roundPercent(digitized / total) : null
+    };
+  }).sort((a, b) => a.courseCode.localeCompare(b.courseCode));
 
-    const yr = Number(s.year_level) || 0;
-    if (yr) {
-      if (!yearStats[yr]) yearStats[yr] = 0;
-      yearStats[yr]++;
-    }
-  });
-
+  const totalCompletenessRatio = expectedCountPerStudent > 0 ? (totalDigitizedDocsCount / expectedCountPerStudent) : totalStudents;
   const avgCompleteness = totalStudents > 0 ? roundPercent(totalCompletenessRatio / totalStudents) : null;
   const fullyDigitizedRate = totalStudents > 0 ? roundPercent(fullyDigitizedCount / totalStudents) : null;
+  const totalExpectedDocsCount = totalStudents * expectedCountPerStudent;
 
-  const byCourse = Object.entries(courseStats).map(([code, stats]) => ({
-    courseCode: code,
-    total: stats.total,
-    digitized: stats.fullyDigitized, // Number of 100% complete students
-    percent: roundPercent(stats.completeness / stats.total),
-    fullyDigitizedRate: roundPercent(stats.fullyDigitized / stats.total)
-  })).sort((a, b) => a.courseCode.localeCompare(b.courseCode));
-
-  const byYear = Object.entries(yearStats).map(([year, count]) => ({
-    year: Number(year),
-    count
-  })).sort((a, b) => b.year - a.year);
+  const byYear = yearRows.map((row) => ({
+    year: Number(row.year_level) || 0,
+    count: Number(row.count) || 0
+  })).filter((x) => x.year > 0)
+    .sort((a, b) => b.year - a.year);
 
   const generatedAt = new Date().toISOString();
 

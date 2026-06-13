@@ -149,14 +149,6 @@ const LogRow = React.memo(function LogRow({
         </td>
         <td className="p-4">
           <div className="flex items-center gap-3">
-            <div className={cn(
-              "flex h-9 w-9 shrink-0 items-center justify-center rounded-brand font-black text-xs transition-all shadow-xs",
-              isSelected 
-                ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-primary shadow-sm" 
-                : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm"
-            )}>
-              {(log.user || "?").substring(0, 2).toUpperCase()}
-            </div>
             <div className="flex flex-col overflow-hidden">
               <span className="truncate text-xs font-bold text-gray-900 dark:text-zinc-50">
                 {log.user}
@@ -169,12 +161,6 @@ const LogRow = React.memo(function LogRow({
         </td>
         <td className="p-4">
           <div className="flex items-center gap-2.5">
-            <div className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-lg transition-colors shadow-xs",
-              isSelected ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-primary" : "bg-gray-50 dark:bg-white/5 text-gray-500 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary"
-            )}>
-              <i className={cn(getActionIcon(log.action), "text-base")}></i>
-            </div>
             <span className="text-xs font-bold tracking-tight text-gray-700 dark:text-zinc-300">
               {log.action}
             </span>
@@ -366,14 +352,13 @@ export default function LogTable({
             <thead className="bg-gray-50 backdrop-blur-sm select-none dark:bg-muted">
               <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 dark:text-zinc-300">
                 <th className="w-[50px] p-4 text-center">
-                  <i className="ph-bold ph-hash text-[11px] dark:text-zinc-300"></i>
                 </th>
-                <th className="w-[180px] p-4">
+                 <th className="w-[180px] p-4">
                   <button
                     onClick={() => handleSort("created_at")}
                     className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
                   >
-                    TIMESTAMP{" "}
+                    Timestamp{" "}
                     <SortIndicator
                       column="created_at"
                       logSortBy={logSortBy}
@@ -386,7 +371,7 @@ export default function LogTable({
                     onClick={() => handleSort("severity")}
                     className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
                   >
-                    SEVERITY{" "}
+                    Severity{" "}
                     <SortIndicator
                       column="severity"
                       logSortBy={logSortBy}
@@ -399,7 +384,7 @@ export default function LogTable({
                     onClick={() => handleSort("actor")}
                     className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
                   >
-                    ACTOR{" "}
+                    Actor{" "}
                     <SortIndicator
                       column="actor"
                       logSortBy={logSortBy}
@@ -412,7 +397,7 @@ export default function LogTable({
                     onClick={() => handleSort("action")}
                     className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
                   >
-                    EVENT / ACTION{" "}
+                    Event / Action{" "}
                     <SortIndicator
                       column="action"
                       logSortBy={logSortBy}
@@ -420,9 +405,8 @@ export default function LogTable({
                     />
                   </button>
                 </th>
-                <th className="min-w-[300px] p-4 dark:text-zinc-300">DESCRIPTION</th>
+                <th className="min-w-[300px] p-4 dark:text-zinc-300">Description</th>
                 <th className="w-[80px] p-4 text-center">
-                   <i className="ph-bold ph-dots-three-outline text-[11px]"></i>
                 </th>
               </tr>
             </thead>

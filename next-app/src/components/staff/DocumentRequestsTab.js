@@ -649,8 +649,30 @@ export default function DocumentRequestsTab({
                               <div className="font-bold text-gray-900 dark:text-zinc-50">
                                 {r.student_name || "—"}
                               </div>
-                              <div className="text-[11px] text-gray-500 dark:text-zinc-400">
-                                {r.student_no}
+                              <div className="flex flex-wrap items-center gap-2 mt-0.5">
+                                <span className="text-[11px] text-gray-500 dark:text-zinc-400">
+                                  {r.student_no}
+                                </span>
+                                {(() => {
+                                  const student = students?.find(
+                                    (s) => String(s.studentNo || s.student_no || "").toUpperCase() === String(r.student_no).toUpperCase()
+                                  );
+                                  if (!student) return null;
+                                  return (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onLocateOnMap(student);
+                                      }}
+                                      title="Locate on storage map"
+                                      className="inline-flex items-center gap-1 rounded-sm bg-red-50 hover:bg-red-100 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-pup-maroon dark:bg-red-950/40 dark:text-primary dark:hover:bg-red-950/60 border border-red-100 dark:border-white/5 cursor-pointer transition-colors"
+                                    >
+                                      <i className="ph-bold ph-map-pin text-[10px]"></i>
+                                      RM{student.room} · CAB-{student.cabinet} · DRW-{student.drawer}
+                                    </button>
+                                  );
+                                })()}
                               </div>
                             </td>
                             <td className="p-4 font-medium text-gray-800 dark:text-zinc-100">

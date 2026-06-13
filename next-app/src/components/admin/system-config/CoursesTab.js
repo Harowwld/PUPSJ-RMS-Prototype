@@ -308,9 +308,6 @@ export default function CoursesTab({
         <CardContent className="font-inter bg-white p-4 dark:bg-card/50 backdrop-blur-md border-t border-gray-100 dark:border-white/10">
           <div className="flex shrink-0 select-none flex-wrap items-end justify-between gap-6">
             <div className="flex w-full flex-col gap-1.5 sm:w-auto">
-              <label className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
-                Status View
-              </label>
               <div className="flex w-full cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 backdrop-blur-sm sm:w-auto dark:border-white/10 dark:bg-muted/50">
                 <button
                   type="button"
@@ -455,7 +452,7 @@ export default function CoursesTab({
                           onClick={() => onSort("code")}
                           className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                         >
-                          CODE <SortIndicator column="code" />
+                          Code <SortIndicator column="code" />
                         </button>
                       </th>
                       <th className="p-4 px-6">
@@ -463,14 +460,14 @@ export default function CoursesTab({
                           onClick={() => onSort("name")}
                           className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                         >
-                          DESIGNATION <SortIndicator column="name" />
+                          Designation <SortIndicator column="name" />
                         </button>
                       </th>
                       <th className="w-40 p-4 px-6">
-                        STATUS
+                        Status
                       </th>
                       <th className="w-32 p-4 px-6 text-right">
-                        ACTIONS
+                        Actions
                       </th>
                     </tr>
                   </thead>
@@ -609,14 +606,9 @@ export default function CoursesTab({
                             />
                           </td>
                           <td className="p-4 px-6">
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-brand bg-gray-100 text-xs font-black text-gray-500 shadow-xs dark:bg-white/5 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm transition-all">
-                                {c.code.substring(0, 2)}
-                              </div>
-                              <span className="text-xs font-black tracking-tight text-gray-900 dark:text-zinc-50">
-                                {c.code}
-                              </span>
-                            </div>
+                            <span className="text-xs font-black tracking-tight text-gray-900 dark:text-zinc-50">
+                              {c.code}
+                            </span>
                           </td>
                           <td className="p-4 px-6 font-medium text-gray-700 dark:text-zinc-200 text-xs max-w-[400px]">
                             <div className="truncate" title={c.name}>

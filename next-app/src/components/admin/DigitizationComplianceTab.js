@@ -373,7 +373,7 @@ export default function DigitizationComplianceTab({
       ) : !error && data ? (
         <div className={cn(
           "transition-all duration-500", 
-          loading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+          (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
         )}>
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -458,9 +458,9 @@ export default function DigitizationComplianceTab({
                   size="sm"
                   onClick={handlePreview}
                   disabled={loading || !data || isGeneratingPdf}
-                  className="h-10 px-6 font-black text-[10px] tracking-widest btn-brand-red active:scale-95 disabled:opacity-60 rounded-brand transition-all dark:shadow-none"
+                  className="flex h-11 px-5 items-center justify-center gap-2 btn-brand-red text-[11px] font-black text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
                 >
-                  <i className={cn("ph-bold text-base mr-2", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
+                  <i className={cn("ph-bold text-base", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
                   {isGeneratingPdf ? "GENERATING..." : "GENERATE REPORT"}
                 </Button>
                 <Button
@@ -664,29 +664,65 @@ export default function DigitizationComplianceTab({
               <div className="animate-pulse">
                 <Skeleton className="h-24 w-full rounded-2xl bg-gray-100 dark:bg-muted" />
               </div>
-            ) : !error && data ? (
-              <div className={cn(
-                "transition-all duration-500", 
-                loading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-              )}>
-                <div className="flex flex-wrap gap-8 bg-gray-50 p-6 rounded-2xl border border-gray-100 shadow-inner dark:bg-white/5 dark:border-white/10 dark:shadow-none">
-                  <div>
-                    <div className="text-[9px] font-black text-gray-400 tracking-widest mb-1.5 text-center dark:text-zinc-500">Digitized</div>
-                    <div className="text-xl font-black text-gray-900 tracking-tight text-center dark:text-zinc-50">{summary?.totalDigitizedDocsCount?.toLocaleString() || 0}</div>
-                  </div>
-                  <div>
-                    <div className="text-[9px] font-black text-gray-400 tracking-widest mb-1.5 text-center dark:text-zinc-500">Required</div>
-                    <div className="text-xl font-black text-gray-900 tracking-tight text-center dark:text-zinc-50">{summary?.totalExpectedDocsCount?.toLocaleString() || 0}</div>
-                  </div>
-                  <div className="sm:ml-auto">
-                    <div className="text-[9px] font-black text-gray-400 tracking-widest mb-1.5 italic dark:text-zinc-500">Calculation Method</div>
-                    <div className="text-[11px] font-medium text-gray-500 max-w-xs leading-relaxed dark:text-zinc-400">
-                      {meta?.definitions?.expectedCountFormula}
+            ) : !error && data ? (() => {
+              const percent = summary?.totalExpectedDocsCount > 0 
+                ? Math.min(100, Math.round((summary?.totalDigitizedDocsCount / summary?.totalExpectedDocsCount) * 100)) 
+                : 0;
+              return (
+                <div className={cn(
+                  "transition-all duration-500", 
+                  (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+                )}>
+                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+                    {/* Digitized Stat */}
+                    <div className="md:col-span-4 group relative flex items-center gap-4 bg-white/80 backdrop-blur-xs p-5 rounded-xl border border-gray-200/80 shadow-xs transition-all hover:shadow-sm dark:bg-[#1f1f1f] dark:border-emerald-500/10 dark:hover:bg-[#1f1f1f]/80">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 transition-transform group-hover:scale-105">
+                        <i className="ph-duotone ph-file-arrow-up text-2xl" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[10px] font-bold text-gray-400 tracking-wider uppercase dark:text-zinc-500">Digitized</div>
+                        <div className="text-2xl font-black text-gray-900 tracking-tight dark:text-zinc-50 truncate">
+                          {summary?.totalDigitizedDocsCount?.toLocaleString() || 0}
+                        </div>
+                        <div className="w-full bg-gray-100 dark:bg-zinc-800 h-1.5 rounded-full mt-2 overflow-hidden">
+                          <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${percent}%` }} />
+                        </div>
+                      </div>
+                      <div className="absolute right-4 top-4 text-[10px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100/50 dark:bg-emerald-950/40 dark:border-emerald-900/20">
+                        {percent}%
+                      </div>
+                    </div>
+
+                    {/* Required Stat */}
+                    <div className="md:col-span-4 group flex items-center gap-4 bg-white/80 backdrop-blur-xs p-5 rounded-xl border border-gray-200/80 shadow-xs transition-all hover:shadow-sm dark:bg-[#1f1f1f] dark:border-red-500/10 dark:hover:bg-[#1f1f1f]/80">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-pup-maroon/5 text-pup-maroon dark:bg-red-950/20 dark:text-red-400 transition-transform group-hover:scale-105">
+                        <i className="ph-duotone ph-list-checks text-2xl" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="text-[10px] font-bold text-gray-400 tracking-wider uppercase dark:text-zinc-500">Required</div>
+                        <div className="text-2xl font-black text-gray-900 tracking-tight dark:text-zinc-50 truncate">
+                          {summary?.totalExpectedDocsCount?.toLocaleString() || 0}
+                        </div>
+                        <div className="w-full bg-gray-100 dark:bg-zinc-800 h-1.5 rounded-full mt-2 overflow-hidden opacity-30">
+                          <div className="bg-pup-maroon h-full rounded-full w-full dark:bg-red-400" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Calculation Method */}
+                    <div className="md:col-span-4 flex flex-col justify-center bg-white/80 backdrop-blur-xs p-5 rounded-xl border border-gray-200/80 shadow-xs dark:bg-[#1f1f1f] dark:border-white/5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <i className="ph-duotone ph-calculator text-base text-pup-maroon dark:text-primary animate-pulse" />
+                        <div className="text-[10px] font-bold text-gray-400 tracking-wider uppercase dark:text-zinc-500">Calculation Method</div>
+                      </div>
+                      <div className="text-[11px] font-medium text-gray-500 leading-relaxed dark:text-zinc-400 line-clamp-2">
+                        {meta?.definitions?.expectedCountFormula || "All required documents based on program configuration."}
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ) : null}
+              );
+            })() : null}
           </div>
         </Card>
 
@@ -726,7 +762,7 @@ export default function DigitizationComplianceTab({
         ) : data ? (
           <div className={cn(
             "overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card transition-all duration-500", 
-            loading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+            (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
           )}>
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 p-4 bg-white border-b border-gray-200 dark:bg-card/50 dark:border-white/10">
               {/* ... (Search and header content) ... */}
@@ -774,7 +810,7 @@ export default function DigitizationComplianceTab({
                             onClick={() => handleSort("courseCode")}
                             className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                           >
-                            PROGRAM <SortIndicator column="courseCode" />
+                            Program <SortIndicator column="courseCode" />
                           </button>
                         </TableHead>
                         <TableHead className="p-4 px-6 text-center font-bold">
@@ -782,7 +818,7 @@ export default function DigitizationComplianceTab({
                             onClick={() => handleSort("total")}
                             className="group mx-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                           >
-                            TOTAL STUDENTS <SortIndicator column="total" />
+                            Total Students <SortIndicator column="total" />
                           </button>
                         </TableHead>
                         <TableHead className="p-4 px-6 text-center font-bold">
@@ -790,7 +826,7 @@ export default function DigitizationComplianceTab({
                             onClick={() => handleSort("digitized")}
                             className="group mx-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                           >
-                            FULLY DIGITIZED <SortIndicator column="digitized" />
+                            Fully Digitized <SortIndicator column="digitized" />
                           </button>
                         </TableHead>
                         <TableHead className="p-4 px-6 text-right font-bold">
@@ -798,7 +834,7 @@ export default function DigitizationComplianceTab({
                             onClick={() => handleSort("percent")}
                             className="group ml-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
                           >
-                            COMPLETENESS <SortIndicator column="percent" />
+                            Completeness <SortIndicator column="percent" />
                           </button>
                         </TableHead>
                       </TableRow>

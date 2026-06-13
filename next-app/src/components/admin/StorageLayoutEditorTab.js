@@ -77,10 +77,12 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
 
   const [selectionBox, setSelectionBox] = useState(null)
   const [history, setHistory] = useState([])
+  const [historyIndex, setHistoryIndex] = useState(0)
   const [clipboard, setClipboard] = useState(null)
 
   const canvasRef = useRef(null)
   const dragRef = useRef(null)
+  const preDragLayoutRef = useRef(null)
 
   const MIN_SIZE = 0.05 // 2 grid units (2 * 0.025)
   const MAX_SIZE = 0.1  // 4 grid units (4 * 0.025)
@@ -121,14 +123,33 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     setIsDirty?.(true)
   }, [updateRoom, setIsDirty])
 
+  const commitLayout = useCallback((nextLayout, label) => {
+    if (!nextLayout) return
+    const cloned = JSON.parse(JSON.stringify(nextLayout))
+    setHistory((prev) => {
+      const sliced = prev.slice(0, historyIndex + 1)
+      const newState = {
+        id: Math.random().toString(36).substring(7),
+        label,
+        layout: cloned
+      }
+      const updated = [...sliced, newState]
+      if (updated.length > 30) {
+        const diff = updated.length - 30
+        setHistoryIndex(30 - 1)
+        return updated.slice(diff)
+      }
+      setHistoryIndex(updated.length - 1)
+      return updated
+    })
+    setLayout(cloned)
+    setIsDirty?.(true)
+  }, [historyIndex, setIsDirty])
+
+  // Alias for canvas PointerDown cache triggers to avoid editing canvas files
   const pushHistory = useCallback((currentLayout) => {
     if (!currentLayout) return
-    setHistory((prev) => {
-      // Don't push if it's the same as the last state
-      const last = prev[prev.length - 1]
-      if (last && JSON.stringify(last) === JSON.stringify(currentLayout)) return prev
-      return [...prev.slice(-19), JSON.parse(JSON.stringify(currentLayout))]
-    })
+    preDragLayoutRef.current = JSON.parse(JSON.stringify(currentLayout))
   }, [])
 
   // 3. DERIVED STATE
@@ -156,14 +177,38 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     return activeRoom.cabinets.find((c) => String(c.id) === String(id)) || null
   }, [activeRoom, selectedCabinetIds])
 
-  // 4. HIGH-LEVEL CALLBACKS (Undo, Copy, Paste, Add/Remove)
+  // 4. HIGH-LEVEL CALLBACKS (Undo, Redo, Copy, Paste, Add/Remove)
   const undo = useCallback(() => {
-    if (history.length === 0) return
-    const prev = history[history.length - 1]
-    setHistory((h) => h.slice(0, -1))
-    setLayout(prev)
-    setIsDirty?.(true)
+    if (historyIndex <= 0) return
+    const prevIndex = historyIndex - 1
+    const prevState = history[prevIndex]
+    if (prevState) {
+      setHistoryIndex(prevIndex)
+      setLayout(JSON.parse(JSON.stringify(prevState.layout)))
+      setIsDirty?.(true)
+    }
+  }, [history, historyIndex, setIsDirty])
+
+  const redo = useCallback(() => {
+    if (historyIndex >= history.length - 1) return
+    const nextIndex = historyIndex + 1
+    const nextState = history[nextIndex]
+    if (nextState) {
+      setHistoryIndex(nextIndex)
+      setLayout(JSON.parse(JSON.stringify(nextState.layout)))
+      setIsDirty?.(true)
+    }
+  }, [history, historyIndex, setIsDirty])
+
+  const revertToHistoryState = useCallback((index) => {
+    const targetState = history[index]
+    if (targetState) {
+      setHistoryIndex(index)
+      setLayout(JSON.parse(JSON.stringify(targetState.layout)))
+      setIsDirty?.(true)
+    }
   }, [history, setIsDirty])
+
 
   const copyCabinets = useCallback(() => {
     if (!activeRoom || selectedCabinetIds.size === 0) return
@@ -173,7 +218,6 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
 
   const pasteCabinets = useCallback(() => {
     if (!activeRoom || !clipboard) return
-    pushHistory(layout)
 
     const existingIds = new Set(activeRoom.cabinets.map(c => c.id))
     const getNextId = (currentSet) => {
@@ -199,19 +243,21 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       }
     })
 
-    updateRoom(activeRoom.id, (r) => ({
-      ...r,
-      cabinets: [...r.cabinets, ...newCabinets].sort((a, b) =>
-        String(a.id).localeCompare(String(b.id))
-      ),
-    }))
+    const updatedCabinets = [...activeRoom.cabinets, ...newCabinets].sort((a, b) =>
+      String(a.id).localeCompare(String(b.id))
+    )
 
+    const nextRooms = layout.rooms.map((r) =>
+      String(r.id) === String(activeRoom.id) ? { ...r, cabinets: updatedCabinets } : r
+    )
+    const nextLayout = { ...layout, rooms: nextRooms }
+
+    commitLayout(nextLayout, "Paste Cabinets")
     setSelectedCabinetIds(new Set(newCabinets.map(c => c.id)))
-  }, [activeRoom, clipboard, layout, pushHistory, updateRoom])
+  }, [activeRoom, clipboard, layout, commitLayout])
 
   const addCabinet = useCallback(() => {
     if (!activeRoom) return
-    pushHistory(layout)
     const existing = new Set(activeRoom.cabinets.map((c) => c.id))
     let id = ""
     let counter = 0
@@ -226,14 +272,19 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       rotation: 0,
       drawerIds: [1, 2, 3, 4],
     }
-    updateRoom(activeRoom.id, (r) => ({
-      ...r,
-      cabinets: [...r.cabinets, cab].sort((a, b) =>
-        String(a.id).localeCompare(String(b.id))
-      ),
-    }))
+
+    const updatedCabinets = [...activeRoom.cabinets, cab].sort((a, b) =>
+      String(a.id).localeCompare(String(b.id))
+    )
+
+    const nextRooms = layout.rooms.map((r) =>
+      String(r.id) === String(activeRoom.id) ? { ...r, cabinets: updatedCabinets } : r
+    )
+    const nextLayout = { ...layout, rooms: nextRooms }
+
+    commitLayout(nextLayout, "Add Cabinet")
     setSelectedCabinetIds(new Set([id]))
-  }, [activeRoom, layout, pushHistory, updateRoom])
+  }, [activeRoom, layout, commitLayout])
 
   const removeSelectedCabinet = useCallback(() => {
     if (!activeRoom || selectedCabinetIds.size === 0) return
@@ -254,22 +305,21 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       }, true)
       return
     }
-
-    pushHistory(layout)
     
     const idsToRemove = Array.from(selectedCabinetIds)
-    
-    updateRoom(activeRoom.id, (room) => ({
-      ...room,
-      cabinets: room.cabinets.filter((c) => !idsToRemove.includes(c.id)),
-    }))
-    
+    const updatedCabinets = activeRoom.cabinets.filter((c) => !idsToRemove.includes(c.id))
+
+    const nextRooms = layout.rooms.map((r) =>
+      String(r.id) === String(activeRoom.id) ? { ...r, cabinets: updatedCabinets } : r
+    )
+    const nextLayout = { ...layout, rooms: nextRooms }
+
+    commitLayout(nextLayout, selectedCabinetIds.size > 1 ? "Delete Cabinets" : "Delete Cabinet")
     setSelectedCabinetIds(new Set())
-  }, [activeRoom, selectedCabinetIds, layout, pushHistory, updateRoom, studentDrawerUsage, showToast])
+  }, [activeRoom, selectedCabinetIds, layout, commitLayout, studentDrawerUsage, showToast])
 
   const duplicateSelectedCabinet = useCallback(() => {
     if (!activeRoom || !selectedCabinet) return
-    pushHistory(layout)
     const existingIds = new Set(activeRoom.cabinets.map((c) => c.id))
     let id = ""
     let counter = 0
@@ -286,50 +336,107 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       id,
       rect: { ...selectedCabinet.rect, x: foundX, y: foundY },
     }
-    updateRoom(activeRoom.id, (r) => ({
-      ...r,
-      cabinets: [...r.cabinets, newCab].sort((a, b) =>
-        String(a.id).localeCompare(String(b.id))
-      ),
-    }))
+    const updatedCabinets = [...activeRoom.cabinets, newCab].sort((a, b) =>
+      String(a.id).localeCompare(String(b.id))
+    )
+
+    const nextRooms = layout.rooms.map((r) =>
+      String(r.id) === String(activeRoom.id) ? { ...r, cabinets: updatedCabinets } : r
+    )
+    const nextLayout = { ...layout, rooms: nextRooms }
+
+    commitLayout(nextLayout, "Duplicate Cabinet")
     setSelectedCabinetIds(new Set([id]))
-  }, [activeRoom, selectedCabinet, layout, pushHistory, updateRoom])
+  }, [activeRoom, selectedCabinet, layout, commitLayout])
 
   const addDrawerToSelected = useCallback(() => {
     if (!activeRoom || !selectedCabinet || selectedCabinet.isDoor) return
     const ids = selectedCabinet.drawerIds || []
     const nextId = (Math.max(0, ...ids.map(Number)) || 0) + 1
-    updateCabinet(activeRoom.id, selectedCabinet.id, (c) => ({
-      ...c,
-      drawerIds: [...(c.drawerIds || []), nextId],
-    }))
-  }, [activeRoom, selectedCabinet, updateCabinet])
+    
+    const nextCabinet = {
+      ...selectedCabinet,
+      drawerIds: [...ids, nextId]
+    }
+    const updatedCabinets = activeRoom.cabinets.map((c) =>
+      String(c.id) === String(selectedCabinet.id) ? nextCabinet : c
+    )
+    const nextRooms = layout.rooms.map((r) =>
+      String(r.id) === String(activeRoom.id) ? { ...r, cabinets: updatedCabinets } : r
+    )
+    const nextLayout = { ...layout, rooms: nextRooms }
+    
+    commitLayout(nextLayout, "Add Drawer")
+  }, [activeRoom, selectedCabinet, layout, commitLayout])
 
   const removeDrawerFromSelected = useCallback(() => {
     if (!activeRoom || !selectedCabinet || selectedCabinet.isDoor) return
     const ids = selectedCabinet.drawerIds || []
     if (ids.length <= 1) return
-    updateCabinet(activeRoom.id, selectedCabinet.id, (c) => ({
-      ...c,
-      drawerIds: (c.drawerIds || []).slice(0, -1),
-    }))
-  }, [activeRoom, selectedCabinet, updateCabinet])
+
+    const nextCabinet = {
+      ...selectedCabinet,
+      drawerIds: ids.slice(0, -1)
+    }
+    const updatedCabinets = activeRoom.cabinets.map((c) =>
+      String(c.id) === String(selectedCabinet.id) ? nextCabinet : c
+    )
+    const nextRooms = layout.rooms.map((r) =>
+      String(r.id) === String(activeRoom.id) ? { ...r, cabinets: updatedCabinets } : r
+    )
+    const nextLayout = { ...layout, rooms: nextRooms }
+    
+    commitLayout(nextLayout, "Remove Drawer")
+  }, [activeRoom, selectedCabinet, layout, commitLayout])
 
   const updateSelectedRectFromNormalized = useCallback((nextRect) => {
     if (!activeRoom || !selectedCabinet) return
-    updateCabinet(activeRoom.id, selectedCabinet.id, (c) =>
-      clampToRoom({ ...c, rect: nextRect })
-    )
-  }, [activeRoom, selectedCabinet, updateCabinet])
+    
+    const targetCabinet = selectedCabinet.isDoor 
+      ? null 
+      : activeRoom.cabinets.find(c => String(c.id) === String(selectedCabinet.id))
+      
+    if (selectedCabinet.isDoor) {
+      const updatedDoor = {
+        ...activeRoom.door,
+        x: nextRect.x,
+        y: nextRect.y
+      }
+      const nextRooms = layout.rooms.map(r => 
+        String(r.id) === String(activeRoom.id) ? { ...r, door: updatedDoor } : r
+      )
+      const nextLayout = { ...layout, rooms: nextRooms }
+      commitLayout(nextLayout, "Move Entrance")
+    } else if (targetCabinet) {
+      const updatedCabinet = clampToRoom({ ...targetCabinet, rect: nextRect })
+      const updatedCabinets = activeRoom.cabinets.map(c => 
+        String(c.id) === String(selectedCabinet.id) ? updatedCabinet : c
+      )
+      const nextRooms = layout.rooms.map(r => 
+        String(r.id) === String(activeRoom.id) ? { ...r, cabinets: updatedCabinets } : r
+      )
+      const nextLayout = { ...layout, rooms: nextRooms }
+      commitLayout(nextLayout, "Move Cabinet")
+    }
+  }, [activeRoom, selectedCabinet, layout, commitLayout])
 
   const updateSelectedSizeNormalized = useCallback((nw, nh) => {
-    if (!activeRoom || !selectedCabinet) return
+    if (!activeRoom || !selectedCabinet || selectedCabinet.isDoor) return
     const w = clamp(nw, MIN_SIZE, MAX_SIZE)
     const h = w * CABINET_ASPECT_RATIO 
-    updateCabinet(activeRoom.id, selectedCabinet.id, (c) =>
-      clampToRoom({ ...c, rect: { ...c.rect, w, h } })
-    )
-  }, [activeRoom, selectedCabinet, updateCabinet, CABINET_ASPECT_RATIO, MIN_SIZE, MAX_SIZE])
+    const targetCabinet = activeRoom.cabinets.find(c => String(c.id) === String(selectedCabinet.id))
+    if (targetCabinet) {
+      const updatedCabinet = clampToRoom({ ...targetCabinet, rect: { ...targetCabinet.rect, w, h } })
+      const updatedCabinets = activeRoom.cabinets.map(c => 
+        String(c.id) === String(selectedCabinet.id) ? updatedCabinet : c
+      )
+      const nextRooms = layout.rooms.map(r => 
+        String(r.id) === String(activeRoom.id) ? { ...r, cabinets: updatedCabinets } : r
+      )
+      const nextLayout = { ...layout, rooms: nextRooms }
+      commitLayout(nextLayout, "Resize Cabinet")
+    }
+  }, [activeRoom, selectedCabinet, layout, commitLayout, CABINET_ASPECT_RATIO, MIN_SIZE, MAX_SIZE])
 
   // 5. EVENT HANDLERS
   const handleCanvasPointerMove = useCallback((e) => {
@@ -465,6 +572,35 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       setSelectedCabinetIds(newlySelected)
     }
 
+    if (mode === "move" || mode === "resize" || mode === "door") {
+      const prevStr = preDragLayoutRef.current ? JSON.stringify(preDragLayoutRef.current) : ""
+      const currentStr = layout ? JSON.stringify(layout) : ""
+      if (prevStr && currentStr && prevStr !== currentStr) {
+        let label = "Move Cabinet"
+        if (mode === "resize") label = "Resize Cabinet"
+        if (mode === "door") label = "Move Entrance"
+        
+        const cloned = JSON.parse(currentStr)
+        setHistory((prev) => {
+          const sliced = prev.slice(0, historyIndex + 1)
+          const newState = {
+            id: Math.random().toString(36).substring(7),
+            label,
+            layout: cloned
+          }
+          const updated = [...sliced, newState]
+          if (updated.length > 30) {
+            const diff = updated.length - 30
+            setHistoryIndex(30 - 1)
+            return updated.slice(diff)
+          }
+          setHistoryIndex(updated.length - 1)
+          return updated
+        })
+        setIsDirty?.(true)
+      }
+    }
+
     dragRef.current = null
     setSelectionBox(null)
     try {
@@ -472,7 +608,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     } catch {
       // ignore
     }
-  }, [selectionBox, activeRoom])
+  }, [selectionBox, activeRoom, layout, historyIndex, setIsDirty])
 
   // 6. LIFE CYCLE / EFFECTS
   useEffect(() => {
@@ -533,6 +669,12 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         if (!res.ok || !json?.ok)
           throw new Error(json?.error || "Failed to load layout")
         setLayout(json.data)
+        setHistory([{
+          id: Math.random().toString(36).substring(7),
+          label: "Initial State",
+          layout: JSON.parse(JSON.stringify(json.data))
+        }])
+        setHistoryIndex(0)
         const firstRoom = Array.isArray(json.data?.rooms)
           ? json.data.rooms[0]?.id
           : null
@@ -681,7 +823,14 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
 
       if (ctrl && key === "z") {
         e.preventDefault()
-        undo()
+        if (e.shiftKey) {
+          redo()
+        } else {
+          undo()
+        }
+      } else if (ctrl && key === "y") {
+        e.preventDefault()
+        redo()
       } else if (ctrl && key === "c") {
         e.preventDefault()
         copyCabinets()
@@ -706,6 +855,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   }, [
     selectedCabinetIds,
     undo,
+    redo,
     copyCabinets,
     pasteCabinets,
     layout,
@@ -896,15 +1046,35 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       "flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-muted/30 backdrop-blur-md select-none",
       "p-6 px-8"
     )}>
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-2">
+        <Button
+          type="button"
+          onClick={undo}
+          disabled={historyIndex <= 0}
+          className="flex h-11 items-center gap-2 rounded-brand btn-brand-red active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none px-6"
+        >
+          <i className="ph-bold ph-arrow-u-up-left text-lg" />
+          Undo
+        </Button>
+        <Button
+          type="button"
+          onClick={redo}
+          disabled={historyIndex >= history.length - 1}
+          className="flex h-11 items-center gap-2 rounded-brand btn-brand-red active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none px-6"
+        >
+          <i className="ph-bold ph-arrow-u-up-right text-lg" />
+          Redo
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-6">
         <div className="flex items-center gap-4">
           <div className="flex flex-col gap-1">
             <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 dark:text-zinc-500">Current Room</label>
             <div className="flex items-center gap-2">
               <div className="relative group">
-                <i className={cn("absolute left-3.5 top-1/2 -translate-y-1/2 transition-all duration-300", activeRoomId ? "ph-fill ph-door-open text-pup-maroon dark:text-primary" : "ph-bold ph-door-open text-gray-400 dark:text-zinc-500", "group-focus-within:text-pup-maroon dark:text-primary")} />
                  <Select
-                  className="h-10 min-w-[200px] cursor-pointer rounded-brand border border-gray-200 bg-white pl-10 pr-3 text-sm font-bold text-gray-800 shadow-xs transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-100 dark:focus:border-zinc-700"
+                  className="h-10 min-w-[200px] cursor-pointer rounded-brand border border-gray-200 bg-white pl-4 pr-3 text-sm font-bold text-gray-800 shadow-xs transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-100 dark:focus:border-zinc-700"
                   value={String(activeRoomId ?? "")}
                   disabled={!layout?.rooms?.length}
                   onChange={(e) => setActiveRoomId(Number(e.target.value))}
@@ -936,15 +1106,13 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
           <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 dark:text-zinc-500">Add Tools</label>
           <Button type="button" variant="outline" onClick={addCabinet} className="h-10 rounded-brand border border-gray-200 bg-white px-5 font-black text-[10px] tracking-widest text-gray-600 shadow-xs hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300" disabled={!activeRoom}><i className="ph-bold ph-plus-square mr-2 text-base" />New cabinet</Button>
         </div>
-      </div>
 
-      <div className="flex flex-wrap items-center gap-6">
-        <div className="flex flex-col gap-1 w-48">
+        <div className="flex flex-col gap-1">
           <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 dark:text-zinc-500">Templates</label>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-2">
             <Select
               menuClassName="min-w-max"
-              className="h-9 w-full cursor-pointer rounded-brand border border-gray-200 bg-white px-3 text-xs font-bold text-gray-700 shadow-xs transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-100 dark:focus:border-zinc-700"
+              className="h-10 min-w-[120px] cursor-pointer rounded-brand border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700 shadow-xs transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-100 dark:focus:border-zinc-700"
               value={selectedTemplateId}
               onChange={(e) => setSelectedTemplateId(e.target.value)}
               disabled={!activeRoom}
@@ -953,16 +1121,16 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
             </Select>
             <Button 
               type="button" 
+              variant="outline"
               onClick={() => setTemplateApplyConfirmOpen(true)} 
-              className="h-8 w-full rounded-brand btn-brand-red text-[9px] font-black tracking-widest text-white shadow-sm active:scale-95 transition-all dark:shadow-none" 
+              className="h-10 rounded-brand border border-gray-200 bg-white px-5 font-black text-[10px] tracking-widest text-gray-600 shadow-xs hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300" 
               disabled={!activeRoom}
             >
-              Use template
+              <i className="ph-bold ph-magic-wand mr-2 text-base" />
+              Use
             </Button>
           </div>
         </div>
-
-
       </div>
     </div>
   )
@@ -982,7 +1150,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
                     <Button
                       onClick={saveLayout}
                       disabled={saving || hasAnyCollisions}
-                      className="flex h-11 items-center gap-2 btn-brand-red active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none"
+                      className="flex h-11 items-center gap-2 rounded-brand btn-brand-red active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none"
                     >
                       <i className={`ph-bold ${saving ? "ph-spinner animate-spin" : "ph-floppy-disk"} text-lg`} />
                       {saving ? "Saving..." : "Save"}
@@ -1014,7 +1182,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
           </div>
           <div className="lg:col-span-1 select-none">
             <CabinetSidebar 
-              selectedCabinetIds={selectedCabinetIds} selectedCabinet={selectedCabinet} duplicateSelectedCabinet={duplicateSelectedCabinet} setBulkConfirmOpen={setBulkConfirmOpen} removeDrawerFromSelected={removeDrawerFromSelected} addDrawerToSelected={addDrawerToSelected} updateSelectedRectFromNormalized={updateSelectedRectFromNormalized} updateSelectedSizeNormalized={updateSelectedSizeNormalized}
+              selectedCabinetIds={selectedCabinetIds} selectedCabinet={selectedCabinet} duplicateSelectedCabinet={duplicateSelectedCabinet} setBulkConfirmOpen={setBulkConfirmOpen} removeDrawerFromSelected={removeDrawerFromSelected} addDrawerToSelected={addDrawerToSelected} updateSelectedRectFromNormalized={updateSelectedRectFromNormalized} updateSelectedSizeNormalized={updateSelectedSizeNormalized} history={history} historyIndex={historyIndex} revertToHistoryState={revertToHistoryState}
             />
           </div>
         </div>

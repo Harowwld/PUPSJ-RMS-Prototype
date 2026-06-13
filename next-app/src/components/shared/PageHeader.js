@@ -39,12 +39,6 @@ export default function PageHeader({
         <div className="flex items-center gap-4">
           {leftAction}
           
-          {icon && (
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm transition-colors dark:border-white/10 dark:bg-white/5">
-              <i className={`ph-duotone ${icon} text-2xl`}></i>
-            </div>
-          )}
-          
           <div>
             <CardTitle className="flex items-center gap-2 text-xl leading-none font-black tracking-tight text-gray-900 transition-colors dark:text-zinc-50">
               {title}

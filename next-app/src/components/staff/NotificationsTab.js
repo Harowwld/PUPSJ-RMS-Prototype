@@ -156,10 +156,13 @@ export default function NotificationsTab({
     if (showRefreshing) setIsRefreshing(true)
     setError("")
     try {
-      const res = await fetch(
-        `/api/notifications?limit=${itemsPerPage}&offset=${offset}&sortBy=${sortBy}&sortOrder=${sortOrder}&tab=${activeTab}`,
-        { cache: "no-store" }
-      )
+      const [res] = await Promise.all([
+        fetch(
+          `/api/notifications?limit=${itemsPerPage}&offset=${offset}&sortBy=${sortBy}&sortOrder=${sortOrder}&tab=${activeTab}`,
+          { cache: "no-store" }
+        ),
+        showRefreshing ? new Promise((resolve) => setTimeout(resolve, 600)) : Promise.resolve(),
+      ])
       const json = await res.json().catch(() => null)
       if (!res.ok || !json?.ok) {
         throw new Error(json?.error || "Failed to load notifications")
@@ -428,7 +431,7 @@ export default function NotificationsTab({
             </div>
           </div>
 
-          {isLoading || isRefreshing ? (
+          {isLoading && !isRefreshing ? (
               <NotificationsSkeleton />
             ) : error ? (
               <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">

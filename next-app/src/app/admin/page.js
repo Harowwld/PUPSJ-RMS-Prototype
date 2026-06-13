@@ -1554,7 +1554,7 @@ function AdminPageContent() {
           />
         )}
 
-        <main className="relative w-full min-w-0 flex-1 overflow-y-auto p-4">
+        <main className="relative w-full min-w-0 flex-1 overflow-y-auto p-4 flex flex-col">
           {view === "directory" && (
             <StaffDirectoryTab
               staffData={staffData}
@@ -1715,6 +1715,7 @@ function AdminPageContent() {
               systemHealth={systemHealth}
               backups={backups}
               isLoading={viewLoading.system || viewLoading.backup}
+              isManualLoading={viewLoading.system || viewLoading.backup}
               backupSearch={backupSearch}
               setBackupSearch={setBackupSearch}
               backupStartDate={backupStartDate}
@@ -1773,7 +1774,7 @@ function AdminPageContent() {
           setDiscardConfirmOpen(false)
           setPendingView(null)
         }}
-        confirmClassName="btn-brand-red text-white h-11 px-8 rounded-lg shadow-md active:scale-95 transition-all"
+        confirmClassName="bg-orange-600 hover:bg-orange-700 text-white h-11 px-8 rounded-lg shadow-md active:scale-95 transition-all"
       />
 
       <EditUserModal

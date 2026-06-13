@@ -30,6 +30,7 @@ export default function BackupTab({
   systemHealth,
   backups,
   isLoading = false,
+  isManualLoading = false,
   error = null,
   backupSearch,
   setBackupSearch,
@@ -210,7 +211,7 @@ export default function BackupTab({
 
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="animate-fade-up font-inter flex min-h-full w-full flex-col gap-6 pb-8">
+      <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
         <div className="relative flex min-h-[600px] w-full items-stretch gap-5">
           {/* MAIN CONTENT */}
           <div className="flex-1 flex flex-col gap-6">
@@ -278,7 +279,7 @@ export default function BackupTab({
               />
             </Card>
 
-            {isLoading ? (
+            {isLoading && !isManualLoading ? (
               <div className="flex-1 flex h-fit min-h-[600px] flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-10">
                 <div className="flex flex-col items-center gap-4">
                   <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary" />
@@ -420,6 +421,7 @@ export default function BackupTab({
             systemHealth={systemHealth}
             lastBackupTime={lastBackupTime}
             isLoading={isLoading}
+            isManualLoading={isManualLoading}
           />
         </div>
 

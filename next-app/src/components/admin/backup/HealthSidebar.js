@@ -12,8 +12,9 @@ export default function HealthSidebar({
   systemHealth,
   lastBackupTime,
   isLoading = false,
+  isManualLoading = false,
 }) {
-  if (isLoading) {
+  if (isLoading && !isManualLoading) {
     return (
       <div className="w-[350px] shrink-0 flex flex-col gap-4 animate-fade-up">
         <Card className="flex flex-col border border-gray-200 bg-white shadow-sm h-full rounded-brand overflow-hidden p-6 space-y-6 dark:border-white/10 dark:bg-card dark:shadow-none">
@@ -46,9 +47,14 @@ export default function HealthSidebar({
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
               <i className="ph-duotone ph-pulse text-2xl"></i>
             </div>
-            <h3 className="text-xl font-black tracking-tight text-gray-900 leading-none dark:text-zinc-50">
-              System Health
-            </h3>
+            <div className="flex flex-col">
+              <h3 className="text-xl font-black tracking-tight text-gray-900 leading-none dark:text-zinc-50">
+                System Health
+              </h3>
+              <p className="mt-1.5 text-sm font-medium text-gray-500 transition-colors dark:text-zinc-400">
+                Monitor database operations and resources.
+              </p>
+            </div>
           </div>
         </div>
 

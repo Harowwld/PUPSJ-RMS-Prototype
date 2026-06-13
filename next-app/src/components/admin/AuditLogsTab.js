@@ -230,7 +230,7 @@ export default function AuditLogsTab({
     <TooltipProvider delay={200}>
       <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
         {/* Stat Cards */}
-        <StatCards isLoading={isLoading} logStats={logStats} />
+        <StatCards isLoading={isLoading && !isManualLoading} logStats={logStats} />
 
         {/* Main Table Card */}
         <Card className="flex h-auto w-full flex-col rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
@@ -245,7 +245,7 @@ export default function AuditLogsTab({
                   size="sm"
                   onClick={handlePreviewPDF}
                   disabled={logTotal === 0 || isExporting}
-                  className="flex h-11 px-5 items-center justify-center gap-2 btn-brand-red hover:-translate-y-0.5 text-[11px] font-black text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
+                  className="flex h-11 px-5 items-center justify-center gap-2 btn-brand-red text-[11px] font-black text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
                 >
                   <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-pdf"} text-base`}></i>
                   {isExporting ? "GENERATING..." : "GENERATE REPORT"}
@@ -282,7 +282,7 @@ export default function AuditLogsTab({
           {hasActiveFilters && (
             <div className={cn(
               "flex-none border-b border-gray-100 bg-white px-4 py-3 transition-all duration-500 animate-in fade-in slide-in-from-top-1 dark:border-white/10 dark:bg-card",
-              isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+              (isLoading && !isManualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
             )}>
               <div className="flex flex-wrap items-center gap-2">
                 <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 dark:text-zinc-500">Active filters:</span>
@@ -367,12 +367,12 @@ export default function AuditLogsTab({
             setLogRoleFilter={setLogRoleFilter}
             setLogSeverityFilter={setLogSeverityFilter}
             logTotal={logTotal}
-            isLoading={isLoading}
+            isLoading={isLoading && !isManualLoading}
           />
         </Card>
 
         <LogTable
-          isLoading={isLoading}
+          isLoading={isLoading && !isManualLoading}
           error={error}
           displayLogs={logs}
           selectedLog={selectedLog}

@@ -134,7 +134,7 @@ export default function RegisterAccountTab({
 
   return (
     <TooltipProvider delay={200}>
-      <div className="animate-fade-up font-inter flex w-full flex-col gap-6">
+      <div className="animate-fade-up font-inter flex w-full flex-1 flex-col gap-6 min-h-0">
         <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
           <PageHeader
             icon="ph-user-plus"
@@ -144,7 +144,7 @@ export default function RegisterAccountTab({
         </Card>
 
         {/* Main Registration Form */}
-        <Card className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-md dark:border-white/10 dark:bg-card dark:shadow-none w-full">
+        <Card className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-md dark:border-white/10 dark:bg-card dark:shadow-none w-full flex flex-col flex-1">
           <div className="flex items-center justify-between border-b border-gray-100 bg-gray-50 p-5 px-8 dark:border-white/10 dark:bg-white/5">
             <h3 className="flex items-center gap-2 text-sm font-black tracking-widest text-gray-900 dark:text-zinc-50">
               <i className="ph-bold ph-list-plus text-pup-maroon dark:text-primary"></i>{" "}
@@ -172,8 +172,8 @@ export default function RegisterAccountTab({
               </Button>
             </div>
           </div>
-          <CardContent className="bg-white p-8 dark:bg-card">
-            <form onSubmit={handleOpenConfirm} className="space-y-8">
+          <CardContent className="bg-white p-8 dark:bg-card flex-grow flex flex-col">
+            <form onSubmit={handleOpenConfirm} className="space-y-8 flex-1 flex flex-col justify-between">
               {/* Part 1: Full name */}
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2">
@@ -185,7 +185,7 @@ export default function RegisterAccountTab({
                     required
                     ref={fnameRef}
                     disabled={isLoading}
-                    className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:bg-card dark:text-zinc-50 dark:border-white/10"
+                    className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:bg-card dark:text-zinc-50 dark:border-white/10 dark:focus-visible:ring-[#b94642] dark:focus-visible:border-[#b94642]"
                     placeholder="Juan"
                     value={createForm.fname}
                     onChange={(e) =>
@@ -204,7 +204,7 @@ export default function RegisterAccountTab({
                     type="text"
                     required
                     disabled={isLoading}
-                    className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:bg-card dark:text-zinc-50 dark:border-white/10"
+                    className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:bg-card dark:text-zinc-50 dark:border-white/10 dark:focus-visible:ring-[#b94642] dark:focus-visible:border-[#b94642]"
                     placeholder="Dela Cruz"
                     value={createForm.lname}
                     onChange={(e) =>
@@ -320,7 +320,7 @@ export default function RegisterAccountTab({
                       required
                       disabled={isLoading}
                       className={cn(
-                        "h-10 w-full rounded-md border border-gray-300 dark:border-white/10 bg-white dark:bg-card px-3 text-sm transition-all focus-visible:border-gray-300 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:text-zinc-50 dark:text-zinc-100",
+                        "h-10 w-full rounded-md border border-gray-300 dark:border-white/10 bg-white dark:bg-card px-3 text-sm transition-all focus-visible:border-gray-300 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:text-zinc-50 dark:text-zinc-100 dark:focus-visible:ring-[#b94642] dark:focus-visible:border-[#b94642]",
                         lastAutoFilled.id &&
                           "border-emerald-500 ring-2 ring-emerald-500/20"
                       )}
@@ -370,7 +370,7 @@ export default function RegisterAccountTab({
                       required
                       disabled={isLoading}
                       className={cn(
-                        "h-10 w-full rounded-md border border-gray-300 dark:border-white/10 bg-white dark:bg-card px-3 text-sm transition-all focus-visible:border-gray-300 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:text-zinc-50 dark:text-zinc-100",
+                        "h-10 w-full rounded-md border border-gray-300 dark:border-white/10 bg-white dark:bg-card px-3 text-sm transition-all focus-visible:border-gray-300 dark:border-white/10 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none text-gray-900 dark:text-zinc-50 dark:text-zinc-100 dark:focus-visible:ring-[#b94642] dark:focus-visible:border-[#b94642]",
                         lastAutoFilled.email &&
                           "border-emerald-500 ring-2 ring-emerald-500/20"
                       )}

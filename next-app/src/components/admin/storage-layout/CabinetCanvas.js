@@ -45,7 +45,7 @@ const CabinetCanvas = memo(({
       ref={canvasRef}
       data-slot="storage-canvas"
       className={cn(
-        "relative w-full overflow-hidden border border-gray-300 dark:border-white/10 bg-[#f8fafc] dark:bg-zinc-800 shadow-inner dark:shadow-none transition-all duration-300",
+        "relative w-full overflow-hidden border border-gray-300 dark:border-white/10 bg-[#f8fafc] dark:bg-zinc-600/30 shadow-inner dark:shadow-none transition-all duration-300 rounded-brand",
         isModalOpen ? "h-full" : ""
       )}
       style={!isModalOpen ? { aspectRatio: "16 / 10" } : {}}
@@ -79,10 +79,10 @@ const CabinetCanvas = memo(({
         }
       }}
     >
-      {/* AutoCAD-inspired precision grid */}
+      {/* Blueprint AutoCAD precision grid */}
       {showGrid && (
         <div
-          className="pointer-events-none absolute inset-0 text-slate-400/20 dark:text-zinc-600/30"
+          className="pointer-events-none absolute inset-0 text-slate-400/20 dark:text-[#292929]"
           style={{
             backgroundImage: `
               linear-gradient(to right, currentColor 1px, transparent 1px),
@@ -96,7 +96,7 @@ const CabinetCanvas = memo(({
       {/* Marquee Selection Box */}
       {selectionBox && (
         <div 
-          className="pointer-events-none absolute border border-cyan-500 bg-cyan-500/10 z-50 ring-1 ring-white/50"
+          className="pointer-events-none absolute border-2 border-dashed border-cyan-500 bg-cyan-500/10 z-50 ring-1 ring-white/30 rounded-sm"
           style={{
             left: `${Math.min(selectionBox.x1, selectionBox.x2) * 100}%`,
             top: `${Math.min(selectionBox.y1, selectionBox.y2) * 100}%`,
@@ -122,11 +122,12 @@ const CabinetCanvas = memo(({
         </svg>
       )}
 
+
       {/* Orientation marker (Entrance Block) */}
       <div
         className={cn(
           "group absolute z-20 cursor-move",
-          selectedCabinetIds.has("DOOR") ? "ring-2 ring-cyan-500 ring-offset-2 ring-offset-[#f8fafc] rounded-lg" : ""
+          selectedCabinetIds.has("DOOR") ? "ring-2 ring-cyan-500 ring-offset-2 ring-offset-[#f8fafc] dark:ring-offset-zinc-950 rounded-lg" : ""
         )}
         style={{
           left: `${(activeRoom?.door?.x ?? getDefaultDoor().x) * 100}%`,
@@ -166,35 +167,36 @@ const CabinetCanvas = memo(({
         }}
       >
         <div 
-          className="relative flex h-full w-full items-center justify-center rounded-sm bg-pup-maroon shadow-md transition-all duration-300 dark:bg-red-600 dark:shadow-none"
+          className="relative flex h-full w-full items-center justify-center rounded-sm bg-pup-maroon shadow-md transition-all duration-300 dark:bg-[#b94642] dark:shadow-none"
         >
           {/* Inner Text Label - Dynamically Rotated and Flipped */}
           <span className={cn(
-            "text-[9px] font-black tracking-widest text-white whitespace-nowrap transition-transform duration-300",
+            "text-[9px] font-black tracking-widest text-white whitespace-nowrap transition-transform duration-300 flex items-center gap-1",
             activeRoom?.door?.rotation === 0 && "rotate-0",
             activeRoom?.door?.rotation === 180 && "rotate-0", // Opposite flip for bottom
             activeRoom?.door?.rotation === 90 && "-rotate-90", // Opposite flip for right
             activeRoom?.door?.rotation === 270 && "rotate-90"  // Opposite flip for left
           )}>
+            <i className="ph-fill ph-door text-xs" />
             ENTRANCE
           </span>
         </div>
       </div>
 
       {/* Precision Stats Overlay */}
-      <div className="pointer-events-none absolute bottom-3 right-3 z-50 flex flex-col items-end gap-1">
+      <div className="pointer-events-none absolute bottom-3 right-3 z-50 flex flex-col items-end gap-1 select-none">
         {selectedCabinet && (
-          <div className="animate-in fade-in slide-in-from-right-2 flex flex-col items-end gap-1 rounded bg-slate-900/80 p-2 font-mono text-[10px] text-white backdrop-blur-sm">
+          <div className="animate-in fade-in slide-in-from-right-2 flex flex-col items-end gap-1 rounded-md bg-slate-900/90 p-2.5 font-mono text-[10px] text-white backdrop-blur-sm border border-white/10 shadow-lg">
             <div className="flex items-center gap-2">
               <span className="opacity-60">Pos:</span>
-              <span>
+              <span className="font-bold">
                 {toPct(selectedCabinet.rect.x)}%,{" "}
                 {toPct(selectedCabinet.rect.y)}%
               </span>
             </div>
             <div className="flex items-center gap-2">
               <span className="opacity-60">Dim:</span>
-              <span>
+              <span className="font-bold">
                 {toPct(selectedCabinet.rect.w)}% x{" "}
                 {toPct(selectedCabinet.rect.h)}%
               </span>
@@ -252,15 +254,17 @@ const CabinetElement = memo(({
   pushHistory,
   layout
 }) => {
+  const drawerCount = (cab.drawerIds || []).length || 1
+
   return (
     <div
       className={cn(
-        "absolute border-2 rounded-sm",
+        "absolute border-2 rounded-md overflow-hidden transition-colors duration-200 cursor-move group/cab shadow-sm hover:shadow-md",
         isSelected 
-          ? "z-10 border-cyan-500 bg-cyan-100 shadow-[0_0_0_4px_rgba(6,182,212,0.2)] dark:border-cyan-300 dark:bg-cyan-400 dark:shadow-[0_0_0_4px_rgba(34,211,238,0.2)]" 
+          ? "z-10 border-cyan-500 bg-cyan-50 shadow-[0_0_0_4px_rgba(6,182,212,0.15)] dark:border-cyan-400 dark:bg-cyan-950 dark:shadow-[0_0_0_4px_rgba(34,211,238,0.15)]" 
           : isConflict 
-            ? "border-red-600 bg-red-50 shadow-[0_0_0_4px_rgba(220,38,38,0.2)] dark:border-red-500 dark:bg-red-900/40 dark:shadow-[0_0_0_4px_rgba(239,68,68,0.2)]" 
-            : "border-gray-500 bg-gray-100 shadow-sm dark:border-zinc-500 dark:bg-zinc-600 dark:shadow-none"
+            ? "border-red-600 bg-red-50 shadow-[0_0_0_4px_rgba(220,38,38,0.15)] dark:border-red-500 dark:bg-red-950 dark:shadow-[0_0_0_4px_rgba(239,68,68,0.15)]" 
+            : "border-gray-400 bg-gray-100 dark:border-zinc-500 dark:bg-[#949494]"
       )}
       style={{
         left: `${cab.rect.x * 100}%`,
@@ -319,6 +323,47 @@ const CabinetElement = memo(({
       }}
       title={`Cabinet ${cab.id}`}
     >
+      {/* Physical Drawer Divisions & Handle Notches (Skeuomorphic-lite) */}
+      <div className="absolute inset-0 flex flex-col pointer-events-none">
+        {Array.from({ length: drawerCount }).map((_, idx) => (
+          <div
+            key={idx}
+            className={cn(
+              "flex-1 flex items-center justify-center border-b last:border-b-0 border-gray-300/40 dark:border-zinc-700/40",
+              isSelected && "border-cyan-300/30 dark:border-cyan-700/30",
+              isConflict && "border-red-300/30 dark:border-red-800/30"
+            )}
+          >
+            {/* Skeuomorphic Pull Handle */}
+            <div
+              className={cn(
+                "w-7 h-1.5 rounded-sm bg-gray-300 dark:bg-[#737373] border border-black/10 dark:border-white/10 shadow-[inset_0_1px_1px_rgba(0,0,0,0.15)] group-hover/cab:scale-x-110 transition-transform duration-200",
+                isSelected && "bg-cyan-400 dark:bg-cyan-800 border-cyan-500/20",
+                isConflict && "bg-red-400 dark:bg-red-800 border-red-500/20"
+              )}
+            />
+          </div>
+        ))}
+      </div>
+
+      {/* Bounding Frame Details */}
+      <div className="absolute inset-0 border border-white/20 pointer-events-none rounded-[3px]" />
+      <div className="absolute inset-[1px] border border-black/5 pointer-events-none rounded-[3px]" />
+
+      {/* Floating Cabinet ID Badge Overlay */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-10">
+        <div className={cn(
+          "px-2 py-0.5 rounded-md font-mono text-[9px] font-black tracking-tighter shadow-sm border border-black/5 dark:border-white/5",
+          isSelected
+            ? "bg-cyan-500 text-white dark:bg-cyan-400 dark:text-zinc-950"
+            : isConflict
+              ? "bg-red-600 text-white dark:bg-red-500 dark:text-white"
+              : "bg-gray-100/90 text-gray-800 dark:bg-zinc-800/90 dark:text-zinc-200"
+        )}>
+          {cab.id}
+        </div>
+      </div>
+
       {isSelected && selectedCabinetIds.size === 1 && (
         <div
           className={cn(
@@ -364,25 +409,6 @@ const CabinetElement = memo(({
           </div>
         </div>
       )}
-      
-      {/* Precision Frame Overlay (Simulated Depth) */}
-      <div className="absolute inset-0 border border-white/20 pointer-events-none rounded-[1px]" />
-      <div className="absolute inset-[1px] border border-black/5 pointer-events-none rounded-[1px]" />
-
-      <div className="absolute inset-0 flex flex-col items-center justify-center p-2 pointer-events-none">
-        <span className={cn(
-          "text-[10px] font-black text-gray-700  tracking-tighter dark:text-zinc-900",
-          isSelected && "dark:text-cyan-50"
-        )}>
-          {cab.id}
-        </span>
-        <div className={cn(
-          "mt-1 h-[2px] w-1/3 bg-gray-400/50 rounded-full dark:bg-zinc-900/40",
-          isSelected && "dark:bg-cyan-50/40"
-        )} />
-      </div>
-
-
     </div>
   )
 })

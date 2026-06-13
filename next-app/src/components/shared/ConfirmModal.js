@@ -67,7 +67,7 @@ export default function ConfirmModal({
       description: "text-gray-600 dark:text-zinc-300",
       confirmVariant: "default",
       buttonIcon: "ph-bold ph-warning",
-      confirmStyle: "bg-linear-to-b from-orange-700 to-orange-500 border-4 border-orange-900 hover:from-orange-600 hover:to-orange-800 text-white shadow-lg shadow-orange-900/20",
+      confirmStyle: "bg-orange-600 hover:bg-orange-700 border-0! border-none! shadow-[inset_0_1px_0_rgba(255,255,255,0.22),inset_0_-1px_0_rgba(0,0,0,0.4),0_1px_3px_rgba(0,0,0,0.2),0_1px_2px_-1px_rgba(0,0,0,0.1)]! text-white",
     },
     success: {
       icon: "ph-duotone ph-arrow-counter-clockwise",
