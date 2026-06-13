@@ -53,7 +53,7 @@ export default function BackupFilters({
   }
 
   return (
-    <div className="rounded-t-brand border-b border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
+    <div className="rounded-t-brand border-b border-gray-200 bg-transparent p-4 dark:border-white/10 dark:bg-transparent">
       <div className="flex w-full flex-wrap items-end gap-4">
         {/* Search */}
         <div className="min-w-[400px] flex-1">

@@ -35,7 +35,7 @@ const ConflictResolutionModals = memo(({
     <>
       <Dialog open={applyReportOpen} onOpenChange={setApplyReportOpen}>
         <DialogContent className="sm:max-w-3xl p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10">
-          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
+          <DialogHeader className="p-6 border-b border-gray-100 bg-transparent dark:border-white/10 dark:bg-transparent">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-xl border border-blue-100/30 bg-blue-50 text-blue-600 shadow-sm flex items-center justify-center shrink-0 dark:bg-blue-950/30 dark:text-blue-400 dark:shadow-none">
                 <i className="ph-duotone ph-seal-check text-2xl"></i>
@@ -53,7 +53,7 @@ const ConflictResolutionModals = memo(({
           <div className="p-6">
             <div className="max-h-[50vh] overflow-hidden overflow-auto rounded-brand border border-gray-200 dark:border-white/10">
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
+                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-transparent dark:border-white/10 dark:bg-transparent">
                   <tr className="text-left text-xs tracking-wider text-gray-600 dark:text-zinc-300 dark:border-white/10">
                     <th className="p-3 font-bold">From</th>
                     <th className="p-3 font-bold">To</th>
@@ -110,7 +110,7 @@ const ConflictResolutionModals = memo(({
         onOpenChange={setTemplateConflictOpen}
       >
         <DialogContent className="sm:max-w-4xl p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10">
-          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
+          <DialogHeader className="p-6 border-b border-gray-100 bg-transparent dark:border-white/10 dark:bg-transparent">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-xl border border-amber-100/30 bg-amber-50 text-amber-600 shadow-sm flex items-center justify-center shrink-0 dark:bg-amber-950/30 dark:text-amber-400 dark:shadow-none">
                 <i className="ph-duotone ph-warning text-2xl"></i>
@@ -126,7 +126,7 @@ const ConflictResolutionModals = memo(({
             </div>
           </DialogHeader>
           <div className="p-6 space-y-4">
-            <div className="rounded-brand border border-gray-200 bg-gray-50 p-3 dark:border-white/10 dark:bg-muted/30">
+            <div className="rounded-brand border border-gray-200 bg-transparent p-3 dark:border-white/10 dark:bg-transparent">
               <div className="mb-2 text-[10px] font-black tracking-widest text-gray-500 dark:text-zinc-400">
                 Reassignment Mode
               </div>
@@ -154,7 +154,7 @@ const ConflictResolutionModals = memo(({
             </div>
             <div className="max-h-[45vh] overflow-hidden overflow-auto rounded-brand border border-gray-200 shadow-inner dark:border-white/10 dark:shadow-none">
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
+                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-transparent dark:border-white/10 dark:bg-transparent">
                   <tr className="text-left text-xs tracking-wider text-gray-600 dark:text-zinc-300 dark:border-white/10">
                     <th className="p-3 font-bold">Current Drawer</th>
                     <th className="p-3 font-bold">Records</th>
@@ -252,7 +252,7 @@ const ConflictResolutionModals = memo(({
 
       <Dialog open={applyPreviewOpen} onOpenChange={setApplyPreviewOpen}>
         <DialogContent className="sm:max-w-3xl p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10">
-          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
+          <DialogHeader className="p-6 border-b border-gray-100 bg-transparent dark:border-white/10 dark:bg-transparent">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-xl border border-blue-100/30 bg-blue-50 text-blue-600 shadow-sm flex items-center justify-center shrink-0 dark:bg-blue-950/30 dark:text-blue-400 dark:shadow-none">
                 <i className="ph-duotone ph-list-checks text-2xl"></i>
@@ -270,7 +270,7 @@ const ConflictResolutionModals = memo(({
           <div className="p-6">
             <div className="max-h-[50vh] overflow-hidden overflow-auto rounded-brand border border-gray-200 shadow-inner dark:border-white/10 dark:shadow-none">
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
+                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-transparent dark:border-white/10 dark:bg-transparent">
                   <tr className="text-left text-xs tracking-wider text-gray-600 dark:text-zinc-300 dark:border-white/10">
                     <th className="p-3 font-bold">Before</th>
                     <th className="p-3 font-bold">After</th>

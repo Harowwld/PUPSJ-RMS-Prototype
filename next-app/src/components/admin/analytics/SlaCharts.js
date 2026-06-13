@@ -244,7 +244,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
         </div>
 
         {/* Top Requested Docs lists */}
-        <div className="flex-1 rounded-brand border border-gray-200 bg-gray-50 p-5 shadow-xs dark:border-white/10 dark:bg-white/5">
+        <div className="flex-1 rounded-brand border border-gray-200 bg-transparent p-5 shadow-xs dark:border-white/10 dark:bg-transparent">
           <h3 className="mb-3 text-xs font-bold tracking-normal text-gray-500 dark:text-zinc-400">
             Top Requested Documents
           </h3>

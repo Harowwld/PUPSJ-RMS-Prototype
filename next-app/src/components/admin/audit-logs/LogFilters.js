@@ -70,7 +70,6 @@ export default function LogFilters({
         <div className="min-w-[320px] flex-[1.5]">
           <div className="mb-1.5 flex items-center justify-between">
             <label className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
-              Global Search
             </label>
             <span className="text-[9px] font-bold text-pup-maroon dark:text-primary/50">
               {logTotal > 0 ? `${logTotal.toLocaleString()} MATCHES` : "NO RESULTS"}

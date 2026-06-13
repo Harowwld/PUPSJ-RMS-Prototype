@@ -371,9 +371,6 @@ export default function NotificationsTab({
         <div className="flex flex-col h-auto gap-4">
           <div className="flex shrink-0 select-none flex-wrap items-end justify-between gap-6">
             <div className="flex w-full flex-col gap-1.5 sm:w-auto">
-              <label className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
-                Notification view
-              </label>
               <div className="flex w-full cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 backdrop-blur-sm sm:w-auto dark:border-white/10 dark:bg-muted/50">
                 <button
                   type="button"

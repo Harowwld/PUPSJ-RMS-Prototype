@@ -762,7 +762,7 @@ export default function ScanUploadTab({
                         )}
                         {filteredCsvRows.length ? (
                           <table className="min-w-full text-[12px] table-auto">
-                            <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
+                            <thead className="sticky top-0 z-10 border-b border-gray-200 bg-transparent dark:border-white/10 dark:bg-transparent">
                               <tr className="text-left text-[10px] font-black tracking-wider text-gray-500 dark:text-zinc-400 dark:border-white/10">
                                 <th className="w-12 p-3.5 py-3 text-center">
                                   <input
@@ -1872,7 +1872,7 @@ export default function ScanUploadTab({
                         ) : null}
 
                         <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                          <div className="border-b border-gray-100 bg-gray-50 p-4 dark:border-white/10 dark:bg-muted/30">
+                          <div className="border-b border-gray-100 bg-transparent p-4 dark:border-white/10 dark:bg-transparent">
                             <div className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
                               Bulk Edit
                             </div>

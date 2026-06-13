@@ -109,6 +109,11 @@ function StaffPageContent() {
   const [isQuickSearching, setIsQuickSearching] = useState(false);
 
   const [activeStudent, setActiveStudent] = useState(null);
+  const [selectedStudentIds, setSelectedStudentIds] = useState(new Set());
+  const [bulkArchiveOpen, setBulkArchiveOpen] = useState(false);
+  const [bulkArchiveLoading, setBulkArchiveLoading] = useState(false);
+  const [bulkRestoreOpen, setBulkRestoreOpen] = useState(false);
+  const [bulkRestoreLoading, setBulkRestoreLoading] = useState(false);
 
   const [currentLocatorLevel, setCurrentLocatorLevel] = useState("rooms");
   const [selectedRoom, setSelectedRoom] = useState(null);
@@ -1189,6 +1194,80 @@ function StaffPageContent() {
     }
   }, [students, applyStudentToPdfForm, clearAllUploadFieldErrors]);
 
+  const confirmBulkArchive = async () => {
+    if (bulkArchiveLoading) return;
+    setBulkArchiveLoading(true);
+
+    try {
+      let successCount = 0;
+      let failCount = 0;
+      const idsToArchive = Array.from(selectedStudentIds);
+
+      for (const studentNo of idsToArchive) {
+        const res = await fetch(`/api/students/${encodeURIComponent(studentNo)}`, {
+          method: "DELETE",
+        });
+        const json = await res.json().catch(() => null);
+
+        if (res.ok && json?.ok) {
+          successCount++;
+        } else {
+          failCount++;
+        }
+      }
+
+      showToast({
+        title: "Bulk Archival Complete",
+        description: `Successfully moved ${successCount} student record(s) to the archive. ${failCount > 0 ? `${failCount} records could not be archived.` : ""}`,
+      });
+      setBulkArchiveOpen(false);
+      setSelectedStudentIds(new Set());
+      fetchData();
+    } catch (err) {
+      showToast({ title: "Bulk Archival Failed", description: err.message }, true);
+    } finally {
+      setBulkArchiveLoading(false);
+    }
+  };
+
+  const confirmBulkRestore = async () => {
+    if (bulkRestoreLoading) return;
+    setBulkRestoreLoading(true);
+
+    try {
+      let successCount = 0;
+      let failCount = 0;
+      const idsToRestore = Array.from(selectedStudentIds);
+
+      for (const studentNo of idsToRestore) {
+        const res = await fetch(`/api/students/${encodeURIComponent(studentNo)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ status: "Active" }),
+        });
+        const json = await res.json().catch(() => null);
+
+        if (res.ok && json?.ok) {
+          successCount++;
+        } else {
+          failCount++;
+        }
+      }
+
+      showToast({
+        title: "Bulk Restoration Complete",
+        description: `Successfully restored ${successCount} student record(s) to active status. ${failCount > 0 ? `${failCount} records could not be restored.` : ""}`,
+      });
+      setBulkRestoreOpen(false);
+      setSelectedStudentIds(new Set());
+      fetchData();
+    } catch (err) {
+      showToast({ title: "Bulk Restoration Failed", description: err.message }, true);
+    } finally {
+      setBulkRestoreLoading(false);
+    }
+  };
+
   const sidebarItems = [
     { type: "header", label: "Operations" },
     { key: "requests", label: "Alumni Requests", iconClass: "ph-bold ph-tray-arrow-up" },
@@ -1321,6 +1400,10 @@ function StaffPageContent() {
                   showToast({ title: "Restore Failed", description: err.message }, true);
                 }
               }}
+              selectedIds={selectedStudentIds}
+              onSelectionChange={setSelectedStudentIds}
+              onBulkArchive={() => setBulkArchiveOpen(true)}
+              onBulkRestore={() => setBulkRestoreOpen(true)}
             />
           </TabsContent>
 
@@ -1723,6 +1806,25 @@ function StaffPageContent() {
           });
         }}
         variant="warning"
+      />
+      <ConfirmModal
+        open={bulkArchiveOpen}
+        title="Confirm Bulk Archival"
+        message={`You are about to move ${selectedStudentIds.size} student record(s) to the system archive. This will disable associated processing for these records.`}
+        confirmLabel="Archive Selected"
+        onConfirm={confirmBulkArchive}
+        onCancel={() => setBulkArchiveOpen(false)}
+        loading={bulkArchiveLoading}
+        variant="warning"
+      />
+      <ConfirmModal
+        open={bulkRestoreOpen}
+        title="Confirm Bulk Restoration"
+        message={`You are about to restore ${selectedStudentIds.size} student record(s) to active status.`}
+        confirmLabel="Restore Selected"
+        onConfirm={confirmBulkRestore}
+        onCancel={() => setBulkRestoreOpen(false)}
+        loading={bulkRestoreLoading}
       />
     </div>
   );

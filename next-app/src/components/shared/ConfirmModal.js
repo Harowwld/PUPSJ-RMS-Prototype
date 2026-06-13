@@ -238,9 +238,9 @@ export default function ConfirmModal({
         )}>
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             onClick={onCancel}
-            className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:border-white/10 dark:text-zinc-300 dark:hover:border-zinc-700 dark:bg-red-950/30"
+            className="h-11 rounded-brand px-6 text-sm font-bold text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors"
             disabled={isLoading}
           >
             {cancelLabel}
@@ -254,8 +254,9 @@ export default function ConfirmModal({
               "h-11 px-6 text-sm font-black shadow-sm rounded-brand gap-2 flex items-center transition-all active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed ",
               variant === "success" && "bg-green-600 hover:bg-green-700 text-white",
               variant === "warning" && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white"),
+              (variant === "brand") && "btn-brand-red hover:from-red-700 hover:to-red-900",
               v.confirmVariant === "destructive" && "btn-brand-red",
-              (v.confirmVariant === "default" && !["success", "warning"].includes(variant)) && "bg-gray-900 hover:bg-gray-800 text-white dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-50 dark:border-white/10",
+              (v.confirmVariant === "default" && !["success", "warning", "brand"].includes(variant)) && "bg-gray-900 hover:bg-gray-800 text-white dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-50 dark:border-white/10",
               confirmClassName
             )}
           >

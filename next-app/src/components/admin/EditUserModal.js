@@ -128,10 +128,10 @@ export default function EditUserModal({
           <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               onClick={onClose}
               disabled={isLoading}
-              className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-700 hover:bg-gray-50 dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
+              className="h-11 rounded-brand px-6 text-sm font-bold text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors"
             >
               Cancel
             </Button>

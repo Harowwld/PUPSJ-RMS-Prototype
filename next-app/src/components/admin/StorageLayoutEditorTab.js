@@ -19,6 +19,7 @@ import { ROOM_TEMPLATES, getDefaultDoor } from "@/lib/storageLayoutDefaults"
 import PageHeader from "@/components/shared/PageHeader"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import ConfirmModal from "@/components/shared/ConfirmModal"
+import PromptModal from "@/components/shared/PromptModal"
 
 // Modular Sub-components
 import CabinetCanvas from "./storage-layout/CabinetCanvas"
@@ -31,6 +32,13 @@ import {
   Dialog,
   DialogContent,
 } from "@/components/ui/dialog"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 // Utilities
 import {
@@ -52,7 +60,8 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
 
   const [activeRoomId, setActiveRoomId] = useState(null)
   const [selectedCabinetIds, setSelectedCabinetIds] = useState(new Set())
-  const [selectedTemplateId, setSelectedTemplateId] = useState("grid-4x2")
+  const [templates, setTemplates] = useState([])
+  const [selectedTemplateId, setSelectedTemplateId] = useState("")
   const [saveConfirmOpen, setSaveConfirmOpen] = useState(false)
   const [saveCountdown, setSaveCountdown] = useState(0)
   const [bulkConfirmOpen, setBulkConfirmOpen] = useState(false)
@@ -60,6 +69,9 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   const [deleteRoomConfirmOpen, setDeleteRoomConfirmOpen] = useState(false)
   const [resetRoomConfirmOpen, setResetRoomConfirmOpen] = useState(false)
   const [templateApplyConfirmOpen, setTemplateApplyConfirmOpen] = useState(false)
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false)
+  const [deleteTemplateConfirmOpen, setDeleteTemplateConfirmOpen] = useState(false)
+  const [restoreTemplatesConfirmOpen, setRestoreTemplatesConfirmOpen] = useState(false)
 
   const [templateConflictOpen, setTemplateConflictOpen] = useState(false)
   const [templateConflictRows, setTemplateConflictRows] = useState([])
@@ -664,10 +676,17 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     ;(async () => {
       setLoading(true)
       try {
-        const res = await fetch("/api/storage-layout", { cache: "no-store" })
-        const json = await res.json()
-        if (!res.ok || !json?.ok)
+        const [layoutRes, templatesRes] = await Promise.all([
+          fetch("/api/storage-layout", { cache: "no-store" }),
+          fetch("/api/storage-layout/templates", { cache: "no-store" })
+        ])
+        
+        const json = await layoutRes.json()
+        const templatesJson = await templatesRes.json()
+
+        if (!layoutRes.ok || !json?.ok)
           throw new Error(json?.error || "Failed to load layout")
+
         setLayout(json.data)
         setHistory([{
           id: Math.random().toString(36).substring(7),
@@ -679,6 +698,13 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
           ? json.data.rooms[0]?.id
           : null
         setActiveRoomId(firstRoom)
+
+        if (templatesRes.ok && templatesJson?.ok) {
+          setTemplates(templatesJson.data)
+          if (templatesJson.data.length > 0) {
+            setSelectedTemplateId(templatesJson.data[0].id)
+          }
+        }
       } catch (err) {
         showToast?.(
           {
@@ -869,6 +895,77 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     setBulkConfirmOpen(false)
   }
 
+  async function saveCurrentAsTemplate(name) {
+    if (!activeRoom || !name) return
+    setSaving(true)
+    const newTpl = {
+      id: "custom-" + Math.random().toString(36).substring(2, 9),
+      name: name,
+      cabinets: JSON.parse(JSON.stringify(activeRoom.cabinets || [])),
+      door: activeRoom.door ? JSON.parse(JSON.stringify(activeRoom.door)) : null
+    }
+    const nextTemplates = [...templates, newTpl]
+    try {
+      const res = await fetch("/api/storage-layout/templates", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nextTemplates),
+      })
+      const json = await res.json()
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to save template")
+      setTemplates(nextTemplates)
+      setSelectedTemplateId(newTpl.id)
+      setSaveTemplateOpen(false)
+      showToast?.({ title: "Template Saved", description: `Saved "${name}".` })
+    } catch (err) {
+      showToast?.({ title: "Save Failed", description: err.message }, true)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function deleteSelectedTemplate() {
+    if (!selectedTemplateId) return
+    setSaving(true)
+    const nextTemplates = templates.filter(t => t.id !== selectedTemplateId)
+    try {
+      const res = await fetch("/api/storage-layout/templates", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(nextTemplates),
+      })
+      const json = await res.json()
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to delete template")
+      setTemplates(nextTemplates)
+      setSelectedTemplateId(nextTemplates[0]?.id || "")
+      setDeleteTemplateConfirmOpen(false)
+      showToast?.({ title: "Template Deleted", description: "The template was removed." })
+    } catch (err) {
+      showToast?.({ title: "Delete Failed", description: err.message }, true)
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function restoreDefaultTemplates() {
+    setSaving(true)
+    try {
+      const res = await fetch("/api/storage-layout/templates", {
+        method: "DELETE",
+      })
+      const json = await res.json()
+      if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to restore defaults")
+      setTemplates(json.data || [])
+      if (json.data?.length > 0) setSelectedTemplateId(json.data[0].id)
+      setRestoreTemplatesConfirmOpen(false)
+      showToast?.({ title: "Defaults Restored", description: "Templates reverted to factory settings." })
+    } catch (err) {
+      showToast?.({ title: "Restore Failed", description: err.message }, true)
+    } finally {
+      setSaving(false)
+    }
+  }
+
   function addRoom() {
     if (!layout) return
     const max = Math.max(0, ...(layout.rooms || []).map((r) => Number(r.id) || 0))
@@ -923,7 +1020,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
 
   function applyTemplateToActiveRoom() {
     if (!activeRoom) return
-    const tpl = ROOM_TEMPLATES.find((t) => t.id === selectedTemplateId)
+    const tpl = templates.find((t) => t.id === selectedTemplateId)
     if (!tpl) return
     pushHistory(layout)
     const targetLocKeys = new Set()
@@ -1044,7 +1141,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   const renderToolbar = () => (
     <div className={cn(
       "flex flex-wrap items-center justify-between gap-4 border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-muted/30 backdrop-blur-md select-none",
-      "p-6 px-8"
+      className
     )}>
       <div className="flex items-center gap-2">
         <Button
@@ -1109,26 +1206,45 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
 
         <div className="flex flex-col gap-1">
           <label className="ml-1 text-[9px] font-black tracking-widest text-gray-400 dark:text-zinc-500">Templates</label>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Select
               menuClassName="min-w-max"
               className="h-10 min-w-[120px] cursor-pointer rounded-brand border border-gray-200 bg-white px-3 text-sm font-bold text-gray-700 shadow-xs transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-100 dark:focus:border-zinc-700"
               value={selectedTemplateId}
               onChange={(e) => setSelectedTemplateId(e.target.value)}
-              disabled={!activeRoom}
+              disabled={!activeRoom || templates.length === 0}
             >
-              {ROOM_TEMPLATES.map((tpl) => <option key={`tpl-opt-${tpl.id}`} value={tpl.id}>{tpl.name}</option>)}
+              {templates.map((tpl) => <option key={`tpl-opt-${tpl.id}`} value={tpl.id}>{tpl.name}</option>)}
             </Select>
             <Button 
               type="button" 
               variant="outline"
               onClick={() => setTemplateApplyConfirmOpen(true)} 
-              className="h-10 rounded-brand border border-gray-200 bg-white px-5 font-black text-[10px] tracking-widest text-gray-600 shadow-xs hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300" 
-              disabled={!activeRoom}
+              className="h-10 rounded-brand border border-gray-200 bg-white px-4 font-black text-[10px] tracking-widest text-gray-600 shadow-xs hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300" 
+              disabled={!activeRoom || !selectedTemplateId}
             >
-              <i className="ph-bold ph-magic-wand mr-2 text-base" />
+              <i className="ph-bold ph-magic-wand mr-1 text-base" />
               Use
             </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                 <Button variant="ghost" size="icon" className="h-10 w-10 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 rounded-brand">
+                   <i className="ph-bold ph-dots-three-vertical text-lg" />
+                 </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 rounded-xl dark:bg-zinc-900 dark:border-white/10">
+                 <DropdownMenuItem onClick={() => setSaveTemplateOpen(true)} className="cursor-pointer" disabled={!activeRoom || activeRoom.cabinets?.length === 0}>
+                   <i className="ph-bold ph-floppy-disk mr-2" /> Save as Template
+                 </DropdownMenuItem>
+                 <DropdownMenuItem onClick={() => setDeleteTemplateConfirmOpen(true)} className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400" disabled={!selectedTemplateId}>
+                   <i className="ph-bold ph-trash mr-2" /> Delete Template
+                 </DropdownMenuItem>
+                 <DropdownMenuSeparator />
+                 <DropdownMenuItem onClick={() => setRestoreTemplatesConfirmOpen(true)} className="cursor-pointer text-amber-600 focus:text-amber-600 dark:text-amber-400 dark:focus:text-amber-400">
+                   <i className="ph-bold ph-arrow-counter-clockwise mr-2" /> Restore Defaults
+                 </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
@@ -1224,6 +1340,38 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       <ConfirmModal open={deleteRoomConfirmOpen} onCancel={() => setDeleteRoomConfirmOpen(false)} title="Delete room" message="Delete this room?" confirmLabel="Delete" variant="danger" onConfirm={() => { removeActiveRoom(); setDeleteRoomConfirmOpen(false); }} />
       <ConfirmModal open={resetRoomConfirmOpen} onCancel={() => setResetRoomConfirmOpen(false)} title="Reset room" message="Clear layout?" confirmLabel="Reset" variant="warning" onConfirm={() => { resetActiveRoomCabinets(); setResetRoomConfirmOpen(false); }} />
       <ConfirmModal open={templateApplyConfirmOpen} onCancel={() => setTemplateApplyConfirmOpen(false)} title="Use template" message="Apply template?" confirmLabel="Use" variant="warning" onConfirm={() => { applyTemplateToActiveRoom(); setTemplateApplyConfirmOpen(false); }} />
+      
+      <PromptModal
+        open={saveTemplateOpen}
+        onCancel={() => setSaveTemplateOpen(false)}
+        title="Save as Template"
+        message="Enter a name for this new custom template."
+        confirmLabel="Save Template"
+        onConfirm={saveCurrentAsTemplate}
+        isLoading={saving}
+        buttonIcon="ph-floppy-disk"
+        variant="brand"
+      />
+      <ConfirmModal 
+        open={deleteTemplateConfirmOpen} 
+        onCancel={() => setDeleteTemplateConfirmOpen(false)} 
+        title="Delete Template" 
+        message={`Are you sure you want to delete the template "${templates.find(t => t.id === selectedTemplateId)?.name || 'selected'}"?`} 
+        confirmLabel="Delete Template" 
+        variant="danger" 
+        onConfirm={deleteSelectedTemplate} 
+        isLoading={saving}
+      />
+      <ConfirmModal 
+        open={restoreTemplatesConfirmOpen} 
+        onCancel={() => setRestoreTemplatesConfirmOpen(false)} 
+        title="Restore Default Templates" 
+        message="This will delete all custom templates and restore the factory default room layouts. Are you sure you want to proceed?" 
+        confirmLabel="Restore Defaults" 
+        variant="warning" 
+        onConfirm={restoreDefaultTemplates} 
+        isLoading={saving}
+      />
     </div>
   )
 }

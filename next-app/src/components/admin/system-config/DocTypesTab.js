@@ -284,11 +284,18 @@ export default function DocTypesTab({
  : "text-gray-500 ring-transparent hover:bg-white/55 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
  }`}
                   >
-                    <i
-                      className={`ph-bold ph-check ${!showArchived ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
-                    ></i>
                     <span className="whitespace-nowrap tracking-wide">
                       ACTIVE
+                    </span>
+                    <span
+                      className={cn(
+                        "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-black transition-all duration-300",
+                        !showArchived
+                          ? "bg-pup-maroon text-white shadow-sm ring-2 ring-red-50/50 dark:bg-red-500/20 dark:text-red-400 dark:ring-red-400/20 dark:shadow-none"
+                          : "bg-gray-200 text-gray-500 group-hover:bg-gray-300 dark:bg-zinc-800 dark:text-zinc-500 dark:group-hover:bg-zinc-700 dark:group-hover:text-zinc-300"
+                      )}
+                    >
+                      {docTypes.filter((dt) => dt.status !== "Archived").length}
                     </span>
                   </button>
                   <button
@@ -300,11 +307,18 @@ export default function DocTypesTab({
  : "text-gray-500 ring-transparent hover:bg-white/55 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
  }`}
                   >
-                    <i
-                      className={`ph-bold ph-archive ${showArchived ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
-                    ></i>
                     <span className="whitespace-nowrap tracking-wide">
                       ARCHIVED
+                    </span>
+                    <span
+                      className={cn(
+                        "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-black transition-all duration-300",
+                        showArchived
+                          ? "bg-pup-maroon text-white shadow-sm ring-2 ring-red-50/50 dark:bg-red-500/20 dark:text-red-400 dark:ring-red-400/20 dark:shadow-none"
+                          : "bg-gray-200 text-gray-500 group-hover:bg-gray-300 dark:bg-zinc-800 dark:text-zinc-500 dark:group-hover:bg-zinc-700 dark:group-hover:text-zinc-300"
+                      )}
+                    >
+                      {docTypes.filter((dt) => dt.status === "Archived").length}
                     </span>
                   </button>
                 </div>
@@ -788,12 +802,15 @@ export default function DocTypesTab({
             <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card">
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 onClick={() => {
                   setIsAddDocTypeOpen(false)
+                  setIsEditDocTypeOpen(false)
                   setNewDocTypeName("")
+                  setNewDocTypeCode("")
+                  setEditDocType({ id: null, name: "", code: "" })
                 }}
-                className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+                className="h-11 rounded-brand px-6 text-sm font-bold text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors"
               >Cancel</Button>
               <Button
                 type="submit"
@@ -851,12 +868,15 @@ export default function DocTypesTab({
             <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card">
               <Button
                 type="button"
-                variant="outline"
+                variant="ghost"
                 onClick={() => {
+                  setIsAddDocTypeOpen(false)
                   setIsEditDocTypeOpen(false)
-                  setEditDocType({ id: null, name: "" })
+                  setNewDocTypeName("")
+                  setNewDocTypeCode("")
+                  setEditDocType({ id: null, name: "", code: "" })
                 }}
-                className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+                className="h-11 rounded-brand px-6 text-sm font-bold text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors"
               >Cancel</Button>
               <Button
                 type="submit"

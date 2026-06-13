@@ -31,7 +31,7 @@ export default function DefaultPasswordModal({
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
-        <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
+        <DialogHeader className="border-b border-gray-100 bg-transparent p-6 dark:border-white/10 dark:bg-transparent">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30">
               <i className="ph-duotone ph-key text-2xl"></i>
@@ -50,7 +50,7 @@ export default function DefaultPasswordModal({
 
         <div className="space-y-4 p-6">
           {/* User info */}
-          <div className="flex items-center gap-3 rounded-brand border border-gray-200 bg-gray-50 p-3 dark:border-white/10 dark:bg-card">
+          <div className="flex items-center gap-3 rounded-brand border border-gray-200 bg-transparent p-3 dark:border-white/10 dark:bg-transparent">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-pup-maroon/10">
               <i className="ph-bold ph-user text-lg text-pup-maroon dark:text-primary"></i>
             </div>

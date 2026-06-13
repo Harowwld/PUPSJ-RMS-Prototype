@@ -192,14 +192,6 @@ export default function BackupTable({
                     </td>
                     <td className="p-4">
                         <div className="flex items-center gap-3">
-                            <div className={cn(
-                                "flex h-9 w-9 shrink-0 items-center justify-center rounded-brand text-xs font-black transition-all shadow-xs",
-                                isSelected 
-                                  ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-primary shadow-sm" 
-                                  : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm"
-                            )}>
-                                <i className="ph-duotone ph-file-zip text-lg"></i>
-                            </div>
                             <span className="text-xs font-bold text-gray-900 dark:text-zinc-50 max-w-[280px] truncate" title={b.filename}>
                                 {b.filename}
                             </span>

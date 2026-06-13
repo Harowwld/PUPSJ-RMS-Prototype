@@ -36,7 +36,7 @@ export default function UserGuideModal({ open, onClose }) {
           className="flex flex-col h-full overflow-hidden lg:flex-row"
         >
           {/* Sidebar Navigation */}
-          <aside className="w-full lg:w-64 bg-gray-50 border-b lg:border-b-0 lg:border-r border-gray-200 p-4 shrink-0 dark:bg-card dark:border-white/10">
+          <aside className="w-full lg:w-64 bg-transparent border-b lg:border-b-0 lg:border-r border-gray-200 p-4 shrink-0 dark:bg-transparent dark:border-white/10">
             <div className="mb-6 px-2 hidden lg:block">
               <h2 className="text-xl font-black text-pup-maroon dark:text-primary tracking-tight">User Guide</h2>
               <p className="text-[10px] text-gray-500 font-black tracking-widest mt-1 dark:text-zinc-400">Documentation</p>

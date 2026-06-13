@@ -815,7 +815,7 @@ export default function DigitalRecordsReviewTab({
       </Card>
        {(isLoading && !isManualLoading) && (!records || records.length === 0) ? (
         <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card animate-pulse">
-          <div className="h-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/5" />
+          <div className="h-10 border-b border-gray-200 bg-transparent dark:border-white/10 dark:bg-transparent" />
           <div className="p-4 space-y-4">
             {[1, 2, 3, 4, 5].map((i) => (
               <Skeleton key={i} className="h-8 w-full bg-gray-50 dark:bg-muted" />
@@ -846,7 +846,7 @@ export default function DigitalRecordsReviewTab({
           <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
             <div className="overflow-x-auto rounded-[inherit]">
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm dark:border-white/10 dark:bg-muted">
+                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-transparent backdrop-blur-sm dark:border-white/10 dark:bg-transparent">
                   <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 dark:text-zinc-300">
                     <th className="w-12 p-4 text-center">
                       <input

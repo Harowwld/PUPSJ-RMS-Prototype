@@ -46,7 +46,6 @@ const StaffTableRow = React.memo(({
   isSelected, 
   active, 
   isArchived, 
-  initials, 
   toggleSelect, 
   onEditUser, 
   onRestoreUser, 
@@ -75,31 +74,19 @@ const StaffTableRow = React.memo(({
         )}
       </td>
       <td className="p-4">
-        <div className="flex items-center gap-3">
-          <div
-            className={cn(
-              "flex h-9 w-9 shrink-0 items-center justify-center rounded-brand font-black text-xs transition-all shadow-xs",
-              isSelected 
-                ? "bg-white dark:bg-zinc-800 text-pup-maroon dark:text-primary shadow-sm" 
-                : "bg-gray-100 dark:bg-white/5 text-gray-500 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm"
+        <div className="flex flex-col min-w-0">
+          <div className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-zinc-50 leading-tight">
+            <span className="truncate">
+              {s.fname} {s.lname}
+            </span>
+            {isCurrentUser && (
+              <Badge className="h-4 bg-pup-maroon text-[8px] font-black dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
+                You
+              </Badge>
             )}
-          >
-            {initials}
           </div>
-          <div className="min-w-0">
-            <div className="flex items-center gap-2 text-sm font-bold text-gray-900 dark:text-zinc-50 leading-tight">
-              <span className="truncate">
-                {s.fname} {s.lname}
-              </span>
-              {isCurrentUser && (
-                <Badge className="h-4 bg-pup-maroon text-[8px] font-black dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
-                  You
-                </Badge>
-              )}
-            </div>
-            <div className="truncate text-[10px] font-medium text-gray-500 dark:text-zinc-400 mt-0.5">
-              {s.email}
-            </div>
+          <div className="truncate text-[10px] font-medium text-gray-500 dark:text-zinc-400 mt-0.5">
+            {s.email}
           </div>
         </div>
       </td>
@@ -554,9 +541,6 @@ export default function StaffDirectoryTab({
  : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
  }`}
                   >
-                    <i
-                      className={`ph-bold ph-users-three ${activeTab === "active" ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
-                    ></i>
                     <span className="whitespace-nowrap tracking-wide">
                       Active
                     </span>
@@ -580,16 +564,13 @@ export default function StaffDirectoryTab({
  : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
  }`}
                   >
-                    <i
-                      className={`ph-bold ph-archive ${activeTab === "archived" ? "" : "text-gray-400 group-hover:text-gray-600 dark:text-zinc-500 dark:group-hover:text-zinc-300 dark:hover:text-zinc-300"}`}
-                    ></i>
                     <span className="whitespace-nowrap tracking-wide">
                       Archived
                     </span>
                     <span
                       className={cn(
                         "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-black transition-all duration-300",
-                        activeTab === "archived"
+                        activeTab === "active"
                           ? "bg-pup-maroon text-white shadow-sm ring-2 ring-red-50/50 dark:bg-red-500/20 dark:text-red-400 dark:ring-red-400/20 dark:shadow-none"
                           : "bg-gray-200 text-gray-500 group-hover:bg-gray-300 dark:bg-zinc-800 dark:text-zinc-500 dark:group-hover:bg-zinc-700 dark:group-hover:text-zinc-300"
                       )}
@@ -600,7 +581,7 @@ export default function StaffDirectoryTab({
                 </div>
               </div>
 
-              <div className="flex flex-1 flex-col gap-1.5 min-w-[300px]">
+              <div className="flex flex-1 flex-col gap-1.col gap-1.5 min-w-[300px]">
                 <div className="flex items-center justify-between">
                   <label className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
                     Search
@@ -613,7 +594,7 @@ export default function StaffDirectoryTab({
                   <i className="ph-bold ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500"></i>
                   <Input
                     placeholder="Search name, email or ID..."
-                    className="h-11 rounded-brand border border-gray-200 bg-white pl-11 pr-4 text-sm font-medium transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
+                    className="h-11 rounded-brand border border-gray-200 bg-white pl-11 pr-4 text-dium transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
                     value={localSearch}
                     onChange={(e) => setLocalSearch(e.target.value)}
                   />
@@ -652,7 +633,7 @@ export default function StaffDirectoryTab({
       {/* Main Table Grid & Pagination (No outer background card) */}
       {isLoading ? (
         <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
-          <div className="h-10 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-white/5" />
+          <div className="h-10 border-b border-gray-200 bg-transparent dark:border-white/10 dark:bg-transparent" />
           <div className="divide-y divide-gray-100 dark:divide-white/10">
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div key={i} className="flex items-center gap-3 p-4">
@@ -703,7 +684,7 @@ export default function StaffDirectoryTab({
           >
             <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
               <table className="min-w-full table-fixed text-sm">
-                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm dark:border-white/10 dark:bg-muted">
+                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-transparent backdrop-blur-sm dark:border-white/10 dark:bg-transparent">
                   <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 dark:text-zinc-300">
                     <th className="w-16 p-4 text-center">
                       <input
@@ -855,10 +836,6 @@ export default function StaffDirectoryTab({
                         isSelected={selectedIds.has(s.id)}
                         active={formatRelativeTime(s.last_active)}
                         isArchived={s.status === "Archived"}
-                        initials={
-                          `${s.fname?.[0] || ""}${s.lname?.[0] || ""}` ||
-                          "?"
-                        }
                         toggleSelect={toggleSelect}
                         onEditUser={onEditUser}
                         onRestoreUser={onRestoreUser}
@@ -977,6 +954,7 @@ export default function StaffDirectoryTab({
     </TooltipProvider>
   )
 }
+
 
 
 

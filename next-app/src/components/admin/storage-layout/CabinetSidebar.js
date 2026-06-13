@@ -37,7 +37,7 @@ const CabinetSidebar = memo(({
 
   return (
     <Card className="overflow-hidden rounded-brand border border-gray-200 shadow-sm select-none dark:border-white/10 dark:shadow-none">
-      <CardHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
+      <CardHeader className="border-b border-gray-100 bg-transparent p-6 dark:border-white/10 dark:bg-transparent">
         <div className="flex items-center gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
             <i className={cn(

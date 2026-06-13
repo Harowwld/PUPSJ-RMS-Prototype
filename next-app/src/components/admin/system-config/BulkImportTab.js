@@ -141,28 +141,28 @@ export default function BulkImportTab({
                 </div>
               }
             />
+            <div className="flex flex-wrap items-center gap-3 border-t border-gray-100 bg-transparent p-4 dark:border-white/5 dark:bg-transparent">
+              <a
+                href="data:text/csv;charset=utf-8,Category,Name,Code%0ADOCUMENT TYPE,Transcript of Records,%0ADOCUMENT TYPE,Diploma,%0ACourse,Bachelor of Science in IT,BSIT%0ACourse,Bachelor of Science in Accountancy,BSA%0ASection,Block 1,BSIT%0ASection,Section 1,BSA"
+                download="PUP-IMPORT-TEMPLATE.csv"
+                className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 shadow-xs transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:hover:border-zinc-700 dark:border-white/10"
+              >
+                <i className="ph-bold ph-download-simple text-base"></i>
+                Download Template
+              </a>
+              <button
+                type="button"
+                onClick={handleCopySample}
+                className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 shadow-xs transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:hover:border-zinc-700 dark:border-white/10"
+              >
+                <i className="ph-bold ph-copy text-base"></i>
+                Copy Raw Sample
+              </button>
+            </div>
           </Card>
 
           <Card className="flex flex-col flex-1 overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm lg:col-span-12 dark:bg-card dark:shadow-none dark:border-white/10 w-full">
             <CardContent className="flex flex-1 flex-col p-6 bg-white dark:bg-card/50 backdrop-blur-md">
-              <div className="mb-6 flex flex-wrap items-center gap-3">
-                <a
-                  href="data:text/csv;charset=utf-8,Category,Name,Code%0ADOCUMENT TYPE,Transcript of Records,%0ADOCUMENT TYPE,Diploma,%0ACourse,Bachelor of Science in IT,BSIT%0ACourse,Bachelor of Science in Accountancy,BSA%0ASection,Block 1,BSIT%0ASection,Section 1,BSA"
-                  download="PUP-IMPORT-TEMPLATE.csv"
-                  className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 shadow-xs transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:hover:border-zinc-700 dark:border-white/10"
-                >
-                  <i className="ph-bold ph-download-simple text-base"></i>
-                  Download Template
-                </a>
-                <button
-                  type="button"
-                  onClick={handleCopySample}
-                  className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 shadow-xs transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:hover:border-zinc-700 dark:border-white/10"
-                >
-                  <i className="ph-bold ph-copy text-base"></i>
-                  Copy Raw Sample
-                </button>
-              </div>
               <div
                 className={`group relative flex min-h-[320px] flex-1 cursor-pointer flex-col items-center justify-center rounded-brand border-2 border-dashed p-12 text-center shadow-sm transition-all ${ importDropActive ? "border-gray-300 bg-red-50 shadow-inner" : "border-gray-400 bg-gray-50 hover:border-gray-300 hover:bg-red-50" } dark:shadow-none dark:border-white/10 dark:bg-red-950/30 dark:hover:border-zinc-700`}
                 onDragOver={(e) => {
@@ -482,9 +482,10 @@ export default function BulkImportTab({
                                 variant="ghost"
                                 size="sm"
                                 onClick={cancelEdit}
-                                className="h-8 rounded-md px-2 text-[10px] font-black text-gray-400 hover:bg-gray-100 dark:bg-muted dark:hover:bg-white/10 dark:text-zinc-500"
+                                className="h-8 rounded-md px-2 text-[10px] font-bold text-gray-400 hover:text-gray-600 hover:bg-transparent dark:text-zinc-500 dark:hover:text-zinc-300"
                               >
-                                <i className="ph-bold ph-x mr-1"></i>Cancel</Button>
+                                Cancel
+                              </Button>
                             </div>
                           ) : row.error ? (
                             <div className="flex items-center justify-end gap-1.5">
@@ -539,7 +540,7 @@ export default function BulkImportTab({
                 </tbody>
               </table>
             </div>
-            <div className="flex items-center justify-between border-t border-gray-100 bg-gray-50 p-4 dark:border-white/10 dark:bg-card">
+            <div className="flex items-center justify-between border-t border-gray-100 bg-transparent p-4 dark:border-white/10 dark:bg-transparent">
               <p className="max-w-md text-[10px] font-medium text-gray-500 dark:text-zinc-400">
                 Only valid and selected rows will be committed to the database. Invalid rows are
                 automatically excluded. Duplicate records (matching name or code) will be ignored by
@@ -550,9 +551,8 @@ export default function BulkImportTab({
                   variant="ghost"
                   size="sm"
                   onClick={resetImport}
-                  className="h-9 px-4 text-xs font-bold text-gray-500 transition-colors hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-400 dark:bg-red-950/30"
+                  className="px-4 text-xs font-bold text-gray-500 hover:text-gray-700 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors"
                 >
-                  <i className="ph-bold ph-trash-simple text-sm mr-2"></i>
                   CANCEL IMPORT
                 </Button>
                 <Button

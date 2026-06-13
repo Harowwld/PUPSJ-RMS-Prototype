@@ -389,7 +389,7 @@ export default function RateLimitingTab() {
                 ))}
               </div>
               <div className="rounded-brand border border-gray-200 bg-white h-64 overflow-hidden dark:border-white/10 dark:bg-card">
-                <div className="border-b border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
+                <div className="border-b border-gray-200 bg-transparent p-4 dark:border-white/10 dark:bg-transparent">
                   <Skeleton className="h-5 w-48 dark:bg-muted" />
                 </div>
                 <div className="p-4 space-y-4">
@@ -402,7 +402,7 @@ export default function RateLimitingTab() {
           )}
           {activeTab !== "overview" && (
             <div className="rounded-brand border border-gray-200 bg-white h-96 overflow-hidden dark:border-white/10 dark:bg-card">
-              <div className="border-b border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
+              <div className="border-b border-gray-200 bg-transparent p-4 dark:border-white/10 dark:bg-transparent">
                 <Skeleton className="h-5 w-48 dark:bg-muted" />
               </div>
               <div className="p-4 space-y-4">
@@ -423,6 +423,7 @@ export default function RateLimitingTab() {
     </div>
   )
 }
+
 
 
 

@@ -276,7 +276,7 @@ export default function LogTable({
       <div className="animate-pulse space-y-4">
         <div className="overflow-hidden overflow-x-auto rounded-brand border border-gray-100 bg-white dark:border-white/10 dark:bg-card">
           <table className="min-w-full">
-            <thead className="bg-gray-50 dark:bg-muted">
+            <thead className="bg-transparent dark:bg-transparent">
               <tr>
                 {[1, 2, 3, 4, 5, 6, 7].map((i) => (
                   <th key={i} className="p-4">

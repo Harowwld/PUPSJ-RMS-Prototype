@@ -171,3 +171,38 @@ export async function listSettingsKeys() {
   return rows.map((r) => String(r.key));
 }
 
+const STORAGE_TEMPLATES_KEY = "storage_templates";
+
+export async function getStorageTemplates() {
+  const row = await dbGet(
+    "SELECT value FROM settings WHERE key = ?",
+    [STORAGE_TEMPLATES_KEY]
+  );
+  const { ROOM_TEMPLATES } = await import("./storageLayoutDefaults.js");
+  if (!row?.value) {
+    return ROOM_TEMPLATES;
+  }
+  try {
+    return JSON.parse(String(row.value));
+  } catch {
+    return ROOM_TEMPLATES;
+  }
+}
+
+export async function setStorageTemplates(templates) {
+  if (!Array.isArray(templates)) {
+    throw new Error("Invalid storage_templates payload");
+  }
+  await dbRun(
+    "INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)",
+    [STORAGE_TEMPLATES_KEY, JSON.stringify(templates)]
+  );
+  return templates;
+}
+
+export async function restoreDefaultStorageTemplates() {
+  await dbRun("DELETE FROM settings WHERE key = ?", [STORAGE_TEMPLATES_KEY]);
+  const { ROOM_TEMPLATES } = await import("./storageLayoutDefaults.js");
+  return ROOM_TEMPLATES;
+}
+

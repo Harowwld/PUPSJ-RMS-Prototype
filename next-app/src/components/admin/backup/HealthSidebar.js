@@ -42,7 +42,7 @@ export default function HealthSidebar({
 
   return (
     <div className="w-[350px] shrink-0 flex flex-col gap-4 animate-in fade-in slide-in-from-right-4 duration-500">
-      <Card className="flex flex-col border border-gray-200 bg-white shadow-sm h-full rounded-brand overflow-hidden dark:border-white/10 dark:bg-card dark:shadow-none">        <div className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
+      <Card className="flex flex-col border border-gray-200 bg-white shadow-sm h-full rounded-brand overflow-hidden dark:border-white/10 dark:bg-card dark:shadow-none">        <div className="border-b border-gray-100 bg-transparent p-6 dark:border-white/10 dark:bg-transparent">
           <div className="flex items-center gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
               <i className="ph-duotone ph-pulse text-2xl"></i>
@@ -171,11 +171,11 @@ export default function HealthSidebar({
           {/* Concise Node Records */}
           <div className="pt-4 border-t border-gray-100 space-y-2 dark:border-white/10">
             <div className="grid grid-cols-1 gap-1.5">
-              <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50 border border-gray-100 dark:bg-white/5 dark:border-white/10">
+              <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-transparent border border-gray-100 dark:bg-transparent dark:border-white/10">
                 <span className="text-[9px] font-black text-gray-400 tracking-widest dark:text-zinc-500">Last Sync</span>
                 <span className="text-[10px] font-black text-gray-800 dark:text-zinc-100">{lastBackupTime}</span>
               </div>
-              <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50 border border-gray-100 dark:bg-white/5 dark:border-white/10">
+              <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-transparent border border-gray-100 dark:bg-transparent dark:border-white/10">
                 <span className="text-[9px] font-black text-gray-400 tracking-widest dark:text-zinc-500">Restore Node</span>
                 <span className={`text-[10px] font-black ${systemHealth.lastRestorationAt ? "text-gray-800" : "text-gray-400 dark:text-zinc-100"}`}>
                   {systemHealth.lastRestorationAt
@@ -183,7 +183,7 @@ export default function HealthSidebar({
                     : "NONE"}
                 </span>
               </div>
-              <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-gray-50 border border-gray-100 dark:bg-white/5 dark:border-white/10">
+              <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-transparent border border-gray-100 dark:bg-transparent dark:border-white/10">
                 <span className="text-[9px] font-black text-gray-400 tracking-widest dark:text-zinc-500">Protocol</span>
                 <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400">AES-256-GCM</span>
               </div>

@@ -97,7 +97,7 @@ export default function LogDetailSheet({
 
             {/* Actor Section */}
             <Card className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-              <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-3 dark:border-white/10 dark:bg-white/5">
+              <div className="flex items-center gap-2 border-b border-gray-100 bg-transparent px-4 py-3 dark:border-white/10 dark:bg-transparent">
                 <i className="ph-bold ph-user-focus text-pup-maroon dark:text-primary"></i>
                 <h4 className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-300">
                   Actor Information
@@ -135,7 +135,7 @@ export default function LogDetailSheet({
 
             {/* Event Details */}
             <Card className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-              <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-3 dark:border-white/10 dark:bg-white/5">
+              <div className="flex items-center gap-2 border-b border-gray-100 bg-transparent px-4 py-3 dark:border-white/10 dark:bg-transparent">
                 <i className="ph-bold ph-newspaper text-pup-maroon dark:text-primary"></i>
                 <h4 className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-300">
                   Event Details
@@ -223,7 +223,7 @@ export default function LogDetailSheet({
 
             {/* Network Data */}
             <Card className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-              <div className="flex items-center gap-2 border-b border-gray-100 bg-gray-50 px-4 py-3 dark:border-white/10 dark:bg-white/5">
+              <div className="flex items-center gap-2 border-b border-gray-100 bg-transparent px-4 py-3 dark:border-white/10 dark:bg-transparent">
                 <i className="ph-bold ph-broadcast text-pup-maroon dark:text-primary"></i>
                 <h4 className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-300">
                   Network Data

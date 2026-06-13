@@ -149,10 +149,6 @@ export default function Header({ authUser, onLogout, children }) {
                   {authUser?.role || "User"}
                 </p>
               </div>
-              <i className={cn(
-                "ph-bold ph-caret-down text-gray-400 dark:text-zinc-500 text-xs transition-all duration-300 hidden sm:block",
-                menuOpen && "rotate-180 text-pup-maroon dark:text-primary"
-              )}></i>
             </DropdownMenuTrigger>
              <DropdownMenuContent align="end" className="w-80 rounded-xl border border-gray-200 shadow-2xl p-2 bg-white/98 backdrop-blur-md dark:bg-card dark:border-white/10 dark:shadow-none">
                <DropdownMenuGroup>

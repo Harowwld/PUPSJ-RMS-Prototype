@@ -673,50 +673,67 @@ export default function DigitizationComplianceTab({
                   "transition-all duration-500", 
                   (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
                 )}>
-                  <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-                    {/* Digitized Stat */}
-                    <div className="md:col-span-4 group relative flex items-center gap-4 bg-white/80 backdrop-blur-xs p-5 rounded-xl border border-gray-200/80 shadow-xs transition-all hover:shadow-sm dark:bg-[#1f1f1f] dark:border-emerald-500/10 dark:hover:bg-[#1f1f1f]/80">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 transition-transform group-hover:scale-105">
-                        <i className="ph-duotone ph-file-arrow-up text-2xl" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-[10px] font-bold text-gray-400 tracking-wider uppercase dark:text-zinc-500">Digitized</div>
-                        <div className="text-2xl font-black text-gray-900 tracking-tight dark:text-zinc-50 truncate">
-                          {summary?.totalDigitizedDocsCount?.toLocaleString() || 0}
+                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 rounded-2xl bg-gray-50/80 p-6 border border-gray-200/60 shadow-inner dark:bg-black/20 dark:border-white/5">
+                    
+                    {/* Context & Formula */}
+                    <div className="flex-1 space-y-3">
+                      <div className="flex items-center gap-3">
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm border border-gray-200 text-pup-maroon dark:bg-card dark:border-white/10 dark:text-primary">
+                          <i className="ph-duotone ph-target text-xl" />
                         </div>
-                        <div className="w-full bg-gray-100 dark:bg-zinc-800 h-1.5 rounded-full mt-2 overflow-hidden">
-                          <div className="bg-emerald-500 h-full rounded-full transition-all duration-500" style={{ width: `${percent}%` }} />
+                        <div>
+                          <h3 className="text-sm font-black text-gray-900 tracking-tight dark:text-zinc-50">
+                            Digitization Target
+                          </h3>
+                          <div className="text-[10px] font-bold text-gray-400 tracking-widest uppercase dark:text-zinc-500 mt-0.5">
+                            Requirement Basis
+                          </div>
                         </div>
                       </div>
-                      <div className="absolute right-4 top-4 text-[10px] font-black text-emerald-600 dark:text-emerald-400 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-100/50 dark:bg-emerald-950/40 dark:border-emerald-900/20">
-                        {percent}%
+                      <div className="pl-13">
+                        <p className="text-[11px] font-medium text-gray-600 leading-relaxed dark:text-zinc-400 max-w-xl">
+                          {meta?.definitions?.expectedCountFormula || "All required documents based on program configuration."}
+                        </p>
                       </div>
                     </div>
 
-                    {/* Required Stat */}
-                    <div className="md:col-span-4 group flex items-center gap-4 bg-white/80 backdrop-blur-xs p-5 rounded-xl border border-gray-200/80 shadow-xs transition-all hover:shadow-sm dark:bg-[#1f1f1f] dark:border-red-500/10 dark:hover:bg-[#1f1f1f]/80">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg bg-pup-maroon/5 text-pup-maroon dark:bg-red-950/20 dark:text-red-400 transition-transform group-hover:scale-105">
-                        <i className="ph-duotone ph-list-checks text-2xl" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="text-[10px] font-bold text-gray-400 tracking-wider uppercase dark:text-zinc-500">Required</div>
-                        <div className="text-2xl font-black text-gray-900 tracking-tight dark:text-zinc-50 truncate">
-                          {summary?.totalExpectedDocsCount?.toLocaleString() || 0}
+                    {/* Progress Metrics Box */}
+                    <div className="w-full lg:w-[450px] shrink-0 bg-white p-5 rounded-xl border border-gray-200 shadow-sm dark:bg-card dark:border-white/10">
+                      <div className="flex items-end justify-between mb-4">
+                        <div className="flex flex-col">
+                          <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase dark:text-zinc-500 mb-1">
+                            Documents Digitized
+                          </span>
+                          <div className="flex items-baseline gap-2">
+                            <span className="text-3xl font-black text-gray-900 leading-none tracking-tighter dark:text-zinc-50">
+                              {summary?.totalDigitizedDocsCount?.toLocaleString() || 0}
+                            </span>
+                            <span className="text-sm font-bold text-gray-400 dark:text-zinc-500">
+                              / {summary?.totalExpectedDocsCount?.toLocaleString() || 0}
+                            </span>
+                          </div>
                         </div>
-                        <div className="w-full bg-gray-100 dark:bg-zinc-800 h-1.5 rounded-full mt-2 overflow-hidden opacity-30">
-                          <div className="bg-pup-maroon h-full rounded-full w-full dark:bg-red-400" />
+                        <div className="flex flex-col items-end">
+                           <Badge variant="outline" className={cn(
+                             "px-2.5 py-1 text-[10px] font-black border tracking-wider",
+                             percent >= 90 ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/50" : 
+                             percent >= 50 ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900/50" : 
+                             "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900/50"
+                           )}>
+                             {percent}% COMPLETE
+                           </Badge>
                         </div>
                       </div>
-                    </div>
-
-                    {/* Calculation Method */}
-                    <div className="md:col-span-4 flex flex-col justify-center bg-white/80 backdrop-blur-xs p-5 rounded-xl border border-gray-200/80 shadow-xs dark:bg-[#1f1f1f] dark:border-white/5">
-                      <div className="flex items-center gap-2 mb-2">
-                        <i className="ph-duotone ph-calculator text-base text-pup-maroon dark:text-primary animate-pulse" />
-                        <div className="text-[10px] font-bold text-gray-400 tracking-wider uppercase dark:text-zinc-500">Calculation Method</div>
-                      </div>
-                      <div className="text-[11px] font-medium text-gray-500 leading-relaxed dark:text-zinc-400 line-clamp-2">
-                        {meta?.definitions?.expectedCountFormula || "All required documents based on program configuration."}
+                      
+                      {/* Substantial Progress Bar */}
+                      <div className="relative h-3 w-full overflow-hidden rounded-full bg-gray-100 shadow-inner dark:bg-zinc-900">
+                        <div 
+                          className={cn(
+                            "absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out shadow-[inset_0_-2px_4px_rgba(0,0,0,0.1)]",
+                            percent >= 90 ? "bg-emerald-500" : percent >= 50 ? "bg-amber-500" : "bg-pup-maroon dark:bg-red-500"
+                          )}
+                          style={{ width: `${percent}%` }}
+                        />
                       </div>
                     </div>
                   </div>

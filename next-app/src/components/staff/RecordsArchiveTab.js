@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react"
 
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
+import FloatingActionBar from "@/components/shared/FloatingActionBar"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -17,6 +18,11 @@ import { Toggle } from "@/components/ui/toggle"
 import RoomMap2D from "@/components/staff/RoomMap2D"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
   Empty,
   EmptyHeader,
   EmptyTitle,
@@ -24,6 +30,82 @@ import {
   EmptyContent,
   EmptyMedia,
 } from "@/components/ui/empty"
+
+const FOLDER_COLORS = {
+  yellow: {
+    name: "Yellow",
+    back: "bg-[#dca11e] dark:bg-[#c28d17] border-[#c28d17] dark:border-[#a37613]",
+    front: "bg-[#f1b82d] dark:bg-[#d69f21] border-[#d69f21] dark:border-[#b88915]",
+    icon: "text-[#5c3e03] dark:text-[#452c02]",
+    title: "text-[#3e2702] dark:text-[#2d1c02]",
+    subtitle: "text-[#785002] dark:text-[#5c3e02]",
+    bubble: "bg-[#f1b82d]",
+    isLight: true,
+  },
+  red: {
+    name: "Red",
+    back: "bg-red-600 dark:bg-red-700 border-red-700 dark:border-red-800",
+    front: "bg-red-500 dark:bg-red-600 border-red-600 dark:border-red-700",
+    icon: "text-white/90",
+    title: "text-white",
+    subtitle: "text-white/70",
+    bubble: "bg-red-500",
+  },
+  blue: {
+    name: "Blue",
+    back: "bg-blue-600 dark:bg-blue-700 border-blue-700 dark:border-blue-800",
+    front: "bg-blue-500 dark:bg-blue-600 border-blue-600 dark:border-blue-700",
+    icon: "text-white/90",
+    title: "text-white",
+    subtitle: "text-white/70",
+    bubble: "bg-blue-500",
+  },
+  green: {
+    name: "Green",
+    back: "bg-emerald-600 dark:bg-emerald-700 border-emerald-700 dark:border-emerald-800",
+    front: "bg-emerald-500 dark:bg-emerald-600 border-emerald-600 dark:border-emerald-700",
+    icon: "text-white/90",
+    title: "text-white",
+    subtitle: "text-white/70",
+    bubble: "bg-emerald-500",
+  },
+  purple: {
+    name: "Purple",
+    back: "bg-purple-600 dark:bg-purple-700 border-purple-700 dark:border-purple-800",
+    front: "bg-purple-500 dark:bg-purple-600 border-purple-600 dark:border-purple-700",
+    icon: "text-white/90",
+    title: "text-white",
+    subtitle: "text-white/70",
+    bubble: "bg-purple-500",
+  },
+  pink: {
+    name: "Pink",
+    back: "bg-pink-600 dark:bg-pink-700 border-pink-700 dark:border-pink-800",
+    front: "bg-pink-500 dark:bg-pink-600 border-pink-600 dark:border-pink-700",
+    icon: "text-white/90",
+    title: "text-white",
+    subtitle: "text-white/70",
+    bubble: "bg-pink-500",
+  },
+  indigo: {
+    name: "Indigo",
+    back: "bg-indigo-600 dark:bg-indigo-700 border-indigo-700 dark:border-indigo-800",
+    front: "bg-indigo-500 dark:bg-indigo-600 border-indigo-600 dark:border-indigo-700",
+    icon: "text-white/90",
+    title: "text-white",
+    subtitle: "text-white/70",
+    bubble: "bg-indigo-500",
+  },
+  gray: {
+    name: "Gray",
+    back: "bg-gray-600 dark:bg-gray-700 border-gray-700 dark:border-gray-800",
+    front: "bg-gray-500 dark:bg-gray-600 border-gray-600 dark:border-gray-700",
+    icon: "text-white/90",
+    title: "text-white",
+    subtitle: "text-white/70",
+    bubble: "bg-gray-500",
+  },
+}
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { cn } from "@/lib/utils"
 
@@ -53,6 +135,10 @@ export default function RecordsArchiveTab({
   onPreviewDocument,
   onRestoreStudent,
   onUnfocusStudent,
+  selectedIds,
+  onSelectionChange,
+  onBulkArchive,
+  onBulkRestore,
 }) {
   const [listType, setListType] = useState("card")
   const [showArchived, setShowArchived] = useState(false)
@@ -60,12 +146,50 @@ export default function RecordsArchiveTab({
   const [page, setPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(9) // 9 fits nicely in 3-column card grid, 10 or more in table
 
+  const [folderColors, setFolderColors] = useState({})
+
+  useEffect(() => {
+    const saved = localStorage.getItem("pup-folder-colors")
+    if (saved) {
+      try {
+        setFolderColors(JSON.parse(saved))
+      } catch (e) {
+        console.error("Failed to parse folder colors", e)
+      }
+    }
+  }, [])
+
+  const updateFolderColor = (key, colorId) => {
+    const next = { ...folderColors, [key]: colorId }
+    setFolderColors(next)
+    localStorage.setItem("pup-folder-colors", JSON.stringify(next))
+  }
+
   const [prevFilters, setPrevFilters] = useState({
     currentLevel,
     showArchived,
     quickQuery,
     listType
   })
+
+  const toggleSelect = (id) => {
+    const next = new Set(selectedIds)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    onSelectionChange(next)
+  }
+
+  const toggleSelectAll = (items) => {
+    const allIds = items.map(it => it.student.studentNo)
+    const allSelected = allIds.every(id => selectedIds.has(id))
+    const next = new Set(selectedIds)
+    if (allSelected) {
+      allIds.forEach(id => next.delete(id))
+    } else {
+      allIds.forEach(id => next.add(id))
+    }
+    onSelectionChange(next)
+  }
 
   if (
     prevFilters.currentLevel !== currentLevel ||
@@ -610,30 +734,87 @@ export default function RecordsArchiveTab({
                   key={`folders-${showArchived}`}
                   className="animate-fade-up grid grid-cols-1 gap-4 p-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5"
                 >
-                  {filteredExplorerItems.map((it, index) => (
-                    <div
-                      key={index}
-                      onClick={it.disabled ? undefined : it.onClick}
-                      className={`group relative h-36 w-full transition-all duration-300 ${ it.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:-translate-y-1.5" }`}
-                    >
-                      {/* Realistic Folder Tab (Backside) */}
-                      <div className="absolute top-0 left-0 z-0 h-8 w-[38%] rounded-t-lg bg-[#dca11e] dark:bg-[#c28d17] transition-all duration-300 group-hover:scale-y-105"></div>
+                  {filteredExplorerItems.map((it, index) => {
+                    const theme = FOLDER_COLORS[folderColors[it.key]] || FOLDER_COLORS["yellow"]
+                    return (
+                      <div
+                        key={index}
+                        onClick={it.disabled ? undefined : it.onClick}
+                        className={`group relative h-36 w-full transition-all duration-300 ${ it.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:-translate-y-1.5" }`}
+                      >
+                        {/* Color Picker Popover */}
+                        {!it.disabled && (
+                          <div className="absolute top-4 right-3 z-30" onClick={(e) => e.stopPropagation()}>
+                            <Popover>
+                              <PopoverTrigger asChild>
+                                <button
+                                  type="button"
+                                  className={cn(
+                                    "flex h-8 w-8 items-center justify-center rounded-full transition-all opacity-0 group-hover:opacity-100 shadow-lg border-2 active:scale-95 cursor-pointer",
+                                    theme.isLight 
+                                      ? "bg-white border-black/10 text-[#5c3e03] hover:bg-gray-50" 
+                                      : "bg-zinc-900 border-white/20 text-white hover:bg-zinc-800"
+                                  )}
+                                  title="Change folder color"
+                                >
+                                  <i className="ph-bold ph-palette text-sm"></i>
+                                </button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-auto p-3 rounded-xl border-gray-200 shadow-2xl dark:bg-zinc-900 dark:border-white/10" side="top" align="end">
+                                <div className="flex items-center gap-2">
+                                  {Object.entries(FOLDER_COLORS).map(([cid, cfg]) => (
+                                    <button
+                                      key={cid}
+                                      type="button"
+                                      onClick={() => updateFolderColor(it.key, cid)}
+                                      className={cn(
+                                        "h-7 w-7 rounded-full border border-black/10 shadow-sm transition-all hover:scale-125 active:scale-90 cursor-pointer",
+                                        cfg.bubble,
+                                        folderColors[it.key] === cid ? "ring-2 ring-pup-maroon ring-offset-2 dark:ring-primary dark:ring-offset-zinc-900 scale-110" : "hover:shadow-md"
+                                      )}
+                                      title={cfg.name}
+                                    />
+                                  ))}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                          </div>
+                        )}
 
-                      {/* Realistic Folder Body (Frontside) */}
-                      <div className="absolute top-3 right-0 bottom-0 left-0 z-10 flex flex-col items-center justify-center rounded-lg rounded-tl-none bg-[#f1b82d] dark:bg-[#d69f21] border border-[#d69f21] p-4 transition-all duration-300 shadow-[0_2.5px_5px_rgba(0,0,0,0.15)] group-hover:shadow-[0_6px_12px_rgba(0,0,0,0.25)]">
-                        
-                        <i
-                          className={`ph-fill ${it.icon} mb-1 text-5xl text-[#5c3e03] dark:text-[#452c02] transition-transform duration-300 group-hover:scale-105`}
-                        ></i>
-                        <h3 className="w-full truncate px-1 text-center text-sm leading-tight font-black text-[#3e2702] sm:text-base">
-                          {it.title}
-                        </h3>
-                        <span className="mt-0.5 text-[9px] font-black tracking-widest text-[#785002]">
-                          {it.subtitle}
-                        </span>
+                        {/* Realistic Folder Tab (Backside) */}
+                        <div className={cn(
+                          "absolute top-0 left-0 z-0 h-8 w-[38%] rounded-t-lg transition-all duration-300 group-hover:scale-y-105 border-t border-l border-r",
+                          theme.back
+                        )}></div>
+
+                        {/* Realistic Folder Body (Frontside) */}
+                        <div className={cn(
+                          "absolute top-3 right-0 bottom-0 left-0 z-10 flex flex-col items-center justify-center rounded-lg rounded-tl-none border p-4 transition-all duration-300 shadow-[0_2.5px_5px_rgba(0,0,0,0.15)] group-hover:shadow-[0_6px_12px_rgba(0,0,0,0.25)]",
+                          theme.front
+                        )}>
+                          
+                          <i
+                            className={cn(
+                              `ph-fill ${it.icon} mb-1 text-5xl transition-transform duration-300 group-hover:scale-105`,
+                              theme.icon
+                            )}
+                          ></i>
+                          <h3 className={cn(
+                            "w-full truncate px-1 text-center text-sm leading-tight font-black sm:text-base",
+                            theme.title
+                          )}>
+                            {it.title}
+                          </h3>
+                          <span className={cn(
+                            "mt-0.5 text-[9px] font-black tracking-widest",
+                            theme.subtitle
+                          )}>
+                            {it.subtitle}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               ) : filteredExplorerItems.length === 0 ? (
                 <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
@@ -664,79 +845,104 @@ export default function RecordsArchiveTab({
                   key={`cards-${currentLevel}-${showArchived}`}
                   className="animate-fade-up grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3"
                 >
-                  {paginatedExplorerItems.map((row, index) => (
-                    <div
-                      key={index}
-                      className={`group relative flex cursor-pointer flex-col rounded-brand border border-gray-300 bg-white p-5 shadow-sm transition-all hover:border-gray-300 hover:shadow-md ${showArchived ? "opacity-90" : ""} dark:border-white/10 dark:bg-card dark:shadow-none dark:hover:border-zinc-700`}
-                      onClick={() => handleLocateStudentClick(row.student)}
-                    >
-                      <div className="mb-4 flex items-start gap-4">
-                        <Avatar className="h-12 w-12 shrink-0 border border-gray-100 shadow-sm dark:border-white/10 dark:shadow-none">
-                          <AvatarFallback
-                            className={`bg-gray-50 font-bold text-gray-400 transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 ${showArchived ? "text-red-400" : ""} dark:bg-card dark:text-zinc-500`}
-                          >
-                            <i className="ph-bold ph-user text-2xl"></i>
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0 flex-1">
-                          <h4 className="truncate text-base leading-tight font-bold text-gray-900 transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-50">
-                            {row.student.name}
-                          </h4>
-                          <div className="mt-1.5 flex items-center gap-2">
-                            <Badge
-                              variant="outline"
-                              className="rounded border-gray-200 px-1.5 py-0 font-mono text-[10px] font-bold text-gray-600 dark:border-white/10 dark:text-zinc-300"
+                  {paginatedExplorerItems.map((row, index) => {
+                    const isSelected = selectedIds.has(row.student.studentNo)
+                    return (
+                      <div
+                        key={index}
+                        className={cn(
+                          "group relative flex cursor-pointer flex-col rounded-brand border p-5 shadow-sm transition-all hover:border-gray-300 hover:shadow-md dark:shadow-none dark:hover:border-zinc-700",
+                          isSelected 
+                            ? "border-amber-200 bg-amber-50/30 dark:border-amber-900/30 dark:bg-amber-950/20" 
+                            : "border-gray-300 bg-white dark:border-white/10 dark:bg-card",
+                          showArchived && !isSelected && "opacity-90"
+                        )}
+                        onClick={() => handleLocateStudentClick(row.student)}
+                      >
+                        <div className="absolute top-4 right-4 z-20" onClick={(e) => e.stopPropagation()}>
+                           <input
+                             type="checkbox"
+                             className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:border-white/10 dark:text-primary"
+                             checked={isSelected}
+                             onChange={() => toggleSelect(row.student.studentNo)}
+                           />
+                        </div>
+                        <div className="mb-4 flex items-start gap-4">
+                          <Avatar className="h-12 w-12 shrink-0 border border-gray-100 shadow-sm dark:border-white/10 dark:shadow-none">
+                            <AvatarFallback
+                              className={cn(
+                                "font-bold transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-500",
+                                isSelected 
+                                  ? "bg-white text-pup-maroon dark:bg-zinc-800 dark:text-primary" 
+                                  : "bg-gray-50 text-gray-400 dark:bg-card"
+                              )}
                             >
-                              {row.student.studentNo}
-                            </Badge>
-                            {showArchived && (
-                              <Badge className="h-4 border-red-100 bg-red-50 px-1 text-[9px] font-black text-red-700 dark:bg-red-950/30">
-                                Archived
+                              <i className="ph-bold ph-user text-2xl"></i>
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="min-w-0 flex-1">
+                            <h4 className={cn(
+                              "truncate text-base leading-tight font-bold transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-50",
+                              isSelected ? "text-pup-maroon dark:text-primary" : "text-gray-900"
+                            )}>
+                              {row.student.name}
+                            </h4>
+                            <div className="mt-1.5 flex items-center gap-2">
+                              <Badge
+                                variant="outline"
+                                className="rounded border-gray-200 px-1.5 py-0 font-mono text-[10px] font-bold text-gray-600 dark:border-white/10 dark:text-zinc-300"
+                              >
+                                {row.student.studentNo}
                               </Badge>
+                              {showArchived && (
+                                <Badge className="h-4 border-red-100 bg-red-50 px-1 text-[9px] font-black text-red-700 dark:bg-red-950/30">
+                                  Archived
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-auto flex items-center justify-between border-t border-gray-100 pt-4 dark:border-white/10">
+                          <div className="flex items-center gap-1.5">
+                            <div className="flex h-6 w-6 items-center justify-center rounded bg-gray-50 text-gray-400 transition-colors group-hover:bg-red-50 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:bg-card dark:text-zinc-500">
+                              <i className="ph-duotone ph-map-pin text-sm"></i>
+                            </div>
+                            <span className="text-[10px] font-black tracking-widest text-gray-500 dark:text-zinc-400">
+                              R-{row.student.room} • C-{row.student.cabinet}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {showArchived ? (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setRestoreTarget(row.student)
+                                  setRestoreStudentOpen(true)
+                                }}
+                                className="h-8 rounded-brand border-green-200 px-2.5 text-[9px] font-bold text-green-700 shadow-xs hover:bg-green-50"
+                              >
+                                <i className="ph-bold ph-arrow-counter-clockwise mr-1"></i>
+                                Restore
+                              </Button>
+                            ) : (
+                              <>
+                                <Badge
+                                  variant="secondary"
+                                  className="border-transparent bg-gray-100 px-2 text-[10px] font-black tracking-tighter text-gray-700 dark:text-zinc-200 dark:bg-muted"
+                                >
+                                  D-{row.student.drawer}
+                                </Badge>
+                                <i className="ph-bold ph-caret-right text-gray-300 transition-all group-hover:translate-x-0.5 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-600"></i>
+                              </>
                             )}
                           </div>
                         </div>
                       </div>
-
-                      <div className="mt-auto flex items-center justify-between border-t border-gray-100 pt-4 dark:border-white/10">
-                        <div className="flex items-center gap-1.5">
-                          <div className="flex h-6 w-6 items-center justify-center rounded bg-gray-50 text-gray-400 transition-colors group-hover:bg-red-50 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:bg-card dark:text-zinc-500">
-                            <i className="ph-duotone ph-map-pin text-sm"></i>
-                          </div>
-                          <span className="text-[10px] font-black tracking-widest text-gray-500 dark:text-zinc-400">
-                            R-{row.student.room} • C-{row.student.cabinet}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {showArchived ? (
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setRestoreTarget(row.student)
-                                setRestoreStudentOpen(true)
-                              }}
-                              className="h-8 rounded-brand border-green-200 px-2.5 text-[9px] font-bold text-green-700 shadow-xs hover:bg-green-50"
-                            >
-                              <i className="ph-bold ph-arrow-counter-clockwise mr-1"></i>
-                              Restore
-                            </Button>
-                          ) : (
-                            <>
-                              <Badge
-                                variant="secondary"
-                                className="border-transparent bg-gray-100 px-2 text-[10px] font-black tracking-tighter text-gray-700 dark:text-zinc-200 dark:bg-muted"
-                              >
-                                D-{row.student.drawer}
-                              </Badge>
-                              <i className="ph-bold ph-caret-right text-gray-300 transition-all group-hover:translate-x-0.5 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-600"></i>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               ) : (
                 <div 
@@ -746,84 +952,104 @@ export default function RecordsArchiveTab({
                   <table className="min-w-full text-sm">
                     <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">
                       <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 dark:text-zinc-300 dark:border-white/10">
-                        <th className="w-[80px] p-4 text-center">
-                          <i className="ph-bold ph-user-circle text-[11px]"></i>
+                        <th className="w-[40px] p-4 text-center">
+                           <input
+                             type="checkbox"
+                             className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:border-white/10 dark:text-primary"
+                             checked={paginatedExplorerItems.length > 0 && paginatedExplorerItems.every(it => selectedIds.has(it.student.studentNo))}
+                             onChange={() => toggleSelectAll(paginatedExplorerItems)}
+                           />
                         </th>
                         <th className="w-48 p-4">Student No.</th>
                         <th className="p-4">Full Name</th>
                         <th className="w-56 p-4">Physical Location</th>
                         <th className="w-40 p-4 text-right">
-                           <i className="ph-bold ph-dots-three-outline text-[11px]"></i>
                         </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100 dark:divide-white/10">
-                      {paginatedExplorerItems.map((row) => (
-                        <tr
-                          key={row.key}
-                          className="group cursor-pointer transition-all duration-200 hover:bg-gray-50 dark:hover:bg-white/5 dark:bg-card"
-                          onClick={() => handleLocateStudentClick(row.student)}
-                        >
-                          <td className="p-4">
-                            <Avatar className="mx-auto h-9 w-9 border border-gray-100 shadow-xs transition-transform group-hover:scale-110 dark:border-white/10 dark:bg-muted">
-                              <AvatarFallback className="bg-gray-50 text-gray-400 dark:bg-zinc-800 dark:text-zinc-500">
-                                <i className="ph-bold ph-user text-base"></i>
-                              </AvatarFallback>
-                            </Avatar>
-                          </td>
-                          <td className="p-4 font-mono text-xs font-bold text-gray-600 dark:text-zinc-300">
-                            {row.student.studentNo}
-                          </td>
-                          <td className="p-4">
-                            <div className="flex flex-col">
-                              <span className="text-sm font-black text-gray-900 transition-colors group-hover:text-pup-maroon dark:group-hover:text-primary dark:text-zinc-50">
-                                {row.student.name}
-                              </span>
-                              {showArchived && (
-                                <Badge className="mt-1 w-fit border-red-100 bg-red-50 px-1.5 text-[8px] font-black text-red-700 dark:bg-red-950/30">
-                                  Archived Record
-                                </Badge>
-                              )}
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <div className="flex items-center gap-2">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gray-50 text-gray-400 group-hover:bg-red-50 group-hover:text-pup-maroon dark:bg-zinc-800 dark:group-hover:bg-primary/10 dark:group-hover:text-primary">
-                                <i className="ph-fill ph-archive-box text-base"></i>
+                      {paginatedExplorerItems.map((row) => {
+                        const isSelected = selectedIds.has(row.student.studentNo)
+                        return (
+                          <tr
+                            key={row.key}
+                            className={cn(
+                              "group cursor-pointer transition-all duration-200 select-none",
+                              isSelected 
+                                ? "bg-amber-50 dark:bg-amber-950/40" 
+                                : "hover:bg-gray-50 dark:hover:bg-white/5 dark:bg-card"
+                            )}
+                            onClick={() => handleLocateStudentClick(row.student)}
+                          >
+                            <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
+                               <input
+                                 type="checkbox"
+                                 className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:border-white/10 dark:text-primary"
+                                 checked={isSelected}
+                                 onChange={() => toggleSelect(row.student.studentNo)}
+                               />
+                            </td>
+                            <td className="p-4 font-mono text-xs font-bold text-gray-600 dark:text-zinc-300">
+                              {row.student.studentNo}
+                            </td>
+                            <td className="p-4">
+                              <div className="flex flex-col">
+                                <span className={cn(
+                                  "text-sm font-black transition-colors",
+                                  isSelected 
+                                    ? "text-pup-maroon dark:text-primary" 
+                                    : "text-gray-900 group-hover:text-pup-maroon dark:group-hover:text-primary dark:text-zinc-50"
+                                )}>
+                                  {row.student.name}
+                                </span>
+                                {showArchived && (
+                                  <Badge className="mt-1 w-fit border-red-100 bg-red-50 px-1.5 text-[8px] font-black text-red-700 dark:bg-red-950/30">
+                                    Archived Record
+                                  </Badge>
+                                )}
                               </div>
-                              <span className="text-[10px] font-black tracking-widest text-gray-500 dark:text-zinc-400">
-                                Cabinet {row.student.cabinet} • Drawer {row.student.drawer}
-                              </span>
-                            </div>
-                          </td>
-                          <td className="p-4 text-right">
-                             {showArchived ? (
-                               <Button
-                                 variant="outline"
-                                 size="sm"
-                                 onClick={(e) => {
-                                   e.stopPropagation()
-                                   setRestoreTarget(row.student)
-                                   setRestoreStudentOpen(true)
-                                 }}
-                                 className="h-9 rounded-brand border-green-200 bg-green-50/50 px-4 text-[10px] font-black text-green-700 shadow-xs hover:bg-green-100"
-                               >
-                                 <i className="ph-bold ph-arrow-counter-clockwise mr-2"></i>
-                                 Restore
-                               </Button>
-                             ) : (
-                               <Button
-                                 variant="outline"
-                                 size="sm"
-                                 className="h-9 rounded-brand border-gray-200 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 shadow-xs transition-all hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-primary dark:text-zinc-300 dark:bg-zinc-800 dark:border-white/10"
-                               >
-                                 <i className="ph-bold ph-magnifying-glass-plus mr-2 text-sm"></i>
-                                 Locate
-                               </Button>
-                             )}
-                          </td>
-                        </tr>
-                      ))}
+                            </td>
+                            <td className="p-4">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] font-black tracking-widest text-gray-500 dark:text-zinc-400">
+                                  Cabinet {row.student.cabinet} • Drawer {row.student.drawer}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="p-4 text-right">
+                               {showArchived ? (
+                                 <Button
+                                   variant="outline"
+                                   size="sm"
+                                   onClick={(e) => {
+                                     e.stopPropagation()
+                                     setRestoreTarget(row.student)
+                                     setRestoreStudentOpen(true)
+                                   }}
+                                   className="h-9 rounded-brand border-green-200 bg-green-50/50 px-4 text-[10px] font-black text-green-700 shadow-xs hover:bg-green-100"
+                                 >
+                                   <i className="ph-bold ph-arrow-counter-clockwise mr-2"></i>
+                                   Restore
+                                 </Button>
+                               ) : (
+                                 <Button
+                                   variant="outline"
+                                   size="sm"
+                                   className={cn(
+                                     "h-9 rounded-brand border px-4 text-[10px] font-black tracking-widest shadow-xs transition-all",
+                                     isSelected 
+                                       ? "border-amber-300 bg-white text-pup-maroon hover:border-pup-maroon dark:border-amber-700 dark:bg-zinc-800 dark:text-primary" 
+                                       : "border-gray-200 bg-white text-gray-600 hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-primary dark:text-zinc-300 dark:bg-zinc-800 dark:border-white/10"
+                                   )}
+                                 >
+                                   <i className="ph-bold ph-magnifying-glass-plus mr-2 text-sm"></i>
+                                   Locate
+                                 </Button>
+                               )}
+                            </td>
+                          </tr>
+                        )
+                      })}
                     </tbody>
                   </table>
                 </div>
@@ -915,6 +1141,58 @@ export default function RecordsArchiveTab({
           setRestoreTarget(null)
         }}
       />
+
+      {selectedIds.size > 0 && (
+        <FloatingActionBar
+          selectedCount={selectedIds.size}
+          selectionStatus="Students Selected"
+          showOnSingle={true}
+          onCancel={() => onSelectionChange(new Set())}
+          customContent={
+            <div className="flex items-center gap-3">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onSelectionChange(new Set())
+                }}
+                className="h-9 px-4 text-xs font-bold text-gray-500 transition-colors hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-400 dark:bg-red-950/30 dark:hover:bg-transparent cursor-pointer"
+              >
+                Deselect All
+              </Button>
+              {showArchived ? (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onBulkRestore()
+                  }}
+                  className="flex h-10 items-center gap-3 rounded-brand bg-emerald-600 px-6 text-xs font-black text-white shadow-lg shadow-emerald-900/20 active:scale-95 transition-all hover:bg-emerald-700 dark:bg-emerald-600 dark:shadow-none cursor-pointer"
+                >
+                  <i className="ph-bold ph-arrow-counter-clockwise text-sm"></i>
+                  Restore
+                </Button>
+              ) : (
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onBulkArchive()
+                  }}
+                  className="flex h-10 items-center gap-3 rounded-brand btn-brand-red px-6 text-xs font-black text-white shadow-lg shadow-red-900/20 active:scale-95 transition-all dark:shadow-none cursor-pointer"
+                >
+                  <i className="ph-bold ph-archive text-sm"></i>
+                  Archive
+                </Button>
+              )}
+            </div>
+          }
+        />
+      )}
     </div>
   )
 }
