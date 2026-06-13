@@ -1157,15 +1157,47 @@ function StaffPageContent() {
     refreshDocuments,
     docsForm,
     ]);
+  const handleRescan = useCallback(async (studentNo, docType, docId, filename, mimeType) => {
+    const s = students.find((x) => String(x.studentNo || x.student_no || "").trim().toUpperCase() === String(studentNo || "").trim().toUpperCase());
+    if (s) {
+      applyStudentToPdfForm(s, docType);
+      setUploadStudentIsExisting(true);
+    } else {
+      setNewRec((p) => ({
+        ...p,
+        studentNo: studentNo || "",
+        docType: docType || "",
+      }));
+      setUploadStudentIsExisting(false);
+    }
+    clearAllUploadFieldErrors();
+    setView("upload");
+
+    if (docId) {
+      try {
+        const res = await fetch(`/api/documents/${docId}`);
+        if (res.ok) {
+          const blob = await res.blob();
+          const file = new File([blob], filename || "document.pdf", {
+            type: mimeType || "application/pdf",
+          });
+          setUploadedFile(file);
+        }
+      } catch (err) {
+        console.error("Failed to preload rejected document for rescan:", err);
+      }
+    }
+  }, [students, applyStudentToPdfForm, clearAllUploadFieldErrors]);
+
   const sidebarItems = [
     { type: "header", label: "Operations" },
-    { key: "requests", label: "Alumni requests", iconClass: "ph-bold ph-tray-arrow-up" },
-    { key: "upload", label: "Scan & upload", iconClass: "ph-bold ph-scan" },
+    { key: "requests", label: "Alumni Requests", iconClass: "ph-bold ph-tray-arrow-up" },
+    { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
     { key: "documents", label: "Documents", iconClass: "ph-bold ph-file-text" },
     { key: "notifications", label: "Notifications", iconClass: "ph-bold ph-bell", badge: notificationsUnread },
 
-    { type: "header", label: "Records archive" },
-    { key: "search", label: "Records & archive", iconClass: "ph-bold ph-archive-box" },
+    { type: "header", label: "Records Archive" },
+    { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
   ];
 
   if (loading) {
@@ -1571,51 +1603,7 @@ function StaffPageContent() {
               docsLoading={docsLoading}
               docsError={docsError}
               docsRows={docsRows}
-              updateDoc={async (id, data) => {
-                try {
-                  let r;
-                  if (data?.file) {
-                    const form = new FormData();
-                    const sn = String(data.studentNo || "").trim();
-                    const dt = String(data.docType || "").trim();
-                    form.set("studentNo", sn);
-                    form.set("studentName", String(data.studentName || "").trim());
-                    form.set("docType", dt);
-
-                    let fileToUpload = data.file;
-                    try {
-                      const cleanSN = sn.toUpperCase().replace(/[^a-zA-Z0-9-]/g, "_") || "UNKNOWN";
-                      const cleanDT = dt.replace(/[^a-zA-Z0-9-]/g, "_") || "DOC";
-                      const ext = (fileToUpload.name || "file.pdf").split(".").pop().toLowerCase();
-                      const newName = `${cleanSN}_${cleanDT}.${ext}`;
-                      fileToUpload = new File([fileToUpload], newName, { type: fileToUpload.type });
-                    } catch (e) {
-                      console.error("[UpdateDoc Rename Error]", e);
-                    }
-
-                    form.set("file", fileToUpload);
-                    r = await fetch(`/api/documents/${id}`, {
-                      method: "PATCH",
-                      body: form,
-                    });
-                  } else {
-                    r = await fetch(`/api/documents/${id}`, {
-                      method: "PATCH",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify(data),
-                    });
-                  }
-                  const payload = await r.json().catch(() => null);
-                  if (!r.ok || !payload?.ok) {
-                    throw new Error(payload?.error || "Update failed");
-                  }
-                  showToast({ title: "Document Updated", description: "Changes to the document have been saved." });
-                  refreshDocuments(docsForm);
-                  fetchAllDocs();
-                } catch (err) {
-                  showToast({ title: "Update Failed", description: err.message }, true);
-                }
-              }}
+              onRescan={handleRescan}
               onUpdateStudent={async (studentNo, data) => {
                 try {
                   const res = await fetch(`/api/students/${encodeURIComponent(studentNo)}`, {
@@ -1664,16 +1652,6 @@ function StaffPageContent() {
                   null
                 );
               })()}
-              onPreviewDocument={(docType, name, no, id) => {
-                setPreview({
-                  docType,
-                  studentName: name,
-                  studentNo: no,
-                  docId: id,
-                  refId: `DOC-${Date.now()}`,
-                });
-                setPreviewOpen(true);
-              }}
             />
           </TabsContent>
 
@@ -1690,37 +1668,7 @@ function StaffPageContent() {
                 });
                 setPreviewOpen(true);
               }}
-              onRescan={async (studentNo, docType, docId, filename, mimeType) => {
-                const s = students.find((x) => String(x.studentNo || x.student_no || "").trim().toUpperCase() === String(studentNo || "").trim().toUpperCase());
-                if (s) {
-                  applyStudentToPdfForm(s, docType);
-                  setUploadStudentIsExisting(true);
-                } else {
-                  setNewRec((p) => ({
-                    ...p,
-                    studentNo: studentNo || "",
-                    docType: docType || "",
-                  }));
-                  setUploadStudentIsExisting(false);
-                }
-                clearAllUploadFieldErrors();
-                setView("upload");
-
-                if (docId) {
-                  try {
-                    const res = await fetch(`/api/documents/${docId}`);
-                    if (res.ok) {
-                      const blob = await res.blob();
-                      const file = new File([blob], filename || "document.pdf", {
-                        type: mimeType || "application/pdf",
-                      });
-                      setUploadedFile(file);
-                    }
-                  } catch (err) {
-                    console.error("Failed to preload rejected document for rescan:", err);
-                  }
-                }
-              }}
+              onRescan={handleRescan}
             />
           </TabsContent>
         </main>

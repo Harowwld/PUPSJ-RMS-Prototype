@@ -151,7 +151,7 @@ export default function BackupTable({
                           className="mt-6 flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                         >
                           <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                          CLEAR SEARCH
+                          Clear Search
                         </Button>
                       ) : (
                         <Button
@@ -159,7 +159,7 @@ export default function BackupTable({
                           className="mt-6 flex h-10 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md px-8 font-black tracking-widest text-white shadow-lg active:scale-95 transition-all dark:shadow-none"
                         >
                           <i className="ph-bold ph-lightning"></i>
-                          CREATE FULL BACKUP
+                          Create Full Backup
                         </Button>
                       )}
                     </EmptyHeader>

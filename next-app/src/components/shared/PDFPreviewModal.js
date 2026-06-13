@@ -48,9 +48,12 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
 
   const docId = preview?.docId
 
+  if (!open && isFullscreen) {
+    setIsFullscreen(false)
+  }
+
   useEffect(() => {
     if (!open) {
-      setIsFullscreen(false)
       if (typeof document !== "undefined") {
         document.body.style.pointerEvents = ""
         document.body.style.overflow = ""

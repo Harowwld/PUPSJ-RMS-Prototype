@@ -331,7 +331,7 @@ export default function LogTable({
             className="mt-6 rounded-full border-gray-200 font-bold hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/10 dark:bg-card"
           >
             <i className="ph-bold ph-arrows-clockwise mr-2 animate-spin"></i>
-            RETRY LOADING
+            Retry Loading
           </Button>
         </EmptyHeader>
       </Empty>
@@ -423,7 +423,7 @@ export default function LogTable({
                           </EmptyMedia>
                         </div>
                         <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
-                          No activity found
+                          No Activity Found
                         </EmptyTitle>
                         <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                           Try adjusting your search filters to find what you&apos;re looking for.
@@ -448,7 +448,7 @@ export default function LogTable({
                             className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                           >
                             <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                            CLEAR SEARCH
+                            Clear Search
                           </Button>
                         )}
                       </EmptyHeader>

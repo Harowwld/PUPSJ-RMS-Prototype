@@ -481,7 +481,7 @@ export default function DocTypesTab({
                               ) : (
                                 <>
                                   <i className="ph-bold ph-plus mr-2"></i>
-                                  ADD
+                                  Add
                                 </>
                               )}
                             </Button>
@@ -493,7 +493,7 @@ export default function DocTypesTab({
                               variant="outline"
                               className="animate-pulse border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-black tracking-wider text-amber-700 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-500/50"
                             >
-                              UNSAVED DRAFT
+                              Unsaved Draft
                             </Badge>
                           ) : (
                             <Badge

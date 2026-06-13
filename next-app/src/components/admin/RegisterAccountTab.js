@@ -59,28 +59,48 @@ export default function RegisterAccountTab({
   // Auto-fill ID
   useEffect(() => {
     if (!isIdManual && suggestedId && createForm.id !== suggestedId) {
-      setCreateForm(f => ({ ...f, id: suggestedId }))
-      setLastAutoFilled(prev => ({ ...prev, id: true }))
-      const timer = setTimeout(() => setLastAutoFilled(prev => ({ ...prev, id: false })), 1000)
-      return () => clearTimeout(timer)
+      const timer = setTimeout(() => {
+        setCreateForm(f => ({ ...f, id: suggestedId }))
+        setLastAutoFilled(prev => ({ ...prev, id: true }))
+      }, 0)
+      const resetTimer = setTimeout(() => {
+        setLastAutoFilled(prev => ({ ...prev, id: false }))
+      }, 1000)
+      return () => {
+        clearTimeout(timer)
+        clearTimeout(resetTimer)
+      }
     }
     // If name is cleared, also clear the non-manual ID
     if (!isIdManual && !suggestedId && createForm.id !== "") {
-      setCreateForm(f => ({ ...f, id: "" }))
+      const timer = setTimeout(() => {
+        setCreateForm(f => ({ ...f, id: "" }))
+      }, 0)
+      return () => clearTimeout(timer)
     }
   }, [suggestedId, isIdManual, createForm.id, setCreateForm])
 
   // Auto-fill Email
   useEffect(() => {
     if (!isEmailManual && suggestedEmail && createForm.email !== suggestedEmail) {
-      setCreateForm(f => ({ ...f, email: suggestedEmail }))
-      setLastAutoFilled(prev => ({ ...prev, email: true }))
-      const timer = setTimeout(() => setLastAutoFilled(prev => ({ ...prev, email: false })), 1000)
-      return () => clearTimeout(timer)
+      const timer = setTimeout(() => {
+        setCreateForm(f => ({ ...f, email: suggestedEmail }))
+        setLastAutoFilled(prev => ({ ...prev, email: true }))
+      }, 0)
+      const resetTimer = setTimeout(() => {
+        setLastAutoFilled(prev => ({ ...prev, email: false }))
+      }, 1000)
+      return () => {
+        clearTimeout(timer)
+        clearTimeout(resetTimer)
+      }
     }
     // If name/role is cleared, also clear the non-manual email
     if (!isEmailManual && !suggestedEmail && createForm.email !== "") {
-      setCreateForm(f => ({ ...f, email: "" }))
+      const timer = setTimeout(() => {
+        setCreateForm(f => ({ ...f, email: "" }))
+      }, 0)
+      return () => clearTimeout(timer)
     }
   }, [suggestedEmail, isEmailManual, createForm.email, setCreateForm])
 
@@ -158,7 +178,7 @@ export default function RegisterAccountTab({
                 className="h-9 rounded-md border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-white/10 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
               >
                 <i className="ph-bold ph-arrow-left mr-1.5 text-xs"></i>
-                BACK TO DIRECTORY
+                Back to Directory
               </Button>
               <Button
                 variant="outline"
@@ -168,7 +188,7 @@ export default function RegisterAccountTab({
                 className="h-9 rounded-md border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
               >
                 <i className="ph-bold ph-arrow-counter-clockwise mr-1.5 text-xs"></i>
-                RESET FORM
+                Reset Form
               </Button>
             </div>
           </div>
@@ -397,12 +417,12 @@ export default function RegisterAccountTab({
                   {isLoading ? (
                     <>
                       <i className="ph-bold ph-circle-notch animate-spin text-lg"></i>
-                      CREATING...
+                      Creating...
                     </>
                   ) : (
                     <>
                       <i className="ph-bold ph-user-circle-plus text-lg"></i>
-                      CREATE ACCOUNT
+                      Create Account
                     </>
                   )}
                 </Button>
@@ -417,7 +437,7 @@ export default function RegisterAccountTab({
           title="Confirm Registration"
           variant="brand"
           message="Review the provisioning details below before creating the new system credentials."
-          confirmLabel={countdown > 0 ? `CONFIRM (${countdown}s)` : "CONFIRM REGISTRATION"}
+          confirmLabel={countdown > 0 ? `Confirm (${countdown}s)` : "Confirm Registration"}
           confirmClassName="bg-pup-maroon hover:bg-red-900 text-white"
           buttonIcon={countdown > 0 ? "ph-bold ph-clock" : "ph-bold ph-check-circle"}
           disabled={countdown > 0}

@@ -542,7 +542,7 @@ export default function SectionsTab({
                             ) : (
                               <>
                                 <i className="ph-bold ph-plus mr-2"></i> 
-                                ADD
+                                Add
                               </>
                             )}
                             </Button>
@@ -554,14 +554,14 @@ export default function SectionsTab({
                               variant="outline"
                               className="border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-black tracking-wider text-amber-700 animate-pulse dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-500/50"
                             >
-                              UNSAVED DRAFT
+                              Unsaved Draft
                             </Badge>
                           ) : (
                             <Badge
                               variant="outline"
                               className="border-gray-200 bg-gray-100 px-2.5 py-1 text-[9px] font-bold tracking-wider text-gray-400 dark:border-white/10 dark:text-zinc-500 dark:bg-muted"
                             >
-                              NEW RECORD
+                              New Record
                             </Badge>
                           )}
                         </td>

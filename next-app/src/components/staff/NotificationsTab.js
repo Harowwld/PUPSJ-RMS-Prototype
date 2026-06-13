@@ -500,7 +500,7 @@ export default function NotificationsTab({
                               onClick={() => handleSort("doc_type")}
                               className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
                             >
-                              Type{" "}
+                              Document Type{" "}
                               <SortIndicator
                                 column="doc_type"
                                 sortBy={sortBy}
@@ -588,15 +588,16 @@ export default function NotificationsTab({
                               >
                                 <td className="p-4">
                                   <div className="flex items-center gap-2">
-                                    <div
+                                    <Badge
+                                      variant="outline"
                                       className={cn(
-                                        "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black tracking-wider shadow-xs transition-all",
+                                        "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black tracking-wider shadow-none transition-all",
                                         ui.badge
                                       )}
                                     >
                                       <i className={cn("ph-fill text-[10px]", ui.icon)}></i>
                                       {ui.label}
-                                    </div>
+                                    </Badge>
                                     {isUnread ? (
                                       <span className="animate-pulse text-[9px] font-extrabold tracking-widest text-pup-maroon dark:text-primary">
                                         New
@@ -611,10 +612,13 @@ export default function NotificationsTab({
                                   {n.student_name || "—"}
                                 </td>
                                 <td className="p-4">
-                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[10px] font-black tracking-wider text-pup-maroon whitespace-nowrap dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
+                                  <Badge
+                                    variant="outline"
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[10px] font-black tracking-wider text-pup-maroon whitespace-nowrap dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
+                                  >
                                     <i className="ph-bold ph-file text-[11px]"></i>
                                     {n.doc_type}
-                                  </span>
+                                  </Badge>
                                 </td>
                                 <td className="p-4 text-gray-700 dark:text-zinc-200">
                                   <div className="max-w-[200px] truncate text-xs font-medium">
@@ -891,30 +895,36 @@ export default function NotificationsTab({
                       <p className="text-base font-bold text-gray-900 dark:text-zinc-50">{selectedNotif?.student_no}</p>
                     </div>
                     <div>
-                      <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase">Document Category</label>
+                      <label className="text-[10px] font-black tracking-widest text-gray-400">Document Category</label>
                       <div className="mt-1.5">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[10px] font-black uppercase tracking-wider text-pup-maroon dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
+                        <Badge
+                          variant="outline"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[10px] font-black tracking-wider text-pup-maroon dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
+                        >
                           <i className="ph-bold ph-file text-[11px]"></i>
                           {selectedNotif?.doc_type}
-                        </span>
+                        </Badge>
                       </div>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100 pb-2 dark:text-zinc-400 dark:border-white/10">Review Summary</h4>
+                  <h4 className="text-[11px] font-bold text-gray-500 tracking-widest border-b border-gray-100 pb-2 dark:text-zinc-400 dark:border-white/10">Review Summary</h4>
                   <div className="mt-5 space-y-5">
                     <div>
-                      <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase">Approval Status</label>
+                      <label className="text-[10px] font-black tracking-widest text-gray-400">Approval Status</label>
                       <div className="mt-1.5">
                         {selectedNotif && (() => {
                           const ui = statusUi(selectedNotif.approval_status)
                           return (
-                            <div className={cn("flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-wider shadow-xs", ui.badge)}>
+                            <Badge
+                              variant="outline"
+                              className={cn("flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black tracking-wider shadow-none", ui.badge)}
+                            >
                               <i className={cn("ph-fill text-[11px]", ui.icon)}></i>
                               {ui.label}
-                            </div>
+                            </Badge>
                           )
                         })()}
                       </div>
