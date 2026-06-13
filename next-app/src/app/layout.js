@@ -2,9 +2,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
-import { Inter_Tight } from "next/font/google";
+import { Inter } from "next/font/google";
 
-const interTight = Inter_Tight({
+const inter = Inter({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
   variable: "--font-sans",
@@ -13,12 +13,15 @@ const interTight = Inter_Tight({
 
 export const metadata = {
   title: "PUP E-Manage",
-  description: "Student Record Keeping System",
-};
+  description: "Records Management System",
+  icons: {
+    icon: '/icon.png',
+  },
+}
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" className={interTight.variable} suppressHydrationWarning>
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
         <link rel="stylesheet" href="/assets/vendor/phosphor/bold/style.css" />
         <link rel="stylesheet" href="/assets/vendor/phosphor/fill/style.css" />
@@ -28,6 +31,8 @@ export default function RootLayout({ children }) {
         />
         <link rel="stylesheet" href="/assets/vendor/phosphor/thin/style.css" />
         <link rel="stylesheet" href="/assets/vendor/phosphor/light/style.css" />
+
+        <link rel="icon" type="image/png" href="/icon.png" />
       </head>
       <body className="antialiased font-sans">
         <ThemeProvider

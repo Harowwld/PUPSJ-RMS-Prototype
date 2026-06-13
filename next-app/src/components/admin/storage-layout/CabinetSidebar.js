@@ -41,14 +41,14 @@ const CabinetSidebar = memo(({
         <div className="flex items-center gap-4">
           <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
             <i className={cn(
-              "text-2xl",
+              "text-xl",
               selectedCabinetIds.size === 0 ? "ph-duotone ph-mouse-simple" :
               selectedCabinetIds.size > 1 ? "ph-duotone ph-stack" :
               selectedCabinet?.isDoor ? "ph-duotone ph-door-open" : "ph-duotone ph-archive"
             )}></i>
           </div>
           <div>
-            <CardTitle className="text-xl leading-none font-black tracking-tight text-gray-900 dark:text-zinc-50">
+            <CardTitle className="text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
               {selectedCabinetIds.size === 0 ? "Selection Details" :
                selectedCabinetIds.size > 1 ? "Group Selection" :
                selectedCabinet?.isDoor ? "Entrance Details" : "Cabinet Details"}
@@ -70,7 +70,7 @@ const CabinetSidebar = memo(({
             type="button"
             onClick={() => setActiveTab("properties")}
             className={cn(
-              "group flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 px-4 text-xs font-bold transition-all duration-200 active:scale-[0.98]",
+              "group flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 px-4 text-xs font-semibold transition-all duration-200 active:scale-[0.98]",
               activeTab === "properties"
                 ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-[#b94642] dark:ring-white/10"
                 : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
@@ -83,7 +83,7 @@ const CabinetSidebar = memo(({
             type="button"
             onClick={() => setActiveTab("history")}
             className={cn(
-              "group flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 px-4 text-xs font-bold transition-all duration-200 active:scale-[0.98]",
+              "group flex h-10 flex-1 cursor-pointer items-center justify-center gap-2 px-4 text-xs font-semibold transition-all duration-200 active:scale-[0.98]",
               activeTab === "history"
                 ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-[#b94642] dark:ring-white/10"
                 : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
@@ -99,9 +99,9 @@ const CabinetSidebar = memo(({
             {selectedCabinetIds.size > 1 ? (
               <div className="flex h-[320px] flex-col items-center justify-center text-center">
                 <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-gray-50 text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
-                  <i className="ph-duotone ph-stack text-3xl"></i>
+                  <i className="ph-duotone ph-stack text-xl"></i>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-zinc-50">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                   Multiple Selection
                 </h3>
                 <p className="mt-1 max-w-[220px] text-sm font-medium text-gray-600 dark:text-zinc-300">
@@ -113,9 +113,9 @@ const CabinetSidebar = memo(({
               <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                    <i className="ph-duotone ph-mouse-left-click text-3xl text-pup-maroon dark:text-primary"></i>
+                    <i className="ph-duotone ph-mouse-left-click text-xl text-pup-maroon dark:text-primary"></i>
                   </EmptyMedia>
-                  <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
+                  <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                     No cabinet selected
                   </EmptyTitle>
                   <EmptyDescription className="mt-1 max-w-[200px] text-sm font-medium text-gray-600 dark:text-zinc-300">
@@ -132,7 +132,7 @@ const CabinetSidebar = memo(({
                         type="button"
                         variant="outline"
                         onClick={duplicateSelectedCabinet}
-                        className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-gray-300 hover:bg-red-50 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+                        className="h-10 rounded-brand border-gray-300 px-4 font-semibold shadow-sm hover:border-gray-300 hover:bg-red-50 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
                       >
                         <i className="ph-bold ph-copy mr-2 text-pup-maroon dark:text-primary" />
                         DUPLICATE
@@ -141,7 +141,7 @@ const CabinetSidebar = memo(({
                         type="button"
                         variant="outline"
                         onClick={() => setBulkConfirmOpen(true)}
-                        className="h-10 rounded-brand border-gray-300 px-4 font-bold shadow-sm hover:border-gray-300 hover:bg-red-50 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+                        className="h-10 rounded-brand border-gray-300 px-4 font-semibold shadow-sm hover:border-gray-300 hover:bg-red-50 dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
                       >
                         <i className="ph-bold ph-trash mr-2 text-pup-maroon dark:text-primary" />
                         REMOVE CABINET
@@ -152,7 +152,7 @@ const CabinetSidebar = memo(({
 
                 {!selectedCabinet.isDoor && (
                   <div>
-                    <div className="mb-2 text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
+                    <div className="mb-2 text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
                       Drawer count
                     </div>
                     <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 p-1 dark:border-white/10 dark:bg-card">
@@ -168,10 +168,10 @@ const CabinetSidebar = memo(({
                       </Button>
 
                       <div className="flex-1 text-center">
-                        <span className="text-lg font-black text-gray-900 dark:text-zinc-50">
+                        <span className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                           {(selectedCabinet.drawerIds || []).length}
                         </span>
-                        <span className="ml-2 text-xs font-bold tracking-tight text-gray-500 dark:text-zinc-400">
+                        <span className="ml-2 text-xs font-semibold tracking-tight text-gray-500 dark:text-zinc-400">
                           Drawers
                         </span>
                       </div>
@@ -191,7 +191,7 @@ const CabinetSidebar = memo(({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="mb-1 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
+                    <label className="mb-1 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
                       X Position (%)
                     </label>
                     <Input
@@ -211,7 +211,7 @@ const CabinetSidebar = memo(({
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
+                    <label className="mb-1 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
                       Y Position (%)
                     </label>
                     <Input
@@ -234,7 +234,7 @@ const CabinetSidebar = memo(({
 
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="mb-1 block text-xs font-bold tracking-wide text-gray-700 opacity-50 dark:text-zinc-200">
+                    <label className="mb-1 block text-xs font-semibold tracking-wide text-gray-700 opacity-50 dark:text-zinc-200">
                       Width (%)
                     </label>
                     <Input
@@ -245,7 +245,7 @@ const CabinetSidebar = memo(({
                     />
                   </div>
                   <div>
-                    <label className="mb-1 block text-xs font-bold tracking-wide text-gray-700 opacity-50 dark:text-zinc-200">
+                    <label className="mb-1 block text-xs font-semibold tracking-wide text-gray-700 opacity-50 dark:text-zinc-200">
                       Height (%)
                     </label>
                     <Input
@@ -257,7 +257,7 @@ const CabinetSidebar = memo(({
                   </div>
                 </div>
 
-                <div className="text-xs leading-relaxed font-medium text-gray-500 dark:text-zinc-400">
+                <div className="text-xs font-medium text-gray-500 dark:text-zinc-400">
                   Tip: drag cabinets on the canvas. Drawer count controls
                   available drawer slots for this cabinet.
                 </div>
@@ -309,7 +309,7 @@ const CabinetSidebar = memo(({
                       <i className={cn(iconClass, "text-base shrink-0", isActive ? "text-white" : "text-gray-500 dark:text-zinc-400")} />
                       <span className="truncate flex-1">{item.label}</span>
                       {isActive && (
-                        <span className="text-[10px] font-black uppercase tracking-wider bg-white/20 px-1.5 py-0.5 rounded text-white shrink-0">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider bg-white/20 px-1.5 py-0.5 rounded text-white shrink-0">
                           Active
                         </span>
                       )}
@@ -318,7 +318,7 @@ const CabinetSidebar = memo(({
                 })
               )}
             </div>
-            <div className="text-[10px] leading-relaxed font-medium text-gray-500 dark:text-zinc-400">
+            <div className="text-[10px] font-medium text-gray-500 dark:text-zinc-400">
               Tip: click any previous action in the list to jump the canvas back to that point in time.
             </div>
           </div>

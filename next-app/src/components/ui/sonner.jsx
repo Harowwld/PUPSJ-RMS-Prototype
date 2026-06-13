@@ -93,8 +93,8 @@ const Toaster = ({
         },
         classNames: {
           toast: "cn-toast group/toast relative flex w-full items-start overflow-hidden p-0 cursor-pointer select-none border border-gray-200 bg-white shadow-md dark:bg-zinc-900 dark:border-zinc-800 dark:shadow-md/50 rounded-xl",
-          title: "text-[13px] font-black text-gray-900 leading-snug dark:text-zinc-50 tracking-tight",
-          description: "text-[11px] font-medium !text-gray-500 leading-relaxed dark:!text-zinc-400 mt-0.5",
+          title: "text-[13px] font-semibold text-gray-900  dark:text-zinc-50 tracking-tight",
+          description: "text-[11px] font-medium !text-gray-500  dark:!text-zinc-400 mt-0.5",
           content: "flex-1 py-3 px-3.5",
           success: "!bg-white dark:!bg-zinc-900 !border-gray-200 dark:!border-zinc-800 border-l-[3px] !border-l-[#16a34a] dark:!border-l-[#10b981] [--normal-bg:#ffffff] dark:[--normal-bg:#18181b] [--normal-border:#e5e7eb] dark:[--normal-border:#27272a]",
           warning: "!bg-white dark:!bg-zinc-900 !border-gray-200 dark:!border-zinc-800 border-l-[3px] !border-l-[#d97706] dark:!border-l-[#f59e0b] [--normal-bg:#ffffff] dark:[--normal-bg:#18181b] [--normal-border:#e5e7eb] dark:[--normal-border:#27272a]",

@@ -7,15 +7,15 @@ export default function SlaKpiCards({ total, completionRate }) {
       <div className="group relative overflow-hidden rounded-xl border-none bg-linear-to-br from-red-500 to-red-700 dark:from-red-700 dark:to-red-950 p-5 shadow-sm transition-all dark:shadow-none">
         <i className="ph-duotone ph-check-circle pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
         <div className="relative z-10">
-          <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-[#f7c9ce]">
+          <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
             <i className="ph-bold ph-check-circle" /> Completion Rate
           </div>
           <div className="flex items-end gap-3">
-            <div className="text-3xl font-black text-white">
+            <div className="text-[48px] font-semibold text-white">
               {completionRate}%
             </div>
           </div>
-          <div className="mt-1 text-[10px] font-medium text-[#f7c9ce]/80">
+          <div className="mt-1 text-[13px] font-normal text-white">
             Request fulfillment efficiency
           </div>
           <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-white/5">
@@ -31,13 +31,13 @@ export default function SlaKpiCards({ total, completionRate }) {
       <div className="group relative overflow-hidden rounded-xl border-none bg-linear-to-br from-emerald-500 to-emerald-700 dark:from-emerald-800 dark:to-emerald-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
         <i className="ph-duotone ph-envelope-open pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
         <div className="relative z-10">
-          <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-emerald-200">
+          <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
             <i className="ph-bold ph-envelope-open" /> Total Requests
           </div>
-          <div className="text-3xl font-black text-white">
+          <div className="text-[48px] font-semibold text-white">
             {total?.toLocaleString() ?? total}
           </div>
-          <div className="mt-1 text-[10px] font-medium text-emerald-200/80">
+          <div className="mt-1 text-[13px] font-normal text-white">
             Total lifetime submissions
           </div>
         </div>

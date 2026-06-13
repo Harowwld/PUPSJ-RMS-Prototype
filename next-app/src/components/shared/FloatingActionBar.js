@@ -32,9 +32,9 @@ export default function FloatingActionBar({
       <div className="flex items-center gap-6 rounded-brand border border-gray-200 bg-white p-3 px-6 shadow-[0_20px_50px_rgba(0,0,0,0.15)] backdrop-blur-md dark:border-white/10 dark:bg-card/95">
         <div className="flex items-center gap-3 border-r border-gray-100 pr-6 dark:border-white/10">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-pup-maroon dark:bg-[#b94642] text-white shadow-sm">
-            <span className="text-xs font-bold">{selectedCount}</span>
+            <span className="text-xs font-semibold">{selectedCount}</span>
           </div>
-          <span className="text-sm font-bold text-gray-700 dark:text-zinc-200">
+          <span className="text-sm font-semibold text-gray-700 dark:text-zinc-200">
             {selectionStatus}
           </span>
         </div>
@@ -48,7 +48,7 @@ export default function FloatingActionBar({
                 variant="ghost"
                 size="sm"
                 onClick={onCancel}
-                className="h-9 px-4 text-xs font-bold text-gray-500 transition-colors hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-400 dark:bg-red-950/30"
+                className="h-9 px-4 text-xs font-semibold text-gray-500 transition-colors hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-400 dark:bg-red-950/30"
               >
                 DESELECT ALL
               </Button>
@@ -58,7 +58,7 @@ export default function FloatingActionBar({
                   size="sm"
                   onClick={onAction}
                   className={cn(
-                    "flex h-10 items-center gap-2 rounded-brand px-6 text-xs font-black  text-white shadow-lg transition-all active:scale-95",
+                    "flex h-10 items-center gap-2 rounded-brand px-6 text-xs font-semibold  text-white shadow-lg transition-all active:scale-95",
                     actionVariant === "success" 
                       ? "btn-brand-green" 
                       : "btn-brand-red"

@@ -91,7 +91,7 @@ const Select = React.forwardRef(({ className, children, value, onChange, placeho
         }}
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "flex h-11 w-full items-center justify-between overflow-hidden rounded-brand border border-gray-300 bg-white px-3 text-xs font-bold text-gray-700 shadow-xs outline-none transition-all hover:bg-gray-50 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-zinc-800 min-w-0",
+          "flex h-11 w-full items-center justify-between overflow-hidden rounded-brand border border-gray-300 bg-white px-3 text-xs font-semibold text-gray-700 shadow-xs outline-none transition-all hover:bg-gray-50 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-zinc-800 min-w-0",
           className
         )}
         {...props}

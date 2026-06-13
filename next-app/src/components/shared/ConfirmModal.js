@@ -141,19 +141,19 @@ export default function ConfirmModal({
         )}>
           <div className="flex items-start gap-4 w-full">
             <div className={`w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 ${v.iconWrap}`}>
-              <i className={`${displayIcon} text-2xl`}></i>
+              <i className={`${displayIcon} text-xl`}></i>
             </div>
             <div className="min-w-0 flex-1">
-              <DialogTitle className={`text-lg font-black tracking-tight leading-tight ${v.title} truncate`}>
+              <DialogTitle className={`text-lg font-semibold tracking-tight  ${v.title} truncate`}>
                 {title}
               </DialogTitle>
-              <DialogDescription className={`text-sm font-medium mt-1.5 leading-relaxed ${v.description}`}>
+              <DialogDescription className={`text-sm font-medium mt-1.5  ${v.description}`}>
                 {message}
               </DialogDescription>
               {note && (
                 <div className="mt-3 flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg dark:bg-amber-950/30">
                   <i className="ph-bold ph-info text-amber-600 shrink-0" />
-                  <p className="text-[11px] font-bold text-amber-700 leading-tight">
+                  <p className="text-[11px] font-semibold text-amber-700">
                     {note}
                   </p>
                 </div>
@@ -166,7 +166,7 @@ export default function ConfirmModal({
           <div className="p-6 space-y-5 bg-white min-w-0 dark:bg-card">
             {selectedItems.length > 0 && (
               <div>
-                <p className="text-[10px] font-bold text-gray-400 tracking-widest mb-1.5 dark:text-zinc-500">
+                <p className="text-[10px] font-semibold text-gray-400 tracking-widest mb-1.5 dark:text-zinc-500">
                   Selected Items ({selectedItems.length})
                 </p>
                 <div className="relative w-full">
@@ -178,7 +178,7 @@ export default function ConfirmModal({
                       >
                         <div className={`w-1.5 h-1.5 shrink-0 rounded-full ${variant === "success" ? "bg-emerald-500" : (variant === "warning" ? "bg-amber-500" : "bg-red-500")}`} />
                         <div className="flex-1 min-w-0">
-                          <p className="truncate text-[11px] font-bold text-gray-700 dark:text-zinc-200">
+                          <p className="truncate text-[11px] font-semibold text-gray-700 dark:text-zinc-200">
                             {item}
                           </p>
                         </div>
@@ -193,16 +193,16 @@ export default function ConfirmModal({
               <div className="rounded-xl border border-red-100 bg-red-50 p-5 shadow-xs dark:bg-red-950/30 dark:border-zinc-800">
                 <div className="flex flex-col items-center gap-5">
                   <div className="text-center">
-                    <label className="mb-2 block text-[9px] font-black tracking-widest text-red-800/60 dark:text-red-500/60">
+                    <label className="mb-2 block text-[9px] font-semibold tracking-widest text-red-800/60 dark:text-red-500/60">
                       Security Authorization Code
                     </label>
-                    <div className="flex h-12 items-center justify-center rounded-xl border-2 border-dashed border-red-200 bg-white px-8 font-mono text-2xl font-black tracking-[0.5em] text-red-700 shadow-inner dark:bg-card dark:shadow-none dark:border-zinc-800 dark:text-red-400">
+                    <div className="flex h-12 items-center justify-center rounded-xl border-2 border-dashed border-red-200 bg-white px-8 font-mono text-xl font-semibold text-red-700 shadow-inner dark:bg-card dark:shadow-none dark:border-zinc-800 dark:text-red-400">
                       {verificationTarget}
                     </div>
                   </div>
 
                   <div className="w-full">
-                    <label className="mb-3 block text-center text-[9px] font-black tracking-widest text-red-800/60 dark:text-red-500/60">
+                    <label className="mb-3 block text-center text-[9px] font-semibold tracking-widest text-red-800/60 dark:text-red-500/60">
                       Input Matching Digits
                     </label>
                     <div className="flex justify-center gap-3">
@@ -213,7 +213,7 @@ export default function ConfirmModal({
                           type="text"
                           maxLength={1}
                           inputMode="numeric"
-                          className="h-16 w-14 rounded-xl border-2 border-red-200 bg-white text-center font-mono text-3xl font-black text-gray-900 shadow-sm transition-all focus:scale-105 focus:border-red-500 focus:ring-4 focus:ring-red-100 focus:outline-none caret-transparent dark:bg-card dark:text-zinc-50 dark:border-zinc-800 dark:focus:border-red-500/50 dark:focus:ring-red-900/20"
+                          className="h-16 w-14 rounded-xl border-2 border-red-200 bg-white text-center font-mono text-xl font-semibold text-gray-900 shadow-sm transition-all focus:scale-105 focus:border-red-500 focus:ring-4 focus:ring-red-100 focus:outline-none caret-transparent dark:bg-card dark:text-zinc-50 dark:border-zinc-800 dark:focus:border-red-500/50 dark:focus:ring-red-900/20"
                           placeholder="0"
                           value={verificationValue[i] || ""}
                           onChange={(e) => handleInputChange(i, e.target.value)}
@@ -224,7 +224,7 @@ export default function ConfirmModal({
                     </div>
                   </div>
                 </div>
-                <p className="mt-5 text-[10px] font-bold text-red-700/70 text-center leading-tight dark:text-red-500/70">
+                <p className="mt-5 text-[10px] font-semibold text-red-700/70 text-center dark:text-red-500/70">
                   For security, please enter the code shown above to enable the deletion button.
                 </p>
               </div>
@@ -240,7 +240,7 @@ export default function ConfirmModal({
             type="button"
             variant="ghost"
             onClick={onCancel}
-            className="h-11 rounded-brand px-6 text-sm font-bold text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors"
+            className="h-11 rounded-brand px-6 text-sm font-semibold text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors"
             disabled={isLoading}
           >
             {cancelLabel}
@@ -251,7 +251,7 @@ export default function ConfirmModal({
             onClick={onConfirm}
             disabled={isLoading || disabled || !isVerified}
             className={cn(
-              "h-11 px-6 text-sm font-black shadow-sm rounded-brand gap-2 flex items-center transition-all active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed ",
+              "h-11 px-6 text-sm font-semibold shadow-sm rounded-brand gap-2 flex items-center transition-all active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed ",
               variant === "success" && "btn-brand-green",
               variant === "warning" && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white"),
               (variant === "brand") && "btn-brand-red hover:from-red-700 hover:to-red-900",

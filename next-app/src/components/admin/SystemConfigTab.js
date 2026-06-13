@@ -946,9 +946,9 @@ export default function SystemConfigTab({
             <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
+                  <i className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
                 </EmptyMedia>
-                <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
+                <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                   Could not load configuration
                 </EmptyTitle>
                 <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
@@ -977,7 +977,7 @@ export default function SystemConfigTab({
               <button
                 type="button"
                 onClick={() => setActiveSubTab("document-types")}
-                className={`group flex h-11 min-w-[180px] cursor-pointer items-center justify-center gap-3 px-6 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${
+                className={`group flex h-11 min-w-[180px] cursor-pointer items-center justify-center gap-3 px-6 text-sm font-semibold transition-all duration-200 active:scale-[0.98] ${
                   activeSubTab === "document-types"
                     ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
                     : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
@@ -988,7 +988,7 @@ export default function SystemConfigTab({
               <button
                 type="button"
                 onClick={() => setActiveSubTab("degree-programs")}
-                className={`group flex h-11 min-w-[180px] cursor-pointer items-center justify-center gap-3 rounded-none px-6 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${
+                className={`group flex h-11 min-w-[180px] cursor-pointer items-center justify-center gap-3 rounded-none px-6 text-sm font-semibold transition-all duration-200 active:scale-[0.98] ${
                   activeSubTab === "degree-programs"
                     ? "bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
                     : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
@@ -999,7 +999,7 @@ export default function SystemConfigTab({
               <button
                 type="button"
                 onClick={() => setActiveSubTab("course-blocks")}
-                className={`group flex h-11 min-w-[180px] cursor-pointer items-center justify-center gap-3 rounded-none px-6 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${
+                className={`group flex h-11 min-w-[180px] cursor-pointer items-center justify-center gap-3 rounded-none px-6 text-sm font-semibold transition-all duration-200 active:scale-[0.98] ${
                   activeSubTab === "course-blocks"
                     ? "bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
                     : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
@@ -1010,7 +1010,7 @@ export default function SystemConfigTab({
               <button
                 type="button"
                 onClick={() => setActiveSubTab("security-questions")}
-                className={`group flex h-11 min-w-[180px] cursor-pointer items-center justify-center gap-3 rounded-none px-6 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${
+                className={`group flex h-11 min-w-[180px] cursor-pointer items-center justify-center gap-3 rounded-none px-6 text-sm font-semibold transition-all duration-200 active:scale-[0.98] ${
                   activeSubTab === "security-questions"
                     ? "bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
                     : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
@@ -1021,7 +1021,7 @@ export default function SystemConfigTab({
               <button
                 type="button"
                 onClick={() => setActiveSubTab("bulk-import")}
-                className={`group flex h-11 min-w-[180px] cursor-pointer items-center justify-center gap-3 px-6 text-sm font-bold transition-all duration-200 active:scale-[0.98] ${
+                className={`group flex h-11 min-w-[180px] cursor-pointer items-center justify-center gap-3 px-6 text-sm font-semibold transition-all duration-200 active:scale-[0.98] ${
                   activeSubTab === "bulk-import"
                     ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
                     : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"

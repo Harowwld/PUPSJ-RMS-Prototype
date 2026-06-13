@@ -171,7 +171,7 @@ const CabinetCanvas = memo(({
         >
           {/* Inner Text Label - Dynamically Rotated and Flipped */}
           <span className={cn(
-            "text-[9px] font-black tracking-widest text-white whitespace-nowrap transition-transform duration-300 flex items-center gap-1",
+            "text-[9px] font-semibold tracking-widest text-white whitespace-nowrap transition-transform duration-300 flex items-center gap-1",
             activeRoom?.door?.rotation === 0 && "rotate-0",
             activeRoom?.door?.rotation === 180 && "rotate-0", // Opposite flip for bottom
             activeRoom?.door?.rotation === 90 && "-rotate-90", // Opposite flip for right
@@ -189,21 +189,21 @@ const CabinetCanvas = memo(({
           <div className="animate-in fade-in slide-in-from-right-2 flex flex-col items-end gap-1 rounded-md bg-slate-900/90 p-2.5 font-mono text-[10px] text-white backdrop-blur-sm border border-white/10 shadow-lg">
             <div className="flex items-center gap-2">
               <span className="opacity-60">Pos:</span>
-              <span className="font-bold">
+              <span className="font-semibold">
                 {toPct(selectedCabinet.rect.x)}%,{" "}
                 {toPct(selectedCabinet.rect.y)}%
               </span>
             </div>
             <div className="flex items-center gap-2">
               <span className="opacity-60">Dim:</span>
-              <span className="font-bold">
+              <span className="font-semibold">
                 {toPct(selectedCabinet.rect.w)}% x{" "}
                 {toPct(selectedCabinet.rect.h)}%
               </span>
             </div>
           </div>
         )}
-        <div className="rounded bg-slate-800/40 px-2 py-1 font-mono text-[9px] text-slate-200 tracking-tighter">
+        <div className="rounded bg-slate-800/40 px-2 py-1 font-mono text-[9px] text-slate-200 tracking-tight">
           GRID: {toPct(SNAP_STEP_X)}% x {toPct(SNAP_STEP_Y)}%
         </div>
       </div>
@@ -353,7 +353,7 @@ const CabinetElement = memo(({
       {/* Floating Cabinet ID Badge Overlay */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-10">
         <div className={cn(
-          "px-2 py-0.5 rounded-md font-mono text-[9px] font-black tracking-tighter shadow-sm border border-black/5 dark:border-white/5",
+          "px-2 py-0.5 rounded-md font-mono text-[9px] font-semibold tracking-tight shadow-sm border border-black/5 dark:border-white/5",
           isSelected
             ? "bg-cyan-500 text-white dark:bg-cyan-400 dark:text-zinc-950"
             : isConflict

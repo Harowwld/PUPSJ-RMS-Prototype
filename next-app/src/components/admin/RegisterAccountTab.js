@@ -168,7 +168,7 @@ export default function RegisterAccountTab({
                   variant="outline"
                   size="sm"
                   onClick={() => onSwitchView?.("directory")}
-                  className="h-9 rounded-md border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-white/10 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                  className="h-9 rounded-md border-gray-300 bg-white px-4 text-[10px] font-semibold tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-white/10 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                 >
                   <i className="ph-bold ph-arrow-left mr-1.5 text-xs"></i>
                   Back to Directory
@@ -178,7 +178,7 @@ export default function RegisterAccountTab({
                   size="sm"
                   disabled={isLoading}
                   onClick={handleClearForm}
-                  className="h-9 rounded-md border-gray-300 bg-white px-4 text-[10px] font-black tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                  className="h-9 rounded-md border-gray-300 bg-white px-4 text-[10px] font-semibold tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                 >
                   <i className="ph-bold ph-arrow-counter-clockwise mr-1.5 text-xs"></i>
                   Reset Form
@@ -191,7 +191,7 @@ export default function RegisterAccountTab({
               {/* Part 1: Full name */}
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 <div className="space-y-2">
-                  <label className="block text-[11px] font-black tracking-wider text-gray-600 dark:text-zinc-300">
+                  <label className="block text-[11px] font-semibold tracking-wider text-gray-600 dark:text-zinc-300">
                     First Name
                   </label>
                   <Input
@@ -211,7 +211,7 @@ export default function RegisterAccountTab({
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-[11px] font-black tracking-wider text-gray-600 dark:text-zinc-300">
+                  <label className="block text-[11px] font-semibold tracking-wider text-gray-600 dark:text-zinc-300">
                     Last Name
                   </label>
                   <Input
@@ -233,7 +233,7 @@ export default function RegisterAccountTab({
 
               {/* Part 2: Role Selection */}
               <div className="space-y-3">
-                <label className="block text-[11px] font-black tracking-wider text-gray-600 dark:text-zinc-300">
+                <label className="block text-[11px] font-semibold tracking-wider text-gray-600 dark:text-zinc-300">
                   Assigned Role
                 </label>
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -243,7 +243,7 @@ export default function RegisterAccountTab({
                     disabled={isLoading}
                     onClick={() => setCreateForm(f => ({ ...f, role: f.role === "Staff" ? "" : "Staff" }))}
                     className={cn(
-                      "h-12 w-full rounded-md border-2 text-[11px] font-black tracking-widest transition-all flex items-center justify-between gap-2 px-4",
+                      "h-12 w-full rounded-md border-2 text-[11px] font-semibold tracking-widest transition-all flex items-center justify-between gap-2 px-4",
                       createForm.role === "Staff"
                         ? "border-amber-600 bg-amber-600 text-white dark:border-amber-500 dark:bg-amber-600 shadow-md"
                         : "border-gray-200 dark:border-white/10 text-gray-500 dark:text-zinc-500 hover:border-amber-200 hover:bg-amber-50 dark:bg-transparent dark:hover:bg-amber-500/5"
@@ -254,7 +254,7 @@ export default function RegisterAccountTab({
                       <span>Registrar Staff</span>
                     </div>
                     {createForm.role === "Staff" && (
-                      <span className="inline-flex items-center rounded-full border border-amber-500 bg-amber-800/50 px-2 py-0.5 text-[9px] font-black tracking-tight text-white shadow-sm">
+                      <span className="inline-flex items-center rounded-full border border-amber-500 bg-amber-800/50 px-2 py-0.5 text-[9px] font-semibold tracking-tight text-white shadow-sm">
                         <i className="ph-fill ph-user-gear mr-1 text-xs" />
                         Standard
                       </span>
@@ -267,7 +267,7 @@ export default function RegisterAccountTab({
                     disabled={isLoading}
                     onClick={() => setCreateForm(f => ({ ...f, role: f.role === "Admin" ? "" : "Admin" }))}
                     className={cn(
-                      "flex h-12 w-full items-center justify-between rounded-md border-2 text-[11px] font-black tracking-widest transition-all gap-2 px-4",
+                      "flex h-12 w-full items-center justify-between rounded-md border-2 text-[11px] font-semibold tracking-widest transition-all gap-2 px-4",
                       createForm.role === "Admin"
                         ? "border-pup-maroon bg-pup-maroon text-white dark:border-[#b94642] dark:bg-pup-darkMaroon shadow-md"
                         : "border-gray-200 dark:border-white/10 text-gray-500 dark:text-zinc-500 hover:border-red-200 hover:bg-red-50 dark:bg-transparent dark:hover:bg-red-500/5"
@@ -278,7 +278,7 @@ export default function RegisterAccountTab({
                       <span>Administrator</span>
                     </div>
                     {createForm.role === "Admin" && (
-                      <span className="inline-flex items-center rounded-full border border-red-200 bg-red-900/50 dark:bg-red-950/80 px-2 py-0.5 text-[9px] font-black tracking-tight text-white dark:text-primary shadow-sm">
+                      <span className="inline-flex items-center rounded-full border border-red-200 bg-red-900/50 dark:bg-red-950/80 px-2 py-0.5 text-[9px] font-semibold tracking-tight text-white dark:text-primary shadow-sm">
                         <i className="ph-fill ph-shield-star mr-1 text-xs" />
                         Full Control
                       </span>
@@ -302,7 +302,7 @@ export default function RegisterAccountTab({
                         sideOffset={10}
                         className="max-w-xs rounded-md border-red-900 bg-[#7a1e28] p-4 text-white shadow-2xl"
                       >
-                        <p className="mb-1 text-[10px] font-black tracking-widest text-red-100">ID Convention</p>
+                        <p className="mb-1 text-[10px] font-semibold tracking-widest text-red-100">ID Convention</p>
                         <code className="block rounded-md border border-white/10 bg-white/5 p-2 font-mono text-[10px] text-white">
                           PUPREGISTRAR-[INITIALS][NUM]
                         </code>
@@ -311,7 +311,7 @@ export default function RegisterAccountTab({
                         </p>
                       </TooltipContent>
                     </Tooltip>
-                    <label className="block text-[11px] font-black tracking-wider text-gray-600 dark:text-zinc-300">
+                    <label className="block text-[11px] font-semibold tracking-wider text-gray-600 dark:text-zinc-300">
                       Employee ID
                     </label>
                   </div>
@@ -350,7 +350,7 @@ export default function RegisterAccountTab({
                         sideOffset={10}
                         className="max-w-xs rounded-md border-red-900 bg-[#7a1e28] p-4 text-white shadow-2xl"
                       >
-                        <p className="mb-1 text-[10px] font-black tracking-widest text-red-100">Email Policy</p>
+                        <p className="mb-1 text-[10px] font-semibold tracking-widest text-red-100">Email Policy</p>
                         <div className="space-y-1">
                           <code className="block rounded-md border border-white/10 bg-white/5 px-2 py-1 font-mono text-[9px] text-white/80">
                             admin.[lastname]@pup.local
@@ -361,7 +361,7 @@ export default function RegisterAccountTab({
                         </div>
                       </TooltipContent>
                     </Tooltip>
-                    <label className="block text-[11px] font-black tracking-wider text-gray-600 dark:text-zinc-300">
+                    <label className="block text-[11px] font-semibold tracking-wider text-gray-600 dark:text-zinc-300">
                       Email Address
                     </label>
                   </div>
@@ -393,7 +393,7 @@ export default function RegisterAccountTab({
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="h-12 w-auto gap-2 rounded-md btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md px-16 text-xs font-black tracking-widest text-white shadow-lg active:scale-95 transition-all dark:shadow-none"
+                  className="h-12 w-auto gap-2 rounded-md btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md px-16 text-xs font-semibold tracking-widest text-white shadow-lg active:scale-95 transition-all dark:shadow-none"
                 >
                   {isLoading ? (
                     <>
@@ -430,12 +430,12 @@ export default function RegisterAccountTab({
         >
           <div className="mt-4 space-y-4 rounded-xl border border-gray-200 bg-gray-50/50 p-5 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white font-black text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white font-semibold text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card">
                 {((createForm.fname?.[0] || "") + (createForm.lname?.[0] || "")).toUpperCase() || "?"}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-black tracking-wider text-gray-400 dark:text-zinc-500 leading-none mb-1">Full name</p>
-                <p className="text-base font-black text-gray-900 dark:text-zinc-50 truncate leading-tight">
+                <p className="text-[10px] font-semibold tracking-wider text-gray-400 dark:text-zinc-500 mb-1">Full name</p>
+                <p className="text-base font-semibold text-gray-900 dark:text-zinc-50 truncate">
                   {createForm.fname} {createForm.lname}
                 </p>
               </div>
@@ -445,12 +445,12 @@ export default function RegisterAccountTab({
 
             <div className="grid grid-cols-2 gap-6">
               <div>
-                <p className="text-[10px] font-black tracking-wider text-gray-400 dark:text-zinc-500 mb-1">Employee ID</p>
-                <p className="text-xs font-bold text-gray-900 dark:text-zinc-50">{createForm.id}</p>
+                <p className="text-[10px] font-semibold tracking-wider text-gray-400 dark:text-zinc-500 mb-1">Employee ID</p>
+                <p className="text-xs font-semibold text-gray-900 dark:text-zinc-50">{createForm.id}</p>
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-black tracking-wider text-gray-400 dark:text-zinc-500 mb-1">Institutional Email</p>
-                <p className="truncate text-xs font-bold text-gray-900 dark:text-zinc-50" title={createForm.email}>
+                <p className="text-[10px] font-semibold tracking-wider text-gray-400 dark:text-zinc-500 mb-1">Institutional Email</p>
+                <p className="truncate text-xs font-semibold text-gray-900 dark:text-zinc-50" title={createForm.email}>
                   {createForm.email}
                 </p>
               </div>
@@ -459,10 +459,10 @@ export default function RegisterAccountTab({
             <Separator className="bg-gray-200 dark:bg-zinc-700/50" />
             
             <div>
-              <p className="mb-2 text-[10px] font-black tracking-wider text-gray-400 dark:text-zinc-500">Access Level</p>
+              <p className="mb-2 text-[10px] font-semibold tracking-wider text-gray-400 dark:text-zinc-500">Access Level</p>
               <div className="flex items-start gap-3">
                 <span className={cn(
-                  "inline-flex shrink-0 items-center rounded-full border px-3 py-1 text-[10px] font-black tracking-tight  shadow-sm dark:shadow-none",
+                  "inline-flex shrink-0 items-center rounded-full border px-3 py-1 text-[10px] font-semibold tracking-tight  shadow-sm dark:shadow-none",
                   createForm.role === "Admin" 
                     ? "border-red-200 bg-red-50 dark:bg-red-950/20 text-pup-maroon dark:text-primary" 
                     : "border-amber-200 bg-amber-50 dark:bg-amber-950/20 text-amber-700"

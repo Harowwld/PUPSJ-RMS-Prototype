@@ -128,7 +128,7 @@ const LogRow = React.memo(function LogRow({
         </td>
         <td className="p-4">
           <div className="flex flex-col">
-            <span className="text-xs font-bold text-gray-900 dark:text-zinc-50">
+            <span className="text-xs font-semibold text-gray-900 dark:text-zinc-50">
               {uploaded.date}
             </span>
             <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-400">
@@ -138,7 +138,7 @@ const LogRow = React.memo(function LogRow({
         </td>
         <td className="p-4">
           <div className={cn(
-            "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black  tracking-wider transition-all",
+            "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-semibold  tracking-wider transition-all",
             sevConfig.bg,
             sevConfig.text,
             sevConfig.border
@@ -150,10 +150,10 @@ const LogRow = React.memo(function LogRow({
         <td className="p-4">
           <div className="flex items-center gap-3">
             <div className="flex flex-col overflow-hidden">
-              <span className="truncate text-xs font-bold text-gray-900 dark:text-zinc-50">
+              <span className="truncate text-xs font-semibold text-gray-900 dark:text-zinc-50">
                 {log.user}
               </span>
-              <span className="text-[11px] font-black tracking-widest text-gray-400 dark:text-zinc-400">
+              <span className="text-[11px] font-semibold tracking-widest text-gray-400 dark:text-zinc-400">
                 {log.role}
               </span>
             </div>
@@ -161,7 +161,7 @@ const LogRow = React.memo(function LogRow({
         </td>
         <td className="p-4">
           <div className="flex items-center gap-2.5">
-            <span className="text-xs font-bold tracking-tight text-gray-700 dark:text-zinc-300">
+            <span className="text-xs font-semibold tracking-tight text-gray-700 dark:text-zinc-300">
               {log.action}
             </span>
           </div>
@@ -169,7 +169,7 @@ const LogRow = React.memo(function LogRow({
         <td className="p-4">
           <Tooltip>
             <TooltipTrigger asChild>
-              <p className="line-clamp-1 max-w-[500px] text-xs font-medium leading-relaxed text-gray-500 dark:text-zinc-400">
+              <p className="line-clamp-1 max-w-[500px] text-xs font-medium text-gray-500 dark:text-zinc-400">
                 {log.details || "No known description"}
               </p>
             </TooltipTrigger>
@@ -316,10 +316,10 @@ export default function LogTable({
           <div className="relative mb-4">
             <div className="absolute inset-0 animate-ping rounded-full bg-red-100 opacity-20"></div>
             <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full border border-red-100 bg-white shadow-xl dark:bg-card dark:shadow-none">
-              <i className="ph-duotone ph-warning-circle text-4xl text-red-600" />
+              <i className="ph-duotone ph-warning-circle text-xl text-red-600" />
             </EmptyMedia>
           </div>
-          <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
+          <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
             System Log Error
           </EmptyTitle>
           <EmptyDescription className="max-w-md text-sm font-medium text-gray-500 dark:text-zinc-400">
@@ -328,7 +328,7 @@ export default function LogTable({
           <Button 
             variant="outline" 
             onClick={() => window.location.reload()}
-            className="mt-6 rounded-full border-gray-200 font-bold hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/10 dark:bg-card"
+            className="mt-6 rounded-full border-gray-200 font-semibold hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/10 dark:bg-card"
           >
             <i className="ph-bold ph-arrows-clockwise mr-2 animate-spin"></i>
             Retry Loading
@@ -350,7 +350,7 @@ export default function LogTable({
         <div className="overflow-x-auto rounded-[inherit]">
           <table className="min-w-full table-fixed text-sm">
             <thead className="bg-gray-50 backdrop-blur-sm select-none dark:bg-muted">
-              <tr className="text-left text-[11px] font-black tracking-wider text-gray-800 dark:text-zinc-250">
+              <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-800 dark:text-zinc-250">
                 <th className="w-[50px] p-4 text-center">
                 </th>
                  <th className="w-[180px] p-4">
@@ -419,10 +419,10 @@ export default function LogTable({
                         <div className="relative mb-6">
                           <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                           <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                            <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
+                            <i className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></i>
                           </EmptyMedia>
                         </div>
-                        <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
+                        <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                           No Activity Found
                         </EmptyTitle>
                         <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
@@ -445,7 +445,7 @@ export default function LogTable({
                               setLogEndDate("")
                               setLogPage(1)
                             }}
-                            className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                            className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                           >
                             <i className="ph-bold ph-arrow-counter-clockwise"></i>
                             Clear Search

@@ -42,7 +42,7 @@ export function RefreshButton({
         </Button>
       </TooltipTrigger>
       <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-        <p className="text-[10px] font-bold">{title}</p>
+        <p className="text-[10px] font-semibold">{title}</p>
       </TooltipContent>
     </Tooltip>
   )

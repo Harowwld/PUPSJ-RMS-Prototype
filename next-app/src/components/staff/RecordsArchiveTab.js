@@ -285,7 +285,7 @@ export default function RecordsArchiveTab({
             {/* Storage Explorer Unified Header with Browser-style Back & Forward Buttons */}
             <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-white/10 pb-6">
               <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">Storage Explorer</span>
+                <span className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">Storage Explorer</span>
                 
                 <div className="flex items-center gap-1.5 sm:gap-2">
                   {/* Back Navigation Button */}
@@ -331,7 +331,7 @@ export default function RecordsArchiveTab({
                   </Button>
                   
                   {/* Location Path Text */}
-                  <h4 className="text-xl sm:text-2xl font-black tracking-tight text-gray-900 dark:text-zinc-50 flex items-center select-none ml-1.5 leading-none">
+                  <h4 className="text-xl sm:text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50 flex items-center select-none ml-1.5">
                     {currentLocatorLevel === "rooms" && "Storage Rooms"}
                     {currentLocatorLevel === "cabinets" && (
                       <>
@@ -350,8 +350,8 @@ export default function RecordsArchiveTab({
               {activeStudent && (
                 <div className="flex items-center gap-3">
                   <div className="flex flex-col text-right hidden sm:flex">
-                    <span className="text-[10px] font-bold text-gray-400 dark:text-zinc-500 tracking-widest leading-none mb-1">Locating Target</span>
-                    <span className="text-lg sm:text-xl font-black text-pup-maroon dark:text-red-400 leading-none tracking-tight">{activeStudent.name}</span>
+                    <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-500 tracking-widest mb-1">Locating Target</span>
+                    <span className="text-lg sm:text-xl font-semibold text-pup-maroon dark:text-red-400 tracking-tight">{activeStudent.name}</span>
                   </div>
                   <Button
                     type="button"
@@ -360,7 +360,7 @@ export default function RecordsArchiveTab({
                     onClick={() => {
                       onUnfocusStudent?.();
                     }}
-                    className="h-10 px-4 rounded-brand border-red-200 text-xs font-black tracking-widest text-red-600 shadow-xs hover:bg-red-50 dark:border-red-950 dark:hover:bg-red-950/30 cursor-pointer"
+                    className="h-10 px-4 rounded-brand border-red-200 text-xs font-semibold tracking-widest text-red-600 shadow-xs hover:bg-red-50 dark:border-red-950 dark:hover:bg-red-950/30 cursor-pointer"
                   >
                     <i className="ph-bold ph-eye-slash mr-1.5 text-sm" />
                     Unfocus
@@ -393,12 +393,12 @@ export default function RecordsArchiveTab({
                         "flex h-24 w-24 items-center justify-center rounded-3xl shadow-lg transition-transform group-hover:scale-110",
                         r.isTarget ? "bg-pup-maroon text-white dark:bg-primary" : "bg-white text-gray-400 dark:bg-zinc-800 dark:text-zinc-500"
                       )}>
-                        <i className="ph-fill ph-warehouse text-5xl"></i>
+                        <i className="ph-fill ph-warehouse text-xl"></i>
                       </div>
                     </div>
                     <div className="p-6">
                       <div className="flex items-center justify-between mb-2">
-                        <h5 className="text-xl font-black text-gray-900 dark:text-zinc-50 tracking-tighter">
+                        <h5 className="text-xl font-semibold text-gray-900 dark:text-zinc-50 tracking-tight">
                           Room {r.room}
                         </h5>
                         {r.isTarget && (
@@ -409,7 +409,7 @@ export default function RecordsArchiveTab({
                       </div>
                       <div className="flex items-center gap-2">
                         <div className="h-1 w-8 bg-pup-maroon/20 rounded-full dark:bg-primary/20"></div>
-                        <span className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+                        <span className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                           {r.occupiedCount} archived records
                         </span>
                       </div>
@@ -484,17 +484,17 @@ export default function RecordsArchiveTab({
               type="button"
               onClick={() => setShowArchived(false)}
               className={cn(
-                "group flex h-12 flex-1 cursor-pointer items-center justify-center gap-3 px-4 text-sm font-bold transition-all duration-200 active:scale-[0.98]",
+                "group flex h-12 flex-1 cursor-pointer items-center justify-center gap-3 px-4 text-sm font-semibold transition-all duration-200 active:scale-[0.98]",
                 !showArchived
                   ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
                   : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
               )}
             >
               <i className={cn("ph-bold ph-users-three text-lg", !showArchived ? "text-pup-maroon dark:text-primary" : "text-gray-400 dark:text-zinc-500")} />
-              <span className="whitespace-nowrap tracking-wide text-xs font-black">Active</span>
+              <span className="whitespace-nowrap tracking-wide text-xs font-semibold">Active</span>
               <span
                 className={cn(
-                  "flex h-6 min-w-[30px] items-center justify-center rounded-full px-2 text-[11px] font-black transition-all duration-300",
+                  "flex h-6 min-w-[30px] items-center justify-center rounded-full px-2 text-[11px] font-semibold transition-all duration-300",
                   !showArchived
                     ? "bg-pup-maroon text-white shadow-sm dark:bg-[#352021] dark:text-primary"
                     : "bg-gray-200 text-gray-500 dark:bg-zinc-800 dark:text-zinc-500"
@@ -507,17 +507,17 @@ export default function RecordsArchiveTab({
               type="button"
               onClick={() => setShowArchived(true)}
               className={cn(
-                "group flex h-12 flex-1 cursor-pointer items-center justify-center gap-3 px-4 text-sm font-bold transition-all duration-200 active:scale-[0.98]",
+                "group flex h-12 flex-1 cursor-pointer items-center justify-center gap-3 px-4 text-sm font-semibold transition-all duration-200 active:scale-[0.98]",
                 showArchived
                   ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
                   : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
               )}
             >
               <i className={cn("ph-bold ph-archive text-lg", showArchived ? "text-pup-maroon dark:text-primary" : "text-gray-400 dark:text-zinc-500")} />
-              <span className="whitespace-nowrap tracking-wide text-xs font-black">Archived</span>
+              <span className="whitespace-nowrap tracking-wide text-xs font-semibold">Archived</span>
               <span
                 className={cn(
-                  "flex h-6 min-w-[30px] items-center justify-center rounded-full px-2 text-[11px] font-black transition-all duration-300",
+                  "flex h-6 min-w-[30px] items-center justify-center rounded-full px-2 text-[11px] font-semibold transition-all duration-300",
                   showArchived
                     ? "bg-pup-maroon text-white shadow-sm dark:bg-[#352021] dark:text-primary"
                     : "bg-gray-200 text-gray-500 dark:bg-zinc-800 dark:text-zinc-500"
@@ -532,7 +532,7 @@ export default function RecordsArchiveTab({
           <section className="flex flex-col overflow-hidden rounded-2xl border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10 mb-4">
             <div className="space-y-3 border-b border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-card">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+                <span className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                   Global Search
                 </span>
               </div>
@@ -565,7 +565,7 @@ export default function RecordsArchiveTab({
               {quickQuery.trim().length < 2 && !showArchived ? (
                 <Empty className="m-auto flex flex-col items-center border-0 py-6 text-center">
                   <EmptyHeader className="flex flex-col items-center gap-0">
-                    <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
+                    <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                       Search Records
                     </EmptyTitle>
                     <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
@@ -593,7 +593,7 @@ export default function RecordsArchiveTab({
               ) : filteredQuickResults.length === 0 ? (
                 <Empty className="m-auto flex flex-col items-center justify-center border-0 py-6 text-center text-gray-500 dark:text-zinc-400">
                   <EmptyHeader className="flex flex-col items-center gap-0">
-                    <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
+                    <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                       {showArchived ? "No Archived Records" : "No Records Found"}
                     </EmptyTitle>
                     <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
@@ -611,7 +611,7 @@ export default function RecordsArchiveTab({
                     onClick={() => handleLocateStudentClick(s)}
                   >
                     <div>
-                      <div className="text-sm font-bold text-gray-800 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-100">
+                      <div className="text-sm font-semibold text-gray-800 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-100">
                         {s.name}
                       </div>
                       <div className="font-mono text-xs font-medium text-gray-500 dark:text-zinc-400">
@@ -639,7 +639,7 @@ export default function RecordsArchiveTab({
                 >
                   <i className="ph-bold ph-house text-lg"></i>
                 </Button>
-                <span className="font-bold text-gray-400 dark:text-zinc-50">/</span>
+                <span className="font-semibold text-gray-400 dark:text-zinc-50">/</span>
                 <Breadcrumb>
                   <BreadcrumbList className="font-semibold text-gray-700 sm:gap-2 dark:text-zinc-200">
                     {breadcrumbs.map((b, idx) => (
@@ -654,7 +654,7 @@ export default function RecordsArchiveTab({
                         )}
                         <BreadcrumbItem>
                           <BreadcrumbLink
-                            className={`cursor-pointer transition-colors hover:text-pup-maroon dark:hover:text-red-500 hover:no-underline ${ currentLevel === b.level ? "font-bold text-pup-maroon dark:text-primary" : "" } dark:text-primary`}
+                            className={`cursor-pointer transition-colors hover:text-pup-maroon dark:hover:text-red-500 hover:no-underline ${ currentLevel === b.level ? "font-semibold text-pup-maroon dark:text-primary" : "" } dark:text-primary`}
                             onClick={() => onBreadcrumbClick(b)}
                           >
                             {b.label}
@@ -668,7 +668,7 @@ export default function RecordsArchiveTab({
                           <i className="ph-bold ph-caret-right text-sm text-gray-400 dark:text-zinc-500"></i>
                         </BreadcrumbSeparator>
                         <BreadcrumbItem>
-                          <Badge className="border-red-100 bg-red-50 text-[10px] font-black text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
+                          <Badge className="border-red-100 bg-red-50 text-[10px] font-semibold text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
                             Archive View
                           </Badge>
                         </BreadcrumbItem>
@@ -683,7 +683,7 @@ export default function RecordsArchiveTab({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className={`px-2 text-xs font-bold ${listType === "card" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"} dark:bg-card dark:text-zinc-50 dark:shadow-none dark:hover:text-zinc-50`}
+                    className={`px-2 text-xs font-semibold ${listType === "card" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"} dark:bg-card dark:text-zinc-50 dark:shadow-none dark:hover:text-zinc-50`}
                     onClick={() => setListType("card")}
                   >
                     <i className="ph-bold ph-squares-four" /> Card
@@ -691,7 +691,7 @@ export default function RecordsArchiveTab({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className={`px-2 text-xs font-bold ${listType === "table" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"} dark:bg-card dark:text-zinc-50 dark:shadow-none dark:hover:text-zinc-50`}
+                    className={`px-2 text-xs font-semibold ${listType === "table" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"} dark:bg-card dark:text-zinc-50 dark:shadow-none dark:hover:text-zinc-50`}
                     onClick={() => setListType("table")}
                   >
                     <i className="ph-bold ph-list-dashes" /> Table
@@ -707,10 +707,10 @@ export default function RecordsArchiveTab({
                     <div className="relative mb-6">
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                       <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                        <i className="ph-duotone ph-users-three text-5xl text-gray-300 dark:text-zinc-600"></i>
+                        <i className="ph-duotone ph-users-three text-xl text-gray-300 dark:text-zinc-600"></i>
                       </EmptyMedia>
                     </div>
-                    <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
+                    <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                       No Student Records Yet
                     </EmptyTitle>
                     <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
@@ -795,18 +795,18 @@ export default function RecordsArchiveTab({
                           
                           <i
                             className={cn(
-                              `ph-fill ${it.icon} mb-1 text-5xl transition-transform duration-300 group-hover:scale-105`,
+                              `ph-fill ${it.icon} mb-1 text-xl transition-transform duration-300 group-hover:scale-105`,
                               theme.icon
                             )}
                           ></i>
                           <h3 className={cn(
-                            "w-full truncate px-1 text-center text-sm leading-tight font-black sm:text-base",
+                            "w-full truncate px-1 text-center text-sm  font-semibold sm:text-base",
                             theme.title
                           )}>
                             {it.title}
                           </h3>
                           <span className={cn(
-                            "mt-0.5 text-[9px] font-black tracking-widest",
+                            "mt-0.5 text-[9px] font-semibold tracking-widest",
                             theme.subtitle
                           )}>
                             {it.subtitle}
@@ -823,12 +823,12 @@ export default function RecordsArchiveTab({
                       <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                       <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
                         <i className={cn(
-                          "ph-duotone text-5xl text-gray-300 dark:text-zinc-600",
+                          "ph-duotone text-xl text-gray-300 dark:text-zinc-600",
                           showArchived ? "ph-archive" : "ph-users"
                         )}></i>
                       </EmptyMedia>
                     </div>
-                    <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
+                    <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                       {showArchived
                         ? "No Archived Students"
                         : "No Students In This Year"}
@@ -871,18 +871,18 @@ export default function RecordsArchiveTab({
                           <Avatar className="h-12 w-12 shrink-0 border border-gray-100 shadow-sm dark:border-white/10 dark:shadow-none">
                             <AvatarFallback
                               className={cn(
-                                "font-bold transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-500",
+                                "font-semibold transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-500",
                                 isSelected 
                                   ? "bg-white text-pup-maroon dark:bg-zinc-800 dark:text-primary" 
                                   : "bg-gray-50 text-gray-400 dark:bg-card"
                               )}
                             >
-                              <i className="ph-bold ph-user text-2xl"></i>
+                              <i className="ph-bold ph-user text-xl"></i>
                             </AvatarFallback>
                           </Avatar>
                           <div className="min-w-0 flex-1">
                             <h4 className={cn(
-                              "truncate text-base leading-tight font-bold transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-50",
+                              "truncate text-base  font-semibold transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-50",
                               isSelected ? "text-pup-maroon dark:text-primary" : "text-gray-900"
                             )}>
                               {row.student.name}
@@ -890,12 +890,12 @@ export default function RecordsArchiveTab({
                             <div className="mt-1.5 flex items-center gap-2">
                               <Badge
                                 variant="outline"
-                                className="rounded border-gray-200 px-1.5 py-0 font-mono text-[10px] font-bold text-gray-600 dark:border-white/10 dark:text-zinc-300"
+                                className="rounded border-gray-200 px-1.5 py-0 font-mono text-[10px] font-semibold text-gray-600 dark:border-white/10 dark:text-zinc-300"
                               >
                                 {row.student.studentNo}
                               </Badge>
                               {showArchived && (
-                                <Badge className="h-4 border-red-100 bg-red-50 px-1 text-[9px] font-black text-red-700 dark:bg-red-950/30">
+                                <Badge className="h-4 border-red-100 bg-red-50 px-1 text-[9px] font-semibold text-red-700 dark:bg-red-950/30">
                                   Archived
                                 </Badge>
                               )}
@@ -908,7 +908,7 @@ export default function RecordsArchiveTab({
                             <div className="flex h-6 w-6 items-center justify-center rounded bg-gray-50 text-gray-400 transition-colors group-hover:bg-red-50 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:bg-card dark:text-zinc-500">
                               <i className="ph-duotone ph-map-pin text-sm"></i>
                             </div>
-                            <span className="text-[10px] font-black tracking-widest text-gray-500 dark:text-zinc-400">
+                            <span className="text-[10px] font-semibold tracking-widest text-gray-500 dark:text-zinc-400">
                               R-{row.student.room} • C-{row.student.cabinet}
                             </span>
                           </div>
@@ -922,7 +922,7 @@ export default function RecordsArchiveTab({
                                   setRestoreTarget(row.student)
                                   setRestoreStudentOpen(true)
                                 }}
-                                className="h-8 rounded-brand border-green-200 px-2.5 text-[9px] font-bold text-green-700 shadow-xs hover:bg-green-50"
+                                className="h-8 rounded-brand border-green-200 px-2.5 text-[9px] font-semibold text-green-700 shadow-xs hover:bg-green-50"
                               >
                                 <i className="ph-bold ph-arrow-counter-clockwise mr-1"></i>
                                 Restore
@@ -931,7 +931,7 @@ export default function RecordsArchiveTab({
                               <>
                                 <Badge
                                   variant="secondary"
-                                  className="border-transparent bg-gray-100 px-2 text-[10px] font-black tracking-tighter text-gray-700 dark:text-zinc-200 dark:bg-muted"
+                                  className="border-transparent bg-gray-100 px-2 text-[10px] font-semibold tracking-tight text-gray-700 dark:text-zinc-200 dark:bg-muted"
                                 >
                                   D-{row.student.drawer}
                                 </Badge>
@@ -951,7 +951,7 @@ export default function RecordsArchiveTab({
                 >
                   <table className="min-w-full text-sm">
                     <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">
-                      <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 dark:text-zinc-300 dark:border-white/10">
+                      <tr className="text-left text-[10px] font-semibold tracking-widest text-gray-600 dark:text-zinc-300 dark:border-white/10">
                         <th className="w-[40px] p-4 text-center">
                            <input
                              type="checkbox"
@@ -989,13 +989,13 @@ export default function RecordsArchiveTab({
                                  onChange={() => toggleSelect(row.student.studentNo)}
                                />
                             </td>
-                            <td className="p-4 font-mono text-xs font-bold text-gray-600 dark:text-zinc-300">
+                            <td className="p-4 font-mono text-xs font-semibold text-gray-600 dark:text-zinc-300">
                               {row.student.studentNo}
                             </td>
                             <td className="p-4">
                               <div className="flex flex-col">
                                 <span className={cn(
-                                  "text-sm font-black transition-colors",
+                                  "text-sm font-semibold transition-colors",
                                   isSelected 
                                     ? "text-pup-maroon dark:text-primary" 
                                     : "text-gray-900 group-hover:text-pup-maroon dark:group-hover:text-primary dark:text-zinc-50"
@@ -1003,7 +1003,7 @@ export default function RecordsArchiveTab({
                                   {row.student.name}
                                 </span>
                                 {showArchived && (
-                                  <Badge className="mt-1 w-fit border-red-100 bg-red-50 px-1.5 text-[8px] font-black text-red-700 dark:bg-red-950/30">
+                                  <Badge className="mt-1 w-fit border-red-100 bg-red-50 px-1.5 text-[8px] font-semibold text-red-700 dark:bg-red-950/30">
                                     Archived Record
                                   </Badge>
                                 )}
@@ -1011,7 +1011,7 @@ export default function RecordsArchiveTab({
                             </td>
                             <td className="p-4">
                               <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-black tracking-widest text-gray-500 dark:text-zinc-400">
+                                <span className="text-[10px] font-semibold tracking-widest text-gray-500 dark:text-zinc-400">
                                   Cabinet {row.student.cabinet} • Drawer {row.student.drawer}
                                 </span>
                               </div>
@@ -1026,7 +1026,7 @@ export default function RecordsArchiveTab({
                                      setRestoreTarget(row.student)
                                      setRestoreStudentOpen(true)
                                    }}
-                                   className="h-9 rounded-brand border-green-200 bg-green-50/50 px-4 text-[10px] font-black text-green-700 shadow-xs hover:bg-green-100"
+                                   className="h-9 rounded-brand border-green-200 bg-green-50/50 px-4 text-[10px] font-semibold text-green-700 shadow-xs hover:bg-green-100"
                                  >
                                    <i className="ph-bold ph-arrow-counter-clockwise mr-2"></i>
                                    Restore
@@ -1036,7 +1036,7 @@ export default function RecordsArchiveTab({
                                    variant="outline"
                                    size="sm"
                                    className={cn(
-                                     "h-9 rounded-brand border px-4 text-[10px] font-black tracking-widest shadow-xs transition-all",
+                                     "h-9 rounded-brand border px-4 text-[10px] font-semibold tracking-widest shadow-xs transition-all",
                                      isSelected 
                                        ? "border-amber-300 bg-white text-pup-maroon hover:border-pup-maroon dark:border-amber-700 dark:bg-zinc-800 dark:text-primary" 
                                        : "border-gray-200 bg-white text-gray-600 hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-primary dark:text-zinc-300 dark:bg-zinc-800 dark:border-white/10"
@@ -1059,7 +1059,7 @@ export default function RecordsArchiveTab({
             {currentLevel === "students" && totalItems > 0 && (
               <div className="flex items-center justify-between border-t border-gray-200 bg-white p-6 px-8 rounded-b-brand dark:border-white/10 dark:bg-card">
                 <div className="flex items-center gap-8 select-none cursor-default">
-                  <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 tracking-widest dark:text-zinc-500">
+                  <div className="flex items-center gap-6 text-[11px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">
                     <span>
                       Showing <strong className="text-gray-900 dark:text-zinc-50">{(page - 1) * itemsPerPage + 1}-{Math.min(page * itemsPerPage, totalItems)}</strong> out of <strong className="text-gray-900 dark:text-zinc-50">{totalItems.toLocaleString()}</strong> entries
                     </span>
@@ -1067,7 +1067,7 @@ export default function RecordsArchiveTab({
                     <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
                       <span className="text-[10px] opacity-60">Rows:</span>
                       <select
-                        className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
+                        className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-semibold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
                         value={itemsPerPage}
                         onChange={(e) => {
                           setItemsPerPage(Number(e.target.value))
@@ -1089,13 +1089,13 @@ export default function RecordsArchiveTab({
                     size="sm"
                     disabled={page <= 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                    className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                   >
                     <i className="ph-bold ph-caret-left mr-2 text-base"></i>
                     Prev
                   </Button>
                   
-                  <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                  <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-semibold text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
                     {page}
                   </div>
 
@@ -1104,7 +1104,7 @@ export default function RecordsArchiveTab({
                     size="sm"
                     disabled={page >= totalPages}
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                    className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-500 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                   >
                     Next
                     <i className="ph-bold ph-caret-right ml-2 text-base"></i>
@@ -1158,7 +1158,7 @@ export default function RecordsArchiveTab({
                   e.stopPropagation()
                   onSelectionChange(new Set())
                 }}
-                className="h-9 px-4 text-xs font-bold text-gray-500 transition-colors hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-400 dark:bg-red-950/30 dark:hover:bg-transparent cursor-pointer"
+                className="h-9 px-4 text-xs font-semibold text-gray-500 transition-colors hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-400 dark:bg-red-950/30 dark:hover:bg-transparent cursor-pointer"
               >
                 Deselect All
               </Button>
@@ -1170,7 +1170,7 @@ export default function RecordsArchiveTab({
                     e.stopPropagation()
                     onBulkRestore()
                   }}
-                  className="flex h-10 items-center gap-3 rounded-brand bg-emerald-600 px-6 text-xs font-black text-white shadow-lg shadow-emerald-900/20 active:scale-95 transition-all hover:bg-emerald-700 dark:bg-emerald-600 dark:shadow-none cursor-pointer"
+                  className="flex h-10 items-center gap-3 rounded-brand bg-emerald-600 px-6 text-xs font-semibold text-white shadow-lg shadow-emerald-900/20 active:scale-95 transition-all hover:bg-emerald-700 dark:bg-emerald-600 dark:shadow-none cursor-pointer"
                 >
                   <i className="ph-bold ph-arrow-counter-clockwise text-sm"></i>
                   Restore
@@ -1183,7 +1183,7 @@ export default function RecordsArchiveTab({
                     e.stopPropagation()
                     onBulkArchive()
                   }}
-                  className="flex h-10 items-center gap-3 rounded-brand btn-brand-red px-6 text-xs font-black text-white shadow-lg shadow-red-900/20 active:scale-95 transition-all dark:shadow-none cursor-pointer"
+                  className="flex h-10 items-center gap-3 rounded-brand btn-brand-red px-6 text-xs font-semibold text-white shadow-lg shadow-red-900/20 active:scale-95 transition-all dark:shadow-none cursor-pointer"
                 >
                   <i className="ph-bold ph-archive text-sm"></i>
                   Archive

@@ -61,13 +61,13 @@ export function TOTPChallengeModal({
         <DialogHeader className="border-b border-gray-100 bg-transparent p-6 text-left dark:border-white/10 dark:bg-transparent">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30">
-              <i className="ph-duotone ph-shield-check text-2xl"></i>
+              <i className="ph-duotone ph-shield-check text-xl"></i>
             </div>
             <div className="min-w-0">
-              <DialogTitle className="text-lg leading-tight font-black tracking-tight text-gray-900 dark:text-zinc-50">
+              <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
                 {title}
               </DialogTitle>
-              <DialogDescription className="mt-1.5 text-sm leading-relaxed font-medium text-gray-600 dark:text-zinc-300">
+              <DialogDescription className="mt-1.5 text-sm font-medium text-gray-600 dark:text-zinc-300">
                 {description}
               </DialogDescription>
             </div>
@@ -77,20 +77,20 @@ export function TOTPChallengeModal({
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 p-6">
             {error && (
-              <div className="animate-in fade-in slide-in-from-top-1 flex items-center gap-2 rounded-brand border border-red-100 bg-red-50 p-3 text-sm font-bold text-red-700 dark:bg-red-950/30">
+              <div className="animate-in fade-in slide-in-from-top-1 flex items-center gap-2 rounded-brand border border-red-100 bg-red-50 p-3 text-sm font-semibold text-red-700 dark:bg-red-950/30">
                 <i className="ph-bold ph-warning-circle text-lg"></i>
                 {error}
               </div>
             )}
 
             <div className="space-y-3">
-              <label className="ml-1 text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+              <label className="ml-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                 Security Verification Code
               </label>
               <Input
                 type="text"
                 maxLength={8}
-                className="h-14 rounded-brand border-gray-300 bg-white text-center text-xl font-black tracking-[0.2em] text-gray-900 shadow-sm focus:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-50"
+                className="h-14 rounded-brand border-gray-300 bg-white text-center text-xl font-semibold text-gray-900 shadow-sm focus:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-50"
                 placeholder="Code or Recovery Code"
                 value={token}
                 onChange={(e) =>
@@ -110,7 +110,7 @@ export function TOTPChallengeModal({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
-              className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold tracking-wider text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card"
+              className="h-11 rounded-brand border-gray-300 px-6 text-sm font-semibold tracking-wider text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card"
             >
               Cancel
             </Button>

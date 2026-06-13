@@ -468,77 +468,89 @@ export default function DigitalRecordsReviewTab({
             "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 transition-all duration-500",
             (isLoading && !isManualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
           )}>
-            <div className="group relative overflow-hidden rounded-brand border-none bg-linear-to-br from-blue-600 to-blue-800 dark:from-blue-800 dark:to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+            <div className="group relative overflow-hidden rounded-xl border-none bg-linear-to-br from-blue-600 to-blue-800 dark:from-blue-800 dark:to-blue-950 p-5 shadow-sm transition-all duration-300 hover:shadow-md dark:shadow-none">
                 <i className="ph-duotone ph-clock-countdown pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
                 <div className="relative z-10">
-                  <div className="flex items-center justify-between">
-                    <p className="mb-1 text-[10px] font-black tracking-widest text-blue-200">
-                      Pending Review
-                    </p>
-                    {stats.hasSlaBreach && !isLoading && (
-                      <div className="flex items-center gap-1.5">
-                         <span className="relative flex h-2 w-2">
-                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                            <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                         </span>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                               <Badge className="bg-red-500 text-white border-0 text-[8px] font-black px-1.5 py-0 h-4 tracking-tighter cursor-help">
-                                  SLA Warning
-                               </Badge>
-                            </TooltipTrigger>
-                            <TooltipContent side="top" className="bg-red-600 text-white border-red-500 max-w-[200px]">
-                               <p className="font-bold text-xs tracking-tight">SLA Breach Detected</p>
-                               <p className="text-[10px] font-medium opacity-90 leading-tight mt-0.5">
-                                  {stats.slaBreachCount} {stats.slaBreachCount === 1 ? "record has" : "records have"} been pending for more than 48 hours.
-                               </p>
-                            </TooltipContent>
-                          </Tooltip>
+                  <div className="flex items-end justify-between">
+                    <div className="w-full">
+                      <div className="mb-1 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 font-medium text-white" style={{ fontSize: "14px", fontWeight: 500, color: "#ffffff" }}>
+                          <i className="ph-bold ph-clock-countdown" /> Pending Review
+                        </div>
+                        {stats.hasSlaBreach && !isLoading && (
+                          <div className="flex items-center gap-1.5">
+                             <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                             </span>
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                   <Badge className="bg-red-500 text-white border-0 text-[8px] font-semibold px-1.5 py-0 h-4 tracking-tight cursor-help">
+                                      SLA Warning
+                                    </Badge>
+                                </TooltipTrigger>
+                                <TooltipContent side="top" className="bg-red-600 text-white border-red-500 max-w-[200px]">
+                                   <p className="font-semibold text-xs tracking-tight">SLA Breach Detected</p>
+                                   <p className="text-[10px] font-medium opacity-90 mt-0.5">
+                                      {stats.slaBreachCount} {stats.slaBreachCount === 1 ? "record has" : "records have"} been pending for more than 48 hours.
+                                    </p>
+                                </TooltipContent>
+                              </Tooltip>
+                          </div>
+                        )}
                       </div>
-                    )}
+                      <div className="font-semibold text-white tracking-tight" style={{ fontSize: "48px", fontWeight: 600, color: "#ffffff" }}>
+                        {stats.pending.toLocaleString()}
+                      </div>
+                      <div className="mt-1 font-normal text-white" style={{ fontSize: "13px", fontWeight: 400, color: "#ffffff" }}>
+                        Waiting to be checked
+                      </div>
+                    </div>
                   </div>
-                  <h3 className="text-3xl font-black text-white">
-                    {stats.pending.toLocaleString()}
-                  </h3>
-                  <p className="mt-0.5 text-[10px] font-medium text-blue-200/80">
-                    Waiting to be checked
-                  </p>
                 </div>
               </div>
 
-            <div className="group relative overflow-hidden rounded-brand border-none bg-linear-to-br from-emerald-600 to-emerald-800 dark:from-emerald-800 dark:to-emerald-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+            <div className="group relative overflow-hidden rounded-xl border-none bg-linear-to-br from-emerald-600 to-emerald-800 dark:from-emerald-800 dark:to-emerald-950 p-5 shadow-sm transition-all duration-300 hover:shadow-md dark:shadow-none">
               <i className="ph-duotone ph-check-circle pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
               <div className="relative z-10">
-                <p className="mb-1 text-[10px] font-black tracking-widest text-emerald-100">
-                  Approved Today
-                </p>
-                <h3 className="text-3xl font-black text-white">
-                  {stats.approvedToday.toLocaleString()}
-                </h3>
-                <p className="mt-0.5 text-[10px] font-medium text-emerald-100/80">
-                  Verified correct ({stats.totalApproved.toLocaleString()} total)
-                </p>
+                <div className="flex items-end justify-between">
+                  <div className="w-full">
+                    <div className="mb-1 flex items-center gap-1.5 font-medium text-white" style={{ fontSize: "14px", fontWeight: 500, color: "#ffffff" }}>
+                      <i className="ph-bold ph-check-circle" /> Approved Today
+                    </div>
+                    <div className="font-semibold text-white tracking-tight" style={{ fontSize: "48px", fontWeight: 600, color: "#ffffff" }}>
+                      {stats.approvedToday.toLocaleString()}
+                    </div>
+                    <div className="mt-1 font-normal text-white" style={{ fontSize: "13px", fontWeight: 400, color: "#ffffff" }}>
+                      Verified correct ({stats.totalApproved.toLocaleString()} total)
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <div className="group relative overflow-hidden rounded-brand border-none bg-linear-to-br from-red-500 to-red-700 dark:from-red-700 dark:to-red-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
+            <div className="group relative overflow-hidden rounded-xl border-none bg-linear-to-br from-red-500 to-red-700 dark:from-red-700 dark:to-red-950 p-5 shadow-sm transition-all duration-300 hover:shadow-md dark:shadow-none">
               <i className="ph-duotone ph-x-circle pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
               <div className="relative z-10">
-                <p className="mb-1 text-[10px] font-black tracking-widest text-red-200">
-                  Returned Today
-                </p>
-                <h3 className="text-3xl font-black text-white">
-                  {stats.declinedToday.toLocaleString()}
-                </h3>
-                <p className="mt-0.5 text-[10px] font-medium text-red-200/80">
-                  Found with errors ({stats.totalDeclined.toLocaleString()} total)
-                </p>
+                <div className="flex items-end justify-between">
+                  <div className="w-full">
+                    <div className="mb-1 flex items-center gap-1.5 font-medium text-white" style={{ fontSize: "14px", fontWeight: 500, color: "#ffffff" }}>
+                      <i className="ph-bold ph-x-circle" /> Returned Today
+                    </div>
+                    <div className="font-semibold text-white tracking-tight" style={{ fontSize: "48px", fontWeight: 600, color: "#ffffff" }}>
+                      {stats.declinedToday.toLocaleString()}
+                    </div>
+                    <div className="mt-1 font-normal text-white" style={{ fontSize: "13px", fontWeight: 400, color: "#ffffff" }}>
+                      Found with errors ({stats.totalDeclined.toLocaleString()} total)
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         ) : null}
 
-      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-brand border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+      <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-xl border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-seal-check"
           title="Digital Records Review"
@@ -552,7 +564,7 @@ export default function DigitalRecordsReviewTab({
                   size="sm"
                   onClick={handleExportCSV}
                   disabled={isLoading || isExporting}
-                  className="flex h-9 px-4 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-transparent text-[10px] font-bold text-gray-600 transition-colors hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
+                  className="flex h-9 px-4 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-transparent text-[10px] font-semibold text-gray-600 transition-colors hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
                 >
                   <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv"} text-sm`}></i>
                   {isExporting ? "Preparing..." : "Export"}
@@ -574,9 +586,9 @@ export default function DigitalRecordsReviewTab({
         {(localSearch !== "" || statusFilter !== "All" || docTypeFilter !== "All" || dateFrom || dateTo) && (
           <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 dark:text-zinc-500">Active filters:</span>
+              <span className="mr-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">Active filters:</span>
               {localSearch && (
-                <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
+                <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-semibold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
                   Search: {localSearch}
                   <button
                     onClick={() => { setSearchQuery(""); setLocalSearch(""); setCurrentPage(1); }}
@@ -587,7 +599,7 @@ export default function DigitalRecordsReviewTab({
                 </div>
               )}
               {statusFilter !== "All" && (
-                <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
+                <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
                   Status: {statusFilter}
                   <button
                     onClick={() => { setStatusFilter("All"); setCurrentPage(1); }}
@@ -598,7 +610,7 @@ export default function DigitalRecordsReviewTab({
                 </div>
               )}
               {docTypeFilter !== "All" && (
-                <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
+                <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
                   Type: {docTypeFilter}
                   <button
                     onClick={() => { setDocTypeFilter("All"); setCurrentPage(1); }}
@@ -609,7 +621,7 @@ export default function DigitalRecordsReviewTab({
                 </div>
               )}
               {(dateFrom || dateTo) && (
-                <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
+                <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
                   Range: {dateFrom || "..."} to {dateTo || "..."}
                   <button
                     onClick={() => { setDateFrom(""); setDateTo(""); setCurrentPage(1); }}
@@ -631,7 +643,7 @@ export default function DigitalRecordsReviewTab({
                   setDateTo("")
                   setCurrentPage(1)
                 }}
-                className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
+                className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-semibold text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
               >
                 CLEAR ALL FILTERS
               </Button>
@@ -645,10 +657,10 @@ export default function DigitalRecordsReviewTab({
             {/* Search */}
             <div className="flex-[2] min-w-[280px]">
               <div className="mb-1.5 flex items-center justify-between">
-                <label className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+                <label className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                   Global Search
                 </label>
-                <span className="text-[9px] font-bold text-pup-maroon dark:text-primary/50">
+                <span className="text-[9px] font-semibold text-pup-maroon dark:text-primary/50">
                   {sortedRecords.length > 0 ? `${sortedRecords.length.toLocaleString()} MATCHES` : "NO RESULTS"}
                 </span>
               </div>
@@ -668,7 +680,7 @@ export default function DigitalRecordsReviewTab({
 
             {/* Status Select */}
             <div className="flex-1 min-w-[128px]">
-              <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+              <label className="mb-1.5 block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                 Status
               </label>
               <Select
@@ -687,7 +699,7 @@ export default function DigitalRecordsReviewTab({
 
             {/* Doc Type Select */}
             <div className="flex-[1.5] min-w-[200px]">
-              <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+              <label className="mb-1.5 block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                 Doc Type
               </label>
               <Select
@@ -707,7 +719,7 @@ export default function DigitalRecordsReviewTab({
             {/* Date Range Picker Section */}
             <div className="min-w-[320px] flex-1">
               <div className="mb-1.5 flex items-center justify-between">
-                <label className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+                <label className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                   Time Period
                 </label>
                 <div className="flex items-center gap-2">
@@ -740,7 +752,7 @@ export default function DigitalRecordsReviewTab({
                         setDateTo(format(end, "yyyy-MM-dd"))
                         setCurrentPage(1)
                       }}
-                      className="rounded-md bg-gray-100 px-2 py-0.5 text-[9px] font-black text-gray-500 transition-all hover:bg-pup-maroon hover:text-white dark:text-zinc-400 dark:bg-muted"
+                      className="rounded-md bg-gray-100 px-2 py-0.5 text-[9px] font-semibold text-gray-500 transition-all hover:bg-pup-maroon hover:text-white dark:text-zinc-400 dark:bg-muted"
                     >
                       {range.replace("last", "Last ")}
                     </button>
@@ -824,9 +836,9 @@ export default function DigitalRecordsReviewTab({
           <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
             <EmptyHeader className="flex flex-col items-center gap-0">
               <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
+                <i className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
               </EmptyMedia>
-              <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
+              <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                 Load failed
               </EmptyTitle>
               <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
@@ -844,7 +856,7 @@ export default function DigitalRecordsReviewTab({
             <div className="overflow-x-auto rounded-[inherit]">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b border-gray-200 bg-transparent backdrop-blur-sm dark:border-white/10 dark:bg-transparent">
-                  <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 dark:text-zinc-300">
+                  <tr className="text-left text-[10px] font-semibold tracking-widest text-gray-600 dark:text-zinc-300">
                     <th className="w-12 p-4 text-center">
                       <input
                         type="checkbox"
@@ -922,10 +934,10 @@ export default function DigitalRecordsReviewTab({
                             <div className="relative mb-6">
                               <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                               <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                                <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
+                                <i className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></i>
                               </EmptyMedia>
                             </div>
-                            <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
+                            <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                               {hasActiveFilters ? "No Records Found" : "No Records Yet"}
                             </EmptyTitle>
                             <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
@@ -946,7 +958,7 @@ export default function DigitalRecordsReviewTab({
                                   setDateTo("")
                                   setCurrentPage(1)
                                 }}
-                                className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                                className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                               >
                                 <i className="ph-bold ph-arrow-counter-clockwise"></i>
                                 Clear Search
@@ -983,11 +995,11 @@ export default function DigitalRecordsReviewTab({
                           </td>
                           <td className="p-4">
                             <div className="flex items-center gap-3">
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-brand bg-gray-100 text-xs font-black text-gray-500 shadow-xs dark:bg-white/5 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm transition-all">
+                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-brand bg-gray-100 text-xs font-semibold text-gray-500 shadow-xs dark:bg-white/5 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm transition-all">
                                 {(r.student_name || "U").substring(0, 2).toUpperCase()}
                               </div>
                               <div className="flex flex-col overflow-hidden">
-                                <span className="truncate text-xs font-bold text-gray-900 leading-tight dark:text-zinc-50">
+                                <span className="truncate text-xs font-semibold text-gray-900 dark:text-zinc-50">
                                   {r.student_name || "Unknown"}
                                 </span>
                                 <span className="truncate text-[10px] font-medium text-gray-500 dark:text-zinc-400 mt-0.5">
@@ -999,7 +1011,7 @@ export default function DigitalRecordsReviewTab({
                           <td className="p-4">
                             <Badge
                               variant="outline"
-                              className="flex w-fit items-center gap-1.5 rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-[9px] font-black text-pup-maroon tracking-wider dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400 shadow-none"
+                              className="flex w-fit items-center gap-1.5 rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-[9px] font-semibold text-pup-maroon tracking-wider dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400 shadow-none"
                             >
                               <i className="ph-bold ph-file-text text-[10px]"></i>
                               {r.doc_type}
@@ -1018,7 +1030,7 @@ export default function DigitalRecordsReviewTab({
                               <Badge
                                 variant="outline"
                                 className={cn(
-                                  "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black  tracking-wider shadow-none transition-all",
+                                  "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-semibold  tracking-wider shadow-none transition-all",
                                   getStatusBadge(r.approval_status)
                                 )}
                               >
@@ -1035,7 +1047,7 @@ export default function DigitalRecordsReviewTab({
                                     </div>
                                   </TooltipTrigger>
                                   <TooltipContent side="top" className="bg-red-600 text-white border-red-500">
-                                     <p className="text-[10px] font-bold tracking-tight">SLA Breach Detected</p>
+                                     <p className="text-[10px] font-semibold tracking-tight">SLA Breach Detected</p>
                                      <p className="text-[9px] font-medium opacity-90">Pending for over 48 hours.</p>
                                   </TooltipContent>
                                 </Tooltip>
@@ -1044,7 +1056,7 @@ export default function DigitalRecordsReviewTab({
                           </td>
                           <td className="p-4">
                             <div className="flex flex-col">
-                              <span className="text-xs font-bold text-gray-900 dark:text-zinc-50">
+                              <span className="text-xs font-semibold text-gray-900 dark:text-zinc-50">
                                 {uploaded.date}
                               </span>
                               <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400">
@@ -1066,7 +1078,7 @@ export default function DigitalRecordsReviewTab({
                                   </Button>
                                 </TooltipTrigger>
                                 <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                                  <p className="text-[10px] font-bold">Document Preview</p>
+                                  <p className="text-[10px] font-semibold">Document Preview</p>
                                   <p className="text-[9px] opacity-80">Open full view of this record</p>
                                 </TooltipContent>
                               </Tooltip>
@@ -1085,7 +1097,7 @@ export default function DigitalRecordsReviewTab({
                                        </Button>
                                      </TooltipTrigger>
                                      <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                                       <p className="text-[10px] font-bold">Approve Record</p>
+                                       <p className="text-[10px] font-semibold">Approve Record</p>
                                        <p className="text-[9px] opacity-80">Finalize and verify this submission</p>
                                      </TooltipContent>
                                    </Tooltip>
@@ -1102,7 +1114,7 @@ export default function DigitalRecordsReviewTab({
                                        </Button>
                                      </TooltipTrigger>
                                      <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                                       <p className="text-[10px] font-bold">Decline Record</p>
+                                       <p className="text-[10px] font-semibold">Decline Record</p>
                                        <p className="text-[9px] opacity-80">Flag issues and return for correction</p>
                                      </TooltipContent>
                                    </Tooltip>
@@ -1129,7 +1141,7 @@ export default function DigitalRecordsReviewTab({
                                          </Button>
                                        </TooltipTrigger>
                                        <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                                         <p className="text-[10px] font-bold">Revert to Pending</p>
+                                         <p className="text-[10px] font-semibold">Revert to Pending</p>
                                          <p className="text-[9px] opacity-80">Undo the previous review decision</p>
                                        </TooltipContent>
                                      </Tooltip>
@@ -1149,14 +1161,14 @@ export default function DigitalRecordsReviewTab({
             {sortedRecords.length > 0 && (
               <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card">
                 <div className="flex items-center gap-8">
-                  <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 tracking-widest dark:text-zinc-500">
+                  <div className="flex items-center gap-6 text-[11px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">
                     <span>
                       Showing <strong className="text-gray-900 dark:text-zinc-50">{paginatedRecords.length}</strong> out of <strong className="text-gray-900 dark:text-zinc-50">{sortedRecords.length}</strong> entries
                     </span>
                     <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
                       <span className="text-[10px] opacity-60">Rows:</span>
                       <Select
-                        className="h-8 w-16 cursor-pointer rounded-brand border border-gray-200 bg-white px-2 text-[10px] font-black text-gray-700 shadow-xs focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10"
+                        className="h-8 w-16 cursor-pointer rounded-brand border border-gray-200 bg-white px-2 text-[10px] font-semibold text-gray-700 shadow-xs focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10"
                         value={itemsPerPage}
                         onChange={(e) => {
                           setItemsPerPage(Number(e.target.value))
@@ -1178,11 +1190,11 @@ export default function DigitalRecordsReviewTab({
                     size="sm"
                     disabled={displayPage <= 1}
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    className="h-10 rounded-brand border-gray-200 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
+                    className="h-10 rounded-brand border-gray-200 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-500 shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
                   >
                     <i className="ph-bold ph-caret-left mr-2 text-base"></i>Prev</Button>
 
-                  <div className="flex h-9 min-w-[48px] items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                  <div className="flex h-9 min-w-[48px] items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-semibold text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
                     {displayPage}
                   </div>
 
@@ -1191,7 +1203,7 @@ export default function DigitalRecordsReviewTab({
                     size="sm"
                     disabled={displayPage >= totalPages}
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    className="h-10 rounded-brand border-gray-200 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
+                    className="h-10 rounded-brand border-gray-200 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-500 shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
                   >Next<i className="ph-bold ph-caret-right mr-2 text-base"></i>
                   </Button>
                 </div>
@@ -1219,7 +1231,7 @@ export default function DigitalRecordsReviewTab({
                       variant="ghost"
                       size="sm"
                       onClick={() => setSelectedIds(new Set())}
-                      className="h-9 rounded-full px-4 text-xs font-bold text-gray-500 hover:bg-gray-100 active:scale-95 dark:text-zinc-400 dark:bg-muted dark:hover:bg-white/10"
+                      className="h-9 rounded-full px-4 text-xs font-semibold text-gray-500 hover:bg-gray-100 active:scale-95 dark:text-zinc-400 dark:bg-muted dark:hover:bg-white/10"
                     >
                       DESELECT ALL
                     </Button>
@@ -1227,7 +1239,7 @@ export default function DigitalRecordsReviewTab({
                     <Button
                       size="sm"
                       onClick={handleBulkApprove}
-                      className="h-9 rounded-full bg-green-600 px-4 text-xs font-bold text-white shadow-sm hover:bg-green-700 active:scale-95 dark:shadow-none"
+                      className="h-9 rounded-full bg-green-600 px-4 text-xs font-semibold text-white shadow-sm hover:bg-green-700 active:scale-95 dark:shadow-none"
                     >
                       <i className="ph-bold ph-check mr-2"></i>
                       APPROVE
@@ -1236,7 +1248,7 @@ export default function DigitalRecordsReviewTab({
                       size="sm"
                       variant="destructive"
                       onClick={handleBulkDecline}
-                      className="h-9 rounded-full bg-linear-to-b from-red-600 to-red-800 border-4 border-red-900 hover:from-red-500 hover:to-red-700 hover:shadow-md transition-all px-4 text-xs font-bold text-white shadow-sm active:scale-95 dark:shadow-none"
+                      className="h-9 rounded-full bg-linear-to-b from-red-600 to-red-800 border-4 border-red-900 hover:from-red-500 hover:to-red-700 hover:shadow-md transition-all px-4 text-xs font-semibold text-white shadow-sm active:scale-95 dark:shadow-none"
                     >
                       <i className="ph-bold ph-x mr-2"></i>
                       DECLINE
@@ -1261,7 +1273,7 @@ export default function DigitalRecordsReviewTab({
                     variant="ghost"
                     size="sm"
                     onClick={() => setSelectedIds(new Set())}
-                    className="h-9 rounded-full px-4 text-xs font-bold text-gray-500 hover:bg-gray-100 active:scale-95 dark:text-zinc-400 dark:bg-muted dark:hover:bg-white/10"
+                    className="h-9 rounded-full px-4 text-xs font-semibold text-gray-500 hover:bg-gray-100 active:scale-95 dark:text-zinc-400 dark:bg-muted dark:hover:bg-white/10"
                   >
                     DESELECT ALL
                   </Button>

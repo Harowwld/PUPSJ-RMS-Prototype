@@ -318,7 +318,7 @@ export default function NotificationsTab({
                   System notifications
                   <Badge
                     variant="outline"
-                    className="border-red-200 bg-red-50 px-2.5 py-1 text-[9px] font-black tracking-widest text-pup-maroon dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400"
+                    className="border-red-200 bg-red-50 px-2.5 py-1 text-[9px] font-semibold tracking-widest text-pup-maroon dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400"
                   >
                     Archive view
                   </Badge>
@@ -336,7 +336,7 @@ export default function NotificationsTab({
                     size="sm"
                     disabled={unreadCount <= 0 || activeTab === "archive"}
                     onClick={markAllRead}
-                    className="h-10 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:border-white/10 dark:bg-red-950/30 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:hover:text-red-500"
+                    className="h-10 rounded-brand border-gray-300 px-5 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:border-white/10 dark:bg-red-950/30 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:hover:text-red-500"
                   >
                     <i className="ph-bold ph-checks mr-1.5"></i>
                     Mark all as read
@@ -346,7 +346,7 @@ export default function NotificationsTab({
                     size="sm"
                     disabled={total <= 0 || activeTab === "archive"}
                     onClick={markAllUnread}
-                    className="h-10 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-amber-50 hover:text-amber-600 dark:border-white/10 dark:bg-amber-950/30 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:hover:text-amber-500"
+                    className="h-10 rounded-brand border-gray-300 px-5 text-sm font-semibold text-gray-700 shadow-sm transition-all hover:border-gray-300 hover:bg-amber-50 hover:text-amber-600 dark:border-white/10 dark:bg-amber-950/30 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:hover:text-amber-500"
                   >
                     <i className="ph-bold ph-envelope mr-1.5"></i>
                     Mark all as unread
@@ -372,7 +372,7 @@ export default function NotificationsTab({
                 <button
                   type="button"
                   onClick={() => setActiveTab("inbox")}
-                  className={`group flex h-11 flex-1 cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] sm:w-[200px] sm:flex-none ${
+                  className={`group flex h-11 flex-1 cursor-pointer items-center justify-center gap-3 px-8 text-sm font-semibold transition-all duration-200 active:scale-[0.98] sm:w-[200px] sm:flex-none ${
  activeTab === "inbox"
  ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
  : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
@@ -386,7 +386,7 @@ export default function NotificationsTab({
                   </span>
                   <span
                     className={cn(
-                      "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-black transition-all duration-300",
+                      "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-semibold transition-all duration-300",
                       activeTab === "inbox"
                         ? "bg-pup-maroon text-white shadow-sm ring-2 ring-red-50/50 dark:bg-red-500/20 dark:text-red-400 dark:ring-red-400/20 dark:shadow-none"
                         : "bg-gray-200 text-gray-500 group-hover:bg-gray-300 dark:bg-zinc-800 dark:text-zinc-500 dark:group-hover:bg-zinc-700 dark:group-hover:text-zinc-300"
@@ -398,7 +398,7 @@ export default function NotificationsTab({
                 <button
                   type="button"
                   onClick={() => setActiveTab("archive")}
-                  className={`group flex h-11 flex-1 cursor-pointer items-center justify-center gap-3 px-8 text-sm font-bold transition-all duration-200 active:scale-[0.98] sm:w-[200px] sm:flex-none ${
+                  className={`group flex h-11 flex-1 cursor-pointer items-center justify-center gap-3 px-8 text-sm font-semibold transition-all duration-200 active:scale-[0.98] sm:w-[200px] sm:flex-none ${
  activeTab === "archive"
  ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
  : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
@@ -412,7 +412,7 @@ export default function NotificationsTab({
                   </span>
                   <span
                     className={cn(
-                      "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-black transition-all duration-300",
+                      "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-semibold transition-all duration-300",
                       activeTab === "archive"
                         ? "bg-pup-maroon text-white shadow-sm ring-2 ring-red-50/50 dark:bg-red-500/20 dark:text-red-400 dark:ring-red-400/20 dark:shadow-none"
                         : "bg-gray-200 text-gray-500 group-hover:bg-gray-300 dark:bg-zinc-800 dark:text-zinc-500 dark:group-hover:bg-zinc-700 dark:group-hover:text-zinc-300"
@@ -431,9 +431,9 @@ export default function NotificationsTab({
               <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                    <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
+                    <i className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
                   </EmptyMedia>
-                  <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
+                  <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                     Could not load notifications
                   </EmptyTitle>
                   <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
@@ -449,7 +449,7 @@ export default function NotificationsTab({
                   <div className="overflow-x-auto rounded-[inherit]">
                     <table className="min-w-full table-fixed text-sm">
                       <thead className="bg-gray-50 select-none dark:bg-muted">
-                        <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 dark:text-zinc-300">
+                        <tr className="text-left text-[10px] font-semibold tracking-widest text-gray-600 dark:text-zinc-300">
                           <th className="w-32 p-4">
                             <button
                               onClick={() => handleSort("decision")}
@@ -553,10 +553,10 @@ export default function NotificationsTab({
                                   <div className="relative mb-6">
                                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                                     <EmptyMedia className="relative z-10 flex h-24 w-24 rotate-3 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl dark:border-white/10 dark:bg-card dark:shadow-none">
-                                      <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
+                                      <i className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></i>
                                     </EmptyMedia>
                                   </div>
-                                  <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">
+                                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
                                     No notifications found
                                   </EmptyTitle>
                                   <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
@@ -585,7 +585,7 @@ export default function NotificationsTab({
                                     <Badge
                                       variant="outline"
                                       className={cn(
-                                        "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black tracking-wider shadow-none transition-all",
+                                        "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-semibold tracking-wider shadow-none transition-all",
                                         ui.badge
                                       )}
                                     >
@@ -593,22 +593,22 @@ export default function NotificationsTab({
                                       {ui.label}
                                     </Badge>
                                     {isUnread ? (
-                                      <span className="animate-pulse text-[9px] font-extrabold tracking-widest text-pup-maroon dark:text-primary">
+                                      <span className="animate-pulse text-[9px] font-semibold tracking-widest text-pup-maroon dark:text-primary">
                                         New
                                       </span>
                                     ) : null}
                                   </div>
                                 </td>
-                                <td className="p-4 text-xs font-bold text-gray-900 dark:text-zinc-50">
+                                <td className="p-4 text-xs font-semibold text-gray-900 dark:text-zinc-50">
                                   {n.student_no}
                                 </td>
-                                <td className="p-4 text-xs font-black text-gray-900 dark:text-zinc-50">
+                                <td className="p-4 text-xs font-semibold text-gray-900 dark:text-zinc-50">
                                   {n.student_name || "—"}
                                 </td>
                                 <td className="p-4">
                                   <Badge
                                     variant="outline"
-                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[10px] font-black tracking-wider text-pup-maroon whitespace-nowrap dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
+                                    className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[10px] font-semibold tracking-wider text-pup-maroon whitespace-nowrap dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
                                   >
                                     <i className="ph-bold ph-file text-[11px]"></i>
                                     {n.doc_type}
@@ -624,17 +624,17 @@ export default function NotificationsTab({
                                     </div>
                                   )}
                                 </td>
-                                 <td className="p-4 text-xs font-bold text-gray-700 dark:text-zinc-300">
+                                 <td className="p-4 text-xs font-semibold text-gray-700 dark:text-zinc-300">
                                   <div className="flex flex-col gap-1.5">
                                     <span className="truncate">{n.reviewed_by || "—"}</span>
                                     {n.reviewed_by && (
                                       n.is_previewed === 1 ? (
-                                        <span className="inline-flex w-fit items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[9px] font-black text-green-700 border border-green-200 dark:bg-emerald-950/20 dark:text-emerald-500/90 dark:border-emerald-900/50">
+                                        <span className="inline-flex w-fit items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[9px] font-semibold text-green-700 border border-green-200 dark:bg-emerald-950/20 dark:text-emerald-500/90 dark:border-emerald-900/50">
                                           <i className="ph-bold ph-check-circle text-[10px]"></i>
                                           Verified Preview
                                         </span>
                                       ) : (
-                                        <span className="inline-flex w-fit items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-black text-amber-700 border border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50">
+                                        <span className="inline-flex w-fit items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-semibold text-amber-700 border border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50">
                                           <i className="ph-bold ph-info text-[10px]"></i>
                                           Quick Approved
                                         </span>
@@ -664,7 +664,7 @@ export default function NotificationsTab({
                                           </Button>
                                         </TooltipTrigger>
                                         <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                                          <p className="text-[10px] font-bold">Document preview</p>
+                                          <p className="text-[10px] font-semibold">Document preview</p>
                                           <p className="text-[9px] opacity-80">Open full view of this record</p>
                                         </TooltipContent>
                                       </Tooltip>
@@ -682,7 +682,7 @@ export default function NotificationsTab({
                                             </Button>
                                           </TooltipTrigger>
                                           <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                                            <p className="text-[10px] font-bold">Inbox status</p>
+                                            <p className="text-[10px] font-semibold">Inbox status</p>
                                             <p className="text-[9px] opacity-80">{isUnread ? "Mark as read" : "Mark as unread"}</p>
                                           </TooltipContent>
                                         </Tooltip>
@@ -700,7 +700,7 @@ export default function NotificationsTab({
                                           </Button>
                                         </TooltipTrigger>
                                         <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                                          <p className="text-[10px] font-bold">Storage action</p>
+                                          <p className="text-[10px] font-semibold">Storage action</p>
                                           <p className="text-[9px] opacity-80">{activeTab === "inbox" ? "Archive notification" : "Restore to inbox"}</p>
                                         </TooltipContent>
                                       </Tooltip>
@@ -718,7 +718,7 @@ export default function NotificationsTab({
                                               n.mime_type
                                             )
                                           }
-                                          className="h-9 rounded-brand btn-brand-red px-3 text-xs font-black tracking-wider shadow-xs transition-all active:scale-95 whitespace-nowrap dark:shadow-none"
+                                          className="h-9 rounded-brand btn-brand-red px-3 text-xs font-semibold tracking-wider shadow-xs transition-all active:scale-95 whitespace-nowrap dark:shadow-none"
                                         >
                                           <i className="ph-bold ph-arrow-counter-clockwise mr-1.5 text-xs"></i>
                                           Re-scan
@@ -737,7 +737,7 @@ export default function NotificationsTab({
                   {total > 0 && (
                     <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-brand dark:border-white/10 dark:bg-card">
                       <div className="flex items-center gap-8 select-none cursor-default">
-                        <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 tracking-widest dark:text-zinc-500">
+                        <div className="flex items-center gap-6 text-[11px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">
                           <span>
                             Showing <strong className="text-gray-900 dark:text-zinc-50">{items.length}</strong> out of <strong className="text-gray-900 dark:text-zinc-50">{total.toLocaleString()}</strong> entries
                             {unreadCount > 0 ? (
@@ -755,7 +755,7 @@ export default function NotificationsTab({
                           <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
                             <span className="text-[10px] opacity-60">Rows:</span>
                             <Select
-                              className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
+                              className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-semibold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
                               value={itemsPerPage}
                               onChange={handleItemsPerPageChange}
                             >
@@ -777,13 +777,13 @@ export default function NotificationsTab({
                             setPage((p) => Math.max(1, p - 1))
                             setJumpPage(String(Math.max(1, displayPage - 1)))
                           }}
-                          className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                          className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                         >
                           <i className="ph-bold ph-caret-left mr-2 text-base"></i>
                           Prev
                         </Button>
 
-                        <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                        <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-semibold text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
                           {displayPage}
                         </div>
 
@@ -795,7 +795,7 @@ export default function NotificationsTab({
                             setPage((p) => Math.min(totalPages, p + 1))
                             setJumpPage(String(Math.min(totalPages, displayPage + 1)))
                           }}
-                          className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                          className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-500 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                         >
                           Next
                           <i className="ph-bold ph-caret-right ml-2 text-base"></i>
@@ -824,10 +824,10 @@ export default function NotificationsTab({
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card">
-                    <i className="ph-duotone ph-file-pdf text-2xl"></i>
+                    <i className="ph-duotone ph-file-pdf text-xl"></i>
                   </div>
                   <div className="min-w-0 text-left">
-                    <DialogTitle className="text-xl leading-none font-black tracking-tight text-gray-900 dark:text-zinc-50">
+                    <DialogTitle className="text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
                       Document Review: {selectedNotif?.doc_type || "Loading..."}
                     </DialogTitle>
                     <p className="mt-1.5 text-sm font-medium text-gray-500 dark:text-zinc-400">
@@ -878,22 +878,22 @@ export default function NotificationsTab({
               {/* Right: metadata & decision */}
               <div className="w-[400px] hidden xl:flex flex-col overflow-y-auto p-8 space-y-10 bg-white dark:bg-card">
                 <div>
-                  <h4 className="text-[11px] font-bold text-gray-500 uppercase tracking-widest border-b border-gray-100 pb-2 dark:text-zinc-400 dark:border-white/10">Student Record</h4>
+                  <h4 className="text-[11px] font-semibold text-gray-500 uppercase tracking-widest border-b border-gray-100 pb-2 dark:text-zinc-400 dark:border-white/10">Student Record</h4>
                   <div className="mt-5 space-y-5">
                     <div>
-                      <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase">Student Name</label>
-                      <p className="text-base font-bold text-gray-900 dark:text-zinc-50">{selectedNotif?.student_name || "—"}</p>
+                      <label className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase">Student Name</label>
+                      <p className="text-base font-semibold text-gray-900 dark:text-zinc-50">{selectedNotif?.student_name || "—"}</p>
                     </div>
                     <div>
-                      <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase">Student Number</label>
-                      <p className="text-base font-bold text-gray-900 dark:text-zinc-50">{selectedNotif?.student_no}</p>
+                      <label className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase">Student Number</label>
+                      <p className="text-base font-semibold text-gray-900 dark:text-zinc-50">{selectedNotif?.student_no}</p>
                     </div>
                     <div>
-                      <label className="text-[10px] font-black tracking-widest text-gray-400">Document Category</label>
+                      <label className="text-[10px] font-semibold tracking-widest text-gray-400">Document Category</label>
                       <div className="mt-1.5">
                         <Badge
                           variant="outline"
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[10px] font-black tracking-wider text-pup-maroon dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[10px] font-semibold tracking-wider text-pup-maroon dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
                         >
                           <i className="ph-bold ph-file text-[11px]"></i>
                           {selectedNotif?.doc_type}
@@ -904,17 +904,17 @@ export default function NotificationsTab({
                 </div>
 
                 <div>
-                  <h4 className="text-[11px] font-bold text-gray-500 tracking-widest border-b border-gray-100 pb-2 dark:text-zinc-400 dark:border-white/10">Review Summary</h4>
+                  <h4 className="text-[11px] font-semibold text-gray-500 tracking-widest border-b border-gray-100 pb-2 dark:text-zinc-400 dark:border-white/10">Review Summary</h4>
                   <div className="mt-5 space-y-5">
                     <div>
-                      <label className="text-[10px] font-black tracking-widest text-gray-400">Approval Status</label>
+                      <label className="text-[10px] font-semibold tracking-widest text-gray-400">Approval Status</label>
                       <div className="mt-1.5">
                         {selectedNotif && (() => {
                           const ui = statusUi(selectedNotif.approval_status)
                           return (
                             <Badge
                               variant="outline"
-                              className={cn("flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black tracking-wider shadow-none", ui.badge)}
+                              className={cn("flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-none", ui.badge)}
                             >
                               <i className={cn("ph-fill text-[11px]", ui.icon)}></i>
                               {ui.label}
@@ -925,24 +925,24 @@ export default function NotificationsTab({
                     </div>
                     {selectedNotif?.approval_status === "Declined" && (
                       <div className="p-5 rounded-2xl bg-red-50 border border-red-100 dark:bg-red-950/30 dark:border-red-900/50">
-                        <label className="text-[10px] font-black tracking-widest text-red-600 uppercase">Rejection Reason</label>
-                        <p className="mt-2 text-sm font-medium text-red-800 dark:text-red-300 leading-relaxed italic">
+                        <label className="text-[10px] font-semibold tracking-widest text-red-600 uppercase">Rejection Reason</label>
+                        <p className="mt-2 text-sm font-medium text-red-800 dark:text-red-300 italic">
                           &quot;{selectedNotif?.review_note || "No specific reason provided by reviewer."}&quot;
                         </p>
                       </div>
                     )}
                     <div className="grid grid-cols-2 gap-4">
                       <div>
-                        <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase">Reviewed By</label>
+                        <label className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase">Reviewed By</label>
                         <div className="flex flex-wrap items-center gap-2 mt-0.5">
-                          <p className="text-xs font-bold text-gray-700 dark:text-zinc-300">{selectedNotif?.reviewed_by || "—"}</p>
+                          <p className="text-xs font-semibold text-gray-700 dark:text-zinc-300">{selectedNotif?.reviewed_by || "—"}</p>
                           {selectedNotif?.reviewed_by && (
                             selectedNotif.is_previewed === 1 ? (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[9px] font-black text-green-700 border border-green-200 dark:bg-emerald-950/20 dark:text-emerald-500/90 dark:border-emerald-900/50">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-green-50 px-2 py-0.5 text-[9px] font-semibold text-green-700 border border-green-200 dark:bg-emerald-950/20 dark:text-emerald-500/90 dark:border-emerald-900/50">
                                 Verified Preview
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-black text-amber-700 border border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50">
+                              <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-[9px] font-semibold text-amber-700 border border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50">
                                 Quick Approved
                               </span>
                             )
@@ -950,8 +950,8 @@ export default function NotificationsTab({
                         </div>
                       </div>
                       <div>
-                        <label className="text-[10px] font-black tracking-widest text-gray-400 uppercase">Decision Date</label>
-                        <p className="text-xs font-bold text-gray-700 dark:text-zinc-300">
+                        <label className="text-[10px] font-semibold tracking-widest text-gray-400 uppercase">Decision Date</label>
+                        <p className="text-xs font-semibold text-gray-700 dark:text-zinc-300">
                           {selectedNotif && formatPHDateTimeParts(selectedNotif.reviewed_at).date}
                         </p>
                       </div>
@@ -978,7 +978,7 @@ export default function NotificationsTab({
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                    <p className="text-[10px] font-bold">Document Zoom</p>
+                    <p className="text-[10px] font-semibold">Document Zoom</p>
                     <p className="text-[9px] opacity-80">Toggle high-focus preview mode</p>
                   </TooltipContent>
                 </Tooltip>
@@ -991,7 +991,7 @@ export default function NotificationsTab({
                         await handleAction(selectedNotif.id, "markUnread");
                         setDetailModalOpen(false);
                       }}
-                      className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 hover:border-gray-300 hover:bg-amber-50 hover:text-amber-600 dark:hover:text-amber-500 shadow-sm transition-colors dark:text-zinc-300 dark:border-white/10"
+                      className="h-11 rounded-brand border-gray-300 px-6 text-sm font-semibold tracking-wide text-gray-600 hover:border-gray-300 hover:bg-amber-50 hover:text-amber-600 dark:hover:text-amber-500 shadow-sm transition-colors dark:text-zinc-300 dark:border-white/10"
                     >
                       <i className="ph-bold ph-envelope mr-2"></i>
                       Mark as Unread
@@ -1003,7 +1003,7 @@ export default function NotificationsTab({
                         await handleAction(selectedNotif?.id, "markRead");
                         setDetailModalOpen(false);
                       }}
-                      className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 hover:border-gray-300 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:text-emerald-500 shadow-sm transition-colors dark:text-zinc-300 dark:border-white/10"
+                      className="h-11 rounded-brand border-gray-300 px-6 text-sm font-semibold tracking-wide text-gray-600 hover:border-gray-300 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:text-emerald-500 shadow-sm transition-colors dark:text-zinc-300 dark:border-white/10"
                     >
                       <i className="ph-bold ph-checks mr-2"></i>
                       Mark as Read
@@ -1016,7 +1016,7 @@ export default function NotificationsTab({
                 <Button
                   variant="outline"
                   onClick={() => setDetailModalOpen(false)}
-                  className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:text-zinc-300 dark:border-white/10"
+                  className="h-11 rounded-brand border-gray-300 px-6 text-sm font-semibold tracking-wide text-gray-600 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:text-zinc-300 dark:border-white/10"
                 >
                   Close Details
                 </Button>
@@ -1027,7 +1027,7 @@ export default function NotificationsTab({
                       onRescan(selectedNotif.student_no, selectedNotif.doc_type, selectedNotif.id, selectedNotif.original_filename, selectedNotif.mime_type)
                       setDetailModalOpen(false)
                     }}
-                    className="h-11 rounded-brand btn-brand-red px-8 text-sm font-bold tracking-wide shadow-md transition-all active:scale-95 dark:shadow-none"
+                    className="h-11 rounded-brand btn-brand-red px-8 text-sm font-semibold tracking-wide shadow-md transition-all active:scale-95 dark:shadow-none"
                   >
                     <i className="ph-bold ph-arrow-counter-clockwise mr-2"></i>
                     Re-scan Document
@@ -1037,7 +1037,7 @@ export default function NotificationsTab({
                     href={`/api/documents/${selectedNotif?.id}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex h-11 items-center rounded-brand btn-brand-red px-8 text-sm font-bold tracking-wide shadow-md transition-all active:scale-95 dark:shadow-none"
+                    className="inline-flex h-11 items-center rounded-brand btn-brand-red px-8 text-sm font-semibold tracking-wide shadow-md transition-all active:scale-95 dark:shadow-none"
                   >
                     <i className="ph-bold ph-arrow-square-out mr-2 text-lg"></i>
                     Open Full View

@@ -203,7 +203,7 @@ export default function SLAAnalyticsTab({
                   size="sm"
                   onClick={handlePreview}
                   disabled={loading || !data || isGeneratingPdf}
-                  className="flex h-11 px-5 items-center justify-center gap-2 btn-brand-red text-[11px] font-black text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
+                  className="flex h-11 px-5 items-center justify-center gap-2 btn-brand-red text-[11px] font-semibold text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
                 >
                   <i className={cn("ph-bold text-base", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
                   {isGeneratingPdf ? "Generating..." : "Generate Report"}
@@ -214,7 +214,7 @@ export default function SLAAnalyticsTab({
                   size="sm"
                   onClick={handleCsvExport}
                   disabled={loading || !data || isExportingCsv}
-                  className="flex h-9 px-4 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-transparent text-[10px] font-bold text-gray-600 transition-colors hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
+                  className="flex h-9 px-4 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-transparent text-[10px] font-semibold text-gray-600 transition-colors hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
                 >
                   <i className={cn("ph-bold text-sm", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
                   {isExportingCsv ? "Preparing..." : "Export"}
@@ -236,9 +236,9 @@ export default function SLAAnalyticsTab({
         {hasActiveFilters && (
           <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 dark:text-zinc-505">Active filters:</span>
+              <span className="mr-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-505">Active filters:</span>
               {(startDate || endDate) && (
-                <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
+                <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
                   Range: {startDate || "..."} to {endDate || "..."}
                   <button
                     onClick={() => { setStartDate(""); setEndDate(""); }}
@@ -255,7 +255,7 @@ export default function SLAAnalyticsTab({
                   setStartDate("")
                   setEndDate("")
                 }}
-                className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
+                className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-semibold text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
               >
                 Clear All Filters
               </Button>
@@ -281,9 +281,9 @@ export default function SLAAnalyticsTab({
             <Empty className="flex h-[400px] flex-col items-center justify-center rounded-brand border border-gray-200 bg-white text-center text-gray-500 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
+                  <i className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
                 </EmptyMedia>
-                <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">
+                <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
                   Data Unavailable
                 </EmptyTitle>
                 <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
@@ -319,10 +319,10 @@ export default function SLAAnalyticsTab({
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
-                    <i className="ph-duotone ph-file-text text-2xl"></i>
+                    <i className="ph-duotone ph-file-text text-xl"></i>
                 </div>
                 <div className="min-w-0">
-                    <DialogTitle className="text-left text-xl leading-none font-black tracking-tight text-gray-900 dark:text-zinc-50">
+                    <DialogTitle className="text-left text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
                     SLA Analytics Report
                     </DialogTitle>
                     <p className="mt-1.5 text-left text-sm font-medium text-gray-500 dark:text-zinc-400">
@@ -367,8 +367,8 @@ export default function SLAAnalyticsTab({
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center bg-white p-10 dark:bg-card">
                 <div className="flex flex-col items-center gap-4">
-                  <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary" />
-                  <p className="text-sm font-bold text-gray-500 tracking-widest dark:text-zinc-400">
+                  <i className="ph-bold ph-spinner animate-spin text-xl text-pup-maroon dark:text-primary" />
+                  <p className="text-sm font-semibold text-gray-500 tracking-widest dark:text-zinc-400">
                     Generating Report Preview...
                   </p>
                 </div>
@@ -393,14 +393,14 @@ export default function SLAAnalyticsTab({
               <Button
                 variant="outline"
                 onClick={() => setReportOpen(false)}
-                className="h-11 px-6 font-bold border-gray-300 shadow-sm hover:border-gray-300 hover:bg-red-50 rounded-brand transition-colors dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+                className="h-11 px-6 font-semibold border-gray-300 shadow-sm hover:border-gray-300 hover:bg-red-50 rounded-brand transition-colors dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
               >
                 Close Preview
               </Button>
               <Button
                 onClick={handlePrint}
                 disabled={!pdfBlobUrl}
-                className="btn-brand-red px-8 font-black text-white shadow-sm rounded-brand transition-colors dark:shadow-none"
+                className="btn-brand-red px-8 font-semibold text-white shadow-sm rounded-brand transition-colors dark:shadow-none"
               >
                 <i className="ph-bold ph-floppy-disk text-lg"></i> Save to Device
               </Button>

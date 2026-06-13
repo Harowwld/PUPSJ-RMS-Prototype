@@ -87,10 +87,10 @@ export default function SecurityQuestionsTab({
                     <div key={i} className="group animate-in fade-in slide-in-from-top-2 duration-300 space-y-2">
                       <div className="flex items-center justify-between gap-2">
                         <div className="flex items-center gap-2">
-                          <span className="flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-[10px] font-black text-gray-500 transition-colors group-focus-within:border-red-100 group-focus-within:bg-red-50 group-focus-within:text-pup-maroon dark:border-white/10 dark:text-zinc-400 dark:bg-red-950/30">
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-[10px] font-semibold text-gray-500 transition-colors group-focus-within:border-red-100 group-focus-within:bg-red-50 group-focus-within:text-pup-maroon dark:border-white/10 dark:text-zinc-400 dark:bg-red-950/30">
                             {i + 1}
                           </span>
-                          <label className="text-[11px] font-black tracking-widest text-gray-500 transition-colors group-focus-within:text-gray-900 dark:text-zinc-400">
+                          <label className="text-[11px] font-semibold tracking-widest text-gray-500 transition-colors group-focus-within:text-gray-900 dark:text-zinc-400">
                             Security Challenge Question{" "}
                             {i < 2 ? (
                               <span className="text-pup-maroon dark:text-primary">*</span>
@@ -105,19 +105,19 @@ export default function SecurityQuestionsTab({
                               {q.trim().length < 10 || new Set(q.toLowerCase().replace(/\s/g, "")).size < 5 ? (
                                 <Tooltip>
                                   <TooltipTrigger asChild>
-                                    <span className="flex items-center gap-1 text-[9px] font-bold text-amber-600 tracking-tight dark:text-amber-400">
+                                    <span className="flex items-center gap-1 text-[9px] font-semibold text-amber-600 tracking-tight dark:text-amber-400">
                                       <i className="ph-bold ph-warning-circle text-xs"></i>
                                       Weak Challenge
                                     </span>
                                   </TooltipTrigger>
                                   <TooltipContent side="top" className="bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-950 dark:text-amber-200 dark:border-amber-900/50">
-                                    <p className="text-[10px] font-bold">
+                                    <p className="text-[10px] font-semibold">
                                       Question must be at least 10 chars and meaningful.
                                     </p>
                                   </TooltipContent>
                                 </Tooltip>
                               ) : (
-                                <span className="flex items-center gap-1 text-[9px] font-bold text-emerald-600 tracking-tight dark:text-emerald-400">
+                                <span className="flex items-center gap-1 text-[9px] font-semibold text-emerald-600 tracking-tight dark:text-emerald-400">
                                   <i className="ph-bold ph-check-circle text-xs"></i>
                                   Strong
                                 </span>
@@ -127,7 +127,7 @@ export default function SecurityQuestionsTab({
                           {i >= 2 && (
                             <button
                               onClick={() => handleRemoveQuestion(i)}
-                              className="text-[10px] font-bold text-gray-400 hover:text-red-600 transition-colors dark:text-zinc-500"
+                              className="text-[10px] font-semibold text-gray-400 hover:text-red-600 transition-colors dark:text-zinc-500"
                             >
                               Remove
                             </button>
@@ -150,7 +150,7 @@ export default function SecurityQuestionsTab({
 
                   <button
                     onClick={handleAddQuestion}
-                    className="flex w-fit items-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-xs font-bold text-gray-500 transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:text-zinc-400 dark:hover:border-zinc-700 dark:border-white/10"
+                    className="flex w-fit items-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-xs font-semibold text-gray-500 transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:text-zinc-400 dark:hover:border-zinc-700 dark:border-white/10"
                   >
                     <i className="ph-bold ph-plus"></i>
                     ADD ANOTHER QUESTION

@@ -1306,7 +1306,7 @@ function StaffPageContent() {
             {sidebarItems.map((item, idx) => {
               if (item.type === "header") {
                 return (
-                  <div key={`header-${idx}`} className="text-[9px] font-black tracking-widest text-gray-400 dark:text-zinc-500 whitespace-nowrap ml-4 first:ml-0 border-l border-gray-200 dark:border-white/5 pl-4 first:border-0 first:pl-0">
+                  <div key={`header-${idx}`} className="text-[9px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500 whitespace-nowrap ml-4 first:ml-0 border-l border-gray-200 dark:border-white/5 pl-4 first:border-0 first:pl-0">
                     {item.label}
                   </div>
                 );
@@ -1317,7 +1317,7 @@ function StaffPageContent() {
                   key={item.key}
                   onClick={() => switchView(item.key)}
                   className={cn(
-                    "px-3 py-1.5 text-xs font-bold rounded-xl flex items-center gap-2 transition-colors duration-300 whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 cursor-pointer shrink-0",
+                    "px-3 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2 transition-colors duration-300 whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 cursor-pointer shrink-0",
                     active
                       ? "bg-red-50 text-pup-maroon dark:bg-red-500/10 dark:text-primary shadow-xs"
                       : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
@@ -1326,7 +1326,7 @@ function StaffPageContent() {
                   <i className={cn(item.iconClass, "text-sm")}></i>
                   {item.label}
                   {item.badge > 0 && (
-                    <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-extrabold text-white bg-pup-maroon dark:bg-red-500/20 dark:text-red-400">
+                    <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-semibold text-white bg-pup-maroon dark:bg-red-500/20 dark:text-red-400">
                       {item.badge}
                     </span>
                   )}

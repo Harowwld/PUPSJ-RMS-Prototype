@@ -28,10 +28,10 @@ export default function DocTypeModal({
         <DialogHeader className="border-b border-gray-100 bg-transparent p-6 dark:border-white/10 dark:bg-transparent">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-red-950/30">
-              <i className="ph-duotone ph-pencil-line text-2xl"></i>
+              <i className="ph-duotone ph-pencil-line text-xl"></i>
             </div>
             <div className="min-w-0">
-              <DialogTitle className="text-lg font-black tracking-tight text-gray-900 dark:text-zinc-50">
+              <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
                 Create Document Type
               </DialogTitle>
               <DialogDescription className="mt-1 text-sm font-medium text-gray-600 dark:text-zinc-300">
@@ -42,7 +42,7 @@ export default function DocTypeModal({
         </DialogHeader>
 
         <div className="p-6">
-          <label className="mb-1 block text-xs font-bold text-gray-700 dark:text-zinc-200">
+          <label className="mb-1 block text-xs font-semibold text-gray-700 dark:text-zinc-200">
             Document Type
           </label>
           <Input
@@ -64,7 +64,7 @@ export default function DocTypeModal({
           />
 
           {error ? (
-            <div className="mt-3 rounded-brand border border-red-200 bg-red-50 p-3 text-sm font-bold text-red-800 dark:bg-red-950/30">
+            <div className="mt-3 rounded-brand border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800 dark:bg-red-950/30">
               {error}
             </div>
           ) : null}
@@ -75,7 +75,7 @@ export default function DocTypeModal({
             type="button"
             variant="outline"
             onClick={onClose}
-            className="h-11 rounded-brand border-gray-300 px-5 text-sm font-bold text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card"
+            className="h-11 rounded-brand border-gray-300 px-5 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card"
             disabled={isLoading}
           >
             Cancel

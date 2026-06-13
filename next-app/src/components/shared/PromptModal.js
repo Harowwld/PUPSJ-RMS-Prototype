@@ -77,14 +77,14 @@ export default function PromptModal({
         <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5 min-w-0">
           <div className="flex items-start gap-4 w-full">
             <div className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border shadow-sm", v.headerIconWrap)}>
-              <i className={cn(v.headerIcon, "text-2xl")}></i>
+              <i className={cn(v.headerIcon, "text-xl")}></i>
             </div>
             <div className="min-w-0 flex-1">
-              <DialogTitle className="text-lg font-black tracking-tight text-gray-900 leading-tight dark:text-zinc-50 truncate">
+              <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50 truncate">
                 {title}
               </DialogTitle>
               {message ? (
-                <DialogDescription className="mt-1.5 text-sm font-medium leading-relaxed text-gray-600 dark:text-zinc-300">
+                <DialogDescription className="mt-1.5 text-sm font-medium text-gray-600 dark:text-zinc-300">
                   {message}
                 </DialogDescription>
               ) : null}
@@ -95,7 +95,7 @@ export default function PromptModal({
         <div className="space-y-5 p-6 min-w-0 bg-white dark:bg-card">
           {itemsList && itemsList.length > 0 && (
             <div className="relative w-full">
-              <p className="text-[10px] font-bold text-gray-400 tracking-widest mb-1.5 dark:text-zinc-500">
+              <p className="text-[10px] font-semibold text-gray-400 tracking-widest mb-1.5 dark:text-zinc-500">
                 Impacted Items ({itemsList.length})
               </p>
               <div className="max-h-[120px] overflow-y-auto rounded-lg border border-gray-200 bg-gray-50 p-2 space-y-1 custom-scrollbar w-full dark:border-white/10 dark:bg-white/5">
@@ -106,7 +106,7 @@ export default function PromptModal({
                   >
                     <div className={cn("h-1.5 w-1.5 shrink-0 rounded-full", v.listDot)} />
                     <div className="flex-1 min-w-0">
-                      <p className="truncate text-[11px] font-bold text-gray-700 dark:text-zinc-200">
+                      <p className="truncate text-[11px] font-semibold text-gray-700 dark:text-zinc-200">
                         {item}
                       </p>
                     </div>
@@ -118,14 +118,14 @@ export default function PromptModal({
 
           <div className="space-y-2">
             {inputLabel && (
-              <label className="block text-[11px] font-bold text-gray-700 tracking-wide dark:text-zinc-400 mb-1.5">
+              <label className="block text-[11px] font-semibold text-gray-700 tracking-wide dark:text-zinc-400 mb-1.5">
                 {inputLabel}
               </label>
             )}
             {multiline ? (
               <textarea
                 className="flex min-h-[100px] w-full rounded-brand border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-zinc-700"
-                value={value}
+                value={value ?? ""}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
                 autoFocus
@@ -134,7 +134,7 @@ export default function PromptModal({
               <Input
                 type="text"
                 className="h-11 rounded-brand border border-gray-300 bg-white px-4 text-sm shadow-sm transition-all placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-300"
-                value={value}
+                value={value ?? ""}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
                 autoFocus
@@ -148,7 +148,7 @@ export default function PromptModal({
             type="button"
             variant="ghost"
             onClick={onCancel}
-            className="h-11 rounded-brand px-6 text-sm font-bold text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors"
+            className="h-11 rounded-brand px-6 text-sm font-semibold text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors"
             disabled={isLoading}
           >
             {cancelLabel}
@@ -159,7 +159,7 @@ export default function PromptModal({
             onClick={onConfirm}
             disabled={isLoading || confirmDisabled}
             className={cn(
-              "h-11 px-6 text-sm font-black shadow-sm rounded-brand gap-2 flex items-center transition-all active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
+              "h-11 px-6 text-sm font-semibold shadow-sm rounded-brand gap-2 flex items-center transition-all active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
               variant === "success" && "bg-green-600 hover:bg-green-700 text-white",
               variant === "warning" && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white"),
               (variant === "brand") && "btn-brand-red hover:from-red-700 hover:to-red-900",

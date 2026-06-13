@@ -176,10 +176,10 @@ export default function AccountSetupModal({ authUser }) {
         {/* Sidebar Tabs */}
         <div className="flex w-full shrink-0 flex-col gap-3 overflow-y-auto border-r border-gray-200 bg-gray-50 p-6 md:w-1/3 dark:border-white/10 dark:bg-card">
           <div className="mb-2">
-            <h3 className="px-1 text-xs font-black tracking-widest text-gray-500 dark:text-zinc-400">
+            <h3 className="px-1 text-xs font-semibold tracking-widest text-gray-500 dark:text-zinc-400">
               Account Setup
             </h3>
-            <p className="mt-0.5 px-1 text-[11px] leading-tight font-medium text-gray-400 dark:text-zinc-500">
+            <p className="mt-0.5 px-1 text-[11px] font-medium text-gray-400 dark:text-zinc-500">
               Complete these steps to access your dashboard securely.
             </p>
           </div>
@@ -192,18 +192,18 @@ export default function AccountSetupModal({ authUser }) {
                 <i
                   className={`text-lg ${needsPassword && step > 1 ? "ph-fill ph-check-circle text-emerald-500" : "ph-duotone ph-password text-pup-maroon dark:text-primary"}`}
                 ></i>
-                <span className="text-sm font-black text-gray-900 dark:text-zinc-50">Step 1</span>
+                <span className="text-sm font-semibold text-gray-900 dark:text-zinc-50">Step 1</span>
               </div>
               {needsPassword && step > 1 && (
-                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold tracking-wider text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
+                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
                   Done
                 </span>
               )}
             </div>
-            <span className="pl-7 text-xs font-bold text-gray-600 dark:text-zinc-300">
+            <span className="pl-7 text-xs font-semibold text-gray-600 dark:text-zinc-300">
               Change Password
             </span>
-            <p className="mt-0.5 pl-7 text-[10px] leading-tight text-gray-500 dark:text-zinc-400">
+            <p className="mt-0.5 pl-7 text-[10px] text-gray-500 dark:text-zinc-400">
               Update your default system password.
             </p>
           </div>
@@ -213,12 +213,12 @@ export default function AccountSetupModal({ authUser }) {
           >
             <div className="flex items-center gap-2">
               <i className="ph-duotone ph-shield-check text-lg text-pup-maroon dark:text-primary"></i>
-              <span className="text-sm font-black text-gray-900 dark:text-zinc-50">Step 2</span>
+              <span className="text-sm font-semibold text-gray-900 dark:text-zinc-50">Step 2</span>
             </div>
-            <span className="pl-7 text-xs font-bold text-gray-600 dark:text-zinc-300">
+            <span className="pl-7 text-xs font-semibold text-gray-600 dark:text-zinc-300">
               Security Answers
             </span>
-            <p className="mt-0.5 pl-7 text-[10px] leading-tight text-gray-500 dark:text-zinc-400">
+            <p className="mt-0.5 pl-7 text-[10px] text-gray-500 dark:text-zinc-400">
               Set up your account recovery questions.
             </p>
           </div>
@@ -229,7 +229,7 @@ export default function AccountSetupModal({ authUser }) {
           {step === 1 && (
             <>
               <DialogHeader className="shrink-0 border-b border-gray-100 bg-white p-6 dark:border-white/10 dark:bg-card">
-                <DialogTitle className="text-xl font-black tracking-tight text-gray-900 dark:text-zinc-50">
+                <DialogTitle className="text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
                   Update Default Password
                 </DialogTitle>
                 <DialogDescription className="mt-1 text-sm font-medium text-gray-600 dark:text-zinc-300">
@@ -243,20 +243,20 @@ export default function AccountSetupModal({ authUser }) {
               >
                 <div className="flex-1 space-y-5 overflow-y-auto p-6">
                   {pwError && (
-                    <div className="flex items-center gap-2 rounded-brand border border-red-100 bg-red-50 p-3 text-sm font-bold text-red-700 dark:border-red-900/30 dark:bg-red-950/30 dark:text-red-400">
+                    <div className="flex items-center gap-2 rounded-brand border border-red-100 bg-red-50 p-3 text-sm font-semibold text-red-700 dark:border-red-900/30 dark:bg-red-950/30 dark:text-red-400">
                       <i className="ph-bold ph-warning-circle text-lg"></i>
                       {pwError}
                     </div>
                   )}
                   <div className="space-y-4">
                     <div>
-                      <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
+                      <label className="mb-1.5 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
                         Current Password <span className="text-pup-maroon dark:text-primary">*</span>
                       </label>
                       <div className="relative group">
                         <Input
                           type={showPw.current ? "text" : "password"}
-                          className="h-11 rounded-brand border-gray-300 bg-gray-50 pr-10 text-sm font-bold text-gray-900 focus-visible:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:ring-red-500/20"
+                          className="h-11 rounded-brand border-gray-300 bg-gray-50 pr-10 text-sm font-semibold text-gray-900 focus-visible:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:ring-red-500/20"
                           value={pwCurrent}
                           onChange={(e) => setPwCurrent(e.target.value)}
                           placeholder="e.g. pupstaff"
@@ -272,13 +272,13 @@ export default function AccountSetupModal({ authUser }) {
                       </div>
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
+                      <label className="mb-1.5 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
                         New Password <span className="text-pup-maroon dark:text-primary">*</span>
                       </label>
                       <div className="relative group">
                         <Input
                           type={showPw.next ? "text" : "password"}
-                          className="h-11 rounded-brand border-gray-300 bg-gray-50 pr-10 text-sm font-bold text-gray-900 focus-visible:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:ring-red-500/20"
+                          className="h-11 rounded-brand border-gray-300 bg-gray-50 pr-10 text-sm font-semibold text-gray-900 focus-visible:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:ring-red-500/20"
                           value={pwNext}
                           onChange={(e) => setPwNext(e.target.value)}
                           placeholder="Min. 6 characters"
@@ -294,13 +294,13 @@ export default function AccountSetupModal({ authUser }) {
                       </div>
                     </div>
                     <div>
-                      <label className="mb-1.5 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
+                      <label className="mb-1.5 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
                         Confirm New Password <span className="text-pup-maroon dark:text-primary">*</span>
                       </label>
                       <div className="relative group">
                         <Input
                           type={showPw.confirm ? "text" : "password"}
-                          className="h-11 rounded-brand border-gray-300 bg-gray-50 pr-10 text-sm font-bold text-gray-900 focus-visible:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:ring-red-500/20"
+                          className="h-11 rounded-brand border-gray-300 bg-gray-50 pr-10 text-sm font-semibold text-gray-900 focus-visible:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:ring-red-500/20"
                           value={pwConfirm}
                           onChange={(e) => setPwConfirm(e.target.value)}
                           placeholder="Must match new password"
@@ -321,7 +321,7 @@ export default function AccountSetupModal({ authUser }) {
                   <Button
                     type="submit"
                     disabled={pwLoading}
-                    className="h-11 btn-brand-red px-6 text-xs font-bold tracking-widest text-white shadow-sm transition-colors"
+                    className="h-11 btn-brand-red px-6 text-xs font-semibold tracking-widest text-white shadow-sm transition-colors"
                   >
                     {pwLoading
                       ? "Saving..."
@@ -337,7 +337,7 @@ export default function AccountSetupModal({ authUser }) {
           {step === 2 && (
             <>
               <DialogHeader className="shrink-0 border-b border-gray-100 bg-white p-6 dark:border-white/10 dark:bg-card">
-                <DialogTitle className="text-xl font-black tracking-tight text-gray-900 dark:text-zinc-50">
+                <DialogTitle className="text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
                   Recovery Questions
                 </DialogTitle>
                 <DialogDescription className="mt-1 text-sm font-medium text-gray-600 dark:text-zinc-300">
@@ -351,7 +351,7 @@ export default function AccountSetupModal({ authUser }) {
               >
                 <div className="custom-scrollbar flex-1 space-y-5 overflow-y-auto p-6">
                   {secError && (
-                    <div className="flex items-center gap-2 rounded-brand border border-red-100 bg-red-50 p-3 text-sm font-bold text-red-700 dark:border-red-900/30 dark:bg-red-950/30 dark:text-red-400">
+                    <div className="flex items-center gap-2 rounded-brand border border-red-100 bg-red-50 p-3 text-sm font-semibold text-red-700 dark:border-red-900/30 dark:bg-red-950/30 dark:text-red-400">
                       <i className="ph-bold ph-warning-circle text-lg"></i>
                       {secError}
                     </div>
@@ -370,7 +370,7 @@ export default function AccountSetupModal({ authUser }) {
                   ) : (
                     questions.map((q) => (
                       <div key={q.id}>
-                        <label className="mb-1.5 block text-xs leading-tight font-bold tracking-wide text-gray-700 dark:text-zinc-200">
+                        <label className="mb-1.5 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
                           {q.question}{" "}
                           {q.is_required ? (
                             <span className="text-pup-maroon dark:text-primary">*</span>
@@ -383,7 +383,7 @@ export default function AccountSetupModal({ authUser }) {
                         <Input
                           type="text"
                           placeholder={q.hasAnswer ? "•••••••• (Already Answered)" : "Enter your answer"}
-                          className="h-11 w-full rounded-brand border-gray-300 bg-gray-50 text-sm font-bold text-gray-900 focus-visible:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:ring-red-500/20"
+                          className="h-11 w-full rounded-brand border-gray-300 bg-gray-50 text-sm font-semibold text-gray-900 focus-visible:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:ring-red-500/20"
                           value={answers[q.id] || ""}
                           onChange={(e) =>
                             setAnswers({ ...answers, [q.id]: e.target.value })
@@ -400,7 +400,7 @@ export default function AccountSetupModal({ authUser }) {
                     disabled={
                       secLoading || secSubmitting || questions.length === 0
                     }
-                    className="h-11 btn-brand-red px-6 text-xs font-bold tracking-widest text-white shadow-sm transition-colors"
+                    className="h-11 btn-brand-red px-6 text-xs font-semibold tracking-widest text-white shadow-sm transition-colors"
                   >                    {secSubmitting ? "Saving..." : "Complete Setup & Enter"}
                   </Button>
                 </div>

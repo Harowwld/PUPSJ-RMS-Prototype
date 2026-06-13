@@ -135,15 +135,15 @@ export default function StatCards({ isLoading, logStats }) {
             <div className="relative z-10">
               <div className="flex items-end justify-between">
                 <div>
-                  <p className={cn("text-[10px] font-black tracking-widest ", classes.sub)}>
-                    {stat.label}
-                  </p>
-                  <h3 className={cn("text-3xl font-black tracking-tight", classes.text)}>
+                  <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
+                    <i className={cn("ph-bold", stat.iconClass)} /> {stat.label}
+                  </div>
+                  <div className="text-[48px] font-semibold text-white tracking-tight">
                     {stat.value.toLocaleString()}
-                  </h3>
-                  <p className={cn("mt-1 text-[10px] font-medium opacity-80", classes.sub)}>
+                  </div>
+                  <div className="mt-1 text-[13px] font-normal text-white">
                     {stat.sublabel}
-                  </p>
+                  </div>
                 </div>
 
               </div>

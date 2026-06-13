@@ -1258,7 +1258,7 @@ function AdminPageContent() {
         if (err.message === "TOTP_REQUIRED") return null
         return (
           <div className="flex flex-col gap-1">
-            <p className="text-sm font-bold text-red-600">Backup Failed</p>
+            <p className="text-sm font-semibold text-red-600">Backup Failed</p>
             <p className="text-xs font-medium opacity-80">
               {err.message || "Unable to complete system snapshot."}
             </p>
@@ -1287,7 +1287,7 @@ function AdminPageContent() {
       loading: "Transferring encrypted backup to external volume...",
       success: (
         <div className="flex flex-col gap-1">
-          <p className="text-sm font-bold">External Sync Complete</p>
+          <p className="text-sm font-semibold">External Sync Complete</p>
           <p className="text-xs font-medium opacity-80">
             A redundant copy has been secured on the external drive.
           </p>
@@ -1295,7 +1295,7 @@ function AdminPageContent() {
       ),
       error: (err) => (
         <div className="flex flex-col gap-1">
-          <p className="text-sm font-bold text-red-600">Sync Failed</p>
+          <p className="text-sm font-semibold text-red-600">Sync Failed</p>
           <p className="text-xs font-medium opacity-80">
             {err.message || "Unable to secure external copy."}
           </p>
@@ -1515,7 +1515,7 @@ function AdminPageContent() {
           {sidebarItems.map((item, idx) => {
             if (item.type === "header") {
               return (
-                <div key={`header-${idx}`} className="text-[9px] font-black tracking-widest text-gray-400 dark:text-zinc-500 whitespace-nowrap ml-4 first:ml-0 border-l border-gray-200 dark:border-white/5 pl-4 first:border-0 first:pl-0">
+                <div key={`header-${idx}`} className="text-[9px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500 whitespace-nowrap ml-4 first:ml-0 border-l border-gray-200 dark:border-white/5 pl-4 first:border-0 first:pl-0">
                   {item.label}
                 </div>
               );
@@ -1526,7 +1526,7 @@ function AdminPageContent() {
                 key={item.key}
                 onClick={() => switchView(item.key)}
                 className={cn(
-                  "px-3 py-1.5 text-xs font-bold rounded-xl flex items-center gap-2 transition-colors duration-300 whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 cursor-pointer shrink-0",
+                  "px-3 py-1.5 text-xs font-semibold rounded-xl flex items-center gap-2 transition-colors duration-300 whitespace-nowrap outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 cursor-pointer shrink-0",
                   active
                     ? "bg-red-50 text-pup-maroon dark:bg-red-500/10 dark:text-primary shadow-xs"
                     : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
@@ -1535,7 +1535,7 @@ function AdminPageContent() {
                 <i className={cn(item.iconClass, "text-sm")}></i>
                 {item.label}
                 {item.badge > 0 && (
-                  <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-extrabold text-white bg-pup-maroon dark:bg-red-500/20 dark:text-red-400">
+                  <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-semibold text-white bg-pup-maroon dark:bg-red-500/20 dark:text-red-400">
                     {item.badge}
                   </span>
                 )}
@@ -1946,13 +1946,13 @@ function AdminPageContent() {
           <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 dark:border-primary/20 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-primary/10">
-                <i className="ph-duotone ph-key text-2xl"></i>
+                <i className="ph-duotone ph-key text-xl"></i>
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg leading-tight font-black tracking-tight text-gray-900 dark:text-zinc-50">
+                <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
                   Staff Account Created
                 </DialogTitle>
-                <DialogDescription className="mt-1.5 text-sm leading-relaxed font-medium text-gray-600 dark:text-zinc-300">
+                <DialogDescription className="mt-1.5 text-sm font-medium text-gray-600 dark:text-zinc-300">
                   System account configured successfully. Securely record the
                   following temporary credentials before closing this window.
                 </DialogDescription>
@@ -1962,7 +1962,7 @@ function AdminPageContent() {
 
           <div className="space-y-6 p-8">
             <div className="rounded-xl border border-amber-100 dark:border-amber-900/30 bg-amber-50 p-6 shadow-sm dark:bg-amber-950/50">
-              <label className="mb-3 block text-[10px] font-black tracking-widest text-amber-900 dark:text-amber-400 opacity-60 dark:opacity-100">
+              <label className="mb-3 block text-[10px] font-semibold tracking-widest text-amber-900 dark:text-amber-400 opacity-60 dark:opacity-100">
                 Temporary Password for{" "}
                 <span className="text-pup-maroon dark:text-primary">
                   {defaultPwUserLabel}
@@ -1970,7 +1970,7 @@ function AdminPageContent() {
               </label>
 
               <div className="group relative flex items-center justify-between rounded-lg border border-amber-200 dark:border-amber-900/40 bg-white p-4 shadow-inner transition-all hover:border-amber-300 dark:hover:border-amber-800/50 dark:bg-white/5 dark:shadow-none">
-                <code className="font-mono text-lg font-black tracking-tight text-gray-900 dark:text-zinc-50">
+                <code className="font-mono text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
                   {defaultReturnedPw}
                 </code>
 
@@ -1979,7 +1979,7 @@ function AdminPageContent() {
                   size="sm"
                   onClick={handleCopyPassword}
                   className={cn(
-                    "h-10 gap-2 rounded-brand border-amber-200 dark:border-amber-900/50 px-4 font-black transition-all",
+                    "h-10 gap-2 rounded-brand border-amber-200 dark:border-amber-900/50 px-4 font-semibold transition-all",
                     copied
                       ? "bg-emerald-500 text-white border-emerald-600 shadow-emerald-200"
                       : "bg-white dark:bg-white/5 text-amber-900 dark:text-amber-200 hover:bg-amber-50 dark:hover:bg-white/10 hover:border-amber-400 dark:hover:border-amber-700/50"
@@ -1990,7 +1990,7 @@ function AdminPageContent() {
                 </Button>
               </div>
 
-              <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200/50 dark:border-amber-900/20 bg-white p-3 text-[10px] font-bold leading-relaxed text-amber-800/80 dark:text-amber-400/80 dark:bg-white/5">
+              <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200/50 dark:border-amber-900/20 bg-white p-3 text-[10px] font-semibold text-amber-800/80 dark:text-amber-400/80 dark:bg-white/5">
                 <i className="ph-fill ph-warning-circle text-sm text-amber-600 mt-0.5" />
                 This password is temporary and will expire after the first login. Please ensure the user receives this securely.
               </div>
@@ -2002,13 +2002,13 @@ function AdminPageContent() {
               type="button"
               variant="outline"
               onClick={() => setDefaultPwOpen(false)}
-              className="h-11 rounded-brand border border-gray-300 px-6 text-sm font-bold text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/5 dark:bg-white/2"
+              className="h-11 rounded-brand border border-gray-300 px-6 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/5 dark:bg-white/2"
             >
               Close
             </Button>
             <Button
               onClick={() => setDefaultPwOpen(false)}
-              className="flex h-11 items-center gap-2 rounded-brand btn-brand-red px-6 font-bold text-white shadow-sm"
+              className="flex h-11 items-center gap-2 rounded-brand btn-brand-red px-6 font-semibold text-white shadow-sm"
             >
               <i className="ph-bold ph-check"></i>
               Acknowledge
@@ -2043,17 +2043,17 @@ function AdminPageContent() {
                   : "border-amber-200 bg-white text-amber-600 dark:border-amber-800/50 dark:bg-amber-900/30 dark:text-amber-400"
               )}>
                 <i className={cn(
-                  "ph-duotone text-2xl",
+                  "ph-duotone text-xl",
                   extDriveEvent?.type === "connected" ? "ph-usb" : "ph-usb-slash"
                 )} />
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg leading-tight font-black tracking-tight text-gray-900 dark:text-zinc-50">
+                <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
                   {extDriveEvent?.type === "connected"
                     ? "External Drive Connected"
                     : "External Drive Disconnected"}
                 </DialogTitle>
-                <DialogDescription className="mt-1.5 text-sm leading-relaxed font-medium text-gray-600 dark:text-zinc-300">
+                <DialogDescription className="mt-1.5 text-sm font-medium text-gray-600 dark:text-zinc-300">
                   {extDriveEvent?.type === "connected"
                     ? "An external backup storage device has been detected and is ready for use."
                     : "The external backup drive is no longer reachable. Backup synchronization is unavailable."}
@@ -2079,8 +2079,8 @@ function AdminPageContent() {
                 <i className="ph-bold ph-hard-drive text-base text-gray-500 dark:text-zinc-400" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-black tracking-widest text-gray-400 dark:text-zinc-500">Drive Label</p>
-                <p className="mt-0.5 text-sm font-black text-gray-900 truncate dark:text-zinc-50">
+                <p className="text-xs font-semibold tracking-widest text-gray-400 dark:text-zinc-500">Drive Label</p>
+                <p className="mt-0.5 text-sm font-semibold text-gray-900 truncate dark:text-zinc-50">
                   {extDriveEvent?.label || "External Storage Device"}
                 </p>
                 {extDriveEvent?.path && (
@@ -2090,7 +2090,7 @@ function AdminPageContent() {
                 )}
               </div>
               <div className={cn(
-                "shrink-0 rounded-full px-2.5 py-1 text-[10px] font-black  tracking-widest",
+                "shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold  tracking-widest",
                 extDriveEvent?.type === "connected"
                   ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400"
                   : "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400"
@@ -2107,7 +2107,7 @@ function AdminPageContent() {
                   ? "ph-info text-blue-500"
                   : "ph-warning-circle text-amber-500"
               )} />
-              <p className="text-[11px] font-medium leading-relaxed text-gray-600 dark:text-zinc-400">
+              <p className="text-[11px] font-medium text-gray-600 dark:text-zinc-400">
                 {extDriveEvent?.type === "connected"
                   ? "Backup archives can now be synchronized to this external drive from the Backup Records panel."
                   : "Any pending or future backup synchronization to this drive will fail until it is reconnected."}
@@ -2120,7 +2120,7 @@ function AdminPageContent() {
               type="button"
               variant="outline"
               onClick={() => setExtDriveModalOpen(false)}
-              className="h-10 rounded-brand border border-gray-300 px-5 text-sm font-bold text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/5 dark:bg-white/2"
+              className="h-10 rounded-brand border border-gray-300 px-5 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/5 dark:bg-white/2"
             >
               Dismiss
             </Button>
@@ -2130,7 +2130,7 @@ function AdminPageContent() {
                   setExtDriveModalOpen(false)
                   switchView("backup")
                 }}
-                className="flex h-10 items-center gap-2 rounded-brand btn-brand-red px-5 font-bold text-white shadow-sm"
+                className="flex h-10 items-center gap-2 rounded-brand btn-brand-red px-5 font-semibold text-white shadow-sm"
               >
                 <i className="ph-bold ph-hard-drives" />
                 Go to Backup Records

@@ -56,7 +56,7 @@ function DocumentsTable({
   return (
     <table className="min-w-full text-sm table-fixed border-separate border-spacing-0">
       <thead className="sticky top-0 z-10 bg-gray-50 backdrop-blur-sm select-none dark:bg-muted">
-        <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 dark:text-zinc-300">
+        <tr className="text-left text-[10px] font-semibold tracking-widest text-gray-600 dark:text-zinc-300">
           <th className="p-4 border-b border-gray-200 dark:border-white/10">
             <button
               onClick={() => handleSort("student_no")}
@@ -151,10 +151,10 @@ function DocumentsTable({
                   <div className="relative mb-6">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                     <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
+                      <i className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></i>
                     </EmptyMedia>
                   </div>
-                  <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">Search Documents</EmptyTitle>
+                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Search Documents</EmptyTitle>
                   <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                     Enter a student number, name, or select a document
                     type to find related records.
@@ -171,10 +171,10 @@ function DocumentsTable({
                   <div className="relative mb-6">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                     <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
+                      <i className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></i>
                     </EmptyMedia>
                   </div>
-                  <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">No Results Found</EmptyTitle>
+                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No Results Found</EmptyTitle>
                   <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                     We couldn&apos;t find any documents matching your
                     search criteria.
@@ -194,16 +194,16 @@ function DocumentsTable({
                   : "bg-red-50 dark:bg-red-950/30"
               )}
             >
-              <td className="p-4 font-bold text-gray-900 dark:text-zinc-50">
+              <td className="p-4 font-semibold text-gray-900 dark:text-zinc-50">
                 {r.student_no}
               </td>
-              <td className="p-4 font-bold text-gray-900 dark:text-zinc-50">
+              <td className="p-4 font-semibold text-gray-900 dark:text-zinc-50">
                 {r.student_name || "—"}
               </td>
               <td className="p-4">
                 <Badge
                   variant="outline"
-                  className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[9px] font-black tracking-wider text-pup-maroon whitespace-nowrap dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
+                  className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[9px] font-semibold tracking-wider text-pup-maroon whitespace-nowrap dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
                 >
                   <i className="ph-bold ph-file-text text-[10px]"></i>
                   {r.doc_type}
@@ -214,7 +214,7 @@ function DocumentsTable({
                   r.verificationStatus === "unverified" ? (
                     <Badge
                       variant="outline"
-                      className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border border-amber-500/20 bg-amber-500/10 text-[9px] font-black tracking-wider text-amber-600 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-400 shadow-none"
+                      className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border border-amber-500/20 bg-amber-500/10 text-[9px] font-semibold tracking-wider text-amber-600 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-400 shadow-none"
                     >
                       <i className="ph-fill ph-warning-circle text-[10px]"></i>
                       Unverified
@@ -222,7 +222,7 @@ function DocumentsTable({
                   ) : (
                     <Badge
                       variant="outline"
-                      className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-[9px] font-black tracking-wider text-emerald-600 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-400 shadow-none"
+                      className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border border-emerald-500/20 bg-emerald-500/10 text-[9px] font-semibold tracking-wider text-emerald-600 dark:border-emerald-400/20 dark:bg-emerald-400/10 dark:text-emerald-400 shadow-none"
                     >
                       <i className="ph-fill ph-check-circle text-[10px]"></i>
                       Uploaded
@@ -231,7 +231,7 @@ function DocumentsTable({
                 ) : (
                   <Badge
                     variant="outline"
-                    className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border border-red-500/20 bg-red-500/10 text-[9px] font-black tracking-wider text-red-600 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
+                    className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border border-red-500/20 bg-red-500/10 text-[9px] font-semibold tracking-wider text-red-600 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
                   >
                     <i className="ph-fill ph-x-circle text-[10px]"></i>
                     Missing
@@ -265,7 +265,7 @@ function DocumentsTable({
                         variant="outline"
                         size="sm"
                         onClick={() => onViewDetails?.(r)}
-                        className="px-3 font-bold text-xs border-gray-300 text-gray-700 hover:border-gray-300 transition-all dark:text-zinc-200 dark:hover:border-zinc-700 dark:border-white/10"
+                        className="px-3 font-semibold text-xs border-gray-300 text-gray-700 hover:border-gray-300 transition-all dark:text-zinc-200 dark:hover:border-zinc-700 dark:border-white/10"
                       >
                         <i className="ph-bold ph-eye mr-1.5"></i>
                         View
@@ -294,7 +294,7 @@ function DocumentsTable({
                       onClick={() =>
                         onRescan?.(r.student_no, r.doc_type)
                       }
-                      className="bg-white border border-gray-300 text-gray-700 hover:text-pup-maroon dark:hover:text-red-500 hover:border-gray-300 font-bold text-xs px-3 h-8 shadow-sm dark:bg-card dark:text-zinc-200 dark:hover:border-zinc-700 dark:shadow-none dark:border-white/10"
+                      className="bg-white border border-gray-300 text-gray-700 hover:text-pup-maroon dark:hover:text-red-500 hover:border-gray-300 font-semibold text-xs px-3 h-8 shadow-sm dark:bg-card dark:text-zinc-200 dark:hover:border-zinc-700 dark:shadow-none dark:border-white/10"
                     >
                       <i className="ph-bold ph-scan mr-1.5"></i>
                       Scan & Upload
@@ -502,7 +502,7 @@ export default function DocumentsTab({
           <div className="bg-white border-t border-b border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
             <div className="flex w-full flex-wrap items-end gap-6">
               <div className="flex-1 min-w-[240px]">
-                <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+                <label className="mb-1.5 block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                   Student Number
                 </label>
                 <Input
@@ -522,7 +522,7 @@ export default function DocumentsTab({
               </div>
 
               <div className="flex-1 min-w-[240px]">
-                <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+                <label className="mb-1.5 block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                   Student Name
                 </label>
                 <Input
@@ -541,7 +541,7 @@ export default function DocumentsTab({
               </div>
 
               <div className="w-full sm:w-56">
-                <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+                <label className="mb-1.5 block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                   Document Type
                 </label>
                 <Select
@@ -577,9 +577,9 @@ export default function DocumentsTab({
           {(docsForm.studentNo !== "" || docsForm.studentName !== "" || docsForm.docType !== "") && (
             <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 dark:text-zinc-500">Active Filters:</span>
+                <span className="mr-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">Active Filters:</span>
                 {docsForm.studentNo && (
-                  <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
+                  <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-semibold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
                     ID: {docsForm.studentNo}
                     <button
                       onClick={() => {
@@ -594,7 +594,7 @@ export default function DocumentsTab({
                   </div>
                 )}
                 {docsForm.studentName && (
-                  <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
+                  <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
                     Name: {docsForm.studentName}
                     <button
                       onClick={() => {
@@ -609,7 +609,7 @@ export default function DocumentsTab({
                   </div>
                 )}
                 {docsForm.docType && (
-                  <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
+                  <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
                     Type: {docsForm.docType}
                     <button
                       onClick={() => {
@@ -631,7 +631,7 @@ export default function DocumentsTab({
                     setDocsForm(cleared);
                     refreshDocuments(cleared);
                   }}
-                  className="h-6 rounded-full border border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
+                  className="h-6 rounded-full border border-dashed border-gray-300 px-3 text-[10px] font-semibold text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
                 >
                   Clear All Filters
                 </Button>
@@ -695,9 +695,9 @@ export default function DocumentsTab({
               <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
                 <EmptyHeader className="flex flex-col items-center gap-0">
                   <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
-                    <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
+                    <i className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
                   </EmptyMedia>
-                  <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">Could Not Load Report</EmptyTitle>
+                  <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Could Not Load Report</EmptyTitle>
                   <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md dark:text-zinc-300">
                     {docsError}
                   </EmptyDescription>
@@ -710,14 +710,14 @@ export default function DocumentsTab({
                 <div className="p-4 border-b border-gray-100 dark:border-white/10">
                   <div className="bg-gray-50 border border-gray-200 rounded-brand p-5 flex items-center justify-between shadow-xs dark:bg-muted/30 dark:border-white/10">
                     <div>
-                      <h3 className="text-sm font-black text-gray-900 tracking-wide dark:text-zinc-50">Upload Progress • {docsRows[0].student_name || docsRows[0].student_no}</h3>
+                      <h3 className="text-sm font-semibold text-gray-900 tracking-wide dark:text-zinc-50">Upload Progress • {docsRows[0].student_name || docsRows[0].student_no}</h3>
                       <p className="text-xs font-medium text-gray-500 mt-1 dark:text-zinc-400">
                         {compUploaded} out of {compTotal} documents uploaded.
                       </p>
                     </div>
                     <div className="flex items-center gap-6">
                       <div className="flex items-center gap-4">
-                        <span className={`text-xl font-black ${compPercent >= 100 ? "text-emerald-600" : compPercent >= 50 ? "text-amber-600" : "text-red-600"} dark:text-emerald-400`}>
+                        <span className={`text-xl font-semibold ${compPercent >= 100 ? "text-emerald-600" : compPercent >= 50 ? "text-amber-600" : "text-red-600"} dark:text-emerald-400`}>
                           {compPercent}%
                         </span>
                         <div className="w-32 sm:w-48 h-2.5 bg-gray-200 rounded-full overflow-hidden dark:bg-zinc-700">
@@ -729,7 +729,7 @@ export default function DocumentsTab({
                       </div>
                       <Button
                         onClick={openEditStudent}
-                        className="bg-white border border-gray-300 text-gray-700 hover:text-pup-maroon dark:hover:text-red-500 hover:border-gray-300 font-bold text-xs px-4 h-9 shadow-sm dark:bg-card dark:text-zinc-200 dark:hover:border-zinc-700 dark:shadow-none dark:border-white/10"
+                        className="bg-white border border-gray-300 text-gray-700 hover:text-pup-maroon dark:hover:text-red-500 hover:border-gray-300 font-semibold text-xs px-4 h-9 shadow-sm dark:bg-card dark:text-zinc-200 dark:hover:border-zinc-700 dark:shadow-none dark:border-white/10"
                       >
                         <i className="ph-bold ph-user-circle-gear mr-2 text-sm"></i>
                         Edit Student
@@ -760,7 +760,7 @@ export default function DocumentsTab({
               docsForm.docType.trim() ? (
                 <div className="flex items-center justify-between border-t border-gray-100 bg-white p-4 dark:border-white/10 dark:bg-card">
                   <div className="flex items-center gap-8 select-none cursor-default">
-                    <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 tracking-widest dark:text-zinc-500">
+                    <div className="flex items-center gap-6 text-[11px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">
                       <span>
                         Showing <strong className="text-gray-900 dark:text-zinc-50">{paginatedRows.length}</strong> Out Of <strong className="text-gray-900 dark:text-zinc-50">{docsRows.length.toLocaleString()}</strong> Entries
                       </span>
@@ -768,7 +768,7 @@ export default function DocumentsTab({
                       <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
                         <span className="text-[10px] opacity-60">Rows:</span>
                         <Select
-                          className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
+                          className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-semibold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
                           value={itemsPerPage}
                           onChange={(e) => {
                             const val = Number(e.target.value);
@@ -795,13 +795,13 @@ export default function DocumentsTab({
                         setPage((p) => p - 1);
                         setJumpPage(String(page - 1));
                       }}
-                      className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                      className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                     >
                       <i className="ph-bold ph-caret-left mr-2 text-base"></i>
                       Prev
                     </Button>
 
-                    <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                    <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-semibold text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
                       {page}
                     </div>
 
@@ -813,7 +813,7 @@ export default function DocumentsTab({
                         setPage((p) => p + 1);
                         setJumpPage(String(page + 1));
                       }}
-                      className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                      className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-500 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                     >
                       Next
                       <i className="ph-bold ph-caret-right ml-2 text-base"></i>
@@ -831,13 +831,13 @@ export default function DocumentsTab({
             <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
               <div className="flex items-start gap-4">
                 <div className="w-12 h-12 rounded-xl border border-red-100 bg-red-50 text-pup-maroon dark:text-primary shadow-sm flex items-center justify-center shrink-0 dark:bg-red-950/30 dark:text-primary dark:shadow-none">
-                  <i className="ph-duotone ph-user-circle-gear text-2xl"></i>
+                  <i className="ph-duotone ph-user-circle-gear text-xl"></i>
                 </div>
                 <div className="min-w-0">
-                  <DialogTitle className="text-lg font-black tracking-tight text-gray-900 leading-tight dark:text-zinc-50">
+                  <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
                     Manage Student Profile
                   </DialogTitle>
-                  <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 leading-relaxed dark:text-zinc-300">
+                  <DialogDescription className="text-sm font-medium mt-1.5 text-gray-600 dark:text-zinc-300">
                     Update student info and storage location.
                   </DialogDescription>
                 </div>
@@ -846,13 +846,13 @@ export default function DocumentsTab({
 
             <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-4">
-                <h4 className="text-[11px] font-bold text-gray-500 tracking-widest border-b border-gray-100 pb-1 dark:text-zinc-400 dark:border-white/10">Identification</h4>
+                <h4 className="text-[11px] font-semibold text-gray-500 tracking-widest border-b border-gray-100 pb-1 dark:text-zinc-400 dark:border-white/10">Identification</h4>
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Student Number</label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Student Number</label>
                   <Input disabled value={currentStudent?.studentNo} className="bg-gray-100 text-gray-500 border-gray-200 cursor-not-allowed dark:text-zinc-400 dark:border-white/10 dark:bg-muted" />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Full Name <span className="text-pup-maroon dark:text-primary">*</span></label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Full Name <span className="text-pup-maroon dark:text-primary">*</span></label>
                   <Input
                     value={editStudentForm.name}
                     onChange={e => setEditStudentForm(p => ({ ...p, name: e.target.value.toUpperCase() }))}
@@ -862,7 +862,7 @@ export default function DocumentsTab({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Degree Program <span className="text-pup-maroon dark:text-primary">*</span></label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Degree Program <span className="text-pup-maroon dark:text-primary">*</span></label>
                   <Select
                     className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 dark:bg-card dark:text-zinc-50 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
                     value={editStudentForm.courseCode}
@@ -874,7 +874,7 @@ export default function DocumentsTab({
                   </Select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Section <span className="text-pup-maroon dark:text-primary">*</span></label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Section <span className="text-pup-maroon dark:text-primary">*</span></label>
                   <Input
                     value={editStudentForm.section}
                     onChange={e => setEditStudentForm(p => ({ ...p, section: e.target.value }))}
@@ -883,7 +883,7 @@ export default function DocumentsTab({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Account Status <span className="text-pup-maroon dark:text-primary">*</span></label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Account Status <span className="text-pup-maroon dark:text-primary">*</span></label>
                   <Select
                     className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 dark:bg-card dark:text-zinc-50 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
                     value={editStudentForm.status}
@@ -900,9 +900,9 @@ export default function DocumentsTab({
               </div>
 
               <div className="space-y-4">
-                <h4 className="text-[11px] font-bold text-gray-500 tracking-widest border-b border-gray-100 pb-1 dark:text-zinc-400 dark:border-white/10">Physical Location</h4>
+                <h4 className="text-[11px] font-semibold text-gray-500 tracking-widest border-b border-gray-100 pb-1 dark:text-zinc-400 dark:border-white/10">Physical Location</h4>
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Room Number <span className="text-pup-maroon dark:text-primary">*</span></label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Room Number <span className="text-pup-maroon dark:text-primary">*</span></label>
                   <Select
                     className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 dark:bg-card dark:text-zinc-50 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
                     value={String(editStudentForm.room || "")}
@@ -919,7 +919,7 @@ export default function DocumentsTab({
                   </Select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Cabinet ID <span className="text-pup-maroon dark:text-primary">*</span></label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Cabinet ID <span className="text-pup-maroon dark:text-primary">*</span></label>
                   <Select
                     className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 dark:bg-card dark:text-zinc-50 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
                     value={editStudentForm.cabinet}
@@ -934,7 +934,7 @@ export default function DocumentsTab({
                   </Select>
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Drawer Number <span className="text-pup-maroon dark:text-primary">*</span></label>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1.5 tracking-wide dark:text-zinc-200">Drawer Number <span className="text-pup-maroon dark:text-primary">*</span></label>
                   <Select
                     className="h-12 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-gray-300 dark:bg-card dark:text-zinc-50 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
                     value={String(editStudentForm.drawer || "")}
@@ -954,15 +954,15 @@ export default function DocumentsTab({
                     <div className="flex gap-3">
                       <i className="ph-duotone ph-warning-circle text-xl text-red-600 shrink-0"></i>
                       <div>
-                        <p className="text-xs font-bold text-red-900 tracking-tight">Archive Record</p>
-                        <p className="text-[11px] text-red-700 mt-1 leading-relaxed">
+                        <p className="text-xs font-semibold text-red-900 tracking-tight">Archive Record</p>
+                        <p className="text-[11px] text-red-700 mt-1">
                           Archiving will hide the student and their documents from search.
                         </p>
                         <Button
                           type="button"
                           variant="outline"
                           onClick={() => setConfirmArchiveOpen(true)}
-                          className="mt-3 w-full bg-white border border-red-200 text-red-600 hover:bg-red-50 text-[10px] font-black h-9 shadow-xs rounded-brand dark:bg-card"
+                          className="mt-3 w-full bg-white border border-red-200 text-red-600 hover:bg-red-50 text-[10px] font-semibold h-9 shadow-xs rounded-brand dark:bg-card"
                         >
                           <i className="ph-bold ph-archive mr-2"></i>
                           Archive Student Record
@@ -979,7 +979,7 @@ export default function DocumentsTab({
                 type="button"
                 variant="outline"
                 onClick={() => setEditStudentOpen(false)}
-                className="h-11 px-6 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
+                className="h-11 px-6 text-sm font-semibold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
               >
                 Cancel
               </Button>
@@ -1034,10 +1034,10 @@ export default function DocumentsTab({
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card">
-                    <i className="ph-duotone ph-file-pdf text-2xl"></i>
+                    <i className="ph-duotone ph-file-pdf text-xl"></i>
                   </div>
                   <div className="min-w-0 text-left">
-                    <DialogTitle className="text-xl leading-none font-black tracking-tight text-gray-900 dark:text-zinc-50">
+                    <DialogTitle className="text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
                       Document View: {selectedDoc?.doc_type || "Loading..."}
                     </DialogTitle>
                     <p className="mt-1.5 text-sm font-medium text-gray-500 dark:text-zinc-400">
@@ -1081,7 +1081,7 @@ export default function DocumentsTab({
                 ) : (
                   <div className="flex h-full items-center justify-center bg-white dark:bg-card">
                     <div className="flex flex-col items-center gap-4 text-gray-400">
-                      <i className="ph-duotone ph-file-dashed text-6xl"></i>
+                      <i className="ph-duotone ph-file-dashed text-xl"></i>
                       <p className="text-sm font-medium">No document file available.</p>
                     </div>
                   </div>
@@ -1091,20 +1091,20 @@ export default function DocumentsTab({
               {/* Right: metadata & decision */}
               <div className="w-[400px] hidden xl:flex flex-col overflow-y-auto p-8 space-y-10 bg-white dark:bg-card">
                 <div>
-                  <h4 className="text-[11px] font-bold text-gray-500 tracking-widest border-b border-gray-100 pb-2 dark:text-zinc-400 dark:border-white/10">Student Record</h4>
+                  <h4 className="text-[11px] font-semibold text-gray-500 tracking-widest border-b border-gray-100 pb-2 dark:text-zinc-400 dark:border-white/10">Student Record</h4>
                   <div className="mt-5 space-y-5">
                     <div>
-                      <label className="text-[10px] font-black tracking-widest text-gray-400">Student Name</label>
-                      <p className="text-base font-bold text-gray-900 dark:text-zinc-50">{selectedDoc?.student_name || "—"}</p>
+                      <label className="text-[10px] font-semibold tracking-widest text-gray-400">Student Name</label>
+                      <p className="text-base font-semibold text-gray-900 dark:text-zinc-50">{selectedDoc?.student_name || "—"}</p>
                     </div>
                     <div>
-                      <label className="text-[10px] font-black tracking-widest text-gray-400">Student Number</label>
-                      <p className="text-base font-bold text-gray-900 dark:text-zinc-50">{selectedDoc?.student_no}</p>
+                      <label className="text-[10px] font-semibold tracking-widest text-gray-400">Student Number</label>
+                      <p className="text-base font-semibold text-gray-900 dark:text-zinc-50">{selectedDoc?.student_no}</p>
                     </div>
                     <div>
-                      <label className="text-[10px] font-black tracking-widest text-gray-400">Document Category</label>
+                      <label className="text-[10px] font-semibold tracking-widest text-gray-400">Document Category</label>
                       <div className="mt-1.5">
-                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[10px] font-black tracking-wider text-pup-maroon dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
+                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[10px] font-semibold tracking-wider text-pup-maroon dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
                           <i className="ph-bold ph-file text-[11px]"></i>
                           {selectedDoc?.doc_type}
                         </span>
@@ -1114,25 +1114,25 @@ export default function DocumentsTab({
                 </div>
 
                 <div>
-                  <h4 className="text-[11px] font-bold text-gray-500 tracking-widest border-b border-gray-100 pb-2 dark:text-zinc-400 dark:border-white/10">Document Status</h4>
+                  <h4 className="text-[11px] font-semibold text-gray-500 tracking-widest border-b border-gray-100 pb-2 dark:text-zinc-400 dark:border-white/10">Document Status</h4>
                   <div className="mt-5 space-y-5">
                     <div>
-                      <label className="text-[10px] font-black tracking-widest text-gray-400">Current Status</label>
+                      <label className="text-[10px] font-semibold tracking-widest text-gray-400">Current Status</label>
                       <div className="mt-1.5">
                         {selectedDoc?.status === "uploaded" ? (
                           selectedDoc.verificationStatus === "unverified" ? (
-                            <div className="flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black tracking-wider shadow-xs bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50">
+                            <div className="flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-xs bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50">
                               <i className="ph-fill ph-warning-circle text-[11px]"></i>
                               Unverified
                             </div>
                           ) : (
-                            <div className="flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black tracking-wider shadow-xs bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-500/90 dark:border-emerald-900/50">
+                            <div className="flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-xs bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/20 dark:text-emerald-500/90 dark:border-emerald-900/50">
                               <i className="ph-fill ph-check-circle text-[11px]"></i>
                               Uploaded
                             </div>
                           )
                         ) : (
-                            <div className="flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-black tracking-wider shadow-xs bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-500/90 dark:border-red-900/50">
+                            <div className="flex w-fit items-center gap-1.5 rounded-full border px-3 py-1.5 text-[10px] font-semibold tracking-wider shadow-xs bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-500/90 dark:border-red-900/50">
                               <i className="ph-fill ph-x-circle text-[11px]"></i>
                               Missing
                             </div>
@@ -1144,21 +1144,21 @@ export default function DocumentsTab({
                       <>
                         <div className="grid grid-cols-2 gap-4">
                           <div className="min-w-0">
-                            <label className="text-[10px] font-black tracking-widest text-gray-400">File Name</label>
+                            <label className="text-[10px] font-semibold tracking-widest text-gray-400">File Name</label>
                             <div className="flex flex-wrap items-center gap-2 mt-0.5 min-w-0">
-                              <p className="text-xs font-bold text-gray-700 dark:text-zinc-300 truncate w-full" title={selectedDoc.doc.original_filename}>{selectedDoc.doc.original_filename}</p>
+                              <p className="text-xs font-semibold text-gray-700 dark:text-zinc-300 truncate w-full" title={selectedDoc.doc.original_filename}>{selectedDoc.doc.original_filename}</p>
                             </div>
                           </div>
                           <div className="min-w-0">
-                            <label className="text-[10px] font-black tracking-widest text-gray-400">File Size</label>
-                            <p className="text-xs font-bold text-gray-700 dark:text-zinc-300 mt-0.5">
+                            <label className="text-[10px] font-semibold tracking-widest text-gray-400">File Size</label>
+                            <p className="text-xs font-semibold text-gray-700 dark:text-zinc-300 mt-0.5">
                               {(selectedDoc.doc.size_bytes / 1024).toFixed(1)} KB
                             </p>
                           </div>
                         </div>
                         <div>
-                          <label className="text-[10px] font-black tracking-widest text-gray-400">Upload Date</label>
-                          <p className="text-xs font-bold text-gray-700 dark:text-zinc-300 mt-0.5">
+                          <label className="text-[10px] font-semibold tracking-widest text-gray-400">Upload Date</label>
+                          <p className="text-xs font-semibold text-gray-700 dark:text-zinc-300 mt-0.5">
                             {selectedDoc.reviewDoc?.created_at ? formatPHDateTime(selectedDoc.reviewDoc.created_at) : "—"}
                           </p>
                         </div>
@@ -1187,7 +1187,7 @@ export default function DocumentsTab({
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                    <p className="text-[10px] font-bold">Document Zoom</p>
+                    <p className="text-[10px] font-semibold">Document Zoom</p>
                     <p className="text-[9px] opacity-80">Toggle high-focus preview mode</p>
                   </TooltipContent>
                 </Tooltip>
@@ -1197,7 +1197,7 @@ export default function DocumentsTab({
                     href={`/api/documents/${selectedDoc.doc.id}`}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex h-11 items-center rounded-brand border border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:text-zinc-300 dark:border-white/10"
+                    className="inline-flex h-11 items-center rounded-brand border border-gray-300 px-6 text-sm font-semibold tracking-wide text-gray-600 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:text-zinc-300 dark:border-white/10"
                   >
                     <i className="ph-bold ph-arrow-square-out mr-2 text-lg"></i>
                     Open Full View
@@ -1209,7 +1209,7 @@ export default function DocumentsTab({
                 <Button
                   variant="outline"
                   onClick={() => setDetailModalOpen(false)}
-                  className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-white/10 shadow-sm transition-colors dark:text-zinc-300 dark:border-white/10"
+                  className="h-11 rounded-brand border-gray-300 px-6 text-sm font-semibold tracking-wide text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-white/10 shadow-sm transition-colors dark:text-zinc-300 dark:border-white/10"
                 >
                   Close Details
                 </Button>
@@ -1228,7 +1228,7 @@ export default function DocumentsTab({
                     }
                   }}
                   disabled={!selectedDoc?.doc?.id}
-                  className="h-11 rounded-brand btn-brand-red px-8 text-sm font-bold tracking-wide shadow-md transition-all active:scale-95 dark:shadow-none"
+                  className="h-11 rounded-brand btn-brand-red px-8 text-sm font-semibold tracking-wide shadow-md transition-all active:scale-95 dark:shadow-none"
                 >
                   <i className="ph-bold ph-arrow-counter-clockwise mr-2"></i>
                   Update Document File

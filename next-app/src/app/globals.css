@@ -15,9 +15,38 @@
   --color-pup-text: #1f1f1f;
   --color-pup-border: #d1d5db;
   --font-heading: var(--font-sans), ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --tracking-wide: 0em;
-  --tracking-wider: 0em;
-  --tracking-widest: 0em;
+  
+  /* Font size scale overrides */
+  --font-size-micro: 10px;
+  --font-size-xs: 11px;
+  --font-size-sm: 12px;
+  --font-size-base: 13px;
+  --font-size-lg: 15px;
+  --font-size-xl: 18px;
+  --font-size-2xl: 18px;
+  --font-size-3xl: 18px;
+  --font-size-4xl: 18px;
+  --font-size-5xl: 18px;
+  --font-size-6xl: 18px;
+
+  /* Font weight overrides */
+  --font-weight-thin: 400;
+  --font-weight-light: 400;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 600;
+  --font-weight-extrabold: 600;
+  --font-weight-black: 600;
+
+  /* Letter spacing overrides */
+  --tracking-tight: -0.01em;
+  --tracking-tighter: -0.01em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.04em;
+  --tracking-wider: 0.04em;
+  --tracking-widest: 0.04em;
+
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -142,9 +171,14 @@
   --color-red-600: #b94642;
 }
 @layer base {
-  * {
+  *, *::before, *::after {
     @apply border-border outline-ring/50;
   }
+  
+  *:not(i):not([class*="ph-"]) {
+    line-height: 1.5 !important;
+  }
+
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
@@ -244,8 +278,15 @@
   background-color: oklch(1 0 0 / 4%);
 }
 
+thead th,
+thead th button,
+th {
+  color: #4a5565 !important;
+}
+
 .dark thead th,
-.dark thead th button {
+.dark thead th button,
+.dark th {
   color: #9f9fa9 !important;
 }
 
@@ -596,10 +637,10 @@ button,
 /* Unified Card/Panel Titles */
 h3:not([class*="text-3xl"]):not([class*="text-2xl"]):not([class*="text-xl"]):not([class*="text-lg"]):not([class*="text-md"]):not([class*="text-base"]), 
 [data-slot="card-title"] {
-  font-size: 0.875rem !important; /* text-sm */
-  font-weight: 700 !important; /* font-bold */
+  font-size: 15px !important; /* subheading */
+  font-weight: 500 !important; /* minor headings get 500 */
   color: #1f2937 !important; /* gray-800 */
-  letter-spacing: normal !important;
+  letter-spacing: -0.01em !important; /* headings get -0.01em */
 }
 
 .dark h3:not([class*="text-3xl"]):not([class*="text-2xl"]):not([class*="text-xl"]):not([class*="text-lg"]):not([class*="text-md"]):not([class*="text-base"]), 
@@ -608,17 +649,17 @@ h3:not([class*="text-3xl"]):not([class*="text-2xl"]):not([class*="text-xl"]):not
 }
 
 /* Typographic Specifications */
-/* 1. Main Body Text & Forms: 16px minimum */
+/* 1. Main Body Text & Forms */
 input, 
 select, 
 textarea, 
 :where(.form-input), 
 :where(.form-select),
 [data-slot="input"] {
-  font-size: 1rem !important; /* 16px */
+  font-size: 13px !important; /* body size */
 }
 
-/* 2. Dashboard / Data Tables: 12px to 14px */
+/* 2. Dashboard / Data Tables */
 table, 
 tr, 
 td, 
@@ -627,13 +668,15 @@ thead,
 tbody, 
 [data-slot="table-cell"],
 [data-slot="table-header"] {
-  font-size: 0.875rem !important; /* 14px */
+  font-size: 12px !important; /* secondary info size */
 }
 
-/* 3. Headlines & Page Headers: 24px to 32px */
+/* 3. Headlines & Page Headers */
 [data-slot="card-title"].text-xl,
 h1 {
-  font-size: 1.5rem !important; /* 24px */
+  font-size: 18px !important; /* page title size */
 }
+
+
 
 

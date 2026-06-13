@@ -55,7 +55,7 @@ export default function SlaFilters({
       <div className="flex flex-wrap items-end gap-5">
         <div className="w-full">
           <div className="mb-1.5 flex items-center justify-between">
-            <label className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+            <label className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
               Time Period
             </label>
             <div className="flex items-center gap-2">
@@ -63,7 +63,7 @@ export default function SlaFilters({
                 <button
                   key={range}
                   onClick={() => handleQuickRange(range)}
-                  className="rounded-md bg-gray-100 px-2 py-0.5 text-[9px] font-black text-gray-500 transition-all hover:bg-pup-maroon hover:text-white dark:text-zinc-400 dark:bg-muted"
+                  className="rounded-md bg-gray-100 px-2 py-0.5 text-[9px] font-semibold text-gray-500 transition-all hover:bg-pup-maroon hover:text-white dark:text-zinc-400 dark:bg-muted"
                 >
                   {range.replace("last", "Last ")}
                 </button>

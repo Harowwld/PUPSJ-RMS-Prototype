@@ -156,7 +156,7 @@ function EmptyTitle({
   return (
     <div
       data-slot="empty-title"
-      className={cn("text-[13px] font-bold tracking-tight text-gray-900 dark:text-zinc-50 mb-0.5", className)}
+      className={cn("text-[13px] font-semibold tracking-tight text-gray-900 dark:text-zinc-50 mb-0.5", className)}
       {...props} />
   )
 }
@@ -169,7 +169,7 @@ function EmptyDescription({
     <div
       data-slot="empty-description"
       className={cn(
-        "text-[11px] text-gray-500 dark:text-zinc-400 max-w-[280px] mx-auto line-clamp-2 leading-normal",
+        "text-[11px] text-gray-500 dark:text-zinc-400 max-w-[280px] mx-auto line-clamp-2 ",
         className
       )}
       {...props} />

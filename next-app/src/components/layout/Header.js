@@ -100,6 +100,10 @@ export default function Header({ authUser, onLogout, children }) {
     router.push("/");
   };
 
+  const isDashboardActive = pathname === "/admin" || pathname === "/staff";
+  const isSettingsActive = pathname === "/account";
+  const isActivityActive = pathname === "/account/activity";
+
   return (
     <header className="bg-white border-b border-gray-300 flex-none z-20 shadow-sm select-none transition-colors duration-300 dark:border-white/5">
       <AccountSetupModal authUser={authUser} />
@@ -109,14 +113,11 @@ export default function Header({ authUser, onLogout, children }) {
           onClick={handleMainDashboardClick}
           onDoubleClick={(e) => e.preventDefault()}
         >
-          <i className="ph-bold ph-bank text-3xl text-pup-maroon dark:text-primary transition-colors group-hover/logo:text-pup-darkMaroon dark:group-hover/logo:text-red-400"></i>
-          <div className="leading-tight">
-            <h1 className="font-bold text-xl text-pup-maroon dark:text-primary tracking-tight transition-colors group-hover/logo:text-pup-darkMaroon dark:group-hover/logo:text-red-400">
-              PUP E-MANAGE
+          <img src="/icon.png" alt="E-Manage Logo" className="h-8 w-8 object-contain" />
+          <div className="">
+            <h1 className="font-semibold text-xl text-black dark:text-white tracking-tight transition-colors group-hover/logo:text-gray-850 dark:group-hover/logo:text-zinc-200">
+              E-Manage
             </h1>
-            <p className="text-[10px] text-gray-500 tracking-widest font-bold group-hover/logo:text-gray-600 transition-colors dark:text-zinc-500 dark:group-hover/logo:text-zinc-400">
-              Student Record Keeping
-            </p>
           </div>
         </div>
 
@@ -152,92 +153,112 @@ export default function Header({ authUser, onLogout, children }) {
             </DropdownMenuTrigger>
              <DropdownMenuContent align="end" className="w-80 rounded-xl border border-gray-200 shadow-2xl p-2 bg-white/98 backdrop-blur-md dark:bg-card dark:border-white/10 dark:shadow-none">
                <DropdownMenuGroup>
-                 <div className="p-4 bg-gray-50/70 border-b border-gray-100 mb-2 dark:bg-white/5 dark:border-white/10 -mx-2 -mt-2 rounded-t-xl">
-                   <div className="flex items-center gap-3">
-                     <div className="h-12 w-12 shrink-0 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-base font-bold text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card">
-                       {initials}
-                     </div>
-                     <div className="min-w-0">
-                       <p className="text-sm font-black text-gray-900 truncate tracking-tight dark:text-zinc-50">
-                         {authUser?.fname} {authUser?.lname}
-                       </p>
-                       <div className="flex items-center gap-1.5">
-                         <span className={cn(
-                           "text-[10px] font-bold px-1.5 py-0.5 rounded border  tracking-wider",
-                           isAdminView 
-                             ? "text-pup-maroon dark:text-primary bg-red-50 border-red-100 dark:bg-red-500/20 dark:border-red-500/30"
-                             : "text-amber-700 dark:text-yellow-500 bg-amber-50 border-amber-200 dark:bg-yellow-500/20 dark:border-yellow-500/30"
-                         )}>
-                           {authUser?.role || "User"}
-                         </span>
-                       </div>
-                       <p className="text-xs text-gray-500 truncate mt-0.5 font-medium dark:text-zinc-500">
-                         {authUser?.email || authUser?.username}
-                       </p>
-                     </div>
-                   </div>
-                 </div>
+                  <div className="p-3 bg-transparent mb-1">
+                    <div className="min-w-0 w-full">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className="text-[14px] font-semibold text-gray-900 truncate tracking-[-0.01em] dark:text-zinc-50">
+                          {authUser?.fname} {authUser?.lname}
+                        </p>
+                        <span className={cn(
+                          "text-[10px] font-medium px-1.5 py-0.5 rounded-[4px] tracking-[0.04em] shrink-0 uppercase",
+                          isAdminView 
+                            ? "text-pup-maroon dark:text-primary bg-red-50 dark:bg-red-500/20"
+                            : "text-amber-800 dark:text-yellow-500 bg-amber-50 dark:bg-yellow-500/20"
+                        )}>
+                          {authUser?.role || "User"}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate mt-[2px] font-normal">
+                        {authUser?.email || authUser?.username}
+                      </p>
+                    </div>
+                  </div>
                </DropdownMenuGroup>
 
-              <DropdownMenuGroup className="p-1">
+              <DropdownMenuGroup className="p-1 flex flex-col gap-[2px]">
                 <DropdownMenuItem
-                  className="cursor-pointer rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-3 font-bold py-2.5 px-3 transition-colors dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
+                  className={cn(
+                    "cursor-pointer rounded-[8px] flex items-center gap-2 font-normal text-[13px] tracking-[-0.01em] py-2 px-3 transition-colors",
+                    isDashboardActive 
+                      ? "text-pup-maroon dark:text-primary hover:bg-transparent" 
+                      : "text-gray-650 hover:bg-gray-50 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
+                  )}
                   onClick={handleMainDashboardClick}
                 >
-                  <i className="ph-bold ph-house-line text-lg text-gray-400 dark:text-zinc-500"></i>
-                  <span className="text-sm">Main Dashboard</span>
+                  <i className={cn(
+                    "ph-bold ph-house-line text-[16px] transition-colors",
+                    isDashboardActive ? "text-pup-maroon dark:text-primary" : "text-gray-400 dark:text-zinc-500"
+                  )}></i>
+                  <span>Dashboard</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  className="cursor-pointer rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-3 font-bold py-2.5 px-3 transition-colors dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
+                  className={cn(
+                    "cursor-pointer rounded-[8px] flex items-center gap-2 font-normal text-[13px] tracking-[-0.01em] py-2 px-3 transition-colors",
+                    isSettingsActive 
+                      ? "text-pup-maroon dark:text-primary hover:bg-transparent" 
+                      : "text-gray-650 hover:bg-gray-50 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
+                  )}
                   onClick={() => router.push("/account")}
                 >
-                  <i className="ph-bold ph-user-circle-gear text-lg text-gray-400 dark:text-zinc-500"></i>
-                  <span className="text-sm">Account Settings</span>
+                  <i className={cn(
+                    "ph-bold ph-user-circle-gear text-[16px] transition-colors",
+                    isSettingsActive ? "text-pup-maroon dark:text-primary" : "text-gray-400 dark:text-zinc-500"
+                  )}></i>
+                  <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
-                  className="cursor-pointer rounded-lg text-gray-600 hover:bg-gray-50 hover:text-gray-900 flex items-center gap-3 font-bold py-2.5 px-3 transition-colors dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
+                  className={cn(
+                    "cursor-pointer rounded-[8px] flex items-center gap-2 font-normal text-[13px] tracking-[-0.01em] py-2 px-3 transition-colors",
+                    isActivityActive 
+                      ? "text-pup-maroon dark:text-primary hover:bg-transparent" 
+                      : "text-gray-650 hover:bg-gray-50 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
+                  )}
                   onClick={() => router.push("/account/activity")}
                 >
-                  <i className="ph-bold ph-clock-counter-clockwise text-lg text-gray-400 dark:text-zinc-500"></i>
-                  <span className="text-sm">My Activity</span>
-                  </DropdownMenuItem>              </DropdownMenuGroup>
+                  <i className={cn(
+                    "ph-bold ph-clock-counter-clockwise text-[16px] transition-colors",
+                    isActivityActive ? "text-pup-maroon dark:text-primary" : "text-gray-400 dark:text-zinc-500"
+                  )}></i>
+                  <span>Activity</span>
+                </DropdownMenuItem>
+              </DropdownMenuGroup>
 
               {hasAdminRights && (
                  <>
                    <div className="px-2 py-3">
-                    <p className="text-[10px] font-black text-gray-400 tracking-[0.15em] px-2 mb-3 dark:text-zinc-500">
+                    <p className="text-[10px] font-medium text-gray-400 tracking-[0.04em] uppercase px-2 mb-2 dark:text-zinc-500">
                       Switch Role
                     </p>
-                    <div className="grid grid-cols-2 gap-2 bg-gray-100/80 p-1.5 rounded-lg border border-gray-200 dark:bg-white/5 dark:border-white/5">
+                    <div className="grid grid-cols-2 gap-2">
                       <DropdownMenuItem
                         onClick={() => handleViewSwitch("admin")}
                         className={cn(
-                          "flex flex-col items-center justify-center gap-1.5 py-3 rounded-md transition-all cursor-pointer outline-none",
+                          "flex flex-col items-center justify-center gap-1.5 py-3 rounded-[8px] transition-all cursor-pointer outline-none",
                           isAdminView 
-                            ? "bg-red-50 text-red-900 shadow-md border border-red-200 ring-1 ring-red-100/20 dark:bg-red-500/20 dark:text-primary dark:border-red-500/30" 
-                            : "text-gray-400 hover:bg-white hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-300"
+                            ? "border-[1.5px] border-pup-maroon bg-red-50 text-pup-maroon dark:border-primary dark:bg-red-500/20 dark:text-primary" 
+                            : "border-0 text-gray-500 hover:bg-gray-50 dark:text-zinc-400 dark:hover:bg-white/5"
                         )}
                       >
                         <i className={cn(
-                          "ph-bold ph-shield-check text-xl transition-colors",
-                          isAdminView ? "text-red-600 dark:text-primary" : "text-gray-400 dark:text-zinc-500"
+                          "ph-bold ph-shield-check text-[16px] transition-colors",
+                          isAdminView ? "text-pup-maroon dark:text-primary" : "text-gray-400 dark:text-zinc-500"
                         )}></i>
-                        <span className="text-[10px] font-black tracking-wider">Admin</span>
+                        <span className="text-[11px] font-medium">Admin</span>
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleViewSwitch("staff")}
                         className={cn(
-                          "flex flex-col items-center justify-center gap-1.5 py-3 rounded-md transition-all cursor-pointer outline-none",
+                          "flex flex-col items-center justify-center gap-1.5 py-3 rounded-[8px] transition-all cursor-pointer outline-none",
                           !isAdminView 
-                            ? "bg-yellow-50 text-yellow-900 shadow-md border border-yellow-200 ring-1 ring-yellow-100/20 dark:bg-yellow-500/20 dark:text-yellow-500 dark:border-yellow-500/30" 
-                            : "text-gray-400 hover:bg-white hover:text-gray-600 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-300"
+                            ? "border-[1.5px] border-pup-maroon bg-red-50 text-pup-maroon dark:border-primary dark:bg-red-500/20 dark:text-primary" 
+                            : "border-0 text-gray-500 hover:bg-gray-50 dark:text-zinc-400 dark:hover:bg-white/5"
                         )}
                       >
                         <i className={cn(
-                          "ph-bold ph-users-three text-xl transition-colors",
-                          !isAdminView ? "text-yellow-600 dark:text-yellow-500" : "text-gray-400 dark:text-zinc-500"
+                          "ph-bold ph-users-three text-[16px] transition-colors",
+                          !isAdminView ? "text-pup-maroon dark:text-primary" : "text-gray-400 dark:text-zinc-500"
                         )}></i>
-                        <span className="text-[10px] font-black tracking-wider">Staff</span>
+                        <span className="text-[11px] font-medium">Staff</span>
                       </DropdownMenuItem>
                     </div>
                   </div>
@@ -245,13 +266,12 @@ export default function Header({ authUser, onLogout, children }) {
               )}
 
               <DropdownMenuSeparator className="opacity-50" />
-              <DropdownMenuGroup className="p-1">
+              <DropdownMenuGroup className="p-1 mt-1">
                 <DropdownMenuItem
                   onClick={onLogout}
-                  className="btn-brand-red rounded-lg !text-white hover:!text-white focus:!text-white focus:**:!text-white flex items-center justify-center gap-2 py-2.5 px-3 m-1 shadow-md"
+                  className="w-full h-[36px] flex items-center justify-center btn-brand-red !rounded-[8px] text-[13px] font-medium tracking-[-0.01em] cursor-pointer text-white hover:text-white"
                 >
-                  <i className="ph-bold ph-power text-lg !text-white"></i>
-                  <span className="text-sm tracking-widest !text-white">Log out</span>
+                  Sign Out
                 </DropdownMenuItem>
               </DropdownMenuGroup>
             </DropdownMenuContent>

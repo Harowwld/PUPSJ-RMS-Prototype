@@ -399,7 +399,7 @@ export default function DocumentRequestsTab({
               {!loading && !error && (
                 <Button
                   type="button"
-                  className="btn-brand-red font-bold shrink-0 dark:shadow-none"
+                  className="btn-brand-red font-semibold shrink-0 dark:shadow-none"
                   onClick={() => setCreateOpen(true)}
                 >
                   <i className="ph-bold ph-plus mr-1.5"></i>
@@ -416,10 +416,10 @@ export default function DocumentRequestsTab({
               {/* Global Search */}
               <div className="flex-1 min-w-[320px]">
                 <div className="mb-1.5 flex items-center justify-between">
-                  <label className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+                  <label className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                     Search Requests
                   </label>
-                  <span className="text-[9px] font-black text-pup-maroon dark:text-primary/70">
+                  <span className="text-[9px] font-semibold text-pup-maroon dark:text-primary/70">
                     {total > 0 ? `${total.toLocaleString()} matches` : "No results"}
                   </span>
                 </div>
@@ -439,7 +439,7 @@ export default function DocumentRequestsTab({
 
               {/* Status Filter */}
               <div className="w-full sm:w-48">
-                <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+                <label className="mb-1.5 block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                   Status
                 </label>
                 <Select
@@ -465,9 +465,9 @@ export default function DocumentRequestsTab({
         {!loading && !error && (q !== "" || statusFilter !== "") && (
           <div className="border-t border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 dark:text-zinc-500">Active filters:</span>
+              <span className="mr-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">Active filters:</span>
               {q && (
-                <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
+                <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-semibold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
                   Search: {q}
                   <button
                     onClick={() => { setQ(""); setPage(1); }}
@@ -478,7 +478,7 @@ export default function DocumentRequestsTab({
                 </div>
               )}
               {statusFilter && (
-                <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
+                <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
                   Status: {statusFilter}
                   <button
                     onClick={() => { setStatusFilter(""); setPage(1); }}
@@ -496,7 +496,7 @@ export default function DocumentRequestsTab({
                   setStatusFilter("");
                   setPage(1);
                 }}
-                className="h-6 rounded-full border border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
+                className="h-6 rounded-full border border-dashed border-gray-300 px-3 text-[10px] font-semibold text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
               >
                 Clear All Filters
               </Button>
@@ -533,9 +533,9 @@ export default function DocumentRequestsTab({
                 <Empty className="h-[320px] flex flex-col items-center justify-center text-center text-gray-500 border-0 dark:text-zinc-400">
                   <EmptyHeader className="flex flex-col items-center gap-0">
                     <EmptyMedia className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-sm dark:bg-card dark:border-white/10 dark:shadow-none">
-                      <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
+                      <i className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
                     </EmptyMedia>
-                    <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">Could Not Load Report</EmptyTitle>
+                    <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Could Not Load Report</EmptyTitle>
                     <EmptyDescription className="text-sm font-medium text-gray-600 mt-1 max-w-md dark:text-zinc-300">
                       {error}
                     </EmptyDescription>
@@ -550,7 +550,7 @@ export default function DocumentRequestsTab({
                 <div className="overflow-x-auto flex-1">
                   <table className="min-w-full text-sm table-fixed">
                     <thead className="bg-gray-50 backdrop-blur-sm select-none dark:bg-muted">
-                      <tr className="text-left text-[10px] font-black tracking-widest text-gray-600 dark:text-zinc-300">
+                      <tr className="text-left text-[10px] font-semibold tracking-widest text-gray-600 dark:text-zinc-300">
                         <th className="p-4 w-20">
                           <button
                             type="button"
@@ -634,10 +634,10 @@ export default function DocumentRequestsTab({
                                 <div className="relative mb-6">
                                   <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                                   <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                                    <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
+                                    <i className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></i>
                                   </EmptyMedia>
                                 </div>
-                                <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">No Alumni Requests Yet</EmptyTitle>
+                                <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No Alumni Requests Yet</EmptyTitle>
                                 <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                                   Create a request for alumni. Track status and find the physical file using the map.
                                 </EmptyDescription>
@@ -659,7 +659,7 @@ export default function DocumentRequestsTab({
                               #{r.id}
                             </td>
                             <td className="p-4">
-                              <div className="font-bold text-gray-900 dark:text-zinc-50">
+                              <div className="font-semibold text-gray-900 dark:text-zinc-50">
                                 {r.student_name || "—"}
                               </div>
                               <div className="flex flex-wrap items-center gap-2 mt-0.5">
@@ -679,7 +679,7 @@ export default function DocumentRequestsTab({
                                         onLocateOnMap(student);
                                       }}
                                       title="Locate on storage map"
-                                      className="inline-flex items-center gap-1 rounded-sm bg-red-50 hover:bg-red-100 px-1.5 py-0.5 text-[9px] font-black tracking-wider text-pup-maroon dark:bg-red-950/40 dark:text-primary dark:hover:bg-red-950/60 border border-red-100 dark:border-white/5 cursor-pointer transition-colors"
+                                      className="inline-flex items-center gap-1 rounded-sm bg-red-50 hover:bg-red-100 px-1.5 py-0.5 text-[9px] font-semibold tracking-wider text-pup-maroon dark:bg-red-950/40 dark:text-primary dark:hover:bg-red-950/60 border border-red-100 dark:border-white/5 cursor-pointer transition-colors"
                                     >
                                       <i className="ph-bold ph-map-pin text-[10px]"></i>
                                       RM{student.room} · CAB-{student.cabinet} · DRW-{student.drawer}
@@ -691,7 +691,7 @@ export default function DocumentRequestsTab({
                             <td className="p-4">
                                <Badge
                                  variant="outline"
-                                 className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[9px] font-black tracking-wider text-pup-maroon whitespace-nowrap dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
+                                 className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[9px] font-semibold tracking-wider text-pup-maroon whitespace-nowrap dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
                                >
                                  <i className="ph-bold ph-file-text text-[10px]"></i>
                                  {r.doc_type}
@@ -700,7 +700,7 @@ export default function DocumentRequestsTab({
                              <td className="p-4">
                                <Badge
                                  variant="outline"
-                                 className={cn("flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-black tracking-wider shadow-none transition-all", statusBadgeClass(r.status))}
+                                 className={cn("flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-semibold tracking-wider shadow-none transition-all", statusBadgeClass(r.status))}
                                >
                                  <i className={cn("ph-fill text-[10px]", statusBadgeIcon(r.status))}></i>
                                  {r.status}
@@ -718,7 +718,7 @@ export default function DocumentRequestsTab({
                 {total > 0 ? (
                   <div className="flex items-center justify-between border-t border-gray-100 bg-white px-6 py-3 rounded-b-brand dark:border-white/10 dark:bg-card">
                     <div className="flex items-center gap-8 select-none cursor-default">
-                      <div className="flex items-center gap-6 text-[11px] font-black text-gray-400 tracking-widest dark:text-zinc-500">
+                      <div className="flex items-center gap-6 text-[11px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">
                         <span>
                           Showing <strong className="text-gray-900 dark:text-zinc-50">{Math.min(itemsPerPage, total - (page - 1) * itemsPerPage)}</strong> out of <strong className="text-gray-900 dark:text-zinc-50">{total.toLocaleString()}</strong> entries
                         </span>
@@ -726,7 +726,7 @@ export default function DocumentRequestsTab({
                         <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
                           <span className="text-[10px] opacity-60">Rows:</span>
                           <Select
-                            className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-bold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
+                            className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-semibold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
                             value={itemsPerPage}
                             onChange={handleItemsPerPageChange}
                           >
@@ -746,13 +746,13 @@ export default function DocumentRequestsTab({
                         size="sm"
                         disabled={page <= 1}
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                        className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                       >
                         <i className="ph-bold ph-caret-left mr-2 text-base"></i>
                         Prev
                       </Button>
 
-                      <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-black text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                      <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-semibold text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
                         {page}
                       </div>
 
@@ -761,7 +761,7 @@ export default function DocumentRequestsTab({
                         size="sm"
                         disabled={page >= totalPages}
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                        className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-black tracking-widest text-gray-500 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                        className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-500 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                       >
                         Next
                         <i className="ph-bold ph-caret-right ml-2 text-base"></i>
@@ -777,7 +777,7 @@ export default function DocumentRequestsTab({
         {/* 3. Request details Card (Right Column) */}
         <Card className="rounded-brand border border-gray-200 bg-white shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0 dark:bg-card dark:border-white/10 dark:shadow-none p-0 mb-4">
           <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between dark:border-white/10 dark:bg-muted/30">
-            <div className="text-xs font-bold tracking-wider text-gray-500 dark:text-zinc-400">
+            <div className="text-xs font-semibold tracking-wider text-gray-500 dark:text-zinc-400">
               Request Details
             </div>
             {hasEdits && (
@@ -785,7 +785,7 @@ export default function DocumentRequestsTab({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="h-7 px-2 text-[10px] font-black text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+                  className="h-7 px-2 text-[10px] font-semibold text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200"
                   onClick={handleResetEdits}
                   disabled={saving}
                 >
@@ -794,7 +794,7 @@ export default function DocumentRequestsTab({
                 <Button
                   variant="default"
                   size="sm"
-                  className="h-7 px-3 text-[10px] font-black btn-brand-red text-white shadow-sm dark:shadow-none"
+                  className="h-7 px-3 text-[10px] font-semibold btn-brand-red text-white shadow-sm dark:shadow-none"
                   onClick={handleManualSave}
                   disabled={saving}
                 >
@@ -835,10 +835,10 @@ export default function DocumentRequestsTab({
                   <div className="relative mb-6">
                     <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                     <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                      <i className="ph-duotone ph-file-text text-5xl text-gray-300 dark:text-zinc-600"></i>
+                      <i className="ph-duotone ph-file-text text-xl text-gray-300 dark:text-zinc-600"></i>
                     </EmptyMedia>
                   </div>
-                  <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">Select a Request</EmptyTitle>
+                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Select a Request</EmptyTitle>
                   <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                     Select a request to see details and location.
                   </EmptyDescription>
@@ -853,21 +853,21 @@ export default function DocumentRequestsTab({
             ) : (
               <div className="space-y-4 animate-fade-up">
                       <div>
-                        <div className="text-xs font-bold text-gray-500 dark:text-zinc-400">
+                        <div className="text-xs font-semibold text-gray-500 dark:text-zinc-400">
                           Student
                         </div>
-                        <div className="font-bold text-gray-900 dark:text-zinc-50">{detail.student_name}</div>
+                        <div className="font-semibold text-gray-900 dark:text-zinc-50">{detail.student_name}</div>
                         <div className="text-xs text-gray-600 dark:text-zinc-300">{detail.student_no}</div>
                       </div>
                       <div>
-                        <div className="text-xs font-bold text-gray-500 dark:text-zinc-400">
+                        <div className="text-xs font-semibold text-gray-500 dark:text-zinc-400">
                           Document Type
                         </div>
                         <div className="font-semibold text-gray-900 dark:text-zinc-50">{detail.doc_type}</div>
                       </div>
 
                       <div className="rounded-brand border border-gray-200 p-3 dark:border-white/10">
-                        <div className="text-xs font-bold text-gray-600 mb-1 dark:text-zinc-300">
+                        <div className="text-xs font-semibold text-gray-600 mb-1 dark:text-zinc-300">
                           Physical Location
                         </div>
 
@@ -883,7 +883,7 @@ export default function DocumentRequestsTab({
                         )}
                         <Button
                           type="button"
-                          className="mt-3 w-full btn-brand-red font-bold text-xs dark:shadow-none"
+                          className="mt-3 w-full btn-brand-red font-semibold text-xs dark:shadow-none"
                           disabled={!studentForRequest}
                           onClick={() => {
                             if (!studentForRequest) return;
@@ -904,13 +904,13 @@ export default function DocumentRequestsTab({
                           <div className="flex gap-2">
                             <i className="ph-bold ph-calendar-blank text-amber-700 text-lg shrink-0 mt-0.5 animate-pulse"></i>
                             <div className="text-xs">
-                              <span className="font-bold text-amber-950 block tracking-wider text-[10px]">
+                              <span className="font-semibold text-amber-950 block tracking-wider text-[10px]">
                                 PUP ODRS Retention Policy
                               </span>
-                              <span className="text-gray-600 block mt-0.5 leading-relaxed">
+                              <span className="text-gray-600 block mt-0.5">
                                 Unclaimed documents are shredded after 90 days according to ODRS policy.
                               </span>
-                              <span className="text-amber-800 font-bold block mt-1.5 flex items-center gap-1.5">
+                              <span className="text-amber-800 font-semibold block mt-1.5 flex items-center gap-1.5">
                                 <i className="ph-bold ph-warning"></i>
                                 Shred Schedule: {retentionExpiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                                 {daysRemaining !== null && (
@@ -923,7 +923,7 @@ export default function DocumentRequestsTab({
                       )}
 
                       <div>
-                        <label className="text-xs font-bold text-gray-600 dark:text-zinc-300">
+                        <label className="text-xs font-semibold text-gray-600 dark:text-zinc-300">
                           Status
                         </label>
                         <Select
@@ -941,7 +941,7 @@ export default function DocumentRequestsTab({
                       </div>
 
                       <div>
-                        <label className="text-xs font-bold text-gray-600 dark:text-zinc-300">
+                        <label className="text-xs font-semibold text-gray-600 dark:text-zinc-300">
                           Notes
                         </label>
                         <textarea
@@ -961,10 +961,10 @@ export default function DocumentRequestsTab({
           <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-xl border border-red-100 dark:border-zinc-800 bg-red-50 text-pup-maroon dark:text-primary shadow-sm flex items-center justify-center shrink-0 dark:bg-red-950/30 dark:text-primary dark:shadow-none">
-                <i className="ph-duotone ph-pencil-line text-2xl"></i>
+                <i className="ph-duotone ph-pencil-line text-xl"></i>
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg font-black tracking-tight text-gray-900 dark:text-zinc-50">New Alumni Request</DialogTitle>
+                <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">New Alumni Request</DialogTitle>
                 <DialogDescription className="text-sm font-medium text-gray-600 mt-1 dark:text-zinc-300">
                   Enter the student number and document type.
                 </DialogDescription>
@@ -990,7 +990,7 @@ export default function DocumentRequestsTab({
                       <i className="ph-bold ph-user-focus text-lg"></i>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="font-bold text-gray-900 text-sm truncate dark:text-zinc-50">{selectedStudent.name}</div>
+                      <div className="font-semibold text-gray-900 text-sm truncate dark:text-zinc-50">{selectedStudent.name}</div>
                       <div className="text-xs text-gray-500 mt-0.5 dark:text-zinc-400">{selectedStudent.studentNo || selectedStudent.student_no}</div>
                       <div className="text-[11px] text-gray-600 mt-1 flex flex-wrap gap-x-2 gap-y-0.5 dark:text-zinc-300">
                         <span>Course: <strong className="text-gray-800 dark:text-zinc-100">{selectedStudent.courseCode || selectedStudent.course_code || "—"}</strong></span>
@@ -1007,7 +1007,7 @@ export default function DocumentRequestsTab({
               ) : (
                 <div className="space-y-4">
                   <div className="relative">
-                    <label className="text-xs font-bold text-gray-700 dark:text-zinc-200">
+                    <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
                       Search Student (Name or Number)
                     </label>
                     <div className="relative mt-1.5">
@@ -1034,7 +1034,7 @@ export default function DocumentRequestsTab({
                                 setStudentSearch("");
                               }}
                             >
-                              <div className="text-sm font-bold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
+                              <div className="text-sm font-semibold text-gray-900 dark:text-zinc-100 group-hover:text-pup-maroon dark:group-hover:text-red-400 transition-colors">
                                 {s?.name}
                               </div>
                               <div className="text-[10px] text-gray-500 dark:text-zinc-400 flex items-center gap-1.5">
@@ -1051,7 +1051,7 @@ export default function DocumentRequestsTab({
 
                   <div>
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-gray-700 dark:text-zinc-200">
+                      <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
                         Or Enter Custom Student Number
                       </label>
                       <span className="text-[10px] text-gray-400 font-semibold">If student record is missing</span>
@@ -1066,7 +1066,7 @@ export default function DocumentRequestsTab({
                 </div>
               )}
               <div>
-                <label className="text-xs font-bold text-gray-700 dark:text-zinc-200">
+                <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
                   Document Type
                 </label>
                 <Select
@@ -1084,7 +1084,7 @@ export default function DocumentRequestsTab({
                 </Select>
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-700 dark:text-zinc-200">
+                <label className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
                   Notes (Optional)
                 </label>
                 <textarea
@@ -1099,14 +1099,14 @@ export default function DocumentRequestsTab({
               <Button
                 type="button"
                 variant="outline"
-                className="px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
+                className="px-5 text-sm font-semibold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
                 onClick={() => setCreateOpen(false)}
               >
                 Cancel
               </Button>
               <Button
                 type="submit"
-                className="px-5 btn-brand-red font-bold shadow-sm rounded-brand gap-2 flex items-center dark:shadow-none"
+                className="px-5 btn-brand-red font-semibold shadow-sm rounded-brand gap-2 flex items-center dark:shadow-none"
                 disabled={submitting}
               >
                 <i className="ph-bold ph-plus-circle text-lg"></i>
@@ -1121,10 +1121,10 @@ export default function DocumentRequestsTab({
           <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
             <div className="flex items-start gap-4">
               <div className="w-12 h-12 rounded-xl border border-red-100 bg-red-50 text-red-700 shadow-sm flex items-center justify-center shrink-0 dark:bg-red-950/30 dark:shadow-none">
-                <i className="ph-duotone ph-warning-circle text-2xl"></i>
+                <i className="ph-duotone ph-warning-circle text-xl"></i>
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg font-black tracking-tight text-gray-900 dark:text-zinc-50">
+                <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
                   No Digital Copy
                 </DialogTitle>
                 <DialogDescription className="text-sm font-medium text-gray-600 mt-1 dark:text-zinc-300">
@@ -1147,7 +1147,7 @@ export default function DocumentRequestsTab({
                 <Empty className="py-6 border-red-200 bg-red-50 text-red-800 dark:bg-red-950/30">
                   <EmptyHeader>
                     <EmptyMedia>
-                      <i className="ph-bold ph-warning-circle text-2xl text-red-600"></i>
+                      <i className="ph-bold ph-warning-circle text-xl text-red-600"></i>
                     </EmptyMedia>
                     <EmptyTitle className="text-sm">No Mapped Storage Location</EmptyTitle>
                     <EmptyDescription className="text-red-700/70 text-xs">
@@ -1162,7 +1162,7 @@ export default function DocumentRequestsTab({
             <Button
               type="button"
               variant="outline"
-              className="px-5 text-sm font-bold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
+              className="px-5 text-sm font-semibold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
               onClick={() => setFileWarningOpen(false)}
             >
               Close
@@ -1171,7 +1171,7 @@ export default function DocumentRequestsTab({
             {studentForRequest ? (
               <Button
                 type="button"
-                className="px-5 btn-brand-red font-bold shadow-sm rounded-brand gap-2 flex items-center dark:shadow-none"
+                className="px-5 btn-brand-red font-semibold shadow-sm rounded-brand gap-2 flex items-center dark:shadow-none"
                 onClick={() => {
                   setFileWarningOpen(false);
                   onLocateOnMap(studentForRequest);

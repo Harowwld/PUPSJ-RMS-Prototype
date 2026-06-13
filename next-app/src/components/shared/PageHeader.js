@@ -43,12 +43,12 @@ export default function PageHeader({
         <div className="flex items-center gap-4">
           {leftAction}
           
-          <div>
-            <CardTitle className="flex items-center gap-2 text-xl leading-none font-black tracking-tight text-gray-900 transition-colors dark:text-zinc-50">
+          <div className="flex flex-col gap-[4px]">
+            <CardTitle className="flex items-center gap-2 text-xl font-semibold tracking-tight text-gray-900 transition-colors dark:text-zinc-50 m-0">
               {title}
             </CardTitle>
             {description && (
-              <CardDescription className="mt-1.5 text-sm font-medium text-gray-500 transition-colors dark:text-zinc-400">
+              <CardDescription className="text-sm font-medium text-gray-500 transition-colors dark:text-zinc-400 m-0">
                 {description}
               </CardDescription>
             )}
@@ -63,11 +63,11 @@ export default function PageHeader({
             {(onSearchChange || searchValue !== undefined) && (
               <div className="w-full sm:w-64">
                 <div className="mb-1 flex items-center justify-between">
-                  <label className="block text-[10px] font-bold text-gray-700 tracking-wide transition-colors dark:text-zinc-200">
+                  <label className="block text-[10px] font-semibold text-gray-700 tracking-wide transition-colors dark:text-zinc-200">
                     {searchLabel}
                   </label>
                   {searchCount && (
-                    <span className="text-[9px] font-black text-pup-maroon dark:text-primary/70">
+                    <span className="text-[9px] font-semibold text-pup-maroon dark:text-primary/70">
                       {searchCount}
                     </span>
                   )}

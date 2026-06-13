@@ -25,13 +25,13 @@ export default function EditUserModal({
         <DialogHeader className="border-b border-gray-100 bg-gray-50/50 p-6 dark:border-white/10 dark:bg-white/5">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon shadow-sm dark:bg-red-950/30 dark:border-white/10">
-              <i className="ph-duotone ph-user-gear text-2xl"></i>
+              <i className="ph-duotone ph-user-gear text-xl"></i>
             </div>
             <div className="min-w-0">
-              <DialogTitle className="text-lg leading-tight font-black tracking-tight text-gray-900 dark:text-zinc-50">
+              <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
                 Update Personnel Profile
               </DialogTitle>
-              <DialogDescription className="mt-1.5 text-sm leading-relaxed font-medium text-gray-600 dark:text-zinc-300">
+              <DialogDescription className="mt-1.5 text-sm font-medium text-gray-600 dark:text-zinc-300">
                 Modify staff credentials and role assignments. Changes will sync
                 across the repository immediately after saving.
               </DialogDescription>
@@ -44,7 +44,7 @@ export default function EditUserModal({
             {/* Part 1: Full name */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
+                <label className="mb-2 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
                   First Name <span className="text-pup-maroon dark:text-primary">*</span>
                 </label>
                 <Input
@@ -59,7 +59,7 @@ export default function EditUserModal({
                 />
               </div>
               <div>
-                <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
+                <label className="mb-2 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
                   Last Name <span className="text-pup-maroon dark:text-primary">*</span>
                 </label>
                 <Input
@@ -77,7 +77,7 @@ export default function EditUserModal({
 
             {/* Part 2: Role Selection */}
             <div>
-              <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
+              <label className="mb-2 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
                 System Role <span className="text-pup-maroon dark:text-primary">*</span>
               </label>
               <Select
@@ -99,7 +99,7 @@ export default function EditUserModal({
             {/* Part 3: System Identifiers */}
             <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
+                <label className="mb-2 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
                   Employee ID <span className="text-pup-maroon dark:text-primary">*</span>
                 </label>
                 <Input
@@ -111,7 +111,7 @@ export default function EditUserModal({
                 />
               </div>
               <div>
-                <label className="mb-2 block text-xs font-bold tracking-wide text-gray-700 dark:text-zinc-200">
+                <label className="mb-2 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
                   Institutional Email
                 </label>
                 <Input
@@ -131,14 +131,14 @@ export default function EditUserModal({
               variant="ghost"
               onClick={onClose}
               disabled={isLoading}
-              className="h-11 rounded-brand px-6 text-sm font-bold text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors"
+              className="h-11 rounded-brand px-6 text-sm font-semibold text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
-              className="flex h-11 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-black text-white shadow-sm dark:shadow-none"
+              className="flex h-11 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-semibold text-white shadow-sm dark:shadow-none"
             >
               <i className="ph-bold ph-floppy-disk"></i>
               {isLoading ? "Saving Changes..." : "Save changes"}

@@ -381,30 +381,30 @@ export default function DigitizationComplianceTab({
             <div className="group relative overflow-hidden rounded-xl border-none bg-linear-to-br from-red-500 to-red-700 dark:from-red-700 dark:to-red-950 p-5 shadow-sm transition-all dark:shadow-none">
               <i className="ph-duotone ph-chart-pie pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
               <div className="relative z-10">
-                <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-red-200">
+                <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
                   <i className="ph-bold ph-chart-pie" /> Completeness
                   <TooltipProvider delayDuration={200}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <i className="ph-bold ph-info cursor-help text-xs text-red-300 hover:text-white transition-colors" />
+                        <i className="ph-bold ph-info cursor-help text-xs text-white hover:text-white transition-colors" />
                       </TooltipTrigger>
                       <TooltipContent 
                         side="right" 
                         sideOffset={10}
                         className="max-w-xs rounded-md border-red-900 bg-[#7a1e28] p-4 text-white shadow-2xl"
                       >
-                        <p className="mb-1 text-[10px] font-black tracking-widest text-red-100">Metric Scope</p>
-                        <p className="text-[11px] font-medium leading-relaxed text-red-100/90">
+                        <p className="mb-1 text-[10px] font-semibold tracking-widest text-red-100">Metric Scope</p>
+                        <p className="text-[11px] font-medium text-red-100/90">
                           This shows the cumulative digitization health across the selected dataset. It is calculated based on total uploaded documents vs. total system requirements.
                         </p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 </div>
-                <div className="text-3xl font-black text-white">
+                <div className="text-[48px] font-semibold text-white">
                   {summary?.percentDigitized != null ? `${summary.percentDigitized}%` : "0%"}
                 </div>
-                <div className="mt-1 text-[10px] font-medium text-red-200/80">
+                <div className="mt-1 text-[13px] font-normal text-white">
                   Overall record health
                 </div>
               </div>
@@ -413,13 +413,13 @@ export default function DigitizationComplianceTab({
             <div className="group relative overflow-hidden rounded-xl border-none bg-linear-to-br from-blue-600 to-blue-800 dark:from-blue-800 dark:to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
               <i className="ph-duotone ph-users-three pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
               <div className="relative z-10">
-                <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-blue-200">
+                <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
                   <i className="ph-bold ph-users-three" /> Students
                 </div>
-                <div className="text-3xl font-black text-white">
+                <div className="text-[48px] font-semibold text-white">
                   {summary?.totalStudents?.toLocaleString?.() ?? summary?.totalStudents}
                 </div>
-                <div className="mt-1 text-[10px] font-medium text-blue-200/80">
+                <div className="mt-1 text-[13px] font-normal text-white">
                   Total Enrollment
                 </div>
               </div>
@@ -428,14 +428,14 @@ export default function DigitizationComplianceTab({
             <div className="group relative overflow-hidden rounded-xl border-none bg-linear-to-br from-emerald-500 to-emerald-700 dark:from-amber-700 dark:to-amber-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
               <i className="ph-duotone ph-check-square-offset pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
               <div className="relative z-10">
-                <div className="mb-1 flex items-center gap-1.5 text-[10px] font-bold tracking-widest text-emerald-100">
+                <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
                   <i className="ph-bold ph-check-square-offset" /> Complete
                 </div>
-                <div className="text-3xl font-black text-white">
+                <div className="text-[48px] font-semibold text-white">
                   {summary?.digitizedStudents?.toLocaleString?.() ?? summary?.digitizedStudents}
                 </div>
-                <div className="mt-1 text-[10px] font-bold text-white flex items-center gap-1.5">
-                  <i className="ph-bold ph-trend-up text-emerald-200" /> 100% Validated
+                <div className="mt-1 text-[13px] font-normal text-white flex items-center gap-1.5">
+                  <i className="ph-bold ph-trend-up text-white" /> 100% Validated
                 </div>
               </div>
             </div>
@@ -460,7 +460,7 @@ export default function DigitizationComplianceTab({
                     size="sm"
                     onClick={handlePreview}
                     disabled={loading || !data || isGeneratingPdf}
-                    className="flex h-11 px-5 items-center justify-center gap-2 btn-brand-red text-[11px] font-black text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
+                    className="flex h-11 px-5 items-center justify-center gap-2 btn-brand-red text-[11px] font-semibold text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
                   >
                     <i className={cn("ph-bold text-base", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
                     {isGeneratingPdf ? "Generating..." : "Generate Report"}
@@ -471,7 +471,7 @@ export default function DigitizationComplianceTab({
                     size="sm"
                     onClick={downloadCsv}
                     disabled={loading || !data || isExportingCsv}
-                    className="flex h-9 px-4 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-transparent text-[10px] font-bold text-gray-600 transition-colors hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
+                    className="flex h-9 px-4 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-transparent text-[10px] font-semibold text-gray-600 transition-colors hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
                   >
                     <i className={cn("ph-bold text-sm", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
                     {isExportingCsv ? "Preparing..." : "Export"}
@@ -493,11 +493,11 @@ export default function DigitizationComplianceTab({
           {hasActiveFilters && (
             <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
               <div className="flex flex-wrap items-center gap-2">
-                  <span className="mr-1 text-[10px] font-bold tracking-widest text-gray-400 dark:text-zinc-505">
+                  <span className="mr-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-505">
                   Active filters:
                   </span>
                   {statusFilter !== "Active" && (
-                      <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
+                      <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
                       Status: {statusFilter}
                       <button
                           onClick={() => setStatusFilter("Active")}
@@ -508,7 +508,7 @@ export default function DigitizationComplianceTab({
                       </div>
                   )}
                   {courseFilter !== "" && (
-                      <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-bold text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
+                      <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
                       Program: {courseFilter}
                       <button
                           onClick={() => setCourseFilter("")}
@@ -519,7 +519,7 @@ export default function DigitizationComplianceTab({
                       </div>
                   )}
                   {requireApproved && (
-                      <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
+                      <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
                       Requirement: Approved Only
                       <button
                           onClick={() => setRequireApproved(false)}
@@ -530,7 +530,7 @@ export default function DigitizationComplianceTab({
                       </div>
                   )}
                   {tableSearch && (
-                      <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-bold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
+                      <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-semibold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
                       Search: {tableSearch}
                       <button
                           onClick={() => setTableSearch("")}
@@ -544,7 +544,7 @@ export default function DigitizationComplianceTab({
                       variant="ghost"
                       size="sm"
                       onClick={handleClearAll}
-                      className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-black text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-darkMaroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
+                      className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-semibold text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-darkMaroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
                   >
                       CLEAR ALL FILTERS
                   </Button>
@@ -566,15 +566,15 @@ export default function DigitizationComplianceTab({
                         sideOffset={10}
                         className="max-w-xs rounded-md border-red-900 bg-[#7a1e28] p-4 text-white shadow-2xl"
                       >
-                        <p className="mb-1 text-[10px] font-black tracking-widest text-red-100">Status Category</p>
-                        <p className="text-[11px] font-medium leading-relaxed text-red-100/90">
+                        <p className="mb-1 text-[10px] font-semibold tracking-widest text-red-100">Status Category</p>
+                        <p className="text-[11px] font-medium text-red-100/90">
                           <strong>Active:</strong> Currently enrolled students.<br />
                           <strong>Archived:</strong> All non-active records (Graduated, Withdrawn, Transferred).
                         </p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                  <label className="block text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+                  <label className="block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                     Student Status
                   </label>
                 </div>
@@ -600,15 +600,15 @@ export default function DigitizationComplianceTab({
                         sideOffset={10}
                         className="max-w-xs rounded-md border-red-900 bg-[#7a1e28] p-4 text-white shadow-2xl"
                       >
-                        <p className="mb-1 text-[10px] font-black tracking-widest text-red-100">Validation Logic</p>
-                        <p className="text-[11px] font-medium leading-relaxed text-red-100/90">
+                        <p className="mb-1 text-[10px] font-semibold tracking-widest text-red-100">Validation Logic</p>
+                        <p className="text-[11px] font-medium text-red-100/90">
                           <strong>Enabled:</strong> Only counts documents that have been reviewed and approved by staff.<br />
                           <strong>Disabled:</strong> Counts all uploaded documents regardless of review status.
                         </p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
-                  <label className="block text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+                  <label className="block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                     Validation Requirement
                   </label>
                 </div>
@@ -617,7 +617,7 @@ export default function DigitizationComplianceTab({
                   pressed={requireApproved}
                   onPressedChange={setRequireApproved}
                   className={cn(
-                    "h-11 px-4 gap-2 rounded-brand border border-gray-200 dark:border-white/10 font-bold text-[10px]  tracking-widest transition-all select-none w-full bg-white dark:bg-card",
+                    "h-11 px-4 gap-2 rounded-brand border border-gray-200 dark:border-white/10 font-semibold text-[10px]  tracking-widest transition-all select-none w-full bg-white dark:bg-card",
                     "hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-700 dark:text-zinc-200",
                     "data-[state=on]:bg-pup-maroon data-[state=on]:text-white data-[state=on]:border-pup-maroon dark:data-[state=on]:bg-red-500/10 dark:data-[state=on]:text-red-400 dark:data-[state=on]:border-red-400/20 shadow-sm"
                   )}
@@ -628,7 +628,7 @@ export default function DigitizationComplianceTab({
               </div>
 
               <div className="flex-[2] min-w-[280px]">
-                <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+                <label className="mb-1.5 block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                   Academic Program
                 </label>
                 <div className="relative">
@@ -679,16 +679,16 @@ export default function DigitizationComplianceTab({
                           <i className="ph-duotone ph-target text-xl" />
                         </div>
                         <div>
-                          <h3 className="text-sm font-black text-gray-900 tracking-tight dark:text-zinc-50">
+                          <h3 className="text-sm font-semibold text-gray-900 tracking-tight dark:text-zinc-50">
                             Digitization Target
                           </h3>
-                          <div className="text-[10px] font-bold text-gray-400 tracking-widest uppercase dark:text-zinc-500 mt-0.5">
+                          <div className="text-[10px] font-semibold text-gray-400 tracking-widest uppercase dark:text-zinc-500 mt-0.5">
                             Requirement Basis
                           </div>
                         </div>
                       </div>
                       <div className="pl-13">
-                        <p className="text-[11px] font-medium text-gray-600 leading-relaxed dark:text-zinc-400 max-w-xl">
+                        <p className="text-[11px] font-medium text-gray-600 dark:text-zinc-400 max-w-xl">
                           {meta?.definitions?.expectedCountFormula || "All required documents based on program configuration."}
                         </p>
                       </div>
@@ -698,21 +698,21 @@ export default function DigitizationComplianceTab({
                     <div className="w-full lg:w-[450px] shrink-0 bg-white p-5 rounded-xl border border-gray-200 shadow-sm dark:bg-card dark:border-white/10">
                       <div className="flex items-end justify-between mb-4">
                         <div className="flex flex-col">
-                          <span className="text-[10px] font-bold text-gray-400 tracking-widest uppercase dark:text-zinc-500 mb-1">
+                          <span className="text-[10px] font-semibold text-gray-400 tracking-widest uppercase dark:text-zinc-500 mb-1">
                             Documents Digitized
                           </span>
                           <div className="flex items-baseline gap-2">
-                            <span className="text-3xl font-black text-gray-900 leading-none tracking-tighter dark:text-zinc-50">
+                            <span className="text-xl font-semibold text-gray-900 tracking-tight dark:text-zinc-50">
                               {summary?.totalDigitizedDocsCount?.toLocaleString() || 0}
                             </span>
-                            <span className="text-sm font-bold text-gray-400 dark:text-zinc-500">
+                            <span className="text-sm font-semibold text-gray-400 dark:text-zinc-500">
                               / {summary?.totalExpectedDocsCount?.toLocaleString() || 0}
                             </span>
                           </div>
                         </div>
                         <div className="flex flex-col items-end">
                            <Badge variant="outline" className={cn(
-                             "px-2.5 py-1 text-[10px] font-black border tracking-wider",
+                             "px-2.5 py-1 text-[10px] font-semibold border tracking-wider",
                              percent >= 90 ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/50" : 
                              percent >= 50 ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900/50" : 
                              "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900/50"
@@ -755,9 +755,9 @@ export default function DigitizationComplianceTab({
             <Empty className="flex h-[400px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
               <EmptyHeader className="flex flex-col items-center gap-0">
                 <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                  <i className="ph-duotone ph-warning-circle text-3xl text-pup-maroon dark:text-primary" />
+                  <i className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
                 </EmptyMedia>
-                <EmptyTitle className="text-lg font-bold text-gray-900 dark:text-zinc-50">Data Unavailable</EmptyTitle>
+                <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">Data Unavailable</EmptyTitle>
                 <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
                   {error}
                 </EmptyDescription>
@@ -765,7 +765,7 @@ export default function DigitizationComplianceTab({
                   variant="outline" 
                   size="sm" 
                   onClick={() => load(true)}
-                  className="mt-6 flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10" 
+                  className="mt-6 flex h-10 items-center gap-2 rounded-brand border border-gray-300 bg-white px-6 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10" 
                 >
                   <i className={cn("ph-bold ph-arrows-clockwise", manualLoading && "animate-spin")}></i>
                   Retry Connection
@@ -782,22 +782,22 @@ export default function DigitizationComplianceTab({
               {/* ... (Search and header content) ... */}
               <div className="flex items-center gap-3">
                 <div>
-                  <h4 className="text-[10px] font-black text-gray-400 tracking-widest mb-1.5 dark:text-zinc-500">
+                  <h4 className="text-[10px] font-semibold text-gray-400 tracking-widest mb-1.5 dark:text-zinc-500">
                     Program Breakdown
                   </h4>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-bold tracking-widest text-gray-400 dark:text-zinc-500">
-                      RECORDS: <span className="text-gray-900 font-black dark:text-zinc-50">{sortedByCourse.length}</span>
+                    <span className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
+                      RECORDS: <span className="text-gray-900 font-semibold dark:text-zinc-50">{sortedByCourse.length}</span>
                     </span>
                   </div>
                 </div>
               </div>
               <div className="min-w-[320px] flex-1 sm:max-w-md">
                 <div className="mb-1.5 flex items-center justify-between">
-                  <label className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+                  <label className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                     Filter Results
                   </label>
-                  <span className="text-[9px] font-black text-pup-maroon dark:text-primary/70">
+                  <span className="text-[9px] font-semibold text-pup-maroon dark:text-primary/70">
                     {tableSearch ? (sortedByCourse.length > 0 ? `${sortedByCourse.length} MATCHES` : "NO RESULTS") : ""}
                   </span>
                 </div>
@@ -818,8 +818,8 @@ export default function DigitizationComplianceTab({
                 {sortedByCourse.length > 0 ? (
                   <Table className="min-w-full text-sm">
                     <TableHeader className="sticky top-0 z-10 [&_tr]:border-b-0 bg-gray-50 backdrop-blur-sm dark:bg-muted">
-                      <TableRow className="hover:bg-transparent text-left text-[10px] font-black tracking-widest text-gray-600 dark:text-zinc-300">
-                        <TableHead className="p-4 px-6 font-bold">
+                      <TableRow className="hover:bg-transparent text-left text-[10px] font-semibold tracking-widest text-gray-600 dark:text-zinc-300">
+                        <TableHead className="p-4 px-6 font-semibold">
                           <button
                             onClick={() => handleSort("courseCode")}
                             className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
@@ -827,7 +827,7 @@ export default function DigitizationComplianceTab({
                             Program <SortIndicator column="courseCode" />
                           </button>
                         </TableHead>
-                        <TableHead className="p-4 px-6 text-center font-bold">
+                        <TableHead className="p-4 px-6 text-center font-semibold">
                           <button
                             onClick={() => handleSort("total")}
                             className="group mx-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
@@ -835,7 +835,7 @@ export default function DigitizationComplianceTab({
                             Total Students <SortIndicator column="total" />
                           </button>
                         </TableHead>
-                        <TableHead className="p-4 px-6 text-center font-bold">
+                        <TableHead className="p-4 px-6 text-center font-semibold">
                           <button
                             onClick={() => handleSort("digitized")}
                             className="group mx-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
@@ -843,7 +843,7 @@ export default function DigitizationComplianceTab({
                             Fully Digitized <SortIndicator column="digitized" />
                           </button>
                         </TableHead>
-                        <TableHead className="p-4 px-6 text-right font-bold">
+                        <TableHead className="p-4 px-6 text-right font-semibold">
                           <button
                             onClick={() => handleSort("percent")}
                             className="group ml-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
@@ -856,23 +856,23 @@ export default function DigitizationComplianceTab({
                     <TableBody className="divide-y divide-gray-100 dark:divide-white/10">
                       {sortedByCourse.map((row) => (
                         <TableRow key={row.courseCode} className="group transition-all duration-200 hover:bg-gray-50/80 dark:bg-card dark:hover:bg-white/5">
-                          <TableCell className="p-4 px-6 font-inter font-bold text-pup-maroon dark:text-primary text-xs dark:text-primary">
+                          <TableCell className="p-4 px-6 font-inter font-semibold text-pup-maroon dark:text-primary text-xs dark:text-primary">
                             {row.courseCode || "—"}
                           </TableCell>
                           <TableCell className="p-4 px-6 text-gray-700 font-medium text-center dark:text-zinc-200">
                             {row.total?.toLocaleString?.() ?? row.total}
                           </TableCell>
                           <TableCell className="p-4 px-6 text-center">
-                            <span className="text-emerald-600 font-black dark:text-emerald-400">
+                            <span className="text-emerald-600 font-semibold dark:text-emerald-400">
                               {row.digitized?.toLocaleString?.() ?? row.digitized}
                             </span>
-                            <span className="text-[10px] text-gray-400 font-bold ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity dark:text-zinc-505">
+                            <span className="text-[10px] text-gray-400 font-semibold ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity dark:text-zinc-505">
                               ({row.fullyDigitizedRate}%)
                             </span>
                           </TableCell>
                           <TableCell className="p-4 px-6 text-right">
                             <div className="flex items-center justify-end gap-4">
-                              <span className="text-gray-900 font-black text-xs dark:text-zinc-50">
+                              <span className="text-gray-900 font-semibold text-xs dark:text-zinc-50">
                                 {row.percent != null ? `${row.percent}%` : "0%"}
                               </span>
                               <div className="w-20 h-1.5 rounded-full bg-gray-100 overflow-hidden hidden sm:block shadow-inner dark:shadow-none dark:bg-muted">
@@ -896,10 +896,10 @@ export default function DigitizationComplianceTab({
                       <div className="relative mb-6 mx-auto w-24 h-24">
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 rounded-full bg-gray-100/50 dark:bg-zinc-800/30"></div>
                         <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                          <i className="ph-duotone ph-magnifying-glass text-5xl text-gray-300 dark:text-zinc-600"></i>
+                          <i className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></i>
                         </EmptyMedia>
                       </div>
-                      <EmptyTitle className="text-xl font-black text-gray-900 dark:text-zinc-50">No data found</EmptyTitle>
+                      <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">No data found</EmptyTitle>
                       <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
                         {tableSearch 
                           ? `No results found for "${tableSearch}".` 
@@ -910,7 +910,7 @@ export default function DigitizationComplianceTab({
                               variant="outline" 
                               size="sm" 
                               onClick={handleClearAll}
-                              className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-bold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                              className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                           >
                               <i className="ph-bold ph-arrow-counter-clockwise"></i>
                               CLEAR ALL FILTERS
@@ -944,10 +944,10 @@ export default function DigitizationComplianceTab({
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-4">
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
-                  <i className="ph-duotone ph-file-text text-2xl"></i>
+                  <i className="ph-duotone ph-file-text text-xl"></i>
                 </div>
                 <div className="min-w-0">
-                  <DialogTitle className="text-left text-xl leading-none font-black tracking-tight text-gray-900 dark:text-zinc-50">
+                  <DialogTitle className="text-left text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
                   Compliance Report
                   </DialogTitle>
                   <p className="mt-1.5 text-left text-sm font-medium text-gray-500 dark:text-zinc-400">
@@ -991,8 +991,8 @@ export default function DigitizationComplianceTab({
             ) : (
               <div className="flex h-full w-full flex-col items-center justify-center bg-white p-10 dark:bg-card">
                 <div className="flex flex-col items-center gap-4">
-                  <i className="ph-bold ph-spinner animate-spin text-4xl text-pup-maroon dark:text-primary" />
-                  <p className="text-sm font-bold text-gray-500 tracking-widest dark:text-zinc-400">
+                  <i className="ph-bold ph-spinner animate-spin text-xl text-pup-maroon dark:text-primary" />
+                  <p className="text-sm font-semibold text-gray-500 tracking-widest dark:text-zinc-400">
                     Generating...
                   </p>
                 </div>
@@ -1017,14 +1017,14 @@ export default function DigitizationComplianceTab({
               <Button
                 variant="outline"
                 onClick={() => setReportOpen(false)}
-                className="h-11 px-6 font-bold border-gray-300 shadow-sm hover:border-gray-300 hover:bg-red-50 rounded-brand transition-colors dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+                className="h-11 px-6 font-semibold border-gray-300 shadow-sm hover:border-gray-300 hover:bg-red-50 rounded-brand transition-colors dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
               >
                 CLOSE
               </Button>
               <Button
                 onClick={handlePrint}
                 disabled={!pdfBlobUrl}
-                className="flex h-11 items-center gap-2 btn-brand-red px-8 font-black text-white shadow-sm rounded-brand transition-colors dark:shadow-none"
+                className="flex h-11 items-center gap-2 btn-brand-red px-8 font-semibold text-white shadow-sm rounded-brand transition-colors dark:shadow-none"
               >
                 <i className="ph-bold ph-floppy-disk text-lg"></i> SAVE TO DEVICE
               </Button>

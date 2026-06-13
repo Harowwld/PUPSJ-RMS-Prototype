@@ -136,7 +136,7 @@ export default function BulkImportTab({
               <a
                 href="data:text/csv;charset=utf-8,Category,Name,Code%0ADOCUMENT TYPE,Transcript of Records,%0ADOCUMENT TYPE,Diploma,%0ACourse,Bachelor of Science in IT,BSIT%0ACourse,Bachelor of Science in Accountancy,BSA%0ASection,Block 1,BSIT%0ASection,Section 1,BSA"
                 download="PUP-IMPORT-TEMPLATE.csv"
-                className="inline-flex h-9 w-auto items-center justify-center gap-2 rounded-lg border border-gray-300 bg-transparent px-4 text-[10px] font-black tracking-widest text-gray-600 transition-all hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
+                className="inline-flex h-9 w-auto items-center justify-center gap-2 rounded-lg border border-gray-300 bg-transparent px-4 text-[10px] font-semibold tracking-widest text-gray-600 transition-all hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
               >
                 <i className="ph-bold ph-download-simple text-sm"></i>
                 Download Template
@@ -144,7 +144,7 @@ export default function BulkImportTab({
               <button
                 type="button"
                 onClick={handleCopySample}
-                className="inline-flex h-9 w-auto items-center justify-center gap-2 rounded-lg border border-gray-300 bg-transparent px-4 text-[10px] font-black tracking-widest text-gray-600 transition-all hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
+                className="inline-flex h-9 w-auto items-center justify-center gap-2 rounded-lg border border-gray-300 bg-transparent px-4 text-[10px] font-semibold tracking-widest text-gray-600 transition-all hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
               >
                 <i className="ph-bold ph-copy text-sm"></i>
                 Copy Raw Sample
@@ -181,8 +181,8 @@ export default function BulkImportTab({
                   className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
                 />
                 <div className="pointer-events-none flex flex-col items-center justify-center text-center gap-1.5 w-full h-full">
-                  <i className="ph-light ph-file-arrow-up text-5xl text-pup-maroon dark:text-primary mb-1"></i>
-                  <p className="text-sm font-bold text-gray-900 dark:text-zinc-50">
+                  <i className="ph-light ph-file-arrow-up text-xl text-pup-maroon dark:text-primary mb-1"></i>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-zinc-50">
                     Drop CSV File here
                   </p>
                   <p className="text-xs font-medium text-gray-500 dark:text-zinc-400">
@@ -207,11 +207,11 @@ export default function BulkImportTab({
             </Button>
             <div className="flex items-center gap-4">
               <div>
-                <CardTitle className="text-xl leading-none font-black tracking-tight text-gray-900 dark:text-zinc-50">
+                <CardTitle className="text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
                   Import Preview
                 </CardTitle>
                 <CardDescription className="mt-1.5 text-sm font-medium text-gray-500 transition-colors dark:text-zinc-400">
-                  <span className="flex items-center gap-1.5 font-bold text-gray-800 dark:text-zinc-100">
+                  <span className="flex items-center gap-1.5 font-semibold text-gray-800 dark:text-zinc-100">
                     <i className="ph-bold ph-file-csv text-sm text-pup-maroon dark:text-primary" />
                     {importFile?.name || "Records Data"}
                   </span>
@@ -220,19 +220,19 @@ export default function BulkImportTab({
             </div>
           </div>            <div className="flex items-center gap-3">
               <div className="flex items-center gap-4 rounded-full border border-gray-200 bg-white px-3 py-1.5 shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                <span className="border-r border-gray-100 pr-4 text-[10px] font-black tracking-widest text-gray-400 dark:border-white/10 dark:text-zinc-300">
+                <span className="border-r border-gray-100 pr-4 text-[10px] font-semibold tracking-widest text-gray-400 dark:border-white/10 dark:text-zinc-300">
                   SUMMARY
                 </span>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs font-bold text-gray-700 dark:text-zinc-200">
+                    <span className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
                       {importRows.length} rows detected · {importRows.filter((r) => r.error).length} invalid rows
                     </span>
                   </div>
                   <div className="h-4 w-px bg-gray-200 mx-1 dark:bg-zinc-700"></div>
                   <div className="flex items-center gap-1.5">
                     <div className="h-2 w-2 rounded-full bg-emerald-500"></div>
-                    <span className="text-xs font-bold text-gray-700 dark:text-zinc-200">
+                    <span className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
                       {importRows.filter((r) => !r.error && importSelected[r.index]).length} Selected
                     </span>
                   </div>
@@ -245,7 +245,7 @@ export default function BulkImportTab({
             <div className="flex-1 overflow-hidden overflow-auto bg-white dark:bg-card rounded-[inherit]">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-20 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
-                  <tr className="text-left text-[11px] font-black tracking-wider text-gray-500 dark:text-zinc-400 dark:border-white/10">
+                  <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 dark:border-white/10">
                     <th className="w-12 p-4 text-center">
                       <input
                         type="checkbox"
@@ -276,7 +276,7 @@ export default function BulkImportTab({
                     </td>
                     <td className="p-4">
                       <Select
-                        className="h-8 w-full rounded-md border border-gray-300 bg-white px-2 text-[10px] font-bold focus:border-gray-300 focus:ring-pup-maroon dark:bg-card dark:focus:border-zinc-700 dark:border-white/10"
+                        className="h-8 w-full rounded-md border border-gray-300 bg-white px-2 text-[10px] font-semibold focus:border-gray-300 focus:ring-pup-maroon dark:bg-card dark:focus:border-zinc-700 dark:border-white/10"
                         value={quickAdd.category}
                         onChange={(e) => {
                           const cat = e.target.value
@@ -294,7 +294,7 @@ export default function BulkImportTab({
                     </td>
                     <td className="p-4">
                       <Input
-                        className="h-8 rounded-md border-gray-300 text-xs font-bold focus-visible:border-gray-300 focus-visible:ring-pup-maroon dark:border-white/10"
+                        className="h-8 rounded-md border-gray-300 text-xs font-semibold focus-visible:border-gray-300 focus-visible:ring-pup-maroon dark:border-white/10"
                         value={quickAdd.name}
                         onChange={(e) =>
                           setQuickAdd((prev) => ({
@@ -311,7 +311,7 @@ export default function BulkImportTab({
                     <td className="p-4">
                       {quickAdd.category.toLowerCase() === "section" ? (
                         <Select
-                          className="h-8 w-full rounded-md border border-gray-300 bg-white px-2 text-[10px] font-bold focus:border-gray-300 focus:ring-pup-maroon dark:bg-card dark:focus:border-zinc-700 dark:border-white/10"
+                          className="h-8 w-full rounded-md border border-gray-300 bg-white px-2 text-[10px] font-semibold focus:border-gray-300 focus:ring-pup-maroon dark:bg-card dark:focus:border-zinc-700 dark:border-white/10"
                           value={quickAdd.code}
                           onChange={(e) =>
                             setQuickAdd((prev) => ({
@@ -349,7 +349,7 @@ export default function BulkImportTab({
                         size="sm"
                         disabled={!quickAdd.name}
                         onClick={handleQuickAdd}
-                        className="h-8 rounded-md btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-4 text-[10px] font-black text-white dark:shadow-none"
+                        className="h-8 rounded-md btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-4 text-[10px] font-semibold text-white dark:shadow-none"
                       >
                         <i className="ph-bold ph-plus mr-1"></i> ADD ROW
                       </Button>
@@ -377,7 +377,7 @@ export default function BulkImportTab({
                         <td className="p-4">
                           {isEditing ? (
                             <Select
-                              className="h-8 w-full rounded-md border border-gray-300 bg-white px-2 text-[10px] font-bold focus:border-gray-300 focus:ring-pup-maroon dark:bg-card dark:focus:border-zinc-700 dark:border-white/10"
+                              className="h-8 w-full rounded-md border border-gray-300 bg-white px-2 text-[10px] font-semibold focus:border-gray-300 focus:ring-pup-maroon dark:bg-card dark:focus:border-zinc-700 dark:border-white/10"
                               value={editData.category}
                               onChange={(e) =>
                                 setEditData((prev) => ({
@@ -393,7 +393,7 @@ export default function BulkImportTab({
                           ) : (
                             <Badge
                               variant="outline"
-                              className={`border-0 px-2 py-0.5 text-[9px] font-black tracking-widest ${ row.category.toLowerCase() === "documenttype" ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" : row.category.toLowerCase() === "course" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" }`}
+                              className={`border-0 px-2 py-0.5 text-[9px] font-semibold tracking-widest ${ row.category.toLowerCase() === "documenttype" ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400" : row.category.toLowerCase() === "course" ? "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" }`}
                             >
                               {row.category || "MISSING"}
                             </Badge>
@@ -402,7 +402,7 @@ export default function BulkImportTab({
                         <td className="p-4">
                           {isEditing ? (
                             <Input
-                              className="h-8 rounded-md border-gray-300 text-xs font-bold focus-visible:border-gray-300 focus-visible:ring-pup-maroon dark:border-white/10"
+                              className="h-8 rounded-md border-gray-300 text-xs font-semibold focus-visible:border-gray-300 focus-visible:ring-pup-maroon dark:border-white/10"
                               value={editData.name}
                               onChange={(e) =>
                                 setEditData((prev) => ({
@@ -414,7 +414,7 @@ export default function BulkImportTab({
                             />
                           ) : (
                             <div
-                              className={`text-sm font-bold truncate max-w-[400px] ${row.error && !row.name ? "text-red-400 italic" : "text-gray-900 dark:text-zinc-50"}`}
+                              className={`text-sm font-semibold truncate max-w-[400px] ${row.error && !row.name ? "text-red-400 italic" : "text-gray-900 dark:text-zinc-50"}`}
                               title={row.name}
                             >
                               {row.name || "(Required field missing)"}
@@ -425,7 +425,7 @@ export default function BulkImportTab({
                           {isEditing ? (
                             editData.category.toLowerCase() === "section" ? (
                               <Select
-                                className="h-8 w-full rounded-md border border-gray-300 bg-white px-2 text-[10px] font-bold focus:border-gray-300 focus:ring-pup-maroon dark:bg-card dark:focus:border-zinc-700 dark:border-white/10"
+                                className="h-8 w-full rounded-md border border-gray-300 bg-white px-2 text-[10px] font-semibold focus:border-gray-300 focus:ring-pup-maroon dark:bg-card dark:focus:border-zinc-700 dark:border-white/10"
                                 value={editData.code}
                                 onChange={(e) =>
                                   setEditData((prev) => ({
@@ -466,14 +466,14 @@ export default function BulkImportTab({
                               <Button
                                 size="sm"
                                 onClick={saveEdit}
-                                className="h-8 rounded-md bg-emerald-600 px-2 text-[10px] font-black text-white hover:bg-emerald-700"
+                                className="h-8 rounded-md bg-emerald-600 px-2 text-[10px] font-semibold text-white hover:bg-emerald-700"
                               >
                                 <i className="ph-bold ph-check mr-1"></i>Save</Button>
                               <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={cancelEdit}
-                                className="h-8 rounded-md px-2 text-[10px] font-bold text-gray-400 hover:text-gray-600 hover:bg-transparent dark:text-zinc-500 dark:hover:text-zinc-300"
+                                className="h-8 rounded-md px-2 text-[10px] font-semibold text-gray-400 hover:text-gray-600 hover:bg-transparent dark:text-zinc-500 dark:hover:text-zinc-300"
                               >
                                 Cancel
                               </Button>
@@ -484,13 +484,13 @@ export default function BulkImportTab({
                                 <TooltipTrigger asChild>
                                   <div className="flex cursor-help items-center gap-1.5 text-red-600">
                                     <i className="ph-bold ph-warning-circle text-base"></i>
-                                    <span className="text-[11px] font-black tracking-tight">
+                                    <span className="text-[11px] font-semibold tracking-tight">
                                       {row.error}
                                     </span>
                                   </div>
                                 </TooltipTrigger>
                                 <TooltipContent side="left" className="bg-red-950 text-white border-red-900">
-                                  <p className="text-[10px] font-bold tracking-wider">
+                                  <p className="text-[10px] font-semibold tracking-wider">
                                     Row Validation Failed: {row.error}
                                   </p>
                                 </TooltipContent>
@@ -509,7 +509,7 @@ export default function BulkImportTab({
                             <div className="flex items-center justify-end gap-1.5 text-emerald-600 dark:text-emerald-400">
                               <div className="flex items-center gap-1.5">
                                 <i className="ph-bold ph-check-circle text-base"></i>
-                                <span className="text-[11px] font-black tracking-tight">
+                                <span className="text-[11px] font-semibold tracking-tight">
                                   Validated
                                 </span>
                               </div>
@@ -542,7 +542,7 @@ export default function BulkImportTab({
                   variant="ghost"
                   size="sm"
                   onClick={resetImport}
-                  className="px-4 text-xs font-bold text-gray-500 hover:text-gray-700 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors"
+                  className="px-4 text-xs font-semibold text-gray-500 hover:text-gray-700 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors"
                 >
                   CANCEL IMPORT
                 </Button>
@@ -563,10 +563,10 @@ export default function BulkImportTab({
           <div className="flex max-w-sm flex-col items-center gap-6 text-center">
             <div className="relative">
               <div className="h-20 w-20 animate-spin rounded-full border-4 border-gray-300 border-t-pup-maroon dark:border-white/10"></div>
-              <i className="ph-duotone ph-database absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-3xl text-pup-maroon dark:text-primary"></i>
+              <i className="ph-duotone ph-database absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-xl text-pup-maroon dark:text-primary"></i>
             </div>
             <div>
-              <h3 className="text-xl font-black text-gray-900 dark:text-zinc-50">Adding Records</h3>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Adding Records</h3>
               <p className="mt-2 text-sm font-medium text-gray-500 dark:text-zinc-400">
                 Writing validated entries to the system. Please do not close the window.
               </p>
@@ -578,7 +578,7 @@ export default function BulkImportTab({
           <div className="flex w-full max-w-md flex-col items-center gap-8 px-6 text-center">
             <div className="relative">
               <div className="flex h-24 w-24 items-center justify-center rounded-3xl border-4 border-white bg-red-50 text-pup-maroon shadow-xl dark:bg-red-950/30 dark:border-white/10">
-                <i className="ph-fill ph-database text-5xl"></i>
+                <i className="ph-fill ph-database text-xl"></i>
               </div>
               <div className="absolute -right-1 -bottom-1 flex h-8 w-8 items-center justify-center rounded-full border-4 border-white bg-emerald-500 text-white shadow-sm dark:border-card">
                 <i className="ph-bold ph-check text-xs"></i>
@@ -586,28 +586,28 @@ export default function BulkImportTab({
             </div>
 
             <div className="space-y-2">
-              <h3 className="text-2xl font-black tracking-tight text-gray-900 dark:text-zinc-50">Import Complete</h3>
-              <p className="text-sm leading-relaxed font-medium text-gray-500 dark:text-zinc-400">
+              <h3 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">Import Complete</h3>
+              <p className="text-sm font-medium text-gray-500 dark:text-zinc-400">
                 The batch of records has been successfully merged into the{" "}
-                <span className="font-bold text-pup-maroon dark:text-primary">system</span>. All records are
+                <span className="font-semibold text-pup-maroon dark:text-primary">system</span>. All records are
                 now active.
               </p>
             </div>
 
             <div className="grid w-full grid-cols-2 gap-px overflow-hidden rounded-2xl border border-gray-200 bg-gray-200 shadow-sm dark:border-white/10 dark:shadow-none dark:bg-zinc-700">
               <div className="space-y-1 bg-white p-5 dark:bg-card">
-                <div className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+                <div className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                   Added Successfully
                 </div>
-                <div className="text-3xl font-black text-emerald-600 tabular-nums dark:text-emerald-400">
+                <div className="text-xl font-semibold text-emerald-600 tabular-nums dark:text-emerald-400">
                   {importResults?.successCount || 0}
                 </div>
               </div>
               <div className="space-y-1 border-l border-gray-100 bg-white p-5 dark:border-white/10 dark:bg-card">
-                <div className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+                <div className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
                   Skipped / Duplicates
                 </div>
-                <div className="text-3xl font-black text-amber-600 tabular-nums dark:text-amber-400">
+                <div className="text-xl font-semibold text-amber-600 tabular-nums dark:text-amber-400">
                   {importResults?.failCount || 0}
                 </div>
               </div>
@@ -623,7 +623,7 @@ export default function BulkImportTab({
               </Button>
               <button
                 onClick={() => setActiveSubTab("document-types")}
-                className="text-[10px] font-black tracking-widest text-gray-400 transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500"
+                className="text-[10px] font-semibold tracking-widest text-gray-400 transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500"
               >
                 Verify Taxonomy Records
               </button>
@@ -634,7 +634,7 @@ export default function BulkImportTab({
       <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
         <DialogContent className="max-w-md overflow-hidden rounded-[2rem] border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card">
           <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
-            <DialogTitle className="text-xl leading-none font-black tracking-tight text-gray-900 dark:text-zinc-50">
+            <DialogTitle className="text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
               Import Instructions
             </DialogTitle>
             <DialogDescription className="sr-only">
@@ -645,7 +645,7 @@ export default function BulkImportTab({
             {/* architecture header */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="text-[10px] font-black tracking-normal text-gray-400 dark:text-zinc-500">
+                <div className="text-[10px] font-semibold tracking-tight text-gray-400 dark:text-zinc-500">
                   1. Architecture
                 </div>
                 <div className="h-px flex-1 bg-gray-100 ml-4 dark:bg-zinc-800/50"></div>
@@ -655,7 +655,7 @@ export default function BulkImportTab({
                 {["Category", "Name", "Code"].map((col) => (
                   <code
                     key={col}
-                    className="px-3 py-1.5 rounded-md text-xs font-mono font-bold bg-gray-100 border border-gray-200 text-gray-800 dark:bg-zinc-800 dark:border-white/10 dark:text-zinc-200 select-all"
+                    className="px-3 py-1.5 rounded-md text-xs font-mono font-semibold bg-gray-100 border border-gray-200 text-gray-800 dark:bg-zinc-800 dark:border-white/10 dark:text-zinc-200 select-all"
                   >
                     {col}
                   </code>
@@ -666,34 +666,34 @@ export default function BulkImportTab({
             {/* Data Mapping Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="text-[10px] font-black tracking-normal text-gray-400 dark:text-zinc-500">
+                <div className="text-[10px] font-semibold tracking-tight text-gray-400 dark:text-zinc-500">
                   2. Data Mapping
                 </div>
                 <div className="h-px flex-1 bg-gray-100 ml-4 dark:bg-zinc-800/50"></div>
               </div>
               
-              <div className="group relative overflow-hidden rounded-xl border border-red-100 bg-red-50 p-5 font-mono text-[11px] leading-relaxed text-gray-700 shadow-xs dark:bg-red-500/5 dark:border-red-500/20 dark:text-zinc-100">
+              <div className="group relative overflow-hidden rounded-xl border border-red-100 bg-red-50 p-5 font-mono text-[11px] text-gray-700 shadow-xs dark:bg-red-500/5 dark:border-red-500/20 dark:text-zinc-100">
                 <div className="absolute top-0 right-0 p-3 opacity-10 transition-opacity group-hover:opacity-30">
-                  <i className="ph-bold ph-file-csv text-4xl text-pup-maroon dark:text-primary" />
+                  <i className="ph-bold ph-file-csv text-xl text-pup-maroon dark:text-primary" />
                 </div>
-                <div className="mb-3 flex items-center gap-2 text-[9px] font-black tracking-[0.15em] text-pup-maroon dark:text-primary">
+                <div className="mb-3 flex items-center gap-2 text-[9px] font-semibold text-pup-maroon dark:text-primary">
                   <i className="ph-bold ph-code text-xs" /> CSV Structure Example
                 </div>
-                <span className="font-bold text-gray-900 dark:text-zinc-50 border-b border-red-200/50 dark:border-white/5 pb-0.5">Category,Name,Code</span>
+                <span className="font-semibold text-gray-900 dark:text-zinc-50 border-b border-red-200/50 dark:border-white/5 pb-0.5">Category,Name,Code</span>
                 <div className="mt-2 space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="text-gray-500 dark:text-zinc-400">DocumentType,</span>
-                    <span className="text-gray-800 dark:text-zinc-300 font-bold">Transcript of Records,</span>
+                    <span className="text-gray-800 dark:text-zinc-300 font-semibold">Transcript of Records,</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-gray-500 dark:text-zinc-400">Course,</span>
-                    <span className="text-gray-800 dark:text-zinc-300 font-bold">Bachelor of Science in IT,</span>
-                    <span className="text-red-700 dark:text-primary font-black">BSIT</span>
+                    <span className="text-gray-800 dark:text-zinc-300 font-semibold">Bachelor of Science in IT,</span>
+                    <span className="text-red-700 dark:text-primary font-semibold">BSIT</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-gray-500 dark:text-zinc-400">Section,</span>
-                    <span className="text-gray-800 dark:text-zinc-300 font-bold">Block 1,</span>
-                    <span className="text-red-700 dark:text-primary font-black">BSIT</span>
+                    <span className="text-gray-800 dark:text-zinc-300 font-semibold">Block 1,</span>
+                    <span className="text-red-700 dark:text-primary font-semibold">BSIT</span>
                   </div>
                 </div>
               </div>
@@ -702,7 +702,7 @@ export default function BulkImportTab({
             {/* Logic Rules Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="text-[10px] font-black tracking-normal text-gray-400 dark:text-zinc-500">
+                <div className="text-[10px] font-semibold tracking-tight text-gray-400 dark:text-zinc-500">
                   3. Taxonomy Logic
                 </div>
                 <div className="h-px flex-1 bg-gray-100 ml-4 dark:bg-zinc-800/50"></div>
@@ -734,10 +734,10 @@ export default function BulkImportTab({
                       <i className={`ph-bold ${rule.icon} text-base`}></i>
                     </div>
                     <div>
-                      <div className="mb-0.5 text-[10px] font-black tracking-tight text-gray-900 dark:text-zinc-50">
+                      <div className="mb-0.5 text-[10px] font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
                         {rule.label}
                       </div>
-                      <div className="text-[11px] leading-tight font-medium text-gray-500 dark:text-zinc-400">
+                      <div className="text-[11px] font-medium text-gray-500 dark:text-zinc-400">
                         {rule.desc}
                       </div>
                     </div>
@@ -750,7 +750,7 @@ export default function BulkImportTab({
             <Button
               type="button"
               onClick={() => setShowInstructions(false)}
-              className="h-9 px-6 rounded-brand btn-brand-red text-xs font-bold text-white shadow-sm active:scale-95 transition-all"
+              className="h-9 px-6 rounded-brand btn-brand-red text-xs font-semibold text-white shadow-sm active:scale-95 transition-all"
             >
               Got it
             </Button>

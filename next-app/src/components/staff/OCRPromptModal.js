@@ -55,10 +55,10 @@ export default function OCRPromptModal({
         <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
           <div className="flex items-start gap-4">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-amber-100/30 bg-amber-50 text-amber-600 shadow-sm dark:bg-amber-950/30 dark:text-amber-400 dark:shadow-none">
-              <i className="ph-duotone ph-scan text-2xl"></i>
+              <i className="ph-duotone ph-scan text-xl"></i>
             </div>
             <div className="min-w-0">
-              <DialogTitle className="text-lg font-black tracking-tight text-gray-900 dark:text-zinc-50">
+              <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
                 OCR match resolution required
               </DialogTitle>
               <DialogDescription className="mt-1 text-sm font-medium text-gray-600 dark:text-zinc-300">
@@ -72,15 +72,15 @@ export default function OCRPromptModal({
 
         <div className="p-6">
           <div className="mb-4">
-            <div className="mb-2 text-[11px] font-bold tracking-widest text-gray-500 dark:text-zinc-400">
+            <div className="mb-2 text-[11px] font-semibold tracking-widest text-gray-500 dark:text-zinc-400">
               Detected name from document
             </div>
-            <div className="rounded-brand border border-red-100 dark:border-none bg-red-50 px-3 py-2 text-sm font-bold text-pup-maroon dark:bg-red-950/30 dark:text-primary">
+            <div className="rounded-brand border border-red-100 dark:border-none bg-red-50 px-3 py-2 text-sm font-semibold text-pup-maroon dark:bg-red-950/30 dark:text-primary">
               {detectedName}
             </div>
           </div>
 
-          <div className="mb-2 text-[11px] font-bold tracking-widest text-gray-500 dark:text-zinc-400">
+          <div className="mb-2 text-[11px] font-semibold tracking-widest text-gray-500 dark:text-zinc-400">
             Select correct student record
           </div>
           <div className="flex max-h-64 flex-col gap-2 overflow-y-auto rounded-brand border border-gray-200 p-2 dark:border-white/10">
@@ -100,7 +100,7 @@ export default function OCRPromptModal({
                     onChange={() => setSelectedStudentNo(id)}
                   />
                   <span className="flex-1">
-                    <span className="font-mono text-sm font-bold text-gray-900 dark:text-zinc-50">
+                    <span className="font-mono text-sm font-semibold text-gray-900 dark:text-zinc-50">
                       {id}
                     </span>
                     <span className="block font-medium text-gray-700 dark:text-zinc-200">
@@ -121,7 +121,7 @@ export default function OCRPromptModal({
           <button
             type="button"
             onClick={onClose}
-            className="h-11 rounded-brand border border-gray-300 px-5 text-sm font-bold text-gray-700 hover:bg-gray-50 dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
+            className="h-11 rounded-brand border border-gray-300 px-5 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
           >
             Cancel
           </button>
@@ -129,7 +129,7 @@ export default function OCRPromptModal({
             type="button"
             onClick={() => selected && onConfirmStudent(selected)}
             disabled={!selected}
-            className={`h-11 rounded-brand px-5 text-sm font-bold shadow-sm transition-all ${ selected ? "btn-brand-red" : "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-muted dark:text-zinc-500" }`}
+            className={`h-11 rounded-brand px-5 text-sm font-semibold shadow-sm transition-all ${ selected ? "btn-brand-red" : "cursor-not-allowed bg-gray-100 text-gray-400 dark:bg-muted dark:text-zinc-500" }`}
           >
             Confirm selection
           </button>

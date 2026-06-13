@@ -78,10 +78,10 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card">
-                <i className="ph-duotone ph-file-pdf text-2xl"></i>
+                <i className="ph-duotone ph-file-pdf text-xl"></i>
               </div>
               <div className="min-w-0">
-                <DialogTitle className="text-left text-xl leading-none font-black tracking-tight text-gray-900 dark:text-zinc-50">
+                <DialogTitle className="text-left text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
                   Document Preview: {preview?.docType || "Loading..."}
                 </DialogTitle>
                 <p className="mt-1.5 text-left text-sm font-medium text-gray-500 dark:text-zinc-400">
@@ -114,9 +114,9 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
             <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
               <div className="max-w-lg text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-card">
-                  <i className="ph-bold ph-file-x text-3xl text-gray-300 dark:text-zinc-600"></i>
+                  <i className="ph-bold ph-file-x text-xl text-gray-300 dark:text-zinc-600"></i>
                 </div>
-                <p className="text-sm font-bold text-gray-600 dark:text-zinc-300">
+                <p className="text-sm font-semibold text-gray-600 dark:text-zinc-300">
                   No digital file attached
                 </p>
                 <p className="mt-1 text-xs text-gray-400 dark:text-zinc-500">
@@ -144,7 +144,7 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
                 </Button>
               </TooltipTrigger>
               <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                <p className="text-[10px] font-bold">Document Zoom</p>
+                <p className="text-[10px] font-semibold">Document Zoom</p>
                 <p className="text-[9px] opacity-80">Toggle high-focus preview mode</p>
               </TooltipContent>
             </Tooltip>
@@ -154,7 +154,7 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
                 <Button
                   variant="outline"
                   onClick={onClose}
-                  className="h-11 rounded-brand border-gray-300 px-6 text-sm font-bold tracking-wide text-gray-600 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:text-zinc-300 dark:hover:border-zinc-700 dark:bg-red-950/30 dark:shadow-none dark:border-white/10"
+                  className="h-11 rounded-brand border-gray-300 px-6 text-sm font-semibold tracking-wide text-gray-600 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:text-zinc-300 dark:hover:border-zinc-700 dark:bg-red-950/30 dark:shadow-none dark:border-white/10"
                 >
                   Close Preview
                 </Button>
@@ -164,7 +164,7 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
                   href={`/api/documents/${docId}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex h-11 items-center rounded-brand border border-gray-300 bg-white px-6 text-sm font-bold tracking-wide text-pup-maroon dark:text-primary shadow-sm transition-colors hover:bg-red-50 dark:border-white/10 dark:bg-card"
+                  className="inline-flex h-11 items-center rounded-brand border border-gray-300 bg-white px-6 text-sm font-semibold tracking-wide text-pup-maroon dark:text-primary shadow-sm transition-colors hover:bg-red-50 dark:border-white/10 dark:bg-card"
                 >
                   <i className="ph-bold ph-arrow-square-out mr-2 text-lg"></i>
                   Open Full View

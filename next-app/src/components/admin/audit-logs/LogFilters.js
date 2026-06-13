@@ -69,9 +69,9 @@ export default function LogFilters({
         {/* Search */}
         <div className="min-w-[320px] flex-[1.5]">
           <div className="mb-1.5 flex items-center justify-between">
-            <label className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+            <label className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
             </label>
-            <span className="text-[9px] font-bold text-pup-maroon dark:text-primary/50">
+            <span className="text-[9px] font-semibold text-pup-maroon dark:text-primary/50">
               {logTotal > 0 ? `${logTotal.toLocaleString()} MATCHES` : "NO RESULTS"}
             </span>
           </div>
@@ -92,7 +92,7 @@ export default function LogFilters({
         {/* Date Range Picker Section */}
         <div className="min-w-[400px] flex-[2]">
           <div className="mb-1.5 flex items-center justify-between">
-            <label className="text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+            <label className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
               Time Period
             </label>
             <div className="flex items-center gap-2">
@@ -100,7 +100,7 @@ export default function LogFilters({
                 <button
                   key={range}
                   onClick={() => handleQuickRange(range)}
-                  className="rounded-md bg-gray-100 px-2 py-0.5 text-[9px] font-black text-gray-500 transition-all hover:bg-pup-maroon hover:text-white dark:text-zinc-400 dark:bg-muted"
+                  className="rounded-md bg-gray-100 px-2 py-0.5 text-[9px] font-semibold text-gray-500 transition-all hover:bg-pup-maroon hover:text-white dark:text-zinc-400 dark:bg-muted"
                 >
                   {range.replace("last", "Last ")}
                 </button>
@@ -171,7 +171,7 @@ export default function LogFilters({
         {/* Quick Select Filters */}
         <div className="flex shrink-0 gap-3">
           <div className="w-28">
-            <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+            <label className="mb-1.5 block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
               Role
             </label>
             <Select
@@ -186,7 +186,7 @@ export default function LogFilters({
           </div>
 
           <div className="w-32">
-            <label className="mb-1.5 block text-[10px] font-black tracking-widest text-gray-400 dark:text-zinc-500">
+            <label className="mb-1.5 block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
               Severity
             </label>
             <Select

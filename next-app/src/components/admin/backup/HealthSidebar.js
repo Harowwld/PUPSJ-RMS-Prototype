@@ -45,7 +45,7 @@ export default function HealthSidebar({
       <Card className="flex flex-col border border-gray-200 bg-white shadow-sm rounded-brand overflow-hidden dark:border-white/10 dark:bg-card dark:shadow-none">
         <div className="border-b border-gray-100 bg-transparent p-6 dark:border-white/10 dark:bg-transparent">
           <div className="flex flex-col">
-            <h3 className="text-xl font-black tracking-tight text-gray-900 leading-none dark:text-zinc-50">
+            <h3 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
               System Health
             </h3>
             <p className="mt-1.5 text-sm font-medium text-gray-500 transition-colors dark:text-zinc-400">
@@ -105,17 +105,17 @@ export default function HealthSidebar({
               </svg>
               <div className="z-10 pb-0 text-center">
                 <span
-                  className="text-3xl font-black tracking-tighter text-gray-900 dark:text-zinc-50"
+                  className="text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50"
                 >
                   {diskPercent}%
                 </span>
               </div>
             </div>
             <div className="mt-4 text-center">
-              <p className="text-[9px] font-black tracking-normal text-gray-400 dark:text-zinc-500">
+              <p className="text-[9px] font-semibold tracking-tight text-gray-400 dark:text-zinc-500">
                 Repository Volume
               </p>
-              <p className="mt-0.5 text-xs font-black text-gray-700 dark:text-zinc-200">
+              <p className="mt-0.5 text-xs font-semibold text-gray-700 dark:text-zinc-200">
                 {systemHealth.disk.total - systemHealth.disk.free}GB /{" "}
                 {systemHealth.disk.total}GB
               </p>
@@ -126,7 +126,7 @@ export default function HealthSidebar({
           <div className="space-y-6 px-1">
             {/* Memory Usage */}
             <div className="space-y-2">
-              <div className="flex justify-between text-[9px] font-black tracking-widest text-gray-500 dark:text-zinc-400">
+              <div className="flex justify-between text-[9px] font-semibold tracking-widest text-gray-500 dark:text-zinc-400">
                 <div className="flex items-center gap-2">
                   <i className="ph-bold ph-memory text-base text-blue-500"></i>
                   <span className="text-gray-800 dark:text-zinc-100">RAM</span>
@@ -150,7 +150,7 @@ export default function HealthSidebar({
 
             {/* Computation */}
             <div className="space-y-2">
-              <div className="flex justify-between text-[9px] font-black tracking-widest text-gray-500 dark:text-zinc-400">
+              <div className="flex justify-between text-[9px] font-semibold tracking-widest text-gray-500 dark:text-zinc-400">
                 <div className="flex items-center gap-2">
                   <i className="ph-bold ph-cpu text-base text-amber-500"></i>
                   <span className="text-gray-800 dark:text-zinc-100">CPU</span>
@@ -177,20 +177,20 @@ export default function HealthSidebar({
           <div className="pt-4 border-t border-gray-100 space-y-2 dark:border-white/10">
             <div className="grid grid-cols-1 gap-1.5">
               <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-transparent border border-gray-100 dark:bg-transparent dark:border-white/10">
-                <span className="text-[9px] font-black text-gray-400 tracking-widest dark:text-zinc-500">Last Sync</span>
-                <span className="text-[10px] font-black text-gray-800 dark:text-zinc-100">{lastBackupTime}</span>
+                <span className="text-[9px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">Last Sync</span>
+                <span className="text-[10px] font-semibold text-gray-800 dark:text-zinc-100">{lastBackupTime}</span>
               </div>
               <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-transparent border border-gray-100 dark:bg-transparent dark:border-white/10">
-                <span className="text-[9px] font-black text-gray-400 tracking-widest dark:text-zinc-500">Restore Node</span>
-                <span className={`text-[10px] font-black ${systemHealth.lastRestorationAt ? "text-gray-800" : "text-gray-400 dark:text-zinc-100"}`}>
+                <span className="text-[9px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">Restore Node</span>
+                <span className={`text-[10px] font-semibold ${systemHealth.lastRestorationAt ? "text-gray-800" : "text-gray-400 dark:text-zinc-100"}`}>
                   {systemHealth.lastRestorationAt
                     ? formatPHDateTime(systemHealth.lastRestorationAt).split(',')[0]
                     : "NONE"}
                 </span>
               </div>
               <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-transparent border border-gray-100 dark:bg-transparent dark:border-white/10">
-                <span className="text-[9px] font-black text-gray-400 tracking-widest dark:text-zinc-500">Protocol</span>
-                <span className="text-[9px] font-black text-emerald-600 dark:text-emerald-400">AES-256-GCM</span>
+                <span className="text-[9px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">Protocol</span>
+                <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">AES-256-GCM</span>
               </div>
             </div>
           </div>

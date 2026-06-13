@@ -128,7 +128,7 @@ export default function RateLimitingTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-zinc-300">Total Violations (24h)</p>
-              <p className="text-2xl font-bold text-pup-maroon dark:text-primary">
+              <p className="text-xl font-semibold text-pup-maroon dark:text-primary">
                 {data.stats.violations.reduce(
                   (sum, v) => sum + parseInt(v.violations || 0),
                   0
@@ -143,7 +143,7 @@ export default function RateLimitingTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-zinc-300">API Requests (24h)</p>
-              <p className="text-2xl font-bold text-pup-maroon dark:text-primary">
+              <p className="text-xl font-semibold text-pup-maroon dark:text-primary">
                 {data.stats.hits.reduce(
                   (sum, h) => sum + parseInt(h.hits || 0),
                   0
@@ -158,7 +158,7 @@ export default function RateLimitingTab() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-gray-600 dark:text-zinc-300">Suspicious IPs</p>
-              <p className="text-2xl font-bold text-pup-maroon dark:text-primary">
+              <p className="text-xl font-semibold text-pup-maroon dark:text-primary">
                 {suspiciousIPs.length}
               </p>
             </div>
@@ -170,7 +170,7 @@ export default function RateLimitingTab() {
       {/* Recent Violations */}
       <div className="rounded-brand border border-gray-200 bg-white overflow-hidden dark:border-white/10 dark:bg-card">
         <div className="border-b border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
-          <h3 className="font-bold text-gray-900 dark:text-zinc-50">
+          <h3 className="font-semibold text-gray-900 dark:text-zinc-50">
             Recent Rate Limit Violations
           </h3>
         </div>
@@ -184,22 +184,22 @@ export default function RateLimitingTab() {
             <table className="w-full">
               <thead className="border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
                 <tr>
-                  <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
+                  <th className="p-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                     Type
                   </th>
-                  <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
+                  <th className="p-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                     Identifier
                   </th>
-                  <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
+                  <th className="p-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                     IP Address
                   </th>
-                  <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
+                  <th className="p-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                     Violations
                   </th>
-                  <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
+                  <th className="p-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                     Lockout Until
                   </th>
-                  <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
+                  <th className="p-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                     Actions
                   </th>
                 </tr>
@@ -251,22 +251,22 @@ export default function RateLimitingTab() {
   const renderConfigurations = () => (
     <div className="rounded-brand border border-gray-200 bg-white overflow-hidden dark:border-white/10 dark:bg-card">
       <div className="border-b border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
-        <h3 className="font-bold text-gray-900 dark:text-zinc-50">Rate Limit Configurations</h3>
+        <h3 className="font-semibold text-gray-900 dark:text-zinc-50">Rate Limit Configurations</h3>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead className="border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
             <tr>
-              <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
+              <th className="p-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                 Endpoint Type
               </th>
-              <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
+              <th className="p-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                 Window (seconds)
               </th>
-              <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
+              <th className="p-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                 Max Requests
               </th>
-              <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
+              <th className="p-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                 Actions
               </th>
             </tr>
@@ -295,7 +295,7 @@ export default function RateLimitingTab() {
   const renderSuspiciousIPs = () => (
     <div className="rounded-brand border border-gray-200 bg-white overflow-hidden dark:border-white/10 dark:bg-card">
       <div className="border-b border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-white/5">
-        <h3 className="font-bold text-gray-900 dark:text-zinc-50">Suspicious IP Addresses</h3>
+        <h3 className="font-semibold text-gray-900 dark:text-zinc-50">Suspicious IP Addresses</h3>
       </div>
       <div className="overflow-x-auto">
         {suspiciousIPs.length === 0 ? (
@@ -307,19 +307,19 @@ export default function RateLimitingTab() {
           <table className="w-full">
             <thead className="border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
               <tr>
-                <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
+                <th className="p-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                   IP Address
                 </th>
-                <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
+                <th className="p-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                   Risk Level
                 </th>
-                <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
+                <th className="p-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                   Failed Logins
                 </th>
-                <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
+                <th className="p-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                   Unique Users
                 </th>
-                <th className="p-3 text-left text-xs font-bold text-gray-600 dark:text-zinc-300">
+                <th className="p-3 text-left text-xs font-semibold text-gray-600 dark:text-zinc-300">
                   Last Seen
                 </th>
               </tr>
@@ -350,7 +350,7 @@ export default function RateLimitingTab() {
   return (
     <div className="space-y-6 animate-fade-up font-inter">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-gray-900 dark:text-zinc-50">
+        <h2 className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
           Rate Limiting & Security
         </h2>
       </div>
