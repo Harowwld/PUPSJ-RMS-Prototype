@@ -194,74 +194,96 @@ export default function SLAAnalyticsTab({
           title="Request Analysis"
           description="Monitor request metrics and turnaround times."
           showBorder={false}
+          titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
             <div className="flex items-center gap-6">
+              <RefreshButton 
+                onRefresh={handleRefresh} 
+                isLoading={manualLoading} 
+                title="Refresh Analytics"
+              />
+
+              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+
               <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCsvExport}
+                  disabled={loading || !data || isExportingCsv}
+                  className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none! border-0!"
+                >
+                  {isExportingCsv ? "Preparing..." : "Export"}
+                </Button>
                 <Button
                   type="button"
                   variant="default"
                   size="sm"
                   onClick={handlePreview}
                   disabled={loading || !data || isGeneratingPdf}
-                  className="flex h-11 px-5 items-center justify-center gap-2 btn-brand-red text-[11px] font-semibold text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
+                  className="flex h-[36px] px-5 items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
                 >
-                  <i className={cn("ph-bold text-base", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
                   {isGeneratingPdf ? "Generating..." : "Generate Report"}
                 </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCsvExport}
-                  disabled={loading || !data || isExportingCsv}
-                  className="flex h-9 px-4 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-transparent text-[10px] font-semibold text-gray-600 transition-colors hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
-                >
-                  <i className={cn("ph-bold text-sm", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
-                  {isExportingCsv ? "Preparing..." : "Export"}
-                </Button>
               </div>
-
-              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
-
-              <RefreshButton 
-                onRefresh={handleRefresh} 
-                isLoading={manualLoading} 
-                title="Refresh Analytics"
-              />
             </div>
           }
         />
 
         {/* Active Filter Chips Row */}
-        {hasActiveFilters && (
-          <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-505">Active filters:</span>
-              {(startDate || endDate) && (
-                <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
-                  Range: {startDate || "..."} to {endDate || "..."}
-                  <button
-                    onClick={() => { setStartDate(""); setEndDate(""); }}
-                    className="ml-1 hover:text-emerald-800 transition-colors"
-                  >
-                    <i className="ph-bold ph-x text-[8px]"></i>
-                  </button>
-                </div>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setStartDate("")
-                  setEndDate("")
-                }}
-                className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-semibold text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
-              >
-                Clear All Filters
-              </Button>
+        {hasActiveFilters && (() => {
+          const formatChipDate = (dateStr) => {
+            if (!dateStr) return "..."
+            try {
+              return format(new Date(dateStr), "MMM d, yyyy")
+            } catch (e) {
+              return dateStr
+            }
+          }
+          const format = (d, fmt) => {
+            // Simple backup formatter since date-fns format is not directly imported in SLAAnalyticsTab
+            // Wait, does SLAAnalyticsTab import format? No, it imports formatPHDateTime.
+            // Let's write a small custom formatter or use standard JS options.
+            try {
+              const dateObj = new Date(d);
+              if (isNaN(dateObj.getTime())) return d;
+              return dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+            } catch (e) {
+              return d;
+            }
+          }
+          return (
+            <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
+                {(startDate || endDate) && (
+                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                    {formatChipDate(startDate)} – {formatChipDate(endDate)}
+                    <button
+                      onClick={() => { setStartDate(""); setEndDate(""); }}
+                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setStartDate("")
+                    setEndDate("")
+                  }}
+                  className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
+                >
+                  Clear
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         <SlaFilters 
             startDate={startDate}

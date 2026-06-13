@@ -33,22 +33,32 @@ export default function PageHeader({
   actions,
   extraChips, // Optional array of { label, value, onClear }
   showBorder = true,
+  titleClassName,
+  descriptionClassName,
+  className,
 }) {
   return (
     <div className={cn(
       "bg-transparent p-6 rounded-t-brand select-none transition-colors duration-300 dark:bg-transparent",
-      showBorder && "border-b border-gray-100 dark:border-white/5"
+      showBorder && "border-b border-gray-100 dark:border-white/5",
+      className
     )}>
       <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
         <div className="flex items-center gap-4">
           {leftAction}
           
           <div className="flex flex-col gap-[4px]">
-            <CardTitle className="flex items-center gap-2 text-xl font-semibold tracking-tight text-gray-900 transition-colors dark:text-zinc-50 m-0">
+            <CardTitle 
+              className={cn("flex items-center gap-2 text-xl font-semibold tracking-tight text-gray-900 transition-colors dark:text-zinc-50 m-0", titleClassName)}
+              style={titleClassName?.includes("text-[18px]") ? { fontSize: "18px" } : undefined}
+            >
               {title}
             </CardTitle>
             {description && (
-              <CardDescription className="text-sm font-medium text-gray-500 transition-colors dark:text-zinc-400 m-0">
+              <CardDescription 
+                className={cn("text-sm font-medium text-gray-500 transition-colors dark:text-zinc-400 m-0", descriptionClassName)}
+                style={descriptionClassName?.includes("text-[13px]") ? { fontSize: "13px" } : undefined}
+              >
                 {description}
               </CardDescription>
             )}

@@ -14,6 +14,7 @@ import {
   Cell,
 } from "recharts"
 import { useTheme } from "next-themes"
+import { cn } from "@/lib/utils"
 import {
   Empty,
   EmptyHeader,
@@ -63,26 +64,23 @@ const CustomPieTooltip = ({ active, payload }) => {
   return null
 }
 
+const APPLE_STATUS_COLORS = {
+  Pending: "#FF9F0A",
+  InProgress: "#32ADE6",
+  "In Progress": "#32ADE6",
+  Ready: "#30D158",
+}
+
 export default function SlaCharts({ data, pieData, onSwitchView }) {
   const { theme, resolvedTheme } = useTheme()
   const isDark = theme === "dark" || resolvedTheme === "dark"
   const totalSlaRequests = pieData.reduce((acc, curr) => acc + curr.value, 0)
 
-  const renderLegend = (value, entry) => {
-    const { payload } = entry
-    const percent = totalSlaRequests > 0 ? ((payload.value / totalSlaRequests) * 100).toFixed(0) : 0
-    return (
-      <span className="text-[10px] font-semibold text-gray-600 dark:text-zinc-300">
-        {value} ({payload.value}) — {percent}%
-      </span>
-    )
-  }
-
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-[20px] lg:grid-cols-3">
       {/* Document Demand Chart */}
-      <div className="rounded-brand border border-gray-200 bg-white p-5 shadow-xs lg:col-span-2 dark:border-white/10 dark:bg-card flex flex-col">
-        <h3 className="mb-4 text-xs font-semibold tracking-tight text-gray-500 dark:text-zinc-400">
+      <div className="rounded-[12px] border-[0.5px] border-black/10 bg-white p-[28px] shadow-[0_1px_3px_rgba(0,0,0,0.06)] lg:col-span-2 dark:border-white/10 dark:bg-card flex flex-col">
+        <h3 className="mb-4 text-[18px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50 m-0">
           Document Demand (By Type)
         </h3>
         <div className="flex-1 min-h-[288px] w-full flex flex-col justify-center">
@@ -90,24 +88,26 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={data.topDocTypes}
-                margin={{ top: 10, right: 10, left: -20, bottom: 40 }}
+                margin={{ top: 10, right: 10, left: -20, bottom: 20 }}
               >
                 <CartesianGrid
                   strokeDasharray="3 3"
                   vertical={false}
-                  stroke={isDark ? "rgba(255,255,255,0.05)" : "#e5e7eb"}
+                  stroke={isDark ? "rgba(255,255,255,0.05)" : "#F2F2F7"}
+                  strokeWidth={0.5}
                 />
                 <XAxis
                   dataKey="name"
-                  tick={{ fontSize: 10, fill: isDark ? "#a1a1aa" : "#6b7280", angle: -45, textAnchor: "end" }}
+                  tick={{ fontSize: 12, fill: isDark ? "#a1a1aa" : "#8E8E93" }}
                   axisLine={false}
                   tickLine={false}
                   interval={0}
                 />
                 <YAxis
-                  tick={{ fontSize: 10, fill: isDark ? "#a1a1aa" : "#6b7280" }}
+                  tick={{ fontSize: 12, fill: isDark ? "#a1a1aa" : "#8E8E93" }}
                   axisLine={false}
                   tickLine={false}
+                  allowDecimals={false}
                 />
                 <ChartTooltip 
                   content={<CustomBarTooltip />} 
@@ -116,7 +116,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                 <Bar
                   dataKey="count"
                   name="Requests"
-                  fill={isDark ? "#ef4444" : "#800000"}
+                  fill="#E5484D"
                   radius={[4, 4, 0, 0]}
                   barSize={40}
                 />
@@ -151,42 +151,47 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-6">
-        {/* Status Breakdown Pie */}
-        <div className="flex-1 rounded-brand border border-gray-200 bg-white p-5 shadow-xs dark:border-white/10 dark:bg-card">
-          <h3 className="mb-2 text-xs font-semibold tracking-tight text-gray-500 dark:text-zinc-400">
+      {/* Right side panels container */}
+      <div className="flex flex-col gap-[24px] rounded-[12px] border-[0.5px] border-black/10 bg-white p-[28px] shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:border-white/10 dark:bg-card">
+        {/* Status Distribution */}
+        <div className="flex flex-col">
+          <h3 className="mb-4 text-[18px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50 m-0">
             Status Distribution
           </h3>
-          <div className="h-44 w-full">
+          <div className="h-44 w-full relative flex items-center justify-center">
             {pieData.length > 0 ? (
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={pieData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={45}
-                    outerRadius={65}
-                    paddingAngle={2}
-                    dataKey="value"
-                    stroke="none"
-                  >
-                    {pieData.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={STATUS_COLORS[entry.name] || "#e5e7eb"}
-                      />
-                    ))}
-                  </Pie>
-                  <ChartTooltip content={<CustomPieTooltip />} />
-                  <Legend 
-                    layout="vertical" 
-                    verticalAlign="middle" 
-                    align="right"
-                    formatter={renderLegend}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              <>
+                <div className="absolute flex flex-col items-center justify-center pointer-events-none">
+                  <span className="text-[28px] font-semibold text-[#111111] dark:text-zinc-50 leading-none">
+                    {totalSlaRequests}
+                  </span>
+                  <span className="text-[11px] font-normal text-[#8E8E93] dark:text-zinc-500 mt-1 uppercase tracking-[0.04em]">
+                    total
+                  </span>
+                </div>
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={pieData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={70}
+                      paddingAngle={2}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {pieData.map((entry, index) => (
+                        <Cell
+                          key={`cell-${index}`}
+                          fill={APPLE_STATUS_COLORS[entry.name] || "#e5e7eb"}
+                        />
+                      ))}
+                    </Pie>
+                    <ChartTooltip content={<CustomPieTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </>
             ) : (
               <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center p-0">
                 <EmptyHeader className="flex flex-col items-center gap-0 max-w-[240px]">
@@ -202,40 +207,43 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                   <EmptyDescription className="max-w-[200px] text-[10px] font-medium text-gray-500 dark:text-zinc-400 mt-0.5">
                     Status distribution requires active request logs.
                   </EmptyDescription>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="mt-3 flex h-8 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-[9px] font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wider dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-                    onClick={() => onSwitchView?.('review')}
-                  >
-                    View Requests
-                  </Button>
                 </EmptyHeader>
               </Empty>
             )}
           </div>
-          <div className="mt-4 grid grid-cols-1 gap-2 border-t border-gray-50 pt-4 dark:border-white/10">
-            {pieData.map((d) => {
-              const percent = totalSlaRequests > 0 ? ((d.value / totalSlaRequests) * 100).toFixed(1) : 0
+          
+          <div className="mt-4 flex flex-col pt-4 border-t border-[#F2F2F7] dark:border-white/5">
+            {pieData.map((d, index) => {
+              const percent = totalSlaRequests > 0 ? ((d.value / totalSlaRequests) * 100).toFixed(0) : 0
+              const displayName = d.name === "InProgress" ? "In Progress" : d.name
+              const color = APPLE_STATUS_COLORS[d.name] || "#ccc"
               return (
                 <div
                   key={d.name}
-                  className="flex items-center justify-between text-[11px] text-gray-600 dark:text-zinc-300"
+                  className={cn(
+                    "flex items-center justify-between h-[36px] border-b-[0.5px] border-[#F2F2F7] dark:border-white/5",
+                    index === pieData.length - 1 && "border-b-0"
+                  )}
                 >
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-[8px]">
                     <div
-                      className="h-2 w-2 rounded-full"
-                      style={{
-                        backgroundColor: STATUS_COLORS[d.name] || "#ccc",
-                      }}
-                    ></div>
-                    <span className="font-semibold tracking-tight">
-                      {d.name}
+                      className="h-2 w-2 rounded-full shrink-0"
+                      style={{ backgroundColor: color }}
+                    />
+                    <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-300">
+                      {displayName}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-inter font-semibold text-gray-900 dark:text-zinc-50">{d.value}</span>
-                    <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-500">{percent}%</span>
+                  <div className="flex items-center gap-[8px]">
+                    <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-50">
+                      {d.value}
+                    </span>
+                    <span 
+                      className="text-[13px] font-medium"
+                      style={{ color: color }}
+                    >
+                      {percent}%
+                    </span>
                   </div>
                 </div>
               )
@@ -243,28 +251,33 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
           </div>
         </div>
 
-        {/* Top Requested Docs lists */}
-        <div className="flex-1 rounded-brand border border-gray-200 bg-transparent p-5 shadow-xs dark:border-white/10 dark:bg-transparent">
-          <h3 className="mb-3 text-xs font-semibold tracking-tight text-gray-500 dark:text-zinc-400">
+        <div className="h-px bg-[#F2F2F7] dark:bg-white/5" />
+
+        {/* Top Requested Documents */}
+        <div className="flex flex-col">
+          <h3 className="mb-4 text-[18px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50 m-0">
             Top Requested Documents
           </h3>
-          <div className="space-y-3">
+          <div className="flex flex-col">
             {data?.topDocTypes?.length > 0 ? (
               data.topDocTypes.map((dt, i) => (
                 <div
                   key={dt.name}
-                  className="flex items-center justify-between"
+                  className={cn(
+                    "flex items-center justify-between h-[44px] border-b-[0.5px] border-[#F2F2F7] dark:border-white/5",
+                    i === data.topDocTypes.length - 1 && "border-b-0"
+                  )}
                 >
-                  <div className="flex items-center gap-2 overflow-hidden">
-                    <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-white text-[10px] font-semibold text-gray-500 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none">
+                  <div className="flex items-center gap-3 overflow-hidden">
+                    <span className="text-[11px] font-normal text-[#8E8E93] dark:text-zinc-500 w-4 shrink-0">
                       {i + 1}
-                    </div>
-                    <span className="truncate text-sm font-semibold text-gray-800 dark:text-zinc-100">
+                    </span>
+                    <span className="truncate text-[14px] font-medium text-[#111111] dark:text-zinc-50">
                       {dt.name}
                     </span>
                   </div>
-                  <span className="rounded-full border border-red-100 bg-red-50 px-2 py-0.5 text-xs font-semibold text-pup-maroon dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400">
-                    {dt.count} req
+                  <span className="text-[12px] font-normal text-[#8E8E93] dark:text-zinc-400">
+                    {dt.count} {dt.count === 1 ? "request" : "requests"}
                   </span>
                 </div>
               ))
@@ -280,17 +293,6 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                   <EmptyTitle className="text-sm font-semibold text-gray-900 dark:text-zinc-50">
                     No requests recorded yet
                   </EmptyTitle>
-                  <EmptyDescription className="max-w-[200px] text-[10px] font-medium text-gray-500 dark:text-zinc-400 mt-0.5">
-                    Document breakdown will display once requests are processed.
-                  </EmptyDescription>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="mt-3 flex h-8 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-[9px] font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wider dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-                    onClick={() => onSwitchView?.('review')}
-                  >
-                    Go to Reviews
-                  </Button>
                 </EmptyHeader>
               </Empty>
             )}

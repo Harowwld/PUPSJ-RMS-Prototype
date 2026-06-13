@@ -92,6 +92,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   const [history, setHistory] = useState([])
   const [historyIndex, setHistoryIndex] = useState(0)
   const [clipboard, setClipboard] = useState(null)
+  const [carouselIndex, setCarouselIndex] = useState(0)
 
   const canvasRef = useRef(null)
   const dragRef = useRef(null)
@@ -172,9 +173,10 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   }, [layout, activeRoomId])
 
   const selectedCabinet = useMemo(() => {
-    if (!activeRoom || selectedCabinetIds.size !== 1) return null
-    const [id] = selectedCabinetIds
-    if (id === "DOOR") {
+    if (!activeRoom || selectedCabinetIds.size === 0) return null
+    const arr = Array.from(selectedCabinetIds)
+    const activeId = arr[carouselIndex] || arr[0]
+    if (activeId === "DOOR") {
       return {
         id: "DOOR",
         isDoor: true,
@@ -187,8 +189,8 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         rotation: activeRoom.door?.rotation ?? 0,
       }
     }
-    return activeRoom.cabinets.find((c) => String(c.id) === String(id)) || null
-  }, [activeRoom, selectedCabinetIds])
+    return activeRoom.cabinets.find((c) => String(c.id) === String(activeId)) || null
+  }, [activeRoom, selectedCabinetIds, carouselIndex])
 
   // 4. HIGH-LEVEL CALLBACKS (Undo, Redo, Copy, Paste, Add/Remove)
   const undo = useCallback(() => {
@@ -659,7 +661,8 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         setSelectedCabinetIds(validIds)
       }
     }
-  }, [activeRoom, selectedCabinetIds.size])
+    setCarouselIndex(0)
+  }, [activeRoom, selectedCabinetIds])
 
   const [activePath, setActivePath] = useState(null)
   const [simulationMode, setSimulationMode] = useState(false)
@@ -1141,152 +1144,150 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
   if (!layout) return null
 
   const renderToolbar = () => (
-    <div className={cn(
-      "flex flex-wrap items-end justify-between gap-4 p-4 border-b border-gray-100 dark:border-white/10 bg-gray-50 dark:bg-muted/30 backdrop-blur-md select-none",
-      className
-    )}>
-      <div className="flex items-center gap-2">
+    <div className="flex h-[52px] items-center px-4 border-b-[0.5px] border-black/[0.08] dark:border-white/[0.08] bg-gray-50/50 dark:bg-muted/10 select-none">
+      {/* Left group: Undo + Redo */}
+      <div className="flex items-center gap-[4px] flex-none">
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           onClick={undo}
           disabled={historyIndex <= 0}
-          className="flex h-10 items-center gap-[6px] rounded-brand border border-gray-200 bg-white dark:border-white/10 dark:bg-card px-6 font-medium text-[13px] tracking-[-0.01em] text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-50 active:scale-95 disabled:opacity-30 disabled:grayscale transition-all shadow-xs"
+          className="h-[36px] bg-transparent hover:bg-transparent border-0 px-2 text-[13px] font-normal text-[#8E8E93] hover:text-[#111111] dark:text-zinc-500 dark:hover:text-zinc-300 disabled:text-[#C7C7CC] dark:disabled:text-zinc-700 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center shadow-none!"
         >
-          <i className="ph-bold ph-arrow-u-up-left text-[15px]" />
           Undo
         </Button>
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           onClick={redo}
           disabled={historyIndex >= history.length - 1}
-          className="flex h-10 items-center gap-[6px] rounded-brand border border-gray-200 bg-white dark:border-white/10 dark:bg-card px-6 font-medium text-[13px] tracking-[-0.01em] text-gray-700 hover:bg-gray-50 hover:text-gray-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-50 active:scale-95 disabled:opacity-30 disabled:grayscale transition-all shadow-xs"
+          className="h-[36px] bg-transparent hover:bg-transparent border-0 px-2 text-[13px] font-normal text-[#8E8E93] hover:text-[#111111] dark:text-zinc-500 dark:hover:text-zinc-300 disabled:text-[#C7C7CC] dark:disabled:text-zinc-700 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center shadow-none!"
         >
-          <i className="ph-bold ph-arrow-u-up-right text-[15px]" />
           Redo
         </Button>
       </div>
 
-      <div className="flex flex-wrap items-end gap-6">
-        <div className="flex flex-col gap-1">
-          <label className="ml-1 text-[9px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">Room</label>
-          <div className="relative group">
-             <Select
-              className="h-10 min-w-[200px] cursor-pointer rounded-brand border border-gray-200 bg-white pl-4 pr-3 text-sm font-semibold text-gray-800 shadow-xs transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-100 dark:focus:border-zinc-700"
-              value={String(activeRoomId ?? "")}
-              disabled={!layout?.rooms?.length}
-              onChange={(e) => setActiveRoomId(Number(e.target.value))}
-            >
-              {layout.rooms.map((r) => (
-                <option key={`room-opt-${r.id}`} value={String(r.id)}>{r.name || `Room ${r.id}`}</option>
-              ))}
-            </Select>
-          </div>
-        </div>
+      {/* Gap between left group and center-left group */}
+      <div className="w-4 flex-none" />
 
-        <Button 
-          type="button" 
-          variant="outline" 
-          onClick={addCabinet} 
-          className="h-10 rounded-brand border border-gray-200 bg-white px-5 font-medium text-[13px] tracking-[-0.01em] text-gray-600 shadow-xs hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300 flex items-center gap-[6px]" 
+      {/* Center-left group: Room dropdown + add icon + trash icon */}
+      <div className="flex items-center gap-[8px] flex-none">
+        <Select
+          className="h-[36px] min-w-[120px] w-fit cursor-pointer rounded-brand border-[0.5px] border-black/15 bg-white px-3 text-[13px] font-normal text-[#111111] dark:border-white/10 dark:bg-card dark:text-zinc-100 [&_i]:text-[12px] [&_i]:text-[#8E8E93] dark:[&_i]:text-zinc-500"
+          value={String(activeRoomId ?? "")}
+          disabled={!layout?.rooms?.length}
+          onChange={(e) => setActiveRoomId(Number(e.target.value))}
+        >
+          {layout.rooms.map((r) => (
+            <option key={`room-opt-${r.id}`} value={String(r.id)}>{r.name || `Room ${r.id}`}</option>
+          ))}
+        </Select>
+
+        <button
+          type="button"
+          onClick={addRoom}
+          className="p-0 border-0 bg-transparent text-[#8E8E93] hover:text-[#30D158] transition-colors cursor-pointer focus:outline-none flex items-center justify-center"
+        >
+          <i className="ph-bold ph-plus text-[16px]" />
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setDeleteRoomConfirmOpen(true)}
+          disabled={!activeRoom || activeRoomStudentCount > 0}
+          className="p-0 border-0 bg-transparent text-[#8E8E93] hover:text-[#E5484D] disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer focus:outline-none flex items-center justify-center"
+        >
+          <i className="ph-bold ph-trash text-[16px]" />
+        </button>
+      </div>
+
+      {/* Spacer: flex: 1 to push right group to the far right */}
+      <div className="flex-1" />
+
+      {/* Right group + Save button */}
+      <div className="flex items-center gap-[8px] flex-none">
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={addCabinet}
+          className="h-[36px] rounded-brand border-[0.5px] border-black/15 bg-transparent px-4 text-[13px] font-normal text-[#111111] hover:bg-gray-50/50 dark:border-white/10 dark:bg-card dark:text-zinc-350 dark:hover:bg-white/5 shadow-none flex items-center justify-center cursor-pointer"
           disabled={!activeRoom}
         >
-          <i className="ph-bold ph-plus-square text-[15px]" />
           New Cabinet
         </Button>
 
-        <div className="flex h-10 items-center gap-1 rounded-brand border border-gray-200 bg-white p-1 shadow-xs dark:border-white/10 dark:bg-card">
-          <Button type="button" variant="ghost" size="icon" onClick={addRoom} className="h-8 w-8 rounded-brand text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/30"><i className="ph-bold ph-plus-circle text-lg" /></Button>
-          <Separator orientation="vertical" className="h-4 mx-0.5 bg-gray-100 dark:bg-muted" />
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => setDeleteRoomConfirmOpen(true)}
-            className="h-8 w-8 rounded-brand text-red-600 hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:bg-red-950/30 disabled:text-gray-400 dark:disabled:text-zinc-500 disabled:bg-transparent dark:disabled:bg-transparent"
-            disabled={!activeRoom || activeRoomStudentCount > 0}
-          >
-            <i className="ph-bold ph-trash text-lg" />
-          </Button>
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <label className="ml-1 text-[9px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">Template</label>
+        {/* Unified Right Group Container */}
+        <div className="relative flex items-center h-[36px] rounded-brand border-[0.5px] border-black/15 bg-white dark:border-white/10 dark:bg-card">
           <Select
-            menuClassName="min-w-max"
-            className="h-10 min-w-[120px] cursor-pointer rounded-brand border border-gray-200 bg-white px-3 text-sm font-semibold text-gray-700 shadow-xs transition-all focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon/20 dark:border-white/10 dark:bg-card dark:text-zinc-100 dark:focus:border-zinc-700"
+            usePortal={false}
+            className="h-full w-auto min-w-0 cursor-pointer rounded-none! rounded-l-brand! border-0 bg-transparent pl-[12px] pr-[12px] gap-[6px] [&_i]:ml-0 [&_i]:text-[12px] [&_i]:text-[#8E8E93]! dark:[&_i]:text-zinc-500! shadow-none hover:bg-black/[0.02]! text-[13px] font-normal text-[#111111] dark:text-zinc-100 focus:ring-0! focus:border-0! focus:outline-none! focus-visible:ring-0! focus-visible:border-0! focus:bg-transparent! active:bg-transparent! focus-visible:bg-transparent!"
+            menuClassName="bg-white! border-[0.5px]! border-black/15! rounded-brand! shadow-[0_4px_12px_rgba(0,0,0,0.08)]! dark:border-white/10 dark:bg-card"
+            optionClassName="text-[13px]! font-normal! text-[#111111]! h-[36px]! px-[12px]! bg-transparent! hover:bg-[#F5F5F5]! dark:text-zinc-300 dark:hover:bg-white/5 rounded-none!"
             value={selectedTemplateId}
             onChange={(e) => setSelectedTemplateId(e.target.value)}
             disabled={!activeRoom || templates.length === 0}
           >
             {templates.map((tpl) => <option key={`tpl-opt-${tpl.id}`} value={tpl.id}>{tpl.name}</option>)}
           </Select>
+
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => setTemplateApplyConfirmOpen(true)}
+            className="h-full bg-transparent hover:bg-black/[0.02] border-0 rounded-none! rounded-r-brand! px-[12px] text-[13px] font-normal text-[#111111] dark:text-zinc-300 disabled:text-[#C7C7CC] dark:disabled:text-zinc-700 disabled:pointer-events-none transition-colors cursor-pointer flex items-center justify-center shadow-none!"
+            disabled={!activeRoom || !selectedTemplateId}
+          >
+            Apply
+          </Button>
         </div>
 
-        <Button 
-          type="button" 
-          variant="outline"
-          onClick={() => setTemplateApplyConfirmOpen(true)} 
-          className="h-10 rounded-brand border border-gray-200 bg-white px-4 font-medium text-[13px] tracking-[-0.01em] text-gray-600 shadow-xs hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:border-white/10 dark:bg-card dark:text-zinc-300 flex items-center gap-[6px]" 
-          disabled={!activeRoom || !selectedTemplateId}
-        >
-          <i className="ph-bold ph-magic-wand text-[15px]" />
-          Apply
-        </Button>
+        {/* Three-dot menu sits OUTSIDE the unified group */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button
+              type="button"
+              className="p-0 border-0 bg-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-white transition-colors cursor-pointer focus:outline-none flex items-center justify-center w-[24px] h-[36px]"
+            >
+              <i className="ph-bold ph-dots-three-vertical text-[16px]" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-48 rounded-xl dark:bg-zinc-900 dark:border-white/10">
+            <DropdownMenuItem onClick={() => setSaveTemplateOpen(true)} className="cursor-pointer" disabled={!activeRoom || activeRoom.cabinets?.length === 0}>
+              <i className="ph-bold ph-floppy-disk mr-2" /> Save as Template
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDeleteTemplateConfirmOpen(true)} className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400" disabled={!selectedTemplateId}>
+              <i className="ph-bold ph-trash mr-2" /> Delete Template
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => setRestoreTemplatesConfirmOpen(true)} className="cursor-pointer text-amber-600 focus:text-amber-600 dark:text-amber-400 dark:focus:text-amber-400">
+              <i className="ph-bold ph-arrow-counter-clockwise mr-2" /> Restore Defaults
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-        <div className="ml-auto flex items-center gap-4">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-               <Button variant="ghost" size="icon" className="h-10 w-10 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 rounded-brand">
-                 <i className="ph-bold ph-dots-three-vertical text-lg" />
-               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 rounded-xl dark:bg-zinc-900 dark:border-white/10">
-               <DropdownMenuItem onClick={() => setSaveTemplateOpen(true)} className="cursor-pointer" disabled={!activeRoom || activeRoom.cabinets?.length === 0}>
-                 <i className="ph-bold ph-floppy-disk mr-2" /> Save as Template
-               </DropdownMenuItem>
-               <DropdownMenuItem onClick={() => setDeleteTemplateConfirmOpen(true)} className="cursor-pointer text-red-600 focus:text-red-600 dark:text-red-400 dark:focus:text-red-400" disabled={!selectedTemplateId}>
-                 <i className="ph-bold ph-trash mr-2" /> Delete Template
-               </DropdownMenuItem>
-               <DropdownMenuSeparator />
-               <DropdownMenuItem onClick={() => setRestoreTemplatesConfirmOpen(true)} className="cursor-pointer text-amber-600 focus:text-amber-600 dark:text-amber-400 dark:focus:text-amber-400">
-                 <i className="ph-bold ph-arrow-counter-clockwise mr-2" /> Restore Defaults
-               </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
-          <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
-
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="inline-block">
-                  <Button
-                    onClick={saveLayout}
-                    disabled={saving || hasAnyCollisions}
-                    className="flex h-10 items-center gap-[6px] !rounded-[8px] btn-brand-red active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none !font-medium !text-[13px] !tracking-[-0.01em]"
-                  >
-                    {saving ? (
-                      <i className="ph-bold ph-spinner animate-spin text-[15px]" />
-                    ) : (
-                      <i className="ph-bold ph-check text-[15px]" />
-                    )}
-                    {saving ? "Saving..." : "Save"}
-                  </Button>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="inline-block">
+                <Button
+                  onClick={saveLayout}
+                  disabled={saving || hasAnyCollisions}
+                  className="flex h-[36px] items-center justify-center rounded-brand btn-brand-red text-white font-medium text-[13px] active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none px-[16px] cursor-pointer"
+                >
+                  {saving ? "Saving..." : "Save"}
+                </Button>
+              </div>
+            </TooltipTrigger>
+            {hasAnyCollisions && (
+              <TooltipContent side="bottom" className="max-w-xs rounded-xl border-red-200 bg-red-50 p-3 text-[10px] font-semibold text-red-700 shadow-xl dark:bg-red-950/30 dark:shadow-none">
+                <div className="flex items-center gap-2">
+                   <i className="ph-fill ph-warning-circle text-sm" />
+                   CANNOT SAVE: RESOLVE OVERLAPS
                 </div>
-              </TooltipTrigger>
-              {hasAnyCollisions && (
-                <TooltipContent side="bottom" className="max-w-xs rounded-xl border-red-200 bg-red-50 p-3 text-[10px] font-semibold text-red-700 shadow-xl dark:bg-red-950/30 dark:shadow-none">
-                  <div className="flex items-center gap-2">
-                     <i className="ph-fill ph-warning-circle text-sm" />
-                     CANNOT SAVE: RESOLVE OVERLAPS
-                  </div>
-                </TooltipContent>
-              )}
-            </Tooltip>
-          </TooltipProvider>
-        </div>
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
       </div>
     </div>
   )
@@ -1297,7 +1298,11 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         icon="ph-layout"
         title="Storage Layout Editor"
         description="Organize how cabinets are placed and arranged in your storage rooms."
+        showBorder={false}
+        titleClassName="text-[15px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50 mb-[4px]"
+        descriptionClassName="text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400 m-0"
       />
+      <div className="border-b-[0.5px] border-black/[0.08] dark:border-white/[0.08] w-full" />
 
       {renderToolbar()}
 
@@ -1310,6 +1315,9 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
           </div>
           <div className="lg:col-span-1 select-none">
             <CabinetSidebar 
+              activeRoom={activeRoom}
+              carouselIndex={carouselIndex}
+              setCarouselIndex={setCarouselIndex}
               selectedCabinetIds={selectedCabinetIds} selectedCabinet={selectedCabinet} duplicateSelectedCabinet={duplicateSelectedCabinet} setBulkConfirmOpen={setBulkConfirmOpen} removeDrawerFromSelected={removeDrawerFromSelected} addDrawerToSelected={addDrawerToSelected} updateSelectedRectFromNormalized={updateSelectedRectFromNormalized} updateSelectedSizeNormalized={updateSelectedSizeNormalized} history={history} historyIndex={historyIndex} revertToHistoryState={revertToHistoryState}
             />
           </div>

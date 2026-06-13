@@ -48,9 +48,9 @@ export default function FloatingActionBar({
                 variant="ghost"
                 size="sm"
                 onClick={onCancel}
-                className="h-9 px-4 text-xs font-semibold text-gray-500 transition-colors hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-400 dark:bg-red-950/30"
+                className="h-9 rounded-[8px] px-4 text-[13px] font-medium tracking-[-0.01em] text-gray-500 hover:bg-gray-50 dark:text-zinc-400 dark:hover:bg-white/5"
               >
-                DESELECT ALL
+                Deselect All
               </Button>
               
               {actionLabel && (

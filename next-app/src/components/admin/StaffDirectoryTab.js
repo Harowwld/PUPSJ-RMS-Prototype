@@ -40,6 +40,35 @@ import { cn } from "@/lib/utils"
 import React from "react"
 import { Select } from "@/components/ui/select"
 
+const formatLastLoginDate = (dateStr) => {
+  if (!dateStr || dateStr === "—") return "—"
+  try {
+    const parts = dateStr.split("/")
+    if (parts.length === 3) {
+      const month = parseInt(parts[0]) - 1
+      const day = parseInt(parts[1])
+      const year = parseInt(parts[2])
+      const date = new Date(year, month, day)
+      if (!isNaN(date.getTime())) {
+        return date.toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric"
+        })
+      }
+    }
+    const d = new Date(dateStr)
+    if (!isNaN(d.getTime())) {
+      return d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      })
+    }
+  } catch (e) {}
+  return dateStr
+}
+
 const StaffTableRow = React.memo(({ 
   s, 
   isCurrentUser, 
@@ -57,13 +86,12 @@ const StaffTableRow = React.memo(({
     <tr
       onClick={(e) => !isCurrentUser && toggleSelect(s.id, e)}
       className={cn(
-        "group transition-all duration-200 hover:bg-gray-50/80 dark:bg-card dark:hover:bg-white/5 select-none",
+        "group h-[52px] border-b-[0.5px] border-black/[0.06] dark:border-white/[0.06] last:border-b-0 transition-all duration-200 hover:bg-[#F9F9F9] dark:hover:bg-white/2 select-none",
         !isCurrentUser && "cursor-pointer",
-        isCurrentUser && "bg-red-50 dark:bg-red-950/30",
-        isSelected && "bg-amber-50 dark:bg-amber-950/40"
+        isSelected && "bg-amber-50/60 dark:bg-amber-950/20"
       )}
     >
-      <td className="p-4 text-center">
+      <td className="py-0 px-4 align-middle text-center">
         {!isCurrentUser && (
           <input
             type="checkbox"
@@ -73,97 +101,94 @@ const StaffTableRow = React.memo(({
           />
         )}
       </td>
-      <td className="p-4">
+      <td className="py-0 px-4 align-middle">
         <div className="flex flex-col min-w-0">
-          <div className="flex items-center gap-2 text-sm font-semibold text-gray-900 dark:text-zinc-50">
-            <span className="truncate">
+          <div className="flex items-center gap-2 text-[14px] font-medium text-[#111111] dark:text-zinc-50">
+            <span className={cn("truncate", isCurrentUser && "font-semibold")}>
               {s.fname} {s.lname}
             </span>
-            {isCurrentUser && (
-              <Badge className="h-4 bg-pup-maroon text-[8px] font-semibold dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
-                You
-              </Badge>
-            )}
           </div>
-          <div className="truncate text-[10px] font-medium text-gray-500 dark:text-zinc-400 mt-0.5">
+          <div className="truncate text-[12px] font-normal text-[#8E8E93] dark:text-zinc-500 mt-[2px]">
             {s.email}
           </div>
         </div>
       </td>
-      <td className="p-4 text-xs font-semibold tracking-tight text-gray-700 whitespace-nowrap dark:text-zinc-300">
+      <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-300">
         {s.id}
       </td>
-      <td className="p-4">
+      <td className="py-0 px-4 align-middle">
         <div className={cn(
-          "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-semibold  tracking-wider transition-all",
+          "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em]",
           s.role === "Admin" || s.role === "SuperAdmin"
-            ? "border-red-500/30 bg-red-500/10 text-red-600 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400"
-            : "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:border-amber-400/20 dark:bg-amber-400/10 dark:text-amber-400"
+            ? "bg-[#FEE2E2] text-[#991B1B] dark:bg-red-950/40 dark:text-red-400"
+            : "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400"
         )}>
-          <i className={cn(
-            "ph-bold text-[10px]",
-            s.role === "Admin" || s.role === "SuperAdmin" ? "ph-shield-star" : "ph-user"
-          )}></i>
           {s.role}
         </div>
       </td>
-      <td className="p-4">
+      <td className="py-0 px-4 align-middle">
         {s.totp_enabled ? (
-          <div className="flex w-fit items-center gap-1.5 whitespace-nowrap rounded-full border border-emerald-500/20 bg-emerald-500/10 px-2.5 py-1 text-[9px] font-semibold text-emerald-600 tracking-wider dark:text-emerald-400">
-            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+          <span className="text-[13px] font-normal text-emerald-600 dark:text-emerald-400">
             2FA Enabled
+          </span>
+        ) : (
+          <span className="text-[13px] font-normal text-[#8E8E93] dark:text-zinc-500">
+            Off
+          </span>
+        )}
+      </td>
+      <td className="py-0 px-4 align-middle">
+        {(!active.relative && active.date === "—") ? (
+          <div className="text-[13px] font-normal text-[#C7C7CC] dark:text-zinc-600">
+            Never active
           </div>
         ) : (
-          <div className="flex w-fit items-center gap-1.5 whitespace-nowrap rounded-full border border-gray-200 bg-gray-50 px-2.5 py-1 text-[9px] font-semibold text-gray-400 tracking-wider dark:border-white/10 dark:bg-white/5 dark:text-zinc-500">
-            <i className="ph-bold ph-warning-circle text-[10px]"></i>
-            Off
+          <div>
+            <div className="flex items-center gap-1.5 text-[13px] font-medium text-[#111111] dark:text-zinc-100">
+              {active.relative === "Active Now" && (
+                <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse"></div>
+              )}
+              {active.relative || formatLastLoginDate(active.date)}
+            </div>
+            {active.relative && (
+              <div className="text-[12px] font-normal text-[#8E8E93] dark:text-zinc-500 mt-[2px]">
+                {formatLastLoginDate(active.date)}
+              </div>
+            )}
           </div>
         )}
       </td>
-      <td className="p-4">
-        <div className={cn(
-          "flex items-center gap-1.5 text-xs font-semibold ",
-          !active.relative && active.date === "—" ? "text-gray-400 dark:text-zinc-500 font-medium" : "text-gray-900 dark:text-zinc-50"
-        )}>
-          {active.relative === "Active Now" && (
-            <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)] animate-pulse"></div>
-          )}
-          {active.relative || (active.date === "—" ? "Never active" : active.date)}
-        </div>
-        {active.relative && (
-          <div className="text-[10px] text-gray-500 font-medium opacity-70 mt-0.5 dark:text-zinc-400">
-            {active.date}
-          </div>
-        )}
-      </td>
-      <td className="p-4 text-right">
+      <td className="py-0 px-4 align-middle text-right">
         <div
-          className="flex items-center justify-end gap-2"
+          className="flex items-center justify-end gap-[12px]"
           onClick={(e) => e.stopPropagation()}
         >
           {isCurrentUser ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => router.push("/account")}
-              className="h-9 w-full max-w-[140px] gap-2 rounded-brand border-gray-200 bg-white px-4 text-[10px] font-semibold tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-white/5 dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-            >
-              <i className="ph-bold ph-user-circle text-base"></i>
-              Account
-            </Button>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => router.push("/account")}
+                  className="p-0 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-[#111111] dark:hover:text-white focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                >
+                  <i className="ph-bold ph-gear-six text-[16px]"></i>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
+                <p className="text-[10px] font-semibold">My Account</p>
+                <p className="text-[9px] opacity-80">View profile and security settings</p>
+              </TooltipContent>
+            </Tooltip>
           ) : (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-[12px]">
               {activeTab === "active" && (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
+                    <button
                       onClick={() => onEditUser(s.id)}
-                      className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800 cursor-pointer active:scale-95"
+                      className="p-0 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-[#111111] dark:hover:text-white focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                     >
-                      <i className="ph-bold ph-pencil-simple text-base"></i>
-                    </Button>
+                      <i className="ph-bold ph-pencil-simple text-[16px]"></i>
+                    </button>
                   </TooltipTrigger>
                   <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
                     <p className="text-[10px] font-semibold">Edit Personnel</p>
@@ -175,14 +200,12 @@ const StaffTableRow = React.memo(({
               {activeTab === "archived" ? (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
+                    <button
                       onClick={() => onRestoreUser(s.id)}
-                      className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-emerald-600 shadow-sm transition-all hover:border-emerald-600 hover:bg-emerald-50 dark:bg-white/5 dark:border-white/10 dark:text-emerald-400 dark:hover:bg-emerald-900/20 cursor-pointer active:scale-95"
+                      className="p-0 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                     >
-                      <i className="ph-bold ph-arrow-counter-clockwise text-base"></i>
-                    </Button>
+                      <i className="ph-bold ph-arrow-counter-clockwise text-[16px]"></i>
+                    </button>
                   </TooltipTrigger>
                   <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
                     <p className="text-[10px] font-semibold">Restore Account</p>
@@ -192,14 +215,12 @@ const StaffTableRow = React.memo(({
               ) : (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="icon"
+                    <button
                       onClick={() => onDeleteUser(s.id)}
-                      className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10 cursor-pointer active:scale-95"
+                      className="p-0 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                     >
-                      <i className="ph-bold ph-archive text-base"></i>
-                    </Button>
+                      <i className="ph-bold ph-archive text-[16px]"></i>
+                    </button>
                   </TooltipTrigger>
                   <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
                     <p className="text-[10px] font-semibold">Archive Profile</p>
@@ -218,12 +239,13 @@ const StaffTableRow = React.memo(({
 StaffTableRow.displayName = "StaffTableRow"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
-  if (sortBy !== column)
-    return <i className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60"></i>
+  if (sortBy !== column) {
+    return <i className="ph-bold ph-caret-up-down ml-1 text-[12px] text-[#C7C7CC] opacity-60 transition-opacity group-hover:opacity-70 dark:text-zinc-600"></i>
+  }
   return sortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
+    <i className="ph-bold ph-caret-up ml-1 text-[12px] text-[#111111] dark:text-white"></i>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
+    <i className="ph-bold ph-caret-down ml-1 text-[12px] text-[#111111] dark:text-white"></i>
   )
 }
 
@@ -459,7 +481,7 @@ export default function StaffDirectoryTab({
   return (
     <TooltipProvider delayDuration={200}>
       <div
-        className="font-inter w-full flex flex-col gap-6 focus:outline-none animate-fade-up"
+        className="font-inter w-full flex flex-1 flex-col h-full min-h-0 gap-6 focus:outline-none animate-fade-up"
         onKeyDown={handleKeyDown}
         tabIndex={0}
       >
@@ -478,14 +500,18 @@ export default function StaffDirectoryTab({
             </div>
           }
           description="Manage system staff and administrative access."
+          titleClassName="text-[15px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50 mb-[4px]"
+          descriptionClassName="text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400 m-0"
         />
 
         {hasActiveFilters && (
-          <div className="flex-none border-t border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+          <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">Active filters:</span>
+              <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                Active filters:
+              </span>
               {localSearch && (
-                <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-semibold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
+                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                   Search: {localSearch}
                   <button
                     onClick={() => { 
@@ -493,20 +519,20 @@ export default function StaffDirectoryTab({
                       setSearch("");
                       setCurrentPage(1); 
                     }}
-                    className="ml-1 hover:text-pup-darkMaroon transition-colors"
+                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
                   >
-                    <i className="ph-bold ph-x text-[8px]"></i>
+                    ×
                   </button>
                 </div>
               )}
               {roleFilter !== "All" && (
-                <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
-                  Role: {roleFilter}
+                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  Role: {roleFilter === "Admin" ? "Administrators" : roleFilter === "Staff" ? "Regular Staff" : roleFilter}
                   <button
                     onClick={() => { setRoleFilter("All"); setCurrentPage(1); }}
-                    className="ml-1 hover:text-blue-800 transition-colors"
+                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
                   >
-                    <i className="ph-bold ph-x text-[8px]"></i>
+                    ×
                   </button>
                 </div>
               )}
@@ -519,109 +545,83 @@ export default function StaffDirectoryTab({
                   setRoleFilter("All")
                   setCurrentPage(1)
                 }}
-                className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-semibold text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
+                className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
               >
-                Clear All Filters
+                Clear
               </Button>
             </div>
           </div>
         )}
 
         {!isLoading && !error && (
-          <CardContent className="font-inter bg-white p-4 dark:bg-card/50 backdrop-blur-md border-t border-gray-100 dark:border-white/10">
-            <div className="flex shrink-0 select-none flex-wrap items-end justify-between gap-6">
-              <div className="flex w-full flex-col gap-1.5 sm:w-auto">
-                <div className="flex w-full cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 backdrop-blur-sm sm:w-auto dark:border-white/10 dark:bg-muted/50">
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("active")}
-                    className={`group flex h-11 flex-1 cursor-pointer items-center justify-center gap-3 px-8 text-sm font-semibold transition-all duration-200 active:scale-[0.98] sm:w-[200px] sm:flex-none ${
- activeTab === "active"
- ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
- : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
- }`}
-                  >
-                    <span className="whitespace-nowrap tracking-wide">
-                      Active
-                    </span>
-                    <span
-                      className={cn(
-                        "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-semibold transition-all duration-300",
-                        activeTab === "active"
-                          ? "bg-pup-maroon text-white shadow-sm ring-2 ring-red-50/50 dark:bg-red-500/20 dark:text-red-400 dark:ring-red-400/20 dark:shadow-none"
-                          : "bg-gray-200 text-gray-500 group-hover:bg-gray-300 dark:bg-zinc-800 dark:text-zinc-500 dark:group-hover:bg-zinc-700 dark:group-hover:text-zinc-300"
-                      )}
-                    >
-                      {staffData.filter((s) => s.status !== "Archived").length}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("archived")}
-                    className={`group flex h-11 flex-1 cursor-pointer items-center justify-center gap-3 px-8 text-sm font-semibold transition-all duration-200 active:scale-[0.98] sm:w-[200px] sm:flex-none ${
- activeTab === "archived"
- ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
- : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
- }`}
-                  >
-                    <span className="whitespace-nowrap tracking-wide">
-                      Archived
-                    </span>
-                    <span
-                      className={cn(
-                        "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-semibold transition-all duration-300",
-                        activeTab === "active"
-                          ? "bg-pup-maroon text-white shadow-sm ring-2 ring-red-50/50 dark:bg-red-500/20 dark:text-red-400 dark:ring-red-400/20 dark:shadow-none"
-                          : "bg-gray-200 text-gray-500 group-hover:bg-gray-300 dark:bg-zinc-800 dark:text-zinc-500 dark:group-hover:bg-zinc-700 dark:group-hover:text-zinc-300"
-                      )}
-                    >
-                      {staffData.filter((s) => s.status === "Archived").length}
-                    </span>
-                  </button>
+          <CardContent className="font-inter bg-white p-[28px] dark:bg-card/50 backdrop-blur-md flex flex-col gap-6">
+            {/* Active / Archived Toggle */}
+            <div className="flex w-full gap-[24px] select-none">
+              <button
+                type="button"
+                onClick={() => setActiveTab("active")}
+                className={cn(
+                  "relative pb-2 text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer",
+                  activeTab === "active" 
+                    ? "text-[#ad2f2f] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-[#ad2f2f]" 
+                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                )}
+              >
+                Active ({staffData.filter((s) => s.status !== "Archived").length})
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab("archived")}
+                className={cn(
+                  "relative pb-2 text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer",
+                  activeTab === "archived" 
+                    ? "text-[#ad2f2f] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-[#ad2f2f]" 
+                    : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                )}
+              >
+                Archived ({staffData.filter((s) => s.status === "Archived").length})
+              </button>
+            </div>
+
+            {/* Toolbar Row */}
+            <div className="flex flex-row items-center gap-[12px] w-full select-none">
+              {/* Search bar: flex: 1; min-width: 0; */}
+              <div className="flex-1 min-w-0 relative group">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+                </div>
+                <Input
+                  type="text"
+                  placeholder="Search name, email or ID..."
+                  className="h-[36px] w-full rounded-[8px] border-[0.5px] border-black/15 bg-white pl-9 pr-20 text-[13px] font-normal placeholder:text-[#8E8E93] dark:border-white/15 dark:bg-card"
+                  value={localSearch}
+                  onChange={(e) => setLocalSearch(e.target.value)}
+                />
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
+                  {filteredStaff.length > 0 ? `${filteredStaff.length} results` : "0 results"}
                 </div>
               </div>
 
-              <div className="flex flex-1 flex-col gap-1.col gap-1.5 min-w-[300px]">
-                <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-                    Search
-                  </label>
-                  <span className="text-[9px] font-semibold text-pup-maroon dark:text-primary/70">
-                    {filteredStaff.length > 0 ? `${filteredStaff.length.toLocaleString()} matches` : "No results"}
-                  </span>
-                </div>
-                <div className="relative group">
-                  <i className="ph-bold ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500"></i>
-                  <Input
-                    placeholder="Search name, email or ID..."
-                    className="h-11 rounded-brand border border-gray-200 bg-white pl-11 pr-4 text-dium transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
-                    value={localSearch}
-                    onChange={(e) => setLocalSearch(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-1.5 w-full sm:w-44">
-                <label className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-                  Role
-                </label>
+              {/* Role dropdown: flex-shrink: 0; width: 160px; */}
+              <div className="shrink-0 w-[160px]">
                 <Select
                   value={roleFilter}
                   onChange={(e) => setRoleFilter(e.target.value)}
+                  className="h-[36px] rounded-[8px] border-[0.5px] border-black/15 text-[13px] font-normal text-[#111111] dark:border-white/15"
                 >
-                  <option value="All">All</option>
+                  <option value="All">Role</option>
                   <option value="Admin">Administrators</option>
                   <option value="Staff">Regular Staff</option>
                 </Select>
               </div>
 
-              <div className="flex items-center gap-3">
+              {/* Add Staff button: flex-shrink: 0; width: auto; */}
+              <div className="shrink-0 w-auto">
                 <Button
                   onClick={() => onSwitchView("create")}
                   disabled={activeTab === "archived"}
-                  className="flex h-11 items-center gap-2 rounded-brand btn-brand-red active:scale-95 disabled:opacity-50 transition-all dark:shadow-none text-[10px] font-semibold tracking-widest px-6"
+                  className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-white font-medium text-[13px] active:scale-95 disabled:opacity-50 transition-all dark:shadow-none px-6"
                 >
-                  <i className="ph-bold ph-user-plus text-base"></i>
                   Add Staff
                 </Button>
               </div>
@@ -675,17 +675,17 @@ export default function StaffDirectoryTab({
         <Tabs
           value={activeTab}
           onValueChange={setActiveTab}
-          className="w-full font-inter"
+          className="w-full flex flex-col flex-1 min-h-0 font-inter"
         >
           <TabsContent
             value={activeTab}
             key={activeTab}
-            className="outline-none animate-fade-up"
+            className="outline-none animate-fade-up flex flex-col flex-1 min-h-0"
           >
-            <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
-              <table className="min-w-full table-fixed text-sm">
-                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-transparent backdrop-blur-sm dark:border-white/10 dark:bg-transparent">
-                  <tr className="text-left text-[10px] font-semibold tracking-widest text-gray-600 dark:text-zinc-300">
+            <div className="w-full overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1 min-h-0">
+              <table className="min-w-full text-sm">
+                <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+                  <tr className="text-left text-[11px] font-medium uppercase tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                     <th className="w-16 p-4 text-center">
                       <input
                         type="checkbox"
@@ -695,8 +695,8 @@ export default function StaffDirectoryTab({
                             (s) => s.id !== currentUserId
                           ) &&
                           paginatedStaff
-                            .filter((s) => s.id !== currentUserId)
-                            .every((s) => selectedIds.has(s.id))
+                             .filter((s) => s.id !== currentUserId)
+                             .every((s) => selectedIds.has(s.id))
                         }
                         onChange={(e) => toggleSelectAll(e.target.checked)}
                         disabled={
@@ -710,7 +710,10 @@ export default function StaffDirectoryTab({
                     <th className="p-4 min-w-[280px]">
                       <button
                         onClick={() => handleSort("fname")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-medium uppercase tracking-[0.04em]",
+                          sortBy === "fname" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                        )}
                       >
                         Staff Name{" "}
                         <SortIndicator
@@ -723,7 +726,10 @@ export default function StaffDirectoryTab({
                     <th className="w-48 p-4">
                       <button
                         onClick={() => handleSort("id")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-medium uppercase tracking-[0.04em]",
+                          sortBy === "id" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                        )}
                       >
                         Employee ID{" "}
                         <SortIndicator
@@ -736,7 +742,10 @@ export default function StaffDirectoryTab({
                     <th className="w-48 p-4">
                       <button
                         onClick={() => handleSort("role")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-medium uppercase tracking-[0.04em]",
+                          sortBy === "role" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                        )}
                       >
                         System Role{" "}
                         <SortIndicator
@@ -749,7 +758,10 @@ export default function StaffDirectoryTab({
                     <th className="w-40 p-4">
                       <button
                         onClick={() => handleSort("totp_enabled")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-medium uppercase tracking-[0.04em]",
+                          sortBy === "totp_enabled" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                        )}
                       >
                         Security{" "}
                         <SortIndicator
@@ -762,7 +774,10 @@ export default function StaffDirectoryTab({
                     <th className="w-56 p-4">
                       <button
                         onClick={() => handleSort("last_active")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                        className={cn(
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-medium uppercase tracking-[0.04em]",
+                          sortBy === "last_active" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                        )}
                       >
                         Last Login{" "}
                         <SortIndicator
@@ -772,93 +787,92 @@ export default function StaffDirectoryTab({
                         />
                       </button>
                     </th>
-                    <th className="w-32 p-4 text-right">
+                    <th className="w-32 p-4 text-right text-[11px] font-medium uppercase tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                       Actions
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-white/10">
-                  {filteredStaff.length === 0 ? (
-                    <tr className="border-0 hover:bg-transparent">
-                      <td colSpan={7} className="p-12 text-center">
-                        <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
-                          <EmptyHeader className="flex flex-col items-center gap-0">
-                            <div className="relative mb-6">
-                              <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
-                              <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                                <i className={activeTab === "archived" && !hasActiveFilters && search === "" ? "ph-archive" : "ph-magnifying-glass"}></i>
-                              </EmptyMedia>
-                            </div>
-                            <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                              {hasActiveFilters || search !== "" ? "No Matches Found" : (activeTab === "archived" ? "No archive found" : "No Activity Found")}
-                            </EmptyTitle>
-                            <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                              {hasActiveFilters || search !== ""
-                                ? "Try adjusting your search filters to find what you're looking for."
-                                : (activeTab === "archived" ? "There are currently no archived personnel records in the system." : "There are currently no personnel records in the system.")}
-                            </EmptyDescription>
-                            {hasActiveFilters || search !== "" ? (
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => {
-                                  setLocalSearch("")
-                                  setSearch("")
-                                  setRoleFilter("All")
-                                  setCurrentPage(1)
-                                }}
-                                className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-                              >
-                                <i className="ph-bold ph-arrow-counter-clockwise"></i>
-                                Clear Search
-                              </Button>
-                            ) : (
-                              activeTab === "active" && staffData.filter(s => s.status !== "Archived").length === 0 && (
+                  <tbody className="bg-transparent">
+                    {filteredStaff.length === 0 ? (
+                      <tr className="border-0 hover:bg-transparent">
+                        <td colSpan={7} className="p-12 text-center">
+                          <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                            <EmptyHeader className="flex flex-col items-center gap-0">
+                              <div className="relative mb-6">
+                                <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                                <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                                  <i className={activeTab === "archived" && !hasActiveFilters && search === "" ? "ph-archive" : "ph-magnifying-glass"}></i>
+                                </EmptyMedia>
+                              </div>
+                              <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                                {hasActiveFilters || search !== "" ? "No Matches Found" : (activeTab === "archived" ? "No archive found" : "No Activity Found")}
+                              </EmptyTitle>
+                              <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                                {hasActiveFilters || search !== ""
+                                  ? "Try adjusting your search filters to find what you're looking for."
+                                  : (activeTab === "archived" ? "There are currently no archived personnel records in the system." : "There are currently no personnel records in the system.")}
+                              </EmptyDescription>
+                              {hasActiveFilters || search !== "" ? (
                                 <Button
-                                  onClick={() => onSwitchView("create")}
-                                  className="mt-6 flex h-10 items-center gap-3 rounded-brand btn-brand-red px-6 text-xs font-semibold text-white transition-all dark:shadow-none"
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => {
+                                    setLocalSearch("")
+                                    setSearch("")
+                                    setRoleFilter("All")
+                                    setCurrentPage(1)
+                                  }}
+                                  className="mt-6 flex h-10 items-center gap-3 rounded-brand border border-gray-300 bg-white px-6 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 tracking-wide dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                                 >
-                                  <i className="ph-bold ph-user-plus"></i>
-                                  Register New Staff
+                                  <i className="ph-bold ph-arrow-counter-clockwise"></i>
+                                  Clear Search
                                 </Button>
-                              )
-                            )}
-                          </EmptyHeader>
-                        </Empty>
-                      </td>
-                    </tr>
-                  ) : (
-                    paginatedStaff.map((s) => (
-                      <StaffTableRow
-                        key={s.id}
-                        s={s}
-                        isCurrentUser={s.id === currentUserId}
-                        isSelected={selectedIds.has(s.id)}
-                        active={formatRelativeTime(s.last_active)}
-                        isArchived={s.status === "Archived"}
-                        toggleSelect={toggleSelect}
-                        onEditUser={onEditUser}
-                        onRestoreUser={onRestoreUser}
-                        onDeleteUser={onDeleteUser}
-                        activeTab={activeTab}
-                      />
-                    ))
-                  )}
-                </tbody>
-              </table>
+                              ) : (
+                                activeTab === "active" && staffData.filter(s => s.status !== "Archived").length === 0 && (
+                                  <Button
+                                    onClick={() => onSwitchView("create")}
+                                    className="mt-6 flex h-10 items-center gap-3 rounded-brand btn-brand-red px-6 text-xs font-semibold text-white transition-all dark:shadow-none"
+                                  >
+                                    <i className="ph-bold ph-user-plus"></i>
+                                    Register New Staff
+                                  </Button>
+                                )
+                              )}
+                            </EmptyHeader>
+                          </Empty>
+                        </td>
+                      </tr>
+                    ) : (
+                      paginatedStaff.map((s) => (
+                        <StaffTableRow
+                          key={s.id}
+                          s={s}
+                          isCurrentUser={s.id === currentUserId}
+                          isSelected={selectedIds.has(s.id)}
+                          active={formatRelativeTime(s.last_active)}
+                          isArchived={s.status === "Archived"}
+                          toggleSelect={toggleSelect}
+                          onEditUser={onEditUser}
+                          onRestoreUser={onRestoreUser}
+                          onDeleteUser={onDeleteUser}
+                          activeTab={activeTab}
+                        />
+                      ))
+                    )}
+                  </tbody>
+                </table>
 
               {filteredStaff.length > 0 && (
-                <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card">
-                  <div className="flex items-center gap-8 select-none cursor-default">
-                    <div className="flex items-center gap-6 text-[11px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">
+                <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card mt-auto">
+                  <div className="flex items-center gap-8">
+                    <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
                       <span>
-                        Showing <strong className="text-gray-900 dark:text-zinc-50">{paginatedStaff.length}</strong> out of <strong className="text-gray-900 dark:text-zinc-50">{filteredStaff.length}</strong> entries
+                        Showing {paginatedStaff.length} of {filteredStaff.length}
                       </span>
-
                       <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
-                        <span className="text-[10px] opacity-60">Rows:</span>
-                        <Select
-                          className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-semibold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
+                        <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
+                        <select
+                          className="h-8 w-16 cursor-pointer rounded-[6px] border border-gray-200 bg-white px-2 text-[12px] font-normal text-gray-700 focus:outline-none transition-all hover:bg-gray-50 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10"
                           value={itemsPerPage}
                           onChange={(e) => {
                             setItemsPerPage(Number(e.target.value))
@@ -868,37 +882,32 @@ export default function StaffDirectoryTab({
                           <option value={10}>10</option>
                           <option value={20}>20</option>
                           <option value={50}>50</option>
-                        </Select>
+                          <option value={100}>100</option>
+                        </select>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex shrink-0 items-center gap-3 select-none">
-                    <Button
-                      variant="outline"
-                      size="sm"
+                  <div className="flex shrink-0 items-center gap-3">
+                    <button
                       disabled={displayPage <= 1}
-                      onClick={() =>
-                        setCurrentPage((p) => Math.max(1, p - 1))
-                      }
-                      className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
                     >
-                      <i className="ph-bold ph-caret-left mr-2 text-base"></i>Prev</Button>
+                      Prev
+                    </button>
 
-                    <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-semibold text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                    <div className="flex h-8 min-w-[32px] items-center justify-center rounded-[6px] border border-gray-200/80 bg-white px-2.5 text-[12px] font-medium text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
                       {displayPage}
                     </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
+                    <button
                       disabled={displayPage >= totalPages}
-                      onClick={() =>
-                        setCurrentPage((p) => Math.min(totalPages, p + 1))
-                      }
-                      className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-500 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-                    >Next<i className="ph-bold ph-caret-right ml-2 text-base"></i>
-                    </Button>
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
+                    >
+                      Next
+                    </button>
                   </div>
                 </div>
               )}

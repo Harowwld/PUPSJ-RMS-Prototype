@@ -1454,42 +1454,42 @@ function AdminPageContent() {
     { type: "header", label: "Operations & Analytics" },
     {
       key: "review",
-      label: "Digital Records Review",
+      label: "Records Review",
       iconClass: "ph-bold ph-seal-check",
       badge: pendingReviewCount,
     },
     {
       key: "digitization",
-      label: "Compliance Analysis",
+      label: "Compliance",
       iconClass: "ph-bold ph-chart-bar",
     },
     {
       key: "request_analytics",
-      label: "Request Analysis",
+      label: "Requests",
       iconClass: "ph-bold ph-trend-up",
     },
 
     { type: "header", label: "User Management" },
     {
       key: "directory",
-      label: "Staff Directory",
+      label: "Directory",
       iconClass: "ph-bold ph-users",
     },
     {
       key: "create",
-      label: "Register Account",
+      label: "Register",
       iconClass: "ph-bold ph-user-plus",
     },
 
     { type: "header", label: "System Configuration" },
     {
       key: "storage_layout",
-      label: "Storage Layout",
+      label: "Storage",
       iconClass: "ph-bold ph-warehouse",
     },
-    { key: "system_data", label: "System Data", iconClass: "ph-bold ph-gear" },
+    { key: "system_data", label: "Data", iconClass: "ph-bold ph-gear" },
     { key: "system", label: "Backup", iconClass: "ph-bold ph-database" },
-    { key: "logs", label: "Audit Logs", iconClass: "ph-bold ph-scroll" },
+    { key: "logs", label: "Audit Log", iconClass: "ph-bold ph-scroll" },
   ]
 
   const sidebarActiveKey = view === "backup" ? "system" : view

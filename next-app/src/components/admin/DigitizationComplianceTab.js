@@ -90,12 +90,12 @@ export default function DigitizationComplianceTab({
   const SortIndicator = ({ column }) => {
     if (sortBy !== column)
       return (
-        <i className="ph-bold ph-caret-up-down ml-1 opacity-30 transition-opacity group-hover:opacity-100"></i>
+        <i className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 dark:text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity"></i>
       );
     return sortOrder === "asc" ? (
-      <i className="ph-bold ph-caret-up ml-1 text-pup-maroon dark:text-primary"></i>
+      <i className="ph-bold ph-caret-up ml-1 text-[12px] text-pup-maroon dark:text-primary"></i>
     ) : (
-      <i className="ph-bold ph-caret-down ml-1 text-pup-maroon dark:text-primary"></i>
+      <i className="ph-bold ph-caret-down ml-1 text-[12px] text-pup-maroon dark:text-primary"></i>
     );
   };
 
@@ -362,7 +362,7 @@ export default function DigitizationComplianceTab({
   const hasActiveFilters = statusFilter !== "Active" || courseFilter !== "" || requireApproved || tableSearch !== "";
 
   return (
-    <div className="flex flex-col w-full gap-6 animate-fade-up font-inter">
+    <div className="flex flex-col flex-1 h-full min-h-0 w-full gap-6 animate-fade-up font-inter">
       {/* 1. Color Stat Cards / Skeletons at the Top */}
       {loading && !data ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
@@ -444,143 +444,136 @@ export default function DigitizationComplianceTab({
       ) : null}
 
       {/* 2. Header and Filters Card & Table Wrapper */}
-      <div className="flex flex-col gap-6 w-full">
+      <div className="flex flex-col flex-1 min-h-0 gap-6 w-full">
         <Card className="p-0 gap-0 overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
           <PageHeader
             icon="ph-chart-pie"
             title="Compliance Analysis"
             description="Monitor digitization completeness."
             showBorder={false}
+            titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
               <div className="flex items-center gap-6">
+                <RefreshButton 
+                  onRefresh={() => load(true)} 
+                  isLoading={manualLoading} 
+                  title="Refresh Compliance Data"
+                  className="text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 h-9 w-9 p-0"
+                />
+
+                <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+
                 <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={downloadCsv}
+                    disabled={loading || !data || isExportingCsv}
+                    className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none! border-0!"
+                  >
+                    {isExportingCsv ? "Preparing..." : "Export"}
+                  </Button>
+
                   <Button
                     type="button"
                     variant="default"
                     size="sm"
                     onClick={handlePreview}
                     disabled={loading || !data || isGeneratingPdf}
-                    className="flex h-11 px-5 items-center justify-center gap-2 btn-brand-red text-[11px] font-semibold text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
+                    className="flex h-[36px] px-5 items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
                   >
-                    <i className={cn("ph-bold text-base", isGeneratingPdf ? "ph-spinner animate-spin" : "ph-file-pdf")} aria-hidden />
                     {isGeneratingPdf ? "Generating..." : "Generate Report"}
                   </Button>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={downloadCsv}
-                    disabled={loading || !data || isExportingCsv}
-                    className="flex h-9 px-4 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-transparent text-[10px] font-semibold text-gray-600 transition-colors hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
-                  >
-                    <i className={cn("ph-bold text-sm", isExportingCsv ? "ph-spinner animate-spin" : "ph-file-csv")} aria-hidden />
-                    {isExportingCsv ? "Preparing..." : "Export"}
-                  </Button>
                 </div>
-
-                <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
-
-                <RefreshButton 
-                  onRefresh={() => load(true)} 
-                  isLoading={manualLoading} 
-                  title="Refresh Compliance Data"
-                />
               </div>
             }
           />
 
           {/* Active Filter Chips Row */}
-          {hasActiveFilters && (
-            <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
-              <div className="flex flex-wrap items-center gap-2">
-                  <span className="mr-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-505">
-                  Active filters:
-                  </span>
-                  {statusFilter !== "Active" && (
-                      <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
-                      Status: {statusFilter}
-                      <button
-                          onClick={() => setStatusFilter("Active")}
-                          className="ml-1 transition-colors hover:text-blue-800"
-                      >
-                          <i className="ph-bold ph-x text-[8px]"></i>
-                      </button>
-                      </div>
-                  )}
-                  {courseFilter !== "" && (
-                      <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
-                      Program: {courseFilter}
-                      <button
-                          onClick={() => setCourseFilter("")}
-                          className="ml-1 transition-colors hover:text-amber-800"
-                      >
-                          <i className="ph-bold ph-x text-[8px]"></i>
-                      </button>
-                      </div>
-                  )}
-                  {requireApproved && (
-                      <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
-                      Requirement: Approved Only
-                      <button
-                          onClick={() => setRequireApproved(false)}
-                          className="ml-1 transition-colors hover:text-emerald-800"
-                      >
-                          <i className="ph-bold ph-x text-[8px]"></i>
-                      </button>
-                      </div>
-                  )}
-                  {tableSearch && (
-                      <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-semibold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
-                      Search: {tableSearch}
-                      <button
-                          onClick={() => setTableSearch("")}
-                          className="ml-1 transition-colors hover:text-pup-darkMaroon"
-                      >
-                          <i className="ph-bold ph-x text-[8px]"></i>
-                      </button>
-                      </div>
-                  )}
-                  <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleClearAll}
-                      className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-semibold text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-darkMaroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
-                  >
-                      CLEAR ALL FILTERS
-                  </Button>
+          {hasActiveFilters && (() => {
+            const formatChipDate = (dateStr) => {
+              if (!dateStr) return "..."
+              try {
+                return format(new Date(dateStr), "MMM d, yyyy")
+              } catch (e) {
+                return dateStr
+              }
+            }
+            return (
+              <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                    Active filters:
+                    </span>
+                    {statusFilter !== "Active" && (
+                        <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                        Status: {statusFilter}
+                        <button
+                            onClick={() => setStatusFilter("Active")}
+                            className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                        >
+                            ×
+                        </button>
+                        </div>
+                    )}
+                    {courseFilter !== "" && (
+                        <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                        Program: {courseFilter}
+                        <button
+                            onClick={() => setCourseFilter("")}
+                            className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                        >
+                            ×
+                        </button>
+                        </div>
+                    )}
+                    {requireApproved && (
+                        <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                        Requirement: Approved Only
+                        <button
+                            onClick={() => setRequireApproved(false)}
+                            className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                        >
+                            ×
+                        </button>
+                        </div>
+                    )}
+                    {tableSearch && (
+                        <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                        Search: {tableSearch}
+                        <button
+                            onClick={() => setTableSearch("")}
+                            className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                        >
+                            ×
+                        </button>
+                        </div>
+                    )}
+                    <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleClearAll}
+                        className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
+                    >
+                        Clear
+                    </Button>
+                </div>
               </div>
-            </div>
-          )}
+            )
+          })()}
 
           <div className="bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
-            <div className="flex w-full flex-wrap items-end gap-5">
-              <div className="flex-1 min-w-[192px]">
-                <div className="mb-1.5 flex items-center gap-2">
-                  <TooltipProvider delayDuration={200}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <i className="ph-bold ph-info cursor-help text-xs text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500" />
-                      </TooltipTrigger>
-                      <TooltipContent 
-                        side="right" 
-                        sideOffset={10}
-                        className="max-w-xs rounded-md border-red-900 bg-[#7a1e28] p-4 text-white shadow-2xl"
-                      >
-                        <p className="mb-1 text-[10px] font-semibold tracking-widest text-red-100">Status Category</p>
-                        <p className="text-[11px] font-medium text-red-100/90">
-                          <strong>Active:</strong> Currently enrolled students.<br />
-                          <strong>Archived:</strong> All non-active records (Graduated, Withdrawn, Transferred).
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <label className="block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-                    Student Status
-                  </label>
-                </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full">
+              <div className="flex flex-col gap-[4px] w-full">
+                <label className="block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                  Student Status
+                </label>
                 <Select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
+                  className="h-[38px] rounded-[8px] border-[0.5px] border-gray-200 text-[13px] font-normal"
                 >
                   <option value="Active">Active</option>
                   <option value="All">All</option>
@@ -588,55 +581,31 @@ export default function DigitizationComplianceTab({
                 </Select>
               </div>
 
-              <div className="flex-1 min-w-[200px]">
-                <div className="mb-1.5 flex items-center gap-2">
-                  <TooltipProvider delayDuration={200}>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <i className="ph-bold ph-info cursor-help text-xs text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500" />
-                      </TooltipTrigger>
-                      <TooltipContent 
-                        side="right" 
-                        sideOffset={10}
-                        className="max-w-xs rounded-md border-red-900 bg-[#7a1e28] p-4 text-white shadow-2xl"
-                      >
-                        <p className="mb-1 text-[10px] font-semibold tracking-widest text-red-100">Validation Logic</p>
-                        <p className="text-[11px] font-medium text-red-100/90">
-                          <strong>Enabled:</strong> Only counts documents that have been reviewed and approved by staff.<br />
-                          <strong>Disabled:</strong> Counts all uploaded documents regardless of review status.
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                  <label className="block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-                    Validation Requirement
-                  </label>
-                </div>
-                <Toggle
-                  variant="outline"
-                  pressed={requireApproved}
-                  onPressedChange={setRequireApproved}
-                  className={cn(
-                    "h-11 px-4 gap-2 rounded-brand border border-gray-200 dark:border-white/10 font-semibold text-[10px]  tracking-widest transition-all select-none w-full bg-white dark:bg-card",
-                    "hover:bg-gray-50 dark:hover:bg-white/5 hover:text-gray-700 dark:text-zinc-200",
-                    "data-[state=on]:bg-pup-maroon data-[state=on]:text-white data-[state=on]:border-pup-maroon dark:data-[state=on]:bg-red-500/10 dark:data-[state=on]:text-red-400 dark:data-[state=on]:border-red-400/20 shadow-sm"
-                  )}
+              <div className="flex flex-col gap-[4px] w-full">
+                <label className="block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                  Validation Requirement
+                </label>
+                <Select
+                  value={requireApproved ? "1" : "0"}
+                  onChange={(e) => setRequireApproved(e.target.value === "1")}
+                  className="h-[38px] rounded-[8px] border-[0.5px] border-gray-200 text-[13px] font-normal"
                 >
-                  <i className={cn("ph-bold text-base", requireApproved ? "ph-check-circle" : "ph-circle")} aria-hidden />
-                  Approved Records Only
-                </Toggle>
+                  <option value="0">All Uploads</option>
+                  <option value="1">Approved Only</option>
+                </Select>
               </div>
 
-              <div className="flex-[2] min-w-[280px]">
-                <label className="mb-1.5 block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
+              <div className="flex flex-col gap-[4px] w-full">
+                <label className="block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                   Academic Program
                 </label>
-                <div className="relative">
+                <div className="relative w-full">
                   <Select
                     value={courseFilter}
                     onChange={(e) => setCourseFilter(e.target.value)}
                     disabled={coursesLoading}
                     placeholder={coursesLoading ? "Loading..." : "All Programs"}
+                    className="h-[38px] rounded-[8px] border-[0.5px] border-gray-200 text-[13px] font-normal"
                   >
                     <option value="">All Programs</option>
                     {courses.map((c) => (
@@ -670,65 +639,53 @@ export default function DigitizationComplianceTab({
                   "transition-all duration-500", 
                   (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
                 )}>
-                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 rounded-2xl bg-gray-50/80 p-6 border border-gray-200/60 shadow-inner dark:bg-black/20 dark:border-white/5">
+                  <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 py-4 w-full bg-transparent border-0">
                     
                     {/* Context & Formula */}
-                    <div className="flex-1 space-y-3">
-                      <div className="flex items-center gap-3">
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm border border-gray-200 text-pup-maroon dark:bg-card dark:border-white/10 dark:text-primary">
-                          <i className="ph-duotone ph-target text-xl" />
-                        </div>
+                    <div className="flex-1">
+                      <div className="flex items-start gap-3">
+                        <i className="ph-bold ph-target text-[16px] text-gray-400 dark:text-zinc-500 shrink-0 mt-1" />
                         <div>
-                          <h3 className="text-sm font-semibold text-gray-900 tracking-tight dark:text-zinc-50">
+                          <h3 className="text-[14px] font-semibold text-gray-900 tracking-[-0.01em] dark:text-zinc-50 m-0">
                             Digitization Target
                           </h3>
-                          <div className="text-[10px] font-semibold text-gray-400 tracking-widest uppercase dark:text-zinc-500 mt-0.5">
+                          <div className="text-[10px] font-medium text-gray-400 dark:text-zinc-500 tracking-[0.05em] uppercase mt-[2px]">
                             Requirement Basis
                           </div>
+                          <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 max-w-xl mt-[6px] mb-0">
+                            {meta?.definitions?.expectedCountFormula || "All required documents based on program configuration."}
+                          </p>
                         </div>
-                      </div>
-                      <div className="pl-13">
-                        <p className="text-[11px] font-medium text-gray-600 dark:text-zinc-400 max-w-xl">
-                          {meta?.definitions?.expectedCountFormula || "All required documents based on program configuration."}
-                        </p>
                       </div>
                     </div>
 
                     {/* Progress Metrics Box */}
-                    <div className="w-full lg:w-[450px] shrink-0 bg-white p-5 rounded-xl border border-gray-200 shadow-sm dark:bg-card dark:border-white/10">
-                      <div className="flex items-end justify-between mb-4">
+                    <div className="w-full lg:w-[400px] shrink-0">
+                      <div className="flex items-end justify-between mb-2">
                         <div className="flex flex-col">
-                          <span className="text-[10px] font-semibold text-gray-400 tracking-widest uppercase dark:text-zinc-500 mb-1">
+                          <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-500 tracking-[0.05em] uppercase mb-1">
                             Documents Digitized
                           </span>
-                          <div className="flex items-baseline gap-2">
-                            <span className="text-xl font-semibold text-gray-900 tracking-tight dark:text-zinc-50">
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-[28px] font-semibold text-gray-900 tracking-[-0.01em] dark:text-zinc-50">
                               {summary?.totalDigitizedDocsCount?.toLocaleString() || 0}
                             </span>
-                            <span className="text-sm font-semibold text-gray-400 dark:text-zinc-500">
+                            <span className="text-[28px] font-semibold text-gray-400 dark:text-zinc-500 tracking-[-0.01em]">
                               / {summary?.totalExpectedDocsCount?.toLocaleString() || 0}
                             </span>
                           </div>
                         </div>
-                        <div className="flex flex-col items-end">
-                           <Badge variant="outline" className={cn(
-                             "px-2.5 py-1 text-[10px] font-semibold border tracking-wider",
-                             percent >= 90 ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900/50" : 
-                             percent >= 50 ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/30 dark:text-amber-400 dark:border-amber-900/50" : 
-                             "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/30 dark:text-red-400 dark:border-red-900/50"
-                           )}>
-                             {percent}% COMPLETE
-                           </Badge>
+                        <div className="flex flex-col items-end pb-1">
+                          <div className="text-[11px] font-medium text-red-600 dark:text-red-500 text-right">
+                            {percent}% COMPLETE
+                          </div>
                         </div>
                       </div>
                       
                       {/* Substantial Progress Bar */}
-                      <div className="relative h-3 w-full overflow-hidden rounded-full bg-gray-100 shadow-inner dark:bg-zinc-900">
+                      <div className="relative h-[4px] w-full overflow-hidden rounded-[4px] bg-gray-100 dark:bg-zinc-800">
                         <div 
-                          className={cn(
-                            "absolute top-0 left-0 h-full rounded-full transition-all duration-1000 ease-out shadow-[inset_0_-2px_4px_rgba(0,0,0,0.1)]",
-                            percent >= 90 ? "bg-emerald-500" : percent >= 50 ? "bg-amber-500" : "bg-pup-maroon dark:bg-red-500"
-                          )}
+                          className="absolute top-0 left-0 h-full rounded-[4px] bg-red-600 dark:bg-red-500 transition-all duration-1000 ease-out"
                           style={{ width: `${percent}%` }}
                         />
                       </div>
@@ -775,121 +732,108 @@ export default function DigitizationComplianceTab({
           </div>
         ) : data ? (
           <div className={cn(
-            "overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card transition-all duration-500", 
+            "flex flex-1 flex-col min-h-0 overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card", 
             (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
           )}>
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 p-4 bg-white border-b border-gray-200 dark:bg-card/50 dark:border-white/10">
-              {/* ... (Search and header content) ... */}
-              <div className="flex items-center gap-3">
-                <div>
-                  <h4 className="text-[10px] font-semibold text-gray-400 tracking-widest mb-1.5 dark:text-zinc-500">
-                    Program Breakdown
-                  </h4>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-                      RECORDS: <span className="text-gray-900 font-semibold dark:text-zinc-50">{sortedByCourse.length}</span>
-                    </span>
-                  </div>
-                </div>
+            <div className="flex items-center justify-between gap-6 p-4 bg-white border-b border-gray-200 dark:bg-card/50 dark:border-white/10">
+              <div className="flex flex-col gap-[2px]">
+                <h4 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 tracking-[-0.01em] m-0">
+                  Program Breakdown
+                </h4>
+                <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">
+                  {sortedByCourse.length} {sortedByCourse.length === 1 ? "program" : "programs"}
+                </span>
               </div>
-              <div className="min-w-[320px] flex-1 sm:max-w-md">
-                <div className="mb-1.5 flex items-center justify-between">
-                  <label className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-                    Filter Results
-                  </label>
-                  <span className="text-[9px] font-semibold text-pup-maroon dark:text-primary/70">
-                    {tableSearch ? (sortedByCourse.length > 0 ? `${sortedByCourse.length} MATCHES` : "NO RESULTS") : ""}
-                  </span>
-                </div>
-                <div className="relative group">
-                  <i className="ph-bold ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500"></i>
-                  <Input
-                    type="text"
-                    placeholder="Search course code..."
-                    className="h-11 w-full rounded-brand border border-gray-200 bg-white pl-11 pr-4 text-sm font-medium transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
-                    value={tableSearch}
-                    onChange={(e) => setTableSearch(e.target.value)}
-                  />
-                </div>
+              
+              <div className="relative group w-[220px] ml-auto">
+                <i className="ph-bold ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+                <Input
+                  type="text"
+                  placeholder="Search course code..."
+                        className="h-[36px] w-full rounded-[8px] border-[0.5px] border-gray-200 bg-white pl-9 pr-4 text-[13px] font-normal transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
+                  value={tableSearch}
+                  onChange={(e) => setTableSearch(e.target.value)}
+                />
               </div>
             </div>
 
-            <div className="overflow-x-auto rounded-[inherit]">
+            <div className="flex-1 min-h-0 overflow-y-auto rounded-[inherit] overflow-hidden">
                 {sortedByCourse.length > 0 ? (
-                  <Table className="min-w-full text-sm">
-                    <TableHeader className="sticky top-0 z-10 [&_tr]:border-b-0 bg-gray-50 backdrop-blur-sm dark:bg-muted">
-                      <TableRow className="hover:bg-transparent text-left text-[10px] font-semibold tracking-widest text-gray-600 dark:text-zinc-300">
-                        <TableHead className="p-4 px-6 font-semibold">
+                  <table className="min-w-full text-sm">
+                    <thead className="sticky top-0 z-10 bg-white backdrop-blur-sm dark:bg-card">
+                      <tr className="hover:bg-transparent text-left border-b border-gray-100 dark:border-white/5">
+                        <th className="p-4 px-6">
                           <button
                             onClick={() => handleSort("courseCode")}
-                            className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                            className="group flex items-center text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none"
                           >
                             Program <SortIndicator column="courseCode" />
                           </button>
-                        </TableHead>
-                        <TableHead className="p-4 px-6 text-center font-semibold">
+                        </th>
+                        <th className="p-4 px-6 text-center">
                           <button
                             onClick={() => handleSort("total")}
-                            className="group mx-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                            className="group mx-auto flex items-center text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none"
                           >
                             Total Students <SortIndicator column="total" />
                           </button>
-                        </TableHead>
-                        <TableHead className="p-4 px-6 text-center font-semibold">
+                        </th>
+                        <th className="p-4 px-6 text-center">
                           <button
                             onClick={() => handleSort("digitized")}
-                            className="group mx-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                            className="group mx-auto flex items-center text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none"
                           >
                             Fully Digitized <SortIndicator column="digitized" />
                           </button>
-                        </TableHead>
-                        <TableHead className="p-4 px-6 text-right font-semibold">
+                        </th>
+                        <th className="p-4 px-6 text-right">
                           <button
                             onClick={() => handleSort("percent")}
-                            className="group ml-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                            className="group ml-auto flex items-center text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none"
                           >
                             Completeness <SortIndicator column="percent" />
                           </button>
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody className="divide-y divide-gray-100 dark:divide-white/10">
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-transparent">
                       {sortedByCourse.map((row) => (
-                        <TableRow key={row.courseCode} className="group transition-all duration-200 hover:bg-gray-50/80 dark:bg-card dark:hover:bg-white/5">
-                          <TableCell className="p-4 px-6 font-inter font-semibold text-pup-maroon dark:text-primary text-xs dark:text-primary">
+                        <tr key={row.courseCode} className="h-[48px] border-b-[0.5px] border-gray-100 last:border-b-0 group transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/[0.02]">
+                          <td className="p-4 px-6 text-[13px] font-medium text-gray-900 dark:text-zinc-50 tracking-[-0.01em]">
                             {row.courseCode || "—"}
-                          </TableCell>
-                          <TableCell className="p-4 px-6 text-gray-700 font-medium text-center dark:text-zinc-200">
+                          </td>
+                          <td className="p-4 px-6 text-[13px] font-normal text-gray-900 dark:text-zinc-50 text-center">
                             {row.total?.toLocaleString?.() ?? row.total}
-                          </TableCell>
-                          <TableCell className="p-4 px-6 text-center">
-                            <span className="text-emerald-600 font-semibold dark:text-emerald-400">
+                          </td>
+                          <td className="p-4 px-6 text-center text-[13px] font-normal">
+                            <span className={cn(
+                              row.digitized === 0 
+                                ? "text-gray-400 dark:text-zinc-500" 
+                                : "text-gray-900 dark:text-zinc-50"
+                            )}>
                               {row.digitized?.toLocaleString?.() ?? row.digitized}
                             </span>
-                            <span className="text-[10px] text-gray-400 font-semibold ml-1.5 opacity-0 group-hover:opacity-100 transition-opacity dark:text-zinc-505">
+                            <span className="text-[10px] text-gray-400 font-semibold ml-1.5 opacity-0 group-hover:opacity-100 dark:text-zinc-505">
                               ({row.fullyDigitizedRate}%)
                             </span>
-                          </TableCell>
-                          <TableCell className="p-4 px-6 text-right">
-                            <div className="flex items-center justify-end gap-4">
-                              <span className="text-gray-900 font-semibold text-xs dark:text-zinc-50">
+                          </td>
+                          <td className="p-4 px-6 text-right">
+                            <div className="flex items-center justify-end gap-[8px]">
+                              <span className="text-[13px] font-medium text-gray-900 dark:text-zinc-50">
                                 {row.percent != null ? `${row.percent}%` : "0%"}
                               </span>
-                              <div className="w-20 h-1.5 rounded-full bg-gray-100 overflow-hidden hidden sm:block shadow-inner dark:shadow-none dark:bg-muted">
+                              <div className="w-[80px] h-[4px] rounded-[2px] bg-gray-100 overflow-hidden hidden sm:block dark:bg-zinc-800">
                                 <div
-                                  className={cn(
-                                    "h-full transition-all duration-700",
-                                    row.percent >= 90 ? "bg-linear-to-r from-emerald-400 to-emerald-600" : "bg-linear-to-r from-red-700 to-pup-maroon"
-                                  )}
+                                  className="h-full bg-red-600 dark:bg-red-500"
                                   style={{ width: `${Math.min(100, row.percent || 0)}%` }}
                                 />
                               </div>
                             </div>
-                          </TableCell>
-                        </TableRow>
+                          </td>
+                        </tr>
                       ))}
-                    </TableBody>
-                  </Table>
+                    </tbody>
+                  </table>
                 ) : (
                   <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
                     <EmptyHeader className="flex flex-col items-center gap-0">

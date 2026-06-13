@@ -111,11 +111,10 @@ export default function BulkImportTab({
   }
 
   return (
-    <div className="flex w-full flex-1 flex-col gap-6 font-inter animate-fade-up min-h-0">
+    <div className="flex w-full flex-1 flex-col gap-6 font-inter animate-fade-up min-h-0 px-[28px] pb-[28px]">
       {importStatus === "idle" ? (
         <div className="flex flex-col flex-1 gap-6 w-full min-h-0 animate-fade-up">
-          {/* Combined Import Card */}
-          <Card className="flex flex-col flex-1 p-0 gap-0 overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10 w-full min-h-0">
+          <div className="mt-[20px]">
             <PageHeader
               title="Import"
               description="Select or drop your structured data"
@@ -131,8 +130,12 @@ export default function BulkImportTab({
                   <i className="ph-bold ph-question text-lg"></i>
                 </Button>
               }
+              className="p-0"
             />
-            <div className="flex flex-wrap items-center gap-3 border-t border-gray-100 bg-transparent p-4 dark:border-white/5 dark:bg-transparent">
+          </div>
+          
+          <div className="flex flex-col flex-1 gap-6 w-full min-h-0">
+            <div className="flex flex-wrap items-center gap-3 bg-transparent dark:border-white/5 dark:bg-transparent">
               <a
                 href="data:text/csv;charset=utf-8,Category,Name,Code%0ADOCUMENT TYPE,Transcript of Records,%0ADOCUMENT TYPE,Diploma,%0ACourse,Bachelor of Science in IT,BSIT%0ACourse,Bachelor of Science in Accountancy,BSA%0ASection,Block 1,BSIT%0ASection,Section 1,BSA"
                 download="PUP-IMPORT-TEMPLATE.csv"
@@ -152,7 +155,7 @@ export default function BulkImportTab({
             </div>
 
             {/* Consolidated Dropzone */}
-            <div className="p-6 border-t border-gray-100 dark:border-white/5 flex flex-col flex-1 items-center justify-center min-h-0 w-full">
+            <div className="flex flex-col flex-1 items-center justify-center min-h-0 w-full">
               <div
                 className={cn(
                   "group relative flex flex-1 h-full w-full cursor-pointer flex-col items-center justify-center rounded-brand border-2 border-dashed p-6 text-center transition-all min-h-[160px]",
@@ -191,11 +194,11 @@ export default function BulkImportTab({
                 </div>
               </div>
             </div>
-          </Card>
+          </div>
         </div>
       ) : importStatus === "preview" ? (
       <div className="animate-in fade-in slide-in-from-bottom-2 flex flex-1 min-h-[500px] flex-col gap-4 duration-300">
-        <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+        <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center mt-[20px]">
           <div className="flex items-center gap-4">
             <Button
               variant="outline"
@@ -241,7 +244,7 @@ export default function BulkImportTab({
             </div>
           </div>
 
-          <Card className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
+          <div className="flex flex-1 flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">
             <div className="flex-1 overflow-hidden overflow-auto bg-white dark:bg-card rounded-[inherit]">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-20 border-b border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-muted">
@@ -556,7 +559,7 @@ export default function BulkImportTab({
                 </Button>
               </div>
             </div>
-          </Card>
+          </div>
         </div>
       ) : importStatus === "importing" ? (
         <div className="animate-fade-up flex flex-1 min-h-[500px] flex-col items-center justify-center rounded-brand border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10">

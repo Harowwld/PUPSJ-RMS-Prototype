@@ -162,36 +162,28 @@ export default function RegisterAccountTab({
             title="Register Account"
             description="Create new user credentials for registrar personnel and administrators."
             showBorder={true}
+            titleClassName="text-[15px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50 mb-[4px]"
+            descriptionClassName="text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400 m-0"
             actions={
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-[8px]">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={() => onSwitchView?.("directory")}
-                  className="h-9 rounded-md border-gray-300 bg-white px-4 text-[10px] font-semibold tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-white/10 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                  className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none! border-0!"
                 >
-                  <i className="ph-bold ph-arrow-left mr-1.5 text-xs"></i>
-                  Back to Directory
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  disabled={isLoading}
-                  onClick={handleClearForm}
-                  className="h-9 rounded-md border-gray-300 bg-white px-4 text-[10px] font-semibold tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-                >
-                  <i className="ph-bold ph-arrow-counter-clockwise mr-1.5 text-xs"></i>
-                  Reset Form
+                  <i className="ph-bold ph-arrow-left"></i>
+                  Directory
                 </Button>
               </div>
             }
           />
-          <CardContent className="bg-white p-8 dark:bg-card">
-            <form onSubmit={handleOpenConfirm} className="space-y-6">
+          <CardContent className="bg-white p-[28px] dark:bg-card">
+            <form onSubmit={handleOpenConfirm} className="flex flex-col gap-[20px]">
               {/* Part 1: Full name */}
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <label className="block text-[11px] font-semibold tracking-wider text-gray-600 dark:text-zinc-300">
+              <div className="grid grid-cols-1 gap-[16px] md:grid-cols-2">
+                <div className="flex flex-col gap-[4px]">
+                  <label className="block text-[12px] font-medium text-[#8E8E93] dark:text-zinc-500">
                     First Name
                   </label>
                   <Input
@@ -199,7 +191,9 @@ export default function RegisterAccountTab({
                     required
                     ref={fnameRef}
                     disabled={isLoading}
-                    className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon/30 focus-visible:outline-none text-gray-900 dark:bg-card dark:text-zinc-50 dark:border-white/10 dark:focus-visible:ring-red-500/30 dark:focus-visible:border-red-500"
+                    className={cn(
+                      "h-[36px] w-full rounded-[8px] border-[0.5px] border-black/15 bg-white px-3 py-0 leading-[36px] text-[13px] font-normal placeholder:text-[#C7C7CC] text-[#111111] focus-visible:border-black/35 focus-visible:ring-0 focus-visible:outline-none dark:bg-card dark:text-zinc-50 dark:border-white/15 dark:focus-visible:border-white/35 transition-all shadow-none"
+                    )}
                     placeholder="Juan"
                     value={createForm.fname}
                     onChange={(e) =>
@@ -210,15 +204,17 @@ export default function RegisterAccountTab({
                     }
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="block text-[11px] font-semibold tracking-wider text-gray-600 dark:text-zinc-300">
+                <div className="flex flex-col gap-[4px]">
+                  <label className="block text-[12px] font-medium text-[#8E8E93] dark:text-zinc-500">
                     Last Name
                   </label>
                   <Input
                     type="text"
                     required
                     disabled={isLoading}
-                    className="h-10 w-full rounded-md border border-gray-300 bg-white px-3 text-sm transition-all focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon/30 focus-visible:outline-none text-gray-900 dark:bg-card dark:text-zinc-50 dark:border-white/10 dark:focus-visible:ring-red-500/30 dark:focus-visible:border-red-500"
+                    className={cn(
+                      "h-[36px] w-full rounded-[8px] border-[0.5px] border-black/15 bg-white px-3 py-0 leading-[36px] text-[13px] font-normal placeholder:text-[#C7C7CC] text-[#111111] focus-visible:border-black/35 focus-visible:ring-0 focus-visible:outline-none dark:bg-card dark:text-zinc-50 dark:border-white/15 dark:focus-visible:border-white/35 transition-all shadow-none"
+                    )}
                     placeholder="Dela Cruz"
                     value={createForm.lname}
                     onChange={(e) =>
@@ -232,180 +228,110 @@ export default function RegisterAccountTab({
               </div>
 
               {/* Part 2: Role Selection */}
-              <div className="space-y-3">
-                <label className="block text-[11px] font-semibold tracking-wider text-gray-600 dark:text-zinc-300">
+              <div className="flex flex-col gap-[4px]">
+                <label className="block text-[12px] font-medium text-[#8E8E93] dark:text-zinc-500">
                   Assigned Role
                 </label>
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <Button
+                <div className="grid grid-cols-1 gap-[12px] sm:grid-cols-2">
+                  <button
                     type="button"
-                    variant="outline"
                     disabled={isLoading}
                     onClick={() => setCreateForm(f => ({ ...f, role: f.role === "Staff" ? "" : "Staff" }))}
                     className={cn(
-                      "h-12 w-full rounded-md border-2 text-[11px] font-semibold tracking-widest transition-all flex items-center justify-between gap-2 px-4",
+                      "h-[36px] w-full rounded-[8px] border-[0.5px] text-[13px] transition-all flex items-center justify-center px-4 py-0 cursor-pointer focus:outline-none",
                       createForm.role === "Staff"
-                        ? "border-amber-600 bg-amber-600 text-white dark:border-amber-500 dark:bg-amber-600 shadow-md"
-                        : "border-gray-200 dark:border-white/10 text-gray-500 dark:text-zinc-500 hover:border-amber-200 hover:bg-amber-50 dark:bg-transparent dark:hover:bg-amber-500/5"
+                        ? "border-orange-500 bg-orange-50 text-orange-600 font-medium dark:border-orange-500 dark:bg-orange-950/20 dark:text-orange-400"
+                        : "border-black/15 dark:border-white/10 text-[#8E8E93] dark:text-zinc-500 bg-white dark:bg-card font-normal"
                     )}
                   >
-                    <div className="flex items-center gap-2">
-                      <i className={cn("text-base", createForm.role === "Staff" ? "ph-bold ph-check-circle" : "ph-bold ph-user")} />
-                      <span>Registrar Staff</span>
-                    </div>
-                    {createForm.role === "Staff" && (
-                      <span className="inline-flex items-center rounded-full border border-amber-500 bg-amber-800/50 px-2 py-0.5 text-[9px] font-semibold tracking-tight text-white shadow-sm">
-                        <i className="ph-fill ph-user-gear mr-1 text-xs" />
-                        Standard
-                      </span>
-                    )}
-                  </Button>
+                    <span>Registrar Staff</span>
+                  </button>
 
-                  <Button
+                  <button
                     type="button"
-                    variant="outline"
                     disabled={isLoading}
                     onClick={() => setCreateForm(f => ({ ...f, role: f.role === "Admin" ? "" : "Admin" }))}
                     className={cn(
-                      "flex h-12 w-full items-center justify-between rounded-md border-2 text-[11px] font-semibold tracking-widest transition-all gap-2 px-4",
+                      "h-[36px] w-full rounded-[8px] border-[0.5px] text-[13px] transition-all flex items-center justify-center px-4 py-0 cursor-pointer focus:outline-none",
                       createForm.role === "Admin"
-                        ? "border-pup-maroon bg-pup-maroon text-white dark:border-[#b94642] dark:bg-pup-darkMaroon shadow-md"
-                        : "border-gray-200 dark:border-white/10 text-gray-500 dark:text-zinc-500 hover:border-red-200 hover:bg-red-50 dark:bg-transparent dark:hover:bg-red-500/5"
+                        ? "border-[#E5484D] bg-[#FFF5F5] text-[#E5484D] font-medium dark:border-red-500 dark:bg-red-950/20 dark:text-red-400"
+                        : "border-black/15 dark:border-white/10 text-[#8E8E93] dark:text-zinc-500 bg-white dark:bg-card font-normal"
                     )}
                   >
-                    <div className="flex items-center gap-2">
-                      <i className={cn("text-base", createForm.role === "Admin" ? "ph-bold ph-check-circle" : "ph-bold ph-shield")} />
-                      <span>Administrator</span>
-                    </div>
-                    {createForm.role === "Admin" && (
-                      <span className="inline-flex items-center rounded-full border border-red-200 bg-red-900/50 dark:bg-red-950/80 px-2 py-0.5 text-[9px] font-semibold tracking-tight text-white dark:text-primary shadow-sm">
-                        <i className="ph-fill ph-shield-star mr-1 text-xs" />
-                        Full Control
-                      </span>
-                    )}
-                  </Button>
+                    <span>Administrator</span>
+                  </button>
                 </div>
               </div>
-
-              <Separator className="bg-gray-100 dark:bg-muted" />
 
               {/* Part 3: System Identifiers */}
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <i className="ph-bold ph-info cursor-help text-sm text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500" />
-                      </TooltipTrigger>
-                      <TooltipContent 
-                        side="right" 
-                        sideOffset={10}
-                        className="max-w-xs rounded-md border-red-900 bg-[#7a1e28] p-4 text-white shadow-2xl"
-                      >
-                        <p className="mb-1 text-[10px] font-semibold tracking-widest text-red-100">ID Convention</p>
-                        <code className="block rounded-md border border-white/10 bg-white/5 p-2 font-mono text-[10px] text-white">
-                          PUPREGISTRAR-[INITIALS][NUM]
-                        </code>
-                        <p className="mt-2 text-[9px] font-medium text-red-100/70">
-                          Example: PUPREGISTRAR-JD101
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                    <label className="block text-[11px] font-semibold tracking-wider text-gray-600 dark:text-zinc-300">
-                      Employee ID
-                    </label>
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      type="text"
-                      required
-                      disabled={isLoading}
-                      className={cn(
-                        "h-10 w-full rounded-md border border-gray-300 dark:border-white/10 bg-white dark:bg-card px-3 text-sm transition-all focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon/30 focus-visible:outline-none text-gray-900 dark:text-zinc-50 dark:text-zinc-100 dark:focus-visible:ring-red-500/30 dark:focus-visible:border-red-500",
-                        lastAutoFilled.id &&
-                          "border-emerald-500 ring-2 ring-emerald-500/20"
-                      )}
-                      placeholder={suggestedId || "PUPREGISTRAR-[XXX]"}
-                      value={createForm.id}
-                      onChange={(e) => {
-                        const val = e.target.value
-                        setIsIdManual(val !== "")
-                        setCreateForm((f) => ({
-                          ...f,
-                          id: val,
-                        }))
-                      }}
-                    />
-                  </div>
+              <div className="grid grid-cols-1 gap-[16px] md:grid-cols-2">
+                <div className="flex flex-col gap-[4px]">
+                  <label className="block text-[12px] font-medium text-[#8E8E93] dark:text-zinc-500">
+                    Employee ID
+                  </label>
+                  <Input
+                    type="text"
+                    required
+                    disabled={isLoading}
+                    className={cn(
+                      "h-[36px] w-full rounded-[8px] border-[0.5px] border-black/15 bg-white px-3 py-0 leading-[36px] text-[13px] font-normal placeholder:text-[#C7C7CC] text-[#111111] focus-visible:border-black/35 focus-visible:ring-0 focus-visible:outline-none dark:bg-card dark:text-zinc-50 dark:border-white/15 dark:focus-visible:border-white/35 transition-all shadow-none",
+                      lastAutoFilled.id && "border-emerald-500"
+                    )}
+                    placeholder={suggestedId || "PUPREGISTRAR-[XXX]"}
+                    value={createForm.id}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setIsIdManual(val !== "")
+                      setCreateForm((f) => ({
+                        ...f,
+                        id: val,
+                      }))
+                    }}
+                  />
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <i className="ph-bold ph-info cursor-help text-sm text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500" />
-                      </TooltipTrigger>
-                      <TooltipContent 
-                        side="right" 
-                        sideOffset={10}
-                        className="max-w-xs rounded-md border-red-900 bg-[#7a1e28] p-4 text-white shadow-2xl"
-                      >
-                        <p className="mb-1 text-[10px] font-semibold tracking-widest text-red-100">Email Policy</p>
-                        <div className="space-y-1">
-                          <code className="block rounded-md border border-white/10 bg-white/5 px-2 py-1 font-mono text-[9px] text-white/80">
-                            admin.[lastname]@pup.local
-                          </code>
-                          <code className="block rounded-md border border-white/10 bg-white/5 px-2 py-1 font-mono text-[9px] text-white/80">
-                            staff.[lastname]@pup.local
-                          </code>
-                        </div>
-                      </TooltipContent>
-                    </Tooltip>
-                    <label className="block text-[11px] font-semibold tracking-wider text-gray-600 dark:text-zinc-300">
-                      Email Address
-                    </label>
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      type="email"
-                      required
-                      disabled={isLoading}
-                      className={cn(
-                        "h-10 w-full rounded-md border border-gray-300 dark:border-white/10 bg-white dark:bg-card px-3 text-sm transition-all focus-visible:border-pup-maroon focus-visible:ring-2 focus-visible:ring-pup-maroon/30 focus-visible:outline-none text-gray-900 dark:text-zinc-50 dark:text-zinc-100 dark:focus-visible:ring-red-500/30 dark:focus-visible:border-red-500",
-                        lastAutoFilled.email &&
-                          "border-emerald-500 ring-2 ring-emerald-500/20"
-                      )}
-                      placeholder={suggestedEmail || "[role].[name]@pup.local"}
-                      value={createForm.email}
-                      onChange={(e) => {
-                        const val = e.target.value
-                        setIsEmailManual(val !== "")
-                        setCreateForm((f) => ({
-                          ...f,
-                          email: val,
-                        }))
-                      }}
-                    />
-                  </div>
+                <div className="flex flex-col gap-[4px]">
+                  <label className="block text-[12px] font-medium text-[#8E8E93] dark:text-zinc-500">
+                    Email Address
+                  </label>
+                  <Input
+                    type="email"
+                    required
+                    disabled={isLoading}
+                    className={cn(
+                      "h-[36px] w-full rounded-[8px] border-[0.5px] border-black/15 bg-white px-3 py-0 leading-[36px] text-[13px] font-normal placeholder:text-[#C7C7CC] text-[#111111] focus-visible:border-black/35 focus-visible:ring-0 focus-visible:outline-none dark:bg-card dark:text-zinc-50 dark:border-white/15 dark:focus-visible:border-white/35 transition-all shadow-none",
+                      lastAutoFilled.email && "border-emerald-500"
+                    )}
+                    placeholder={suggestedEmail || "[role].[name]@pup.local"}
+                    value={createForm.email}
+                    onChange={(e) => {
+                      const val = e.target.value
+                      setIsEmailManual(val !== "")
+                      setCreateForm((f) => ({
+                        ...f,
+                        email: val,
+                      }))
+                    }}
+                  />
                 </div>
               </div>
-              <div className="flex items-center justify-end border-t border-gray-100 pt-6 dark:border-white/10">
+              <div className="flex items-center justify-end border-t border-gray-100 pt-6 dark:border-white/10 mt-[8px] gap-[8px]">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={isLoading}
+                  onClick={handleClearForm}
+                  className="h-[36px] px-3 font-normal text-[13px] text-[#8E8E93] hover:text-[#111111] hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center justify-center rounded-[8px] shadow-none! border-0!"
+                >
+                  Reset Form
+                </Button>
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  className="h-12 w-auto gap-2 rounded-md btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md px-16 text-xs font-semibold tracking-widest text-white shadow-lg active:scale-95 transition-all dark:shadow-none"
+                  className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-white font-medium text-[13px] active:scale-95 disabled:opacity-50 transition-all dark:shadow-none px-[20px] cursor-pointer"
                 >
-                  {isLoading ? (
-                    <>
-                      <i className="ph-bold ph-circle-notch animate-spin text-lg"></i>
-                      Creating...
-                    </>
-                  ) : (
-                    <>
-                      <i className="ph-bold ph-user-circle-plus text-lg"></i>
-                      Create Account
-                    </>
-                  )}
+                  {isLoading ? "Creating..." : "Create Account"}
                 </Button>
               </div>
             </form>

@@ -254,8 +254,8 @@ export default function DocTypesTab({
 
   return (
     <TooltipProvider delay={200}>
-      <div className="font-inter flex w-full flex-col gap-6 animate-fade-up">
-        <Card className="p-0 gap-0 overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
+      <div className="font-inter flex w-full flex-col gap-6 animate-fade-up px-[28px] pb-[28px]">
+        <div className="mt-[20px]">
           <PageHeader
             icon="ph-files"
             showBorder={false}
@@ -270,104 +270,80 @@ export default function DocTypesTab({
               </div>
             }
             description="Manage formal document categories and digitization requirements."
+            className="p-0"
           />
+        </div>
 
-          <CardContent className="font-inter bg-white p-4 dark:bg-card/50 backdrop-blur-md border-t border-gray-100 dark:border-white/10">
-            <div className="flex shrink-0 select-none flex-wrap items-end justify-between gap-6">
-              <div className="flex w-full flex-col gap-1.5 sm:w-auto">
-                <div className="flex w-full cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 backdrop-blur-sm sm:w-auto dark:border-white/10 dark:bg-muted/50">
-                  <button
-                    type="button"
-                    onClick={() => setShowArchived(false)}
-                    className={`group flex h-11 flex-1 cursor-pointer items-center justify-center gap-3 px-8 text-sm font-semibold transition-all duration-200 active:scale-[0.98] sm:w-[200px] sm:flex-none ${
- !showArchived
- ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
- : "text-gray-500 ring-transparent hover:bg-white/55 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
- }`}
-                  >
-                    <span className="whitespace-nowrap tracking-wide">
-                      Active
-                    </span>
-                    <span
-                      className={cn(
-                        "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-semibold transition-all duration-300",
-                        !showArchived
-                          ? "bg-pup-maroon text-white shadow-sm ring-2 ring-red-50/50 dark:bg-red-500/20 dark:text-red-400 dark:ring-red-400/20 dark:shadow-none"
-                          : "bg-gray-200 text-gray-500 group-hover:bg-gray-300 dark:bg-zinc-800 dark:text-zinc-500 dark:group-hover:bg-zinc-700 dark:group-hover:text-zinc-300"
-                      )}
-                    >
-                      {docTypes.filter((dt) => dt.status !== "Archived").length}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setShowArchived(true)}
-                    className={`group flex h-11 flex-1 cursor-pointer items-center justify-center gap-3 px-8 text-sm font-semibold transition-all duration-200 active:scale-[0.98] sm:w-[200px] sm:flex-none ${
- showArchived
- ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
- : "text-gray-500 ring-transparent hover:bg-white/55 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
- }`}
-                  >
-                    <span className="whitespace-nowrap tracking-wide">
-                      Archived
-                    </span>
-                    <span
-                      className={cn(
-                        "flex h-5 min-w-[26px] items-center justify-center rounded-full px-2 text-[10px] font-semibold transition-all duration-300",
-                        showArchived
-                          ? "bg-pup-maroon text-white shadow-sm ring-2 ring-red-50/50 dark:bg-red-500/20 dark:text-red-400 dark:ring-red-400/20 dark:shadow-none"
-                          : "bg-gray-200 text-gray-500 group-hover:bg-gray-300 dark:bg-zinc-800 dark:text-zinc-500 dark:group-hover:bg-zinc-700 dark:group-hover:text-zinc-300"
-                      )}
-                    >
-                      {docTypes.filter((dt) => dt.status === "Archived").length}
-                    </span>
-                  </button>
-                </div>
-              </div>
-
-              <div className="flex flex-1 flex-col gap-1.5 min-w-[300px]">
-                <div className="flex items-center justify-between">
-                  <label className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-                    Search Document Types
-                  </label>
-                  <span className="text-[9px] font-semibold text-pup-maroon dark:text-primary/70">
-                    {filteredDocTypesFull.length > 0 ? `${filteredDocTypesFull.length.toLocaleString()} MATCHES` : "NO RESULTS"}
-                  </span>
-                </div>
-                <div className="relative group">
-                  <i className="ph-bold ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500"></i>
-                  <Input
-                    placeholder="Filter document name..."
-                    className="h-11 rounded-brand border border-gray-200 bg-white pl-11 pr-4 text-sm font-medium transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
-                    value={localSearch}
-                    onChange={(e) => setLocalSearch(e.target.value)}
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleExportDocTypes}
-                  className="flex h-9 px-4 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-transparent text-[10px] font-semibold text-gray-600 transition-colors hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
-                >
-                  <i className="ph-bold ph-file-csv text-sm"></i>
-                  Export
-                </Button>
-
-                <Button
-                  onClick={() => setIsAddDocTypeOpen(true)}
-                  disabled={showArchived}
-                  className="flex h-11 items-center gap-2 rounded-brand btn-brand-red active:scale-95 disabled:opacity-50 transition-all dark:shadow-none text-[10px] font-semibold tracking-widest px-6"
-                >
-                  <i className="ph-bold ph-plus"></i>
-                  Add
-                </Button>
-              </div>
+        <div className="font-inter">
+          <div className="flex select-none items-center justify-between gap-3 border-b-[0.5px] border-black/10 dark:border-white/10 pb-4">
+            {/* Active / Archived Tabs */}
+            <div className="flex items-center gap-[24px]">
+              <button
+                type="button"
+                onClick={() => setShowArchived(false)}
+                className={`flex items-center justify-center text-[13px] pb-[10px] -mb-[17px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
+                  !showArchived
+                    ? "border-[#ad2f2f] text-[#ad2f2f] font-semibold"
+                    : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
+                }`}
+              >
+                <span className="whitespace-nowrap tracking-wide">
+                  Active ({docTypes.filter((dt) => dt.status !== "Archived").length})
+                </span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowArchived(true)}
+                className={`flex items-center justify-center text-[13px] pb-[10px] -mb-[17px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
+                  showArchived
+                    ? "border-[#ad2f2f] text-[#ad2f2f] font-semibold"
+                    : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
+                }`}
+              >
+                <span className="whitespace-nowrap tracking-wide">
+                  Archived ({docTypes.filter((dt) => dt.status === "Archived").length})
+                </span>
+              </button>
             </div>
-          </CardContent>
-        </Card>
+
+            {/* Search Input, Matches Count, Export, Add */}
+            <div className="flex flex-1 items-center justify-end gap-3 min-w-[300px] select-none">
+              <div className="flex-1 max-w-md relative group">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+                </div>
+                <Input
+                  type="text"
+                  placeholder="Filter document name..."
+                  className="h-[36px] w-full rounded-[8px] border-[0.5px] border-black/15 bg-white pl-9 pr-20 text-[13px] font-normal placeholder:text-[#8E8E93] dark:border-white/15 dark:bg-card focus-visible:ring-0 focus-visible:border-black/30"
+                  value={localSearch}
+                  onChange={(e) => setLocalSearch(e.target.value)}
+                />
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
+                  {filteredDocTypesFull.length > 0 ? `${filteredDocTypesFull.length} results` : "0 results"}
+                </div>
+              </div>
+
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleExportDocTypes}
+                className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-[#111] hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none border-0"
+              >
+                Export
+              </Button>
+
+              <Button
+                onClick={() => setIsAddDocTypeOpen(true)}
+                disabled={showArchived}
+                className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-white text-[13px] font-medium px-6 active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
+              >
+                Add
+              </Button>
+            </div>
+          </div>
+        </div>
 
         {/* Main Table Container (No outer card background/shadow) */}
         <div key={showArchived} className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card w-full animate-fade-up">
@@ -412,9 +388,9 @@ export default function DocTypesTab({
                   ))}
                 </div>
               ) : (
-                <table className="min-w-full text-sm">
-                  <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm dark:border-white/10 dark:bg-muted">
-                    <tr className="text-left text-[10px] font-semibold tracking-widest text-gray-600 dark:text-zinc-300">
+                 <table className="min-w-full text-sm">
+                  <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+                    <tr className="text-left text-[11px] font-medium uppercase tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                       <th className="w-16 p-4 text-center">
                         <input
                           type="checkbox"
@@ -430,16 +406,19 @@ export default function DocTypesTab({
                       <th className="p-4 px-6">
                         <button
                           onClick={() => onSort("name")}
-                          className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                          className={cn(
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-medium uppercase tracking-[0.04em]",
+                            sortDoc.key === "name" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                          )}
                         >
-                          Name / Label <SortIndicator column="name" />
+                          Document Type <SortIndicator column="name" />
                         </button>
                       </th>
-                      <th className="w-40 p-4 px-6">
-                        Status
+                      <th className="w-48 p-4 px-6">
+                        <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">Status</span>
                       </th>
                       <th className="w-32 p-4 px-6 text-right">
-                        Actions
+                        <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">Actions</span>
                       </th>
                     </tr>
                   </thead>
@@ -447,11 +426,11 @@ export default function DocTypesTab({
                     {!showArchived && (
                       <tr
                         className={cn(
-                          "transition-all duration-300",
+                          "transition-all duration-300 h-16",
                           newDocTypeName.trim() ? "bg-amber-50/50 dark:bg-amber-950/10" : "bg-gray-50/30 hover:bg-gray-50 dark:bg-white/[0.02] dark:hover:bg-white/[0.05]"
                         )}
                       >
-                        <td className="p-4 text-center">
+                        <td className="p-4 text-center align-middle">
                           <div
                             className={cn(
                               "flex h-5 w-5 mx-auto items-center justify-center rounded-full border-2 border-dashed transition-colors",
@@ -466,21 +445,21 @@ export default function DocTypesTab({
                             ></i>
                           </div>
                         </td>
-                        <td className="p-4 px-6">
+                        <td className="p-4 px-6 align-middle">
                           <div className="flex items-center gap-2">
                             <Input
                               placeholder="Quick add document type name..."
                               value={newDocTypeName}
                               onChange={(e) => setNewDocTypeName(e.target.value)}
                               onKeyDown={(e) => {
-                                if (e.key === "Enter") {
-                                  e.preventDefault()
-                                  addDocType(null, newDocTypeName)
-                                }
+                                  if (e.key === "Enter") {
+                                    e.preventDefault()
+                                    addDocType(null, newDocTypeName)
+                                  }
                               }}
                               className={cn(
-                                "h-9 flex-1 rounded-brand border border-gray-300 bg-white text-sm transition-all focus-visible:ring-pup-maroon",
-                                newDocTypeName.trim() ? "ring-2 ring-amber-100" : "focus-visible:border-gray-300 dark:border-white/10 dark:bg-card"
+                                "h-9 flex-1 rounded-[8px] border-[0.5px] border-black/15 bg-white text-xs font-semibold focus-visible:ring-0 focus-visible:border-black/30",
+                                newDocTypeName.trim() ? "ring-1 ring-amber-100" : "focus-visible:border-gray-300 dark:border-white/10 dark:bg-card"
                               )}
                             />
                             <Button
@@ -489,37 +468,28 @@ export default function DocTypesTab({
                                 !newDocTypeName.trim() || isQuickAddLoading
                               }
                               onClick={() => addDocType(null, newDocTypeName)}
-                              className="h-9 rounded-brand px-4 text-[10px] font-semibold tracking-widest text-white shadow-sm active:scale-95 disabled:opacity-50 transition-all dark:shadow-none btn-brand-red"
+                              className="h-9 w-9 p-0 flex items-center justify-center rounded-[8px] text-[14px] font-semibold text-white shadow-sm active:scale-95 disabled:opacity-50 transition-all dark:shadow-none btn-brand-orange shrink-0"
                             >
                               {isQuickAddLoading ? (
                                 <i className="ph-bold ph-spinner animate-spin"></i>
                               ) : (
-                                <>
-                                  <i className="ph-bold ph-plus mr-2"></i>
-                                  Add
-                                </>
+                                <i className="ph-bold ph-plus"></i>
                               )}
                             </Button>
                           </div>
                         </td>
-                        <td className="p-4 px-6">
+                        <td className="p-4 px-6 align-middle">
                           {newDocTypeName.trim() ? (
-                            <Badge
-                              variant="outline"
-                              className="animate-pulse border-amber-200 bg-amber-50 px-2.5 py-1 text-[9px] font-semibold tracking-wider text-amber-700 dark:bg-orange-950/20 dark:text-orange-400 dark:border-orange-500/50"
-                            >
-                              Unsaved Draft
-                            </Badge>
+                            <div className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] bg-orange-100 text-orange-800 dark:bg-orange-950/40 dark:text-orange-400">
+                              Draft
+                            </div>
                           ) : (
-                            <Badge
-                              variant="outline"
-                              className="border-gray-200 bg-gray-100 px-2.5 py-1 text-[9px] font-semibold tracking-wider text-gray-400 dark:border-white/10 dark:text-zinc-500 dark:bg-muted"
-                            >
-                              NEW RECORD
-                            </Badge>
+                            <div className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] bg-gray-100 text-[#8E8E93] dark:bg-zinc-800 dark:text-zinc-500">
+                              New
+                            </div>
                           )}
                         </td>
-                        <td className="p-4 px-6 text-right"></td>
+                        <td className="p-4 px-6 text-right align-middle"></td>
                       </tr>
                     )}
                     {filteredDocTypes.map((dt) => {
@@ -535,14 +505,14 @@ export default function DocTypesTab({
                             if (!isDisabled) toggleDocTypeSelected(dt.id, e);
                           }}
                           className={cn(
-                            "group transition-all duration-200 hover:bg-gray-50/80 dark:bg-card dark:hover:bg-white/5 select-none cursor-pointer",
+                            "group transition-all duration-200 hover:bg-gray-50/80 dark:bg-card dark:hover:bg-white/5 select-none cursor-pointer h-16",
                             dt.status === "Archived" && "opacity-75",
-                            isSelected && "bg-amber-50 dark:bg-amber-950/40",
+                            isSelected && "bg-amber-50/50 dark:bg-amber-950/20",
                             isDisabled && "cursor-not-allowed"
                           )}
                         >
-                          <td className="p-4 text-center">
-                              <input
+                          <td className="p-4 text-center align-middle">
+                            <input
                               type="checkbox"
                               className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20 dark:text-primary dark:border-white/10"
                               checked={isSelected}
@@ -551,59 +521,49 @@ export default function DocTypesTab({
                                 e.stopPropagation();
                               }}
                               onChange={(e) => {
-                                // tr onClick handles it, but let's keep this for direct interactions
+                                // tr onClick handles it
                                 e.stopPropagation();
                                 toggleDocTypeSelected(dt.id);
                               }}
                               disabled={isDisabled}
                             />
                           </td>
-                          <td className="p-4 px-6">
-                            <span className="text-xs font-semibold text-gray-900 dark:text-zinc-50">
+                          <td className="p-4 px-6 align-middle">
+                            <span className="text-[14px] font-medium text-[#111111] dark:text-zinc-50">
                               {dt.name}
                             </span>
                           </td>
-                          <td className="p-4 px-6">
+                          <td className="p-4 px-6 align-middle">
                             {dt.status === "Archived" ? (
-                              <Badge
-                                variant="outline"
-                                className="border-red-200 bg-red-50 px-2.5 py-1 text-[9px] font-semibold tracking-wider text-red-700 dark:border-red-500/20 dark:bg-red-500/10 dark:text-primary"
-                              >
-                                ARCHIVED
-                              </Badge>
+                              <div className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400">
+                                Archived
+                              </div>
                             ) : (
-                              <Badge
-                                variant="outline"
-                                className="border-green-200 bg-green-50 px-2.5 py-1 text-[9px] font-semibold tracking-wider text-green-700 dark:border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400"
-                              >
-                                ACTIVE
-                              </Badge>
+                              <div className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] bg-green-100 text-green-800 dark:bg-emerald-950/40 dark:text-emerald-400">
+                                Active
+                              </div>
                             )}
                           </td>
-                          <td className="p-4 px-6 text-right">
+                          <td className="p-4 px-6 text-right align-middle">
                             <div 
-                              className="inline-flex items-center justify-end gap-2"
+                              className="inline-flex items-center justify-end gap-[12px]"
                               onClick={(e) => e.stopPropagation()}
                             >
                               {!showArchived && (
-                                <Button
-                                  variant="outline"
-                                  size="icon"
+                                <button
                                   disabled={dt.status === "Archived"}
                                   onClick={() => {
                                     setEditDocType({ id: dt.id, name: dt.name })
                                     setIsEditDocTypeOpen(true)
                                   }}
-                                  className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800"
+                                  className="p-0 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-[#111111] dark:hover:text-white focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                 >
-                                  <i className="ph-bold ph-pencil-simple text-base"></i>
-                                </Button>
+                                  <i className="ph-bold ph-pencil-simple text-[16px]"></i>
+                                </button>
                               )}
 
                             {dt.status === "Archived" ? (
-                              <Button
-                                variant="outline"
-                                size="icon"
+                              <button
                                 onClick={() => {
                                   setConfirmPayload({
                                     title: "Restore Document Type",
@@ -619,14 +579,12 @@ export default function DocTypesTab({
                                   })
                                   setConfirmOpen(true)
                                 }}
-                                className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-emerald-600 shadow-sm transition-all hover:border-emerald-600 hover:bg-emerald-50 dark:bg-white/5 dark:border-white/10 dark:text-emerald-400 dark:hover:bg-emerald-900/20"
+                                className="p-0 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                               >
-                                <i className="ph-bold ph-arrow-counter-clockwise text-base"></i>
-                              </Button>
+                                <i className="ph-bold ph-arrow-counter-clockwise text-[16px]"></i>
+                              </button>
                             ) : (
-                              <Button
-                                variant="outline"
-                                size="icon"
+                              <button
                                 onClick={() => {
                                   setConfirmPayload({
                                     title: "Archive Document Type",
@@ -641,10 +599,10 @@ export default function DocTypesTab({
                                   })
                                   setConfirmOpen(true)
                                 }}
-                                className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10"
+                                className="p-0 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                               >
-                                <i className="ph-bold ph-archive text-base"></i>
-                              </Button>
+                                <i className="ph-bold ph-archive text-[16px]"></i>
+                              </button>
                             )}
                           </div>
                         </td>

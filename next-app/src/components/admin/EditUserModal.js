@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Select } from "@/components/ui/select"
+import { cn } from "@/lib/utils"
 
 export default function EditUserModal({
   open,
@@ -65,7 +65,7 @@ export default function EditUserModal({
                 <Input
                   type="text"
                   required
-                  className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none dark:bg-card dark:border-white/10"
+                  className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none dark:bg-card dark:text-zinc-400"
                   placeholder="Dela Cruz"
                   value={editForm.lname}
                   onChange={(e) =>
@@ -76,24 +76,39 @@ export default function EditUserModal({
             </div>
 
             {/* Part 2: Role Selection */}
-            <div>
-              <label className="mb-2 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
+            <div className="flex flex-col gap-[4px]">
+              <label className="block text-[12px] font-medium text-[#8E8E93] dark:text-zinc-500">
                 System Role <span className="text-pup-maroon dark:text-primary">*</span>
               </label>
-              <Select
-                required
-                className="h-11 w-full rounded-brand border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-900 shadow-sm transition-colors focus:border-gray-300 focus:ring-2 focus:ring-pup-maroon focus:outline-none dark:bg-card dark:text-zinc-50 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10"
-                value={editForm.role}
-                onChange={(e) =>
-                  setEditForm((f) => ({ ...f, role: e.target.value }))
-                }
-              >
-                <option value="" disabled>
-                  Select Role...
-                </option>
-                <option value="Admin">Admin</option>
-                <option value="Staff">Staff</option>
-              </Select>
+              <div className="grid grid-cols-1 gap-[12px] sm:grid-cols-2">
+                <button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={() => setEditForm(f => ({ ...f, role: f.role === "Staff" ? "" : "Staff" }))}
+                  className={cn(
+                    "h-[36px] w-full rounded-[8px] border-[0.5px] text-[13px] transition-all flex items-center justify-center px-4 py-0 cursor-pointer focus:outline-none",
+                    editForm.role === "Staff"
+                      ? "border-orange-500 bg-orange-50 text-orange-600 font-medium dark:border-orange-500 dark:bg-orange-950/20 dark:text-orange-400"
+                      : "border-black/15 dark:border-white/10 text-[#8E8E93] dark:text-zinc-500 bg-white dark:bg-card font-normal"
+                  )}
+                >
+                  <span>Registrar Staff</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={isLoading}
+                  onClick={() => setEditForm(f => ({ ...f, role: f.role === "Admin" ? "" : "Admin" }))}
+                  className={cn(
+                    "h-[36px] w-full rounded-[8px] border-[0.5px] text-[13px] transition-all flex items-center justify-center px-4 py-0 cursor-pointer focus:outline-none",
+                    editForm.role === "Admin"
+                      ? "border-[#E5484D] bg-[#FFF5F5] text-[#E5484D] font-medium dark:border-red-500 dark:bg-red-950/20 dark:text-red-400"
+                      : "border-black/15 dark:border-white/10 text-[#8E8E93] dark:text-zinc-500 bg-white dark:bg-card font-normal"
+                  )}
+                >
+                  <span>Administrator</span>
+                </button>
+              </div>
             </div>
 
             {/* Part 3: System Identifiers */}

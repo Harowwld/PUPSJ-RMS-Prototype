@@ -286,8 +286,8 @@ export default function SectionsTab({
   }
 
   return (
-    <div className="font-inter flex w-full flex-col gap-6 animate-fade-up">
-      <Card className="p-0 gap-0 overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
+    <div className="font-inter flex w-full flex-col gap-6 animate-fade-up px-[28px] pb-[28px]">
+      <div className="mt-[20px]">
         <PageHeader
           icon="ph-list-numbers"
           showBorder={false}
@@ -302,9 +302,11 @@ export default function SectionsTab({
             </div>
           }
           description="Manage academic cohorts, sections, and organizational blocks."
+          className="p-0"
         />
+      </div>
 
-        <CardContent className="font-inter bg-white p-4 dark:bg-card/50 backdrop-blur-md border-t border-gray-100 dark:border-white/10">
+      <div className="font-inter">
           <div className="flex shrink-0 select-none flex-wrap items-end justify-between gap-6">
             <div className="flex w-full flex-col gap-1.5 sm:w-auto">
               <div className="flex w-full cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 backdrop-blur-sm sm:w-auto dark:border-white/10 dark:bg-muted/50">
@@ -400,8 +402,7 @@ export default function SectionsTab({
               </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
       {/* Main Table Container (No outer card background/shadow) */}
       <div key={showArchived} className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card w-full animate-fade-up">

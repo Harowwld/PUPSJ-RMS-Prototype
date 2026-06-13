@@ -4,7 +4,7 @@ import * as React from "react"
 import { createPortal } from "react-dom"
 import { cn } from "@/lib/utils"
 
-const Select = React.forwardRef(({ className, children, value, onChange, placeholder, menuClassName, optionClassName, ...props }, ref) => {
+const Select = React.forwardRef(({ className, children, value, onChange, placeholder, menuClassName, optionClassName, usePortal = true, ...props }, ref) => {
   const [isOpen, setIsOpen] = React.useState(false)
   const [mounted, setMounted] = React.useState(false)
   const [coords, setCoords] = React.useState({ top: 0, left: 0, width: 0 })
@@ -29,7 +29,7 @@ const Select = React.forwardRef(({ className, children, value, onChange, placeho
 
   React.useEffect(() => {
     if (typeof window === "undefined") return
-    if (isOpen) {
+    if (isOpen && usePortal) {
       updateCoords()
       window.addEventListener("scroll", updateCoords, true)
       window.addEventListener("resize", updateCoords)
@@ -38,7 +38,7 @@ const Select = React.forwardRef(({ className, children, value, onChange, placeho
       window.removeEventListener("scroll", updateCoords, true)
       window.removeEventListener("resize", updateCoords)
     }
-  }, [isOpen])
+  }, [isOpen, usePortal])
 
   React.useEffect(() => {
     if (typeof document === "undefined") return
@@ -78,8 +78,48 @@ const Select = React.forwardRef(({ className, children, value, onChange, placeho
     setIsOpen(false)
   }
 
+  const renderMenu = () => (
+    <div
+      ref={menuRef}
+      style={usePortal ? {
+        position: "fixed",
+        top: coords.top + 4,
+        left: coords.left,
+        width: coords.width,
+        zIndex: 9999,
+      } : undefined}
+      className={cn(
+        "transition-[opacity,transform] animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden rounded-brand border border-gray-200 bg-white p-1 shadow-2xl dark:border-white/10 dark:bg-card",
+        usePortal ? "" : "absolute z-50 top-[calc(100%+4px)] left-0 min-w-[120px] w-full",
+        menuClassName
+      )}
+    >
+      <div className="max-h-60 overflow-y-auto overflow-x-hidden w-full scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-zinc-800">
+        {options.map((option) => (
+          <button
+            key={option.value}
+            type="button"
+            disabled={option.disabled}
+            onClick={() => handleSelect(option.value)}
+            className={cn(
+              "flex w-full items-center rounded-lg px-3 py-2 text-left text-xs font-semibold transition-colors min-w-0",
+              String(value) === String(option.value)
+                ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-400"
+                : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/5",
+              option.disabled && "opacity-50 cursor-not-allowed",
+              optionClassName
+            )}
+            title={option.label}
+          >
+            <span className="truncate flex-1">{option.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+
   return (
-    <div className="relative w-full min-w-0">
+    <div className="relative w-full min-w-0 h-full">
       <button
         type="button"
         ref={(el) => {
@@ -110,45 +150,7 @@ const Select = React.forwardRef(({ className, children, value, onChange, placeho
         ></i>
       </button>
 
-      {isOpen && mounted && createPortal(
-        <div
-          ref={menuRef}
-          style={{
-            position: "fixed",
-            top: coords.top + 4,
-            left: coords.left,
-            width: coords.width,
-            zIndex: 9999,
-          }}
-          className={cn(
-            "transition-[opacity,transform] animate-in fade-in slide-in-from-top-2 duration-200 overflow-hidden rounded-brand border border-gray-200 bg-white p-1 shadow-2xl dark:border-white/10 dark:bg-card",
-            menuClassName
-          )}
-        >
-          <div className="max-h-60 overflow-y-auto overflow-x-hidden w-full scrollbar-thin scrollbar-thumb-gray-200 dark:scrollbar-thumb-zinc-800">
-            {options.map((option) => (
-              <button
-                key={option.value}
-                type="button"
-                disabled={option.disabled}
-                onClick={() => handleSelect(option.value)}
-                className={cn(
-                  "flex w-full items-center rounded-lg px-3 py-2 text-left text-xs font-semibold transition-colors min-w-0",
-                  String(value) === String(option.value)
-                    ? "bg-pup-maroon/10 text-pup-maroon dark:bg-red-500/20 dark:text-red-400"
-                    : "text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-white/5",
-                  option.disabled && "opacity-50 cursor-not-allowed",
-                  optionClassName
-                )}
-                title={option.label}
-              >
-                <span className="truncate flex-1">{option.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>,
-        document.body
-      )}
+      {isOpen && mounted && (usePortal ? createPortal(renderMenu(), document.body) : renderMenu())}
     </div>
   )
 })

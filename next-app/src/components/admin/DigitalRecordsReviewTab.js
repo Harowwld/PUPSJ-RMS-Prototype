@@ -33,13 +33,53 @@ import { Select } from "@/components/ui/select"
 import { toast } from "sonner"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
-  if (sortBy !== column)
-    return <i className="ph-bold ph-caret-up-down ml-1 opacity-30 text-[10px]"></i>
+  if (sortBy !== column) {
+    return <i className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+  }
   return sortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-pup-maroon dark:text-primary text-[10px] dark:text-primary"></i>
+    <i className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></i>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-pup-maroon dark:text-primary text-[10px] dark:text-primary"></i>
+    <i className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></i>
   )
+}
+
+function toNormalCase(str) {
+  if (!str) return ""
+  return str
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ")
+}
+
+const formatUploadedDate = (dateString) => {
+  if (!dateString) return { dateStr: "—", timeStr: "" }
+  try {
+    let normalized = String(dateString);
+    if (!normalized.includes("T") && !normalized.includes("Z")) {
+      normalized = normalized.replace(" ", "T") + "Z";
+    }
+    const date = new Date(normalized);
+    if (isNaN(date.getTime())) throw new Error("Invalid");
+    
+    const dateStr = date.toLocaleDateString("en-US", {
+      timeZone: "Asia/Manila",
+      month: "short",
+      day: "numeric",
+      year: "numeric"
+    });
+    
+    const timeStr = date.toLocaleTimeString("en-US", {
+      timeZone: "Asia/Manila",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true
+    });
+    
+    return { dateStr, timeStr };
+  } catch {
+    return { dateStr: String(dateString), timeStr: "" };
+  }
 }
 
 export default function DigitalRecordsReviewTab({
@@ -453,9 +493,64 @@ export default function DigitalRecordsReviewTab({
     }
   }, [records])
 
+  const activeShortcut = useMemo(() => {
+    if (!dateFrom || !dateTo) return null
+    const todayStr = format(new Date(), "yyyy-MM-dd")
+    
+    // Check Today
+    if (dateFrom === todayStr && dateTo === todayStr) return "Today"
+    
+    // Check Yesterday
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    const yesterdayStr = format(yesterday, "yyyy-MM-dd")
+    if (dateFrom === yesterdayStr && dateTo === yesterdayStr) return "Yesterday"
+    
+    // Check 7 days
+    const last7 = new Date()
+    last7.setDate(last7.getDate() - 7)
+    const last7Str = format(last7, "yyyy-MM-dd")
+    if (dateFrom === last7Str && dateTo === todayStr) return "7 days"
+    
+    // Check 30 days
+    const last30 = new Date()
+    last30.setDate(last30.getDate() - 30)
+    const last30Str = format(last30, "yyyy-MM-dd")
+    if (dateFrom === last30Str && dateTo === todayStr) return "30 days"
+    
+    return null
+  }, [dateFrom, dateTo])
+
+  const handleShortcutClick = (range) => {
+    const end = new Date()
+    let start = new Date()
+    switch (range) {
+      case "Today":
+        start.setHours(0, 0, 0, 0)
+        break
+      case "Yesterday":
+        start.setDate(start.getDate() - 1)
+        start.setHours(0, 0, 0, 0)
+        end.setDate(end.getDate() - 1)
+        end.setHours(23, 59, 59, 999)
+        break
+      case "7 days":
+        start.setDate(start.getDate() - 7)
+        start.setHours(0, 0, 0, 0)
+        break
+      case "30 days":
+        start.setDate(start.getDate() - 30)
+        start.setHours(0, 0, 0, 0)
+        break
+    }
+    setDateFrom(format(start, "yyyy-MM-dd"))
+    setDateTo(format(end, "yyyy-MM-dd"))
+    setCurrentPage(1)
+  }
+
   return (
     <TooltipProvider delayDuration={200}>
-      <div className="animate-fade-up font-inter flex h-auto w-full flex-col gap-6">
+      <div className="animate-fade-up font-inter flex flex-1 flex-col h-full min-h-0 w-full gap-6">
         {/* Color Stat Cards / Skeletons at the Top */}
         {(isLoading && !isManualLoading) && !records ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-pulse">
@@ -553,144 +648,146 @@ export default function DigitalRecordsReviewTab({
       <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-xl border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
         <PageHeader
           icon="ph-seal-check"
-          title="Digital Records Review"
+          title="Records Review"
           description="Verify student record submissions."
           showBorder={false}
+          titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
             <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleExportCSV}
-                  disabled={isLoading || isExporting}
-                  className="flex h-9 px-4 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-transparent text-[10px] font-semibold text-gray-600 transition-colors hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
-                >
-                  <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv"} text-sm`}></i>
-                  {isExporting ? "Preparing..." : "Export"}
-                </Button>
-              </div>
-
-              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
-
               <RefreshButton 
                 onRefresh={onRefresh} 
                 isLoading={isManualLoading} 
                 title="Refresh Review Data"
               />
+
+              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleExportCSV}
+                  disabled={isLoading || isExporting}
+                  className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none! border-0!"
+                >
+                  {isExporting ? "Preparing..." : "Export"}
+                </Button>
+              </div>
             </div>
           }
         />
 
         {/* Active Filter Chips Row */}
-        {(localSearch !== "" || statusFilter !== "All" || docTypeFilter !== "All" || dateFrom || dateTo) && (
-          <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">Active filters:</span>
-              {localSearch && (
-                <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-semibold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
-                  Search: {localSearch}
-                  <button
-                    onClick={() => { setSearchQuery(""); setLocalSearch(""); setCurrentPage(1); }}
-                    className="ml-1 hover:text-pup-darkMaroon transition-colors"
-                  >
-                    <i className="ph-bold ph-x text-[8px]"></i>
-                  </button>
-                </div>
-              )}
-              {statusFilter !== "All" && (
-                <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
-                  Status: {statusFilter}
-                  <button
-                    onClick={() => { setStatusFilter("All"); setCurrentPage(1); }}
-                    className="ml-1 hover:text-blue-800 transition-colors"
-                  >
-                    <i className="ph-bold ph-x text-[8px]"></i>
-                  </button>
-                </div>
-              )}
-              {docTypeFilter !== "All" && (
-                <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
-                  Type: {docTypeFilter}
-                  <button
-                    onClick={() => { setDocTypeFilter("All"); setCurrentPage(1); }}
-                    className="ml-1 hover:text-amber-800 transition-colors"
-                  >
-                    <i className="ph-bold ph-x text-[8px]"></i>
-                  </button>
-                </div>
-              )}
-              {(dateFrom || dateTo) && (
-                <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
-                  Range: {dateFrom || "..."} to {dateTo || "..."}
-                  <button
-                    onClick={() => { setDateFrom(""); setDateTo(""); setCurrentPage(1); }}
-                    className="ml-1 hover:text-emerald-800 transition-colors"
-                  >
-                    <i className="ph-bold ph-x text-[8px]"></i>
-                  </button>
-                </div>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  setSearchQuery("")
-                  setLocalSearch("")
-                  setStatusFilter("All")
-                  setDocTypeFilter("All")
-                  setDateFrom("")
-                  setDateTo("")
-                  setCurrentPage(1)
-                }}
-                className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-semibold text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
-              >
-                CLEAR ALL FILTERS
-              </Button>
+        {(localSearch !== "" || statusFilter !== "All" || docTypeFilter !== "All" || dateFrom || dateTo) && (() => {
+          const formatChipDate = (dateStr) => {
+            if (!dateStr) return "..."
+            try {
+              return format(new Date(dateStr), "MMM d, yyyy")
+            } catch (e) {
+              return dateStr
+            }
+          }
+          return (
+            <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
+                {localSearch && (
+                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                    Search: {localSearch}
+                    <button
+                      onClick={() => { setSearchQuery(""); setLocalSearch(""); setCurrentPage(1); }}
+                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                {statusFilter !== "All" && (
+                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                    Status: {statusFilter}
+                    <button
+                      onClick={() => { setStatusFilter("All"); setCurrentPage(1); }}
+                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                {docTypeFilter !== "All" && (
+                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                    Type: {docTypeFilter}
+                    <button
+                      onClick={() => { setDocTypeFilter("All"); setCurrentPage(1); }}
+                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                {(dateFrom || dateTo) && (
+                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                    {formatChipDate(dateFrom)} – {formatChipDate(dateTo)}
+                    <button
+                      onClick={() => { setDateFrom(""); setDateTo(""); setCurrentPage(1); }}
+                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                    >
+                      ×
+                    </button>
+                  </div>
+                )}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    setSearchQuery("")
+                    setLocalSearch("")
+                    setStatusFilter("All")
+                    setDocTypeFilter("All")
+                    setDateFrom("")
+                    setDateTo("")
+                    setCurrentPage(1)
+                  }}
+                  className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
+                >
+                  Clear
+                </Button>
+              </div>
             </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* Filter Bar */}
         <div className="bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
-          <div className="flex w-full flex-wrap items-end gap-5">
+          <div className="flex w-full flex-wrap items-center gap-5">
             {/* Search */}
-            <div className="flex-[2] min-w-[280px]">
-              <div className="mb-1.5 flex items-center justify-between">
-                <label className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-                  Global Search
-                </label>
-                <span className="text-[9px] font-semibold text-pup-maroon dark:text-primary/50">
-                  {sortedRecords.length > 0 ? `${sortedRecords.length.toLocaleString()} MATCHES` : "NO RESULTS"}
-                </span>
+            <div className="flex-[2] min-w-[280px] group relative">
+              <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
               </div>
-              <div className="group relative">
-                <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
-                  <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500"></i>
-                </div>
-                <Input
-                  type="text"
-                  placeholder="Student, doc type, filename..."
-                  className="h-11 w-full rounded-brand border border-gray-200 bg-white pl-10.5 text-sm font-medium transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
-                  value={localSearch}
-                  onChange={(e) => setLocalSearch(e.target.value)}
-                />
+              <Input
+                type="text"
+                placeholder="Search student, document, filename..."
+                className="h-[36px] w-full rounded-[8px] border-[0.5px] border-gray-200 bg-white pl-9 pr-20 text-[13px] font-normal transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
+                value={localSearch}
+                onChange={(e) => setLocalSearch(e.target.value)}
+              />
+              <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
+                {sortedRecords.length > 0 ? `${sortedRecords.length} results` : "0 results"}
               </div>
             </div>
 
             {/* Status Select */}
-            <div className="flex-1 min-w-[128px]">
-              <label className="mb-1.5 block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-                Status
-              </label>
+            <div className="min-w-[120px] flex-1">
               <Select
                 value={statusFilter}
                 onChange={(e) => { 
                   setStatusFilter(e.target.value); 
                   setCurrentPage(1);
                 }}
+                className="h-[36px] rounded-[8px] border-[0.5px] border-gray-200 text-[13px] font-normal"
               >
-                <option value="All">All</option>
+                <option value="All">Status</option>
                 <option value="Pending">Pending</option>
                 <option value="Approved">Approved</option>
                 <option value="Declined">Declined</option>
@@ -698,125 +795,100 @@ export default function DigitalRecordsReviewTab({
             </div>
 
             {/* Doc Type Select */}
-            <div className="flex-[1.5] min-w-[200px]">
-              <label className="mb-1.5 block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-                Doc Type
-              </label>
+            <div className="min-w-[150px] flex-1">
               <Select
                 value={docTypeFilter}
                 onChange={(e) => { 
                   setDocTypeFilter(e.target.value); 
                   setCurrentPage(1);
                 }}
+                className="h-[36px] rounded-[8px] border-[0.5px] border-gray-200 text-[13px] font-normal"
               >
-                <option value="All">All</option>
+                <option value="All">Document type</option>
                 {activeDocTypes.map((docTypeName) => (
                   <option key={docTypeName} value={docTypeName}>{docTypeName}</option>
                 ))}
               </Select>
             </div>
 
-            {/* Date Range Picker Section */}
-            <div className="min-w-[320px] flex-1">
-              <div className="mb-1.5 flex items-center justify-between">
-                <label className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-                  Time Period
-                </label>
-                <div className="flex items-center gap-2">
-                  {["today", "yesterday", "last7", "last30"].map((range) => (
-                    <button
-                      key={range}
-                      onClick={() => {
-                        const end = new Date()
-                        let start = new Date()
-                        switch (range) {
-                          case "today":
-                            start.setHours(0, 0, 0, 0)
-                            break
-                          case "yesterday":
-                            start.setDate(start.getDate() - 1)
-                            start.setHours(0, 0, 0, 0)
-                            end.setDate(end.getDate() - 1)
-                            end.setHours(23, 59, 59, 999)
-                            break
-                          case "last7":
-                            start.setDate(start.getDate() - 7)
-                            start.setHours(0, 0, 0, 0)
-                            break
-                          case "last30":
-                            start.setDate(start.getDate() - 30)
-                            start.setHours(0, 0, 0, 0)
-                            break
-                        }
-                        setDateFrom(format(start, "yyyy-MM-dd"))
-                        setDateTo(format(end, "yyyy-MM-dd"))
+            {/* Time Period shortcuts */}
+            <div className="flex items-center gap-[12px] h-[36px] flex-none">
+              {["Today", "Yesterday", "7 days", "30 days"].map((range) => {
+                const isActive = activeShortcut === range
+                return (
+                  <button
+                    key={range}
+                    type="button"
+                    onClick={() => handleShortcutClick(range)}
+                    className={cn(
+                      "text-[12px] font-normal transition-all bg-transparent border-0 cursor-pointer shadow-none focus:outline-none focus:ring-0 pb-1",
+                      isActive 
+                        ? "text-pup-maroon dark:text-red-500 border-b-[2px] border-pup-maroon dark:border-red-500 font-medium" 
+                        : "text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300"
+                    )}
+                  >
+                    {range}
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Date range picker */}
+            <div className="flex items-center gap-2 flex-none">
+              <div className="w-[120px]">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "h-[36px] w-full justify-start rounded-[8px] border-[0.5px] border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-[13px] font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10",
+                        !dateFrom ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
+                      )}
+                    >
+                      {dateFrom ? format(new Date(dateFrom), "MMM d, yyyy") : "Start Date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto rounded-2xl p-0 shadow-2xl" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateFrom ? new Date(dateFrom) : undefined}
+                      onSelect={(date) => {
+                        setDateFrom(date ? format(date, "yyyy-MM-dd") : "")
                         setCurrentPage(1)
                       }}
-                      className="rounded-md bg-gray-100 px-2 py-0.5 text-[9px] font-semibold text-gray-500 transition-all hover:bg-pup-maroon hover:text-white dark:text-zinc-400 dark:bg-muted"
-                    >
-                      {range.replace("last", "Last ")}
-                    </button>
-                  ))}
-                </div>
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "h-11 w-full justify-start rounded-brand border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-xs font-semibold shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card",
-                          !dateFrom && "text-gray-400 dark:text-zinc-500"
-                        )}
-                      >
-                        <i className="ph-bold ph-calendar-blank mr-2 text-base text-gray-400 dark:text-zinc-500"></i>
-                        {dateFrom ? format(new Date(dateFrom), "MMM d, yyyy") : "Start Date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto rounded-2xl p-0 shadow-2xl" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={dateFrom ? new Date(dateFrom) : undefined}
-                        onSelect={(date) => {
-                          setDateFrom(date ? format(date, "yyyy-MM-dd") : "")
-                          setCurrentPage(1)
-                        }}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
-                <div className="flex items-center text-gray-300 dark:text-zinc-600">
-                   <i className="ph-bold ph-arrow-right"></i>
-                </div>
-                <div className="flex-1">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        className={cn(
-                          "h-11 w-full justify-start rounded-brand border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-xs font-semibold shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card",
-                          !dateTo && "text-gray-400 dark:text-zinc-500"
-                        )}
-                      >
-                        <i className="ph-bold ph-calendar-blank mr-2 text-base text-gray-400 dark:text-zinc-500"></i>
-                        {dateTo ? format(new Date(dateTo), "MMM d, yyyy") : "End Date"}
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-auto rounded-2xl p-0 shadow-2xl" align="start">
-                      <Calendar
-                        mode="single"
-                        selected={dateTo ? new Date(dateTo) : undefined}
-                        onSelect={(date) => {
-                          setDateTo(date ? format(date, "yyyy-MM-dd") : "")
-                          setCurrentPage(1)
-                        }}
-                        initialFocus
-                      />
-                    </PopoverContent>
-                  </Popover>
-                </div>
+              <div className="text-[12px] text-gray-400 dark:text-zinc-500 shrink-0">
+                →
+              </div>
+              <div className="w-[120px]">
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "h-[36px] w-full justify-start rounded-[8px] border-[0.5px] border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-[13px] font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10",
+                        !dateTo ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
+                      )}
+                    >
+                      {dateTo ? format(new Date(dateTo), "MMM d, yyyy") : "End Date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto rounded-2xl p-0 shadow-2xl" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={dateTo ? new Date(dateTo) : undefined}
+                      onSelect={(date) => {
+                        setDateTo(date ? format(date, "yyyy-MM-dd") : "")
+                        setCurrentPage(1)
+                      }}
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </div>
@@ -849,14 +921,14 @@ export default function DigitalRecordsReviewTab({
         </div>
       ) : records ? (
         <div className={cn(
-          "flex flex-1 flex-col gap-6 transition-all duration-500",
+          "flex flex-1 flex-col min-h-0 gap-6 transition-all duration-500",
           (isLoading && !isManualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
         )}>
-          <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
-            <div className="overflow-x-auto rounded-[inherit]">
+          <div className="flex-1 min-h-0 flex flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
+            <div className="flex-1 min-h-0 overflow-y-auto rounded-[inherit]">
               <table className="min-w-full text-sm">
-                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-transparent backdrop-blur-sm dark:border-white/10 dark:bg-transparent">
-                  <tr className="text-left text-[10px] font-semibold tracking-widest text-gray-600 dark:text-zinc-300">
+                <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
+                  <tr className="text-left text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                     <th className="w-12 p-4 text-center">
                       <input
                         type="checkbox"
@@ -872,7 +944,7 @@ export default function DigitalRecordsReviewTab({
                     <th className="p-4">
                       <button
                         onClick={() => handleSort("student_name")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[11px] font-medium uppercase tracking-[0.04em]"
                       >
                         Student Name{" "}
                         <SortIndicator
@@ -885,7 +957,7 @@ export default function DigitalRecordsReviewTab({
                     <th className="p-4">
                       <button
                         onClick={() => handleSort("doc_type")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[11px] font-medium uppercase tracking-[0.04em]"
                       >
                         Document Type{" "}
                         <SortIndicator
@@ -895,11 +967,11 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4">Source Filename</th>
+                    <th className="p-4 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Source Filename</th>
                     <th className="p-4">
                       <button
                         onClick={() => handleSort("approval_status")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[11px] font-medium uppercase tracking-[0.04em]"
                       >
                         Status{" "}
                         <SortIndicator
@@ -912,7 +984,7 @@ export default function DigitalRecordsReviewTab({
                     <th className="p-4">
                       <button
                         onClick={() => handleSort("created_at")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[11px] font-medium uppercase tracking-[0.04em]"
                       >
                         Upload Date{" "}
                         <SortIndicator
@@ -922,10 +994,10 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 text-right">Actions</th>
+                    <th className="p-4 text-right text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+                <tbody className="bg-transparent">
                   {sortedRecords.length === 0 ? (
                     <tr className="border-0 hover:bg-transparent">
                       <td colSpan={7} className="border-0 p-0">
@@ -970,7 +1042,6 @@ export default function DigitalRecordsReviewTab({
                     </tr>
                   ) : (
                     paginatedRecords.map((r) => {
-                      const uploaded = formatPHDateTimeParts(r.created_at)
                       const isSelected = selectedIds.has(r.id)
                       const fortyEightHoursAgo = Date.now() - 48 * 60 * 60 * 1000
                       const isSlaBreached = r.approval_status === "Pending" && new Date(r.created_at).getTime() < fortyEightHoursAgo
@@ -979,13 +1050,13 @@ export default function DigitalRecordsReviewTab({
                         <tr
                           key={r.id}
                           className={cn(
-                            "group transition-all duration-200 hover:bg-gray-50/80 dark:bg-card dark:hover:bg-white/5 select-none cursor-pointer",
-                            isSelected && "bg-amber-50 dark:bg-amber-950/40",
-                            isSlaBreached && !isSelected && "bg-amber-50 dark:bg-amber-950/10"
+                            "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                            isSelected && "bg-amber-50/60 dark:bg-amber-950/20",
+                            isSlaBreached && !isSelected && "bg-amber-50/30 dark:bg-amber-950/5"
                           )}
                           onClick={(e) => toggleSelectRow(r.id, e)}
                         >
-                          <td className="p-4 text-center">
+                          <td className="py-0 px-4 align-middle text-center">
                             <input
                               type="checkbox"
                               className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10"
@@ -993,52 +1064,39 @@ export default function DigitalRecordsReviewTab({
                               onChange={() => {}} // Controlled by tr onClick
                             />
                           </td>
-                          <td className="p-4">
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-brand bg-gray-100 text-xs font-semibold text-gray-500 shadow-xs dark:bg-white/5 dark:text-zinc-500 group-hover:bg-white dark:group-hover:bg-zinc-800 group-hover:text-pup-maroon dark:group-hover:text-primary group-hover:shadow-sm transition-all">
-                                {(r.student_name || "U").substring(0, 2).toUpperCase()}
-                              </div>
-                              <div className="flex flex-col overflow-hidden">
-                                <span className="truncate text-xs font-semibold text-gray-900 dark:text-zinc-50">
-                                  {r.student_name || "Unknown"}
-                                </span>
-                                <span className="truncate text-[10px] font-medium text-gray-500 dark:text-zinc-400 mt-0.5">
-                                  {r.student_no}
-                                </span>
-                              </div>
+                          <td className="py-0 px-4 align-middle">
+                            <div className="flex flex-col overflow-hidden">
+                              <span className="truncate text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                                {toNormalCase(r.student_name)}
+                              </span>
+                              <span className="truncate text-[11px] font-normal text-gray-400 dark:text-zinc-500 mt-[2px]">
+                                {r.student_no}
+                              </span>
                             </div>
                           </td>
-                          <td className="p-4">
-                            <Badge
-                              variant="outline"
-                              className="flex w-fit items-center gap-1.5 rounded-full border border-red-100 bg-red-50 px-2.5 py-1 text-[9px] font-semibold text-pup-maroon tracking-wider dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-400 shadow-none"
-                            >
-                              <i className="ph-bold ph-file-text text-[10px]"></i>
+                          <td className="py-0 px-4 align-middle">
+                            <span className="inline-flex w-fit items-center justify-center rounded-[4px] bg-gray-100 px-[8px] py-[3px] text-[11px] font-medium text-gray-900 dark:bg-zinc-800 dark:text-zinc-100">
                               {r.doc_type}
-                            </Badge>
+                            </span>
                           </td>
-                          <td className="p-4">
+                          <td className="py-0 px-4 align-middle">
                             <span
-                              className="block max-w-[180px] truncate text-xs font-medium text-gray-600 dark:text-zinc-300"
+                              className="block max-w-[180px] truncate text-[13px] font-normal text-gray-400 dark:text-zinc-500"
                               title={r.original_filename}
                             >
                               {r.original_filename}
                             </span>
                           </td>
-                          <td className="p-4">
+                          <td className="py-0 px-4 align-middle">
                             <div className="flex items-center gap-3">
-                              <Badge
-                                variant="outline"
+                              <span
                                 className={cn(
-                                  "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-semibold  tracking-wider shadow-none transition-all",
+                                  "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium uppercase tracking-[0.04em] shadow-none transition-all",
                                   getStatusBadge(r.approval_status)
                                 )}
                               >
-                                <i
-                                  className={`ph-fill ${getStatusIcon(r.approval_status)} text-[10px]`}
-                                ></i>
                                 {r.approval_status || "Pending"}
-                              </Badge>
+                              </span>
                               {isSlaBreached && (
                                 <Tooltip>
                                   <TooltipTrigger asChild>
@@ -1054,28 +1112,26 @@ export default function DigitalRecordsReviewTab({
                               )}
                             </div>
                           </td>
-                          <td className="p-4">
+                          <td className="py-0 px-4 align-middle">
                             <div className="flex flex-col">
-                              <span className="text-xs font-semibold text-gray-900 dark:text-zinc-50">
-                                {uploaded.date}
+                              <span className="text-[13px] font-normal text-gray-900 dark:text-zinc-50">
+                                {formatUploadedDate(r.created_at).dateStr}
                               </span>
-                              <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400">
-                                {uploaded.time}
+                              <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500 mt-[2px]">
+                                {formatUploadedDate(r.created_at).timeStr}
                               </span>
                             </div>
                           </td>
-                          <td className="p-4 text-right">
-                            <div className="flex items-center justify-end gap-2" onClick={(e) => e.stopPropagation()}>
+                          <td className="py-0 px-4 align-middle text-right">
+                            <div className="flex items-center justify-end gap-[12px]" onClick={(e) => e.stopPropagation()}>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Button
-                                    variant="outline"
-                                    size="icon"
+                                  <button
                                     onClick={() => handlePreview(r)}
-                                    className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800 cursor-pointer active:scale-95"
+                                    className="p-0 border-0 bg-transparent text-gray-400 dark:text-zinc-500 transition-colors hover:text-pup-maroon dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                   >
-                                    <i className="ph-bold ph-eye text-lg"></i>
-                                  </Button>
+                                    <i className="ph-bold ph-eye text-[16px]"></i>
+                                  </button>
                                 </TooltipTrigger>
                                 <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
                                   <p className="text-[10px] font-semibold">Document Preview</p>
@@ -1087,67 +1143,61 @@ export default function DigitalRecordsReviewTab({
                                  <>
                                    <Tooltip>
                                      <TooltipTrigger asChild>
-                                       <Button
-                                         variant="outline"
-                                         size="icon"
+                                       <button
                                          onClick={() => handleApprove(r.id)}
-                                         className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-emerald-600 shadow-sm transition-all hover:border-emerald-600 hover:bg-emerald-50 dark:bg-white/5 dark:border-white/10 dark:text-emerald-400 dark:hover:bg-emerald-900/20 cursor-pointer active:scale-95"
+                                         className="p-0 border-0 bg-transparent text-gray-400 dark:text-zinc-500 transition-colors hover:text-green-600 dark:hover:text-green-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                        >
-                                         <i className="ph-bold ph-check text-lg"></i>
-                                       </Button>
+                                         <i className="ph-bold ph-check text-[16px]"></i>
+                                       </button>
                                      </TooltipTrigger>
-                                     <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
+                                                   <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
                                        <p className="text-[10px] font-semibold">Approve Record</p>
                                        <p className="text-[9px] opacity-80">Finalize and verify this submission</p>
                                      </TooltipContent>
                                    </Tooltip>
 
                                    <Tooltip>
+                                   <TooltipTrigger asChild>
+                                     <button
+                                       onClick={() => onDecline(r.id)}
+                                       className="p-0 border-0 bg-transparent text-gray-400 dark:text-zinc-500 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                     >
+                                       <i className="ph-bold ph-x text-[16px]"></i>
+                                     </button>
+                                   </TooltipTrigger>
+                                   <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
+                                     <p className="text-[10px] font-semibold">Decline Record</p>
+                                     <p className="text-[9px] opacity-80">Flag issues and return for correction</p>
+                                   </TooltipContent>
+                                 </Tooltip>
+                               </>
+                             ) : (
+                               // Grace Period Logic: Only allow revert within 10 minutes of review
+                               (() => {
+                                 const reviewedAt = r.reviewed_at ? new Date(r.reviewed_at.replace(" ", "T")).getTime() : 0
+                                 const now = Date.now()
+                                 const isWithinGracePeriod = now - reviewedAt < 10 * 60 * 1000 // 10 minutes
+
+                                 if (!isWithinGracePeriod) return null
+
+                                 return (
+                                   <Tooltip>
                                      <TooltipTrigger asChild>
-                                       <Button
-                                         variant="outline"
-                                         size="icon"
-                                         onClick={() => onDecline(r.id)}
-                                         className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10 cursor-pointer active:scale-95"
+                                       <button
+                                         onClick={() => onSetStatus(r.id, "Pending", "Undo review action")}
+                                         className="p-0 border-0 bg-transparent text-gray-400 dark:text-zinc-500 transition-colors hover:text-pup-maroon dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                        >
-                                         <i className="ph-bold ph-x text-lg"></i>
-                                       </Button>
+                                         <i className="ph-bold ph-arrow-counter-clockwise text-[16px]"></i>
+                                       </button>
                                      </TooltipTrigger>
                                      <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                                       <p className="text-[10px] font-semibold">Decline Record</p>
-                                       <p className="text-[9px] opacity-80">Flag issues and return for correction</p>
+                                       <p className="text-[10px] font-semibold">Revert to Pending</p>
+                                       <p className="text-[9px] opacity-80">Undo the previous review decision</p>
                                      </TooltipContent>
                                    </Tooltip>
-                                 </>
-                               ) : (
-                                 // Grace Period Logic: Only allow revert within 10 minutes of review
-                                 (() => {
-                                   const reviewedAt = r.reviewed_at ? new Date(r.reviewed_at.replace(" ", "T")).getTime() : 0
-                                   const now = Date.now()
-                                   const isWithinGracePeriod = now - reviewedAt < 10 * 60 * 1000 // 10 minutes
-
-                                   if (!isWithinGracePeriod) return null
-
-                                   return (
-                                     <Tooltip>
-                                       <TooltipTrigger asChild>
-                                         <Button
-                                           variant="outline"
-                                           size="icon"
-                                           onClick={() => onSetStatus(r.id, "Pending", "Undo review action")}
-                                           className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-amber-600 shadow-sm transition-all hover:border-amber-600 hover:bg-amber-50 dark:bg-white/5 dark:border-white/10 dark:text-amber-500 dark:hover:bg-amber-900/20 cursor-pointer active:scale-95"
-                                         >
-                                           <i className="ph-bold ph-arrow-counter-clockwise text-lg"></i>
-                                         </Button>
-                                       </TooltipTrigger>
-                                       <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                                         <p className="text-[10px] font-semibold">Revert to Pending</p>
-                                         <p className="text-[9px] opacity-80">Undo the previous review decision</p>
-                                       </TooltipContent>
-                                     </Tooltip>
-                                   )
-                                 })()
-                               )}
+                                 )
+                               })()
+                             )}
                             </div>
                           </td>
                         </tr>
@@ -1161,14 +1211,14 @@ export default function DigitalRecordsReviewTab({
             {sortedRecords.length > 0 && (
               <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card">
                 <div className="flex items-center gap-8">
-                  <div className="flex items-center gap-6 text-[11px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">
+                  <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
                     <span>
-                      Showing <strong className="text-gray-900 dark:text-zinc-50">{paginatedRecords.length}</strong> out of <strong className="text-gray-900 dark:text-zinc-50">{sortedRecords.length}</strong> entries
+                      Showing {paginatedRecords.length} of {sortedRecords.length}
                     </span>
                     <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
-                      <span className="text-[10px] opacity-60">Rows:</span>
-                      <Select
-                        className="h-8 w-16 cursor-pointer rounded-brand border border-gray-200 bg-white px-2 text-[10px] font-semibold text-gray-700 shadow-xs focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10"
+                      <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
+                      <select
+                        className="h-8 w-16 cursor-pointer rounded-[6px] border border-gray-200 bg-white px-2 text-[12px] font-normal text-gray-700 focus:outline-none transition-all hover:bg-gray-50 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10"
                         value={itemsPerPage}
                         onChange={(e) => {
                           setItemsPerPage(Number(e.target.value))
@@ -1179,33 +1229,31 @@ export default function DigitalRecordsReviewTab({
                         <option value={20}>20</option>
                         <option value={50}>50</option>
                         <option value={100}>100</option>
-                      </Select>
+                      </select>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex shrink-0 items-center gap-3">
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <button
                     disabled={displayPage <= 1}
                     onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    className="h-10 rounded-brand border-gray-200 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-500 shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
+                    className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
                   >
-                    <i className="ph-bold ph-caret-left mr-2 text-base"></i>Prev</Button>
+                    Prev
+                  </button>
 
-                  <div className="flex h-9 min-w-[48px] items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-semibold text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                  <div className="flex h-8 min-w-[32px] items-center justify-center rounded-[6px] border border-gray-200/80 bg-white px-2.5 text-[12px] font-medium text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
                     {displayPage}
                   </div>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <button
                     disabled={displayPage >= totalPages}
                     onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                    className="h-10 rounded-brand border-gray-200 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-500 shadow-sm transition-all hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-20 dark:border-white/10 dark:bg-card dark:text-zinc-400 dark:shadow-none"
-                  >Next<i className="ph-bold ph-caret-right mr-2 text-base"></i>
-                  </Button>
+                    className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
+                  >
+                    Next
+                  </button>
                 </div>
               </div>
             )}
@@ -1231,27 +1279,25 @@ export default function DigitalRecordsReviewTab({
                       variant="ghost"
                       size="sm"
                       onClick={() => setSelectedIds(new Set())}
-                      className="h-9 rounded-full px-4 text-xs font-semibold text-gray-500 hover:bg-gray-100 active:scale-95 dark:text-zinc-400 dark:bg-muted dark:hover:bg-white/10"
+                      className="h-9 rounded-[8px] px-4 text-[13px] font-medium tracking-[-0.01em] text-gray-500 hover:bg-gray-50 dark:text-zinc-400 dark:hover:bg-white/5"
                     >
-                      DESELECT ALL
+                      Deselect All
                     </Button>
-                    <div className="h-4 w-[1px] bg-gray-200 dark:bg-white/10 mx-1" />
                     <Button
                       size="sm"
                       onClick={handleBulkApprove}
-                      className="h-9 rounded-full bg-green-600 px-4 text-xs font-semibold text-white shadow-sm hover:bg-green-700 active:scale-95 dark:shadow-none"
+                      className="h-9 btn-brand-green !rounded-[8px] px-4 text-[13px] font-medium tracking-[-0.01em] active:scale-95 transition-all shadow-none text-white hover:text-white"
                     >
                       <i className="ph-bold ph-check mr-2"></i>
-                      APPROVE
+                      Approve
                     </Button>
                     <Button
                       size="sm"
-                      variant="destructive"
                       onClick={handleBulkDecline}
-                      className="h-9 rounded-full bg-linear-to-b from-red-600 to-red-800 border-4 border-red-900 hover:from-red-500 hover:to-red-700 hover:shadow-md transition-all px-4 text-xs font-semibold text-white shadow-sm active:scale-95 dark:shadow-none"
+                      className="h-9 btn-brand-red !rounded-[8px] px-4 text-[13px] font-medium tracking-[-0.01em] active:scale-95 transition-all shadow-none text-white hover:text-white"
                     >
                       <i className="ph-bold ph-x mr-2"></i>
-                      DECLINE
+                      Decline
                     </Button>
                   </div>
                 }
@@ -1265,7 +1311,7 @@ export default function DigitalRecordsReviewTab({
               onCancel={() => setSelectedIds(new Set())}
               customContent={
                 <div className="flex items-center gap-3">
-                  <span className="text-xs font-medium text-amber-700 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-200 dark:bg-amber-950/30 dark:text-amber-500/90 dark:border-amber-900/50">
+                  <span className="text-[12px] font-medium text-amber-700 bg-amber-50 px-3 py-1.5 rounded-[8px] border border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50">
                     <i className="ph-fill ph-warning-circle mr-1.5"></i>
                     Contains reviewed records. Bulk actions disabled.
                   </span>
@@ -1273,9 +1319,9 @@ export default function DigitalRecordsReviewTab({
                     variant="ghost"
                     size="sm"
                     onClick={() => setSelectedIds(new Set())}
-                    className="h-9 rounded-full px-4 text-xs font-semibold text-gray-500 hover:bg-gray-100 active:scale-95 dark:text-zinc-400 dark:bg-muted dark:hover:bg-white/10"
+                    className="h-9 rounded-[8px] px-4 text-[13px] font-medium tracking-[-0.01em] text-gray-500 hover:bg-gray-50 dark:text-zinc-400 dark:hover:bg-white/5"
                   >
-                    DESELECT ALL
+                    Deselect All
                   </Button>
                 </div>
               }

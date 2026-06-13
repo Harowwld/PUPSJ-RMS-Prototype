@@ -965,78 +965,77 @@ export default function SystemConfigTab({
   return (
     <TooltipProvider delayDuration={200}>
       <div className="animate-fade-up font-inter flex w-full flex-1 flex-col gap-6 min-h-0">
-        <Tabs
-          defaultValue="document-types"
-          value={activeSubTab}
-          onValueChange={setActiveSubTab}
-          orientation="horizontal"
-          className="flex min-h-0 flex-1 flex-col"
-        >
-          <div className="flex shrink-0 flex-col items-center gap-4 sm:flex-row select-none">
-            <div className="flex cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 backdrop-blur-sm sm:w-auto dark:border-white/10 dark:bg-muted/50">
-              <button
-                type="button"
-                onClick={() => setActiveSubTab("document-types")}
-                className={`group flex h-11 min-w-[180px] cursor-pointer items-center justify-center gap-3 px-6 text-sm font-semibold transition-all duration-200 active:scale-[0.98] ${
-                  activeSubTab === "document-types"
-                    ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
-                    : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
-                }`}
-              >
-                <span className="whitespace-nowrap tracking-wide">Document Types</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveSubTab("degree-programs")}
-                className={`group flex h-11 min-w-[180px] cursor-pointer items-center justify-center gap-3 rounded-none px-6 text-sm font-semibold transition-all duration-200 active:scale-[0.98] ${
-                  activeSubTab === "degree-programs"
-                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
-                    : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
-                }`}
-              >
-                <span className="whitespace-nowrap tracking-wide">Degree Programs</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveSubTab("course-blocks")}
-                className={`group flex h-11 min-w-[180px] cursor-pointer items-center justify-center gap-3 rounded-none px-6 text-sm font-semibold transition-all duration-200 active:scale-[0.98] ${
-                  activeSubTab === "course-blocks"
-                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
-                    : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
-                }`}
-              >
-                <span className="whitespace-nowrap tracking-wide">Course Blocks</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveSubTab("security-questions")}
-                className={`group flex h-11 min-w-[180px] cursor-pointer items-center justify-center gap-3 rounded-none px-6 text-sm font-semibold transition-all duration-200 active:scale-[0.98] ${
-                  activeSubTab === "security-questions"
-                    ? "bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
-                    : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
-                }`}
-              >
-                <span className="whitespace-nowrap tracking-wide">Security Questions</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveSubTab("bulk-import")}
-                className={`group flex h-11 min-w-[180px] cursor-pointer items-center justify-center gap-3 px-6 text-sm font-semibold transition-all duration-200 active:scale-[0.98] ${
-                  activeSubTab === "bulk-import"
-                    ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
-                    : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
-                }`}
-              >
-                <span className="whitespace-nowrap tracking-wide">Imports</span>
-              </button>
+        <Card className="p-0 gap-0 overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full flex flex-col min-h-0">
+          <Tabs
+            defaultValue="document-types"
+            value={activeSubTab}
+            onValueChange={setActiveSubTab}
+          >
+            <div className="w-full select-none px-[28px] pt-[20px]">
+              <div className="flex items-center gap-[24px]">
+                <button
+                  type="button"
+                  onClick={() => setActiveSubTab("document-types")}
+                  className={`flex items-center justify-center text-[13px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
+                    activeSubTab === "document-types"
+                      ? "border-pup-maroon text-pup-maroon dark:border-primary dark:text-primary font-semibold"
+                      : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
+                  }`}
+                >
+                  <span className="whitespace-nowrap tracking-wide">Document Types</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveSubTab("degree-programs")}
+                  className={`flex items-center justify-center text-[13px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
+                    activeSubTab === "degree-programs"
+                      ? "border-pup-maroon text-pup-maroon dark:border-primary dark:text-primary font-semibold"
+                      : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
+                  }`}
+                >
+                  <span className="whitespace-nowrap tracking-wide">Degree Programs</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveSubTab("course-blocks")}
+                  className={`flex items-center justify-center text-[13px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
+                    activeSubTab === "course-blocks"
+                      ? "border-pup-maroon text-pup-maroon dark:border-primary dark:text-primary font-semibold"
+                      : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
+                  }`}
+                >
+                  <span className="whitespace-nowrap tracking-wide">Course Blocks</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveSubTab("security-questions")}
+                  className={`flex items-center justify-center text-[13px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
+                    activeSubTab === "security-questions"
+                      ? "border-pup-maroon text-pup-maroon dark:border-primary dark:text-primary font-semibold"
+                      : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
+                  }`}
+                >
+                  <span className="whitespace-nowrap tracking-wide">Security Questions</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveSubTab("bulk-import")}
+                  className={`flex items-center justify-center text-[13px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
+                    activeSubTab === "bulk-import"
+                      ? "border-pup-maroon text-pup-maroon dark:border-primary dark:text-primary font-semibold"
+                      : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
+                  }`}
+                >
+                  <span className="whitespace-nowrap tracking-wide">Imports</span>
+                </button>
+              </div>
             </div>
-          </div>
 
-          <div className="relative mt-4 flex flex-1 flex-col p-0 w-full gap-6 min-h-0">
-            <TabsContent
-              value="document-types"
-              className="m-0 flex flex-col border-0 focus-visible:ring-0"
-            >
+            <div className="relative flex flex-1 flex-col p-0 w-full min-h-0">
+              <TabsContent
+                value="document-types"
+                className="m-0 flex flex-col border-0 focus-visible:ring-0"
+              >
               <DocTypesTab
                 loading={loading}
                 docTypes={docTypes}
@@ -1169,8 +1168,9 @@ export default function SystemConfigTab({
             </TabsContent>
           </div>
         </Tabs>
+      </Card>
 
-        {/* MODALS */}
+      {/* MODALS */}
 
         <ConfirmModal
           open={confirmOpen}
