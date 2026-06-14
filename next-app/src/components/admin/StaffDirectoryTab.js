@@ -164,69 +164,37 @@ const StaffTableRow = React.memo(({
           onClick={(e) => e.stopPropagation()}
         >
           {isCurrentUser ? (
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <button
-                  onClick={() => router.push("/account")}
-                  className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                >
-                  <i className="ph-bold ph-gear-six text-[16px]"></i>
-                </button>
-              </TooltipTrigger>
-              <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                <p className="text-[10px] font-semibold">My Account</p>
-                <p className="text-[9px] opacity-80">View profile and security settings</p>
-              </TooltipContent>
-            </Tooltip>
+            <button
+              onClick={() => router.push("/account")}
+              className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+            >
+              <i className="ph-bold ph-gear-six text-[16px]"></i>
+            </button>
           ) : (
             <div className="flex items-center gap-[12px]">
               {activeTab === "active" && (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => onEditUser(s.id)}
-                      className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                    >
-                      <i className="ph-bold ph-pencil-simple text-[16px]"></i>
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                    <p className="text-[10px] font-semibold">Edit Personnel</p>
-                    <p className="text-[9px] opacity-80">Modify account details and system role</p>
-                  </TooltipContent>
-                </Tooltip>
+                <button
+                  onClick={() => onEditUser(s.id)}
+                  className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                >
+                  <i className="ph-bold ph-pencil-simple text-[16px]"></i>
+                </button>
               )}
 
               {activeTab === "archived" ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => onRestoreUser(s.id)}
-                      className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                    >
-                      <i className="ph-bold ph-arrow-counter-clockwise text-[16px]"></i>
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                    <p className="text-[10px] font-semibold">Restore Account</p>
-                    <p className="text-[9px] opacity-80">Reactivate access for this staff member</p>
-                  </TooltipContent>
-                </Tooltip>
+                <button
+                  onClick={() => onRestoreUser(s.id)}
+                  className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                >
+                  <i className="ph-bold ph-arrow-counter-clockwise text-[16px]"></i>
+                </button>
               ) : (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      onClick={() => onDeleteUser(s.id)}
-                      className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                    >
-                      <i className="ph-bold ph-archive text-[16px]"></i>
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                    <p className="text-[10px] font-semibold">Archive Profile</p>
-                    <p className="text-[9px] opacity-80">Deactivate and hide from active directory</p>
-                  </TooltipContent>
-                </Tooltip>
+                <button
+                  onClick={() => onDeleteUser(s.id)}
+                  className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                >
+                  <i className="ph-bold ph-archive text-[16px]"></i>
+                </button>
               )}
             </div>
           )}
