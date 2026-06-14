@@ -163,7 +163,7 @@ const StaffTableRow = React.memo(({
       </td>
       <td className="py-0 px-4 align-middle text-right">
         <div
-          className="flex items-center justify-end gap-[12px]"
+          className="flex items-center justify-end gap-1.5"
           onClick={(e) => e.stopPropagation()}
         >
           {isCurrentUser ? (
@@ -174,7 +174,7 @@ const StaffTableRow = React.memo(({
               <i className="ph-bold ph-gear-six text-[16px]"></i>
             </button>
           ) : (
-            <div className="flex items-center gap-[12px]">
+            <div className="flex items-center gap-1.5">
               {activeTab === "active" && (
                 <button
                   onClick={() => onEditUser(s.id)}
@@ -656,7 +656,7 @@ export default function StaffDirectoryTab({
             <div className="w-full overflow-visible rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
-                  <tr className="text-left text-[11px] font-medium uppercase tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                  <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                     <th className="w-16 p-4 text-center">
                       <input
                         type="checkbox"
@@ -682,7 +682,7 @@ export default function StaffDirectoryTab({
                       <button
                         onClick={() => handleSort("fname")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-medium uppercase tracking-[0.04em]",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
                           sortBy === "fname" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
                         )}
                       >
@@ -698,7 +698,7 @@ export default function StaffDirectoryTab({
                       <button
                         onClick={() => handleSort("id")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-medium uppercase tracking-[0.04em]",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
                           sortBy === "id" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
                         )}
                       >
@@ -714,7 +714,7 @@ export default function StaffDirectoryTab({
                       <button
                         onClick={() => handleSort("role")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-medium uppercase tracking-[0.04em]",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
                           sortBy === "role" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
                         )}
                       >
@@ -730,7 +730,7 @@ export default function StaffDirectoryTab({
                       <button
                         onClick={() => handleSort("totp_enabled")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-medium uppercase tracking-[0.04em]",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
                           sortBy === "totp_enabled" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
                         )}
                       >
@@ -746,7 +746,7 @@ export default function StaffDirectoryTab({
                       <button
                         onClick={() => handleSort("last_active")}
                         className={cn(
-                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-medium uppercase tracking-[0.04em]",
+                          "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
                           sortBy === "last_active" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
                         )}
                       >
@@ -758,8 +758,8 @@ export default function StaffDirectoryTab({
                         />
                       </button>
                     </th>
-                    <th className="w-32 p-4 text-right text-[11px] font-medium uppercase tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                      Actions
+                    <th className="w-32 p-4 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                      Action
                     </th>
                   </tr>
                 </thead>
