@@ -371,7 +371,7 @@ th {
 /* Dialog & Popup Animations */
 @layer utilities {
   [data-slot='dialog-overlay'] {
-    @apply backdrop-blur-sm bg-black/40;
+    @apply bg-black/40;
     transition: opacity 0.3s ease;
   }
 
