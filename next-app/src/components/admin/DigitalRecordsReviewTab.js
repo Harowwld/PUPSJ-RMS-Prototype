@@ -1105,7 +1105,8 @@ export default function DigitalRecordsReviewTab({
                                 )}
                               >
                                 {r.approval_status || "Pending"}
-                                             {isSlaBreached && (
+                              </span>
+                              {isSlaBreached && (
                                 <div className="flex h-5 w-5 animate-pulse items-center justify-center rounded-full bg-red-100 text-red-600 shadow-sm dark:shadow-none">
                                   <i className="ph-bold ph-warning-diamond text-[10px]"></i>
                                 </div>
