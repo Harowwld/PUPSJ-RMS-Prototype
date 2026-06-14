@@ -233,119 +233,127 @@ export default function AuditLogsTab({
         <StatCards isLoading={isLoading && !isManualLoading} logStats={logStats} />
 
         {/* Main Table Card */}
-        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-visible rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-xl border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
           <PageHeader
             icon="ph-shield-check"
             title="Audit Logs"
             description="Trace system activities, security events, and administrative actions with precision."
             showBorder={false}
+            titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
             actions={
               <div className="flex items-center gap-6">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={handlePreviewPDF}
-                    disabled={logTotal === 0 || isExporting}
-                    className="flex h-11 px-5 items-center justify-center gap-2 btn-brand-red text-[11px] font-semibold text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
-                  >
-                    <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-pdf"} text-base`}></i>
-                    {isExporting ? "Generating..." : "Generate Report"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDownloadCSV}
-                    disabled={logTotal === 0 || isExporting}
-                    className="flex h-9 px-4 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-transparent text-[10px] font-semibold text-gray-600 transition-colors hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
-                  >
-                    <i className={`ph-bold ${isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv"} text-sm`}></i>
-                    {isExporting ? "Preparing..." : "Export"}
-                  </Button>
-                </div>
-
-                <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
-
                 <RefreshButton 
                   onRefresh={onRefresh} 
                   isLoading={isManualLoading} 
                   title="Refresh Audit Logs"
                 />
+
+                <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleDownloadCSV}
+                    disabled={logTotal === 0 || isExporting}
+                    className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none! border-0!"
+                  >
+                    {isExporting ? "Preparing..." : "Export"}
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    onClick={handlePreviewPDF}
+                    disabled={logTotal === 0 || isExporting}
+                    className="flex h-[36px] px-5 items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
+                  >
+                    {isExporting ? "Generating..." : "Generate Report"}
+                  </Button>
+                </div>
               </div>
             }
           />
 
           {/* Active Filter Chips Row */}
-          {hasActiveFilters && (
-            <div className={cn(
-              "flex-none border-b border-gray-100 bg-white px-4 py-3 transition-all duration-500 animate-in fade-in slide-in-from-top-1 dark:border-white/10 dark:bg-card",
-              (isLoading && !isManualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-            )}>
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">Active filters:</span>
-                {localSearch && (
-                  <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-semibold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
-                    Search: {localSearch}
-                    <button
-                      onClick={() => { setLocalSearch(""); setLogSearch(""); setLogPage(1); }}
-                      className="ml-1 hover:text-pup-darkMaroon transition-colors"
-                    >
-                      <i className="ph-bold ph-x text-[8px]"></i>
-                    </button>
-                  </div>
-                )}
-                {logRoleFilter !== "All" && (
-                  <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
-                    Role: {logRoleFilter}
-                    <button
-                      onClick={() => { setLogRoleFilter("All"); setLogPage(1); }}
-                      className="ml-1 hover:text-blue-800 transition-colors"
-                    >
-                      <i className="ph-bold ph-x text-[8px]"></i>
-                    </button>
-                  </div>
-                )}
-                {logSeverityFilter !== "All" && (
-                  <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
-                    Severity: {logSeverityFilter}
-                    <button
-                      onClick={() => { setLogSeverityFilter("All"); setLogPage(1); }}
-                      className="ml-1 hover:text-amber-800 transition-colors"
-                    >
-                      <i className="ph-bold ph-x text-[8px]"></i>
-                    </button>
-                  </div>
-                )}
-                {(logStartDate || logEndDate) && (
-                  <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
-                    Range: {logStartDate || "..."} to {logEndDate || "..."}
-                    <button
-                      onClick={() => { setLogStartDate(""); setLogEndDate(""); setLogPage(1); }}
-                      className="ml-1 hover:text-emerald-800 transition-colors"
-                    >
-                      <i className="ph-bold ph-x text-[8px]"></i>
-                    </button>
-                  </div>
-                )}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setLocalSearch("")
-                    setLogSearch("")
-                    setLogRoleFilter("All")
-                    setLogSeverityFilter("All")
-                    setLogStartDate("")
-                    setLogEndDate("")
-                    setLogPage(1)
-                  }}
-                  className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-semibold text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
-                >
-                  CLEAR ALL FILTERS
-                </Button>
+          {hasActiveFilters && (() => {
+            const formatChipDate = (dateStr) => {
+              if (!dateStr) return "..."
+              try {
+                return format(new Date(dateStr), "MMM d, yyyy")
+              } catch (e) {
+                return dateStr
+              }
+            }
+            return (
+              <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
+                  {localSearch && (
+                    <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                      Search: {localSearch}
+                      <button
+                        onClick={() => { setLocalSearch(""); setLogSearch(""); setLogPage(1); }}
+                        className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                  {logRoleFilter !== "All" && (
+                    <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                      Role: {logRoleFilter}
+                      <button
+                        onClick={() => { setLogRoleFilter("All"); setLogPage(1); }}
+                        className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                  {logSeverityFilter !== "All" && (
+                    <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                      Severity: {logSeverityFilter}
+                      <button
+                        onClick={() => { setLogSeverityFilter("All"); setLogPage(1); }}
+                        className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                  {(logStartDate || logEndDate) && (
+                    <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                      {formatChipDate(logStartDate)} – {formatChipDate(logEndDate)}
+                      <button
+                        onClick={() => { setLogStartDate(""); setLogEndDate(""); setLogPage(1); }}
+                        className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setLocalSearch("")
+                      setLogSearch("")
+                      setLogRoleFilter("All")
+                      setLogSeverityFilter("All")
+                      setLogStartDate("")
+                      setLogEndDate("")
+                      setLogPage(1)
+                    }}
+                    className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
+                  >
+                    Clear
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
+            )
+          })()}
 
           <LogFilters
             localSearch={localSearch}

@@ -1,92 +1,104 @@
 "use client"
 
-import { Button } from "@/components/ui/button"
-
 export default function LogExpandedRow({ log, handleCopy }) {
+  const formattedDescription = (() => {
+    const text = log.details || "No known description";
+    const parts = text.split(/'([^']+)'/g);
+    if (parts.length === 1) return text;
+    return parts.map((part, i) => {
+      if (i % 2 === 1) {
+        return <span key={i} className="font-medium text-[#111111] dark:text-zinc-50">{part}</span>;
+      }
+      return part;
+    });
+  })();
+
   return (
-    <div className="animate-in fade-in slide-in-from-top-1 border-t border-gray-100 p-8 duration-500 dark:border-white/10">
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-        {/* Rich Description */}
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-pup-maroon/10 text-pup-maroon dark:text-primary shadow-sm ring-1 ring-pup-maroon/20 dark:bg-red-500/10 dark:ring-red-500/20 dark:shadow-none">
-              <i className="ph-duotone ph-newspaper-clipping text-lg"></i>
-            </div>
-            <h5 className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-300">
-              Rich Description
+    <div 
+      className="animate-in fade-in slide-in-from-top-1 duration-500 bg-[#FAFAFA] dark:bg-[#121214]"
+      style={{ borderTop: '0.5px solid rgba(0,0,0,0.06)', padding: '20px 28px' }}
+    >
+      <div className="grid grid-cols-1 gap-[20px] md:grid-cols-3">
+        {/* Details Section */}
+        <div className="flex flex-col">
+          <div className="flex items-center gap-[6px] mb-[12px]">
+            <i className="ti ti-file-text text-[14px]" style={{ fontSize: '14px', color: '#8E8E93' }}></i>
+            <h5 className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#8E8E93]">
+              Details
             </h5>
           </div>
-          <div className="h-full rounded-2xl border border-gray-200 bg-white p-5 shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-card dark:shadow-none">
-            <p className="text-xs font-semibold text-gray-700 dark:text-zinc-200">
-              {log.details || "No known description"}
+          <div 
+            className="bg-white dark:bg-card p-[16px] rounded-[8px] h-full"
+            style={{ border: '0.5px solid rgba(0,0,0,0.08)' }}
+          >
+            <p className="text-[13px] font-normal text-[#111111] dark:text-zinc-50 leading-[1.5]">
+              {formattedDescription}
             </p>
           </div>
         </div>
 
-        {/* Network & Device */}
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-blue-50 text-blue-600 shadow-sm ring-1 ring-blue-100 dark:bg-blue-500/10 dark:text-blue-400 dark:ring-blue-500/20 dark:shadow-none">
-              <i className="ph-duotone ph-broadcast text-lg"></i>
-            </div>
-            <h5 className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-300">
-              Network & Device
+        {/* Network Section */}
+        <div className="flex flex-col">
+          <div className="flex items-center gap-[6px] mb-[12px]">
+            <i className="ti ti-wifi text-[14px]" style={{ fontSize: '14px', color: '#8E8E93' }}></i>
+            <h5 className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#8E8E93]">
+              Network
             </h5>
           </div>
-          <div className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-card dark:shadow-none">
+          <div 
+            className="space-y-[16px] bg-white dark:bg-card p-[16px] rounded-[8px]"
+            style={{ border: '0.5px solid rgba(0,0,0,0.08)' }}
+          >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-300">IP ADDRESS:</span>
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-lg dark:text-blue-400 dark:bg-blue-900/30">{log.ip}</span>
-                <Button 
-                  variant="ghost"
-                  size="icon"
+              <span className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">IP Address</span>
+              <div className="flex items-center gap-[6px]">
+                <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-50">{log.ip || "::1"}</span>
+                <button 
                   onClick={() => handleCopy(log.ip, "IP Address")}
-                  className="h-8 w-8 rounded-xl border border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:bg-card dark:hover:border-zinc-800 dark:border-white/10 dark:hover:bg-white/5 dark:text-zinc-500"
+                  className="p-0 border-0 bg-transparent text-[#C7C7CC] hover:text-[#111111] dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
                 >
-                  <i className="ph-bold ph-copy text-xs"></i>
-                </Button>
+                  <i className="ti ti-copy text-[14px]" style={{ fontSize: '14px' }}></i>
+                </button>
               </div>
             </div>
-            <div className="flex flex-col gap-2 border-t border-gray-50 pt-4 dark:border-white/10">
-              <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-300">USER AGENT:</span>
-              <span className="text-[10px] font-semibold text-gray-500 italic bg-gray-50 p-3 rounded-xl border border-gray-100 dark:text-zinc-400 dark:bg-zinc-800/50 dark:border-white/5">
-                {log.userAgent}
+            <div className="flex flex-col gap-1.5 border-t border-black/5 pt-[16px] dark:border-white/5">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">Browser</span>
+              <span className="text-[12px] font-normal text-[#8E8E93] leading-[1.5]">
+                {log.userAgent || log.user_agent}
               </span>
             </div>
           </div>
         </div>
 
-        {/* Entity Context */}
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2.5">
-            <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 shadow-sm ring-1 ring-emerald-100 dark:bg-emerald-500/10 dark:text-emerald-400 dark:ring-emerald-500/20 dark:shadow-none">
-              <i className="ph-duotone ph-cube text-lg"></i>
-            </div>
-            <h5 className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-300">
-              Entity Context
+        {/* Reference Section */}
+        <div className="flex flex-col">
+          <div className="flex items-center gap-[6px] mb-[12px]">
+            <i className="ti ti-box text-[14px]" style={{ fontSize: '14px', color: '#8E8E93' }}></i>
+            <h5 className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#8E8E93]">
+              Reference
             </h5>
           </div>
-          <div className="space-y-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm ring-1 ring-black/5 dark:border-white/10 dark:bg-card dark:shadow-none">
+          <div 
+            className="space-y-[16px] bg-white dark:bg-card p-[16px] rounded-[8px]"
+            style={{ border: '0.5px solid rgba(0,0,0,0.08)' }}
+          >
             <div className="flex items-center justify-between">
-              <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-300">TARGET TYPE:</span>
-              <span className="rounded-xl bg-emerald-50 border border-emerald-100/30 px-3 py-1 text-[10px] font-semibold text-emerald-700 shadow-xs dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-500/10">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">Target</span>
+              <span className="rounded-[4px] bg-[#E0F2FE] px-[8px] py-[3px] text-[11px] font-medium text-[#0369A1] dark:bg-blue-950/40 dark:text-blue-400">
                 {log.entityType || "N/A"}
               </span>
             </div>
-            <div className="flex items-center justify-between border-t border-gray-50 pt-4 dark:border-white/10">
-              <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-300">REFERENCE ID:</span>
-              <div className="flex items-center gap-3">
-                <span className="font-mono text-xs font-semibold text-emerald-600 dark:text-emerald-400">{log.entityId || "N/A"}</span>
+            <div className="flex items-center justify-between border-t border-black/5 pt-[16px] dark:border-white/5">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">ID</span>
+              <div className="flex items-center gap-[6px]">
+                <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">{log.entityId || "N/A"}</span>
                 {log.entityId && (
-                  <Button 
-                    variant="ghost"
-                    size="icon"
+                  <button 
                     onClick={() => handleCopy(log.entityId, "Reference ID")}
-                    className="h-8 w-8 rounded-xl border border-gray-100 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:bg-card dark:hover:border-zinc-800 dark:border-white/10 dark:hover:bg-white/5 dark:text-zinc-500"
+                    className="p-0 border-0 bg-transparent text-[#C7C7CC] hover:text-[#111111] dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
                   >
-                    <i className="ph-bold ph-copy text-xs"></i>
-                  </Button>
+                    <i className="ti ti-copy text-[14px]" style={{ fontSize: '14px' }}></i>
+                  </button>
                 )}
               </div>
             </div>

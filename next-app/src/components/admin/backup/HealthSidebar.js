@@ -99,7 +99,7 @@ export default function HealthSidebar({
           {/* Main Gauge: Storage */}
           <div className="flex flex-col items-center py-2 bg-transparent border-0 shadow-none">
             <div
-              className="relative mx-auto flex aspect-[2/1] w-full max-w-[120px] items-end justify-center overflow-hidden transition-all duration-500"
+              className="relative mx-auto flex aspect-[2/1] w-full max-w-[160px] items-end justify-center overflow-hidden transition-all duration-500"
             >
               <svg
                 className="absolute inset-0 h-full w-full"
@@ -128,9 +128,9 @@ export default function HealthSidebar({
                   }
                 />
               </svg>
-              <div className="z-10 pb-1 text-center">
+              <div className="z-10 pb-1.5 text-center">
                 <span
-                  className="text-[20px] font-semibold transition-colors duration-300"
+                  className="text-[26px] font-semibold transition-colors duration-300"
                   style={{ color: currentGaugeColor }}
                 >
                   {diskPercent}%

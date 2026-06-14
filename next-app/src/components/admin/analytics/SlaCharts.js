@@ -81,7 +81,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
       {/* Document Demand Chart */}
       <div className="rounded-[12px] border-[0.5px] border-black/10 bg-white p-[28px] shadow-[0_1px_3px_rgba(0,0,0,0.06)] lg:col-span-2 dark:border-white/10 dark:bg-card flex flex-col">
         <h3 className="mb-4 text-[18px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50 m-0">
-          Document Demand (By Type)
+          Document Demand
         </h3>
         <div className="flex-1 min-h-[288px] w-full flex flex-col justify-center">
           {data?.topDocTypes?.length > 0 ? (
@@ -93,8 +93,8 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                 <CartesianGrid
                   strokeDasharray="3 3"
                   vertical={false}
-                  stroke={isDark ? "rgba(255,255,255,0.05)" : "#F2F2F7"}
-                  strokeWidth={0.5}
+                  stroke={isDark ? "rgba(255, 255, 255, 0.15)" : "#E5E5EA"}
+                  strokeWidth={1}
                 />
                 <XAxis
                   dataKey="name"
@@ -111,14 +111,15 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                 />
                 <ChartTooltip 
                   content={<CustomBarTooltip />} 
-                  cursor={{ fill: isDark ? "rgba(255,255,255,0.05)" : "#f9fafb" }} 
+                  cursor={false} 
                 />
                 <Bar
                   dataKey="count"
                   name="Requests"
                   fill="#E5484D"
                   radius={[4, 4, 0, 0]}
-                  barSize={40}
+                  barSize={72}
+                  activeBar={{ fill: isDark ? "#FF6267" : "#C92A30" }}
                 />
               </BarChart>
             </ResponsiveContainer>

@@ -559,10 +559,7 @@ export default function DigitalRecordsReviewTab({
             ))}
           </div>
         ) : !error ? (
-          <div className={cn(
-            "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 transition-all duration-500",
-            (isLoading && !isManualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-          )}>
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {/* Stat Card 1: Pending Review */}
             <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa] p-5 transition-all duration-300 hover:-translate-y-0.5">
                 <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
@@ -932,10 +929,7 @@ export default function DigitalRecordsReviewTab({
           </Empty>
         </div>
       ) : records ? (
-        <div className={cn(
-          "flex flex-1 flex-col min-h-0 gap-6 transition-all duration-500",
-          (isLoading && !isManualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-        )}>
+        <div className="flex flex-1 flex-col min-h-0 gap-6">
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
             <div className="flex-1 overflow-visible rounded-[inherit]">
               <table className="min-w-full text-sm">

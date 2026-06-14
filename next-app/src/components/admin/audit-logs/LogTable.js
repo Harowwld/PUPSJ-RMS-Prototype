@@ -12,12 +12,6 @@ import {
   EmptyMedia,
 } from "@/components/ui/empty"
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
@@ -26,66 +20,36 @@ import { formatPHDateTimeParts } from "@/lib/timeFormat"
 import { cn } from "@/lib/utils"
 
 import LogExpandedRow from "./LogExpandedRow"
-import LogPagination from "./LogPagination"
 
 function SortIndicator({ column, logSortBy, logSortOrder }) {
-  if (logSortBy !== column)
-    return <i className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60"></i>
+  if (logSortBy !== column) {
+    return <i className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+  }
   return logSortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
+    <i className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></i>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
+    <i className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></i>
   )
 }
 
-function getActionIcon(action) {
-  const act = String(action || "").toLowerCase()
-  if (act.includes("report") || act.includes("generate")) return "ph-duotone ph-file-pdf"
-  if (act.includes("login")) return "ph-duotone ph-sign-in"
-  if (act.includes("logout")) return "ph-duotone ph-sign-out"
-  if (act.includes("create") || act.includes("add")) return "ph-duotone ph-plus-circle"
-  if (act.includes("delete") || act.includes("remove")) return "ph-duotone ph-trash"
-  if (act.includes("restore")) return "ph-duotone ph-arrow-counter-clockwise"
-  if (act.includes("update") || act.includes("edit")) return "ph-duotone ph-pencil-line"
-  if (act.includes("upload") || act.includes("ingest")) return "ph-duotone ph-cloud-arrow-up"
-  if (act.includes("download") || act.includes("export")) return "ph-duotone ph-download-simple"
-  if (act.includes("view") || act.includes("preview")) return "ph-duotone ph-eye"
-  if (act.includes("approve")) return "ph-duotone ph-check-circle"
-  if (act.includes("reject")) return "ph-duotone ph-x-circle"
-  if (act.includes("archive")) return "ph-duotone ph-archive"
-  if (act.includes("rotate") || act.includes("password")) return "ph-duotone ph-key"
-  if (act.includes("backup")) return "ph-duotone ph-database"
-  if (act.includes("security") || act.includes("auth")) return "ph-duotone ph-shield-check"
-  return "ph-duotone ph-activity"
-}
-
-function getSeverityConfig(sev) {
-  switch (String(sev || "").toUpperCase()) {
-    case "CRITICAL":
-      return {
-        bg: "bg-red-500/10",
-        text: "text-red-600 dark:text-red-400",
-        border: "border-red-500/20 dark:border-red-400/20",
-        dot: "bg-red-500",
-        icon: "ph-fill ph-warning-circle"
-      }
-    case "WARNING":
-      return {
-        bg: "bg-amber-500/10",
-        text: "text-amber-600 dark:text-amber-400",
-        border: "border-amber-500/20 dark:border-amber-400/20",
-        dot: "bg-amber-500",
-        icon: "ph-fill ph-warning"
-      }
-    default:
-      return {
-        bg: "bg-blue-500/10",
-        text: "text-blue-600 dark:text-blue-400",
-        border: "border-blue-500/20 dark:border-blue-400/20",
-        dot: "bg-blue-500",
-        icon: "ph-fill ph-info"
-      }
+function getSeverityInfo(sev) {
+  const s = String(sev || "").toUpperCase();
+  if (s === "CRITICAL") {
+    return {
+      label: "Critical",
+      classes: "bg-[#FEE2E2] text-[#991B1B] dark:bg-red-950/40 dark:text-red-400"
+    };
   }
+  if (s === "WARNING") {
+    return {
+      label: "Warning",
+      classes: "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400"
+    };
+  }
+  return {
+    label: "Info",
+    classes: "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400"
+  };
 }
 
 const LogRow = React.memo(function LogRow({
@@ -97,81 +61,78 @@ const LogRow = React.memo(function LogRow({
   handleCopy,
   cn
 }) {
-  const sevConfig = getSeverityConfig(log.severity)
-  const uploaded = formatPHDateTimeParts(log.created_at || log.time)
+  const severityInfo = getSeverityInfo(log.severity)
+  
+  const formattedTimestamp = (() => {
+    try {
+      const d = new Date(log.created_at || log.time);
+      if (isNaN(d.getTime())) return log.created_at || log.time;
+      return d.toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true
+      });
+    } catch (e) {
+      return log.created_at || log.time;
+    }
+  })();
 
   return (
     <React.Fragment>
       <tr
         className={cn(
-          "group border-l-2 border-transparent transition-all duration-200 hover:bg-gray-50 dark:bg-card dark:hover:bg-white/5 select-none cursor-pointer",
-          isSelected && "border-amber-400 bg-amber-50 dark:bg-amber-950/40",
+          "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+          isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
           isExpanded && "bg-gray-50 dark:bg-white/8"
         )}
         onClick={() => {
           toggleRow(log.id);
         }}
       >
-        <td className="p-4 text-center">
+        <td className="py-0 px-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleRow(log.id);
-            }}
-            className={cn(
-              "mx-auto flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-zinc-500 transition-all hover:bg-pup-maroon dark:hover:bg-zinc-800 dark:hover:text-primary hover:text-white",
-              isExpanded && "bg-pup-maroon dark:bg-zinc-700 text-white dark:text-primary rotate-90 shadow-sm"
-            )}
+            onClick={() => toggleRow(log.id)}
+            className="mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-transform duration-200"
+            style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
           >
-            <i className="ph-bold ph-caret-right text-xs"></i>
+            <i className="ti ti-chevron-down text-[14px]" style={{ fontSize: '14px' }}></i>
           </button>
         </td>
-        <td className="p-4">
-          <div className="flex flex-col">
-            <span className="text-xs font-semibold text-gray-900 dark:text-zinc-50">
-              {uploaded.date}
+        <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-50">
+          {formattedTimestamp}
+        </td>
+        <td className="py-0 px-4 align-middle">
+          <span
+            className={cn(
+              "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] shadow-none transition-all",
+              severityInfo.classes
+            )}
+          >
+            {severityInfo.label}
+          </span>
+        </td>
+        <td className="py-0 px-4 align-middle">
+          <div className="flex flex-col overflow-hidden">
+            <span className="truncate text-[13px] font-medium text-[#111111] dark:text-zinc-50">
+              {log.user}
             </span>
-            <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-400">
-              {uploaded.time}
-            </span>
-          </div>
-        </td>
-        <td className="p-4">
-          <div className={cn(
-            "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-semibold  tracking-wider transition-all",
-            sevConfig.bg,
-            sevConfig.text,
-            sevConfig.border
-          )}>
-            <i className={cn(sevConfig.icon, "text-[10px]")}></i>
-            {log.severity}
-          </div>
-        </td>
-        <td className="p-4">
-          <div className="flex items-center gap-3">
-            <div className="flex flex-col overflow-hidden">
-              <span className="truncate text-xs font-semibold text-gray-900 dark:text-zinc-50">
-                {log.user}
-              </span>
-              <span className="text-[11px] font-semibold tracking-widest text-gray-400 dark:text-zinc-400">
-                {log.role}
-              </span>
-            </div>
-          </div>
-        </td>
-        <td className="p-4">
-          <div className="flex items-center gap-2.5">
-            <span className="text-xs font-semibold tracking-tight text-gray-700 dark:text-zinc-300">
-              {log.action}
+            <span className="truncate text-[12px] font-normal text-[#8E8E93] mt-[2px]">
+              {log.role}
             </span>
           </div>
         </td>
-        <td className="p-4">
+        <td className="py-0 px-4 align-middle text-[13px] font-medium text-[#111111] dark:text-zinc-50">
+          {log.action === "Rotate Password" ? "Password Rotated" : log.action}
+        </td>
+        <td className="py-0 px-4 align-middle">
           <Tooltip>
             <TooltipTrigger asChild>
-              <p className="line-clamp-1 max-w-[500px] text-xs font-medium text-gray-500 dark:text-zinc-400">
+              <span className="block max-w-[320px] truncate text-[13px] font-normal text-[#8E8E93]">
                 {log.details || "No known description"}
-              </p>
+              </span>
             </TooltipTrigger>
             <TooltipContent
               side="top"
@@ -181,23 +142,23 @@ const LogRow = React.memo(function LogRow({
             </TooltipContent>
           </Tooltip>
         </td>
-        <td className="p-4 text-center">
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "h-9 w-9 rounded-xl border border-transparent transition-all active:scale-95 dark:shadow-none",
-              isSelected 
-                ? "bg-white text-pup-maroon border-gray-200 dark:bg-zinc-800 dark:text-primary dark:border-white/10 shadow-sm" 
-                : "text-gray-400 hover:bg-white hover:text-pup-maroon hover:border-gray-200 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-primary dark:hover:border-white/10"
-            )}
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedLog(log);
-            }}
-          >
-            <i className="ph-bold ph-eye text-lg"></i>
-          </Button>
+        <td className="py-0 px-4 align-middle text-right" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-end gap-[12px]">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  onClick={() => setSelectedLog(log)}
+                  className="p-0 border-0 bg-transparent text-[#C7C7CC] hover:text-[#111111] dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+                >
+                  <i className="ti ti-eye text-[16px]"></i>
+                </button>
+              </TooltipTrigger>
+              <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
+                <p className="text-[10px] font-semibold">View Detail</p>
+                <p className="text-[9px] opacity-80">Open full metadata details</p>
+              </TooltipContent>
+            </Tooltip>
+          </div>
         </td>
       </tr>
       {isExpanded && (
@@ -209,7 +170,7 @@ const LogRow = React.memo(function LogRow({
       )}
     </React.Fragment>
   )
-});
+})
 
 export default function LogTable({
   isLoading,
@@ -243,67 +204,23 @@ export default function LogTable({
   handleCopy,
   cn,
 }) {
-  const [expandedRows, setExpandedRows] = useState({});
+  const [expandedRows, setExpandedRows] = useState({})
 
   const toggleRow = useCallback((id) => {
     setExpandedRows(prev => ({
       ...prev,
       [id]: !prev[id]
-    }));
-  }, []);
+    }))
+  }, [])
 
-  const handleItemsPerPageChange = (e) => {
-    const value = Number(e.target.value)
-    setItemsPerPage(value)
-    setLogsPerPage(value)
-    setLogPage(1)
-  }
-
-  const handleJumpPage = (e) => {
-    if (e.key === "Enter" || e.type === "blur") {
-      const val = parseInt(jumpPage)
-      const maxPage = Math.max(1, Math.ceil(logTotal / itemsPerPage))
-      if (!isNaN(val) && val >= 1 && val <= maxPage) {
-        setLogPage(val)
-      } else {
-        setJumpPage(String(logPage))
-      }
-    }
-  }
-
-  if (isLoading && !displayLogs) {
+  if (isLoading && (!displayLogs || displayLogs.length === 0)) {
     return (
-      <div className="animate-pulse space-y-4">
-        <div className="overflow-hidden overflow-x-auto rounded-brand border border-gray-100 bg-white dark:border-white/10 dark:bg-card">
-          <table className="min-w-full">
-            <thead className="bg-transparent dark:bg-transparent">
-              <tr>
-                {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-                  <th key={i} className="p-4">
-                    <Skeleton className="h-3 w-16 dark:bg-muted" />
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-white/10">
-              {[1, 2, 3, 4, 5, 6].map((row) => (
-                <tr key={row}>
-                  <td className="p-4"><Skeleton className="h-6 w-6 rounded-full dark:bg-muted" /></td>
-                  <td className="p-4"><Skeleton className="h-3 w-24 dark:bg-muted" /></td>
-                  <td className="p-4"><Skeleton className="h-6 w-20 rounded-full dark:bg-muted" /></td>
-                  <td className="p-4">
-                    <div className="space-y-2">
-                      <Skeleton className="h-4 w-32 dark:bg-muted" />
-                      <Skeleton className="h-2 w-16 dark:bg-muted" />
-                    </div>
-                  </td>
-                  <td className="p-4"><Skeleton className="h-4 w-28 dark:bg-muted" /></td>
-                  <td className="p-4"><Skeleton className="h-3 w-full dark:bg-muted" /></td>
-                  <td className="p-4 text-center"><Skeleton className="h-8 w-8 mx-auto rounded-full dark:bg-muted" /></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card animate-pulse">
+        <div className="h-10 border-b border-gray-200 bg-transparent dark:border-white/10 dark:bg-transparent" />
+        <div className="p-4 space-y-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-8 w-full bg-gray-50 dark:bg-muted" />
+          ))}
         </div>
       </div>
     )
@@ -311,52 +228,39 @@ export default function LogTable({
 
   if (error) {
     return (
-      <Empty className="flex h-[400px] flex-col items-center justify-center rounded-xl border-2 border-dashed border-gray-100 bg-gray-50 text-center dark:border-white/10 dark:bg-muted/30">
-        <EmptyHeader className="flex flex-col items-center gap-2">
-          <div className="relative mb-4">
-            <div className="absolute inset-0 animate-ping rounded-full bg-red-100 opacity-20"></div>
-            <EmptyMedia className="relative z-10 flex h-20 w-20 items-center justify-center rounded-full border border-red-100 bg-white shadow-xl dark:bg-card dark:shadow-none">
-              <i className="ph-duotone ph-warning-circle text-xl text-red-600" />
+      <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-6">
+        <Empty className="flex h-[320px] flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+          <EmptyHeader className="flex flex-col items-center gap-0">
+            <EmptyMedia className="mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+              <i className="ph-duotone ph-warning-circle text-xl text-pup-maroon dark:text-primary" />
             </EmptyMedia>
-          </div>
-          <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-            System Log Error
-          </EmptyTitle>
-          <EmptyDescription className="max-w-md text-sm font-medium text-gray-500 dark:text-zinc-400">
-            {error}
-          </EmptyDescription>
-          <Button 
-            variant="outline" 
-            onClick={() => window.location.reload()}
-            className="mt-6 rounded-full border-gray-200 font-semibold hover:bg-gray-50 dark:border-white/10 dark:hover:bg-white/10 dark:bg-card"
-          >
-            <i className="ph-bold ph-arrows-clockwise mr-2 animate-spin"></i>
-            Retry Loading
-          </Button>
-        </EmptyHeader>
-      </Empty>
+            <EmptyTitle className="text-lg font-semibold text-gray-900 dark:text-zinc-50">
+              Load failed
+            </EmptyTitle>
+            <EmptyDescription className="mt-1 max-w-md text-sm font-medium text-gray-600 dark:text-zinc-300">
+              {error}
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
+      </div>
     )
   }
 
+  const totalPages = Math.ceil(logTotal / itemsPerPage) || 1
+  const displayPage = Math.min(logPage, totalPages)
+
   return (
-    <div className="space-y-0">
-      <div
-        key={`${logPage}-${logSortBy}-${logSortOrder}-${itemsPerPage}`}
-        className={cn(
-          "overflow-hidden rounded-brand border border-gray-200 dark:border-white/10 bg-white dark:bg-card shadow-sm dark:shadow-none transition-all duration-500 animate-fade-up",
-          isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-        )}
-      >
-        <div className="overflow-x-auto rounded-[inherit]">
-          <table className="min-w-full table-fixed text-sm">
-            <thead className="bg-gray-50 backdrop-blur-sm select-none dark:bg-muted">
-              <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-800 dark:text-zinc-250">
-                <th className="w-[50px] p-4 text-center">
-                </th>
-                 <th className="w-[180px] p-4">
+    <div className="flex flex-1 flex-col min-h-0 gap-6">
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
+        <div className="flex-1 overflow-visible rounded-[inherit]">
+          <table className="min-w-full text-sm">
+            <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
+              <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                <th className="w-12 p-4 text-center"></th>
+                <th className="p-4">
                   <button
                     onClick={() => handleSort("created_at")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em]"
                   >
                     Timestamp{" "}
                     <SortIndicator
@@ -366,12 +270,12 @@ export default function LogTable({
                     />
                   </button>
                 </th>
-                <th className="w-[120px] p-4">
+                <th className="p-4">
                   <button
                     onClick={() => handleSort("severity")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em]"
                   >
-                    Severity{" "}
+                    Level{" "}
                     <SortIndicator
                       column="severity"
                       logSortBy={logSortBy}
@@ -379,10 +283,10 @@ export default function LogTable({
                     />
                   </button>
                 </th>
-                <th className="w-[200px] p-4">
+                <th className="p-4">
                   <button
                     onClick={() => handleSort("actor")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em]"
                   >
                     Actor{" "}
                     <SortIndicator
@@ -392,12 +296,12 @@ export default function LogTable({
                     />
                   </button>
                 </th>
-                <th className="w-[220px] p-4">
+                <th className="p-4">
                   <button
                     onClick={() => handleSort("action")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em]"
                   >
-                    Event / Action{" "}
+                    Action{" "}
                     <SortIndicator
                       column="action"
                       logSortBy={logSortBy}
@@ -405,15 +309,14 @@ export default function LogTable({
                     />
                   </button>
                 </th>
-                <th className="min-w-[300px] p-4 dark:text-zinc-200">Description</th>
-                <th className="w-[80px] p-4 text-center">
-                </th>
+                <th className="p-4 text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Description</th>
+                <th className="p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+            <tbody className="bg-transparent">
               {displayLogs.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="p-0">
+                <tr className="border-0 hover:bg-transparent">
+                  <td colSpan={7} className="border-0 p-0">
                     <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
                       <EmptyHeader className="flex flex-col items-center gap-0">
                         <div className="relative mb-6">
@@ -426,7 +329,7 @@ export default function LogTable({
                           No Activity Found
                         </EmptyTitle>
                         <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                          Try adjusting your search filters to find what you&apos;re looking for.
+                          Try adjusting your search filters to find what you're looking for.
                         </EmptyDescription>
                         {(localSearch !== "" ||
                           logRoleFilter !== "All" ||
@@ -473,19 +376,56 @@ export default function LogTable({
           </table>
         </div>
 
-        {/* Pagination inside the card container */}
         {logTotal > 0 && (
-          <LogPagination
-            logTotal={logTotal}
-            logPage={logPage}
-            setLogPage={setLogPage}
-            itemsPerPage={itemsPerPage}
-            logsPerPage={logsPerPage}
-            handleItemsPerPageChange={handleItemsPerPageChange}
-            jumpPage={jumpPage}
-            setJumpPage={setJumpPage}
-            handleJumpPage={handleJumpPage}
-          />
+          <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card">
+            <div className="flex items-center gap-8">
+              <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
+                <span>
+                  Showing {displayLogs.length} of {logTotal}
+                </span>
+                <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
+                  <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
+                  <select
+                    className="h-8 w-16 cursor-pointer rounded-[6px] border border-gray-200 bg-white px-2 text-[12px] font-normal text-gray-700 focus:outline-none transition-all hover:bg-gray-50 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10"
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      const value = Number(e.target.value)
+                      setItemsPerPage(value)
+                      setLogsPerPage(value)
+                      setLogPage(1)
+                    }}
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex shrink-0 items-center gap-3">
+              <button
+                disabled={displayPage <= 1}
+                onClick={() => setLogPage((p) => Math.max(1, p - 1))}
+                className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
+              >
+                Prev
+              </button>
+
+              <div className="flex h-8 min-w-[32px] items-center justify-center rounded-[6px] border border-gray-200/80 bg-white px-2.5 text-[12px] font-medium text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
+                {displayPage}
+              </div>
+
+              <button
+                disabled={displayPage >= totalPages}
+                onClick={() => setLogPage((p) => Math.min(totalPages, p + 1))}
+                className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
+              >
+                Next
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>

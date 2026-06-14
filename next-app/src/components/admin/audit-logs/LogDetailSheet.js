@@ -1,6 +1,5 @@
 "use client"
 
-import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import {
@@ -10,31 +9,56 @@ import {
   SheetTitle,
   SheetDescription,
 } from "@/components/ui/sheet"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
 
-function getSeverityColor(sev) {
-  switch (String(sev || "").toUpperCase()) {
-    case "CRITICAL":
-      return "bg-red-100 text-red-700 border-red-200"
-    case "WARNING":
-      return "bg-amber-100 text-amber-700 border-amber-200"
-    default:
-      return "bg-blue-100 text-blue-700 border-blue-200"
+function getSeverityInfo(sev) {
+  const s = String(sev || "").toUpperCase();
+  if (s === "CRITICAL") {
+    return {
+      label: "Critical",
+      classes: "bg-[#FEE2E2] text-[#991B1B] dark:bg-red-950/40 dark:text-red-400"
+    };
   }
+  if (s === "WARNING") {
+    return {
+      label: "Warning",
+      classes: "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400"
+    };
+  }
+  return {
+    label: "Info",
+    classes: "bg-[#E0F2FE] text-[#0369A1] dark:bg-blue-950/40 dark:text-blue-400"
+  };
 }
 
-function getSeverityTextColor(sev) {
-  switch (String(sev || "").toUpperCase()) {
-    case "CRITICAL":
-      return "text-red-600"
-    case "WARNING":
-      return "text-amber-600 dark:text-amber-400"
-    default:
-      return "text-blue-600 dark:text-blue-400"
+function formatLastSync(val) {
+  if (!val || val === "Never") return "Never"
+  try {
+    const d = new Date(val.replace(' at ', ' '))
+    if (isNaN(d.getTime())) {
+      const parsed = new Date(val)
+      if (!isNaN(parsed.getTime())) {
+        return parsed.toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true
+        })
+      }
+      return val
+    }
+    return d.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true
+    })
+  } catch (e) {
+    return val
   }
 }
 
@@ -48,271 +72,232 @@ export default function LogDetailSheet({
   hasNext,
   hasPrev
 }) {
+  const formattedTime = selectedLog ? formatLastSync(selectedLog.time || selectedLog.created_at) : "";
+  const severityInfo = selectedLog ? getSeverityInfo(selectedLog.severity) : null;
+  const initials = selectedLog
+    ? (selectedLog.user || "")
+        .split(" ")
+        .map((n) => n[0])
+        .join("")
+        .slice(0, 2)
+        .toUpperCase()
+    : "";
+
+  const formattedDescription = (() => {
+    if (!selectedLog) return "";
+    const text = selectedLog.details || "No known description";
+    const parts = text.split(/'([^']+)'/g);
+    if (parts.length === 1) return text;
+    return parts.map((part, i) => {
+      if (i % 2 === 1) {
+        return <span key={i} className="font-medium text-[#111111] dark:text-zinc-50">{part}</span>;
+      }
+      return part;
+    });
+  })();
+
   return (
     <Sheet
       open={!!selectedLog}
       onOpenChange={(open) => !open && setSelectedLog(null)}
     >
-      <SheetContent className="font-inter flex w-full flex-col border-l border-gray-200 bg-gray-50 p-0 sm:max-w-md dark:border-white/10 dark:bg-card">
-        <SheetHeader className="shrink-0 border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
-              <i className="ph-duotone ph-file-text text-xl"></i>
-            </div>
-            <div className="min-w-0">
-              <SheetTitle className="text-left text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
-                Log Entry
-              </SheetTitle>
-              <SheetDescription className="mt-1.5 text-left text-sm font-medium text-gray-500 dark:text-zinc-400">
-                System Event ID:{" "}
-                <span className="font-mono font-semibold text-gray-700 dark:text-zinc-200">
-                  {selectedLog?.id}
-                </span>
-              </SheetDescription>
-            </div>
+      <SheetContent 
+        className="font-inter flex flex-col border-l bg-white p-[24px_20px] shadow-none sm:max-w-[320px] w-[320px] dark:border-white/10 dark:bg-[#121214]"
+        style={{ borderLeft: '0.5px solid rgba(0,0,0,0.08)' }}
+      >
+        <SheetHeader className="shrink-0 p-0 mb-6 border-b-0 bg-transparent text-left relative">
+          <div className="flex flex-col text-left">
+            <SheetTitle className="text-left text-[18px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50">
+              Log Entry
+            </SheetTitle>
+            <SheetDescription className="mt-[2px] text-left text-[12px] font-normal text-[#8E8E93]">
+              System Event ID: {selectedLog?.id}
+            </SheetDescription>
           </div>
         </SheetHeader>
 
         {selectedLog && (
-          <div className="flex-1 space-y-6 overflow-y-auto p-6 pb-24">
+          <div className="flex-1 space-y-6 overflow-y-auto pr-1 -mr-1 pb-24">
             {/* Header Info */}
-            <div className="flex items-start justify-between gap-4">
+            <div 
+              className="flex justify-between items-end pb-4 border-black/5 dark:border-white/5"
+              style={{ borderBottomWidth: '0.5px', borderBottomStyle: 'solid' }}
+            >
               <div>
-                <p className="mb-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-300">
+                <p className="text-[11px] font-medium uppercase tracking-[0.04em] text-[#8E8E93] mb-1">
                   Timestamp
                 </p>
-                <p className="text-sm font-semibold text-gray-900 dark:text-zinc-50">{selectedLog.time}</p>
+                <p className="text-[13px] font-normal text-[#111111] dark:text-zinc-150">{formattedTime}</p>
               </div>
-              <div className="text-right">
-                <p className="mb-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-300">
+              <div className="text-right flex flex-col items-end">
+                <p className="text-[11px] font-medium uppercase tracking-[0.04em] text-[#8E8E93] mb-1">
                   Severity
                 </p>
-                <Badge
-                  className={`rounded-sm border-0 px-2 py-0.5 text-[10px] font-semibold ${getSeverityColor(selectedLog.severity)}`}
+                <span
+                  className={cn(
+                    "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em]",
+                    severityInfo.classes
+                  )}
                 >
-                  {selectedLog.severity}
-                </Badge>
+                  {severityInfo.label}
+                </span>
               </div>
             </div>
 
             {/* Actor Section */}
-            <Card className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-              <div className="flex items-center gap-2 border-b border-gray-100 bg-transparent px-4 py-3 dark:border-white/10 dark:bg-transparent">
-                <i className="ph-bold ph-user-focus text-pup-maroon dark:text-primary"></i>
-                <h4 className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-300">
-                  Actor Information
+            <div className="flex flex-col">
+              <div className="flex items-center gap-[6px] mb-[12px]">
+                <i className="ti ti-user text-[14px]" style={{ fontSize: '14px', color: '#8E8E93' }}></i>
+                <h4 className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#8E8E93]">
+                  Actor
                 </h4>
               </div>
-              <div className="flex items-center gap-3 p-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-gray-100 dark:border-white/10 dark:bg-muted">
-                  <i className="ph-bold ph-user text-lg text-gray-500 dark:text-zinc-400"></i>
+              <div className="flex items-center gap-3 bg-white dark:bg-card p-[16px] rounded-[8px]" style={{ border: '0.5px solid rgba(0,0,0,0.08)' }}>
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-black/5 bg-gray-50 dark:border-white/5 dark:bg-zinc-800">
+                  <span className="text-[12px] font-medium text-[#8E8E93]">{initials}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="truncate text-sm font-semibold text-gray-900 dark:text-zinc-50">{selectedLog.user}</p>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => onSearchSimilar(selectedLog.user)}
-                          className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:border-white/10 dark:bg-card dark:hover:border-zinc-700 dark:text-zinc-300"
-                        >
-                          <i className="ph-bold ph-magnifying-glass text-xs"></i>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left" className="rounded-brand font-semibold text-[10px] tracking-wider">
-                        Search similar (Actor)
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <p className="mt-0.5 text-[10px] font-semibold tracking-wider text-pup-maroon dark:text-primary dark:text-primary">
+                  <p className="truncate text-[13px] font-medium text-[#111111] dark:text-zinc-50">{selectedLog.user}</p>
+                  <p className="mt-0.5 text-[12px] font-normal text-[#8E8E93]">
                     {selectedLog.role}
                   </p>
                 </div>
               </div>
-            </Card>
+            </div>
 
             {/* Event Details */}
-            <Card className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-              <div className="flex items-center gap-2 border-b border-gray-100 bg-transparent px-4 py-3 dark:border-white/10 dark:bg-transparent">
-                <i className="ph-bold ph-newspaper text-pup-maroon dark:text-primary"></i>
-                <h4 className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-300">
-                  Event Details
+            <div className="flex flex-col">
+              <div className="flex items-center gap-[6px] mb-[12px]">
+                <i className="ti ti-file-text text-[14px]" style={{ fontSize: '14px', color: '#8E8E93' }}></i>
+                <h4 className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#8E8E93]">
+                  Details
                 </h4>
               </div>
-              <div className="space-y-4 p-4">
+              <div className="space-y-[16px] bg-white dark:bg-card p-[16px] rounded-[8px]" style={{ border: '0.5px solid rgba(0,0,0,0.08)' }}>
                 <div>
-                  <p className="mb-1 text-[10px] font-semibold text-gray-400 dark:text-zinc-300">
-                    Action Performed
+                  <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">
+                    Action
                   </p>
-                  <p
-                    className={`text-sm font-semibold tracking-tight ${getSeverityTextColor(selectedLog.severity)}`}
-                  >
-                    {selectedLog.action}
+                  <p className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">
+                    {selectedLog.action === "Rotate Password" ? "Password Rotated" : selectedLog.action}
                   </p>
                 </div>
 
-                <div className="border-t border-gray-100 pt-3 dark:border-white/10">
+                <div className="border-t border-black/5 pt-[16px] dark:border-white/5">
                   <div className="mb-1 flex items-center justify-between">
-                    <p className="text-[10px] font-semibold text-gray-400 dark:text-zinc-300">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">
                       Description
                     </p>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleCopy(selectedLog.details || "No known description", "Event description")}
-                          className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:border-white/10 dark:bg-card dark:hover:border-zinc-700 dark:text-zinc-300"
-                        >
-                          <i className="ph-bold ph-copy text-xs"></i>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left" className="rounded-brand font-semibold text-[10px] tracking-wider">
-                        Copy Description
-                      </TooltipContent>
-                    </Tooltip>
+                    <button
+                      onClick={() => handleCopy(selectedLog.details || "No description", "Description")}
+                      className="p-0 border-0 bg-transparent text-[#C7C7CC] hover:text-[#111111] dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+                    >
+                      <i className="ti ti-copy text-[14px]" style={{ fontSize: '14px' }}></i>
+                    </button>
                   </div>
-                  <p className="text-sm font-medium text-gray-700 dark:text-zinc-200">
-                    {selectedLog.details || "No known description"}
+                  <p className="text-[13px] font-normal text-[#111111] dark:text-zinc-50 leading-[1.5]">
+                    {formattedDescription}
                   </p>
                 </div>
 
                 {(selectedLog.entityType || selectedLog.entityId) && (
-                  <div className="grid grid-cols-2 gap-4 border-t border-gray-100 pt-3 dark:border-white/10">
+                  <div className="grid grid-cols-2 gap-4 border-t border-black/5 pt-[16px] dark:border-white/5">
                     <div>
-                      <p className="mb-1 text-[10px] font-semibold text-gray-400 dark:text-zinc-300">
-                        Target Entity
+                      <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">
+                        Target
                       </p>
-                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600 dark:text-zinc-300 dark:bg-muted">
+                      <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-150">
                         {selectedLog.entityType || "N/A"}
                       </span>
                     </div>
                     <div>
                       <div className="mb-1 flex items-center justify-between">
-                        <p className="text-[10px] font-semibold text-gray-400 dark:text-zinc-300">
-                          Entity Reference ID
+                        <p className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">
+                          Reference ID
                         </p>
                         {selectedLog.entityId && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => handleCopy(selectedLog.entityId, "Entity ID")}
-                                className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:border-white/10 dark:bg-card dark:hover:border-zinc-700 dark:text-zinc-300"
-                              >
-                                <i className="ph-bold ph-copy text-xs"></i>
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="left" className="rounded-brand font-semibold text-[10px] tracking-wider">
-                              Copy Entity ID
-                            </TooltipContent>
-                          </Tooltip>
+                          <button
+                            onClick={() => handleCopy(selectedLog.entityId, "Reference ID")}
+                            className="p-0 border-0 bg-transparent text-[#C7C7CC] hover:text-[#111111] dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+                          >
+                            <i className="ti ti-copy text-[14px]" style={{ fontSize: '14px' }}></i>
+                          </button>
                         )}
                       </div>
-                      <p className="font-mono text-[11px] font-semibold text-gray-900 dark:text-zinc-50">
+                      <p className="text-[13px] font-medium text-[#111111] dark:text-zinc-50">
                         {selectedLog.entityId || "N/A"}
                       </p>
                     </div>
                   </div>
                 )}
               </div>
-            </Card>
+            </div>
 
             {/* Network Data */}
-            <Card className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-              <div className="flex items-center gap-2 border-b border-gray-100 bg-transparent px-4 py-3 dark:border-white/10 dark:bg-transparent">
-                <i className="ph-bold ph-broadcast text-pup-maroon dark:text-primary"></i>
-                <h4 className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-300">
-                  Network Data
+            <div className="flex flex-col">
+              <div className="flex items-center gap-[6px] mb-[12px]">
+                <i className="ti ti-wifi text-[14px]" style={{ fontSize: '14px', color: '#8E8E93' }}></i>
+                <h4 className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#8E8E93]">
+                  Network
                 </h4>
               </div>
-              <div className="space-y-4 p-4">
+              <div className="space-y-[16px] bg-white dark:bg-card p-[16px] rounded-[8px]" style={{ border: '0.5px solid rgba(0,0,0,0.08)' }}>
                 <div>
                   <div className="mb-1 flex items-center justify-between">
-                    <p className="flex items-center gap-1 text-[10px] font-semibold text-gray-400 dark:text-zinc-300">
-                      <i className="ph-bold ph-globe"></i> IP Address
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">
+                      IP Address
                     </p>
                     <div className="flex items-center gap-2">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => onSearchSimilar(selectedLog.ip)}
-                            className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:border-white/10 dark:bg-card dark:hover:border-zinc-700 dark:text-zinc-300"
-                          >
-                            <i className="ph-bold ph-magnifying-glass text-xs"></i>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="left" className="rounded-brand font-semibold text-[10px] tracking-wider">
-                          Search similar (IP)
-                        </TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={() => handleCopy(selectedLog.ip, "IP address")}
-                            className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:border-white/10 dark:bg-card dark:hover:border-zinc-700 dark:text-zinc-300"
-                          >
-                            <i className="ph-bold ph-copy text-xs"></i>
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent side="left" className="rounded-brand font-semibold text-[10px] tracking-wider">
-                          Copy IP Address
-                        </TooltipContent>
-                      </Tooltip>
+                      <button
+                        onClick={() => onSearchSimilar(selectedLog.ip)}
+                        className="p-0 border-0 bg-transparent text-[#C7C7CC] hover:text-[#111111] dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+                      >
+                        <i className="ti ti-search text-[14px]" style={{ fontSize: '14px' }}></i>
+                      </button>
+                      <button
+                        onClick={() => handleCopy(selectedLog.ip, "IP Address")}
+                        className="p-0 border-0 bg-transparent text-[#C7C7CC] hover:text-[#111111] dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+                      >
+                        <i className="ti ti-copy text-[14px]" style={{ fontSize: '14px' }}></i>
+                      </button>
                     </div>
                   </div>
-                  <p className="inline-block rounded border border-gray-100 bg-gray-50 p-2 font-mono text-xs font-semibold text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50">
-                    {selectedLog.ip}
+                  <p className="text-[13px] font-normal text-[#111111] dark:text-zinc-50">
+                    {selectedLog.ip || "::1"}
                   </p>
                 </div>
-                <div>
-                  <p className="mb-1 flex items-center gap-1 text-[10px] font-semibold text-gray-400 dark:text-zinc-300">
-                    <i className="ph-bold ph-desktop"></i> Device &amp; Browser
+                <div className="border-t border-black/5 pt-[16px] dark:border-white/5">
+                  <p className="mb-1 text-[11px] font-semibold uppercase tracking-[0.04em] text-[#8E8E93]">
+                    Browser
                   </p>
-                  <p className="rounded-lg border border-gray-100 bg-gray-50 p-3 text-[11px] font-medium text-gray-600 dark:border-white/10 dark:bg-card dark:text-zinc-300">
-                    {selectedLog.userAgent}
+                  <p className="text-[12px] font-normal text-[#8E8E93] leading-[1.5]">
+                    {selectedLog.userAgent || selectedLog.user_agent}
                   </p>
                 </div>
               </div>
-            </Card>
+            </div>
           </div>
         )}
 
-        <div className="absolute bottom-0 left-0 right-0 border-t border-gray-100 bg-white p-4 backdrop-blur-sm dark:border-white/10 dark:bg-card/80">
-          <div className="flex items-center justify-between gap-3">
-            <Button
-              variant="outline"
-              size="sm"
+        <div className="absolute bottom-0 left-0 right-0 border-t border-gray-100 bg-white p-4 backdrop-blur-sm dark:border-white/10 dark:bg-[#121214]/80">
+          <div className="flex items-center justify-between gap-[8px]">
+            <button
               disabled={!hasPrev}
               onClick={onPrev}
-              className="flex-1 h-10 rounded-brand border-gray-300 text-[10px] font-semibold tracking-widest text-gray-500 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 disabled:opacity-30 transition-all dark:text-zinc-400 dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+              className="flex-1 h-[36px] rounded-[8px] bg-transparent text-[13px] font-normal text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer dark:text-zinc-300 dark:hover:bg-white/5 border border-black/15 dark:border-white/20 select-none"
             >
-              <i className="ph-bold ph-caret-left mr-2"></i>
-              Previous Log
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
+              ← Previous Log
+            </button>
+            <button
               disabled={!hasNext}
               onClick={onNext}
-              className="flex-1 h-10 rounded-brand border-gray-300 text-[10px] font-semibold tracking-widest text-gray-500 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 disabled:opacity-30 transition-all dark:text-zinc-400 dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+              className="flex-1 h-[36px] rounded-[8px] bg-transparent text-[13px] font-normal text-gray-700 hover:bg-gray-100 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer dark:text-zinc-300 dark:hover:bg-white/5 border border-black/15 dark:border-white/20 select-none"
             >
-              Next Log
-              <i className="ph-bold ph-caret-right ml-2"></i>
-            </Button>
+              Next Log →
+            </button>
           </div>
         </div>
       </SheetContent>
     </Sheet>
   )
 }
-
-
-
