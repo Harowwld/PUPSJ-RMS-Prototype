@@ -1105,19 +1105,10 @@ export default function DigitalRecordsReviewTab({
                                 )}
                               >
                                 {r.approval_status || "Pending"}
-                              </span>
-                              {isSlaBreached && (
-                                <Tooltip>
-                                  <TooltipTrigger asChild>
-                                    <div className="flex h-5 w-5 animate-pulse items-center justify-center rounded-full bg-red-100 text-red-600 shadow-sm cursor-help dark:shadow-none">
-                                      <i className="ph-bold ph-warning-diamond text-[10px]"></i>
-                                    </div>
-                                  </TooltipTrigger>
-                                  <TooltipContent side="top" className="bg-red-600 text-white border-red-500">
-                                     <p className="text-[10px] font-semibold tracking-tight">SLA Breach Detected</p>
-                                     <p className="text-[9px] font-medium opacity-90">Pending for over 48 hours.</p>
-                                  </TooltipContent>
-                                </Tooltip>
+                                             {isSlaBreached && (
+                                <div className="flex h-5 w-5 animate-pulse items-center justify-center rounded-full bg-red-100 text-red-600 shadow-sm dark:shadow-none">
+                                  <i className="ph-bold ph-warning-diamond text-[10px]"></i>
+                                </div>
                               )}
                             </div>
                           </td>
@@ -1133,80 +1124,48 @@ export default function DigitalRecordsReviewTab({
                           </td>
                           <td className="py-0 px-4 align-middle text-right">
                             <div className="flex items-center justify-end gap-[12px]" onClick={(e) => e.stopPropagation()}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <button
-                                    onClick={() => handlePreview(r)}
-                                    className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-pup-maroon dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                                  >
-                                    <i className="ph-bold ph-eye text-[16px]"></i>
-                                  </button>
-                                </TooltipTrigger>
-                                <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                                  <p className="text-[10px] font-semibold">Document Preview</p>
-                                  <p className="text-[9px] opacity-80">Open full view of this record</p>
-                                </TooltipContent>
-                              </Tooltip>
+                              <button
+                                onClick={() => handlePreview(r)}
+                                className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-pup-maroon dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                              >
+                                <i className="ph-bold ph-eye text-[16px]"></i>
+                              </button>
 
                               {r.approval_status === "Pending" ? (
                                  <>
-                                   <Tooltip>
-                                     <TooltipTrigger asChild>
-                                       <button
-                                         onClick={() => handleApprove(r.id)}
-                                         className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-green-600 dark:hover:text-green-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                                       >
-                                         <i className="ph-bold ph-check text-[16px]"></i>
-                                       </button>
-                                     </TooltipTrigger>
-                                                   <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                                       <p className="text-[10px] font-semibold">Approve Record</p>
-                                       <p className="text-[9px] opacity-80">Finalize and verify this submission</p>
-                                     </TooltipContent>
-                                   </Tooltip>
+                                   <button
+                                     onClick={() => handleApprove(r.id)}
+                                     className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-green-600 dark:hover:text-green-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                   >
+                                     <i className="ph-bold ph-check text-[16px]"></i>
+                                   </button>
 
-                                   <Tooltip>
-                                   <TooltipTrigger asChild>
-                                     <button
-                                       onClick={() => onDecline(r.id)}
-                                       className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                                     >
-                                       <i className="ph-bold ph-x text-[16px]"></i>
-                                     </button>
-                                   </TooltipTrigger>
-                                   <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                                     <p className="text-[10px] font-semibold">Decline Record</p>
-                                     <p className="text-[9px] opacity-80">Flag issues and return for correction</p>
-                                   </TooltipContent>
-                                 </Tooltip>
-                               </>
-                             ) : (
-                               // Grace Period Logic: Only allow revert within 10 minutes of review
-                               (() => {
-                                 const reviewedAt = r.reviewed_at ? new Date(r.reviewed_at.replace(" ", "T")).getTime() : 0
-                                 const now = Date.now()
-                                 const isWithinGracePeriod = now - reviewedAt < 10 * 60 * 1000 // 10 minutes
+                                   <button
+                                     onClick={() => onDecline(r.id)}
+                                     className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                   >
+                                     <i className="ph-bold ph-x text-[16px]"></i>
+                                   </button>
+                                 </>
+                              ) : (
+                                // Grace Period Logic: Only allow revert within 10 minutes of review
+                                (() => {
+                                  const reviewedAt = r.reviewed_at ? new Date(r.reviewed_at.replace(" ", "T")).getTime() : 0
+                                  const now = Date.now()
+                                  const isWithinGracePeriod = now - reviewedAt < 10 * 60 * 1000 // 10 minutes
 
-                                 if (!isWithinGracePeriod) return null
+                                  if (!isWithinGracePeriod) return null
 
-                                 return (
-                                   <Tooltip>
-                                     <TooltipTrigger asChild>
-                                       <button
-                                         onClick={() => onSetStatus(r.id, "Pending", "Undo review action")}
-                                         className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-pup-maroon dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                                       >
-                                         <i className="ph-bold ph-arrow-counter-clockwise text-[16px]"></i>
-                                       </button>
-                                     </TooltipTrigger>
-                                     <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                                       <p className="text-[10px] font-semibold">Revert to Pending</p>
-                                       <p className="text-[9px] opacity-80">Undo the previous review decision</p>
-                                     </TooltipContent>
-                                   </Tooltip>
-                                 )
-                               })()
-                             )}
+                                  return (
+                                    <button
+                                      onClick={() => onSetStatus(r.id, "Pending", "Undo review action")}
+                                      className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-pup-maroon dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                    >
+                                      <i className="ph-bold ph-arrow-counter-clockwise text-[16px]"></i>
+                                    </button>
+                                  )
+                                })()
+                              )}
                             </div>
                           </td>
                         </tr>
