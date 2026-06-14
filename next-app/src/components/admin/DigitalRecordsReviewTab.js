@@ -1137,7 +1137,7 @@ export default function DigitalRecordsReviewTab({
                                 <TooltipTrigger asChild>
                                   <button
                                     onClick={() => handlePreview(r)}
-                                    className="p-0 border-0 bg-transparent text-gray-400 dark:text-zinc-500 transition-colors hover:text-pup-maroon dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                    className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-pup-maroon dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                   >
                                     <i className="ph-bold ph-eye text-[16px]"></i>
                                   </button>
@@ -1154,7 +1154,7 @@ export default function DigitalRecordsReviewTab({
                                      <TooltipTrigger asChild>
                                        <button
                                          onClick={() => handleApprove(r.id)}
-                                         className="p-0 border-0 bg-transparent text-gray-400 dark:text-zinc-500 transition-colors hover:text-green-600 dark:hover:text-green-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                         className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-green-600 dark:hover:text-green-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                        >
                                          <i className="ph-bold ph-check text-[16px]"></i>
                                        </button>
@@ -1169,7 +1169,7 @@ export default function DigitalRecordsReviewTab({
                                    <TooltipTrigger asChild>
                                      <button
                                        onClick={() => onDecline(r.id)}
-                                       className="p-0 border-0 bg-transparent text-gray-400 dark:text-zinc-500 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                       className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                      >
                                        <i className="ph-bold ph-x text-[16px]"></i>
                                      </button>
@@ -1194,7 +1194,7 @@ export default function DigitalRecordsReviewTab({
                                      <TooltipTrigger asChild>
                                        <button
                                          onClick={() => onSetStatus(r.id, "Pending", "Undo review action")}
-                                         className="p-0 border-0 bg-transparent text-gray-400 dark:text-zinc-500 transition-colors hover:text-pup-maroon dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                         className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-pup-maroon dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                        >
                                          <i className="ph-bold ph-arrow-counter-clockwise text-[16px]"></i>
                                        </button>

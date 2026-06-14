@@ -148,7 +148,7 @@ const LogRow = React.memo(function LogRow({
               <TooltipTrigger asChild>
                 <button
                   onClick={() => setSelectedLog(log)}
-                  className="p-0 border-0 bg-transparent text-[#C7C7CC] hover:text-[#111111] dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+                  className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] hover:text-[#111111] dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
                 >
                   <i className="ti ti-eye text-[16px]"></i>
                 </button>
