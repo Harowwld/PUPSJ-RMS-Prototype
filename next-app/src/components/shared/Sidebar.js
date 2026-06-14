@@ -32,7 +32,7 @@ export default function Sidebar({ items, activeKey, onSelect, onLogout, zoomNode
   )
   const staffIconColor = isStaff ? "#edbb00" : "#E5484D"
   const sidebarRef = useRef(null)
-  const [sidebarFocused, setSidebarFocused] = useState(true)
+  const [sidebarFocused, setSidebarFocused] = useState(false)
   const [localActiveKey, setLocalActiveKey] = useState(activeKey)
 
   useEffect(() => {
