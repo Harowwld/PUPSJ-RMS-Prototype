@@ -35,7 +35,7 @@ function PDFFrame({ docId }) {
       <iframe
         title="PDF Preview"
         src={`/api/documents/${docId}#toolbar=0&navpanes=0`}
-        className="absolute inset-0 h-full w-full bg-gray-200 dark:bg-zinc-700"
+        className="absolute inset-0 h-full w-full bg-white dark:bg-zinc-900"
         style={{ border: "none" }}
         onLoad={() => setFrameReady(true)}
       />
@@ -95,7 +95,7 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
           </div>
         </DialogHeader>
 
-        <div className="relative flex flex-1 flex-col overflow-hidden bg-gray-100 p-0 dark:bg-muted">
+        <div className="relative flex flex-1 flex-col overflow-hidden bg-white p-0 dark:bg-zinc-950">
           {docId ? (
             <div className={cn("relative min-h-0 min-w-0 flex-1 flex flex-col transition-all duration-300", isFullscreen ? "fixed inset-0 z-[9999] bg-white dark:bg-card" : "")}>
               {isFullscreen && (
