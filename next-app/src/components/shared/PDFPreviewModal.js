@@ -158,7 +158,7 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
               href={`/api/documents/${docId}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex items-center text-[#E5484D] hover:underline hover:text-[#c93b40] font-medium"
+              className="inline-flex items-center text-[#E5484D] hover:text-[#c93b40] font-medium group"
               style={{ 
                 height: '36px', 
                 paddingLeft: '8px', 
@@ -166,8 +166,8 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
                 fontSize: '13px'
               }}
             >
-              Open Full View
-              <i className="ti ti-arrow-up-right ml-1" style={{ fontSize: '14px' }}></i>
+              <span className="group-hover:underline">Open Full View</span>
+              <i className="ti ti-arrow-up-right ml-1" style={{ fontSize: '14px', textDecoration: 'none' }}></i>
             </a>
           ) : null}
         </div>
