@@ -86,16 +86,19 @@ const StaffTableRow = React.memo(({
     <tr
       onClick={(e) => !isCurrentUser && toggleSelect(s.id, e)}
       className={cn(
-        "group h-[52px] border-b-[0.5px] border-black/[0.06] dark:border-white/[0.06] last:border-b-0 transition-all duration-200 hover:bg-[#F9F9F9] dark:hover:bg-white/2 select-none",
+        "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
         !isCurrentUser && "cursor-pointer",
-        isSelected && "bg-amber-50/60 dark:bg-amber-950/20"
+        isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
       )}
     >
       <td className="py-0 px-4 align-middle text-center">
         {!isCurrentUser && (
           <input
             type="checkbox"
-            className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:border-white/10 dark:text-primary"
+            className={cn(
+              "h-4 w-4 cursor-pointer rounded border border-gray-300 dark:border-white/10 transition-opacity",
+              isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
+            )}
             checked={isSelected}
             onChange={() => {}} // Controlled by tr onClick
           />
@@ -657,7 +660,7 @@ export default function StaffDirectoryTab({
                     <th className="w-16 p-4 text-center">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:text-primary dark:border-white/10"
+                        className="h-4 w-4 cursor-pointer rounded border border-gray-300 dark:border-white/10"
                         checked={
                           paginatedStaff.some(
                             (s) => s.id !== currentUserId
