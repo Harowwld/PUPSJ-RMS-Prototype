@@ -35,7 +35,7 @@ function PDFFrame({ docId }) {
       <iframe
         title="PDF Preview"
         src={`/api/documents/${docId}#toolbar=0&navpanes=0`}
-        className="absolute inset-0 h-full w-full bg-white dark:bg-zinc-900"
+        className="absolute inset-0 h-full w-full bg-gray-200 dark:bg-zinc-700"
         style={{ border: "none" }}
         onLoad={() => setFrameReady(true)}
       />
@@ -73,9 +73,9 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
     >
       <DialogContent 
         hideClose={true}
-        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out xl:max-w-[1400px] rounded-brand dark:border-white/10 dark:bg-muted"
+        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-white p-0 shadow-2xl transition-all duration-300 ease-out xl:max-w-[1400px] rounded-brand dark:border-white/10 dark:bg-muted"
       >
-        <DialogHeader className="shrink-0 border-b bg-gray-50 dark:bg-white/5" style={{ padding: '20px 24px', borderBottomWidth: '0.5px', borderBottomColor: 'rgba(0,0,0,0.08)' }}>
+        <DialogHeader className="shrink-0 border-b bg-white dark:bg-white/5" style={{ padding: '20px 24px', borderBottomWidth: '0.5px', borderBottomColor: 'rgba(0,0,0,0.08)' }}>
           <div className="flex items-center justify-between w-full">
             <div className="min-w-0">
               <DialogTitle className="text-left font-semibold text-[#111111] dark:text-zinc-50" style={{ fontSize: '15px', letterSpacing: '-0.01em' }}>
@@ -95,7 +95,7 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
           </div>
         </DialogHeader>
 
-        <div className="relative flex flex-1 flex-col overflow-hidden bg-white p-0 dark:bg-zinc-950">
+        <div className="relative flex flex-1 flex-col overflow-hidden bg-white p-0 dark:bg-muted">
           {docId ? (
             <div className={cn("relative min-h-0 min-w-0 flex-1 flex flex-col transition-all duration-300", isFullscreen ? "fixed inset-0 z-[9999] bg-white dark:bg-card" : "")}>
               {isFullscreen && (
