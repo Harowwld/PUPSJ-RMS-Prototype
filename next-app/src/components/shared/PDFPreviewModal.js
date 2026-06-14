@@ -9,12 +9,6 @@ import {
 } from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 
@@ -35,7 +29,7 @@ function PDFFrame({ docId }) {
       <iframe
         title="PDF Preview"
         src={`/api/documents/${docId}#toolbar=0&navpanes=0`}
-        className="absolute inset-0 h-full w-full bg-gray-200 dark:bg-zinc-700"
+        className="absolute inset-0 h-full w-full bg-[#F2F2F7] dark:bg-zinc-800"
         style={{ border: "none" }}
         onLoad={() => setFrameReady(true)}
       />
@@ -72,30 +66,34 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
       }}
     >
       <DialogContent 
-        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out xl:max-w-[1400px] rounded-brand dark:border-white/10 dark:bg-muted"
+        hideClose={true}
+        className="flex flex-col overflow-hidden bg-white dark:bg-zinc-900 p-0 shadow-[0_8px_40px_rgba(0,0,0,0.16)] w-[760px] max-w-full max-h-[90vh] transition-all duration-300 ease-out rounded-[16px] border-0"
       >
-        <DialogHeader className="shrink-0 border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
+        <DialogHeader className="shrink-0 p-[20px_24px] dark:border-zinc-850" style={{ borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}>
           <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card">
-                <i className="ph-duotone ph-file-pdf text-xl"></i>
-              </div>
+            <div className="flex items-center gap-3">
+              <i className="ti ti-file-text text-[18px]" style={{ color: "#E5484D" }}></i>
               <div className="min-w-0">
-                <DialogTitle className="text-left text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
+                <DialogTitle className="text-left text-[15px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50">
                   Document Preview: {preview?.docType || "Loading..."}
                 </DialogTitle>
-                <p className="mt-1.5 text-left text-sm font-medium text-gray-500 dark:text-zinc-400">
+                <p className="mt-[2px] text-left text-[12px] font-normal text-[#8E8E93] dark:text-zinc-400">
                   Reviewing digitized record for {preview?.studentName || "student"}. Ensure all
                   identifiers and data are clearly legible.
                 </p>
               </div>
             </div>
+            <DialogClose asChild>
+              <button className="p-0 border-0 bg-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-100 transition-colors cursor-pointer focus:outline-none flex items-center justify-center">
+                <i className="ti ti-x text-[16px]"></i>
+              </button>
+            </DialogClose>
           </div>
         </DialogHeader>
 
-        <div className="relative flex flex-1 flex-col overflow-hidden bg-gray-100 p-0 dark:bg-muted">
+        <div className="relative flex flex-1 flex-col overflow-hidden min-h-0 bg-[#F2F2F7] dark:bg-zinc-950 p-[24px]">
           {docId ? (
-            <div className={cn("relative min-h-0 min-w-0 flex-1 flex flex-col transition-all duration-300", isFullscreen ? "fixed inset-0 z-[9999] bg-white dark:bg-card" : "")}>
+            <div className={cn("relative min-h-0 min-w-0 flex-1 flex flex-col transition-all duration-300", isFullscreen ? "fixed inset-0 z-[9999] bg-white dark:bg-card p-0" : "bg-white rounded-lg shadow-[0_2px_12px_rgba(0,0,0,0.12)] overflow-hidden")}>
               {isFullscreen && (
                 <div className="absolute top-4 right-4 z-[10000]">
                   <Button
@@ -109,10 +107,21 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
                 </div>
               )}
               <PDFFrame key={docId} docId={docId} />
+              
+              {!isFullscreen && (
+                <button
+                  type="button"
+                  onClick={() => setIsFullscreen(true)}
+                  className="absolute bottom-3 left-3 z-20 flex items-center justify-center bg-white border border-[rgba(0,0,0,0.12)] rounded-[6px] p-1.5 text-[#8E8E93] hover:text-[#111111] dark:bg-zinc-900 dark:border-zinc-700 transition-colors cursor-pointer"
+                  style={{ borderWidth: "0.5px" }}
+                >
+                  <i className="ti ti-arrows-maximize text-[16px]"></i>
+                </button>
+              )}
             </div>
           ) : (
-            <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
-              <div className="max-w-lg text-center">
+            <div className="flex flex-1 items-center justify-center bg-[#F2F2F7] dark:bg-zinc-950">
+              <div className="max-w-lg text-center bg-white dark:bg-zinc-900 p-8 rounded-lg shadow-[0_2px_12px_rgba(0,0,0,0.12)]">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-card">
                   <i className="ph-bold ph-file-x text-xl text-gray-300 dark:text-zinc-600"></i>
                 </div>
@@ -127,54 +136,28 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
           )}
         </div>
 
-        <TooltipProvider delayDuration={200}>
-          <div className="flex shrink-0 justify-between items-center gap-3 border-t border-gray-100 bg-white p-4 dark:border-white/10 dark:bg-card">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setIsFullscreen(!isFullscreen)}
-                  className={cn(
-                    "h-11 w-11 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card transition-all hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card shadow-sm dark:shadow-none",
-                    isFullscreen && "bg-pup-maroon dark:bg-red-600 text-white hover:bg-pup-darkMaroon border-pup-darkMaroon"
-                  )}
-                >
-                  <i className={cn("ph-bold text-xl", isFullscreen ? "ph-corners-in" : "ph-corners-out")}></i>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
-                <p className="text-[10px] font-semibold">Document Zoom</p>
-                <p className="text-[9px] opacity-80">Toggle high-focus preview mode</p>
-              </TooltipContent>
-            </Tooltip>
-
-            <div className="flex items-center gap-3">
-              <DialogClose asChild>
-                <Button
-                  variant="outline"
-                  onClick={onClose}
-                  className="h-11 rounded-brand border-gray-300 px-6 text-sm font-semibold tracking-wide text-gray-600 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-sm transition-colors dark:text-zinc-300 dark:hover:border-zinc-700 dark:bg-red-950/30 dark:shadow-none dark:border-white/10"
-                >
-                  Close Preview
-                </Button>
-              </DialogClose>
-              {docId ? (
-                <a
-                  href={`/api/documents/${docId}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-flex h-11 items-center rounded-brand border border-gray-300 bg-white px-6 text-sm font-semibold tracking-wide text-pup-maroon dark:text-primary shadow-sm transition-colors hover:bg-red-50 dark:border-white/10 dark:bg-card"
-                >
-                  <i className="ph-bold ph-arrow-square-out mr-2 text-lg"></i>
-                  Open Full View
-                </a>
-              ) : null}
-            </div>
-          </div>
-        </TooltipProvider>
+        <div className="flex shrink-0 justify-end items-center gap-[8px] p-[16px_24px] dark:border-zinc-850" style={{ borderTop: "0.5px solid rgba(0,0,0,0.08)" }}>
+          <DialogClose asChild>
+            <button
+              onClick={onClose}
+              className="h-[36px] px-4 rounded-[8px] border-[0.5px] border-black/15 bg-transparent text-[13px] font-normal text-[#111111] hover:bg-[#F5F5F5] dark:text-zinc-300 dark:border-white/10 dark:hover:bg-zinc-800 transition-colors cursor-pointer outline-none"
+              style={{ borderWidth: "0.5px" }}
+            >
+              Close
+            </button>
+          </DialogClose>
+          {docId ? (
+            <a
+              href={`/api/documents/${docId}`}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex h-[36px] items-center justify-center rounded-[8px] bg-[#E5484D] text-white hover:bg-[#C93B3B] px-4 text-[13px] font-medium transition-colors cursor-pointer outline-none"
+            >
+              Open Full View
+            </a>
+          ) : null}
+        </div>
       </DialogContent>
     </Dialog>
   )
 }
-
