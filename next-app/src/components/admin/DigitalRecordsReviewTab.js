@@ -1000,7 +1000,7 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
+                    <th className="p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Action</th>
                   </tr>
                 </thead>
                 <tbody className="bg-transparent">
