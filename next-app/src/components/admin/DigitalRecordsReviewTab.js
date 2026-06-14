@@ -1127,7 +1127,7 @@ export default function DigitalRecordsReviewTab({
                             <div className="flex items-center justify-end gap-[12px]" onClick={(e) => e.stopPropagation()}>
                               <button
                                 onClick={() => handlePreview(r)}
-                                className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-pup-maroon dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                               >
                                 <i className="ph-bold ph-eye text-[16px]"></i>
                               </button>
@@ -1160,7 +1160,7 @@ export default function DigitalRecordsReviewTab({
                                   return (
                                     <button
                                       onClick={() => onSetStatus(r.id, "Pending", "Undo review action")}
-                                      className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-pup-maroon dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                      className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                     >
                                       <i className="ph-bold ph-arrow-counter-clockwise text-[16px]"></i>
                                     </button>
