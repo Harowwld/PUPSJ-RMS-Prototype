@@ -180,14 +180,16 @@ export default function DocTypesTab({
   }
 
   const SortIndicator = ({ column }) => {
-    if (sortDoc.key !== column)
-      return <i className="ph-bold ph-caret-up-down ml-1 opacity-40 text-[10px]"></i>
+    if (sortDoc.key !== column) {
+      return <i className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+    }
     return sortDoc.direction === "asc" ? (
-      <i className="ph-bold ph-caret-up ml-1 text-pup-maroon dark:text-primary text-[10px] dark:text-primary"></i>
+      <i className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></i>
     ) : (
-      <i className="ph-bold ph-caret-down ml-1 text-pup-maroon dark:text-primary text-[10px] dark:text-primary"></i>
+      <i className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></i>
     )
   }
+
 
   const handleExportDocTypes = handleExportProp || (() => {
     const csvContent = [
@@ -259,6 +261,7 @@ export default function DocTypesTab({
           <PageHeader
             icon="ph-files"
             showBorder={false}
+            titleClassName="text-[15px]"
             title={
               <div className="flex items-center gap-2">
                 Document Types
@@ -389,9 +392,9 @@ export default function DocTypesTab({
                 </div>
               ) : (
                  <table className="min-w-full text-sm">
-                  <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
-                    <tr className="text-left text-[11px] font-medium uppercase tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
-                      <th className="w-16 p-4 text-center">
+                  <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
+                    <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                      <th className="w-12 p-4 text-center">
                         <input
                           type="checkbox"
                           className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20 dark:text-primary dark:border-white/10"
@@ -407,30 +410,26 @@ export default function DocTypesTab({
                         <button
                           onClick={() => onSort("name")}
                           className={cn(
-                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[11px] font-medium uppercase tracking-[0.04em]",
-                            sortDoc.key === "name" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                            "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                            sortDoc.key === "name" ? "text-pup-maroon dark:text-red-500" : "text-gray-400 dark:text-zinc-500 hover:text-pup-maroon dark:hover:text-red-500"
                           )}
                         >
                           Document Type <SortIndicator column="name" />
                         </button>
                       </th>
-                      <th className="w-48 p-4 px-6">
-                        <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">Status</span>
-                      </th>
-                      <th className="w-32 p-4 px-6 text-right">
-                        <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">Actions</span>
-                      </th>
+                      <th className="w-48 p-4 px-6 text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Status</th>
+                      <th className="w-32 p-4 px-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-white/10">
                     {!showArchived && (
                       <tr
                         className={cn(
-                          "transition-all duration-300 h-16",
-                          newDocTypeName.trim() ? "bg-amber-50/50 dark:bg-amber-950/10" : "bg-gray-50/30 hover:bg-gray-50 dark:bg-white/[0.02] dark:hover:bg-white/[0.05]"
+                          "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                          newDocTypeName.trim() && "bg-amber-50/50 dark:bg-amber-950/10"
                         )}
                       >
-                        <td className="p-4 text-center align-middle">
+                        <td className="py-0 px-4 align-middle text-center">
                           <div
                             className={cn(
                               "flex h-5 w-5 mx-auto items-center justify-center rounded-full border-2 border-dashed transition-colors",
@@ -445,7 +444,7 @@ export default function DocTypesTab({
                             ></i>
                           </div>
                         </td>
-                        <td className="p-4 px-6 align-middle">
+                        <td className="py-0 px-6 align-middle">
                           <div className="flex items-center gap-2">
                             <Input
                               placeholder="Quick add document type name..."
@@ -478,7 +477,7 @@ export default function DocTypesTab({
                             </Button>
                           </div>
                         </td>
-                        <td className="p-4 px-6 align-middle">
+                        <td className="py-0 px-6 align-middle">
                           {newDocTypeName.trim() ? (
                             <div className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] bg-orange-100 text-orange-800 dark:bg-orange-950/40 dark:text-orange-400">
                               Draft
@@ -489,7 +488,7 @@ export default function DocTypesTab({
                             </div>
                           )}
                         </td>
-                        <td className="p-4 px-6 text-right align-middle"></td>
+                        <td className="py-0 px-6 text-right align-middle"></td>
                       </tr>
                     )}
                     {filteredDocTypes.map((dt) => {
@@ -505,16 +504,19 @@ export default function DocTypesTab({
                             if (!isDisabled) toggleDocTypeSelected(dt.id, e);
                           }}
                           className={cn(
-                            "group transition-all duration-200 hover:bg-gray-50/80 dark:bg-card dark:hover:bg-white/5 select-none cursor-pointer h-16",
+                            "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                             dt.status === "Archived" && "opacity-75",
-                            isSelected && "bg-amber-50/50 dark:bg-amber-950/20",
+                            isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
                             isDisabled && "cursor-not-allowed"
                           )}
                         >
-                          <td className="p-4 text-center align-middle">
+                          <td className="py-0 px-4 align-middle text-center">
                             <input
                               type="checkbox"
-                              className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20 dark:text-primary dark:border-white/10"
+                              className={cn(
+                                "h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10 transition-opacity",
+                                isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
+                              )}
                               checked={isSelected}
                               onClick={(e) => {
                                 // Prevent click bubbling to tr
@@ -528,12 +530,12 @@ export default function DocTypesTab({
                               disabled={isDisabled}
                             />
                           </td>
-                          <td className="p-4 px-6 align-middle">
-                            <span className="text-[14px] font-medium text-[#111111] dark:text-zinc-50">
+                          <td className="py-0 px-6 align-middle">
+                            <span className="text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                               {dt.name}
                             </span>
                           </td>
-                          <td className="p-4 px-6 align-middle">
+                          <td className="py-0 px-6 align-middle">
                             {dt.status === "Archived" ? (
                               <div className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] bg-red-100 text-red-800 dark:bg-red-950/40 dark:text-red-400">
                                 Archived
@@ -544,7 +546,7 @@ export default function DocTypesTab({
                               </div>
                             )}
                           </td>
-                          <td className="p-4 px-6 text-right align-middle">
+                          <td className="py-0 px-6 text-right align-middle">
                             <div 
                               className="inline-flex items-center justify-end gap-[12px]"
                               onClick={(e) => e.stopPropagation()}
@@ -556,7 +558,7 @@ export default function DocTypesTab({
                                     setEditDocType({ id: dt.id, name: dt.name })
                                     setIsEditDocTypeOpen(true)
                                   }}
-                                  className="p-0 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-[#111111] dark:hover:text-white focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                  className="p-0 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-pup-maroon dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                 >
                                   <i className="ph-bold ph-pencil-simple text-[16px]"></i>
                                 </button>
@@ -664,17 +666,16 @@ export default function DocTypesTab({
             </div>
 
         {filteredDocTypesFull.length > 0 && (
-          <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-2xl dark:border-white/10 dark:bg-card">
-            <div className="flex items-center gap-8 select-none cursor-default">
-              <div className="flex items-center gap-6 text-[11px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">
+          <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card">
+            <div className="flex items-center gap-8">
+              <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
                 <span>
-                  SHOWING <strong className="text-gray-900 dark:text-zinc-50">{filteredDocTypes.length}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{filteredDocTypesFull.length}</strong> ENTRIES
+                  Showing {filteredDocTypes.length} of {filteredDocTypesFull.length}
                 </span>
-
                 <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
-                  <span className="text-[10px] opacity-60">ROWS:</span>
-                  <Select
-                    className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-semibold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
+                  <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
+                  <select
+                    className="h-8 w-16 cursor-pointer rounded-[6px] border border-gray-200 bg-white px-2 text-[12px] font-normal text-gray-700 focus:outline-none transition-all hover:bg-gray-50 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10"
                     value={itemsPerPage}
                     onChange={handleItemsPerPageChange}
                   >
@@ -682,33 +683,31 @@ export default function DocTypesTab({
                     <option value={20}>20</option>
                     <option value={50}>50</option>
                     <option value={100}>100</option>
-                  </Select>
+                  </select>
                 </div>
               </div>
             </div>
 
-            <div className="flex shrink-0 items-center gap-3 select-none">
-              <Button
-                variant="outline"
-                size="sm"
+            <div className="flex shrink-0 items-center gap-3">
+              <button
                 disabled={pageDoc <= 1}
-                onClick={() => setPageDoc((p) => p - 1)}
-                className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                onClick={() => setPageDoc((p) => Math.max(1, p - 1))}
+                className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
               >
-                <i className="ph-bold ph-caret-left mr-2 text-base"></i>Prev</Button>
+                Prev
+              </button>
 
-              <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-semibold text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+              <div className="flex h-8 min-w-[32px] items-center justify-center rounded-[6px] border border-gray-200/80 bg-white px-2.5 text-[12px] font-medium text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
                 {pageDoc}
               </div>
 
-              <Button
-                variant="outline"
-                size="sm"
+              <button
                 disabled={pageDoc >= Math.ceil(filteredDocTypesFull.length / itemsPerPage)}
                 onClick={() => setPageDoc((p) => p + 1)}
-                className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-500 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-              >Next<i className="ph-bold ph-caret-right ml-2 text-base"></i>
-              </Button>
+                className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
+              >
+                Next
+              </button>
             </div>
           </div>
         )}

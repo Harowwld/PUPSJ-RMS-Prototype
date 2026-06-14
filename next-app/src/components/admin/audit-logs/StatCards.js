@@ -84,17 +84,23 @@ export default function StatCards({ isLoading, logStats }) {
   const getColorClasses = (color) => {
     switch (color) {
       case "blue": return { 
-        bg: "from-blue-500 to-blue-700 dark:from-blue-800 dark:to-blue-950", border: "border-blue-950", 
+        bg: "from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa]",
+        shape1: "from-[#0055FF]/40 to-[#007AFF]/0",
+        shape2: "from-[#14C8FF]/30 to-[#007AFF]/0",
         text: "text-white", 
         sub: "text-blue-200", spark: "#BFDBFE" 
       };
       case "emerald": return { 
-        bg: "from-emerald-500 to-emerald-700 dark:from-emerald-800 dark:to-emerald-950", border: "border-emerald-950", 
+        bg: "from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37]",
+        shape1: "from-[#047857]/40 to-[#059669]/0",
+        shape2: "from-[#34d399]/30 to-[#059669]/0",
         text: "text-white", 
         sub: "text-emerald-100", spark: "#A7F3D0" 
       };
       case "amber": return { 
-        bg: "from-amber-500 to-amber-700 dark:from-amber-700 dark:to-amber-950", border: "border-amber-950", 
+        bg: "from-[#fbbf24] via-[#d97706] to-[#b45309] dark:from-[#d97706] dark:to-[#78350f]",
+        shape1: "from-[#b45309]/40 to-[#d97706]/0",
+        shape2: "from-[#fbbf24]/30 to-[#d97706]/0",
         text: "text-white", 
         sub: "text-amber-100", spark: "#FDE68A" 
       };
@@ -125,18 +131,21 @@ export default function StatCards({ isLoading, logStats }) {
           <div 
             key={i} 
             className={cn(
-              "group relative overflow-hidden rounded-xl border-none p-5 shadow-sm dark:shadow-none transition-all duration-300 hover:shadow-md dark:shadow-none bg-linear-to-br",
+              "group relative overflow-hidden rounded-xl border-none p-5 shadow-sm dark:shadow-none transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-br",
               classes.bg
             )}
           >
-            {/* Background Decorative Icon */}
-            <i className={cn("ph-duotone pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]", stat.iconClass)} />
+            {/* iCloud diagonal overlay vectors */}
+            <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
+              <div className={cn("absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr pointer-events-none", classes.shape1)} style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
+              <div className={cn("absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr pointer-events-none", classes.shape2)} style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
+            </div>
             
             <div className="relative z-10">
               <div className="flex items-end justify-between">
                 <div>
                   <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
-                    <i className={cn("ph-bold", stat.iconClass)} /> {stat.label}
+                    {stat.label}
                   </div>
                   <div className="text-[48px] font-semibold text-white tracking-tight">
                     {stat.value.toLocaleString()}

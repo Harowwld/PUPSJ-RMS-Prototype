@@ -158,7 +158,7 @@ export function AuthGuard({ allowedRoles = [], children, redirectTo = "/" }) {
   // Show loading skeleton while checking authentication
   if (isLoading) {
     return (
-      <div className="font-inter flex h-screen flex-col gap-4 overflow-hidden bg-gray-50 p-4 dark:bg-card">
+      <div className="font-inter flex min-h-screen flex-col gap-4 bg-gray-50 p-4 dark:bg-card">
         <Skeleton className="h-16 w-full shrink-0 rounded-brand" />
         <div className="flex flex-1 gap-4">
           <Skeleton className="h-full w-[30%] rounded-brand" />

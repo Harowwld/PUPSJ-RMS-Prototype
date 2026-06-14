@@ -91,6 +91,48 @@ function StaffPageContent() {
     }
   }, [searchParams])
   const [loading, setLoading] = useState(true);
+  const [zoomNode, setZoomNode] = useState(3); // 0 to 6 (7 nodes)
+  const handleZoomMouseDown = (e) => {
+    // Avoid text selection or default drag triggers
+    e.preventDefault();
+    const track = e.currentTarget;
+    
+    const updateZoom = (clientX) => {
+      const rect = track.getBoundingClientRect();
+      const clickX = clientX - rect.left;
+      const percentage = clickX / rect.width;
+      const node = Math.max(0, Math.min(6, Math.round(percentage * 6)));
+      setZoomNode(node);
+    };
+
+    const isTouch = e.type === "touchstart";
+    const startX = isTouch ? e.touches[0].clientX : e.clientX;
+    updateZoom(startX);
+
+    const handleMove = (moveEvent) => {
+      const clientX = moveEvent.type === "touchmove" ? moveEvent.touches[0].clientX : moveEvent.clientX;
+      updateZoom(clientX);
+    };
+
+    const handleEnd = () => {
+      if (isTouch) {
+        document.removeEventListener("touchmove", handleMove);
+        document.removeEventListener("touchend", handleEnd);
+      } else {
+        document.removeEventListener("mousemove", handleMove);
+        document.removeEventListener("mouseup", handleEnd);
+      }
+    };
+
+    if (isTouch) {
+      document.addEventListener("touchmove", handleMove, { passive: true });
+      document.addEventListener("touchend", handleEnd);
+    } else {
+      document.addEventListener("mousemove", handleMove);
+      document.addEventListener("mouseup", handleEnd);
+    }
+  };
+
   const [notificationsUnread, setNotificationsUnread] = useState(0);
 
   const [students, setStudents] = useState([]);
@@ -1279,9 +1321,17 @@ function StaffPageContent() {
     { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
   ];
 
+  const [sidebarOpen, setSidebarOpen] = useState(true);
+
+  useEffect(() => {
+    const handleToggle = () => setSidebarOpen((prev) => !prev);
+    window.addEventListener("toggle-sidebar", handleToggle);
+    return () => window.removeEventListener("toggle-sidebar", handleToggle);
+  }, []);
+
   if (loading) {
     return (
-      <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4 transition-colors duration-300 dark:bg-background">
+      <div className="min-h-screen bg-gray-50 flex flex-col font-inter p-4 gap-4 transition-colors duration-300 dark:bg-background">
         <Skeleton className="h-16 w-full rounded-brand shrink-0" />
         <div className="flex-1 flex gap-4">
           <Skeleton className="w-[30%] h-full rounded-brand" />
@@ -1292,14 +1342,70 @@ function StaffPageContent() {
   }
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden bg-gray-50 font-inter transition-colors duration-300 dark:bg-background">
-      <Header authUser={authUser} onLogout={handleLogout} />
+    <div className="min-h-screen flex flex-col bg-gray-50 font-inter transition-colors duration-300 dark:bg-background">
+      <Header authUser={authUser} onLogout={handleLogout}>
+        {authUser?.preferences?.navigation_layout !== "topbar" && !sidebarOpen && (
+          <div className="flex items-center gap-3.5 pl-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("toggle-sidebar"))
+                }
+              }}
+              className="flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-700 cursor-pointer bg-transparent h-9 w-9"
+            >
+              <i className="ti ti-layout-sidebar text-[21px]" style={{ color: "#E5484D" }}></i>
+            </button>
+
+            {/* Apple Photos Style Zoom Control */}
+            <div className="flex items-center gap-1.5 select-none pr-2">
+              <button
+                type="button"
+                onClick={() => setZoomNode(prev => Math.max(0, prev - 1))}
+                className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-9 w-9 transition-colors duration-75"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M2.5 7H11.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+                </svg>
+              </button>
+              <div 
+                onMouseDown={handleZoomMouseDown}
+                onTouchStart={handleZoomMouseDown}
+                className="relative w-[80px] h-[18px] flex items-center group cursor-pointer"
+              >
+                {/* Track */}
+                <div className="absolute left-0 right-0 h-[3px] bg-[#D1D1D6] dark:bg-zinc-700 rounded-full"></div>
+                {/* Active Track */}
+                <div 
+                  className="absolute left-0 h-[3px] bg-[#007AFF] rounded-full"
+                  style={{ width: `${(zoomNode / 6) * 100}%` }}
+                ></div>
+                {/* Handle */}
+                <div 
+                  className="absolute -translate-x-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-zinc-900 border-[3px] border-[#007AFF] shadow-xs"
+                  style={{ left: `${(zoomNode / 6) * 100}%` }}
+                ></div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setZoomNode(prev => Math.min(6, prev + 1))}
+                className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-9 w-9 transition-colors duration-75"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7 2.5V11.5M2.5 7H11.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+      </Header>
 
       <Tabs
         value={view}
         onValueChange={switchView}
         orientation={authUser?.preferences?.navigation_layout === "topbar" ? "horizontal" : "vertical"}
-        className={cn("flex-1 overflow-hidden w-full gap-0 relative flex", authUser?.preferences?.navigation_layout === "topbar" ? "flex-col" : "flex-row")}
+        className={cn("flex-1 w-full gap-0 relative flex", authUser?.preferences?.navigation_layout === "topbar" ? "flex-col" : "flex-row")}
       >
         {authUser?.preferences?.navigation_layout === "topbar" ? (
           <div className="w-full bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-white/5 py-2.5 px-4 flex items-center justify-center gap-2 overflow-x-auto shadow-xs select-none shrink-0 scrollbar-none">
@@ -1334,12 +1440,21 @@ function StaffPageContent() {
               );
             })}
           </div>
-        ) : (
-          <Sidebar items={sidebarItems} activeKey={view} onSelect={switchView} />
-        )}
-
-        <main className="flex-1 overflow-y-auto p-4 relative w-full min-w-0">
-          <TabsContent value="search" className="h-full m-0 border-0 focus-visible:ring-0">
+        ) : sidebarOpen ? (
+          <Sidebar 
+            items={sidebarItems} 
+            activeKey={view} 
+            onSelect={switchView} 
+            onLogout={handleLogout} 
+            zoomNode={zoomNode}
+            setZoomNode={setZoomNode}
+            handleZoomMouseDown={handleZoomMouseDown}
+          />
+        ) : null}
+        <main 
+          className="flex-1 p-4 relative w-full min-w-0 bg-white dark:bg-zinc-950"
+          style={{ zoom: [0.75, 0.83, 0.92, 1.0, 1.08, 1.17, 1.25][zoomNode] }}
+        >          <TabsContent value="search" className="h-full m-0 border-0 focus-visible:ring-0">
             <RecordsArchiveTab
               loading={!storageLayout}
               quickQuery={quickQuery}
@@ -1757,7 +1872,6 @@ function StaffPageContent() {
         </main>
       </Tabs>
 
-      <Footer />
       <PDFPreviewModal
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}
@@ -1835,11 +1949,10 @@ export default function StaffPage() {
     <StaffGuard>
       <Suspense
         fallback={
-          <div className="h-screen bg-gray-50 flex flex-col font-inter overflow-hidden p-4 gap-4 dark:bg-background">
-            <Skeleton className="h-16 w-full rounded-brand shrink-0" />
-            <div className="flex-1 flex gap-4">
-              <Skeleton className="w-[30%] h-full rounded-brand" />
-              <Skeleton className="w-[70%] h-full rounded-brand" />
+          <div className="min-h-screen bg-gray-50 dark:bg-background flex items-center justify-center font-inter p-4">
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-pup-maroon dark:border-zinc-800 dark:border-t-primary"></div>
+              <p className="text-xs font-semibold tracking-widest text-gray-400 dark:text-zinc-500 uppercase">Loading System...</p>
             </div>
           </div>
         }

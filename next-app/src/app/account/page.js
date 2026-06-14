@@ -559,7 +559,7 @@ function AccountPageContent() {
 
   if (loading) {
     return (
-      <div className="h-screen flex flex-col bg-gray-50 animate-fade-in dark:bg-white/5">
+      <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-white/5">
         <header className="bg-white border-b border-gray-200 h-16 flex items-center px-4 shrink-0 dark:bg-card dark:border-white/10">
           <Skeleton className="w-10 h-10 rounded-full" />
           <Skeleton className="w-48 h-6 ml-3" />
@@ -590,7 +590,7 @@ function AccountPageContent() {
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-background font-inter selection:bg-pup-maroon selection:text-white">
       <Header authUser={authUser} onLogout={handleLogout} />
 
-      <main className="flex-1 w-full max-w-[1100px] mx-auto py-10 px-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <main className="flex-1 w-full max-w-[1100px] mx-auto py-10 px-4">
         <PageHeader
           title="Account Settings"
           description="Update your personal info and security settings."

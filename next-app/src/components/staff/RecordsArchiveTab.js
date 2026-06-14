@@ -271,10 +271,10 @@ export default function RecordsArchiveTab({
       ? "min-h-[min(70vh,800px)] flex-1 w-full aspect-[16/10] mx-auto max-w-6xl overflow-hidden rounded-xl shadow-2xl"
       : "w-full aspect-[16/10] max-h-[600px] mx-auto max-w-4xl overflow-hidden rounded-xl shadow-lg border border-gray-200 dark:border-white/10"
     const rowClass = isFullscreen
-      ? "flex flex-1 flex-col overflow-hidden min-h-0"
+      ? "flex flex-1 flex-col overflow-visible"
       : "flex flex-col w-full"
     const leftClass = isFullscreen
-      ? "bg-white dark:bg-zinc-950 p-8 min-h-0 overflow-y-auto flex flex-1 flex-col w-full"
+      ? "bg-white dark:bg-zinc-950 p-8 h-auto overflow-visible flex flex-1 flex-col w-full"
       : "bg-white dark:bg-zinc-950 p-8 flex flex-col w-full"
     const innerLeftClass = "flex w-full flex-col min-h-0 flex-1 mx-auto max-w-6xl"
 
@@ -947,7 +947,7 @@ export default function RecordsArchiveTab({
               ) : (
                 <div 
                   key={`table-${currentLevel}-${showArchived}`}
-                  className="flex-1 overflow-hidden overflow-auto rounded-brand border border-gray-200 bg-white shadow-sm animate-fade-up dark:border-white/10 dark:bg-card"
+                  className="flex-1 overflow-visible rounded-brand border border-gray-200 bg-white shadow-sm animate-fade-up dark:border-white/10 dark:bg-card"
                 >
                   <table className="min-w-full text-sm">
                     <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">

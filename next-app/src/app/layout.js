@@ -31,6 +31,7 @@ export default function RootLayout({ children }) {
         />
         <link rel="stylesheet" href="/assets/vendor/phosphor/thin/style.css" />
         <link rel="stylesheet" href="/assets/vendor/phosphor/light/style.css" />
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
 
         <link rel="icon" type="image/png" href="/icon.png" />
       </head>

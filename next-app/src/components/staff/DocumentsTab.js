@@ -741,7 +741,7 @@ export default function DocumentsTab({
               
               <div
                 key={`${docsForm.studentNo}-${docsForm.docType}`}
-                className="flex-1 w-full overflow-auto animate-fade-up"
+                className="flex-1 w-full overflow-visible animate-fade-up"
               >
                 <DocumentsTable
                   docsRows={docsRows}

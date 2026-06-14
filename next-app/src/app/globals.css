@@ -83,6 +83,15 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+
+  --shadow-xs: none;
+  --shadow-sm: none;
+  --shadow-md: none;
+  --shadow-lg: none;
+  --shadow-xl: none;
+  --shadow-2xl: none;
+  --shadow-inner: none;
+  --shadow: none;
 }
 
 :root {
@@ -171,6 +180,13 @@
   --color-red-600: #b94642;
 }
 @layer base {
+  html, body {
+    height: auto;
+    min-height: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
   *, *::before, *::after {
     @apply border-border outline-ring/50;
   }
@@ -211,6 +227,24 @@
 
 .dark .bg-gray-50 {
     background-color: var(--muted); /* Use the lighter gray muted shade */
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 52px white inset !important;
+  -webkit-text-fill-color: #1D1D1F !important;
+  caret-color: #1D1D1F;
+}
+
+.dark input:-webkit-autofill,
+.dark input:-webkit-autofill:hover,
+.dark input:-webkit-autofill:focus,
+.dark input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 52px #27272a inset !important;
+  -webkit-text-fill-color: #f4f4f5 !important;
+  caret-color: #f4f4f5;
 }
 
 /* Modern Card Styling Overrides for Dark Mode */
@@ -309,7 +343,7 @@ th {
 }
 
 .animate-fade-up {
-  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  /* Disabled entry animations */
 }
 
 /* Utility Components */
@@ -727,6 +761,111 @@ tbody,
 [data-slot="card-title"].text-xl,
 h1 {
   font-size: 18px !important; /* page title size */
+}
+h1.login-title {
+  font-size: 25px !important;
+}
+
+#username, #password {
+  font-size: 15px !important;
+}
+
+.field-wrapper {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: white;
+  transition: box-shadow 150ms ease !important;
+}
+.dark .field-wrapper {
+  background: #27272a;
+}
+.field-wrapper label {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 15px !important;
+  color: #8E8E93;
+  transition: all 150ms ease;
+  pointer-events: none;
+  z-index: 5;
+}
+.field-wrapper.active label,
+.field-wrapper:has(input:focus) label,
+.field-wrapper:has(input:autofill) label,
+.field-wrapper:has(input:-webkit-autofill) label,
+.field-wrapper:has(input:not(:placeholder-shown)) label {
+  top: 8px;
+  transform: translateY(0);
+  font-size: 11px !important;
+}
+.field-wrapper input {
+  height: 52px !important;
+  padding-top: 16px !important;
+  padding-bottom: 0 !important;
+  padding-left: 14px !important;
+  font-size: 15px !important;
+  color: #1D1D1F !important;
+  border: none !important;
+  border-radius: 0px !important;
+  width: 100% !important;
+  background: transparent !important;
+  outline: none !important;
+}
+.dark .field-wrapper input {
+  color: #f4f4f5 !important;
+}
+
+/* Merged container styles */
+.merged-container {
+  border: 1px solid rgba(0,0,0,0.2) !important;
+  border-radius: 10px !important;
+  overflow: hidden !important;
+  transition: border-color 150ms ease, box-shadow 150ms ease !important;
+}
+.dark .merged-container {
+  border: 1px solid rgba(255,255,255,0.15) !important;
+}
+
+.merged-container.has-error:not(:focus-within) {
+  border-color: #E5484D !important;
+  box-shadow: 0 0 0 1px #E5484D !important;
+}
+
+/* Email bottom divider (Step 2 state) */
+.email-wrapper.step2-active {
+  border-bottom: 1px solid rgba(0,0,0,0.12) !important;
+}
+.dark .email-wrapper.step2-active {
+  border-bottom: 1px solid rgba(255,255,255,0.1) !important;
+}
+
+/* Concentric logo rings animations */
+@keyframes spin-clockwise {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes spin-counter-clockwise {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+.animate-spin-slow {
+  animation: spin-clockwise 40s linear infinite;
+}
+.animate-spin-reverse {
+  animation: spin-counter-clockwise 25s linear infinite;
+}
+.animate-spin-slowest {
+  animation: spin-clockwise 55s linear infinite;
 }
 
 

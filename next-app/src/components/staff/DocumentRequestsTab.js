@@ -545,7 +545,7 @@ export default function DocumentRequestsTab({
             ) : (
               <div 
                 key={`${page}-${statusFilter}-${debouncedQ}-${sortBy}-${sortOrder}`}
-                className="flex-1 w-full overflow-auto animate-fade-up"
+                className="flex-1 w-full overflow-visible animate-fade-up"
               >
                 <div className="overflow-x-auto flex-1">
                   <table className="min-w-full text-sm table-fixed">

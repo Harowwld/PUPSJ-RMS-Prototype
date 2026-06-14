@@ -116,40 +116,38 @@ export default function BulkImportTab({
         <div className="flex flex-col flex-1 gap-6 w-full min-h-0 animate-fade-up">
           <div className="mt-[20px]">
             <PageHeader
+              showBorder={false}
+              titleClassName="text-[15px]"
               title="Import"
               description="Select or drop your structured data"
-              showBorder={false}
+              className="p-0"
               actions={
-                <Button
-                  variant="ghost"
-                  size="sm"
+                <button
+                  type="button"
                   onClick={() => setShowInstructions(true)}
-                  className="h-8 w-8 rounded-full p-0 text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:text-primary dark:hover:bg-white/5"
+                  className="text-[#C7C7CC] hover:text-[#8E8E93] transition-colors bg-transparent border-0 p-0 cursor-pointer"
                   title="Import Instructions"
                 >
-                  <i className="ph-bold ph-question text-lg"></i>
-                </Button>
+                  <i className="ti ti-help-circle text-[16px]"></i>
+                </button>
               }
-              className="p-0"
             />
           </div>
           
           <div className="flex flex-col flex-1 gap-6 w-full min-h-0">
-            <div className="flex flex-wrap items-center gap-3 bg-transparent dark:border-white/5 dark:bg-transparent">
+            <div className="flex items-center gap-[8px] mt-[16px]">
               <a
                 href="data:text/csv;charset=utf-8,Category,Name,Code%0ADOCUMENT TYPE,Transcript of Records,%0ADOCUMENT TYPE,Diploma,%0ACourse,Bachelor of Science in IT,BSIT%0ACourse,Bachelor of Science in Accountancy,BSA%0ASection,Block 1,BSIT%0ASection,Section 1,BSA"
                 download="PUP-IMPORT-TEMPLATE.csv"
-                className="inline-flex h-9 w-auto items-center justify-center gap-2 rounded-lg border border-gray-300 bg-transparent px-4 text-[10px] font-semibold tracking-widest text-gray-600 transition-all hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
+                className="inline-flex h-[36px] items-center justify-center rounded-[8px] border-[0.5px] border-black/15 dark:border-white/15 bg-transparent px-[16px] text-[13px] font-normal text-[#111111] dark:text-zinc-100 transition-colors hover:bg-[#F5F5F5] dark:hover:bg-white/5 cursor-pointer"
               >
-                <i className="ph-bold ph-download-simple text-sm"></i>
                 Download Template
               </a>
               <button
                 type="button"
                 onClick={handleCopySample}
-                className="inline-flex h-9 w-auto items-center justify-center gap-2 rounded-lg border border-gray-300 bg-transparent px-4 text-[10px] font-semibold tracking-widest text-gray-600 transition-all hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-transparent dark:text-zinc-300 dark:border-white/10"
+                className="inline-flex h-[36px] items-center justify-center rounded-[8px] border-[0.5px] border-black/15 dark:border-white/15 bg-transparent px-[16px] text-[13px] font-normal text-[#111111] dark:text-zinc-100 transition-colors hover:bg-[#F5F5F5] dark:hover:bg-white/5 cursor-pointer"
               >
-                <i className="ph-bold ph-copy text-sm"></i>
                 Copy Raw Sample
               </button>
             </div>
@@ -158,10 +156,8 @@ export default function BulkImportTab({
             <div className="flex flex-col flex-1 items-center justify-center min-h-0 w-full">
               <div
                 className={cn(
-                  "group relative flex flex-1 h-full w-full cursor-pointer flex-col items-center justify-center rounded-brand border-2 border-dashed p-6 text-center transition-all min-h-[160px]",
-                  importDropActive 
-                    ? "border-pup-maroon bg-red-50/30" 
-                    : "border-gray-400 hover:border-pup-maroon bg-gray-50/20 hover:bg-red-50/10 dark:border-zinc-700 dark:hover:border-primary"
+                  "group relative flex flex-1 h-full w-full cursor-pointer flex-col items-center justify-center rounded-[12px] border-[0.5px] border-black/12 bg-[#FAFAFA] dark:border-white/12 dark:bg-zinc-900/50 p-[40px] text-center transition-all duration-150 ease-out min-h-[570px]",
+                  importDropActive && "border-[#E5484D] border bg-[#FFF5F5] dark:bg-red-950/20"
                 )}
                 onDragOver={(e) => {
                   e.preventDefault()
@@ -183,13 +179,13 @@ export default function BulkImportTab({
                   onChange={handleCsvSelect}
                   className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
                 />
-                <div className="pointer-events-none flex flex-col items-center justify-center text-center gap-1.5 w-full h-full">
-                  <i className="ph-light ph-file-arrow-up text-xl text-pup-maroon dark:text-primary mb-1"></i>
-                  <p className="text-sm font-semibold text-gray-900 dark:text-zinc-50">
-                    Drop CSV File here
+                <div className="pointer-events-none flex flex-col items-center justify-center text-center w-full h-full">
+                  <i className={cn("ti ti-upload text-[24px] transition-colors duration-150", importDropActive ? "text-[#E5484D]" : "text-[#C7C7CC]")}></i>
+                  <p className="text-[14px] font-medium text-[#111111] dark:text-zinc-100 mt-[12px] m-0">
+                    Drop CSV file here
                   </p>
-                  <p className="text-xs font-medium text-gray-500 dark:text-zinc-400">
-                    or click to browse local files (.csv)
+                  <p className="text-[13px] font-normal text-[#8E8E93] mt-[4px] m-0">
+                    or click to <span className="text-[#E5484D] cursor-pointer hover:underline">browse</span> local files (.csv)
                   </p>
                 </div>
               </div>
@@ -210,7 +206,7 @@ export default function BulkImportTab({
             </Button>
             <div className="flex items-center gap-4">
               <div>
-                <CardTitle className="text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
+                <CardTitle className="text-[15px] font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
                   Import Preview
                 </CardTitle>
                 <CardDescription className="mt-1.5 text-sm font-medium text-gray-500 transition-colors dark:text-zinc-400">
@@ -635,54 +631,62 @@ export default function BulkImportTab({
         </div>
       )}
       <Dialog open={showInstructions} onOpenChange={setShowInstructions}>
-        <DialogContent className="max-w-md overflow-hidden rounded-[2rem] border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card">
-          <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
-            <DialogTitle className="text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
+        <DialogContent className="w-[680px] max-w-[90vw] sm:max-w-[90vw] overflow-hidden rounded-[16px] border border-gray-200 bg-white p-8 shadow-[0_8px_40px_rgba(0,0,0,0.12)] dark:border-white/10 dark:bg-zinc-950 [&>button]:hidden relative flex flex-col max-h-[80vh]">
+          {/* Close button */}
+          <button
+            onClick={() => setShowInstructions(false)}
+            className="absolute right-8 top-8 text-[#8E8E93] hover:text-[#111] transition-colors border-0 bg-transparent p-0 cursor-pointer"
+          >
+            <i className="ph-bold ph-x text-[16px]"></i>
+          </button>
+
+          {/* Modal Header */}
+          <div className="mb-6">
+            <DialogTitle className="text-[18px] font-semibold tracking-[-0.01em] text-[#111] dark:text-zinc-50">
               Import Instructions
             </DialogTitle>
             <DialogDescription className="sr-only">
               Data categories and guidelines for importing bulk CSV files.
             </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-8 overflow-y-auto p-6 pb-10 scrollbar-hide max-h-[60vh]">
-            {/* architecture header */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="text-[10px] font-semibold tracking-tight text-gray-400 dark:text-zinc-500">
-                  1. Architecture
-                </div>
-                <div className="h-px flex-1 bg-gray-100 ml-4 dark:bg-zinc-800/50"></div>
+          </div>
+
+          {/* Modal Content */}
+          <div className="overflow-y-auto flex-1 pr-1">
+            {/* Architecture */}
+            <div className="mb-6">
+              <div className="flex items-center gap-[6px] text-[11px] mb-3 mt-0">
+                <span className="font-semibold tracking-[0.05em] text-[#8E8E93]">Architecture</span>
               </div>
-              
-              <div className="flex flex-wrap gap-2 justify-center">
+              <div className="inline-flex gap-2">
                 {["Category", "Name", "Code"].map((col) => (
-                  <code
+                  <span
                     key={col}
-                    className="px-3 py-1.5 rounded-md text-xs font-mono font-semibold bg-gray-100 border border-gray-200 text-gray-800 dark:bg-zinc-800 dark:border-white/10 dark:text-zinc-200 select-all"
+                    className="bg-[#F2F2F7] rounded-[6px] px-3 py-1 text-[12px] font-medium text-[#111] dark:bg-zinc-800 dark:text-zinc-200 border-0"
                   >
                     {col}
-                  </code>
+                  </span>
                 ))}
               </div>
             </div>
 
-            {/* Data Mapping Section */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="text-[10px] font-semibold tracking-tight text-gray-400 dark:text-zinc-500">
-                  2. Data Mapping
-                </div>
-                <div className="h-px flex-1 bg-gray-100 ml-4 dark:bg-zinc-800/50"></div>
+            {/* Data Mapping */}
+            <div className="pt-6 mt-6 border-t-[0.5px] border-black/[0.08] dark:border-white/10 mb-6">
+              <div className="flex items-center gap-[6px] text-[11px] mb-3">
+                <span className="font-semibold tracking-[0.05em] text-[#8E8E93]">Data Mapping</span>
               </div>
-              
-              <div className="group relative overflow-hidden rounded-xl border border-red-100 bg-red-50 p-5 font-mono text-[11px] text-gray-700 shadow-xs dark:bg-red-500/5 dark:border-red-500/20 dark:text-zinc-100">
-                <div className="absolute top-0 right-0 p-3 opacity-10 transition-opacity group-hover:opacity-30">
-                  <i className="ph-bold ph-file-csv text-xl text-pup-maroon dark:text-primary" />
-                </div>
-                <div className="mb-3 flex items-center gap-2 text-[9px] font-semibold text-pup-maroon dark:text-primary">
-                  <i className="ph-bold ph-code text-xs" /> CSV Structure Example
-                </div>
-                <span className="font-semibold text-gray-900 dark:text-zinc-50 border-b border-red-200/50 dark:border-white/5 pb-0.5">Category,Name,Code</span>
+
+              <div className="relative rounded-lg bg-[#F2F2F7] dark:bg-zinc-900 p-4 font-mono text-[12px] text-[#111] dark:text-zinc-100 leading-[1.6]">
+                <button
+                  onClick={handleCopySample}
+                  className="absolute top-4 right-4 text-[#8E8E93] hover:text-[#111] transition-colors border-0 bg-transparent p-0 cursor-pointer flex items-center justify-center"
+                  title="Copy Example"
+                >
+                  <i className="ph-bold ph-copy ti-copy text-[14px]"></i>
+                </button>
+
+                <div className="text-[11px] text-[#8E8E93] mb-3 normal-case font-sans">CSV Structure Example</div>
+                
+                <span className="font-semibold text-[#111] dark:text-zinc-50 border-b border-black/[0.08] dark:border-white/5 pb-0.5">Category,Name,Code</span>
                 <div className="mt-2 space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="text-gray-500 dark:text-zinc-400">DocumentType,</span>
@@ -691,30 +695,27 @@ export default function BulkImportTab({
                   <div className="flex items-center gap-2">
                     <span className="text-gray-500 dark:text-zinc-400">Course,</span>
                     <span className="text-gray-800 dark:text-zinc-300 font-semibold">Bachelor of Science in IT,</span>
-                    <span className="text-red-700 dark:text-primary font-semibold">BSIT</span>
+                    <span className="text-[#E5484D] font-semibold">BSIT</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-gray-500 dark:text-zinc-400">Section,</span>
                     <span className="text-gray-800 dark:text-zinc-300 font-semibold">Block 1,</span>
-                    <span className="text-red-700 dark:text-primary font-semibold">BSIT</span>
+                    <span className="text-[#E5484D] font-semibold">BSIT</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Logic Rules Section */}
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="text-[10px] font-semibold tracking-tight text-gray-400 dark:text-zinc-500">
-                  3. Taxonomy Logic
-                </div>
-                <div className="h-px flex-1 bg-gray-100 ml-4 dark:bg-zinc-800/50"></div>
+            {/* Taxonomy Logic */}
+            <div className="pt-6 mt-6 border-t-[0.5px] border-black/[0.08] dark:border-white/10">
+              <div className="flex items-center gap-[6px] text-[11px] mb-3">
+                <span className="font-semibold tracking-[0.05em] text-[#8E8E93]">Taxonomy Logic</span>
               </div>
 
-              <div className="grid grid-cols-1 gap-2.5">
+              <div className="flex flex-col gap-4">
                 {[
                   {
-                    label: "DOCUMENT TYPE",
+                    label: "Document type",
                     desc: "ID code optional. Only 'Name' required.",
                     icon: "ph-files",
                   },
@@ -731,16 +732,16 @@ export default function BulkImportTab({
                 ].map((rule) => (
                   <div
                     key={rule.label}
-                    className="group flex items-start gap-3 rounded-xl border border-gray-100 bg-white p-3.5 shadow-xs transition-all hover:border-red-200 hover:shadow-md dark:border-white/5 dark:bg-zinc-800/30 dark:shadow-none"
+                    className="flex items-start gap-3"
                   >
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-50 text-pup-maroon dark:text-primary border border-red-100 shadow-xs transition-transform group-hover:scale-110 dark:bg-red-500/10 dark:text-primary dark:border-red-500/20">
-                      <i className={`ph-bold ${rule.icon} text-base`}></i>
+                    <div className="flex h-5 w-5 shrink-0 items-center justify-center text-[#8E8E93] mt-[2px]">
+                      <i className={`ph-bold ${rule.icon} text-[16px]`}></i>
                     </div>
                     <div>
-                      <div className="mb-0.5 text-[10px] font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
+                      <div className="text-[13px] font-medium text-[#111] dark:text-zinc-50 leading-tight">
                         {rule.label}
                       </div>
-                      <div className="text-[11px] font-medium text-gray-500 dark:text-zinc-400">
+                      <div className="text-[12px] font-normal text-[#8E8E93] dark:text-zinc-400 mt-0.5 leading-normal">
                         {rule.desc}
                       </div>
                     </div>
@@ -749,14 +750,16 @@ export default function BulkImportTab({
               </div>
             </div>
           </div>
-          <div className="border-t border-gray-100 p-4 bg-gray-50 dark:border-white/10 dark:bg-white/5 flex justify-end">
-            <Button
+
+          {/* Modal Footer */}
+          <div className="mt-6 flex justify-end">
+            <button
               type="button"
               onClick={() => setShowInstructions(false)}
-              className="h-9 px-6 rounded-brand btn-brand-red text-xs font-semibold text-white shadow-sm active:scale-95 transition-all"
+              className="flex h-[36px] px-5 items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none cursor-pointer border-0"
             >
-              Got it
-            </Button>
+              Done
+            </button>
           </div>
         </DialogContent>
       </Dialog>

@@ -53,6 +53,7 @@ export default function SecurityQuestionsTab({
             <PageHeader
               icon="ph-lock-key"
               showBorder={false}
+              titleClassName="text-[15px]"
               title="Security Questions"
               description="Define verification challenges for personnel account recovery and setup."
               actions={
@@ -69,32 +70,31 @@ export default function SecurityQuestionsTab({
             />
           </div>
 
-          <div className="max-w-4xl space-y-8 mt-2">
-            <div className="grid grid-cols-1 gap-6">
+          <div className="max-w-4xl mt-2">
+            <div className="flex flex-col gap-[20px]">
               {securityQuestions.map((q, i) => (
-                <div key={i} className="group animate-in fade-in slide-in-from-top-2 duration-300 space-y-2">
+                <div key={i} className="group flex flex-col">
                   <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-full border border-gray-200 bg-gray-100 text-[10px] font-semibold text-gray-500 transition-colors group-focus-within:border-red-100 group-focus-within:bg-red-50 group-focus-within:text-pup-maroon dark:border-white/10 dark:text-zinc-400 dark:bg-red-950/30">
+                    <div className="flex items-center gap-[6px]">
+                      <span className="text-[12px] font-medium text-[#8E8E93] select-none">
                         {i + 1}
                       </span>
-                      <label className="text-[11px] font-semibold tracking-widest text-gray-500 transition-colors group-focus-within:text-gray-900 dark:text-zinc-400">
-                        Security Challenge Question{" "}
+                      <label className="text-[12px] font-medium text-[#8E8E93]">
+                        Security Challenge Question
                         {i < 2 ? (
-                          <span className="text-pup-maroon dark:text-primary">*</span>
+                          <span className="ml-[2px] text-[12px] font-normal text-[#E5484D]">*</span>
                         ) : (
-                          <span className="ml-1 text-gray-400 normal-case dark:text-zinc-500">(Optional)</span>
+                          <span className="ml-[6px] text-[12px] font-normal text-[#C7C7CC]">(Optional)</span>
                         )}
                       </label>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-[12px]">
                       {q && q.trim().length > 0 && (
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center">
                           {q.trim().length < 10 || new Set(q.toLowerCase().replace(/\s/g, "")).size < 5 ? (
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <span className="flex items-center gap-1 text-[9px] font-semibold text-amber-600 tracking-tight dark:text-amber-400">
-                                  <i className="ph-bold ph-warning-circle text-xs"></i>
+                                <span className="text-[12px] font-medium text-[#FF9500] cursor-help">
                                   Weak Challenge
                                 </span>
                               </TooltipTrigger>
@@ -105,8 +105,7 @@ export default function SecurityQuestionsTab({
                               </TooltipContent>
                             </Tooltip>
                           ) : (
-                            <span className="flex items-center gap-1 text-[9px] font-semibold text-emerald-600 tracking-tight dark:text-emerald-400">
-                              <i className="ph-bold ph-check-circle text-xs"></i>
+                            <span className="text-[12px] font-medium text-[#30D158]">
                               Strong
                             </span>
                           )}
@@ -114,8 +113,9 @@ export default function SecurityQuestionsTab({
                       )}
                       {i >= 2 && (
                         <button
+                          type="button"
                           onClick={() => handleRemoveQuestion(i)}
-                          className="text-[10px] font-semibold text-gray-400 hover:text-red-600 transition-colors dark:text-zinc-500"
+                          className="text-[12px] font-normal text-[#8E8E93] hover:text-[#E5484D] transition-colors bg-transparent border-0 p-0 cursor-pointer"
                         >
                           Remove
                         </button>
@@ -125,7 +125,7 @@ export default function SecurityQuestionsTab({
                   <Input
                     type="text"
                     placeholder="e.g. What was the name of your first elementary school?"
-                    className={`h-12 rounded-brand border bg-white text-sm shadow-xs transition-all focus-visible:border-gray-300 focus-visible:ring-pup-maroon ${ q && q.trim().length > 0 && (q.trim().length < 10 || new Set(q.toLowerCase().replace(/\s/g, "")).size < 5) ? "border-amber-200 focus-visible:border-amber-500 focus-visible:ring-amber-500" : "border-gray-300" } dark:bg-card dark:border-white/10`}
+                    className={`mt-[4px] h-[36px] rounded-[8px] border-[0.5px] bg-white text-[13px] font-normal text-[#111111] dark:text-zinc-100 px-[12px] transition-all focus-visible:ring-0 focus-visible:border-black/35 dark:focus-visible:border-white/35 ${ q && q.trim().length > 0 && (q.trim().length < 10 || new Set(q.toLowerCase().replace(/\s/g, "")).size < 5) ? "border-amber-300 dark:border-amber-600" : "border-black/15 dark:border-white/15" } dark:bg-card`}
                     value={q}
                     onChange={(e) => {
                       const updated = [...securityQuestions]
@@ -137,11 +137,12 @@ export default function SecurityQuestionsTab({
               ))}
 
               <button
+                type="button"
                 onClick={handleAddQuestion}
-                className="flex w-fit items-center gap-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3 text-xs font-semibold text-gray-500 transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:text-zinc-400 dark:hover:border-zinc-700 dark:border-white/10"
+                className="mt-[8px] flex h-[36px] w-fit items-center rounded-[8px] border-[0.5px] border-black/15 bg-transparent px-[16px] text-[13px] font-normal text-[#8E8E93] transition-colors hover:text-[#111111] hover:border-black/30 dark:hover:text-zinc-200 dark:hover:border-white/30 cursor-pointer"
               >
-                <i className="ph-bold ph-plus"></i>
-                ADD ANOTHER QUESTION
+                <i className="ph-bold ph-plus text-[13px] text-[#8E8E93]"></i>
+                <span className="ml-[6px]">Add another question</span>
               </button>
             </div>
           </div>

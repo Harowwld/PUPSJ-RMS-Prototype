@@ -105,176 +105,110 @@ export default function Header({ authUser, onLogout, children }) {
   const isActivityActive = pathname === "/account/activity";
 
   return (
-    <header className="bg-white border-b border-gray-300 flex-none z-20 shadow-sm select-none transition-colors duration-300 dark:border-white/5">
+    <header className="bg-[#f2f2f7] dark:bg-card border-b border-gray-300 flex-none z-20 select-none transition-colors duration-300 dark:border-white/5">
       <AccountSetupModal authUser={authUser} />
       <div className="w-full px-4 h-16 flex items-center justify-between">
-        <div 
-          className="flex items-center gap-3 cursor-pointer group/logo active:scale-95 transition-transform select-none"
-          onClick={handleMainDashboardClick}
-          onDoubleClick={(e) => e.preventDefault()}
-        >
-          <img src="/icon.png" alt="E-Manage Logo" className="h-8 w-8 object-contain" />
-          <div className="">
-            <h1 className="font-semibold text-xl text-black dark:text-white tracking-tight transition-colors group-hover/logo:text-gray-850 dark:group-hover/logo:text-zinc-200">
-              E-Manage
-            </h1>
+        <div className="flex items-center gap-[6px]">
+          <div 
+            className="flex items-center gap-1 cursor-pointer group/logo select-none"
+            onClick={handleMainDashboardClick}
+            onDoubleClick={(e) => e.preventDefault()}
+          >
+            <img src="/icon.png" alt="eManage Logo" className="h-8 w-8 object-contain" />
+            <div className="flex items-center">
+              <span className="font-semibold text-[26px] text-black dark:text-white tracking-tight transition-colors group-hover/logo:text-gray-850 dark:group-hover/logo:text-zinc-200 leading-none">
+                eManage
+              </span>
+            </div>
           </div>
+          <span 
+            className="text-[26px] font-medium select-none leading-none tracking-tight transition-colors duration-300" 
+            style={{ color: (authUser?.role || "Staff").toLowerCase() === "admin" ? "#e30000" : "#edbb00" }}
+          >
+            {authUser?.role || "Staff"}
+          </span>
         </div>
 
         <div className="flex items-center gap-2">
           {children}
         </div>
-
         <div className="flex items-center gap-2">
           <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
-            <DropdownMenuTrigger className={cn(
-              "group flex items-center gap-3 rounded-md border px-3 py-1.5 shadow-xs transition-all focus:outline-none",
-              menuOpen 
-                ? "border-pup-maroon dark:border-red-500 bg-white ring-2 ring-red-50 dark:ring-red-950/20 shadow-sm" 
-                : "border-gray-200 dark:border-white/5 bg-white/90 hover:border-gray-300 dark:hover:border-white/10 hover:bg-red-50 dark:bg-white/5 dark:hover:bg-white/10"
-            )}>
+            <DropdownMenuTrigger className="focus:outline-none select-none">
               <div className={cn(
-                "h-9 w-9 shrink-0 rounded-md bg-gray-100 dark:bg-white/5 flex items-center justify-center text-xs font-semibold text-gray-700 dark:text-zinc-300 transition-colors",
-                menuOpen && "bg-red-50 dark:bg-red-950/30 text-pup-maroon dark:text-primary shadow-xs ring-1 ring-red-100 dark:ring-red-900/30"
+                "h-11 w-11 flex items-center justify-center rounded-[10px] transition-all",
+                menuOpen 
+                  ? "bg-gray-200/70 dark:bg-white/10" 
+                  : "hover:bg-gray-100 dark:hover:bg-white/5"
               )}>
-                {initials}
-              </div>
-              <div className="text-left hidden sm:block">
-                <p className="text-xs font-semibold text-gray-900 leading-tight truncate max-w-[160px] dark:text-zinc-50">
-                  {authUser?.fname} {authUser?.lname}
-                </p>
-                <p className={cn(
-                  "text-[11px] font-medium text-gray-500 dark:text-zinc-500 leading-tight transition-colors",
-                  menuOpen && "text-pup-maroon dark:text-red-400/90"
-                )}>
-                  {authUser?.role || "User"}
-                </p>
+                <div className="h-9 w-9 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center text-xs font-semibold text-gray-700 dark:text-zinc-300 border border-gray-200 dark:border-white/10">
+                  {initials}
+                </div>
               </div>
             </DropdownMenuTrigger>
-             <DropdownMenuContent align="end" className="w-80 rounded-xl border border-gray-200 shadow-2xl p-2 bg-white/98 backdrop-blur-md dark:bg-card dark:border-white/10 dark:shadow-none">
-               <DropdownMenuGroup>
-                  <div className="p-3 bg-transparent mb-1">
-                    <div className="min-w-0 w-full">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-[14px] font-semibold text-gray-900 truncate tracking-[-0.01em] dark:text-zinc-50">
-                          {authUser?.fname} {authUser?.lname}
-                        </p>
-                        <span className={cn(
-                          "text-[10px] font-medium px-1.5 py-0.5 rounded-[4px] tracking-[0.04em] shrink-0 uppercase",
-                          isAdminView 
-                            ? "text-pup-maroon dark:text-primary bg-red-50 dark:bg-red-500/20"
-                            : "text-amber-800 dark:text-yellow-500 bg-amber-50 dark:bg-yellow-500/20"
-                        )}>
-                          {authUser?.role || "User"}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-gray-500 dark:text-zinc-400 truncate mt-[2px] font-normal">
-                        {authUser?.email || authUser?.username}
-                      </p>
-                    </div>
-                  </div>
+            <DropdownMenuContent align="end" className="w-72 rounded-2xl border border-gray-200 shadow-2xl p-0 overflow-hidden bg-white/98 backdrop-blur-md dark:bg-card dark:border-white/10 dark:shadow-none">
+               <div className="bg-[#F2F2F7] dark:bg-zinc-800/80 px-5 py-4 border-b border-gray-200 dark:border-white/5 flex flex-col text-left">
+                 <span className="font-bold text-[18px] text-gray-900 dark:text-zinc-50 leading-tight">
+                   {authUser?.fname} {authUser?.lname}
+                 </span>
+                 <span className="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5 truncate">
+                   {authUser?.email || authUser?.username}
+                 </span>
+               </div>
+
+               <DropdownMenuGroup className="p-1.5 flex flex-col gap-[2px]">
+                 <DropdownMenuItem
+                   className={cn(
+                     "cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 transition-colors outline-none",
+                     isSettingsActive
+                       ? "text-[#007AFF] bg-gray-50 dark:bg-white/5"
+                       : "text-gray-900 hover:bg-gray-50 dark:text-zinc-100 dark:hover:bg-white/5"
+                   )}
+                   onClick={() => router.push("/account")}
+                 >
+                   <i className="ti ti-settings text-[19px] text-[#007AFF] shrink-0"></i>
+                   <span>Account Settings</span>
+                 </DropdownMenuItem>
+
+                 <DropdownMenuItem
+                   className={cn(
+                     "cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 transition-colors outline-none",
+                     isActivityActive
+                       ? "text-[#007AFF] bg-gray-50 dark:bg-white/5"
+                       : "text-gray-900 hover:bg-gray-50 dark:text-zinc-100 dark:hover:bg-white/5"
+                   )}
+                   onClick={() => router.push("/account/activity")}
+                 >
+                   <i className="ti ti-history text-[19px] text-[#007AFF] shrink-0"></i>
+                   <span>My Activity</span>
+                 </DropdownMenuItem>
+
+                 {hasAdminRights && (
+                   <DropdownMenuItem
+                     onClick={() => handleViewSwitch(isAdminView ? "staff" : "admin")}
+                     className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-zinc-100 transition-colors outline-none"
+                   >
+                     <i className={cn(
+                       "text-[19px] shrink-0",
+                       isAdminView ? "ti ti-users text-[#007AFF]" : "ti ti-shield-check text-[#007AFF]"
+                     )}></i>
+                     <span>{isAdminView ? "Switch to Staff View" : "Switch to Admin View"}</span>
+                   </DropdownMenuItem>
+                 )}
                </DropdownMenuGroup>
 
-              <DropdownMenuGroup className="p-1 flex flex-col gap-[2px]">
-                <DropdownMenuItem
-                  className={cn(
-                    "cursor-pointer rounded-[8px] flex items-center gap-2 font-normal text-[13px] tracking-[-0.01em] py-2 px-3 transition-colors",
-                    isDashboardActive 
-                      ? "text-pup-maroon dark:text-primary hover:bg-transparent" 
-                      : "text-gray-650 hover:bg-gray-50 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
-                  )}
-                  onClick={handleMainDashboardClick}
-                >
-                  <i className={cn(
-                    "ph-bold ph-house-line text-[16px] transition-colors",
-                    isDashboardActive ? "text-pup-maroon dark:text-primary" : "text-gray-400 dark:text-zinc-500"
-                  )}></i>
-                  <span>Dashboard</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className={cn(
-                    "cursor-pointer rounded-[8px] flex items-center gap-2 font-normal text-[13px] tracking-[-0.01em] py-2 px-3 transition-colors",
-                    isSettingsActive 
-                      ? "text-pup-maroon dark:text-primary hover:bg-transparent" 
-                      : "text-gray-650 hover:bg-gray-50 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
-                  )}
-                  onClick={() => router.push("/account")}
-                >
-                  <i className={cn(
-                    "ph-bold ph-user-circle-gear text-[16px] transition-colors",
-                    isSettingsActive ? "text-pup-maroon dark:text-primary" : "text-gray-400 dark:text-zinc-500"
-                  )}></i>
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className={cn(
-                    "cursor-pointer rounded-[8px] flex items-center gap-2 font-normal text-[13px] tracking-[-0.01em] py-2 px-3 transition-colors",
-                    isActivityActive 
-                      ? "text-pup-maroon dark:text-primary hover:bg-transparent" 
-                      : "text-gray-650 hover:bg-gray-50 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
-                  )}
-                  onClick={() => router.push("/account/activity")}
-                >
-                  <i className={cn(
-                    "ph-bold ph-clock-counter-clockwise text-[16px] transition-colors",
-                    isActivityActive ? "text-pup-maroon dark:text-primary" : "text-gray-400 dark:text-zinc-500"
-                  )}></i>
-                  <span>Activity</span>
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
+               <div className="border-t border-gray-100 dark:border-white/5 my-1 mx-1.5"></div>
 
-              {hasAdminRights && (
-                 <>
-                   <div className="px-2 py-3">
-                    <p className="text-[10px] font-medium text-gray-400 tracking-[0.04em] uppercase px-2 mb-2 dark:text-zinc-500">
-                      Switch Role
-                    </p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <DropdownMenuItem
-                        onClick={() => handleViewSwitch("admin")}
-                        className={cn(
-                          "flex flex-col items-center justify-center gap-1.5 py-3 rounded-[8px] transition-all cursor-pointer outline-none",
-                          isAdminView 
-                            ? "border-[1.5px] border-pup-maroon bg-red-50 text-pup-maroon dark:border-primary dark:bg-red-500/20 dark:text-primary" 
-                            : "border-0 text-gray-500 hover:bg-gray-50 dark:text-zinc-400 dark:hover:bg-white/5"
-                        )}
-                      >
-                        <i className={cn(
-                          "ph-bold ph-shield-check text-[16px] transition-colors",
-                          isAdminView ? "text-pup-maroon dark:text-primary" : "text-gray-400 dark:text-zinc-500"
-                        )}></i>
-                        <span className="text-[11px] font-medium">Admin</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => handleViewSwitch("staff")}
-                        className={cn(
-                          "flex flex-col items-center justify-center gap-1.5 py-3 rounded-[8px] transition-all cursor-pointer outline-none",
-                          !isAdminView 
-                            ? "border-[1.5px] border-pup-maroon bg-red-50 text-pup-maroon dark:border-primary dark:bg-red-500/20 dark:text-primary" 
-                            : "border-0 text-gray-500 hover:bg-gray-50 dark:text-zinc-400 dark:hover:bg-white/5"
-                        )}
-                      >
-                        <i className={cn(
-                          "ph-bold ph-users-three text-[16px] transition-colors",
-                          !isAdminView ? "text-pup-maroon dark:text-primary" : "text-gray-400 dark:text-zinc-500"
-                        )}></i>
-                        <span className="text-[11px] font-medium">Staff</span>
-                      </DropdownMenuItem>
-                    </div>
-                  </div>
-                </>
-              )}
-
-              <DropdownMenuSeparator className="opacity-50" />
-              <DropdownMenuGroup className="p-1 mt-1">
-                <DropdownMenuItem
-                  onClick={onLogout}
-                  className="w-full h-[36px] flex items-center justify-center btn-brand-red !rounded-[8px] text-[13px] font-medium tracking-[-0.01em] cursor-pointer text-white hover:text-white"
-                >
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
+               <DropdownMenuGroup className="p-1.5">
+                 <DropdownMenuItem
+                   onClick={onLogout}
+                   className="cursor-pointer rounded-[8px] flex items-center gap-3 font-medium text-[15px] py-2.5 px-3 text-[#FF3B30] dark:text-[#FF453A] hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors outline-none"
+                 >
+                   <i className="ti ti-circle-x text-[19px] text-[#FF3B30] dark:text-[#FF453A] shrink-0"></i>
+                   <span>Sign Out</span>
+                 </DropdownMenuItem>
+               </DropdownMenuGroup>
+             </DropdownMenuContent>
           </DropdownMenu>
         </div>
       </div>

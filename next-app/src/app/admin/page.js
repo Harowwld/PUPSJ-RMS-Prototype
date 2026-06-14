@@ -77,6 +77,14 @@ function AdminPageContent() {
     : "review"
 
   const [view, setView] = useState(initialView)
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+
+  useEffect(() => {
+    const handleToggle = () => setSidebarOpen((prev) => !prev)
+    window.addEventListener("toggle-sidebar", handleToggle)
+    return () => window.removeEventListener("toggle-sidebar", handleToggle)
+  }, [])
+
   const [viewLoading, setViewLoading] = useState({
     directory: false,
     logs: false,
@@ -85,6 +93,49 @@ function AdminPageContent() {
     review: false,
     request_analytics: false,
   })
+
+  const [zoomNode, setZoomNode] = useState(3); // 0 to 6 (7 nodes)
+  const handleZoomMouseDown = (e) => {
+    // Avoid text selection or default drag triggers
+    e.preventDefault();
+    const track = e.currentTarget;
+    
+    const updateZoom = (clientX) => {
+      const rect = track.getBoundingClientRect();
+      const clickX = clientX - rect.left;
+      const percentage = clickX / rect.width;
+      const node = Math.max(0, Math.min(6, Math.round(percentage * 6)));
+      setZoomNode(node);
+    };
+
+    const isTouch = e.type === "touchstart";
+    const startX = isTouch ? e.touches[0].clientX : e.clientX;
+    updateZoom(startX);
+
+    const handleMove = (moveEvent) => {
+      const clientX = moveEvent.type === "touchmove" ? moveEvent.touches[0].clientX : moveEvent.clientX;
+      updateZoom(clientX);
+    };
+
+    const handleEnd = () => {
+      if (isTouch) {
+        document.removeEventListener("touchmove", handleMove);
+        document.removeEventListener("touchend", handleEnd);
+      } else {
+        document.removeEventListener("mousemove", handleMove);
+        document.removeEventListener("mouseup", handleEnd);
+      }
+    };
+
+    if (isTouch) {
+      document.addEventListener("touchmove", handleMove, { passive: true });
+      document.addEventListener("touchend", handleEnd);
+    } else {
+      document.addEventListener("mousemove", handleMove);
+      document.addEventListener("mouseup", handleEnd);
+    }
+  };
+
 
   const [staffData, setStaffData] = useState([])
   const [auditLogs, setAuditLogs] = useState(null)
@@ -1491,12 +1542,11 @@ function AdminPageContent() {
     { key: "system", label: "Backup", iconClass: "ph-bold ph-database" },
     { key: "logs", label: "Audit Log", iconClass: "ph-bold ph-scroll" },
   ]
-
   const sidebarActiveKey = view === "backup" ? "system" : view
 
   if (loading) {
     return (
-      <div className="font-inter flex h-screen flex-col gap-4 overflow-hidden bg-gray-50 p-4 transition-colors duration-300 dark:bg-background">
+      <div className="font-inter flex min-h-screen flex-col gap-4 bg-gray-50 p-4 transition-colors duration-300 dark:bg-background">
         <Skeleton className="h-16 w-full shrink-0 rounded-brand" />
         <div className="flex flex-1 gap-4">
           <Skeleton className="h-full w-[30%] rounded-brand" />
@@ -1507,8 +1557,66 @@ function AdminPageContent() {
   }
 
   return (
-    <div className="font-inter flex h-screen flex-col overflow-hidden bg-gray-50 transition-colors duration-300 dark:bg-background">
-      <Header authUser={authUser} onLogout={handleLogout} />
+    <div className="font-inter flex min-h-screen flex-col bg-gray-50 transition-colors duration-300 dark:bg-background">
+
+
+      <Header authUser={authUser} onLogout={handleLogout}>
+        {authUser?.preferences?.navigation_layout !== "topbar" && !sidebarOpen && (
+          <div className="flex items-center gap-3.5 pl-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("toggle-sidebar"))
+                }
+              }}
+              className="flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-700 cursor-pointer bg-transparent h-9 w-9"
+            >
+              <i className="ti ti-layout-sidebar text-[21px]" style={{ color: "#E5484D" }}></i>
+            </button>
+
+            {/* Apple Photos Style Zoom Control */}
+            <div className="flex items-center gap-1.5 select-none pr-2">
+              <button
+                type="button"
+                onClick={() => setZoomNode(prev => Math.max(0, prev - 1))}
+                className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-9 w-9 transition-colors duration-75"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M2.5 7H11.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+                </svg>
+              </button>
+              <div 
+                onMouseDown={handleZoomMouseDown}
+                onTouchStart={handleZoomMouseDown}
+                className="relative w-[80px] h-[18px] flex items-center group cursor-pointer"
+              >
+                {/* Track */}
+                <div className="absolute left-0 right-0 h-[3px] bg-[#D1D1D6] dark:bg-zinc-700 rounded-full"></div>
+                {/* Active Track */}
+                <div 
+                  className="absolute left-0 h-[3px] bg-[#007AFF] rounded-full"
+                  style={{ width: `${(zoomNode / 6) * 100}%` }}
+                ></div>
+                {/* Handle */}
+                <div 
+                  className="absolute -translate-x-1/2 w-[16px] h-[16px] rounded-full bg-white dark:bg-zinc-900 border-[3px] border-[#007AFF] shadow-xs"
+                  style={{ left: `${(zoomNode / 6) * 100}%` }}
+                ></div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setZoomNode(prev => Math.min(6, prev + 1))}
+                className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-9 w-9 transition-colors duration-75"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M7 2.5V11.5M2.5 7H11.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+        )}
+      </Header>
 
       {authUser?.preferences?.navigation_layout === "topbar" && (
         <div className="w-full bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-white/5 py-2.5 px-4 flex items-center justify-center gap-2 overflow-x-auto shadow-xs select-none shrink-0 scrollbar-none">
@@ -1545,17 +1653,22 @@ function AdminPageContent() {
         </div>
       )}
 
-      <div className={cn("flex min-h-0 w-full flex-1", authUser?.preferences?.navigation_layout === "topbar" ? "flex-col" : "flex-row")}>
-        {authUser?.preferences?.navigation_layout !== "topbar" && (
+      <div className={cn("flex w-full flex-1", authUser?.preferences?.navigation_layout === "topbar" ? "flex-col" : "flex-row")}>
+        {authUser?.preferences?.navigation_layout !== "topbar" && sidebarOpen && (
           <Sidebar
             items={sidebarItems}
             activeKey={sidebarActiveKey}
             onSelect={switchView}
+            onLogout={handleLogout}
+            zoomNode={zoomNode}
+            setZoomNode={setZoomNode}
+            handleZoomMouseDown={handleZoomMouseDown}
           />
         )}
-
-        <main className="relative w-full min-w-0 flex-1 overflow-y-auto p-4 flex flex-col">
-          {view === "directory" && (
+        <main 
+          className="relative w-full min-w-0 flex-1 p-4 flex flex-col bg-white dark:bg-zinc-950"
+          style={{ zoom: [0.75, 0.83, 0.92, 1.0, 1.08, 1.17, 1.25][zoomNode] }}
+        >          {view === "directory" && (
             <StaffDirectoryTab
               staffData={staffData}
               isLoading={viewLoading.directory}
@@ -1760,8 +1873,6 @@ function AdminPageContent() {
           )}
         </main>
       </div>
-
-      <Footer />
 
       <ConfirmModal
         open={discardConfirmOpen}
@@ -2148,11 +2259,10 @@ export default function AdminPage() {
     <AdminGuard>
       <Suspense
         fallback={
-          <div className="font-inter flex h-screen flex-col gap-4 overflow-hidden bg-gray-50 p-4 dark:bg-background">
-            <Skeleton className="h-16 w-full shrink-0 rounded-brand" />
-            <div className="flex flex-1 gap-4">
-              <Skeleton className="h-full w-[30%] rounded-brand" />
-              <Skeleton className="h-full w-[70%] rounded-brand" />
+          <div className="min-h-screen bg-gray-50 dark:bg-background flex items-center justify-center font-inter p-4">
+            <div className="flex flex-col items-center gap-4">
+              <div className="h-12 w-12 animate-spin rounded-full border-4 border-gray-200 border-t-pup-maroon dark:border-zinc-800 dark:border-t-primary"></div>
+              <p className="text-xs font-semibold tracking-widest text-gray-400 dark:text-zinc-500 uppercase">Loading System...</p>
             </div>
           </div>
         }

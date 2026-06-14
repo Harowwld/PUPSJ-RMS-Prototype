@@ -378,11 +378,14 @@ export default function DigitizationComplianceTab({
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Completeness Card */}
-            <div className="group relative overflow-hidden rounded-xl border-none bg-linear-to-br from-red-500 to-red-700 dark:from-red-700 dark:to-red-950 p-5 shadow-sm transition-all dark:shadow-none">
-              <i className="ph-duotone ph-chart-pie pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
+            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#f87171] via-[#dc2626] to-[#b91c1c] dark:from-[#dc2626] dark:to-[#7f1d1d] p-5 transition-all duration-300 hover:-translate-y-0.5">
+                <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
+                  <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#b91c1c]/40 to-[#dc2626]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
+                  <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#f87171]/30 to-[#dc2626]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
+                </div>
               <div className="relative z-10">
                 <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
-                  <i className="ph-bold ph-chart-pie" /> Completeness
+                  Completeness
                   <TooltipProvider delayDuration={200}>
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -410,11 +413,15 @@ export default function DigitizationComplianceTab({
               </div>
             </div>
 
-            <div className="group relative overflow-hidden rounded-xl border-none bg-linear-to-br from-blue-600 to-blue-800 dark:from-blue-800 dark:to-blue-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
-              <i className="ph-duotone ph-users-three pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
+            {/* Students Card */}
+            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa] p-5 transition-all duration-300 hover:-translate-y-0.5">
+                <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
+                  <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#0055FF]/40 to-[#007AFF]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
+                  <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#14C8FF]/30 to-[#007AFF]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
+                </div>
               <div className="relative z-10">
                 <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
-                  <i className="ph-bold ph-users-three" /> Students
+                  Students
                 </div>
                 <div className="text-[48px] font-semibold text-white">
                   {summary?.totalStudents?.toLocaleString?.() ?? summary?.totalStudents}
@@ -425,11 +432,15 @@ export default function DigitizationComplianceTab({
               </div>
             </div>
 
-            <div className="group relative overflow-hidden rounded-xl border-none bg-linear-to-br from-emerald-500 to-emerald-700 dark:from-amber-700 dark:to-amber-950 p-5 shadow-sm transition-all hover:shadow-md dark:shadow-none">
-              <i className="ph-duotone ph-check-square-offset pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
+            {/* Complete Card */}
+            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37] p-5 transition-all duration-300 hover:-translate-y-0.5">
+                <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
+                  <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#047857]/40 to-[#059669]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
+                  <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#34d399]/30 to-[#059669]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
+                </div>
               <div className="relative z-10">
                 <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
-                  <i className="ph-bold ph-check-square-offset" /> Complete
+                  Complete
                 </div>
                 <div className="text-[48px] font-semibold text-white">
                   {summary?.digitizedStudents?.toLocaleString?.() ?? summary?.digitizedStudents}
@@ -567,7 +578,7 @@ export default function DigitizationComplianceTab({
           <div className="bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 w-full">
               <div className="flex flex-col gap-[4px] w-full">
-                <label className="block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                <label className="block text-[11px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                   Student Status
                 </label>
                 <Select
@@ -582,7 +593,7 @@ export default function DigitizationComplianceTab({
               </div>
 
               <div className="flex flex-col gap-[4px] w-full">
-                <label className="block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                <label className="block text-[11px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                   Validation Requirement
                 </label>
                 <Select
@@ -596,7 +607,7 @@ export default function DigitizationComplianceTab({
               </div>
 
               <div className="flex flex-col gap-[4px] w-full">
-                <label className="block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                <label className="block text-[11px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                   Academic Program
                 </label>
                 <div className="relative w-full">
@@ -663,7 +674,7 @@ export default function DigitizationComplianceTab({
                     <div className="w-full lg:w-[400px] shrink-0">
                       <div className="flex items-end justify-between mb-2">
                         <div className="flex flex-col">
-                          <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-500 tracking-[0.05em] uppercase mb-1">
+                          <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-500 tracking-[0.05em] mb-1">
                             Documents Digitized
                           </span>
                           <div className="flex items-baseline gap-1">
@@ -677,7 +688,7 @@ export default function DigitizationComplianceTab({
                         </div>
                         <div className="flex flex-col items-end pb-1">
                           <div className="text-[11px] font-medium text-red-600 dark:text-red-500 text-right">
-                            {percent}% COMPLETE
+                            {percent}% Complete
                           </div>
                         </div>
                       </div>
@@ -757,7 +768,7 @@ export default function DigitizationComplianceTab({
               </div>
             </div>
 
-            <div className="flex-1 min-h-0 overflow-y-auto rounded-[inherit] overflow-hidden">
+            <div className="flex-1 overflow-visible rounded-[inherit]">
                 {sortedByCourse.length > 0 ? (
                   <table className="min-w-full text-sm">
                     <thead className="sticky top-0 z-10 bg-white backdrop-blur-sm dark:bg-card">
@@ -765,7 +776,7 @@ export default function DigitizationComplianceTab({
                         <th className="p-4 px-6">
                           <button
                             onClick={() => handleSort("courseCode")}
-                            className="group flex items-center text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none"
+                            className="group flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none"
                           >
                             Program <SortIndicator column="courseCode" />
                           </button>
@@ -773,7 +784,7 @@ export default function DigitizationComplianceTab({
                         <th className="p-4 px-6 text-center">
                           <button
                             onClick={() => handleSort("total")}
-                            className="group mx-auto flex items-center text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none"
+                            className="group mx-auto flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none"
                           >
                             Total Students <SortIndicator column="total" />
                           </button>
@@ -781,7 +792,7 @@ export default function DigitizationComplianceTab({
                         <th className="p-4 px-6 text-center">
                           <button
                             onClick={() => handleSort("digitized")}
-                            className="group mx-auto flex items-center text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none"
+                            className="group mx-auto flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none"
                           >
                             Fully Digitized <SortIndicator column="digitized" />
                           </button>
@@ -789,7 +800,7 @@ export default function DigitizationComplianceTab({
                         <th className="p-4 px-6 text-right">
                           <button
                             onClick={() => handleSort("percent")}
-                            className="group ml-auto flex items-center text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none"
+                            className="group ml-auto flex items-center text-[12px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500 transition-colors focus:outline-none"
                           >
                             Completeness <SortIndicator column="percent" />
                           </button>

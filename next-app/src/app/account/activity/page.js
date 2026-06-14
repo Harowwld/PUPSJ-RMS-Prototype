@@ -104,21 +104,27 @@ function StatCards({ isLoading, stats }) {
       label: "Total Events",
       value: stats.totalLogs || 0,
       sublabel: "Cumulative personal logs",
-      colorClass: "from-blue-500 to-blue-700 dark:from-blue-800 dark:to-blue-950",
+      bgClass: "from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa]",
+      shape1: "from-[#0055FF]/40 to-[#007AFF]/0",
+      shape2: "from-[#14C8FF]/30 to-[#007AFF]/0",
       iconClass: "ph-database",
     },
     {
       label: "Activity Today",
       value: stats.logsToday || 0,
       sublabel: "Events recorded today",
-      colorClass: "from-emerald-500 to-emerald-700 dark:from-emerald-800 dark:to-emerald-950",
+      bgClass: "from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37]",
+      shape1: "from-[#047857]/40 to-[#059669]/0",
+      shape2: "from-[#34d399]/30 to-[#059669]/0",
       iconClass: "ph-calendar-check",
     },
     {
       label: "Auth Attempts",
       value: stats.authEvents || 0,
       sublabel: "Logins & access events",
-      colorClass: "from-amber-500 to-amber-700 dark:from-amber-700 dark:to-amber-950",
+      bgClass: "from-[#fbbf24] via-[#d97706] to-[#b45309] dark:from-[#d97706] dark:to-[#78350f]",
+      shape1: "from-[#b45309]/40 to-[#d97706]/0",
+      shape2: "from-[#fbbf24]/30 to-[#d97706]/0",
       iconClass: "ph-fingerprint",
     },
   ];
@@ -129,16 +135,19 @@ function StatCards({ isLoading, stats }) {
         <div
           key={i}
           className={cn(
-            "group relative overflow-hidden rounded-xl border-none p-5 shadow-sm dark:shadow-none transition-all duration-300 hover:shadow-md bg-linear-to-br",
-            stat.colorClass
+            "group relative overflow-hidden rounded-xl border-none p-5 transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-br",
+            stat.bgClass
           )}
         >
-          <i className={cn("ph-duotone pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]", stat.iconClass)} />
+          <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
+            <div className={cn("absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr pointer-events-none", stat.shape1)} style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
+            <div className={cn("absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr pointer-events-none", stat.shape2)} style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
+          </div>
           <div className="relative z-10">
             <div className="flex items-end justify-between">
               <div>
                 <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
-                  <i className={cn("ph-bold", stat.iconClass)} /> {stat.label}
+                  {stat.label}
                 </div>
                 <div className="text-[48px] font-semibold text-white tracking-tight">
                   {stat.value.toLocaleString()}
@@ -585,7 +594,7 @@ function LogTable({
   if (isLoading && !displayLogs.length) {
     return (
       <div className="animate-pulse space-y-4">
-        <div className="overflow-hidden overflow-x-auto rounded-brand border border-gray-100 bg-white dark:border-white/10 dark:bg-card">
+        <div className="overflow-visible rounded-brand border border-gray-100 bg-white dark:border-white/10 dark:bg-card">
           <table className="min-w-full">
             <thead className="bg-transparent dark:bg-transparent">
               <tr>
@@ -651,11 +660,11 @@ function LogTable({
     <div className="space-y-0">
       <div
         className={cn(
-          "overflow-hidden rounded-brand border border-gray-200 dark:border-white/10 bg-white dark:bg-card shadow-sm dark:shadow-none transition-all duration-500 animate-fade-up",
+          "overflow-visible rounded-brand border border-gray-200 dark:border-white/10 bg-white dark:bg-card shadow-sm dark:shadow-none transition-all duration-500 animate-fade-up",
           isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
         )}
       >
-        <div className="overflow-x-auto rounded-[inherit]">
+        <div className="overflow-visible rounded-[inherit]">
           <table className="min-w-full table-fixed text-sm">
             <thead className="bg-gray-50 backdrop-blur-sm select-none dark:bg-muted">
               <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-800 dark:text-zinc-250">
@@ -1278,7 +1287,7 @@ export default function AccountActivityPage() {
 
   if (loadingUser) {
     return (
-      <div className="min-h-screen bg-gray-50 animate-in fade-in duration-700 dark:bg-background">
+      <div className="min-h-screen bg-gray-50 dark:bg-background">
         <div className="h-16 bg-white border-b border-gray-200 dark:bg-card dark:border-white/10" />
         <main className="max-w-[1200px] mx-auto p-8 space-y-8">
           <div className="flex flex-col gap-2">
@@ -1300,7 +1309,7 @@ export default function AccountActivityPage() {
     <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-background font-inter">
       <Header authUser={authUser} onLogout={handleLogout} />
 
-      <main className="flex-1 w-full max-w-[1400px] mx-auto py-10 px-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <main className="flex-1 w-full max-w-[1400px] mx-auto py-10 px-6">
         <TooltipProvider delayDuration={200}>
           <PageHeader
             icon="ph-clock-counter-clockwise"

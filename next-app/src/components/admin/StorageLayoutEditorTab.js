@@ -1210,10 +1210,10 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
           type="button"
           variant="ghost"
           onClick={addCabinet}
-          className="h-[36px] rounded-brand border-[0.5px] border-black/15 bg-transparent px-4 text-[13px] font-normal text-[#111111] hover:bg-gray-50/50 dark:border-white/10 dark:bg-card dark:text-zinc-350 dark:hover:bg-white/5 shadow-none flex items-center justify-center cursor-pointer"
+          className="h-[36px] bg-transparent hover:bg-black/[0.04] dark:hover:bg-white/5 border-0 rounded-brand px-4 text-[13px] font-normal text-[#111111] dark:text-zinc-300 shadow-none flex items-center justify-center cursor-pointer gap-1.5"
           disabled={!activeRoom}
         >
-          New Cabinet
+          <i className="ph-bold ph-plus text-[12px] text-[#8E8E93] dark:text-zinc-500" /> Cabinet
         </Button>
 
         {/* Unified Right Group Container */}
@@ -1350,7 +1350,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
         applyTemplateWithMappings={applyTemplateWithMappings}
       />
 
-      <Card className="rounded-brand border border-gray-200 bg-white shadow-sm p-0 gap-0 dark:border-white/10 dark:bg-card dark:shadow-none w-full">
+      <Card className="rounded-brand border border-gray-200 bg-white shadow-sm p-0 gap-0 dark:border-white/10 dark:bg-card dark:shadow-none w-full overflow-hidden">
         {renderEditorContent()}
       </Card>
 

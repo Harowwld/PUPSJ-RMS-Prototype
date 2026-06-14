@@ -563,14 +563,18 @@ export default function DigitalRecordsReviewTab({
             "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 transition-all duration-500",
             (isLoading && !isManualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
           )}>
-            <div className="group relative overflow-hidden rounded-xl border-none bg-linear-to-br from-blue-600 to-blue-800 dark:from-blue-800 dark:to-blue-950 p-5 shadow-sm transition-all duration-300 hover:shadow-md dark:shadow-none">
-                <i className="ph-duotone ph-clock-countdown pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
+            {/* Stat Card 1: Pending Review */}
+            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa] p-5 transition-all duration-300 hover:-translate-y-0.5">
+                <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
+                  <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#0055FF]/40 to-[#007AFF]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
+                  <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#14C8FF]/30 to-[#007AFF]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
+                </div>
                 <div className="relative z-10">
                   <div className="flex items-end justify-between">
                     <div className="w-full">
-                      <div className="mb-1 flex items-center justify-between">
-                        <div className="flex items-center gap-1.5 font-medium text-white" style={{ fontSize: "14px", fontWeight: 500, color: "#ffffff" }}>
-                          <i className="ph-bold ph-clock-countdown" /> Pending Review
+                       <div className="mb-1 flex items-center justify-between">
+                        <div className="flex items-center gap-1.5 font-medium text-white animate-fade-in" style={{ fontSize: "14px", fontWeight: 500, color: "#ffffff" }}>
+                          Pending Review
                         </div>
                         {stats.hasSlaBreach && !isLoading && (
                           <div className="flex items-center gap-1.5">
@@ -605,43 +609,51 @@ export default function DigitalRecordsReviewTab({
                 </div>
               </div>
 
-            <div className="group relative overflow-hidden rounded-xl border-none bg-linear-to-br from-emerald-600 to-emerald-800 dark:from-emerald-800 dark:to-emerald-950 p-5 shadow-sm transition-all duration-300 hover:shadow-md dark:shadow-none">
-              <i className="ph-duotone ph-check-circle pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
-              <div className="relative z-10">
-                <div className="flex items-end justify-between">
-                  <div className="w-full">
-                    <div className="mb-1 flex items-center gap-1.5 font-medium text-white" style={{ fontSize: "14px", fontWeight: 500, color: "#ffffff" }}>
-                      <i className="ph-bold ph-check-circle" /> Approved Today
-                    </div>
-                    <div className="font-semibold text-white tracking-tight" style={{ fontSize: "48px", fontWeight: 600, color: "#ffffff" }}>
-                      {stats.approvedToday.toLocaleString()}
-                    </div>
-                    <div className="mt-1 font-normal text-white" style={{ fontSize: "13px", fontWeight: 400, color: "#ffffff" }}>
-                      Verified correct ({stats.totalApproved.toLocaleString()} total)
+            {/* Stat Card 2: Approved Today */}
+            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37] p-5 transition-all duration-300 hover:-translate-y-0.5">
+                <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
+                  <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#047857]/40 to-[#059669]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
+                  <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#34d399]/30 to-[#059669]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
+                </div>
+                <div className="relative z-10">
+                  <div className="flex items-end justify-between">
+                    <div className="w-full">
+                      <div className="mb-1 flex items-center gap-1.5 font-medium text-white" style={{ fontSize: "14px", fontWeight: 500, color: "#ffffff" }}>
+                        Approved Today
+                      </div>
+                      <div className="font-semibold text-white tracking-tight" style={{ fontSize: "48px", fontWeight: 600, color: "#ffffff" }}>
+                        {stats.approvedToday.toLocaleString()}
+                      </div>
+                      <div className="mt-1 font-normal text-white" style={{ fontSize: "13px", fontWeight: 400, color: "#ffffff" }}>
+                        Verified correct ({stats.totalApproved.toLocaleString()} total)
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="group relative overflow-hidden rounded-xl border-none bg-linear-to-br from-red-500 to-red-700 dark:from-red-700 dark:to-red-950 p-5 shadow-sm transition-all duration-300 hover:shadow-md dark:shadow-none">
-              <i className="ph-duotone ph-x-circle pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-[280px] text-white opacity-[0.07]" />
-              <div className="relative z-10">
-                <div className="flex items-end justify-between">
-                  <div className="w-full">
-                    <div className="mb-1 flex items-center gap-1.5 font-medium text-white" style={{ fontSize: "14px", fontWeight: 500, color: "#ffffff" }}>
-                      <i className="ph-bold ph-x-circle" /> Returned Today
-                    </div>
-                    <div className="font-semibold text-white tracking-tight" style={{ fontSize: "48px", fontWeight: 600, color: "#ffffff" }}>
-                      {stats.declinedToday.toLocaleString()}
-                    </div>
-                    <div className="mt-1 font-normal text-white" style={{ fontSize: "13px", fontWeight: 400, color: "#ffffff" }}>
-                      Found with errors ({stats.totalDeclined.toLocaleString()} total)
+            {/* Stat Card 3: Returned Today */}
+            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#f87171] via-[#dc2626] to-[#b91c1c] dark:from-[#dc2626] dark:to-[#7f1d1d] p-5 transition-all duration-300 hover:-translate-y-0.5">
+                <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
+                  <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#b91c1c]/40 to-[#dc2626]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
+                  <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#f87171]/30 to-[#dc2626]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
+                </div>
+                <div className="relative z-10">
+                  <div className="flex items-end justify-between">
+                    <div className="w-full">
+                      <div className="mb-1 flex items-center gap-1.5 font-medium text-white" style={{ fontSize: "14px", fontWeight: 500, color: "#ffffff" }}>
+                        Returned Today
+                      </div>
+                      <div className="font-semibold text-white tracking-tight" style={{ fontSize: "48px", fontWeight: 600, color: "#ffffff" }}>
+                        {stats.declinedToday.toLocaleString()}
+                      </div>
+                      <div className="mt-1 font-normal text-white" style={{ fontSize: "13px", fontWeight: 400, color: "#ffffff" }}>
+                        Found with errors ({stats.totalDeclined.toLocaleString()} total)
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
           </div>
         ) : null}
 
@@ -925,10 +937,10 @@ export default function DigitalRecordsReviewTab({
           (isLoading && !isManualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
         )}>
           <div className="flex-1 min-h-0 flex flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
-            <div className="flex-1 min-h-0 overflow-y-auto rounded-[inherit]">
+            <div className="flex-1 overflow-visible rounded-[inherit]">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
-                  <tr className="text-left text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                  <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                     <th className="w-12 p-4 text-center">
                       <input
                         type="checkbox"
@@ -944,7 +956,7 @@ export default function DigitalRecordsReviewTab({
                     <th className="p-4">
                       <button
                         onClick={() => handleSort("student_name")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[11px] font-medium uppercase tracking-[0.04em]"
+                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em]"
                       >
                         Student Name{" "}
                         <SortIndicator
@@ -957,7 +969,7 @@ export default function DigitalRecordsReviewTab({
                     <th className="p-4">
                       <button
                         onClick={() => handleSort("doc_type")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[11px] font-medium uppercase tracking-[0.04em]"
+                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em]"
                       >
                         Document Type{" "}
                         <SortIndicator
@@ -967,11 +979,11 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Source Filename</th>
+                    <th className="p-4 text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Filename</th>
                     <th className="p-4">
                       <button
                         onClick={() => handleSort("approval_status")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[11px] font-medium uppercase tracking-[0.04em]"
+                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em]"
                       >
                         Status{" "}
                         <SortIndicator
@@ -984,7 +996,7 @@ export default function DigitalRecordsReviewTab({
                     <th className="p-4">
                       <button
                         onClick={() => handleSort("created_at")}
-                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[11px] font-medium uppercase tracking-[0.04em]"
+                        className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em]"
                       >
                         Upload Date{" "}
                         <SortIndicator
@@ -994,7 +1006,7 @@ export default function DigitalRecordsReviewTab({
                         />
                       </button>
                     </th>
-                    <th className="p-4 text-right text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
+                    <th className="p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="bg-transparent">
@@ -1051,7 +1063,7 @@ export default function DigitalRecordsReviewTab({
                           key={r.id}
                           className={cn(
                             "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
-                            isSelected && "bg-amber-50/60 dark:bg-amber-950/20",
+                            isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
                             isSlaBreached && !isSelected && "bg-amber-50/30 dark:bg-amber-950/5"
                           )}
                           onClick={(e) => toggleSelectRow(r.id, e)}
@@ -1059,7 +1071,10 @@ export default function DigitalRecordsReviewTab({
                           <td className="py-0 px-4 align-middle text-center">
                             <input
                               type="checkbox"
-                              className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10"
+                              className={cn(
+                                "h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10 transition-opacity",
+                                isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
+                              )}
                               checked={isSelected}
                               onChange={() => {}} // Controlled by tr onClick
                             />

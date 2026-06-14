@@ -2,11 +2,53 @@
 
 import {
   Card,
-  CardContent,
 } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
-import { formatPHDateTime } from "@/lib/timeFormat"
 import { cn } from "@/lib/utils"
+
+function formatLastSync(val) {
+  if (!val || val === "Never") return "Never"
+  try {
+    const d = new Date(val.replace(' at ', ' '))
+    if (isNaN(d.getTime())) {
+      const parsed = new Date(val)
+      if (!isNaN(parsed.getTime())) {
+        return parsed.toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "numeric",
+          minute: "2-digit",
+          hour12: true
+        })
+      }
+      return val
+    }
+    return d.toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      hour12: true
+    })
+  } catch (e) {
+    return val
+  }
+}
+
+const getGaugeColor = (percent) => {
+  if (percent <= 40) return "#30D158"
+  if (percent <= 60) return "#FF9F0A"
+  if (percent <= 80) return "#FF6B00"
+  return "#E5484D"
+}
+
+const getUsageColor = (percent) => {
+  if (percent <= 50) return "#30D158"
+  if (percent <= 80) return "#FF9F0A"
+  return "#E5484D"
+}
 
 export default function HealthSidebar({
   systemHealth,
@@ -16,7 +58,7 @@ export default function HealthSidebar({
 }) {
   if (isLoading && !isManualLoading) {
     return (
-      <div className="w-[350px] shrink-0 flex flex-col gap-4 animate-fade-up">
+      <div className="w-[350px] shrink-0 flex flex-col gap-4">
         <Card className="flex flex-col border border-gray-200 bg-white shadow-sm h-full rounded-brand overflow-hidden p-6 space-y-6 dark:border-white/10 dark:bg-card dark:shadow-none">
            <Skeleton className="h-12 w-full rounded-xl dark:bg-muted" />
            <Skeleton className="h-[180px] w-full rounded-2xl dark:bg-muted" />
@@ -31,59 +73,44 @@ export default function HealthSidebar({
   }
 
   const diskPercent = systemHealth?.disk?.percent || 0
+  const ramPercent = systemHealth?.memory?.percent || 0
+  const cpuPercent = systemHealth?.cpu || 0
 
-  const getDiskColor = (percent) => {
-    if (percent >= 90) return "text-red-500"
-    if (percent >= 70) return "text-amber-500"
-    return "text-green-500"
-  }
-
-  const diskColorClass = getDiskColor(diskPercent)
+  const currentGaugeColor = getGaugeColor(diskPercent)
+  const currentRamColor = getUsageColor(ramPercent)
+  const currentCpuColor = getUsageColor(cpuPercent)
 
   return (
-    <div className="w-[350px] shrink-0 flex flex-col gap-4 animate-in fade-in slide-in-from-right-4 duration-500 h-fit">
+    <div className="w-[350px] shrink-0 flex flex-col gap-4 h-fit">
       <Card className="flex flex-col border border-gray-200 bg-white shadow-sm rounded-brand overflow-hidden dark:border-white/10 dark:bg-card dark:shadow-none">
+        {/* Page Header */}
         <div className="border-b border-gray-100 bg-transparent p-6 dark:border-white/10 dark:bg-transparent">
           <div className="flex flex-col">
-            <h3 className="text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
-              System Health
+            <h3 className="text-[15px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50 mb-[4px]">
+              System Status
             </h3>
-            <p className="mt-1.5 text-sm font-medium text-gray-500 transition-colors dark:text-zinc-400">
-              Monitor database operations and resources.
+            <p className="text-[13px] font-normal text-[#8E8E93] m-0">
+              Storage, memory, and system resources.
             </p>
           </div>
         </div>
 
-        <div className="p-4 space-y-6">
+        <div className="p-6 space-y-6">
           {/* Main Gauge: Storage */}
-          <div className="flex flex-col items-center py-4 bg-transparent border-0 shadow-none p-5">
+          <div className="flex flex-col items-center py-2 bg-transparent border-0 shadow-none">
             <div
-              className="relative mx-auto flex aspect-[2/1] w-full max-w-[160px] items-end justify-center overflow-hidden rounded-t-full transition-all duration-500"
+              className="relative mx-auto flex aspect-[2/1] w-full max-w-[120px] items-end justify-center overflow-hidden transition-all duration-500"
             >
               <svg
                 className="absolute inset-0 h-full w-full"
                 viewBox="0 0 100 50"
               >
-                <defs>
-                  <linearGradient id="gaugeGreen" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#34d399" />
-                    <stop offset="100%" stopColor="#059669" />
-                  </linearGradient>
-                  <linearGradient id="gaugeAmber" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#fbbf24" />
-                    <stop offset="100%" stopColor="#ea580c" />
-                  </linearGradient>
-                  <linearGradient id="gaugeRed" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#ef4444" />
-                    <stop offset="100%" stopColor="#b91c1c" />
-                  </linearGradient>
-                </defs>
                 {/* Background base path */}
                 <path
                   d="M 15 42 A 35 35 0 0 1 85 42"
                   fill="none"
-                  stroke="#d1d5db"
-                  strokeWidth="15"
+                  stroke="#F2F2F7"
+                  strokeWidth="8"
                   strokeLinecap="round"
                   className="dark:stroke-zinc-800"
                 />
@@ -91,106 +118,127 @@ export default function HealthSidebar({
                 <path
                   d="M 15 42 A 35 35 0 0 1 85 42"
                   fill="none"
-                  stroke={
-                    diskPercent >= 90 ? "url(#gaugeRed)" : diskPercent >= 70 ? "url(#gaugeAmber)" : "url(#gaugeGreen)"
-                  }
-                  strokeWidth="15"
+                  stroke={currentGaugeColor}
+                  strokeWidth="8"
                   strokeLinecap="round"
-                  className="transition-all duration-1000 ease-out"
+                  style={{ transition: "stroke 300ms ease, stroke-dashoffset 1000ms ease-out" }}
                   strokeDasharray="109.96"
                   strokeDashoffset={
                     109.96 * (1 - diskPercent / 100)
                   }
                 />
               </svg>
-              <div className="z-10 pb-0 text-center">
+              <div className="z-10 pb-1 text-center">
                 <span
-                  className="text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50"
+                  className="text-[20px] font-semibold transition-colors duration-300"
+                  style={{ color: currentGaugeColor }}
                 >
                   {diskPercent}%
                 </span>
               </div>
             </div>
-            <div className="mt-4 text-center">
-              <p className="text-[9px] font-semibold tracking-tight text-gray-400 dark:text-zinc-500">
-                Repository Volume
+            {/* Texts below gauge */}
+            <div className="mt-[8px] flex flex-col items-center text-center">
+              <p className="text-[11px] font-medium tracking-[0.04em] uppercase text-[#8E8E93]">
+                Storage Used
               </p>
-              <p className="mt-0.5 text-xs font-semibold text-gray-700 dark:text-zinc-200">
-                {systemHealth.disk.total - systemHealth.disk.free}GB /{" "}
-                {systemHealth.disk.total}GB
+              <p className="mt-1 text-[13px] font-normal text-[#111111] dark:text-zinc-50">
+                {systemHealth?.disk?.total && systemHealth?.disk?.free
+                  ? `${systemHealth.disk.total - systemHealth.disk.free}GB / ${systemHealth.disk.total}GB`
+                  : "0GB / 0GB"}
               </p>
             </div>
           </div>
 
           {/* Critical Resource Bars */}
-          <div className="space-y-6 px-1">
-            {/* Memory Usage */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-[9px] font-semibold tracking-widest text-gray-500 dark:text-zinc-400">
-                <div className="flex items-center gap-2">
-                  <i className="ph-bold ph-memory text-base text-blue-500"></i>
-                  <span className="text-gray-800 dark:text-zinc-100">RAM</span>
+          <div className="flex flex-col gap-[20px] px-1">
+            {/* Memory Usage (RAM) */}
+            <div className="flex flex-col gap-[6px]">
+              <div className="flex justify-between items-center text-[12px] font-medium text-[#8E8E93]">
+                <div className="flex items-center gap-1.5">
+                  <i className="ti ti-cpu" style={{ fontSize: '14px', color: '#C7C7CC', padding: 0, margin: 0, background: 'none', border: 'none' }}></i>
+                  <span>RAM</span>
                 </div>
-                <span className="text-gray-900 dark:text-zinc-50">{systemHealth.memory?.percent || 0}%</span>
+                <span 
+                  className="font-medium transition-colors duration-300"
+                  style={{ color: currentRamColor }}
+                >{ramPercent}%</span>
               </div>
-              <div className="h-6 w-full overflow-hidden rounded-full bg-gray-300 shadow-inner border border-gray-200 dark:shadow-none dark:border-white/10 dark:bg-muted">
+              <div className="w-full overflow-hidden rounded-[2px] bg-[#F2F2F7] dark:bg-zinc-800" style={{ height: '4px' }}>
                 <div
-                  className={cn(
-                    "h-full rounded-full transition-all duration-1000",
-                    (systemHealth.memory?.percent || 0) > 85
-                      ? "bg-red-500"
-                      : (systemHealth.memory?.percent || 0) >= 60
-                      ? "bg-amber-500"
-                      : "bg-emerald-500"
-                  )}
-                  style={{ width: `${systemHealth.memory?.percent || 0}%` }}
+                  className="rounded-[2px] transition-all duration-1000"
+                  style={{ 
+                    height: '4px',
+                    width: `${ramPercent}%`,
+                    backgroundColor: currentRamColor,
+                    transition: "width 1000ms ease-out, background-color 300ms ease"
+                  }}
                 />
               </div>
             </div>
 
-            {/* Computation */}
-            <div className="space-y-2">
-              <div className="flex justify-between text-[9px] font-semibold tracking-widest text-gray-500 dark:text-zinc-400">
-                <div className="flex items-center gap-2">
-                  <i className="ph-bold ph-cpu text-base text-amber-500"></i>
-                  <span className="text-gray-800 dark:text-zinc-100">CPU</span>
+            {/* Computation (CPU) */}
+            <div className="flex flex-col gap-[6px]">
+              <div className="flex justify-between items-center text-[12px] font-medium text-[#8E8E93]">
+                <div className="flex items-center gap-1.5">
+                  <i className="ti ti-settings" style={{ fontSize: '14px', color: '#C7C7CC', padding: 0, margin: 0, background: 'none', border: 'none' }}></i>
+                  <span>CPU</span>
                 </div>
-                <span className="text-gray-900 dark:text-zinc-50">{systemHealth.cpu}%</span>
+                <span 
+                  className="font-medium transition-colors duration-300"
+                  style={{ color: currentCpuColor }}
+                >{cpuPercent}%</span>
               </div>
-              <div className="h-6 w-full overflow-hidden rounded-full bg-gray-300 shadow-inner border border-gray-200 dark:shadow-none dark:border-white/10 dark:bg-muted">
+              <div className="w-full overflow-hidden rounded-[2px] bg-[#F2F2F7] dark:bg-zinc-800" style={{ height: '4px' }}>
                 <div
-                  className={cn(
-                    "h-full rounded-full transition-all duration-1000",
-                    systemHealth.cpu > 85
-                      ? "bg-red-500"
-                      : systemHealth.cpu >= 60
-                      ? "bg-amber-500"
-                      : "bg-emerald-500"
-                  )}
-                  style={{ width: `${systemHealth.cpu}%` }}
+                  className="rounded-[2px] transition-all duration-1000"
+                  style={{ 
+                    height: '4px',
+                    width: `${cpuPercent}%`,
+                    backgroundColor: currentCpuColor,
+                    transition: "width 1000ms ease-out, background-color 300ms ease"
+                  }}
                 />
               </div>
             </div>
           </div>
 
           {/* Concise Node Records */}
-          <div className="pt-4 border-t border-gray-100 space-y-2 dark:border-white/10">
-            <div className="grid grid-cols-1 gap-1.5">
-              <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-transparent border border-gray-100 dark:bg-transparent dark:border-white/10">
-                <span className="text-[9px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">Last Sync</span>
-                <span className="text-[10px] font-semibold text-gray-800 dark:text-zinc-100">{lastBackupTime}</span>
-              </div>
-              <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-transparent border border-gray-100 dark:bg-transparent dark:border-white/10">
-                <span className="text-[9px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">Restore Node</span>
-                <span className={`text-[10px] font-semibold ${systemHealth.lastRestorationAt ? "text-gray-800" : "text-gray-400 dark:text-zinc-100"}`}>
-                  {systemHealth.lastRestorationAt
-                    ? formatPHDateTime(systemHealth.lastRestorationAt).split(',')[0]
-                    : "NONE"}
+          <div className="pt-4 border-t border-gray-100 dark:border-white/10">
+            <div className="flex flex-col">
+              {/* Last Synced */}
+              <div 
+                className="h-[36px] flex items-center justify-between border-black/5 dark:border-white/10"
+                style={{ borderBottomWidth: '0.5px', borderBottomStyle: 'solid' }}
+              >
+                <span className="text-[13px] font-normal text-[#8E8E93]">Last Synced</span>
+                <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-150">
+                  {formatLastSync(lastBackupTime)}
                 </span>
               </div>
-              <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-transparent border border-gray-100 dark:bg-transparent dark:border-white/10">
-                <span className="text-[9px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">Protocol</span>
-                <span className="text-[9px] font-semibold text-emerald-600 dark:text-emerald-400">AES-256-GCM</span>
+              {/* Backup Node */}
+              <div 
+                className="h-[36px] flex items-center justify-between border-black/5 dark:border-white/10"
+                style={{ borderBottomWidth: '0.5px', borderBottomStyle: 'solid' }}
+              >
+                <span className="text-[13px] font-normal text-[#8E8E93]">Backup Node</span>
+                {systemHealth?.lastRestorationAt ? (
+                  <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-150">
+                    {formatLastSync(systemHealth.lastRestorationAt)}
+                  </span>
+                ) : (
+                  <span className="text-[13px] font-normal text-[#8E8E93]">
+                    Not configured
+                  </span>
+                )}
+              </div>
+              {/* Encryption */}
+              <div className="h-[36px] flex items-center justify-between">
+                <span className="text-[13px] font-normal text-[#8E8E93]">Encryption</span>
+                <div className="flex items-center">
+                  <span className="inline-block w-[6px] h-[6px] rounded-full bg-[#30D158] mr-[6px]" />
+                  <span className="text-[13px] font-normal text-[#111111] dark:text-zinc-150">AES-256-GCM</span>
+                </div>
               </div>
             </div>
           </div>
@@ -199,5 +247,3 @@ export default function HealthSidebar({
     </div>
   )
 }
-
-

@@ -63,13 +63,16 @@ export default function BackupTable({
           "flex-1 overflow-hidden overflow-x-auto overflow-y-auto select-none min-h-[400px]"
         )}
       >
-        <table className="min-w-full table-fixed text-sm">
-          <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm dark:border-white/20 dark:bg-muted">
-            <tr className="text-left text-[10px] font-semibold tracking-widest text-gray-600 dark:text-zinc-300">
-              <th className="w-16 p-4 text-center">
+        <table className="min-w-full text-sm">
+          <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
+            <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+              <th className="w-12 p-4 text-center">
                 <input
                   type="checkbox"
-                  className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:cursor-not-allowed disabled:opacity-20 dark:text-primary dark:border-white/10"
+                  className={cn(
+                    "h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10 transition-opacity",
+                    backups.length > 0 && backups.every((b) => selectedBackupIds.includes(b.id)) ? "opacity-100" : "opacity-50 hover:opacity-85"
+                  )}
                   checked={
                     backups.length > 0 &&
                     backups.every((b) => selectedBackupIds.includes(b.id))
@@ -78,10 +81,13 @@ export default function BackupTable({
                   disabled={backups.length === 0}
                 />
               </th>
-              <th className="p-4 min-w-[280px]">
+              <th className="p-4 px-6 min-w-[280px]">
                 <button
                   onClick={() => handleSort("filename")}
-                  className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                  className={cn(
+                    "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                    sortBy === "filename" ? "text-pup-maroon dark:text-red-500" : "text-gray-400 dark:text-zinc-500 hover:text-pup-maroon dark:hover:text-red-500"
+                  )}
                 >
                   Backup Archive{" "}
                   <SortIndicator
@@ -91,10 +97,13 @@ export default function BackupTable({
                   />
                 </button>
               </th>
-              <th className="w-32 p-4 text-center">
+              <th className="w-32 p-4 px-6 text-center">
                 <button
                   onClick={() => handleSort("size_bytes")}
-                  className="group mx-auto flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                  className={cn(
+                    "group mx-auto flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                    sortBy === "size_bytes" ? "text-pup-maroon dark:text-red-500" : "text-gray-400 dark:text-zinc-500 hover:text-pup-maroon dark:hover:text-red-500"
+                  )}
                 >
                   Size{" "}
                   <SortIndicator
@@ -104,10 +113,13 @@ export default function BackupTable({
                   />
                 </button>
               </th>
-              <th className="w-56 p-4">
+              <th className="w-56 p-4 px-6">
                 <button
                   onClick={() => handleSort("created_at")}
-                  className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none"
+                  className={cn(
+                    "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                    sortBy === "created_at" ? "text-pup-maroon dark:text-red-500" : "text-gray-400 dark:text-zinc-500 hover:text-pup-maroon dark:hover:text-red-500"
+                  )}
                 >
                   Creation Date{" "}
                   <SortIndicator
@@ -117,13 +129,13 @@ export default function BackupTable({
                   />
                 </button>
               </th>
-              <th className="w-56 p-4 text-center font-semibold whitespace-nowrap">
+              <th className="w-56 p-4 px-6 text-center font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                 Storage Locations
               </th>
-              <th className="w-32 p-4 text-right">Actions</th>
+              <th className="w-32 p-4 px-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-white/20">
+          <tbody className="divide-y divide-gray-100 dark:divide-white/10">
             {sortedAndPaginatedBackups.length === 0 ? (
               <tr className="border-0 hover:bg-transparent">
                 <td colSpan={6} className="border-0 p-0">
@@ -132,7 +144,7 @@ export default function BackupTable({
                       <div className="relative mb-6">
                         <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
                         <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
-                          <i className={cn("ph-duotone text-xl text-gray-300 dark:text-zinc-600", isFilterActive ? "ph-magnifying-glass" : "ph-database")}></i>
+                          <i className={cn("ph-duotone text-xl text-gray-300 dark:text-zinc-650", isFilterActive ? "ph-magnifying-glass" : "ph-database")}></i>
                         </EmptyMedia>
                       </div>
                       <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
@@ -174,59 +186,62 @@ export default function BackupTable({
                   <tr
                     key={b.id}
                     className={cn(
-                        "group transition-all duration-200 hover:bg-gray-50/80 dark:bg-card dark:hover:bg-white/5 select-none cursor-pointer",
-                        isSelected && "bg-amber-50 dark:bg-amber-950/40"
+                        "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                        isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                     )}
                     onClick={(e) => {
                       if (e.target.closest("button") || e.target.closest("input")) return
                       handleToggleRow(b.id)
                     }}
                   >
-                    <td className="p-4 text-center">
+                    <td className="py-0 px-4 align-middle text-center">
                       <input
                         type="checkbox"
-                        className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:border-white/10"
+                        className={cn(
+                          "h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10 transition-opacity",
+                          isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
+                        )}
                         checked={isSelected}
                         onChange={() => handleToggleRow(b.id)}
                       />
                     </td>
-                    <td className="p-4">
-                        <div className="flex items-center gap-3">
-                            <span className="text-xs font-semibold text-gray-900 dark:text-zinc-50 max-w-[280px] truncate" title={b.filename}>
-                                {b.filename}
-                            </span>
-                        </div>
+                    <td className="py-0 px-6 align-middle">
+                      <div className="flex items-center gap-3">
+                        <span className="text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50 max-w-[280px] truncate" title={b.filename}>
+                          {b.filename}
+                        </span>
+                      </div>
                     </td>
-                    <td className="p-4 text-center text-xs font-semibold text-gray-700 dark:text-zinc-200">
+                    <td className="py-0 px-6 align-middle text-center text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                       {formatBytes(b.size_bytes)}
                     </td>
-                    <td className="p-4">
-                        <div className="flex flex-col">
-                            <span className="text-xs font-semibold text-gray-900 dark:text-zinc-50">
-                                {formatPHDateTime(b.created_at).split(' at ')[0]}
-                            </span>
-                            <span className="text-[10px] font-medium text-gray-500 dark:text-zinc-400">
-                                {formatPHDateTime(b.created_at).split(' at ')[1]}
-                            </span>
-                        </div>
+                    <td className="py-0 px-6 align-middle">
+                      <div className="flex flex-col">
+                        <span className="text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50 leading-tight">
+                          {formatPHDateTime(b.created_at).split(' at ')[0]}
+                        </span>
+                        <span className="text-[11px] font-normal text-gray-500 dark:text-zinc-400 mt-0.5 leading-tight">
+                          {formatPHDateTime(b.created_at).split(' at ')[1]}
+                        </span>
+                      </div>
                     </td>
-                    <td className="p-4">
+                    <td className="py-0 px-6 align-middle">
                       <div className="flex mx-auto w-fit items-center gap-2">
                         {/* Local Node */}
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <div
                               className={cn(
-                                  "flex items-center gap-1.5 rounded-full border px-2.5 py-1 shadow-xs transition-all",
-                                  b.status_local === "Success" ? "border-green-200 bg-green-50 text-green-700 dark:bg-green-950/20 dark:border-green-800/20 dark:text-green-400" : "border-gray-200 bg-gray-50 text-gray-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500"
+                                  "inline-flex items-center gap-1.5 rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em]",
+                                  b.status_local === "Success" 
+                                    ? "bg-green-100 text-green-800 dark:bg-emerald-950/40 dark:text-emerald-400" 
+                                    : "bg-gray-100 text-gray-850 dark:bg-zinc-800 dark:text-zinc-400"
                               )}
                             >
                               <i
-                                className={cn("ph-bold text-[10px]", b.status_local === "Success" ? "ph-check-circle" : "ph-warning-circle")}
+                                className={cn("ph-bold text-[12px]", b.status_local === "Success" ? "ph-check-circle" : "ph-warning-circle")}
                               ></i>
-                              <span className="text-[9px] font-semibold tracking-wider">
-                                Local
-                              </span>
+                              <span>Local</span>
                             </div>
                           </TooltipTrigger>
                           <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
@@ -243,11 +258,9 @@ export default function BackupTable({
                         {b.status_external === "Success" ? (
                           <Tooltip>
                             <TooltipTrigger asChild>
-                              <div className="flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-blue-700 shadow-xs transition-all dark:bg-blue-950/20 dark:border-blue-800/20 dark:text-blue-400">
-                                <i className="ph-bold ph-hard-drives text-[10px]"></i>
-                                <span className="text-[9px] font-semibold tracking-wider">
-                                  External
-                                </span>
+                              <div className="inline-flex items-center gap-1.5 rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-400">
+                                <i className="ph-bold ph-hard-drives text-[12px]"></i>
+                                <span>External</span>
                               </div>
                             </TooltipTrigger>
                             <TooltipContent className="bg-zinc-900 text-white border-zinc-800">
@@ -262,12 +275,14 @@ export default function BackupTable({
                                 onClick={() => handleSyncExternal(b.id)}
                                 disabled={localLoading.syncingId === b.id}
                                 className={cn(
-                                    "flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-semibold tracking-wider  shadow-xs transition-all active:scale-95 disabled:opacity-50",
-                                    b.status_external === "Failed" ? "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 dark:bg-amber-950/30 dark:border-amber-800/30" : "border-gray-300 bg-white text-gray-500 hover:bg-gray-50 dark:bg-card dark:border-white/10 dark:text-zinc-400 dark:hover:bg-zinc-800"
+                                    "inline-flex items-center gap-1.5 rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] border-0 transition-all active:scale-95 disabled:opacity-50 cursor-pointer",
+                                    b.status_external === "Failed" 
+                                      ? "bg-amber-100 text-amber-800 hover:bg-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:hover:bg-amber-900/40" 
+                                      : "bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
                                 )}
                               >
                                 <i
-                                  className={cn("ph-bold text-[10px]", localLoading.syncingId === b.id ? "ph-arrows-clockwise animate-spin" : b.status_external === "Failed" ? "ph-warning" : "ph-share-network")}
+                                  className={cn("ph-bold text-[12px]", localLoading.syncingId === b.id ? "ph-arrows-clockwise animate-spin" : b.status_external === "Failed" ? "ph-warning" : "ph-share-network")}
                                 ></i>
                                 <span>
                                   {localLoading.syncingId === b.id
@@ -286,24 +301,20 @@ export default function BackupTable({
                         )}
                       </div>
                     </td>
-                    <td className="p-4 text-right">
-                      <div className="flex items-center justify-end gap-2" onClick={e => e.stopPropagation()}>
-                        <Button
-                          variant="outline"
-                          size="icon"
+                    <td className="py-0 px-6 text-right align-middle">
+                      <div className="inline-flex items-center justify-end gap-[12px]" onClick={e => e.stopPropagation()}>
+                        <button
                           onClick={() => onDownloadBackup(b.id, b.filename)}
-                          className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-gray-400 shadow-sm transition-all hover:border-gray-300 hover:bg-gray-50 hover:text-pup-maroon dark:hover:text-red-500 dark:bg-white/5 dark:border-white/10 dark:text-zinc-500 dark:hover:text-primary dark:hover:bg-zinc-800"
+                          className="p-0 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-650 transition-colors hover:text-pup-maroon dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                         >
-                          <i className="ph-bold ph-download-simple text-lg"></i>
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
+                          <i className="ph-bold ph-download-simple text-[16px]"></i>
+                        </button>
+                        <button
                           onClick={() => onDeleteBackup(b.id)}
-                          className="h-9 w-9 rounded-brand border-gray-200 bg-white p-0 text-red-400 shadow-sm transition-all hover:border-red-600 hover:bg-red-50 dark:bg-white/5 dark:border-white/10 dark:text-red-400/90 dark:hover:bg-red-400/10"
+                          className="p-0 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-650 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                         >
-                          <i className="ph-bold ph-trash text-lg"></i>
-                        </Button>
+                          <i className="ph-bold ph-trash text-[16px]"></i>
+                        </button>
                       </div>
                     </td>
                   </tr>

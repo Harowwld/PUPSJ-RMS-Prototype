@@ -50,7 +50,13 @@ export default function PageHeader({
           <div className="flex flex-col gap-[4px]">
             <CardTitle 
               className={cn("flex items-center gap-2 text-xl font-semibold tracking-tight text-gray-900 transition-colors dark:text-zinc-50 m-0", titleClassName)}
-              style={titleClassName?.includes("text-[18px]") ? { fontSize: "18px" } : undefined}
+              style={
+                titleClassName?.includes("text-[15px]")
+                  ? { fontSize: "15px" }
+                  : titleClassName?.includes("text-[18px]")
+                  ? { fontSize: "18px" }
+                  : undefined
+              }
             >
               {title}
             </CardTitle>

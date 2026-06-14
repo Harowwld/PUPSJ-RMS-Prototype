@@ -682,7 +682,7 @@ export default function StaffDirectoryTab({
             key={activeTab}
             className="outline-none animate-fade-up flex flex-col flex-1 min-h-0"
           >
-            <div className="w-full overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1 min-h-0">
+            <div className="w-full overflow-visible rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
                   <tr className="text-left text-[11px] font-medium uppercase tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
