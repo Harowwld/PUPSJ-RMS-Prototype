@@ -870,21 +870,6 @@ h1.login-title {
   animation: spin-clockwise 55s linear infinite;
 }
 
-/* Custom PDF Preview Scrollbar */
-.custom-preview-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-.custom-preview-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-.custom-preview-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
-  border-radius: 2px;
-}
-.custom-preview-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.25);
-}
-
 
 
 

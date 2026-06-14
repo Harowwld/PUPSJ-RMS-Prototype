@@ -9,6 +9,12 @@ import {
 } from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 import { useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 
@@ -29,7 +35,7 @@ function PDFFrame({ docId }) {
       <iframe
         title="PDF Preview"
         src={`/api/documents/${docId}#toolbar=0&navpanes=0`}
-        className="absolute inset-0 h-full w-full bg-[#F2F2F7] dark:bg-zinc-800"
+        className="absolute inset-0 h-full w-full bg-gray-200 dark:bg-zinc-700"
         style={{ border: "none" }}
         onLoad={() => setFrameReady(true)}
       />
@@ -67,33 +73,34 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
     >
       <DialogContent 
         hideClose={true}
-        className="flex flex-col overflow-hidden bg-white dark:bg-zinc-900 p-0 shadow-[0_8px_40px_rgba(0,0,0,0.16)] w-[760px] max-w-full max-h-[90vh] transition-all duration-300 ease-out rounded-[16px] border-0"
+        className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out xl:max-w-[1400px] rounded-brand dark:border-white/10 dark:bg-muted"
       >
-        <DialogHeader className="shrink-0 p-[20px_24px] dark:border-zinc-850" style={{ borderBottom: "0.5px solid rgba(0,0,0,0.08)" }}>
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <i className="ti ti-file-text text-[18px]" style={{ color: "#E5484D" }}></i>
+        <DialogHeader className="shrink-0 border-b bg-gray-50 dark:bg-white/5" style={{ padding: '20px 24px', borderBottomWidth: '0.5px', borderBottomColor: 'rgba(0,0,0,0.08)' }}>
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center" style={{ gap: '12px' }}>
+              <i className="ti ti-file-text shrink-0" style={{ fontSize: '18px', color: '#E5484D' }}></i>
               <div className="min-w-0">
-                <DialogTitle className="text-left text-[15px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50">
+                <DialogTitle className="text-left font-semibold text-[#111111] dark:text-zinc-50" style={{ fontSize: '15px', letterSpacing: '-0.01em' }}>
                   Document Preview: {preview?.docType || "Loading..."}
                 </DialogTitle>
-                <p className="mt-[2px] text-left text-[12px] font-normal text-[#8E8E93] dark:text-zinc-400">
-                  Reviewing digitized record for {preview?.studentName || "student"}. Ensure all
-                  identifiers and data are clearly legible.
+                <p className="text-left font-normal text-[#8E8E93] dark:text-zinc-400" style={{ fontSize: '12px', marginTop: '2px' }}>
+                  Reviewing digitized record for {preview?.studentName || "student"}. Ensure all identifiers and data are clearly legible.
                 </p>
               </div>
             </div>
-            <DialogClose asChild>
-              <button className="p-0 border-0 bg-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-100 transition-colors cursor-pointer focus:outline-none flex items-center justify-center">
-                <i className="ti ti-x text-[16px]"></i>
-              </button>
-            </DialogClose>
+            <button
+              onClick={onClose}
+              className="p-0 border-0 bg-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-100 focus:outline-none cursor-pointer transition-colors flex items-center justify-center"
+              style={{ width: '28px', height: '28px' }}
+            >
+              <i className="ti ti-x" style={{ fontSize: '16px' }}></i>
+            </button>
           </div>
         </DialogHeader>
 
-        <div className="relative flex flex-1 flex-col overflow-hidden min-h-0 bg-[#F2F2F7] dark:bg-zinc-950 p-[24px]">
+        <div className="relative flex flex-1 flex-col overflow-hidden bg-gray-100 p-0 dark:bg-muted">
           {docId ? (
-            <div className={cn("relative min-h-0 min-w-0 flex-1 flex flex-col transition-all duration-300", isFullscreen ? "fixed inset-0 z-[9999] bg-white dark:bg-card p-0" : "bg-white rounded-lg shadow-[0_2px_12px_rgba(0,0,0,0.12)] overflow-hidden")}>
+            <div className={cn("relative min-h-0 min-w-0 flex-1 flex flex-col transition-all duration-300", isFullscreen ? "fixed inset-0 z-[9999] bg-white dark:bg-card" : "")}>
               {isFullscreen && (
                 <div className="absolute top-4 right-4 z-[10000]">
                   <Button
@@ -107,21 +114,10 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
                 </div>
               )}
               <PDFFrame key={docId} docId={docId} />
-              
-              {!isFullscreen && (
-                <button
-                  type="button"
-                  onClick={() => setIsFullscreen(true)}
-                  className="absolute bottom-3 left-3 z-20 flex items-center justify-center bg-white border border-[rgba(0,0,0,0.12)] rounded-[6px] p-1.5 text-[#8E8E93] hover:text-[#111111] dark:bg-zinc-900 dark:border-zinc-700 transition-colors cursor-pointer"
-                  style={{ borderWidth: "0.5px" }}
-                >
-                  <i className="ti ti-arrows-maximize text-[16px]"></i>
-                </button>
-              )}
             </div>
           ) : (
-            <div className="flex flex-1 items-center justify-center bg-[#F2F2F7] dark:bg-zinc-950">
-              <div className="max-w-lg text-center bg-white dark:bg-zinc-900 p-8 rounded-lg shadow-[0_2px_12px_rgba(0,0,0,0.12)]">
+            <div className="flex flex-1 items-center justify-center bg-white p-6 dark:bg-card">
+              <div className="max-w-lg text-center">
                 <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full border border-gray-200 bg-gray-50 dark:border-white/10 dark:bg-card">
                   <i className="ph-bold ph-file-x text-xl text-gray-300 dark:text-zinc-600"></i>
                 </div>
@@ -136,22 +132,47 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
           )}
         </div>
 
-        <div className="flex shrink-0 justify-end items-center gap-[8px] p-[16px_24px] dark:border-zinc-850" style={{ borderTop: "0.5px solid rgba(0,0,0,0.08)" }}>
+        <div 
+          className="flex shrink-0 justify-end items-center bg-white dark:bg-card"
+          style={{ 
+            padding: '16px 24px', 
+            borderTopWidth: '0.5px', 
+            borderTopColor: 'rgba(0,0,0,0.08)',
+            gap: '8px'
+          }}
+        >
           <DialogClose asChild>
-            <button
+            <Button
+              variant="outline"
               onClick={onClose}
-              className="h-[36px] px-4 rounded-[8px] border-[0.5px] border-black/15 bg-transparent text-[13px] font-normal text-[#111111] hover:bg-[#F5F5F5] dark:text-zinc-300 dark:border-white/10 dark:hover:bg-zinc-800 transition-colors cursor-pointer outline-none"
-              style={{ borderWidth: "0.5px" }}
+              className="px-4 text-[#111111] hover:text-[#111111] dark:text-zinc-300 shadow-none bg-transparent hover:bg-[rgba(0,0,0,0.04)]"
+              style={{ 
+                height: '36px', 
+                borderWidth: '0.5px', 
+                borderColor: 'rgba(0,0,0,0.15)', 
+                borderRadius: '8px', 
+                fontSize: '13px', 
+                fontWeight: 400 
+              }}
             >
               Close
-            </button>
+            </Button>
           </DialogClose>
           {docId ? (
             <a
               href={`/api/documents/${docId}`}
               target="_blank"
               rel="noreferrer"
-              className="inline-flex h-[36px] items-center justify-center rounded-[8px] bg-[#E5484D] text-white hover:bg-[#C93B3B] px-4 text-[13px] font-medium transition-colors cursor-pointer outline-none"
+              className="inline-flex items-center justify-center text-white hover:text-white"
+              style={{ 
+                height: '36px', 
+                borderRadius: '8px', 
+                backgroundColor: '#E5484D', 
+                paddingLeft: '16px', 
+                paddingRight: '16px', 
+                fontSize: '13px', 
+                fontWeight: 500 
+              }}
             >
               Open Full View
             </a>
@@ -161,3 +182,4 @@ export default function PDFPreviewModal({ open, onClose, preview }) {
     </Dialog>
   )
 }
+
