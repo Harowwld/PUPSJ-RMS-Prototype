@@ -2,24 +2,21 @@
 
 import { useEffect, useMemo, useRef, useState } from "react"
 import {
-  Card,
-  CardContent,
-} from "@/components/ui/card"
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import { Separator } from "@/components/ui/separator"
-import PageHeader from "@/components/shared/PageHeader"
-import ConfirmModal from "@/components/shared/ConfirmModal"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { toast } from "sonner"
 
 export default function RegisterAccountTab({
+  open,
+  onClose,
   authUser,
   createForm,
   setCreateForm,
@@ -27,14 +24,8 @@ export default function RegisterAccountTab({
   isLoading = false,
   onResetForm,
   onCreateAccount,
-  onSwitchView,
 }) {
-  const [showDefaultPw, setShowDefaultPw] = useState(false)
   const [lastAutoFilled, setLastAutoFilled] = useState({ id: false, email: false })
-  const [showConfirmModal, setShowConfirmModal] = useState(false)
-  const [countdown, setCountdown] = useState(3)
-  
-  const skipConfirmation = !!authUser?.preferences?.skip_registration_confirmation
   const fnameRef = useRef(null)
 
   const [isIdManual, setIsIdManual] = useState(false)
@@ -71,7 +62,6 @@ export default function RegisterAccountTab({
         clearTimeout(resetTimer)
       }
     }
-    // If name is cleared, also clear the non-manual ID
     if (!isIdManual && !suggestedId && createForm.id !== "") {
       const timer = setTimeout(() => {
         setCreateForm(f => ({ ...f, id: "" }))
@@ -95,7 +85,6 @@ export default function RegisterAccountTab({
         clearTimeout(resetTimer)
       }
     }
-    // If name/role is cleared, also clear the non-manual email
     if (!isEmailManual && !suggestedEmail && createForm.email !== "") {
       const timer = setTimeout(() => {
         setCreateForm(f => ({ ...f, email: "" }))
@@ -105,37 +94,13 @@ export default function RegisterAccountTab({
   }, [suggestedEmail, isEmailManual, createForm.email, setCreateForm])
 
   useEffect(() => {
-    let timer
-    if (showConfirmModal && !skipConfirmation && countdown > 0) {
-      timer = setInterval(() => {
-        setCountdown((prev) => prev - 1)
-      }, 1000)
+    if (open) {
+      const timer = setTimeout(() => {
+        fnameRef.current?.focus()
+      }, 100)
+      return () => clearTimeout(timer)
     }
-    return () => clearInterval(timer)
-  }, [showConfirmModal, countdown, skipConfirmation])
-
-  const handleOpenConfirm = (e) => {
-    e.preventDefault()
-    if (skipConfirmation) {
-      onCreateAccount(e)
-      return
-    }
-    setCountdown(3)
-    setShowConfirmModal(true)
-  }
-
-  const handleConfirmAction = (e) => {
-    setShowConfirmModal(false)
-    onCreateAccount(e)
-  }
-
-  useEffect(() => {
-    // Auto-focus the first field when the component mounts (tab switched)
-    const timer = setTimeout(() => {
-      fnameRef.current?.focus()
-    }, 100)
-    return () => clearTimeout(timer)
-  }, [])
+  }, [open])
 
   const handleClearForm = () => {
     onResetForm()
@@ -143,8 +108,6 @@ export default function RegisterAccountTab({
     toast.success("Form cleared successfully", {
       description: "All registration fields have been reset.",
     })
-    // Delay resetting manual flags to ensure the form values have cleared first,
-    // preventing the auto-fill effect from re-triggering.
     setTimeout(() => {
         setIsIdManual(false)
         setIsEmailManual(false)
@@ -154,46 +117,36 @@ export default function RegisterAccountTab({
 
   return (
     <TooltipProvider delay={200}>
-      <div className="animate-fade-up font-inter flex w-full flex-1 flex-col gap-6 min-h-0">
-        {/* Main Registration Form - merged with header */}
-        <Card className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-md dark:border-white/10 dark:bg-card dark:shadow-none w-full h-fit">
-          <PageHeader
-            icon="ph-user-plus"
-            title="Register Account"
-            description="Create new user credentials for registrar personnel and administrators."
-            showBorder={true}
-            titleClassName="text-[15px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50 mb-[4px]"
-            descriptionClassName="text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400 m-0"
-            actions={
-              <div className="flex items-center gap-[8px]">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => onSwitchView?.("directory")}
-                  className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none! border-0!"
-                >
-                  <i className="ph-bold ph-arrow-left"></i>
-                  Directory
-                </Button>
+      <Dialog open={open} onOpenChange={onClose}>
+        <DialogContent className="w-full max-w-2xl overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-white/10 dark:bg-card">
+          <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
+            <div className="flex items-start gap-4">
+              <div className="min-w-0">
+                <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                  Register Account
+                </DialogTitle>
+                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+                  Create new user credentials for registrar personnel and administrators.
+                </DialogDescription>
               </div>
-            }
-          />
-          <CardContent className="bg-white p-[28px] dark:bg-card">
-            <form onSubmit={handleOpenConfirm} className="flex flex-col gap-[20px]">
+            </div>
+          </DialogHeader>
+
+          <form onSubmit={onCreateAccount}>
+            <div className="space-y-5 p-6 pb-4">
               {/* Part 1: Full name */}
-              <div className="grid grid-cols-1 gap-[16px] md:grid-cols-2">
-                <div className="flex flex-col gap-[4px]">
-                  <label className="block text-[12px] font-medium text-[#8E8E93] dark:text-zinc-500">
-                    First Name
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                    First Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                   </label>
                   <Input
                     type="text"
                     required
                     ref={fnameRef}
                     disabled={isLoading}
-                    className={cn(
-                      "h-[36px] w-full rounded-[8px] border-[0.5px] border-black/15 bg-white px-3 py-0 leading-[36px] text-[13px] font-normal placeholder:text-[#C7C7CC] text-[#111111] focus-visible:border-black/35 focus-visible:ring-0 focus-visible:outline-none dark:bg-card dark:text-zinc-50 dark:border-white/15 dark:focus-visible:border-white/35 transition-all shadow-none"
-                    )}
+                    className="h-[36px] rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus-visible:border-zinc-600"
+                    style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                     placeholder="Juan"
                     value={createForm.fname}
                     onChange={(e) =>
@@ -204,17 +157,16 @@ export default function RegisterAccountTab({
                     }
                   />
                 </div>
-                <div className="flex flex-col gap-[4px]">
-                  <label className="block text-[12px] font-medium text-[#8E8E93] dark:text-zinc-500">
-                    Last Name
+                <div>
+                  <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                    Last Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                   </label>
                   <Input
                     type="text"
                     required
                     disabled={isLoading}
-                    className={cn(
-                      "h-[36px] w-full rounded-[8px] border-[0.5px] border-black/15 bg-white px-3 py-0 leading-[36px] text-[13px] font-normal placeholder:text-[#C7C7CC] text-[#111111] focus-visible:border-black/35 focus-visible:ring-0 focus-visible:outline-none dark:bg-card dark:text-zinc-50 dark:border-white/15 dark:focus-visible:border-white/35 transition-all shadow-none"
-                    )}
+                    className="h-[36px] rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus-visible:border-zinc-600"
+                    style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                     placeholder="Dela Cruz"
                     value={createForm.lname}
                     onChange={(e) =>
@@ -227,56 +179,57 @@ export default function RegisterAccountTab({
                 </div>
               </div>
 
-              {/* Part 2: Role Selection */}
-              <div className="flex flex-col gap-[4px]">
-                <label className="block text-[12px] font-medium text-[#8E8E93] dark:text-zinc-500">
-                  Assigned Role
+              {/* Part 2: Role Selection (right side of the card, no separator) */}
+              <div className="flex flex-row items-center justify-between pb-1">
+                <label className="block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  System Role <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                 </label>
-                <div className="grid grid-cols-1 gap-[12px] sm:grid-cols-2">
+                <div className="flex items-center gap-6">
                   <button
                     type="button"
                     disabled={isLoading}
-                    onClick={() => setCreateForm(f => ({ ...f, role: f.role === "Staff" ? "" : "Staff" }))}
+                    onClick={() => setCreateForm(f => ({ ...f, role: "Staff" }))}
                     className={cn(
-                      "h-[36px] w-full rounded-[8px] border-[0.5px] text-[13px] transition-all flex items-center justify-center px-4 py-0 cursor-pointer focus:outline-none",
+                      "text-[13px] pb-1 bg-transparent rounded-none h-auto px-0 w-auto hover:bg-transparent cursor-pointer focus:outline-none focus-visible:outline-none border-b-[1.5px] border-transparent transition-all font-medium",
                       createForm.role === "Staff"
-                        ? "border-orange-500 bg-orange-50 text-orange-600 font-medium dark:border-orange-500 dark:bg-orange-950/20 dark:text-orange-400"
-                        : "border-black/15 dark:border-white/10 text-[#8E8E93] dark:text-zinc-500 bg-white dark:bg-card font-normal"
+                        ? "text-pup-maroon dark:text-red-400 border-pup-maroon dark:border-red-400"
+                        : "text-gray-500 dark:text-zinc-500"
                     )}
                   >
-                    <span>Registrar Staff</span>
+                    Registrar Staff
                   </button>
 
                   <button
                     type="button"
                     disabled={isLoading}
-                    onClick={() => setCreateForm(f => ({ ...f, role: f.role === "Admin" ? "" : "Admin" }))}
+                    onClick={() => setCreateForm(f => ({ ...f, role: "Admin" }))}
                     className={cn(
-                      "h-[36px] w-full rounded-[8px] border-[0.5px] text-[13px] transition-all flex items-center justify-center px-4 py-0 cursor-pointer focus:outline-none",
+                      "text-[13px] pb-1 bg-transparent rounded-none h-auto px-0 w-auto hover:bg-transparent cursor-pointer focus:outline-none focus-visible:outline-none border-b-[1.5px] border-transparent transition-all font-medium",
                       createForm.role === "Admin"
-                        ? "border-[#E5484D] bg-[#FFF5F5] text-[#E5484D] font-medium dark:border-red-500 dark:bg-red-950/20 dark:text-red-400"
-                        : "border-black/15 dark:border-white/10 text-[#8E8E93] dark:text-zinc-500 bg-white dark:bg-card font-normal"
+                        ? "text-pup-maroon dark:text-red-400 border-pup-maroon dark:border-red-400"
+                        : "text-gray-500 dark:text-zinc-500"
                     )}
                   >
-                    <span>Administrator</span>
+                    Administrator
                   </button>
                 </div>
               </div>
 
               {/* Part 3: System Identifiers */}
-              <div className="grid grid-cols-1 gap-[16px] md:grid-cols-2">
-                <div className="flex flex-col gap-[4px]">
-                  <label className="block text-[12px] font-medium text-[#8E8E93] dark:text-zinc-500">
-                    Employee ID
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                    Employee ID <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                   </label>
                   <Input
                     type="text"
                     required
                     disabled={isLoading}
                     className={cn(
-                      "h-[36px] w-full rounded-[8px] border-[0.5px] border-black/15 bg-white px-3 py-0 leading-[36px] text-[13px] font-normal placeholder:text-[#C7C7CC] text-[#111111] focus-visible:border-black/35 focus-visible:ring-0 focus-visible:outline-none dark:bg-card dark:text-zinc-50 dark:border-white/15 dark:focus-visible:border-white/35 transition-all shadow-none",
-                      lastAutoFilled.id && "border-emerald-500"
+                      "h-[36px] rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus-visible:border-zinc-600",
+                      lastAutoFilled.id && "border-emerald-500 dark:border-emerald-500"
                     )}
+                    style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                     placeholder={suggestedId || "PUPREGISTRAR-[XXX]"}
                     value={createForm.id}
                     onChange={(e) => {
@@ -290,18 +243,19 @@ export default function RegisterAccountTab({
                   />
                 </div>
 
-                <div className="flex flex-col gap-[4px]">
-                  <label className="block text-[12px] font-medium text-[#8E8E93] dark:text-zinc-500">
-                    Email Address
+                <div>
+                  <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                    Email Address <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                   </label>
                   <Input
                     type="email"
                     required
                     disabled={isLoading}
                     className={cn(
-                      "h-[36px] w-full rounded-[8px] border-[0.5px] border-black/15 bg-white px-3 py-0 leading-[36px] text-[13px] font-normal placeholder:text-[#C7C7CC] text-[#111111] focus-visible:border-black/35 focus-visible:ring-0 focus-visible:outline-none dark:bg-card dark:text-zinc-50 dark:border-white/15 dark:focus-visible:border-white/35 transition-all shadow-none",
-                      lastAutoFilled.email && "border-emerald-500"
+                      "h-[36px] rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus-visible:border-zinc-600",
+                      lastAutoFilled.email && "border-emerald-500 dark:border-emerald-500"
                     )}
+                    style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                     placeholder={suggestedEmail || "[role].[name]@pup.local"}
                     value={createForm.email}
                     onChange={(e) => {
@@ -315,16 +269,27 @@ export default function RegisterAccountTab({
                   />
                 </div>
               </div>
-              <div className="flex items-center justify-end border-t border-gray-100 pt-6 dark:border-white/10 mt-[8px] gap-[8px]">
+            </div>
+
+            <div className="flex flex-row justify-between bg-white p-6 dark:bg-card border-none items-center">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleClearForm}
+                disabled={isLoading}
+                className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 bg-transparent hover:bg-transparent border-none shadow-none p-0 h-auto cursor-pointer focus:outline-none"
+              >
+                Reset Form
+              </Button>
+              <div className="flex items-center gap-6">
                 <Button
                   type="button"
                   variant="ghost"
-                  size="sm"
+                  onClick={onClose}
                   disabled={isLoading}
-                  onClick={handleClearForm}
-                  className="h-[36px] px-3 font-normal text-[13px] text-[#8E8E93] hover:text-[#111111] hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center justify-center rounded-[8px] shadow-none! border-0!"
+                  className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 bg-transparent hover:bg-transparent border-none shadow-none p-0 h-auto cursor-pointer focus:outline-none"
                 >
-                  Reset Form
+                  Cancel
                 </Button>
                 <Button
                   type="submit"
@@ -334,76 +299,10 @@ export default function RegisterAccountTab({
                   {isLoading ? "Creating..." : "Create Account"}
                 </Button>
               </div>
-            </form>
-          </CardContent>
-        </Card>
-
-        <ConfirmModal
-          open={showConfirmModal}
-          onCancel={() => setShowConfirmModal(false)}
-          title="Confirm Registration"
-          variant="brand"
-          message="Review the provisioning details below before creating the new system credentials."
-          confirmLabel={countdown > 0 ? `Confirm (${countdown}s)` : "Confirm Registration"}
-          confirmClassName="bg-pup-maroon hover:bg-red-900 text-white"
-          buttonIcon={countdown > 0 ? "ph-bold ph-clock" : "ph-bold ph-check-circle"}
-          disabled={countdown > 0}
-          onConfirm={handleConfirmAction}
-          isLoading={isLoading}
-          note={createForm.role === "Admin" 
-            ? "Granted full administrative control over system configurations, user accounts, and audit logs." 
-            : "Granted operational access to process document requests, student records, and room layouts."}
-        >
-          <div className="mt-4 space-y-4 rounded-xl border border-gray-200 bg-gray-50/50 p-5 dark:border-white/10 dark:bg-white/5">
-            <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white font-semibold text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card">
-                {((createForm.fname?.[0] || "") + (createForm.lname?.[0] || "")).toUpperCase() || "?"}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[10px] font-semibold tracking-wider text-gray-400 dark:text-zinc-500 mb-1">Full name</p>
-                <p className="text-base font-semibold text-gray-900 dark:text-zinc-50 truncate">
-                  {createForm.fname} {createForm.lname}
-                </p>
-              </div>
             </div>
-
-            <Separator className="bg-gray-200 dark:bg-zinc-700/50" />
-
-            <div className="grid grid-cols-2 gap-6">
-              <div>
-                <p className="text-[10px] font-semibold tracking-wider text-gray-400 dark:text-zinc-500 mb-1">Employee ID</p>
-                <p className="text-xs font-semibold text-gray-900 dark:text-zinc-50">{createForm.id}</p>
-              </div>
-              <div className="min-w-0">
-                <p className="text-[10px] font-semibold tracking-wider text-gray-400 dark:text-zinc-500 mb-1">Institutional Email</p>
-                <p className="truncate text-xs font-semibold text-gray-900 dark:text-zinc-50" title={createForm.email}>
-                  {createForm.email}
-                </p>
-              </div>
-            </div>
-
-            <Separator className="bg-gray-200 dark:bg-zinc-700/50" />
-            
-            <div>
-              <p className="mb-2 text-[10px] font-semibold tracking-wider text-gray-400 dark:text-zinc-500">Access Level</p>
-              <div className="flex items-start gap-3">
-                <span className={cn(
-                  "inline-flex shrink-0 items-center rounded-full border px-3 py-1 text-[10px] font-semibold tracking-tight  shadow-sm dark:shadow-none",
-                  createForm.role === "Admin" 
-                    ? "border-red-200 bg-red-50 dark:bg-red-950/20 text-pup-maroon dark:text-primary" 
-                    : "border-amber-200 bg-amber-50 dark:bg-amber-950/20 text-amber-700"
-                )}>
-                  <i className={cn("ph-fill mr-1.5 text-xs", createForm.role === "Admin" ? "ph-shield-star" : "ph-user-gear")} />
-                  {createForm.role === "Admin" ? "Administrator" : "Registrar Staff"}
-                </span>
-              </div>
-            </div>
-          </div>
-        </ConfirmModal>
-      </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </TooltipProvider>
   )
 }
-
-
-

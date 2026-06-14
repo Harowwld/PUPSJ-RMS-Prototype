@@ -1342,7 +1342,7 @@ function StaffPageContent() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 font-inter transition-colors duration-300 dark:bg-background">
+    <div className="h-screen overflow-hidden flex flex-col bg-gray-50 font-inter transition-colors duration-300 dark:bg-background">
       <Header authUser={authUser} onLogout={handleLogout}>
         {authUser?.preferences?.navigation_layout !== "topbar" && !sidebarOpen && (
           <div className="flex items-center gap-3.5 pl-1.5">
@@ -1355,7 +1355,7 @@ function StaffPageContent() {
               }}
               className="flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-700 cursor-pointer bg-transparent h-9 w-9"
             >
-              <i className="ti ti-layout-sidebar text-[21px]" style={{ color: "#E5484D" }}></i>
+              <i className="ti ti-layout-sidebar text-[21px]" style={{ color: "#ebb800" }}></i>
             </button>
 
             {/* Apple Photos Style Zoom Control */}
@@ -1405,7 +1405,7 @@ function StaffPageContent() {
         value={view}
         onValueChange={switchView}
         orientation={authUser?.preferences?.navigation_layout === "topbar" ? "horizontal" : "vertical"}
-        className={cn("flex-1 w-full gap-0 relative flex", authUser?.preferences?.navigation_layout === "topbar" ? "flex-col" : "flex-row")}
+        className={cn("flex-1 w-full gap-0 relative flex min-h-0 overflow-hidden", authUser?.preferences?.navigation_layout === "topbar" ? "flex-col" : "flex-row")}
       >
         {authUser?.preferences?.navigation_layout === "topbar" ? (
           <div className="w-full bg-white dark:bg-zinc-900 border-b border-gray-200 dark:border-white/5 py-2.5 px-4 flex items-center justify-center gap-2 overflow-x-auto shadow-xs select-none shrink-0 scrollbar-none">
@@ -1451,10 +1451,11 @@ function StaffPageContent() {
             handleZoomMouseDown={handleZoomMouseDown}
           />
         ) : null}
-        <main 
-          className="flex-1 p-4 relative w-full min-w-0 bg-white dark:bg-zinc-950"
-          style={{ zoom: [0.75, 0.83, 0.92, 1.0, 1.08, 1.17, 1.25][zoomNode] }}
-        >          <TabsContent value="search" className="h-full m-0 border-0 focus-visible:ring-0">
+        <main className="flex-1 relative w-full min-w-0 min-h-0 bg-white dark:bg-zinc-950 overflow-y-auto">
+          <div 
+            className="flex-1 p-4 flex flex-col min-h-0 w-full"
+            style={{ zoom: [0.75, 0.83, 0.92, 1.0, 1.08, 1.17, 1.25][zoomNode] }}
+          >          <TabsContent value="search" className="h-full m-0 border-0 focus-visible:ring-0">
             <RecordsArchiveTab
               loading={!storageLayout}
               quickQuery={quickQuery}
@@ -1869,6 +1870,7 @@ function StaffPageContent() {
               onRescan={handleRescan}
             />
           </TabsContent>
+          </div>
         </main>
       </Tabs>
 

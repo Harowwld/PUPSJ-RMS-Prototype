@@ -1183,6 +1183,8 @@ export default function SystemConfigTab({
           buttonIcon={confirmPayload.buttonIcon}
           selectedItems={confirmPayload.selectedItems}
           onConfirm={confirmPayload.onConfirm}
+          isArchiveModal={confirmPayload.title?.toLowerCase().includes("archive") && !confirmPayload.title?.toLowerCase().includes("delete")}
+          isRestoreModal={confirmPayload.title?.toLowerCase().includes("restore") && !confirmPayload.title?.toLowerCase().includes("system")}
         />
       </div>
     </TooltipProvider>

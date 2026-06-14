@@ -1150,18 +1150,16 @@ export default function RecordsArchiveTab({
           onCancel={() => onSelectionChange(new Set())}
           customContent={
             <div className="flex items-center gap-3">
-              <Button
+              <button
                 type="button"
-                variant="ghost"
-                size="sm"
                 onClick={(e) => {
                   e.stopPropagation()
                   onSelectionChange(new Set())
                 }}
-                className="h-9 px-4 text-xs font-semibold text-gray-500 transition-colors hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-400 dark:bg-red-950/30 dark:hover:bg-transparent cursor-pointer"
+                className="h-auto text-[13px] font-normal text-[#8E8E93] hover:text-[#111111] dark:hover:text-white bg-transparent hover:bg-transparent border-0 p-0 shadow-none cursor-pointer"
               >
                 Deselect All
-              </Button>
+              </button>
               {showArchived ? (
                 <Button
                   type="button"
@@ -1170,9 +1168,8 @@ export default function RecordsArchiveTab({
                     e.stopPropagation()
                     onBulkRestore()
                   }}
-                  className="flex h-10 items-center gap-3 rounded-brand bg-emerald-600 px-6 text-xs font-semibold text-white shadow-lg shadow-emerald-900/20 active:scale-95 transition-all hover:bg-emerald-700 dark:bg-emerald-600 dark:shadow-none cursor-pointer"
+                  className="flex h-[36px] px-5 items-center justify-center rounded-[8px] btn-brand-green text-[13px] font-medium text-white active:scale-95 transition-all dark:shadow-none cursor-pointer"
                 >
-                  <i className="ph-bold ph-arrow-counter-clockwise text-sm"></i>
                   Restore
                 </Button>
               ) : (
@@ -1183,9 +1180,8 @@ export default function RecordsArchiveTab({
                     e.stopPropagation()
                     onBulkArchive()
                   }}
-                  className="flex h-10 items-center gap-3 rounded-brand btn-brand-red px-6 text-xs font-semibold text-white shadow-lg shadow-red-900/20 active:scale-95 transition-all dark:shadow-none cursor-pointer"
+                  className="flex h-[36px] px-5 items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 transition-all dark:shadow-none cursor-pointer"
                 >
-                  <i className="ph-bold ph-archive text-sm"></i>
                   Archive
                 </Button>
               )}

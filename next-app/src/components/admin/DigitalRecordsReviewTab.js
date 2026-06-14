@@ -289,8 +289,10 @@ export default function DigitalRecordsReviewTab({
 
   const toggleSelectAll = (checked) => {
     if (checked) {
-      const ids = new Set(paginatedRecords.map((r) => r.id))
-      setSelectedIds(ids)
+      const pendingIds = paginatedRecords
+        .filter((r) => r.approval_status === "Pending")
+        .map((r) => r.id)
+      setSelectedIds(new Set(pendingIds))
     } else {
       setSelectedIds(new Set())
     }
@@ -298,6 +300,9 @@ export default function DigitalRecordsReviewTab({
   }
 
   const toggleSelectRow = (id, event) => {
+    const record = paginatedRecords.find((r) => r.id === id)
+    if (!record || record.approval_status !== "Pending") return
+
     const isSelected = selectedIds.has(id)
 
     if (event?.shiftKey && lastSelectedId) {
@@ -323,6 +328,7 @@ export default function DigitalRecordsReviewTab({
         const end = Math.max(currentIdx, lastIdx)
         const idsInRange = paginatedRecords
           .slice(start, end + 1)
+          .filter((r) => r.approval_status === "Pending")
           .map((r) => r.id)
 
         const next = new Set(selectedIds)
@@ -857,7 +863,7 @@ export default function DigitalRecordsReviewTab({
                       {dateFrom ? format(new Date(dateFrom), "MMM d, yyyy") : "Start Date"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl p-0 shadow-2xl" align="start">
+                  <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                     <Calendar
                       mode="single"
                       selected={dateFrom ? new Date(dateFrom) : undefined}
@@ -886,7 +892,7 @@ export default function DigitalRecordsReviewTab({
                       {dateTo ? format(new Date(dateTo), "MMM d, yyyy") : "End Date"}
                     </Button>
                   </PopoverTrigger>
-                  <PopoverContent className="w-auto rounded-2xl p-0 shadow-2xl" align="start">
+                  <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                     <Calendar
                       mode="single"
                       selected={dateTo ? new Date(dateTo) : undefined}
@@ -941,10 +947,16 @@ export default function DigitalRecordsReviewTab({
                         className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:text-primary dark:border-white/10"
                         checked={
                           paginatedRecords.length > 0 &&
-                          paginatedRecords.every((r) => selectedIds.has(r.id))
+                          paginatedRecords.filter((r) => r.approval_status === "Pending").length > 0 &&
+                          paginatedRecords
+                            .filter((r) => r.approval_status === "Pending")
+                            .every((r) => selectedIds.has(r.id))
                         }
                         onChange={(e) => toggleSelectAll(e.target.checked)}
-                        disabled={paginatedRecords.length === 0}
+                        disabled={
+                          paginatedRecords.length === 0 ||
+                          paginatedRecords.filter((r) => r.approval_status === "Pending").length === 0
+                        }
                       />
                     </th>
                     <th className="p-4">
@@ -1063,15 +1075,17 @@ export default function DigitalRecordsReviewTab({
                           onClick={(e) => toggleSelectRow(r.id, e)}
                         >
                           <td className="py-0 px-4 align-middle text-center">
-                            <input
-                              type="checkbox"
-                              className={cn(
-                                "h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10 transition-opacity",
-                                isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
-                              )}
-                              checked={isSelected}
-                              onChange={() => {}} // Controlled by tr onClick
-                            />
+                            {r.approval_status === "Pending" ? (
+                              <input
+                                type="checkbox"
+                                className={cn(
+                                  "h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10 transition-opacity",
+                                  isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
+                                )}
+                                checked={isSelected}
+                                onChange={() => {}} // Controlled by tr onClick
+                              />
+                            ) : null}
                           </td>
                           <td className="py-0 px-4 align-middle">
                             <div className="flex flex-col overflow-hidden">
@@ -1127,7 +1141,7 @@ export default function DigitalRecordsReviewTab({
                             <div className="flex items-center justify-end gap-[12px]" onClick={(e) => e.stopPropagation()}>
                               <button
                                 onClick={() => handlePreview(r)}
-                                className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                               >
                                 <i className="ph-bold ph-eye text-[16px]"></i>
                               </button>
@@ -1136,34 +1150,33 @@ export default function DigitalRecordsReviewTab({
                                  <>
                                    <button
                                      onClick={() => handleApprove(r.id)}
-                                     className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-green-600 dark:hover:text-green-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                     className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-green-600 dark:hover:text-green-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                    >
                                      <i className="ph-bold ph-check text-[16px]"></i>
                                    </button>
 
                                    <button
                                      onClick={() => onDecline(r.id)}
-                                     className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                     className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                    >
                                      <i className="ph-bold ph-x text-[16px]"></i>
                                    </button>
                                  </>
                               ) : (
-                                // Grace Period Logic: Only allow revert within 10 minutes of review
+                                // Revert/Undo Action
                                 (() => {
-                                  const reviewedAt = r.reviewed_at ? new Date(r.reviewed_at.replace(" ", "T")).getTime() : 0
-                                  const now = Date.now()
-                                  const isWithinGracePeriod = now - reviewedAt < 10 * 60 * 1000 // 10 minutes
-
-                                  if (!isWithinGracePeriod) return null
-
                                   return (
-                                    <button
-                                      onClick={() => onSetStatus(r.id, "Pending", "Undo review action")}
-                                      className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-gray-400 dark:text-zinc-500 transition-colors hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
-                                    >
-                                      <i className="ph-bold ph-arrow-counter-clockwise text-[16px]"></i>
-                                    </button>
+                                    <Tooltip>
+                                      <TooltipTrigger asChild>
+                                        <button
+                                          onClick={() => onSetStatus(r.id, "Pending", "Undo review action")}
+                                          className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                        >
+                                          <i className="ph-bold ph-arrow-counter-clockwise text-[16px]"></i>
+                                        </button>
+                                      </TooltipTrigger>
+                                      <TooltipContent side="top">Undo</TooltipContent>
+                                    </Tooltip>
                                   )
                                 })()
                               )}
@@ -1184,21 +1197,27 @@ export default function DigitalRecordsReviewTab({
                     <span>
                       Showing {paginatedRecords.length} of {sortedRecords.length}
                     </span>
-                    <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
+                    <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
                       <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
-                      <select
-                        className="h-8 w-16 cursor-pointer rounded-[6px] border border-gray-200 bg-white px-2 text-[12px] font-normal text-gray-700 focus:outline-none transition-all hover:bg-gray-50 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10"
-                        value={itemsPerPage}
-                        onChange={(e) => {
-                          setItemsPerPage(Number(e.target.value))
-                          setCurrentPage(1)
-                        }}
-                      >
-                        <option value={10}>10</option>
-                        <option value={20}>20</option>
-                        <option value={50}>50</option>
-                        <option value={100}>100</option>
-                      </select>
+                      <div className="flex items-center gap-1">
+                        {[10, 20, 50, 100].map((size) => (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => {
+                              setItemsPerPage(size)
+                              setCurrentPage(1)
+                            }}
+                            className={`px-2 py-0.5 rounded-[4px] text-[12px] font-normal cursor-pointer transition-colors border-0 ${
+                              itemsPerPage === size
+                                ? "bg-gray-100 text-[#111111] font-medium dark:bg-white/10 dark:text-zinc-50"
+                                : "bg-transparent text-gray-450 dark:text-zinc-550 hover:text-gray-700 dark:hover:text-zinc-300"
+                            }`}
+                          >
+                            {size}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1244,28 +1263,25 @@ export default function DigitalRecordsReviewTab({
                 onCancel={() => setSelectedIds(new Set())}
                 customContent={
                   <div className="flex items-center gap-3">
-                    <Button
-                      variant="ghost"
-                      size="sm"
+                    <button
+                      type="button"
                       onClick={() => setSelectedIds(new Set())}
-                      className="h-9 rounded-[8px] px-4 text-[13px] font-medium tracking-[-0.01em] text-gray-500 hover:bg-gray-50 dark:text-zinc-400 dark:hover:bg-white/5"
+                      className="h-auto text-[13px] font-normal text-[#8E8E93] hover:text-[#111111] dark:hover:text-white bg-transparent hover:bg-transparent border-0 p-0 shadow-none cursor-pointer"
                     >
                       Deselect All
-                    </Button>
+                    </button>
                     <Button
                       size="sm"
                       onClick={handleBulkApprove}
-                      className="h-9 btn-brand-green !rounded-[8px] px-4 text-[13px] font-medium tracking-[-0.01em] active:scale-95 transition-all shadow-none text-white hover:text-white"
+                      className="flex h-[36px] w-[90px] items-center justify-center rounded-[8px] btn-brand-green text-[13px] font-medium text-white active:scale-95 transition-all dark:shadow-none cursor-pointer"
                     >
-                      <i className="ph-bold ph-check mr-2"></i>
                       Approve
                     </Button>
                     <Button
                       size="sm"
                       onClick={handleBulkDecline}
-                      className="h-9 btn-brand-red !rounded-[8px] px-4 text-[13px] font-medium tracking-[-0.01em] active:scale-95 transition-all shadow-none text-white hover:text-white"
+                      className="flex h-[36px] w-[90px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 transition-all dark:shadow-none cursor-pointer"
                     >
-                      <i className="ph-bold ph-x mr-2"></i>
                       Decline
                     </Button>
                   </div>
@@ -1284,14 +1300,13 @@ export default function DigitalRecordsReviewTab({
                     <i className="ph-fill ph-warning-circle mr-1.5"></i>
                     Contains reviewed records. Bulk actions disabled.
                   </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
+                  <button
+                    type="button"
                     onClick={() => setSelectedIds(new Set())}
-                    className="h-9 rounded-[8px] px-4 text-[13px] font-medium tracking-[-0.01em] text-gray-500 hover:bg-gray-50 dark:text-zinc-400 dark:hover:bg-white/5"
+                    className="h-auto text-[13px] font-normal text-[#8E8E93] hover:text-[#111111] dark:hover:text-white bg-transparent hover:bg-transparent border-0 p-0 shadow-none cursor-pointer"
                   >
                     Deselect All
-                  </Button>
+                  </button>
                 </div>
               }
             />

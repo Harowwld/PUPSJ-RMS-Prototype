@@ -110,7 +110,7 @@ export default function SlaFilters({
                   {startDate ? format(new Date(startDate), "MMM d, yyyy") : "Start Date"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto rounded-2xl p-0 shadow-2xl" align="start">
+              <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                 <Calendar
                   mode="single"
                   selected={startDate ? new Date(startDate) : undefined}
@@ -138,7 +138,7 @@ export default function SlaFilters({
                   {endDate ? format(new Date(endDate), "MMM d, yyyy") : "End Date"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto rounded-2xl p-0 shadow-2xl" align="start">
+              <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                 <Calendar
                   mode="single"
                   selected={endDate ? new Date(endDate) : undefined}

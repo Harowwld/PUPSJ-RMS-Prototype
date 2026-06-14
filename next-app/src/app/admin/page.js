@@ -58,12 +58,10 @@ function AdminPageContent() {
     review: false,
     request_analytics: false,
     system_data: true,
-    create: true,
   })
 
   const validViews = [
     "directory",
-    "create",
     "review",
     "digitization",
     "request_analytics",
@@ -187,6 +185,7 @@ function AdminPageContent() {
     status: "Active",
   })
   const [createLoading, setCreateLoading] = useState(false)
+  const [registerOpen, setRegisterOpen] = useState(false)
 
   const [editOpen, setEditOpen] = useState(false)
   const [editOriginalId, setEditOriginalId] = useState("")
@@ -802,7 +801,7 @@ function AdminPageContent() {
         if (!suppressToast) {
           showToast({
             title: "Document Review Finalized",
-            description: `The digital record has been successfully ${approvalStatus.toLowerCase()} and the status updated in the repository.`,
+            description: "Record status updated in the repository.",
           })
         }
         refreshReviewRecords()
@@ -982,7 +981,7 @@ function AdminPageContent() {
         email: "",
         status: "Active",
       })
-      switchView("directory")
+      setRegisterOpen(false)
     } catch (err) {
       if (typeof totpToken === "string") throw err
       showToast({ title: "Creation Failed", description: err.message }, true)
@@ -1526,11 +1525,6 @@ function AdminPageContent() {
       label: "Directory",
       iconClass: "ph-bold ph-users",
     },
-    {
-      key: "create",
-      label: "Register",
-      iconClass: "ph-bold ph-user-plus",
-    },
 
     { type: "header", label: "System Configuration" },
     {
@@ -1557,7 +1551,7 @@ function AdminPageContent() {
   }
 
   return (
-    <div className="font-inter flex min-h-screen flex-col bg-gray-50 transition-colors duration-300 dark:bg-background">
+    <div className="font-inter flex h-screen overflow-hidden flex-col bg-gray-50 transition-colors duration-300 dark:bg-background">
 
 
       <Header authUser={authUser} onLogout={handleLogout}>
@@ -1653,7 +1647,7 @@ function AdminPageContent() {
         </div>
       )}
 
-      <div className={cn("flex w-full flex-1", authUser?.preferences?.navigation_layout === "topbar" ? "flex-col" : "flex-row")}>
+      <div className={cn("flex w-full flex-1 min-h-0 overflow-hidden", authUser?.preferences?.navigation_layout === "topbar" ? "flex-col" : "flex-row")}>
         {authUser?.preferences?.navigation_layout !== "topbar" && sidebarOpen && (
           <Sidebar
             items={sidebarItems}
@@ -1665,10 +1659,11 @@ function AdminPageContent() {
             handleZoomMouseDown={handleZoomMouseDown}
           />
         )}
-        <main 
-          className="relative w-full min-w-0 flex-1 p-4 flex flex-col bg-white dark:bg-zinc-950"
-          style={{ zoom: [0.75, 0.83, 0.92, 1.0, 1.08, 1.17, 1.25][zoomNode] }}
-        >          {view === "directory" && (
+        <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white dark:bg-zinc-950 overflow-y-auto">
+          <div 
+            className="flex-1 p-4 flex flex-col min-h-0 w-full"
+            style={{ zoom: [0.75, 0.83, 0.92, 1.0, 1.08, 1.17, 1.25][zoomNode] }}
+          >          {view === "directory" && (
             <StaffDirectoryTab
               staffData={staffData}
               isLoading={viewLoading.directory}
@@ -1709,30 +1704,14 @@ function AdminPageContent() {
               }}
               onBulkArchive={handleBulkArchive}
               onBulkRestore={handleBulkRestore}
-              onSwitchView={switchView}
+              onSwitchView={(v) => {
+                if (v === "create") {
+                  setRegisterOpen(true)
+                } else {
+                  switchView(v)
+                }
+              }}
               onRefresh={() => refreshStaff(true)}
-            />
-          )}
-
-          {view === "create" && (
-            <RegisterAccountTab
-              authUser={authUser}
-              createForm={createForm}
-              setCreateForm={setCreateForm}
-              staffCount={staffData.length}
-              isLoading={createLoading}
-              onResetForm={() =>
-                setCreateForm({
-                  id: "",
-                  role: "",
-                  fname: "",
-                  lname: "",
-                  email: "",
-                  status: "Active",
-                })
-              }
-              onCreateAccount={handleCreate}
-              onSwitchView={switchView}
             />
           )}
 
@@ -1871,6 +1850,7 @@ function AdminPageContent() {
               showToast={showToast}
             />
           )}
+          </div>
         </main>
       </div>
 
@@ -1896,10 +1876,31 @@ function AdminPageContent() {
         onSubmit={handleEditSubmit}
       />
 
+      <RegisterAccountTab
+        open={registerOpen}
+        onClose={() => setRegisterOpen(false)}
+        authUser={authUser}
+        createForm={createForm}
+        setCreateForm={setCreateForm}
+        staffCount={staffData.length}
+        isLoading={createLoading}
+        onResetForm={() =>
+          setCreateForm({
+            id: "",
+            role: "",
+            fname: "",
+            lname: "",
+            email: "",
+            status: "Active",
+          })
+        }
+        onCreateAccount={handleCreate}
+      />
+
       <ConfirmModal
         open={deleteOpen}
         title="Archive Personnel Account"
-        message={`Archive this personnel account? This will restrict their system access immediately but can be restored later if needed.`}
+        message="This account will be restricted immediately but can be restored later."
         confirmLabel="Archive Account"
         icon="ph-duotone ph-archive"
         buttonIcon="ph-bold ph-archive"
@@ -1909,12 +1910,13 @@ function AdminPageContent() {
         onConfirm={confirmDelete}
         onCancel={() => setDeleteOpen(false)}
         isLoading={deleteLoading}
+        isPersonnelModal={true}
       />
 
       <ConfirmModal
         open={restoreOpen}
         title="Restore Personnel Account"
-        message={`Reactivate system access for this personnel profile? They will be able to log in to the system again.`}
+        message="This account will be reactivated and the personnel will be able to log in again."
         confirmLabel="Restore Account"
         variant="success"
         selectedItems={[
@@ -1922,6 +1924,7 @@ function AdminPageContent() {
         ]}
         onConfirm={confirmRestoreUser}
         onCancel={() => setRestoreOpen(false)}
+        isRestoreModal={true}
       />
 
       <ConfirmModal
@@ -1933,8 +1936,8 @@ function AdminPageContent() {
         }
         message={
           backupDeleteTargets.length > 1
-            ? `You are about to permanently remove ${backupDeleteTargets.length} backup archives from the local server. This action is irreversible.`
-            : `You are about to permanently remove the following backup archive from the local server. This action is irreversible.`
+            ? "This will permanently remove the selected backups from the server. This action cannot be undone."
+            : "This will permanently remove the selected backup from the server. This action cannot be undone."
         }
         selectedItems={backupDeleteTargets.map((t) => t?.filename || "Unknown")}
         onConfirm={confirmDeleteBackup}
@@ -1945,6 +1948,7 @@ function AdminPageContent() {
         verificationTarget={backupDeleteVerificationTarget}
         verificationValue={backupDeleteVerificationValue}
         onVerificationChange={setBackupDeleteVerificationValue}
+        isDeleteBackup={true}
       />
 
       <ConfirmModal
@@ -1964,7 +1968,7 @@ function AdminPageContent() {
       <PromptModal
         open={declinePromptOpen}
         title="Decline Digital Record"
-        message="Please provide a brief reason for declining this digital record. This will be sent as a notification to the student."
+        message="Provide a brief reason for declining. This will be sent to the student as a notification."
         value={declineReason}
         onChange={setDeclineReason}
         onConfirm={submitDeclineWithReason}
@@ -1976,9 +1980,10 @@ function AdminPageContent() {
         variant="danger"
         confirmLabel="Confirm Decline"
         buttonIcon="ph-bold ph-x"
-        inputLabel="Reason for Rejection"
+        inputLabel="Reason"
         placeholder="e.g., Image is too blurry, incorrect document type..."
         multiline
+        isDeclineModal={true}
       />
 
       {/* Bulk Decline Prompt */}
@@ -2004,7 +2009,7 @@ function AdminPageContent() {
       <ConfirmModal
         open={bulkArchiveOpen}
         title="Batch Archive Personnel"
-        message={`Move ${selectedStaffIds.size} personnel profiles to the archive vault? This will revoke their system access immediately.`}
+        message={`${selectedStaffIds.size} personnel profiles will be archived and their system access revoked immediately.`}
         confirmLabel="Archive Selected"
         icon="ph-duotone ph-archive"
         buttonIcon="ph-bold ph-archive"
@@ -2027,12 +2032,13 @@ function AdminPageContent() {
           setBulkArchiveOpen(false)
         }}
         isLoading={bulkArchiveLoading}
+        isPersonnelModal={true}
       />
 
       <ConfirmModal
         open={bulkRestoreOpen}
         title="Batch Restore Personnel"
-        message={`Reactivate system access for ${selectedStaffIds.size} personnel profiles? They will be able to log in to the system again.`}
+        message={`${selectedStaffIds.size} personnel profiles will be reactivated and able to log in again.`}
         confirmLabel="Restore Selected"
         variant="success"
         selectedItems={Array.from(selectedStaffIds).map((id) => {
@@ -2044,6 +2050,8 @@ function AdminPageContent() {
           setBulkRestoreOpen(false)
         }}
         isLoading={bulkRestoreLoading}
+        isPersonnelModal={true}
+        isRestoreModal={true}
       />
 
       <PDFPreviewModal
@@ -2054,74 +2062,68 @@ function AdminPageContent() {
 
       <Dialog open={defaultPwOpen} onOpenChange={setDefaultPwOpen}>
         <DialogContent className="w-full max-w-2xl overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-white/10 dark:bg-card">
-          <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
+          <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 dark:border-primary/20 bg-red-50 text-pup-maroon dark:text-primary shadow-sm dark:bg-primary/10">
-                <i className="ph-duotone ph-key text-xl"></i>
-              </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
+                <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                   Staff Account Created
                 </DialogTitle>
-                <DialogDescription className="mt-1.5 text-sm font-medium text-gray-600 dark:text-zinc-300">
-                  System account configured successfully. Securely record the
-                  following temporary credentials before closing this window.
+                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+                  Securely record the temporary credentials below before closing this window.
                 </DialogDescription>
               </div>
             </div>
           </DialogHeader>
 
-          <div className="space-y-6 p-8">
-            <div className="rounded-xl border border-amber-100 dark:border-amber-900/30 bg-amber-50 p-6 shadow-sm dark:bg-amber-950/50">
-              <label className="mb-3 block text-[10px] font-semibold tracking-widest text-amber-900 dark:text-amber-400 opacity-60 dark:opacity-100">
+          <div className="space-y-5 p-6 pb-4">
+            <div className="bg-transparent p-0 border-none">
+              <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                 Temporary Password for{" "}
-                <span className="text-pup-maroon dark:text-primary">
+                <span className="text-pup-maroon dark:text-red-400">
                   {defaultPwUserLabel}
                 </span>
               </label>
 
-              <div className="group relative flex items-center justify-between rounded-lg border border-amber-200 dark:border-amber-900/40 bg-white p-4 shadow-inner transition-all hover:border-amber-300 dark:hover:border-amber-800/50 dark:bg-white/5 dark:shadow-none">
-                <code className="font-mono text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
+              <div 
+                className="flex items-center justify-between rounded-[8px] border-[0.5px] border-gray-300 bg-white p-[10px_14px] dark:border-zinc-800 dark:bg-zinc-900/30"
+                style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
+              >
+                <code className="font-mono text-[14px] font-medium text-pup-maroon dark:text-red-400">
                   {defaultReturnedPw}
                 </code>
 
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   size="sm"
                   onClick={handleCopyPassword}
                   className={cn(
-                    "h-10 gap-2 rounded-brand border-amber-200 dark:border-amber-900/50 px-4 font-semibold transition-all",
-                    copied
-                      ? "bg-emerald-500 text-white border-emerald-600 shadow-emerald-200"
-                      : "bg-white dark:bg-white/5 text-amber-900 dark:text-amber-200 hover:bg-amber-50 dark:hover:bg-white/10 hover:border-amber-400 dark:hover:border-amber-700/50"
+                    "text-[12px] font-medium bg-transparent hover:bg-transparent border-none shadow-none p-0 h-auto cursor-pointer focus:outline-none",
+                    copied ? "text-emerald-600" : "text-pup-maroon dark:text-red-400"
                   )}
                 >
-                  <i className={cn("ph-bold", copied ? "ph-check-circle" : "ph-copy")} />
-                  {copied ? "COPIED!" : "COPY"}
+                  {copied ? "copied" : "copy"}
                 </Button>
               </div>
 
-              <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber-200/50 dark:border-amber-900/20 bg-white p-3 text-[10px] font-semibold text-amber-800/80 dark:text-amber-400/80 dark:bg-white/5">
-                <i className="ph-fill ph-warning-circle text-sm text-amber-600 mt-0.5" />
-                This password is temporary and will expire after the first login. Please ensure the user receives this securely.
+              <div className="mt-3 text-[11px] font-normal text-gray-500 dark:text-zinc-500 p-0 border-none bg-transparent">
+                This password is temporary and expires after first login. Ensure the user receives it securely.
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card">
+          <div className="flex flex-row justify-end gap-2 bg-white p-6 dark:bg-card border-none">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               onClick={() => setDefaultPwOpen(false)}
-              className="h-11 rounded-brand border border-gray-300 px-6 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-white/5 dark:bg-white/2"
+              className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 bg-transparent hover:bg-transparent border-none shadow-none p-0 h-auto cursor-pointer focus:outline-none"
             >
               Close
             </Button>
             <Button
               onClick={() => setDefaultPwOpen(false)}
-              className="flex h-11 items-center gap-2 rounded-brand btn-brand-red px-6 font-semibold text-white shadow-sm"
+              className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white shadow-none border-none py-0 px-4 cursor-pointer"
             >
-              <i className="ph-bold ph-check"></i>
               Acknowledge
             </Button>
           </div>

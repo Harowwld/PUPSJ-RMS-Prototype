@@ -31,6 +31,11 @@ export default function Header({ authUser, onLogout, children }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [preferredView, setPreferredView] = useState(null);
   const [showSessionExpired, setShowSessionExpired] = useState(false);
+  const [imageError, setImageError] = useState(false);
+
+  useEffect(() => {
+    setImageError(false);
+  }, [authUser?.avatar_filename]);
 
   useEffect(() => {
     // Only admins have a choice of view
@@ -141,8 +146,17 @@ export default function Header({ authUser, onLogout, children }) {
                   ? "bg-gray-200/70 dark:bg-white/10" 
                   : "hover:bg-gray-100 dark:hover:bg-white/5"
               )}>
-                <div className="h-9 w-9 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center text-xs font-semibold text-gray-700 dark:text-zinc-300 border border-gray-200 dark:border-white/10">
-                  {initials}
+                <div className="h-9 w-9 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center text-xs font-semibold text-gray-700 dark:text-zinc-300 border border-gray-200 dark:border-white/10 overflow-hidden">
+                  {authUser?.avatar_filename && !imageError ? (
+                    <img 
+                      src={`/api/account/avatar?id=${authUser.id}&t=${authUser.updated_at || Date.now()}`}
+                      alt="Avatar"
+                      className="w-full h-full object-cover"
+                      onError={() => setImageError(true)}
+                    />
+                  ) : (
+                    initials
+                  )}
                 </div>
               </div>
             </DropdownMenuTrigger>

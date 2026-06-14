@@ -169,7 +169,7 @@ const StaffTableRow = React.memo(({
           {isCurrentUser ? (
             <button
               onClick={() => router.push("/account")}
-              className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+              className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-blue-500 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
             >
               <i className="ph-bold ph-gear-six text-[16px]"></i>
             </button>
@@ -178,7 +178,7 @@ const StaffTableRow = React.memo(({
               {activeTab === "active" && (
                 <button
                   onClick={() => onEditUser(s.id)}
-                  className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                  className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-amber-500 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                 >
                   <i className="ph-bold ph-pencil-simple text-[16px]"></i>
                 </button>
@@ -211,12 +211,12 @@ StaffTableRow.displayName = "StaffTableRow"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column) {
-    return <i className="ph-bold ph-caret-up-down ml-1 text-[12px] text-[#C7C7CC] opacity-60 transition-opacity group-hover:opacity-70 dark:text-zinc-600"></i>
+    return <i className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
   }
   return sortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-[12px] text-[#111111] dark:text-white"></i>
+    <i className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></i>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-[12px] text-[#111111] dark:text-white"></i>
+    <i className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></i>
   )
 }
 
@@ -461,12 +461,12 @@ export default function StaffDirectoryTab({
         <PageHeader
           icon="ph-users-three"
           title={
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-[6px]">
               Staff Directory
               {activeTab === "archived" && (
-                <Badge className="border-red-100 bg-red-50 text-[10px] font-semibold text-red-700 dark:border-white/10 dark:bg-red-950/30 dark:text-red-400">
-                  Restore Mode
-                </Badge>
+                <span className="text-[12px] font-normal text-emerald-600 dark:text-emerald-400">
+                  · Restore Mode
+                </span>
               )}
             </div>
           }
@@ -653,7 +653,7 @@ export default function StaffDirectoryTab({
             key={activeTab}
             className="outline-none animate-fade-up flex flex-col flex-1 min-h-0"
           >
-            <div className="w-full overflow-visible rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1">
+            <div className="w-full overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1">
               <table className="min-w-full text-sm">
                 <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
                   <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
@@ -840,21 +840,27 @@ export default function StaffDirectoryTab({
                       <span>
                         Showing {paginatedStaff.length} of {filteredStaff.length}
                       </span>
-                      <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
+                      <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
                         <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
-                        <select
-                          className="h-8 w-16 cursor-pointer rounded-[6px] border border-gray-200 bg-white px-2 text-[12px] font-normal text-gray-700 focus:outline-none transition-all hover:bg-gray-50 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10"
-                          value={itemsPerPage}
-                          onChange={(e) => {
-                            setItemsPerPage(Number(e.target.value))
-                            setCurrentPage(1)
-                          }}
-                        >
-                          <option value={10}>10</option>
-                          <option value={20}>20</option>
-                          <option value={50}>50</option>
-                          <option value={100}>100</option>
-                        </select>
+                        <div className="flex items-center gap-1">
+                          {[10, 20, 50, 100].map((size) => (
+                            <button
+                              key={size}
+                              type="button"
+                              onClick={() => {
+                                setItemsPerPage(size)
+                                setCurrentPage(1)
+                              }}
+                              className={`px-2 py-0.5 rounded-[4px] text-[12px] font-normal cursor-pointer transition-colors border-0 ${
+                                itemsPerPage === size
+                                  ? "bg-gray-100 text-[#111111] font-medium dark:bg-white/10 dark:text-zinc-50"
+                                  : "bg-transparent text-gray-450 dark:text-zinc-550 hover:text-gray-700 dark:hover:text-zinc-300"
+                              }`}
+                            >
+                              {size}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -894,14 +900,13 @@ export default function StaffDirectoryTab({
           onCancel={() => onSelectionChange(new Set())}
           customContent={
             <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
+              <button
+                type="button"
                 onClick={() => onSelectionChange(new Set())}
-                className="h-9 px-4 text-xs font-semibold text-gray-500 transition-colors hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-400 dark:bg-red-950/30"
+                className="h-auto text-[13px] font-normal text-[#8E8E93] hover:text-[#111111] dark:hover:text-white bg-transparent hover:bg-transparent border-0 p-0 shadow-none cursor-pointer"
               >
                 Deselect All
-              </Button>
+              </button>
 
               {activeTab === "active" ? (
                 <Button
@@ -909,10 +914,9 @@ export default function StaffDirectoryTab({
                   onClick={() => {
                     onBulkArchive(Array.from(selectedIds))
                   }}
-                  className="flex h-10 items-center gap-3 rounded-brand btn-brand-red px-6 text-xs font-semibold text-white shadow-lg shadow-red-900/20 active:scale-95 transition-all dark:shadow-none"
+                  className="flex h-[36px] px-5 items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 transition-all dark:shadow-none cursor-pointer"
                 >
-                  <i className="ph-bold ph-archive text-sm"></i>
-                  Archive Selected
+                  Archive
                 </Button>
               ) : (
                 <Button
@@ -920,10 +924,9 @@ export default function StaffDirectoryTab({
                   onClick={() => {
                     onBulkRestore(Array.from(selectedIds))
                   }}
-                  className="flex h-10 items-center gap-3 rounded-brand btn-brand-green px-6 text-xs font-semibold text-white active:scale-95 transition-all dark:shadow-none"
+                  className="flex h-[36px] px-5 items-center justify-center rounded-[8px] btn-brand-green text-[13px] font-medium text-white active:scale-95 transition-all dark:shadow-none cursor-pointer"
                 >
-                  <i className="ph-bold ph-arrow-counter-clockwise text-sm"></i>
-                  Restore Selected
+                  Restore
                 </Button>
               )}
             </div>

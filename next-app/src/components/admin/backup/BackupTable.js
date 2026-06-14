@@ -19,12 +19,13 @@ import BackupPagination from "./BackupPagination"
 import { cn } from "@/lib/utils"
 
 function SortIndicator({ column, sortBy, sortOrder }) {
-  if (sortBy !== column)
-    return <i className="ph-bold ph-caret-up-down ml-1 opacity-30 text-[10px]"></i>
+  if (sortBy !== column) {
+    return <i className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+  }
   return sortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-pup-maroon dark:text-primary text-[10px] dark:text-primary"></i>
+    <i className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></i>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-pup-maroon dark:text-primary text-[10px] dark:text-primary"></i>
+    <i className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></i>
   )
 }
 
@@ -60,7 +61,7 @@ export default function BackupTable({
     <>
       <div
         className={cn(
-          "flex-1 overflow-hidden overflow-x-auto overflow-y-auto select-none min-h-[400px]"
+          "flex-1 overflow-hidden overflow-x-auto overflow-y-auto select-none min-h-[400px] isolate"
         )}
       >
         <table className="min-w-full text-sm">
@@ -132,7 +133,7 @@ export default function BackupTable({
               <th className="w-56 p-4 px-6 text-center font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                 Storage Locations
               </th>
-              <th className="w-32 p-4 px-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
+              <th className="w-32 p-4 px-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Action</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100 dark:divide-white/10">
@@ -238,9 +239,6 @@ export default function BackupTable({
                                     : "bg-gray-100 text-gray-850 dark:bg-zinc-800 dark:text-zinc-400"
                               )}
                             >
-                              <i
-                                className={cn("ph-bold text-[12px]", b.status_local === "Success" ? "ph-check-circle" : "ph-warning-circle")}
-                              ></i>
                               <span>Local</span>
                             </div>
                           </TooltipTrigger>
@@ -259,7 +257,6 @@ export default function BackupTable({
                           <Tooltip>
                             <TooltipTrigger asChild>
                               <div className="inline-flex items-center gap-1.5 rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-400">
-                                <i className="ph-bold ph-hard-drives text-[12px]"></i>
                                 <span>External</span>
                               </div>
                             </TooltipTrigger>
@@ -281,9 +278,9 @@ export default function BackupTable({
                                       : "bg-gray-100 text-gray-800 hover:bg-gray-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
                                 )}
                               >
-                                <i
-                                  className={cn("ph-bold text-[12px]", localLoading.syncingId === b.id ? "ph-arrows-clockwise animate-spin" : b.status_external === "Failed" ? "ph-warning" : "ph-share-network")}
-                                ></i>
+                                {localLoading.syncingId === b.id && (
+                                  <i className="ph-bold ph-arrows-clockwise animate-spin text-[12px]"></i>
+                                )}
                                 <span>
                                   {localLoading.syncingId === b.id
                                     ? localLoading.syncStatus || "..."
@@ -302,16 +299,16 @@ export default function BackupTable({
                       </div>
                     </td>
                     <td className="py-0 px-6 text-right align-middle">
-                      <div className="inline-flex items-center justify-end gap-[12px]" onClick={e => e.stopPropagation()}>
+                      <div className="inline-flex items-center justify-end gap-1.5" onClick={e => e.stopPropagation()}>
                         <button
                           onClick={() => onDownloadBackup(b.id, b.filename)}
-                          className="p-0 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-650 transition-colors hover:text-pup-maroon dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                          className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-650 transition-colors hover:text-blue-500 dark:hover:text-blue-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                         >
                           <i className="ph-bold ph-download-simple text-[16px]"></i>
                         </button>
                         <button
                           onClick={() => onDeleteBackup(b.id)}
-                          className="p-0 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-650 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                          className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-650 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                         >
                           <i className="ph-bold ph-trash text-[16px]"></i>
                         </button>

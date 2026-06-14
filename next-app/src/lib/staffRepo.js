@@ -142,12 +142,18 @@ export async function updateStaff(originalId, patch) {
     email: patch.email ?? existing.email,
     last_active:
       patch.lastActive === undefined ? existing.last_active : patch.lastActive,
+    avatar_filename:
+      patch.avatarFilename !== undefined
+        ? patch.avatarFilename
+        : patch.avatar_filename !== undefined
+        ? patch.avatar_filename
+        : existing.avatar_filename,
   };
 
   await dbRun(
     `
     UPDATE staff
-    SET id = ?, fname = ?, lname = ?, role = ?, section = ?, status = ?, email = ?, last_active = ?, updated_at = datetime('now')
+    SET id = ?, fname = ?, lname = ?, role = ?, section = ?, status = ?, email = ?, last_active = ?, avatar_filename = ?, updated_at = datetime('now')
     WHERE id = ?
   `,
     [
@@ -159,6 +165,7 @@ export async function updateStaff(originalId, patch) {
       next.status,
       next.email,
       next.last_active,
+      next.avatar_filename,
       originalId,
     ]
   );

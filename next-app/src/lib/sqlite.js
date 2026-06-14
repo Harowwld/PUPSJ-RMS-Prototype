@@ -1055,6 +1055,17 @@ export async function getDb() {
       }
     }
 
+    if (schemaVersion < 21) {
+      try {
+        if (!columnExists("staff", "avatar_filename")) {
+          db.exec("ALTER TABLE staff ADD COLUMN avatar_filename TEXT");
+        }
+        db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('schema_version', '21')").run();
+      } catch (e) {
+        console.error("[DB] schema_version 21 migration (staff avatar):", e);
+      }
+    }
+
     ensureDocumentRequestsTable();
     ensureIngestQueueTable();
     ensureStaffNotificationStateTable();
@@ -1063,6 +1074,7 @@ export async function getDb() {
     ensureBirthCertificateDocType();
     ensureScanSessionTables();
     ensureStaffPreferencesColumn();
+    ensureStaffAvatarColumn();
 
     return db;
   } catch (err) {
@@ -1143,6 +1155,18 @@ function ensureStaffPreferencesColumn() {
     db.exec("UPDATE staff SET preferences = '{}' WHERE preferences IS NULL OR TRIM(preferences) = ''");
   } catch (e) {
     console.error("[DB] ensureStaffPreferencesColumn:", e);
+  }
+}
+
+function ensureStaffAvatarColumn() {
+  if (!db) return;
+  try {
+    if (!columnExists("staff", "avatar_filename")) {
+      db.exec("ALTER TABLE staff ADD COLUMN avatar_filename TEXT");
+      console.log("[DB] Added missing avatar_filename column to staff table.");
+    }
+  } catch (e) {
+    console.error("[DB] ensureStaffAvatarColumn:", e);
   }
 }
 

@@ -21,36 +21,33 @@ export default function EditUserModal({
 }) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="w-full max-w-3xl overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-3xl dark:border-white/10 dark:bg-card">
-        <DialogHeader className="border-b border-gray-100 bg-gray-50/50 p-6 dark:border-white/10 dark:bg-white/5">
+      <DialogContent className="w-full max-w-2xl overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-2xl dark:border-white/10 dark:bg-card">
+        <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
           <div className="flex items-start gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon shadow-sm dark:bg-red-950/30 dark:border-white/10">
-              <i className="ph-duotone ph-user-gear text-xl"></i>
-            </div>
             <div className="min-w-0">
-              <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
+              <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                 Update Personnel Profile
               </DialogTitle>
-              <DialogDescription className="mt-1.5 text-sm font-medium text-gray-600 dark:text-zinc-300">
-                Modify staff credentials and role assignments. Changes will sync
-                across the repository immediately after saving.
+              <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+                Changes will sync across the repository immediately after saving.
               </DialogDescription>
             </div>
           </div>
         </DialogHeader>
 
         <form onSubmit={onSubmit}>
-          <div className="space-y-6 p-6">
+          <div className="space-y-5 p-6 pb-4">
             {/* Part 1: Full name */}
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
-                  First Name <span className="text-pup-maroon dark:text-primary">*</span>
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  First Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                 </label>
                 <Input
                   type="text"
                   required
-                  className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none dark:bg-card dark:border-white/10"
+                  className="h-[36px] rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus-visible:border-zinc-600"
+                  style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                   placeholder="Juan"
                   value={editForm.fname}
                   onChange={(e) =>
@@ -59,13 +56,14 @@ export default function EditUserModal({
                 />
               </div>
               <div>
-                <label className="mb-2 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
-                  Last Name <span className="text-pup-maroon dark:text-primary">*</span>
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  Last Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                 </label>
                 <Input
                   type="text"
                   required
-                  className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none dark:bg-card dark:text-zinc-400"
+                  className="h-[36px] rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus-visible:border-zinc-600"
+                  style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                   placeholder="Dela Cruz"
                   value={editForm.lname}
                   onChange={(e) =>
@@ -76,63 +74,65 @@ export default function EditUserModal({
             </div>
 
             {/* Part 2: Role Selection */}
-            <div className="flex flex-col gap-[4px]">
-              <label className="block text-[12px] font-medium text-[#8E8E93] dark:text-zinc-500">
-                System Role <span className="text-pup-maroon dark:text-primary">*</span>
+            <div className="flex flex-col gap-1">
+              <label className="block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                System Role <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
               </label>
-              <div className="grid grid-cols-1 gap-[12px] sm:grid-cols-2">
+              <div className="flex items-center gap-6 border-b border-gray-100 dark:border-white/5 pb-0">
                 <button
                   type="button"
                   disabled={isLoading}
-                  onClick={() => setEditForm(f => ({ ...f, role: f.role === "Staff" ? "" : "Staff" }))}
+                  onClick={() => setEditForm(f => ({ ...f, role: "Staff" }))}
                   className={cn(
-                    "h-[36px] w-full rounded-[8px] border-[0.5px] text-[13px] transition-all flex items-center justify-center px-4 py-0 cursor-pointer focus:outline-none",
+                    "text-[13px] pb-1.5 bg-transparent rounded-none h-auto px-0 w-auto hover:bg-transparent cursor-pointer focus:outline-none focus-visible:outline-none border-b-[1.5px] border-transparent transition-all font-medium",
                     editForm.role === "Staff"
-                      ? "border-orange-500 bg-orange-50 text-orange-600 font-medium dark:border-orange-500 dark:bg-orange-950/20 dark:text-orange-400"
-                      : "border-black/15 dark:border-white/10 text-[#8E8E93] dark:text-zinc-500 bg-white dark:bg-card font-normal"
+                      ? "text-pup-maroon dark:text-red-400 border-pup-maroon dark:border-red-400"
+                      : "text-gray-500 dark:text-zinc-500"
                   )}
                 >
-                  <span>Registrar Staff</span>
+                  Registrar Staff
                 </button>
 
                 <button
                   type="button"
                   disabled={isLoading}
-                  onClick={() => setEditForm(f => ({ ...f, role: f.role === "Admin" ? "" : "Admin" }))}
+                  onClick={() => setEditForm(f => ({ ...f, role: "Admin" }))}
                   className={cn(
-                    "h-[36px] w-full rounded-[8px] border-[0.5px] text-[13px] transition-all flex items-center justify-center px-4 py-0 cursor-pointer focus:outline-none",
+                    "text-[13px] pb-1.5 bg-transparent rounded-none h-auto px-0 w-auto hover:bg-transparent cursor-pointer focus:outline-none focus-visible:outline-none border-b-[1.5px] border-transparent transition-all font-medium",
                     editForm.role === "Admin"
-                      ? "border-[#E5484D] bg-[#FFF5F5] text-[#E5484D] font-medium dark:border-red-500 dark:bg-red-950/20 dark:text-red-400"
-                      : "border-black/15 dark:border-white/10 text-[#8E8E93] dark:text-zinc-500 bg-white dark:bg-card font-normal"
+                      ? "text-pup-maroon dark:text-red-400 border-pup-maroon dark:border-red-400"
+                      : "text-gray-500 dark:text-zinc-500"
                   )}
                 >
-                  <span>Administrator</span>
+                  Administrator
                 </button>
               </div>
             </div>
 
             {/* Part 3: System Identifiers */}
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <div>
-                <label className="mb-2 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
-                  Employee ID <span className="text-pup-maroon dark:text-primary">*</span>
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  Employee ID <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                 </label>
                 <Input
                   type="text"
                   readOnly
-                  className="h-11 cursor-not-allowed rounded-brand border border-gray-200 bg-gray-50 font-mono text-sm text-gray-500 focus-visible:outline-none dark:border-white/10 dark:bg-card dark:text-zinc-400"
+                  className="h-[36px] cursor-not-allowed rounded-[8px] border-[0.5px] border-gray-300 bg-gray-50/50 font-mono text-[13px] font-normal tracking-[-0.01em] text-gray-500 focus-visible:outline-none dark:border-zinc-800 dark:bg-zinc-900/30 dark:text-zinc-400"
+                  style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                   placeholder="e.g. 2023-001"
                   value={editForm.id}
                 />
               </div>
               <div>
-                <label className="mb-2 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
                   Institutional Email
                 </label>
                 <Input
                   type="email"
                   readOnly
-                  className="h-11 cursor-not-allowed rounded-brand border border-gray-200 bg-gray-50 text-sm text-gray-500 focus-visible:outline-none dark:border-white/10 dark:bg-card dark:text-zinc-400"
+                  className="h-[36px] cursor-not-allowed rounded-[8px] border-[0.5px] border-gray-300 bg-gray-50/50 text-[13px] font-normal tracking-[-0.01em] text-gray-500 focus-visible:outline-none dark:border-zinc-800 dark:bg-zinc-900/30 dark:text-zinc-400"
+                  style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                   placeholder="username@pup.edu.ph"
                   value={editForm.email}
                 />
@@ -140,23 +140,22 @@ export default function EditUserModal({
             </div>
           </div>
 
-          <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card">
+          <div className="flex flex-row justify-end gap-2 bg-white p-6 dark:bg-card border-none">
             <Button
               type="button"
               variant="ghost"
               onClick={onClose}
               disabled={isLoading}
-              className="h-11 rounded-brand px-6 text-sm font-semibold text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors"
+              className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 bg-transparent hover:bg-transparent border-none shadow-none p-0 h-auto cursor-pointer focus:outline-none"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={isLoading}
-              className="flex h-11 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-semibold text-white shadow-sm dark:shadow-none"
+              className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white shadow-none border-none py-0 px-4 cursor-pointer"
             >
-              <i className="ph-bold ph-floppy-disk"></i>
-              {isLoading ? "Saving Changes..." : "Save changes"}
+              {isLoading ? "Saving..." : "Save"}
             </Button>
           </div>
         </form>
@@ -164,6 +163,3 @@ export default function EditUserModal({
     </Dialog>
   )
 }
-
-
-

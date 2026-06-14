@@ -18,11 +18,11 @@ const ICON_MAP = {
   logs: { icon: "ti ti-shield-check", color: "#E5484D" },
 
   // Staff views
-  requests: { icon: "ti ti-arrow-up-right", color: "#E5484D" },
-  upload: { icon: "ti ti-scan", color: "#E5484D" },
-  documents: { icon: "ti ti-file-text", color: "#E5484D" },
-  notifications: { icon: "ti ti-bell", color: "#E5484D" },
-  search: { icon: "ti ti-archive", color: "#E5484D" },
+  requests: { icon: "ti ti-arrow-up-right", color: "#ebb800" },
+  upload: { icon: "ti ti-scan", color: "#ebb800" },
+  documents: { icon: "ti ti-file-text", color: "#ebb800" },
+  notifications: { icon: "ti ti-bell", color: "#ebb800" },
+  search: { icon: "ti ti-archive", color: "#ebb800" },
 }
 
 export default function Sidebar({ items, activeKey, onSelect, onLogout, zoomNode, setZoomNode, handleZoomMouseDown }) {
@@ -30,20 +30,27 @@ export default function Sidebar({ items, activeKey, onSelect, onLogout, zoomNode
   const isStaff = pathname?.startsWith("/staff") || items.some(item => 
     ["requests", "upload", "documents", "notifications", "search"].includes(item.key)
   )
-  const staffIconColor = isStaff ? "#edbb00" : "#E5484D"
+  const activeColor = isStaff ? "#ebb800" : "#E5484D"
+  const staffIconColor = isStaff ? "#ebb800" : "#E5484D"
   const sidebarRef = useRef(null)
-  const [sidebarFocused, setSidebarFocused] = useState(false)
-  const [localActiveKey, setLocalActiveKey] = useState(activeKey)
-
-  useEffect(() => {
-    setLocalActiveKey(activeKey)
-  }, [activeKey])
+  const pendingFocusKeyRef = useRef(null)
+  const [sidebarFocused, setSidebarFocused] = useState(true)
 
   useEffect(() => {
     const handleDocumentClick = (e) => {
       if (sidebarRef.current && sidebarRef.current.contains(e.target)) {
+        const linkEl = e.target.closest("[data-sidebar-key]")
+        if (linkEl) {
+          const clickedKey = linkEl.getAttribute("data-sidebar-key")
+          if (clickedKey !== activeKey) {
+            pendingFocusKeyRef.current = clickedKey
+            return
+          }
+        }
+        pendingFocusKeyRef.current = null
         setSidebarFocused(true)
       } else {
+        pendingFocusKeyRef.current = null
         setSidebarFocused(false)
       }
     }
@@ -55,7 +62,14 @@ export default function Sidebar({ items, activeKey, onSelect, onLogout, zoomNode
         document.removeEventListener("mousedown", handleDocumentClick)
       }
     }
-  }, [])
+  }, [activeKey])
+
+  useEffect(() => {
+    if (pendingFocusKeyRef.current === activeKey) {
+      setSidebarFocused(true)
+      pendingFocusKeyRef.current = null
+    }
+  }, [activeKey])
 
   const [expandedKeys, setExpandedKeys] = useState(() => {
     const initial = {}
@@ -91,7 +105,6 @@ export default function Sidebar({ items, activeKey, onSelect, onLogout, zoomNode
   const handleLinkClick = (e, key) => {
     if (e.button === 0 && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
       e.preventDefault()
-      setLocalActiveKey(key)
       onSelect(key)
     }
   }
@@ -113,7 +126,7 @@ export default function Sidebar({ items, activeKey, onSelect, onLogout, zoomNode
             }}
             className="flex w-[30px] h-[30px] items-center justify-center rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] cursor-pointer transition-colors"
           >
-            <i className="ti ti-layout-sidebar text-[21px]" style={{ color: "#E5484D" }}></i>
+            <i className="ti ti-layout-sidebar text-[21px]" style={{ color: activeColor }}></i>
           </button>
 
           {/* Zoom Control when Sidebar is Visible */}
@@ -175,7 +188,7 @@ export default function Sidebar({ items, activeKey, onSelect, onLogout, zoomNode
 
           if (item.type === "accordion") {
             const isExpanded = expandedKeys[item.key]
-            const hasActiveChild = item.children?.some((c) => c.key === localActiveKey)
+            const hasActiveChild = item.children?.some((c) => c.key === activeKey)
             const iconConfig = ICON_MAP[item.key] || { icon: item.iconClass, color: staffIconColor }
 
             return (
@@ -187,10 +200,11 @@ export default function Sidebar({ items, activeKey, onSelect, onLogout, zoomNode
                     "flex w-full h-[36px] items-center justify-between rounded-[6px] px-2 text-[15px] transition-colors outline-none cursor-pointer",
                     hasActiveChild && !isExpanded
                       ? sidebarFocused
-                        ? "bg-[#E5484D] text-white font-medium"
-                        : "bg-[#F0F0F0] text-[#1D1D1F] font-medium"
+                        ? "text-white font-normal"
+                        : "bg-[#F0F0F0] text-[#1D1D1F] font-normal"
                       : "text-[#1D1D1F] hover:bg-[rgba(0,0,0,0.06)] font-normal"
                   )}
+                  style={hasActiveChild && !isExpanded && sidebarFocused ? { backgroundColor: activeColor } : {}}
                 >
                   <div className="flex min-w-0 items-center gap-1.5 pl-4">
                     <i
@@ -203,13 +217,15 @@ export default function Sidebar({ items, activeKey, onSelect, onLogout, zoomNode
                     {item.badge > 0 ? (
                       <span
                         className={cn(
-                          "flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold",
+                          "flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
+                        )}
+                        style={
                           hasActiveChild && !isExpanded
                             ? sidebarFocused
-                              ? "bg-white text-[#E5484D]"
-                              : "bg-[#E5484D] text-white"
-                            : "bg-[#E5484D] text-white"
-                        )}
+                              ? { backgroundColor: "#FFFFFF", color: activeColor }
+                              : { backgroundColor: activeColor, color: "#FFFFFF" }
+                            : { backgroundColor: activeColor, color: "#FFFFFF" }
+                        }
                       >
                         {item.badge > 99 ? "99+" : item.badge}
                       </span>
@@ -231,23 +247,25 @@ export default function Sidebar({ items, activeKey, onSelect, onLogout, zoomNode
                 >
                   <div className="ml-4 flex flex-col gap-[2px] border-l border-gray-150 pl-2">
                     {item.children.map((child, childIdx) => {
-                      const isActive = localActiveKey === child.key
+                      const isActive = activeKey === child.key
                       const childIconConfig = ICON_MAP[child.key] || { icon: child.iconClass, color: staffIconColor }
 
                       return (
                         <a
                           key={child.key}
+                          data-sidebar-key={child.key}
                           href={`${pathname}?view=${child.key}`}
                           onClick={(e) => handleLinkClick(e, child.key)}
                           className={cn(
                             "flex w-full h-[36px] items-center justify-between gap-[6px] rounded-[6px] px-2 text-[15px] transition-colors outline-none cursor-pointer",
                             isActive
                               ? sidebarFocused
-                                ? "bg-[#E5484D] text-white font-medium"
-                                : "bg-[#F0F0F0] text-[#1D1D1F] font-medium"
+                                ? "text-white font-normal"
+                                : "bg-[#F0F0F0] text-[#1D1D1F] font-normal"
                               : "text-[#1D1D1F] hover:bg-[rgba(0,0,0,0.06)] font-normal"
                           )}
                           style={{
+                            backgroundColor: isActive && sidebarFocused ? activeColor : undefined,
                             transitionDelay: isExpanded
                               ? `${childIdx * 50}ms`
                               : "0ms",
@@ -263,13 +281,15 @@ export default function Sidebar({ items, activeKey, onSelect, onLogout, zoomNode
                           {child.badge > 0 ? (
                             <span
                               className={cn(
-                                "flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold",
+                                "flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
+                              )}
+                              style={
                                 isActive
                                   ? sidebarFocused
-                                    ? "bg-white text-[#E5484D]"
-                                    : "bg-[#E5484D] text-white"
-                                  : "bg-[#E5484D] text-white"
-                              )}
+                                    ? { backgroundColor: "#FFFFFF", color: activeColor }
+                                    : { backgroundColor: activeColor, color: "#FFFFFF" }
+                                  : { backgroundColor: activeColor, color: "#FFFFFF" }
+                              }
                             >
                               {child.badge > 99 ? "99+" : child.badge}
                             </span>
@@ -283,22 +303,24 @@ export default function Sidebar({ items, activeKey, onSelect, onLogout, zoomNode
             )
           }
 
-          const isActive = localActiveKey === item.key
+          const isActive = activeKey === item.key
           const iconConfig = ICON_MAP[item.key] || { icon: item.iconClass, color: staffIconColor }
 
           return (
             <a
               key={item.key}
-              href={`${pathname}?view=${item.key}`}
+              data-sidebar-key={item.key}
+              href={`${pathname}?view={item.key}`}
               onClick={(e) => handleLinkClick(e, item.key)}
               className={cn(
                 "flex w-full h-[36px] items-center justify-between gap-1.5 rounded-[6px] px-2 text-[15px] transition-colors outline-none cursor-pointer",
                 isActive
                   ? sidebarFocused
-                    ? "bg-[#E5484D] text-white font-medium"
-                    : "bg-[#F0F0F0] text-[#1D1D1F] font-medium"
+                    ? "text-white font-normal"
+                    : "bg-[#F0F0F0] text-[#1D1D1F] font-normal"
                   : "text-[#1D1D1F] hover:bg-[rgba(0,0,0,0.06)] font-normal"
               )}
+              style={isActive && sidebarFocused ? { backgroundColor: activeColor } : {}}
             >
               <span className="flex min-w-0 items-center gap-1.5 pl-4">
                 <i
@@ -310,13 +332,15 @@ export default function Sidebar({ items, activeKey, onSelect, onLogout, zoomNode
               {item.badge > 0 ? (
                 <span
                   className={cn(
-                    "ml-auto flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold",
+                    "ml-auto flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
+                  )}
+                  style={
                     isActive
                       ? sidebarFocused
-                        ? "bg-white text-[#E5484D]"
-                        : "bg-[#E5484D] text-white"
-                      : "bg-[#E5484D] text-white"
-                  )}
+                        ? { backgroundColor: "#FFFFFF", color: activeColor }
+                        : { backgroundColor: activeColor, color: "#FFFFFF" }
+                      : { backgroundColor: activeColor, color: "#FFFFFF" }
+                  }
                 >
                   {item.badge > 99 ? "99+" : item.badge}
                 </span>
@@ -325,8 +349,6 @@ export default function Sidebar({ items, activeKey, onSelect, onLogout, zoomNode
           )
         })}
       </div>
-
-      
     </aside>
   )
 }

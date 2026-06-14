@@ -253,8 +253,8 @@ input:-webkit-autofill:active {
     box-shadow: none;
 }
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -262,16 +262,20 @@ input:-webkit-autofill:active {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: oklch(0.5 0 0 / 20%);
+  background: #d1d5db; /* Tailwind gray-300 */
   border-radius: 10px;
 }
 
 .dark ::-webkit-scrollbar-thumb {
-    background: oklch(1 0 0 / 15%);
+  background: #4b5563; /* Tailwind gray-600 */
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--primary);
+  background: #9ca3af; /* Tailwind gray-400 */
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280; /* Tailwind gray-500 */
 }
 
 /* Interactive Elements */
@@ -477,9 +481,7 @@ th {
   border-radius: 12px !important;
   box-shadow: 
     inset 0 1px 0 rgba(255, 255, 255, 0.22), 
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4), 
-    0 1px 3px rgba(0, 0, 0, 0.2), 
-    0 1px 2px -1px rgba(0, 0, 0, 0.1) !important;
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4) !important;
   font-weight: 600 !important;
   @apply normal-case transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2;
 }
@@ -492,9 +494,7 @@ th {
   border-style: none !important;
   box-shadow: 
     inset 0 1px 0 rgba(255, 255, 255, 0.25), 
-    inset 0 -1px 0 rgba(0, 0, 0, 0.5), 
-    0 1px 3px rgba(0, 0, 0, 0.4), 
-    0 1px 2px -1px rgba(0, 0, 0, 0.2) !important;
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5) !important;
 }
 
 .btn-brand-red:hover {
@@ -505,9 +505,7 @@ th {
   border-style: none !important;
   box-shadow: 
     inset 0 1px 0 rgba(255, 255, 255, 0.25), 
-    inset 0 -1.5px 0 rgba(0, 0, 0, 0.45), 
-    0 2px 4px rgba(0, 0, 0, 0.2), 
-    0 1px 2px -1px rgba(0, 0, 0, 0.1) !important;
+    inset 0 -1.5px 0 rgba(0, 0, 0, 0.45) !important;
 }
 
 .dark .btn-brand-red:hover {
@@ -529,9 +527,7 @@ th {
   border-radius: 12px !important;
   box-shadow: 
     inset 0 1px 0 rgba(255, 255, 255, 0.22), 
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4), 
-    0 1px 3px rgba(0, 0, 0, 0.2), 
-    0 1px 2px -1px rgba(0, 0, 0, 0.1) !important;
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4) !important;
   font-weight: 600 !important;
   @apply normal-case transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2;
 }
@@ -544,9 +540,7 @@ th {
   border-style: none !important;
   box-shadow: 
     inset 0 1px 0 rgba(255, 255, 255, 0.25), 
-    inset 0 -1px 0 rgba(0, 0, 0, 0.5), 
-    0 1px 3px rgba(0, 0, 0, 0.4), 
-    0 1px 2px -1px rgba(0, 0, 0, 0.2) !important;
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5) !important;
 }
 
 .btn-brand-orange:hover {
@@ -557,9 +551,7 @@ th {
   border-style: none !important;
   box-shadow: 
     inset 0 1px 0 rgba(255, 255, 255, 0.25), 
-    inset 0 -1.5px 0 rgba(0, 0, 0, 0.45), 
-    0 2px 4px rgba(0, 0, 0, 0.2), 
-    0 1px 2px -1px rgba(0, 0, 0, 0.1) !important;
+    inset 0 -1.5px 0 rgba(0, 0, 0, 0.45) !important;
 }
 
 .dark .btn-brand-orange:hover {
@@ -581,9 +573,7 @@ th {
   border-radius: 12px !important;
   box-shadow: 
     inset 0 1px 0 rgba(255, 255, 255, 0.22), 
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4), 
-    0 1px 3px rgba(0, 0, 0, 0.2), 
-    0 1px 2px -1px rgba(0, 0, 0, 0.1) !important;
+    inset 0 -1px 0 rgba(0, 0, 0, 0.4) !important;
   font-weight: 600 !important;
   @apply normal-case transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2;
 }
@@ -596,9 +586,7 @@ th {
   border-style: none !important;
   box-shadow: 
     inset 0 1px 0 rgba(255, 255, 255, 0.25), 
-    inset 0 -1px 0 rgba(0, 0, 0, 0.5), 
-    0 1px 3px rgba(0, 0, 0, 0.4), 
-    0 1px 2px -1px rgba(0, 0, 0, 0.2) !important;
+    inset 0 -1px 0 rgba(0, 0, 0, 0.5) !important;
 }
 
 .btn-brand-green:hover {
@@ -609,9 +597,7 @@ th {
   border-style: none !important;
   box-shadow: 
     inset 0 1px 0 rgba(255, 255, 255, 0.25), 
-    inset 0 -1.5px 0 rgba(0, 0, 0, 0.45), 
-    0 2px 4px rgba(0, 0, 0, 0.2), 
-    0 1px 2px -1px rgba(0, 0, 0, 0.1) !important;
+    inset 0 -1.5px 0 rgba(0, 0, 0, 0.45) !important;
 }
 
 .dark .btn-brand-green:hover {
@@ -870,6 +856,47 @@ h1.login-title {
   animation: spin-clockwise 55s linear infinite;
 }
 
+/* Custom Apple notification entry/exit animations for Sonner toasts */
+[data-sonner-toaster] {
+  position: fixed !important;
+  top: 16px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  right: auto !important;
+  bottom: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+}
 
+[data-sonner-toast] {
+  animation: apple-toast-slide-down 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  transition: none !important;
+}
 
+[data-sonner-toast][data-removed="true"] {
+  animation: apple-toast-slide-up 200ms cubic-bezier(0.16, 1, 0.3, 1) forwards !important;
+  transition: none !important;
+}
 
+@keyframes apple-toast-slide-down {
+  from {
+    transform: translateY(-40px) scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes apple-toast-slide-up {
+  from {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateY(-40px) scale(0.95);
+    opacity: 0;
+  }
+}

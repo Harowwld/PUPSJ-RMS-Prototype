@@ -51,6 +51,7 @@ export default function AuditLogsTab({
   const [localSearch, setLocalSearch] = useState(logSearch || "")
   const [itemsPerPage, setItemsPerPage] = useState(logsPerPage || 10)
   const [isExporting, setIsExporting] = useState(false)
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false)
   const [selectedLog, setSelectedLog] = useState(null)
   const [jumpPage, setJumpPage] = useState(String(logPage))
 
@@ -156,8 +157,8 @@ export default function AuditLogsTab({
   }
 
   const handlePreviewPDF = async () => {
-    if (logTotal === 0 || isExporting) return
-    setIsExporting(true)
+    if (logTotal === 0 || isGeneratingPdf) return
+    setIsGeneratingPdf(true)
     try {
       const allLogs = await fetchAllForExport()
       const blob = await generateAuditLogsPdf(allLogs, {
@@ -181,7 +182,7 @@ export default function AuditLogsTab({
       console.error("[PDF Preview Error]", err)
       showToast({ title: "Preview Failed", description: err.message || "Unable to generate PDF preview." }, true)
     } finally {
-      setIsExporting(false)
+      setIsGeneratingPdf(false)
     }
   }
 
@@ -256,20 +257,28 @@ export default function AuditLogsTab({
                     variant="ghost"
                     size="sm"
                     onClick={handleDownloadCSV}
-                    disabled={logTotal === 0 || isExporting}
-                    className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none! border-0!"
+                    disabled={logTotal === 0 || isExporting || isGeneratingPdf}
+                    className="h-10 w-[68px] justify-center font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center rounded-brand shadow-none! border-0!"
                   >
-                    {isExporting ? "Preparing..." : "Export"}
+                    {isExporting ? (
+                      <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                    ) : (
+                      "Export"
+                    )}
                   </Button>
                   <Button
                     type="button"
                     variant="default"
                     size="sm"
                     onClick={handlePreviewPDF}
-                    disabled={logTotal === 0 || isExporting}
-                    className="flex h-[36px] px-5 items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
+                    disabled={logTotal === 0 || isExporting || isGeneratingPdf}
+                    className="flex h-[36px] w-[142px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
                   >
-                    {isExporting ? "Generating..." : "Generate Report"}
+                    {isGeneratingPdf ? (
+                      <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                    ) : (
+                      "Generate Report"
+                    )}
                   </Button>
                 </div>
               </div>

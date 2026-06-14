@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { generateAuditLogsPdf } from "@/lib/pdfGenerator";
 import { generateExportFilename } from "@/lib/exportHelpers";
 import PdfPreviewDialog from "@/components/admin/audit-logs/PdfPreviewDialog";
+import LogDetailSheet from "@/components/admin/audit-logs/LogDetailSheet";
 import {
   Empty,
   EmptyHeader,
@@ -206,127 +207,155 @@ function LogFilters({
     setLogPage(1);
   };
 
+  const activeShortcut = (() => {
+    if (!logStartDate || !logEndDate) return null;
+    const todayStr = format(new Date(), "yyyy-MM-dd");
+    
+    // Check Today
+    if (logStartDate === todayStr && logEndDate === todayStr) return "today";
+    
+    // Check Yesterday
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = format(yesterday, "yyyy-MM-dd");
+    if (logStartDate === yesterdayStr && logEndDate === yesterdayStr) return "yesterday";
+    
+    // Check 7 days
+    const last7 = new Date();
+    last7.setDate(last7.getDate() - 7);
+    const last7Str = format(last7, "yyyy-MM-dd");
+    if (logStartDate === last7Str && logEndDate === todayStr) return "last7";
+    
+    // Check 30 days
+    const last30 = new Date();
+    last30.setDate(last30.getDate() - 30);
+    const last30Str = format(last30, "yyyy-MM-dd");
+    if (logStartDate === last30Str && logEndDate === todayStr) return "last30";
+    
+    return null;
+  })();
+
   return (
     <div className={cn(
       "bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10 transition-all duration-500",
       isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
     )}>
-      <div className="flex w-full flex-wrap items-end gap-5">
+      <div className="flex w-full flex-wrap items-center gap-5">
         {/* Search */}
-        <div className="min-w-[320px] flex-[1.5]">
-          <div className="mb-1.5 flex items-center justify-between">
-            <label className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500"></label>
-            <span className="text-[9px] font-semibold text-pup-maroon dark:text-primary/50">
-              {logTotal > 0 ? `${logTotal.toLocaleString()} MATCHES` : "NO RESULTS"}
-            </span>
+        <div className="flex-[2] min-w-[280px] group relative">
+          <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+            <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
           </div>
-          <div className="group relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
-              <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500"></i>
-            </div>
-            <Input
-              type="text"
-              placeholder="Search by action, details, or IP..."
-              className="h-11 w-full rounded-brand border border-gray-200 bg-white pl-10.5 text-sm font-medium transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300"
-              value={localSearch}
-              onChange={handleSearchChange}
-            />
+          <Input
+            type="text"
+            placeholder="Search by action, details, or IP..."
+            className="h-[36px] w-full rounded-[8px] border-[0.5px] border-gray-200 bg-white pl-9 pr-20 text-[13px] font-normal transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
+            value={localSearch}
+            onChange={handleSearchChange}
+          />
+          <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
+            {logTotal > 0 ? `${logTotal.toLocaleString()} results` : "0 results"}
           </div>
         </div>
 
-        {/* Date Range Picker Section */}
-        <div className="min-w-[400px] flex-[2]">
-          <div className="mb-1.5 flex items-center justify-between">
-            <label className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-              Time Period
-            </label>
-            <div className="flex items-center gap-2">
-              {["today", "yesterday", "last7", "last30"].map((range) => (
-                <button
-                  key={range}
-                  onClick={() => handleQuickRange(range)}
-                  className="rounded-md bg-gray-100 px-2 py-0.5 text-[9px] font-semibold text-gray-500 transition-all hover:bg-pup-maroon hover:text-white dark:text-zinc-400 dark:bg-muted cursor-pointer"
-                >
-                  {range.replace("last", "Last ")}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <div className="flex-1">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "h-11 w-full justify-start rounded-brand border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-xs font-semibold shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card",
-                      !logStartDate && "text-gray-400 dark:text-zinc-500"
-                    )}
-                  >
-                    <i className="ph-bold ph-calendar-blank mr-2 text-base text-gray-400 dark:text-zinc-500"></i>
-                    {logStartDate ? format(new Date(logStartDate), "MMM d, yyyy") : "Start Date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto rounded-2xl p-0 shadow-2xl" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={logStartDate ? new Date(logStartDate) : undefined}
-                    onSelect={(date) => {
-                      setLogStartDate(date ? format(date, "yyyy-MM-dd") : "");
-                      setLogPage(1);
-                    }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-            <div className="flex items-center text-gray-300 dark:text-zinc-650">
-               <i className="ph-bold ph-arrow-right"></i>
-            </div>
-            <div className="flex-1">
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "h-11 w-full justify-start rounded-brand border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-xs font-semibold shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card",
-                      !logEndDate && "text-gray-400 dark:text-zinc-500"
-                    )}
-                  >
-                    <i className="ph-bold ph-calendar-blank mr-2 text-base text-gray-400 dark:text-zinc-500"></i>
-                    {logEndDate ? format(new Date(logEndDate), "MMM d, yyyy") : "End Date"}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto rounded-2xl p-0 shadow-2xl" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={logEndDate ? new Date(logEndDate) : undefined}
-                    onSelect={(date) => {
-                      setLogEndDate(date ? format(date, "yyyy-MM-dd") : "");
-                      setLogPage(1);
-                    }}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-        </div>
-
-        {/* Severity filter */}
-        <div className="w-36">
-          <label className="mb-1.5 block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-            Severity
-          </label>
+        {/* Severity Select */}
+        <div className="min-w-[130px] flex-1">
           <Select
             value={logSeverityFilter}
             onChange={handleSeverityChange}
+            className="h-[36px] rounded-[8px] border-[0.5px] border-gray-200 text-[13px] font-normal"
           >
-            <option value="All">All</option>
+            <option value="All">Severity</option>
             <option value="INFO">Information</option>
             <option value="WARNING">Warning</option>
             <option value="CRITICAL">Critical</option>
           </Select>
+        </div>
+
+        {/* Time Period shortcuts */}
+        <div className="flex items-center gap-[12px] h-[36px] flex-none">
+          {[
+            { key: "today", label: "Today" },
+            { key: "yesterday", label: "Yesterday" },
+            { key: "last7", label: "7 days" },
+            { key: "last30", label: "30 days" },
+          ].map((range) => {
+            const isActive = activeShortcut === range.key;
+            return (
+              <button
+                key={range.key}
+                type="button"
+                onClick={() => handleQuickRange(range.key)}
+                className={cn(
+                  "text-[12px] font-normal transition-all bg-transparent border-0 cursor-pointer shadow-none focus:outline-none focus:ring-0 pb-1",
+                  isActive 
+                    ? "text-pup-maroon dark:text-red-500 border-b-[2px] border-pup-maroon dark:border-red-500 font-medium" 
+                    : "text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300"
+                )}
+              >
+                {range.label}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Date range picker */}
+        <div className="flex items-center gap-2 flex-none">
+          <div className="w-[120px]">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "h-[36px] w-full justify-start rounded-[8px] border-[0.5px] border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-[13px] font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10",
+                    !logStartDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
+                  )}
+                >
+                  {logStartDate ? format(new Date(logStartDate), "MMM d, yyyy") : "Start Date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+                <Calendar
+                  mode="single"
+                  selected={logStartDate ? new Date(logStartDate) : undefined}
+                  onSelect={(date) => {
+                    setLogStartDate(date ? format(date, "yyyy-MM-dd") : "");
+                    setLogPage(1);
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
+          <div className="text-[12px] text-gray-400 dark:text-zinc-500 shrink-0">
+            →
+          </div>
+          <div className="w-[120px]">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "h-[36px] w-full justify-start rounded-[8px] border-[0.5px] border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-[13px] font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10",
+                    !logEndDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
+                  )}
+                >
+                  {logEndDate ? format(new Date(logEndDate), "MMM d, yyyy") : "End Date"}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+                <Calendar
+                  mode="single"
+                  selected={logEndDate ? new Date(logEndDate) : undefined}
+                  onSelect={(date) => {
+                    setLogEndDate(date ? format(date, "yyyy-MM-dd") : "");
+                    setLogPage(1);
+                  }}
+                  initialFocus
+                />
+              </PopoverContent>
+            </Popover>
+          </div>
         </div>
       </div>
     </div>
@@ -428,66 +457,89 @@ function LogExpandedRow({ log, handleCopy }) {
   );
 }
 
+function getSeverityInfo(sev) {
+  const s = String(sev || "").toUpperCase();
+  if (s === "CRITICAL") {
+    return {
+      label: "Critical",
+      classes: "bg-[#FEE2E2] text-[#991B1B] dark:bg-red-950/40 dark:text-red-400"
+    };
+  }
+  if (s === "WARNING") {
+    return {
+      label: "Warning",
+      classes: "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400"
+    };
+  }
+  return {
+    label: "Info",
+    classes: "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400"
+  };
+}
+
 const LogRow = ({ log, isSelected, isExpanded, toggleRow, setSelectedLog, handleCopy }) => {
-  const sevConfig = getSeverityConfig(log.severity);
-  const uploaded = formatPHDateTimeParts(log.created_at || log.time);
+  const severityInfo = getSeverityInfo(log.severity)
+  
+  const formattedTimestamp = (() => {
+    try {
+      const d = new Date(log.created_at || log.time);
+      if (isNaN(d.getTime())) return log.created_at || log.time;
+      return d.toLocaleString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true
+      });
+    } catch (e) {
+      return log.created_at || log.time;
+    }
+  })();
 
   return (
     <>
       <tr
         className={cn(
-          "group border-l-2 border-transparent transition-all duration-200 hover:bg-gray-50 dark:bg-card dark:hover:bg-white/5 select-none cursor-pointer",
-          isSelected && "border-amber-400 bg-amber-50 dark:bg-amber-950/40",
+          "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+          isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
           isExpanded && "bg-gray-50 dark:bg-white/8"
         )}
-        onClick={() => toggleRow(log.id)}
+        onClick={() => {
+          toggleRow(log.id);
+        }}
       >
-        <td className="p-4 text-center">
+        <td className="py-0 px-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
           <button
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleRow(log.id);
-            }}
-            className={cn(
-              "mx-auto flex h-7 w-7 items-center justify-center rounded-lg bg-gray-100 dark:bg-white/5 text-gray-400 dark:text-zinc-500 transition-all hover:bg-pup-maroon dark:hover:bg-zinc-800 dark:hover:text-primary hover:text-white cursor-pointer",
-              isExpanded && "bg-pup-maroon dark:bg-zinc-700 text-white dark:text-primary rotate-90 shadow-sm"
-            )}
+            onClick={() => toggleRow(log.id)}
+            className="mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-transform duration-200"
+            style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
           >
-            <i className="ph-bold ph-caret-right text-xs"></i>
+            <i className="ti ti-chevron-down text-[14px]" style={{ fontSize: '14px' }}></i>
           </button>
         </td>
-        <td className="p-4">
-          <div className="flex flex-col">
-            <span className="text-xs font-semibold text-gray-900 dark:text-zinc-50">
-              {uploaded.date}
-            </span>
-            <span className="text-[10px] font-medium text-gray-400 dark:text-zinc-400">
-              {uploaded.time}
-            </span>
-          </div>
+        <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-50">
+          {formattedTimestamp}
         </td>
-        <td className="p-4">
-          <div className={cn(
-            "flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-semibold tracking-wider transition-all",
-            sevConfig.bg,
-            sevConfig.text,
-            sevConfig.border
-          )}>
-            <i className={cn(sevConfig.icon, "text-[10px]")}></i>
-            {log.severity}
-          </div>
-        </td>
-        <td className="p-4">
-          <span className="text-xs font-semibold tracking-tight text-gray-700 dark:text-zinc-300">
-            {log.action}
+        <td className="py-0 px-4 align-middle">
+          <span
+            className={cn(
+              "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] shadow-none transition-all",
+              severityInfo.classes
+            )}
+          >
+            {severityInfo.label}
           </span>
         </td>
-        <td className="p-4">
+        <td className="py-0 px-4 align-middle text-[13px] font-medium text-[#111111] dark:text-zinc-50">
+          {log.action === "Rotate Password" ? "Password Rotated" : log.action}
+        </td>
+        <td className="py-0 px-4 align-middle">
           <Tooltip>
             <TooltipTrigger asChild>
-              <p className="line-clamp-1 max-w-[500px] text-xs font-medium text-gray-500 dark:text-zinc-400">
+              <span className="block max-w-[500px] truncate text-[13px] font-normal text-[#8E8E93]">
                 {log.details || "No known description"}
-              </p>
+              </span>
             </TooltipTrigger>
             <TooltipContent
               side="top"
@@ -497,23 +549,15 @@ const LogRow = ({ log, isSelected, isExpanded, toggleRow, setSelectedLog, handle
             </TooltipContent>
           </Tooltip>
         </td>
-        <td className="p-4 text-center">
-          <Button
-            variant="ghost"
-            size="icon"
-            className={cn(
-              "h-9 w-9 rounded-xl border border-transparent transition-all active:scale-95 dark:shadow-none",
-              isSelected 
-                ? "bg-white text-pup-maroon border-gray-200 dark:bg-zinc-800 dark:text-primary dark:border-white/10 shadow-sm" 
-                : "text-gray-400 hover:bg-white hover:text-pup-maroon hover:border-gray-200 dark:text-zinc-500 dark:hover:bg-zinc-800 dark:hover:text-primary dark:hover:border-white/10"
-            )}
-            onClick={(e) => {
-              e.stopPropagation();
-              setSelectedLog(log);
-            }}
-          >
-            <i className="ph-bold ph-eye text-lg"></i>
-          </Button>
+        <td className="py-0 px-4 align-middle text-right" onClick={(e) => e.stopPropagation()}>
+          <div className="flex items-center justify-end gap-[12px]">
+            <button
+              onClick={() => setSelectedLog(log)}
+              className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center transition-colors"
+            >
+              <i className="ti ti-eye text-[16px]"></i>
+            </button>
+          </div>
         </td>
       </tr>
       {isExpanded && (
@@ -528,13 +572,14 @@ const LogRow = ({ log, isSelected, isExpanded, toggleRow, setSelectedLog, handle
 };
 
 function SortIndicator({ column, logSortBy, logSortOrder }) {
-  if (logSortBy !== column)
-    return <i className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60"></i>;
+  if (logSortBy !== column) {
+    return <i className="ph-bold ph-caret-up-down ml-1 text-[12px] text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity"></i>
+  }
   return logSortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
+    <i className="ph-bold ph-caret-up ml-1 text-[12px] text-gray-400"></i>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
-  );
+    <i className="ph-bold ph-caret-down ml-1 text-[12px] text-gray-400"></i>
+  )
 }
 
 function LogTable({
@@ -666,13 +711,13 @@ function LogTable({
       >
         <div className="overflow-visible rounded-[inherit]">
           <table className="min-w-full table-fixed text-sm">
-            <thead className="bg-gray-50 backdrop-blur-sm select-none dark:bg-muted">
-              <tr className="text-left text-[11px] font-semibold tracking-wider text-gray-800 dark:text-zinc-250">
+            <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10 select-none">
+              <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                 <th className="w-[50px] p-4 text-center"></th>
                 <th className="w-[180px] p-4">
                   <button
                     onClick={() => handleSort("created_at")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300 cursor-pointer"
+                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em] cursor-pointer"
                   >
                     Timestamp{" "}
                     <SortIndicator
@@ -685,9 +730,9 @@ function LogTable({
                 <th className="w-[120px] p-4">
                   <button
                     onClick={() => handleSort("severity")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300 cursor-pointer"
+                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em] cursor-pointer"
                   >
-                    Severity{" "}
+                    Level{" "}
                     <SortIndicator
                       column="severity"
                       logSortBy={logSortBy}
@@ -698,7 +743,7 @@ function LogTable({
                 <th className="w-[250px] p-4">
                   <button
                     onClick={() => handleSort("action")}
-                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300 cursor-pointer"
+                    className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none text-[12px] font-medium tracking-[0.04em] cursor-pointer"
                   >
                     Event / Action{" "}
                     <SortIndicator
@@ -708,8 +753,8 @@ function LogTable({
                     />
                   </button>
                 </th>
-                <th className="min-w-[300px] p-4 dark:text-zinc-200">Description</th>
-                <th className="w-[80px] p-4 text-center"></th>
+                <th className="min-w-[300px] p-4 text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Description</th>
+                <th className="w-[80px] p-4 text-center text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 dark:divide-white/10">
@@ -776,51 +821,53 @@ function LogTable({
         {logTotal > 0 && (
           <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 rounded-b-brand dark:border-white/10 dark:bg-card">
             <div className="flex items-center gap-8 select-none cursor-default">
-              <div className="flex items-center gap-6 text-[11px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">
+              <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
                 <span>
-                  SHOWING <strong className="text-gray-900 dark:text-zinc-50">{endItem - startItem + 1}</strong> OUT OF <strong className="text-gray-900 dark:text-zinc-50">{logTotal.toLocaleString()}</strong> ENTRIES
+                  Showing {endItem - startItem + 1} of {logTotal}
                 </span>
 
-                <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
-                  <span className="text-[10px] opacity-60">ROWS:</span>
-                  <Select
-                    className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-semibold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
-                    value={itemsPerPage}
-                    onChange={handleItemsPerPageChange}
-                  >
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </Select>
+                <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
+                  <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
+                  <div className="flex items-center gap-1">
+                    {[10, 20, 50, 100].map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => handleItemsPerPageChange({ target: { value: size } })}
+                        className={`px-2 py-0.5 rounded-[4px] text-[12px] font-normal cursor-pointer transition-colors border-0 ${
+                          itemsPerPage === size
+                            ? "bg-gray-100 text-[#111111] font-medium dark:bg-white/10 dark:text-zinc-50"
+                            : "bg-transparent text-gray-450 dark:text-zinc-550 hover:text-gray-700 dark:hover:text-zinc-300"
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="flex shrink-0 items-center gap-3 select-none">
-              <Button
-                variant="outline"
-                size="sm"
+              <button
                 disabled={logPage <= 1}
-                onClick={() => setLogPage((p) => p - 1)}
-                className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10 cursor-pointer"
+                onClick={() => setLogPage((p) => Math.max(1, p - 1))}
+                className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
               >
-                <i className="ph-bold ph-caret-left mr-2 text-base"></i>Prev
-              </Button>
-              
-              <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-semibold text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                Prev
+              </button>
+
+              <div className="flex h-8 min-w-[32px] items-center justify-center rounded-[6px] border border-gray-200/80 bg-white px-2.5 text-[12px] font-medium text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
                 {logPage}
               </div>
 
-              <Button
-                variant="outline"
-                size="sm"
+              <button
                 disabled={logPage >= totalPages}
-                onClick={() => setLogPage((p) => p + 1)}
-                className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-500 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10 cursor-pointer"
+                onClick={() => setLogPage((p) => Math.min(totalPages, p + 1))}
+                className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
               >
-                Next<i className="ph-bold ph-caret-right ml-2 text-base"></i>
-              </Button>
+                Next
+              </button>
             </div>
           </div>
         )}
@@ -829,222 +876,7 @@ function LogTable({
   );
 }
 
-function LogDetailSheet({ selectedLog, setSelectedLog, handleCopy }) {
-  return (
-    <Sheet
-      open={!!selectedLog}
-      onOpenChange={(open) => !open && setSelectedLog(null)}
-    >
-      <SheetContent className="font-inter flex w-full flex-col border-l border-gray-200 bg-gray-50 p-0 sm:max-w-md dark:border-white/10 dark:bg-card">
-        <SheetHeader className="shrink-0 border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
-              <i className="ph-bold ph-file-text text-xl animate-in zoom-in duration-300"></i>
-            </div>
-            <div className="min-w-0">
-              <SheetTitle className="text-left text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
-                Log Entry
-              </SheetTitle>
-              <SheetDescription className="mt-1.5 text-left text-sm font-medium text-gray-500 dark:text-zinc-400">
-                System Event ID:{" "}
-                <span className="font-mono font-semibold text-gray-700 dark:text-zinc-200">
-                  {selectedLog?.id}
-                </span>
-              </SheetDescription>
-            </div>
-          </div>
-        </SheetHeader>
 
-        {selectedLog && (
-          <div className="flex-1 space-y-6 overflow-y-auto p-6 pb-24">
-            {/* Header Info */}
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="mb-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-300">
-                  Timestamp
-                </p>
-                <p className="text-sm font-semibold text-gray-900 dark:text-zinc-50">
-                  {formatPHDateTime(selectedLog.created_at)}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="mb-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-300">
-                  Severity
-                </p>
-                <Badge
-                  className={cn(
-                    "rounded-sm border-0 px-2 py-0.5 text-[10px] font-semibold",
-                    getSeverityConfig(selectedLog.severity).bg,
-                    getSeverityConfig(selectedLog.severity).text
-                  )}
-                >
-                  {selectedLog.severity}
-                </Badge>
-              </div>
-            </div>
-
-            {/* Actor Section (Cohesive personal info) */}
-            <Card className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-              <div className="flex items-center gap-2 border-b border-gray-100 bg-transparent px-4 py-3 dark:border-white/10 dark:bg-transparent">
-                <i className="ph-bold ph-user-focus text-pup-maroon dark:text-primary"></i>
-                <h4 className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-300">
-                  Actor Information
-                </h4>
-              </div>
-              <div className="flex items-center gap-3 p-4">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-gray-200 bg-gray-100 dark:border-white/10 dark:bg-muted">
-                  <i className="ph-bold ph-user text-lg text-gray-500 dark:text-zinc-400"></i>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="truncate text-sm font-semibold text-gray-900 dark:text-zinc-50">{selectedLog.actor || selectedLog.user}</p>
-                  <p className="mt-0.5 text-[10px] font-semibold tracking-wider text-pup-maroon dark:text-primary">
-                    {selectedLog.role}
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            {/* Event Details */}
-            <Card className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-              <div className="flex items-center gap-2 border-b border-gray-100 bg-transparent px-4 py-3 dark:border-white/10 dark:bg-transparent">
-                <i className="ph-bold ph-newspaper text-pup-maroon dark:text-primary"></i>
-                <h4 className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-300">
-                  Event Details
-                </h4>
-              </div>
-              <div className="space-y-4 p-4">
-                <div>
-                  <p className="mb-1 text-[10px] font-semibold text-gray-400 dark:text-zinc-300">
-                    Action Performed
-                  </p>
-                  <p
-                    className={cn(
-                      "text-sm font-semibold tracking-tight",
-                      getSeverityConfig(selectedLog.severity).text
-                    )}
-                  >
-                    {selectedLog.action}
-                  </p>
-                </div>
-
-                <div className="border-t border-gray-100 pt-3 dark:border-white/10">
-                  <div className="mb-1 flex items-center justify-between">
-                    <p className="text-[10px] font-semibold text-gray-400 dark:text-zinc-300">
-                      Description
-                    </p>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleCopy(selectedLog.details || "No known description", "Event description")}
-                          className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:border-white/10 dark:bg-card dark:hover:border-zinc-700 dark:text-zinc-300 cursor-pointer"
-                        >
-                          <i className="ph-bold ph-copy text-xs"></i>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left" className="rounded-brand font-semibold text-[10px] tracking-wider">
-                        Copy Description
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <p className="text-sm font-medium text-gray-700 dark:text-zinc-200">
-                    {selectedLog.details || "No known description"}
-                  </p>
-                </div>
-
-                {(selectedLog.entity_type || selectedLog.entityType || selectedLog.entity_id || selectedLog.entityId) && (
-                  <div className="grid grid-cols-2 gap-4 border-t border-gray-100 pt-3 dark:border-white/10">
-                    <div>
-                      <p className="mb-1 text-[10px] font-semibold text-gray-400 dark:text-zinc-300">
-                        Target Type
-                      </p>
-                      <span className="rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-semibold text-gray-600 dark:text-zinc-300 dark:bg-muted">
-                        {selectedLog.entityType || selectedLog.entity_type || "N/A"}
-                      </span>
-                    </div>
-                    <div>
-                      <div className="mb-1 flex items-center justify-between">
-                        <p className="text-[10px] font-semibold text-gray-400 dark:text-zinc-300">
-                          Reference ID
-                        </p>
-                        {(selectedLog.entityId || selectedLog.entity_id) && (
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button
-                                variant="outline"
-                                size="icon"
-                                onClick={() => handleCopy(selectedLog.entityId || selectedLog.entity_id, "Reference ID")}
-                                className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:border-white/10 dark:bg-card dark:hover:border-zinc-700 dark:text-zinc-300 cursor-pointer"
-                              >
-                                <i className="ph-bold ph-copy text-xs"></i>
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent side="left" className="rounded-brand font-semibold text-[10px] tracking-wider">
-                              Copy Entity ID
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                      </div>
-                      <p className="font-mono text-[11px] font-semibold text-gray-900 dark:text-zinc-50">
-                        {selectedLog.entityId || selectedLog.entity_id || "N/A"}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </Card>
-
-            {/* Network Data */}
-            <Card className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-              <div className="flex items-center gap-2 border-b border-gray-100 bg-transparent px-4 py-3 dark:border-white/10 dark:bg-transparent">
-                <i className="ph-bold ph-broadcast text-pup-maroon dark:text-primary"></i>
-                <h4 className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-300">
-                  Network Data
-                </h4>
-              </div>
-              <div className="space-y-4 p-4">
-                <div>
-                  <div className="mb-1 flex items-center justify-between">
-                    <p className="flex items-center gap-1 text-[10px] font-semibold text-gray-400 dark:text-zinc-300">
-                      <i className="ph-bold ph-globe"></i> IP Address
-                    </p>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleCopy(selectedLog.ip, "IP address")}
-                          className="h-7 w-7 rounded-lg border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 shadow-xs transition-all dark:border-white/10 dark:bg-card dark:hover:border-zinc-700 dark:text-zinc-300 cursor-pointer"
-                        >
-                          <i className="ph-bold ph-copy text-xs"></i>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent side="left" className="rounded-brand font-semibold text-[10px] tracking-wider">
-                        Copy IP Address
-                      </TooltipContent>
-                    </Tooltip>
-                  </div>
-                  <p className="inline-block rounded border border-gray-100 bg-gray-50 p-2 font-mono text-xs font-semibold text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50">
-                    {selectedLog.ip}
-                  </p>
-                </div>
-                <div>
-                  <p className="mb-1 flex items-center gap-1 text-[10px] font-semibold text-gray-400 dark:text-zinc-300">
-                    <i className="ph-bold ph-desktop"></i> Device &amp; Browser
-                  </p>
-                  <p className="rounded-lg border border-gray-100 bg-gray-50 p-3 text-[11px] font-medium text-gray-600 dark:border-white/10 dark:bg-card dark:text-zinc-300">
-                    {selectedLog.userAgent || selectedLog.user_agent}
-                  </p>
-                </div>
-              </div>
-            </Card>
-          </div>
-        )}
-      </SheetContent>
-    </Sheet>
-  );
-}
 
 // 3. MAIN WORKSPACE PAGE
 export default function AccountActivityPage() {
@@ -1073,6 +905,7 @@ export default function AccountActivityPage() {
 
   // Export State
   const [isExporting, setIsExporting] = useState(false);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const [pdfPreviewOpen, setPdfPreviewOpen] = useState(false);
   const [pdfBlobUrl, setPdfPreviewUrl] = useState(null);
   const [previewFrameReady, setPreviewFrameReady] = useState(false);
@@ -1172,6 +1005,22 @@ export default function AccountActivityPage() {
     setPage(1);
   };
 
+  const handleNextLog = () => {
+    if (!selectedLog) return;
+    const currentIndex = rows.findIndex((log) => log.id === selectedLog.id);
+    if (currentIndex < rows.length - 1) {
+      setSelectedLog(rows[currentIndex + 1]);
+    }
+  };
+
+  const handlePrevLog = () => {
+    if (!selectedLog) return;
+    const currentIndex = rows.findIndex((log) => log.id === selectedLog.id);
+    if (currentIndex > 0) {
+      setSelectedLog(rows[currentIndex - 1]);
+    }
+  };
+
   const handleSearchChange = (e) => setLocalSearch(e.target.value);
   const handleSeverityChange = (e) => {
     setSeverityFilter(e.target.value);
@@ -1242,8 +1091,8 @@ export default function AccountActivityPage() {
   };
 
   const handlePreviewPDF = async () => {
-    if (total === 0 || isExporting) return;
-    setIsExporting(true);
+    if (total === 0 || isGeneratingPdf || isExporting) return;
+    setIsGeneratingPdf(true);
     try {
       const allLogs = await fetchAllForExport();
       const blob = await generateAuditLogsPdf(allLogs, {
@@ -1257,7 +1106,7 @@ export default function AccountActivityPage() {
     } catch (err) {
       toast.error("Preview Failed", { description: err.message || "Unable to generate PDF preview." });
     } finally {
-      setIsExporting(false);
+      setIsGeneratingPdf(false);
     }
   };
 
@@ -1306,11 +1155,12 @@ export default function AccountActivityPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-background font-inter">
+    <div className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-background font-inter">
       <Header authUser={authUser} onLogout={handleLogout} />
 
-      <main className="flex-1 w-full max-w-[1400px] mx-auto py-10 px-6">
-        <TooltipProvider delayDuration={200}>
+      <main className="flex-1 min-h-0 overflow-y-auto w-full">
+        <div className="max-w-[1400px] mx-auto py-10 px-6">
+          <TooltipProvider delayDuration={200}>
           <PageHeader
             icon="ph-clock-counter-clockwise"
             title="My Activity"
@@ -1320,24 +1170,31 @@ export default function AccountActivityPage() {
               <div className="flex items-center gap-6">
                 <div className="flex items-center gap-2">
                   <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleDownloadCSV}
+                    disabled={total === 0 || isExporting || isGeneratingPdf}
+                    className="h-10 w-[68px] justify-center font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center rounded-brand shadow-none! border-0! cursor-pointer"
+                  >
+                    {isExporting ? (
+                      <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                    ) : (
+                      "Export"
+                    )}
+                  </Button>
+                  <Button
+                    type="button"
                     variant="default"
                     size="sm"
                     onClick={handlePreviewPDF}
-                    disabled={total === 0 || isExporting}
-                    className="flex h-11 px-5 items-center justify-center gap-2 btn-brand-red text-[11px] font-semibold text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none cursor-pointer"
+                    disabled={total === 0 || isExporting || isGeneratingPdf}
+                    className="flex h-[36px] w-[142px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none cursor-pointer"
                   >
-                    <i className={cn("ph-bold text-base", isExporting ? "ph-circle-notch animate-spin" : "ph-file-pdf")} aria-hidden />
-                    {isExporting ? "Generating..." : "Generate Report"}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleDownloadCSV}
-                    disabled={total === 0 || isExporting}
-                    className="flex h-9 px-4 items-center justify-center gap-1.5 rounded-brand border border-gray-300 bg-transparent text-[10px] font-semibold text-gray-600 transition-colors hover:border-pup-maroon hover:bg-red-50/50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-50 dark:bg-transparent dark:text-zinc-300 dark:border-white/10 cursor-pointer"
-                  >
-                    <i className={cn("ph-bold text-sm", isExporting ? "ph-circle-notch animate-spin" : "ph-file-csv")} aria-hidden />
-                    {isExporting ? "Preparing..." : "Export"}
+                    {isGeneratingPdf ? (
+                      <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                    ) : (
+                      "Generate Report"
+                    )}
                   </Button>
                 </div>
 
@@ -1369,65 +1226,75 @@ export default function AccountActivityPage() {
 
           {/* Table & Filter Card wrapper */}
           <Card className="mt-8 flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-            {/* Active filters row */}
-            {hasActiveFilters && (
-              <div className={cn(
-                "flex-none border-b border-gray-100 bg-white px-4 py-3 transition-all duration-500 animate-in fade-in slide-in-from-top-1 dark:border-white/10 dark:bg-card",
-                loading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
-              )}>
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="mr-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">Active filters:</span>
-                  {localSearch && (
-                    <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-semibold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
-                      Search: {localSearch}
-                      <button
-                        onClick={() => { setLocalSearch(""); setSearch(""); setPage(1); }}
-                        className="ml-1 hover:text-pup-darkMaroon transition-colors cursor-pointer"
-                      >
-                        <i className="ph-bold ph-x text-[8px]"></i>
-                      </button>
-                    </div>
-                  )}
-                  {severityFilter !== "All" && (
-                    <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
-                      Severity: {severityFilter}
-                      <button
-                        onClick={() => { setSeverityFilter("All"); setPage(1); }}
-                        className="ml-1 hover:text-amber-800 transition-colors cursor-pointer"
-                      >
-                        <i className="ph-bold ph-x text-[8px]"></i>
-                      </button>
-                    </div>
-                  )}
-                  {(startDate || endDate) && (
-                    <div className="flex items-center gap-1 rounded-full border border-emerald-100/30 bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
-                      Range: {startDate || "..."} to {endDate || "..."}
-                      <button
-                        onClick={() => { setStartDate(""); setEndDate(""); setPage(1); }}
-                        className="ml-1 hover:text-emerald-800 transition-colors cursor-pointer"
-                      >
-                        <i className="ph-bold ph-x text-[8px]"></i>
-                      </button>
-                    </div>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      setLocalSearch("");
-                      setSearch("");
-                      setSeverityFilter("All");
-                      setStartDate("");
-                      setEndDate("");
-                      setPage(1);
-                    }}
-                    className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-semibold text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon dark:border-white/10 dark:text-primary dark:bg-red-950/30 cursor-pointer"
-                  >
-                    CLEAR ALL FILTERS
-                  </Button>
+            {/* Active Filter Chips Row */}
+            {hasActiveFilters && (() => {
+              const formatChipDate = (dateStr) => {
+                if (!dateStr) return "..."
+                try {
+                  return format(new Date(dateStr), "MMM d, yyyy")
+                } catch (e) {
+                  return dateStr
+                }
+              }
+              return (
+                <div className={cn(
+                  "flex-none border-b border-gray-100 bg-white px-6 py-3 transition-all duration-500 animate-in fade-in slide-in-from-top-1 dark:border-white/10 dark:bg-card",
+                  loading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
+                )}>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
+                    {localSearch && (
+                      <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                        Search: {localSearch}
+                        <button
+                          onClick={() => { setLocalSearch(""); setSearch(""); setPage(1); }}
+                          className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                    {severityFilter !== "All" && (
+                      <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                        Severity: {severityFilter}
+                        <button
+                          onClick={() => { setSeverityFilter("All"); setPage(1); }}
+                          className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                    {(startDate || endDate) && (
+                      <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                        {formatChipDate(startDate)} – {formatChipDate(endDate)}
+                        <button
+                          onClick={() => { setStartDate(""); setEndDate(""); setPage(1); }}
+                          className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setLocalSearch("");
+                        setSearch("");
+                        setSeverityFilter("All");
+                        setStartDate("");
+                        setEndDate("");
+                        setPage(1);
+                      }}
+                      className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
+                    >
+                      Clear
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            )}
+              )
+            })()}
 
             {/* Filter Bar */}
             <LogFilters
@@ -1481,6 +1348,12 @@ export default function AccountActivityPage() {
             selectedLog={selectedLog}
             setSelectedLog={setSelectedLog}
             handleCopy={handleCopy}
+            onSearchSimilar={handleSearchSimilar}
+            onNext={handleNextLog}
+            onPrev={handlePrevLog}
+            hasNext={rows.length > 0 && selectedLog && rows.findIndex(l => l.id === selectedLog.id) < rows.length - 1}
+            hasPrev={rows.length > 0 && selectedLog && rows.findIndex(l => l.id === selectedLog.id) > 0}
+            hideActor={true}
           />
 
           {/* PDF Preview Dialog */}
@@ -1496,7 +1369,8 @@ export default function AccountActivityPage() {
             setIsFullscreenPreview={setIsFullscreenPreview}
           />
         </TooltipProvider>
-      </main>
-    </div>
+      </div>
+    </main>
+  </div>
   );
 }

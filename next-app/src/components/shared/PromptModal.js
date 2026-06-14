@@ -29,6 +29,7 @@ export default function PromptModal({
   inputLabel = "", // Text to display above the input
   variant = "default", // 'default' | 'danger' | 'warning'
   buttonIcon: customButtonIcon,
+  isDeclineModal = false,
 }) {
   const variantClasses = {
     danger: {
@@ -74,17 +75,28 @@ export default function PromptModal({
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
       <DialogContent className="overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-lg dark:border-white/10 dark:bg-card">
-        <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5 min-w-0">
+        <DialogHeader className={cn(
+          "border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5 min-w-0",
+          isDeclineModal && "bg-white dark:bg-card border-none pb-0"
+        )}>
           <div className="flex items-start gap-4 w-full">
-            <div className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border shadow-sm", v.headerIconWrap)}>
-              <i className={cn(v.headerIcon, "text-xl")}></i>
-            </div>
+            {!isDeclineModal && (
+              <div className={cn("flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border shadow-sm", v.headerIconWrap)}>
+                <i className={cn(v.headerIcon, "text-xl")}></i>
+              </div>
+            )}
             <div className="min-w-0 flex-1">
-              <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50 truncate">
+              <DialogTitle className={cn(
+                "text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50 truncate",
+                isDeclineModal && "text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+              )}>
                 {title}
               </DialogTitle>
               {message ? (
-                <DialogDescription className="mt-1.5 text-sm font-medium text-gray-600 dark:text-zinc-300">
+                <DialogDescription className={cn(
+                  "mt-1.5 text-sm font-medium text-gray-600 dark:text-zinc-300",
+                  isDeclineModal && "mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400"
+                )}>
                   {message}
                 </DialogDescription>
               ) : null}
@@ -92,7 +104,7 @@ export default function PromptModal({
           </div>
         </DialogHeader>
 
-        <div className="space-y-5 p-6 min-w-0 bg-white dark:bg-card">
+        <div className={cn("space-y-5 p-6 min-w-0 bg-white dark:bg-card", isDeclineModal && "pb-4")}>
           {itemsList && itemsList.length > 0 && (
             <div className="relative w-full">
               <p className="text-[10px] font-semibold text-gray-400 tracking-widest mb-1.5 dark:text-zinc-500">
@@ -118,13 +130,20 @@ export default function PromptModal({
 
           <div className="space-y-2">
             {inputLabel && (
-              <label className="block text-[11px] font-semibold text-gray-700 tracking-wide dark:text-zinc-400 mb-1.5">
+              <label className={cn(
+                "block text-[11px] font-semibold text-gray-700 tracking-wide dark:text-zinc-400 mb-1.5",
+                isDeclineModal && "mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400"
+              )}>
                 {inputLabel}
               </label>
             )}
             {multiline ? (
               <textarea
-                className="flex min-h-[100px] w-full rounded-brand border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-zinc-700"
+                className={cn(
+                  "flex min-h-[100px] w-full rounded-brand border border-gray-300 bg-white px-4 py-3 text-sm shadow-sm transition-all placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-pup-maroon focus:border-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-zinc-700",
+                  isDeclineModal && "rounded-[8px] border-[0.5px] border-gray-300 text-[13px] font-normal tracking-[-0.01em] focus:border-gray-500 focus:ring-0"
+                )}
+                style={isDeclineModal ? { borderWidth: '0.5px', borderStyle: 'solid' } : undefined}
                 value={value ?? ""}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
@@ -133,7 +152,11 @@ export default function PromptModal({
             ) : (
               <Input
                 type="text"
-                className="h-11 rounded-brand border border-gray-300 bg-white px-4 text-sm shadow-sm transition-all placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-300"
+                className={cn(
+                  "h-11 rounded-brand border border-gray-300 bg-white px-4 text-sm shadow-sm transition-all placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:border-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-300",
+                  isDeclineModal && "h-[36px] rounded-[8px] border-[0.5px] border-gray-300 text-[13px] font-normal tracking-[-0.01em] focus-visible:border-gray-500 focus-visible:ring-0 focus:border-gray-500 focus:ring-0 focus-visible:ring-offset-0 focus:outline-none"
+                )}
+                style={isDeclineModal ? { borderWidth: '0.5px', borderStyle: 'solid' } : undefined}
                 value={value ?? ""}
                 onChange={(e) => onChange(e.target.value)}
                 placeholder={placeholder}
@@ -143,12 +166,18 @@ export default function PromptModal({
           </div>
         </div>
 
-        <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card">
+        <div className={cn(
+          "flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card",
+          isDeclineModal && "flex flex-row justify-end gap-2 bg-white p-6 dark:bg-card border-none"
+        )}>
           <Button
             type="button"
             variant="ghost"
             onClick={onCancel}
-            className="h-11 rounded-brand px-6 text-sm font-semibold text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors"
+            className={cn(
+              "h-11 rounded-brand px-6 text-sm font-semibold text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors",
+              isDeclineModal && "text-[13px] font-medium text-gray-500 dark:text-zinc-400 bg-transparent hover:bg-transparent border-none shadow-none p-0 h-auto cursor-pointer focus:outline-none"
+            )}
             disabled={isLoading}
           >
             {cancelLabel}
@@ -164,10 +193,11 @@ export default function PromptModal({
               variant === "warning" && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white"),
               (variant === "brand") && "btn-brand-red hover:from-red-700 hover:to-red-900",
               v.confirmVariant === "destructive" && "btn-brand-red",
-              (v.confirmVariant === "default" && !["success", "warning", "brand"].includes(variant)) && "bg-gray-900 hover:bg-gray-800 text-white dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-50 dark:border-white/10"
+              (v.confirmVariant === "default" && !["success", "warning", "brand"].includes(variant)) && "bg-gray-900 hover:bg-gray-800 text-white dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-50 dark:border-white/10",
+              isDeclineModal && "flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white shadow-none border-none py-0 px-4 cursor-pointer"
             )}
           >
-            <i className={cn(customButtonIcon || v.buttonIcon, "text-lg")}></i>
+            {!isDeclineModal && <i className={cn(customButtonIcon || v.buttonIcon, "text-lg")}></i>}
             {isLoading ? "Processing..." : confirmLabel}
           </Button>
         </div>
@@ -175,4 +205,3 @@ export default function PromptModal({
     </Dialog>
   )
 }
-

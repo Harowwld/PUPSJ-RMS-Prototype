@@ -21,6 +21,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogClose,
 } from "@/components/ui/dialog"
 import {
   Tooltip,
@@ -213,9 +214,13 @@ export default function SLAAnalyticsTab({
                   size="sm"
                   onClick={handleCsvExport}
                   disabled={loading || !data || isExportingCsv}
-                  className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none! border-0!"
+                  className="h-10 w-[68px] justify-center font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center rounded-brand shadow-none! border-0!"
                 >
-                  {isExportingCsv ? "Preparing..." : "Export"}
+                  {isExportingCsv ? (
+                    <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                  ) : (
+                    "Export"
+                  )}
                 </Button>
                 <Button
                   type="button"
@@ -223,9 +228,13 @@ export default function SLAAnalyticsTab({
                   size="sm"
                   onClick={handlePreview}
                   disabled={loading || !data || isGeneratingPdf}
-                  className="flex h-[36px] px-5 items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
+                  className="flex h-[36px] w-[142px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
                 >
-                  {isGeneratingPdf ? "Generating..." : "Generate Report"}
+                  {isGeneratingPdf ? (
+                    <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                  ) : (
+                    "Generate Report"
+                  )}
                 </Button>
               </div>
             </div>
@@ -335,24 +344,44 @@ export default function SLAAnalyticsTab({
         }}
       >
         <DialogContent 
+          hideClose={true}
           className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out font-inter xl:max-w-[1200px] rounded-brand dark:border-white/10 dark:bg-muted"
         >
-          <DialogHeader className="shrink-0 border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-gray-200 bg-white text-pup-maroon dark:text-primary shadow-sm dark:border-white/10 dark:bg-card dark:text-primary dark:shadow-none">
-                    <i className="ph-duotone ph-file-text text-xl"></i>
-                </div>
-                <div className="min-w-0">
-                    <DialogTitle className="text-left text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
-                    SLA Analytics Report
-                    </DialogTitle>
-                    <p className="mt-1.5 text-left text-sm font-medium text-gray-500 dark:text-zinc-400">
-                    Period: {startDate || "All"} to {endDate || "Present"}
-                    </p>
-                </div>
-              </div>
+          <DialogHeader 
+            className="shrink-0 bg-gray-50 dark:bg-white/5"
+            style={{
+              padding: '20px 24px',
+              borderBottom: '0.5px solid rgba(0,0,0,0.08)',
+              display: 'flex',
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '12px'
+            }}
+          >
+            <div className="min-w-0">
+              <DialogTitle className="text-left" style={{ fontSize: '15px', fontWeight: 600, color: '#111', letterSpacing: '-0.01em' }}>
+                SLA Analytics Report
+              </DialogTitle>
+              <p style={{ marginTop: '2px', fontSize: '12px', fontWeight: 400, color: '#8E8E93' }} className="text-left">
+                Period: {startDate || "All"} · {endDate || "Present"}
+              </p>
             </div>
+            
+            <DialogClose asChild>
+              <button
+                type="button"
+                className="hover:text-[#111] dark:hover:text-white transition-colors focus:outline-none flex items-center justify-center p-0"
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#8E8E93',
+                  cursor: 'pointer'
+                }}
+              >
+                <i className="ti ti-x" style={{ fontSize: '16px' }}></i>
+              </button>
+            </DialogClose>
           </DialogHeader>
 
           <div className="relative flex-1 overflow-hidden bg-gray-100 dark:bg-muted">
@@ -398,33 +427,57 @@ export default function SLAAnalyticsTab({
             )}
           </div>
 
-          <div className="flex shrink-0 justify-between items-center gap-3 border-t border-gray-100 bg-white p-4 dark:border-white/10 dark:bg-card">
+          <div
+            className="flex shrink-0 items-center bg-white dark:bg-card"
+            style={{
+              padding: '16px 24px',
+              borderTop: '0.5px solid rgba(0,0,0,0.08)'
+            }}
+          >
             <Button
-              variant="outline"
+              variant="ghost"
               size="icon"
               onClick={() => setIsFullscreenPreview(!isFullscreenPreview)}
-              className={cn(
-                "h-11 w-11 rounded-xl border border-gray-200 dark:border-white/10 bg-white dark:bg-card transition-all hover:bg-gray-50 dark:hover:bg-white/10 dark:bg-card shadow-sm dark:shadow-none",
-                isFullscreenPreview && "bg-pup-maroon dark:bg-red-600 text-white hover:bg-pup-darkMaroon border-pup-darkMaroon"
-              )}
+              className="text-[#8E8E93] hover:text-[#111] dark:hover:text-white hover:bg-transparent transition-colors rounded-brand shadow-none border-0 p-0"
+              style={{
+                height: '36px',
+                width: '36px',
+                background: 'none'
+              }}
             >
-              <i className={cn("ph-bold text-xl", isFullscreenPreview ? "ph-corners-in" : "ph-corners-out")}></i>
+              <i className="ti ti-arrows-vertical" style={{ fontSize: '16px' }}></i>
             </Button>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-[8px]" style={{ marginLeft: 'auto' }}>
               <Button
-                variant="outline"
+                variant="ghost"
                 onClick={() => setReportOpen(false)}
-                className="h-11 px-6 font-semibold border-gray-300 shadow-sm hover:border-gray-300 hover:bg-red-50 rounded-brand transition-colors dark:shadow-none dark:hover:border-zinc-700 dark:bg-red-950/30 dark:border-white/10"
+                className="font-semibold text-sm text-gray-600 hover:text-[#111] hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors rounded-brand shadow-none border-0"
+                style={{
+                  height: '36px',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  boxShadow: 'none',
+                  background: 'none'
+                }}
               >
-                Close Preview
+                Close
               </Button>
               <Button
                 onClick={handlePrint}
                 disabled={!pdfBlobUrl}
-                className="btn-brand-red px-8 font-semibold text-white shadow-sm rounded-brand transition-colors dark:shadow-none"
+                className="text-white btn-brand-red active:scale-95 disabled:opacity-50 transition-all dark:shadow-none"
+                style={{
+                  height: '36px',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  boxShadow: 'none',
+                  paddingLeft: '24px',
+                  paddingRight: '24px'
+                }}
               >
-                <i className="ph-bold ph-floppy-disk text-lg"></i> Save to Device
+                Save to Device
               </Button>
             </div>
           </div>

@@ -178,7 +178,7 @@ export default function LogFilters({
                   {logStartDate ? format(new Date(logStartDate), "MMM d, yyyy") : "Start Date"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto rounded-2xl p-0 shadow-2xl" align="start">
+              <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                 <Calendar
                   mode="single"
                   selected={logStartDate ? new Date(logStartDate) : undefined}
@@ -207,7 +207,7 @@ export default function LogFilters({
                   {logEndDate ? format(new Date(logEndDate), "MMM d, yyyy") : "End Date"}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-auto rounded-2xl p-0 shadow-2xl" align="start">
+              <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
                 <Calendar
                   mode="single"
                   selected={logEndDate ? new Date(logEndDate) : undefined}

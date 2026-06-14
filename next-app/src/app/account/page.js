@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import Header from "@/components/layout/Header";
@@ -41,6 +41,10 @@ function AccountPageContent() {
   const { theme, setTheme } = useTheme();
   const [authUser, setAuthUser] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Avatar State
+  const [avatarUrl, setAvatarUrl] = useState(null);
+  const fileInputRef = useRef(null);
 
   // Profile Form State
   const [fname, setFname] = useState("");
@@ -112,6 +116,11 @@ function AccountPageContent() {
         }
         const user = json.data;
         setAuthUser(user);
+        if (user.avatar_filename) {
+          setAvatarUrl(`/api/account/avatar?id=${user.id}&t=${Date.now()}`);
+        } else {
+          setAvatarUrl(null);
+        }
         setFname(user.fname || "");
         setLname(user.lname || "");
         setUsername(user.email || user.username || "");
@@ -250,6 +259,76 @@ function AccountPageContent() {
     }
     localStorage.setItem("pup-logout", Date.now());
     router.push("/");
+  };
+
+  const handleAvatarClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Only image files are allowed.");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size exceeds 5MB limit.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    try {
+      const res = await fetch("/api/account/avatar", {
+        method: "POST",
+        body: formData,
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        throw new Error(json.error || "Upload failed");
+      }
+
+      toast.success("Avatar Uploaded", {
+        description: "Your profile photo has been successfully updated."
+      });
+      
+      setAvatarUrl(`/api/account/avatar?id=${authUser.id}&t=${Date.now()}`);
+      setAuthUser(prev => ({ ...prev, avatar_filename: json.avatar_filename }));
+      window.dispatchEvent(new Event("avatar-changed"));
+    } catch (err) {
+      toast.error("Upload Failed", {
+        description: err.message || "Could not update your avatar."
+      });
+    }
+  };
+
+  const handleRemoveAvatar = async () => {
+    try {
+      const res = await fetch("/api/account/avatar", {
+        method: "DELETE",
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) {
+        throw new Error(json.error || "Removal failed");
+      }
+
+      toast.success("Avatar Removed", {
+        description: "Your profile photo has been removed."
+      });
+      
+      setAvatarUrl(null);
+      setAuthUser(prev => ({ ...prev, avatar_filename: null }));
+      window.dispatchEvent(new Event("avatar-changed"));
+    } catch (err) {
+      toast.error("Removal Failed", {
+        description: err.message || "Could not remove your avatar."
+      });
+    }
   };
 
   const submitProfile = async (e) => {
@@ -587,10 +666,11 @@ function AccountPageContent() {
 
 
   return (
-    <div className="min-h-screen flex flex-col bg-gray-50 dark:bg-background font-inter selection:bg-pup-maroon selection:text-white">
+    <div className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-background font-inter selection:bg-pup-maroon selection:text-white">
       <Header authUser={authUser} onLogout={handleLogout} />
 
-      <main className="flex-1 w-full max-w-[1100px] mx-auto py-10 px-4">
+      <main className="flex-1 min-h-0 overflow-y-auto w-full">
+        <div className="max-w-[1200px] mx-auto py-10 px-4">
         <PageHeader
           title="Account Settings"
           description="Update your personal info and security settings."
@@ -616,68 +696,99 @@ function AccountPageContent() {
             defaultValue="profile"
             value={activeTab}
             onValueChange={setActiveTab}
-            className="grid grid-cols-1 lg:grid-cols-[260px_1fr] gap-10 items-start"
+            className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-10 items-start"
           >
           {/* Sidebar Navigation */}
           <aside className="space-y-6 lg:sticky lg:top-24">
-            <div className="bg-white rounded-brand border border-gray-200 shadow-2xl shadow-black/5 overflow-hidden dark:bg-zinc-900 dark:border-white/5">
+            <div className="bg-white rounded-brand border border-gray-200 shadow-2xl shadow-black/5 overflow-hidden dark:bg-zinc-900 dark:border-white/5 p-6 flex flex-col gap-5">
               
               {/* Header Section */}
-              <div className="p-5 flex items-center gap-4 border-b border-gray-100 dark:border-white/5">
-                {/* Avatar: 48px (w-12 h-12), circular, no white card behind it */}
-                <div className="w-12 h-12 shrink-0 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 flex items-center justify-center text-[16px] font-semibold shadow-inner">
-                  {initials}
+              <div className="flex items-center justify-center gap-4.5 w-full">
+                {/* Avatar: 60px, circular */}
+                <div className="flex flex-col items-center shrink-0">
+                  <div 
+                    onClick={handleAvatarClick}
+                    className="relative group w-[60px] h-[60px] shrink-0 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 flex items-center justify-center text-[20px] font-semibold shadow-inner cursor-pointer overflow-hidden transition-all duration-300 hover:ring-2 hover:ring-pup-maroon/20"
+                  >
+                    {avatarUrl ? (
+                      <img 
+                        src={avatarUrl} 
+                        alt="Profile avatar" 
+                        className="w-full h-full object-cover"
+                        onError={() => setAvatarUrl(null)}
+                      />
+                    ) : (
+                      <span>{initials}</span>
+                    )}
+                    {/* Hover overlay */}
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <i className="ph-bold ph-camera text-white text-base"></i>
+                    </div>
+                  </div>
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    onChange={handleAvatarChange}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  {avatarUrl && (
+                    <button
+                      type="button"
+                      onClick={handleRemoveAvatar}
+                      className="mt-1.5 text-[11px] font-medium text-red-500 hover:text-red-700 cursor-pointer bg-transparent border-none p-0 focus:outline-none"
+                    >
+                      Remove
+                    </button>
+                  )}
                 </div>
                 
                 {/* Identity Info */}
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex flex-col items-start justify-center">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-[15px] font-semibold text-gray-900 tracking-[-0.01em] dark:text-zinc-50 leading-tight">
+                    <h3 className="text-[17px] font-semibold text-gray-900 tracking-[-0.01em] dark:text-zinc-50 leading-tight">
                       {fname} {lname}
                     </h3>
                     {authUser?.role && (
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-red-50 text-pup-maroon dark:bg-red-500/20 dark:text-red-400 uppercase tracking-[0.04em]">
-                        {authUser.role}
+                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-[4px] bg-red-50 text-pup-maroon dark:bg-red-500/20 dark:text-red-400 tracking-[0.04em]">
+                        {isAdminRole(authUser.role) ? "Admin" : authUser.role}
                       </span>
                     )}
                   </div>
-                  <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400 mt-1 truncate">
+                  <p className="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px] truncate">
                     {authUser?.email || authUser?.username}
                   </p>
                 </div>
               </div>
 
               {/* Navigation Menu */}
-              <div className="p-5 pt-0">
-                <TabsList className="w-full flex flex-col h-auto bg-transparent p-0 gap-1">
-                  {[
-                    { id: "profile", label: "Profile", icon: "ph-identification-card" },
-                    { id: "security", label: "Security", icon: "ph-shield-star" },
-                    { id: "preferences", label: "Preferences", icon: "ph-palette" }
-                  ].map((tab) => (
-                    <TabsTrigger
-                      key={tab.id}
-                      value={tab.id}
-                      className="group flex items-center justify-start gap-[6px] w-full px-3 py-2.5 rounded-[8px] text-[14px] font-normal whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 data-[state=active]:bg-red-50 dark:data-[state=active]:bg-red-500/10 data-[state=active]:text-pup-maroon dark:data-[state=active]:text-primary text-gray-650 hover:bg-gray-50 dark:hover:bg-white/5 dark:text-zinc-400 dark:hover:text-zinc-50 dark:focus-visible:ring-red-500/20 cursor-pointer"
-                    >
-                      <i className={cn(
-                        "ph-bold text-[16px] shrink-0 text-gray-400 dark:text-zinc-500 transition-colors",
-                        "group-data-[state=active]:text-pup-maroon dark:group-data-[state=active]:text-primary"
-                      )}></i>
-                      <span className="truncate text-left">{tab.label}</span>
-                      <div className="shrink-0 ml-auto w-5 h-5 flex items-center justify-center opacity-0 group-data-[state=active]:opacity-100 transition-opacity">
-                        <i className="ph-bold ph-caret-right text-sm"></i>
-                      </div>
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </div>
+              <TabsList className="w-full flex flex-col h-auto bg-transparent p-0 gap-[4px]">
+                {[
+                  { id: "profile", label: "Profile", icon: "ph-identification-card" },
+                  { id: "security", label: "Security", icon: "ph-shield-star" }
+                ].map((tab) => (
+                  <TabsTrigger
+                    key={tab.id}
+                    value={tab.id}
+                    className="group flex items-center justify-start gap-[6px] w-full px-3.5 h-[42px] rounded-[8px] text-[15px] font-normal tracking-[-0.01em] whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 data-[state=active]:bg-red-50 dark:data-[state=active]:bg-red-500/10 data-[state=active]:text-pup-maroon dark:data-[state=active]:text-primary text-gray-650 hover:bg-gray-50 dark:hover:bg-white/5 dark:text-zinc-400 dark:hover:text-zinc-50 dark:focus-visible:ring-red-500/20 cursor-pointer"
+                  >
+                    <i className={cn(
+                      "ph-bold text-[18px] shrink-0 text-gray-400 dark:text-zinc-500 transition-colors",
+                      "group-data-[state=active]:text-pup-maroon dark:group-data-[state=active]:text-primary"
+                    )}></i>
+                    <span className="truncate text-left">{tab.label}</span>
+                    <div className="shrink-0 ml-auto w-5 h-5 flex items-center justify-center opacity-0 group-data-[state=active]:opacity-100 transition-opacity">
+                      <i className="ph-bold ph-caret-right text-sm"></i>
+                    </div>
+                  </TabsTrigger>
+                ))}
+              </TabsList>
             </div>
           </aside>
 
           {/* Content Area */}
           <div className="min-w-0 space-y-8 flex-1">
-            <TabsContent value="profile" className="m-0 border-0 focus-visible:ring-0 animate-in fade-in slide-in-from-right-4 duration-500">
+            <TabsContent value="profile" className="m-0 border-0 focus-visible:ring-0">
               <Card className="rounded-2xl border-gray-200 shadow-xs overflow-hidden bg-white dark:border-white/10 dark:bg-card">
                 <CardHeader className="bg-transparent p-[28px] pb-0">
                   <div>
@@ -762,7 +873,7 @@ function AccountPageContent() {
               </Card>
             </TabsContent>
 
-            <TabsContent value="security" className="m-0 border-0 focus-visible:ring-0 animate-in fade-in slide-in-from-right-4 duration-500">
+            <TabsContent value="security" className="m-0 border-0 focus-visible:ring-0">
               <div className="space-y-8">
                 {/* Password Rotation Card */}
                 <Card className="rounded-2xl border-gray-200 shadow-xs overflow-hidden bg-white dark:border-white/10 dark:bg-card">
@@ -1244,223 +1355,7 @@ function AccountPageContent() {
               </div>
             </TabsContent>
 
-            <TabsContent value="preferences" className="m-0 border-0 focus-visible:ring-0 animate-in fade-in slide-in-from-right-4 duration-500">
-              <Card className="rounded-2xl border-gray-200 shadow-sm overflow-hidden bg-white dark:border-white/10 dark:bg-card">
-                <CardHeader className="bg-linear-to-r from-gray-50/80 to-white border-b border-gray-100 p-[28px] dark:bg-muted dark:bg-none dark:border-white/10">
-                  <div className="flex items-center gap-5">
-                    <div>
-                      <CardTitle className="!text-[20px] font-semibold tracking-[-0.01em] text-gray-900 transition-colors dark:text-zinc-50">
-                        System Preference
-                      </CardTitle>
-                      <CardDescription className="mt-1 text-[14px] font-normal text-gray-500 transition-colors dark:text-zinc-400">
-                        Customize how the system looks for you.
-                      </CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
 
-                <CardContent className="p-[28px] pt-6">
-                  <div className="space-y-6">
-                    {/* Tab Navigation */}
-                    <div className="grid w-full grid-cols-3 gap-2 pb-2">
-                      <button
-                        type="button"
-                        onClick={() => setPrefTab("visuals")}
-                        className={cn(
-                          "text-[13px] font-medium py-2 transition-all cursor-pointer text-center outline-none border-b-2",
-                          prefTab === "visuals"
-                            ? "border-pup-maroon text-pup-maroon dark:border-primary dark:text-primary"
-                            : "border-transparent text-gray-500 hover:text-gray-950 dark:hover:text-zinc-200"
-                        )}
-                      >
-                        Visuals
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPrefTab("layout")}
-                        className={cn(
-                          "text-[13px] font-medium py-2 transition-all cursor-pointer text-center outline-none border-b-2",
-                          prefTab === "layout"
-                            ? "border-pup-maroon text-pup-maroon dark:border-primary dark:text-primary"
-                            : "border-transparent text-gray-500 hover:text-gray-950 dark:hover:text-zinc-200"
-                        )}
-                      >
-                        Layout
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setPrefTab("personal")}
-                        className={cn(
-                          "text-[13px] font-medium py-2 transition-all cursor-pointer text-center outline-none border-b-2",
-                          prefTab === "personal"
-                            ? "border-pup-maroon text-pup-maroon dark:border-primary dark:text-primary"
-                            : "border-transparent text-gray-500 hover:text-gray-950 dark:hover:text-zinc-200"
-                        )}
-                      >
-                        Personal
-                      </button>
-                    </div>
-
-                    {/* Visuals Category */}
-                    {prefTab === "visuals" && (
-                      <div className="space-y-6 animate-in fade-in duration-300">
-                        <div className="space-y-3">
-                          <div className="px-1">
-                            <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-450 block">
-                              Interface Theme
-                            </label>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                            {['system', 'light', 'dark'].map((t) => (
-                              <button
-                                type="button"
-                                key={t}
-                                onClick={() => handleThemeChange({ target: { value: t } })}
-                                className={cn(
-                                  "relative flex flex-col items-center gap-3 p-5 rounded-[8px] border transition-all group overflow-hidden cursor-pointer",
-                                  theme === t 
-                                    ? "border-pup-maroon border-[1.5px] bg-red-50/50 dark:border-primary dark:bg-red-500/10" 
-                                    : "border-gray-200 border-[0.5px] bg-white hover:border-gray-300 dark:border-white/10 dark:bg-card dark:hover:border-white/20"
-                                )}
-                              >
-                                <div className={cn(
-                                  "w-10 h-10 flex items-center justify-center transition-all",
-                                  theme === t 
-                                    ? "rounded-full bg-pup-maroon text-white dark:bg-primary text-[20px]" 
-                                    : "text-gray-400 dark:text-zinc-500 group-hover:text-gray-600 dark:group-hover:text-zinc-350 text-[20px]"
-                                )}>
-                                  <i className={cn(
-                                    "ph-bold",
-                                    t === 'system' ? "ph-desktop" : t === 'light' ? "ph-sun" : "ph-moon"
-                                  )}></i>
-                                </div>
-                                <span className={cn(
-                                  "text-[12px] font-medium tracking-wide",
-                                  theme === t ? "text-pup-maroon dark:text-primary" : "text-gray-500 dark:text-zinc-400"
-                                )}>
-                                  {t.charAt(0).toUpperCase() + t.slice(1)}
-                                </span>
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-
-                        <Separator className="bg-gray-100 dark:bg-white/5" />
-
-                        <div className="space-y-3">
-                          <div className="px-1">
-                            <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-450 block">
-                              Accessibility Options
-                            </label>
-                          </div>
-
-                          <div className="py-4 flex items-center justify-between gap-6">
-                            <div className="space-y-1">
-                              <h4 className="text-[13px] font-medium text-gray-900 dark:text-zinc-50 tracking-[-0.01em]">High Contrast Mode</h4>
-                              <p className="text-[12px] font-normal text-gray-500 dark:text-zinc-400">
-                                Increases visibility by showing highly contrasting colors.
-                              </p>
-                            </div>
-                            <label className="relative inline-flex cursor-pointer items-center shrink-0">
-                              <input 
-                                type="checkbox" 
-                                className="sr-only peer"
-                                checked={!!userPreferences.high_contrast}
-                                onChange={(e) => handleAccessibilityToggle("high_contrast", e.target.checked)}
-                              />
-                              <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-pup-maroon peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:border-gray-600 dark:bg-zinc-700 dark:peer-focus:ring-red-800"></div>
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Layout Category */}
-                    {prefTab === "layout" && (
-                      <div className="space-y-6 animate-in fade-in duration-300">
-                        <div className="space-y-3">
-                          <div className="px-1">
-                            <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400 block">
-                              Navigation Layout
-                            </label>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {[
-                              { key: 'sidebar', label: 'Sidebar Navigation', icon: 'ph-sidebar-simple', desc: 'Traditional left-hand sidebar navigation layout.' },
-                              { key: 'topbar', label: 'Top Navbar', icon: 'ph-navigation-arrow', desc: 'Modern top navigation bar layout.' }
-                            ].map((item) => {
-                              const isActive = item.key === 'topbar' 
-                                ? userPreferences.navigation_layout === 'topbar' 
-                                : (!userPreferences.navigation_layout || userPreferences.navigation_layout === 'sidebar');
-                              return (
-                                <button
-                                  type="button"
-                                  key={item.key}
-                                  onClick={() => handleUserPreferenceToggle("navigation_layout", item.key)}
-                                  className={cn(
-                                    "relative flex items-center gap-4 p-5 rounded-[8px] border transition-all text-left cursor-pointer w-full min-h-[96px]",
-                                    isActive
-                                      ? "border-pup-maroon border-[1.5px] bg-red-50/50 dark:border-primary dark:bg-red-500/10" 
-                                      : "border-gray-200 border-[0.5px] bg-white hover:border-gray-300 dark:border-white/10 dark:bg-card dark:hover:border-white/20"
-                                  )}
-                                >
-                                  <div className="w-5 h-5 flex items-center justify-center text-[16px] text-gray-400 dark:text-zinc-500 shrink-0">
-                                    <i className={cn("ph-bold", item.icon)}></i>
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <span className={cn(
-                                      "text-[13px] font-semibold tracking-[-0.01em] block",
-                                      isActive ? "text-pup-maroon dark:text-primary" : "text-gray-900 dark:text-zinc-50"
-                                    )}>
-                                      {item.label}
-                                    </span>
-                                    <p className="text-[12px] font-normal text-gray-500 mt-1 dark:text-zinc-400">
-                                      {item.desc}
-                                    </p>
-                                  </div>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                    {prefTab === "personal" && (
-                      <div className="space-y-6 animate-in fade-in duration-300">
-                        <div className="space-y-3">
-                          <div className="px-1">
-                            <label className="text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400 block">
-                              Workflow Preferences
-                            </label>
-                          </div>
-
-                          <div className="py-4 flex items-center justify-between gap-6">
-                            <div className="space-y-1">
-                              <h4 className="text-[13px] font-semibold text-gray-900 dark:text-zinc-50 tracking-[-0.01em]">Skip Registration Confirmation</h4>
-                              <p className="text-[12px] font-normal text-gray-500 mt-1 dark:text-zinc-400">
-                                Bypass the final review modal when provisioning accounts.
-                              </p>
-                            </div>
-                            <label className="relative inline-flex cursor-pointer items-center shrink-0">
-                              <input 
-                                type="checkbox" 
-                                className="sr-only peer"
-                                checked={!!userPreferences.skip_registration_confirmation}
-                                onChange={(e) => handleUserPreferenceToggle("skip_registration_confirmation", e.target.checked)}
-                              />
-                              <div className="peer h-6 w-11 rounded-full bg-gray-200 after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-pup-maroon peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-red-300 dark:border-gray-600 dark:bg-zinc-700 dark:peer-focus:ring-red-800"></div>
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
           </div>
         </Tabs>
         </div>
@@ -1520,6 +1415,7 @@ function AccountPageContent() {
             </div>
           </DialogContent>
         </Dialog>
+        </div>
       </main>
     </div>
   );

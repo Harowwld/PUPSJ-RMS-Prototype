@@ -216,7 +216,7 @@ export default function BackupTab({
           {/* MAIN CONTENT */}
           <div className="flex-1 flex flex-col gap-6">
             {/* Page Header Card */}
-            <Card className="p-0 gap-0 overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
+            <Card className="p-0 gap-0 overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
               <PageHeader
                 icon="ph-hard-drives"
                 title="Backup Records"
@@ -240,20 +240,24 @@ export default function BackupTab({
                           restoreFileRef.current.click()
                         }
                         disabled={localLoading.uploading}
-                        className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-[#111] hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none border-0"
+                        className="h-10 w-[130px] justify-center font-semibold text-sm text-gray-600 hover:text-[#111] hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center rounded-brand shadow-none border-0"
                       >
-                        {localLoading.uploading
-                          ? "Reading file..."
-                          : "Restore Backup"}
+                        {localLoading.uploading ? (
+                          <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                        ) : (
+                          "Restore Backup"
+                        )}
                       </Button>
                       <Button
                         onClick={handleGenerateBackup}
                         disabled={localLoading.generating}
-                        className="flex h-[36px] items-center gap-2 rounded-[8px] btn-brand-red active:scale-95 transition-all dark:shadow-none px-5 text-[13px] font-medium text-white cursor-pointer"
+                        className="flex h-[36px] w-[130px] items-center justify-center rounded-[8px] btn-brand-red active:scale-95 transition-all dark:shadow-none text-[13px] font-medium text-white cursor-pointer"
                       >
-                        {localLoading.generating
-                          ? localLoading.generatingStatus || "Working..."
-                          : "Create Backup"}
+                        {localLoading.generating ? (
+                          <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                        ) : (
+                          "Create Backup"
+                        )}
                       </Button>
                       <input
                         ref={restoreFileRef}
@@ -269,7 +273,7 @@ export default function BackupTab({
             </Card>
 
             {isLoading && !isManualLoading ? (
-              <div className="flex-1 flex h-fit min-h-[600px] flex-col items-center justify-center rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-10">
+              <div className="flex-1 flex h-fit min-h-[600px] flex-col items-center justify-center rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card p-10">
                 <div className="flex flex-col items-center gap-4">
                   <i className="ph-bold ph-spinner animate-spin text-xl text-pup-maroon dark:text-primary" />
                   <p className="text-sm font-semibold text-gray-500 tracking-widest dark:text-zinc-400">
@@ -278,7 +282,7 @@ export default function BackupTab({
                 </div>
               </div>
             ) : error ? (
-              <div className="flex-1 flex h-fit min-h-[600px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
+              <div className="flex-1 flex h-fit min-h-[600px] flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
                 <CardContent className="flex flex-1 flex-col items-center justify-center p-6">
                   <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
                     <EmptyHeader className="flex flex-col items-center gap-0">
@@ -307,7 +311,7 @@ export default function BackupTab({
                 </CardContent>
               </div>
             ) : (
-              <div className="flex-1 flex h-fit min-h-[600px] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
+              <div className="flex-1 flex h-fit min-h-[600px] flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card isolate">
               {/* Active Filter Chips Row */}
               {(localSearch !== "" ||
                 backupStartDate !== "" ||

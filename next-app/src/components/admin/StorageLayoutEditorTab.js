@@ -828,7 +828,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       setSaveConfirmOpen(false)
       showToast?.({
         title: "Layout Saved",
-        description: "Your archive room mapping was successfully updated.",
+        description: "Archive room mapping updated.",
       })
     } catch (err) {
       showToast?.({ title: "Save Failed", description: err.message }, true)
@@ -1221,7 +1221,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
           <Select
             usePortal={false}
             className="h-full w-auto min-w-0 cursor-pointer rounded-none! rounded-l-brand! border-0 bg-transparent pl-[12px] pr-[12px] gap-[6px] [&_i]:ml-0 [&_i]:text-[12px] [&_i]:text-[#8E8E93]! dark:[&_i]:text-zinc-500! shadow-none hover:bg-black/[0.02]! text-[13px] font-normal text-[#111111] dark:text-zinc-100 focus:ring-0! focus:border-0! focus:outline-none! focus-visible:ring-0! focus-visible:border-0! focus:bg-transparent! active:bg-transparent! focus-visible:bg-transparent!"
-            menuClassName="bg-white! border-[0.5px]! border-black/15! rounded-brand! shadow-[0_4px_12px_rgba(0,0,0,0.08)]! dark:border-white/10 dark:bg-card"
+            menuClassName="bg-white! border-[0.5px]! border-black/15! rounded-brand! shadow-none! dark:border-white/10 dark:bg-card"
             optionClassName="text-[13px]! font-normal! text-[#111111]! h-[36px]! px-[12px]! bg-transparent! hover:bg-[#F5F5F5]! dark:text-zinc-300 dark:hover:bg-white/5 rounded-none!"
             value={selectedTemplateId}
             onChange={(e) => setSelectedTemplateId(e.target.value)}
@@ -1251,7 +1251,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
               <i className="ph-bold ph-dots-three-vertical text-[16px]" />
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-48 rounded-xl dark:bg-zinc-900 dark:border-white/10">
+          <DropdownMenuContent align="end" className="w-48 rounded-xl border border-gray-200 bg-white shadow-md dark:bg-zinc-900 dark:border-white/10">
             <DropdownMenuItem onClick={() => setSaveTemplateOpen(true)} className="cursor-pointer" disabled={!activeRoom || activeRoom.cabinets?.length === 0}>
               <i className="ph-bold ph-floppy-disk mr-2" /> Save as Template
             </DropdownMenuItem>
@@ -1272,9 +1272,13 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
                 <Button
                   onClick={saveLayout}
                   disabled={saving || hasAnyCollisions}
-                  className="flex h-[36px] items-center justify-center rounded-brand btn-brand-red text-white font-medium text-[13px] active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none px-[16px] cursor-pointer"
+                  className="flex h-[36px] w-[90px] items-center justify-center rounded-brand btn-brand-red text-white font-medium text-[13px] active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none cursor-pointer"
                 >
-                  {saving ? "Saving..." : "Save"}
+                  {saving ? (
+                    <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                  ) : (
+                    "Save"
+                  )}
                 </Button>
               </div>
             </TooltipTrigger>

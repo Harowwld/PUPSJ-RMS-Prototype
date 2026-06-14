@@ -170,220 +170,250 @@ export default function AccountSetupModal({ authUser }) {
   return (
     <Dialog open={open} onOpenChange={() => {}}>
       <DialogContent
-        className="flex h-[85vh] max-h-screen flex-col overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-2xl md:h-[600px] md:flex-row transition-colors dark:border-white/10 dark:bg-card dark:shadow-none"
+        className="flex h-[85vh] max-h-screen flex-col overflow-hidden rounded-[12px] border border-gray-200 bg-white p-0 shadow-2xl shadow-black/5 sm:max-w-2xl md:h-[500px] md:flex-row transition-colors dark:border-white/10 dark:bg-card dark:shadow-none"
         hideClose
       >
-        {/* Sidebar Tabs */}
-        <div className="flex w-full shrink-0 flex-col gap-3 overflow-y-auto border-r border-gray-200 bg-gray-50 p-6 md:w-1/3 dark:border-white/10 dark:bg-card">
-          <div className="mb-2">
-            <h3 className="px-1 text-xs font-semibold tracking-widest text-gray-500 dark:text-zinc-400">
+        {/* Sidebar Steps */}
+        <div className="flex w-full shrink-0 flex-col overflow-y-auto border-r border-gray-200 bg-gray-50/50 p-6 md:w-1/3 dark:border-white/10 dark:bg-card">
+          <div className="mb-5">
+            <h3 className="text-[14px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-550">
               Account Setup
             </h3>
-            <p className="mt-0.5 px-1 text-[11px] font-medium text-gray-400 dark:text-zinc-500">
+            <p className="mt-1 text-[11px] font-normal leading-normal text-gray-500 dark:text-zinc-400">
               Complete these steps to access your dashboard securely.
             </p>
           </div>
 
-          <div
-            className={`flex flex-col gap-1 rounded-brand px-4 py-3 transition-all ${step === 1 ? "scale-100 border border-gray-200 bg-white opacity-100 shadow-sm" : "scale-95 opacity-40 grayscale"} dark:border-white/10 dark:bg-card`}
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <i
-                  className={`text-lg ${needsPassword && step > 1 ? "ph-fill ph-check-circle text-emerald-500" : "ph-duotone ph-password text-pup-maroon dark:text-primary"}`}
-                ></i>
-                <span className="text-sm font-semibold text-gray-900 dark:text-zinc-50">Step 1</span>
-              </div>
-              {needsPassword && step > 1 && (
-                <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold tracking-wider text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400">
-                  Done
-                </span>
+          <div className="flex flex-col flex-1 gap-1">
+            {/* Step 1 */}
+            <div
+              className={cn(
+                "flex flex-col gap-1 transition-all rounded-[8px] px-3 py-2.5",
+                step === 1 
+                  ? "bg-gray-100/80 dark:bg-zinc-800/40" 
+                  : "opacity-60"
               )}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {needsPassword && step > 1 ? (
+                    <i className="ph-bold ph-check text-[14px] text-emerald-600 dark:text-emerald-450 shrink-0"></i>
+                  ) : (
+                    <i className="ph-bold ph-circle text-[14px] text-pup-maroon dark:text-red-400 shrink-0"></i>
+                  )}
+                  <span className="text-[10px] font-semibold uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-550">
+                    Step 1
+                  </span>
+                </div>
+                {needsPassword && step > 1 && (
+                  <span className="text-[10px] font-normal text-gray-400 dark:text-zinc-550">
+                    Done
+                  </span>
+                )}
+              </div>
+              <span className="pl-[22px] text-[13px] font-semibold text-gray-800 dark:text-zinc-200 tracking-[-0.01em]">
+                Change Password
+              </span>
+              <p className="pl-[22px] text-[11px] font-normal text-gray-400 dark:text-zinc-550 mt-0.5">
+                Update your default system password.
+              </p>
             </div>
-            <span className="pl-7 text-xs font-semibold text-gray-600 dark:text-zinc-300">
-              Change Password
-            </span>
-            <p className="mt-0.5 pl-7 text-[10px] text-gray-500 dark:text-zinc-400">
-              Update your default system password.
-            </p>
-          </div>
 
-          <div
-            className={`flex flex-col gap-1 rounded-brand px-4 py-3 transition-all ${step === 2 ? "scale-100 border border-gray-200 bg-white opacity-100 shadow-sm" : "scale-95 opacity-40 grayscale"} dark:border-white/10 dark:bg-card`}
-          >
-            <div className="flex items-center gap-2">
-              <i className="ph-duotone ph-shield-check text-lg text-pup-maroon dark:text-primary"></i>
-              <span className="text-sm font-semibold text-gray-900 dark:text-zinc-50">Step 2</span>
+            {/* Vertical Connector Line */}
+            <div className="w-[0.5px] h-[20px] bg-gray-200 dark:bg-zinc-800 ml-6 shrink-0" />
+
+            {/* Step 2 */}
+            <div
+              className={cn(
+                "flex flex-col gap-1 transition-all rounded-[8px] px-3 py-2.5",
+                step === 2 
+                  ? "bg-gray-100/80 dark:bg-zinc-800/40" 
+                  : "opacity-60"
+              )}
+            >
+              <div className="flex items-center gap-2">
+                {step === 2 ? (
+                  <i className="ph-bold ph-circle text-[14px] text-pup-maroon dark:text-red-400 shrink-0"></i>
+                ) : (
+                  <div className="w-[14px] h-[14px] shrink-0" />
+                )}
+                <span className="text-[10px] font-semibold uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-550">
+                  Step 2
+                </span>
+              </div>
+              <span className="pl-[22px] text-[13px] font-semibold text-gray-800 dark:text-zinc-200 tracking-[-0.01em]">
+                Security Answers
+              </span>
+              <p className="pl-[22px] text-[11px] font-normal text-gray-400 dark:text-zinc-550 mt-0.5">
+                Set up your account recovery questions.
+              </p>
             </div>
-            <span className="pl-7 text-xs font-semibold text-gray-600 dark:text-zinc-300">
-              Security Answers
-            </span>
-            <p className="mt-0.5 pl-7 text-[10px] text-gray-500 dark:text-zinc-400">
-              Set up your account recovery questions.
-            </p>
           </div>
         </div>
 
         {/* Content Area */}
         <div className="flex w-full flex-col bg-white md:w-2/3 dark:bg-card">
           {step === 1 && (
-            <>
-              <DialogHeader className="shrink-0 border-b border-gray-100 bg-white p-6 dark:border-white/10 dark:bg-card">
-                <DialogTitle className="text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
-                  Update Default Password
-                </DialogTitle>
-                <DialogDescription className="mt-1 text-sm font-medium text-gray-600 dark:text-zinc-300">
-                  You are logging in for the first time. Please change your
-                  default password to continue using the system securely.
-                </DialogDescription>
-              </DialogHeader>
-              <form
-                onSubmit={submitPassword}
-                className="flex min-h-0 flex-1 flex-col"
-              >
-                <div className="flex-1 space-y-5 overflow-y-auto p-6">
-                  {pwError && (
-                    <div className="flex items-center gap-2 rounded-brand border border-red-100 bg-red-50 p-3 text-sm font-semibold text-red-700 dark:border-red-900/30 dark:bg-red-950/30 dark:text-red-400">
-                      <i className="ph-bold ph-warning-circle text-lg"></i>
-                      {pwError}
+            <form
+              onSubmit={submitPassword}
+              className="flex min-h-0 flex-1 flex-col justify-between"
+            >
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div>
+                  <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                    Update Default Password
+                  </h3>
+                  <p className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400 leading-normal">
+                    You're logging in for the first time. Change your default password to continue.
+                  </p>
+                </div>
+
+                {pwError && (
+                  <div className="flex items-center gap-2 rounded-[8px] border border-red-100 bg-red-50 p-3 text-xs font-semibold text-red-700 dark:border-red-900/30 dark:bg-red-950/30 dark:text-red-400 animate-in shake-1">
+                    <i className="ph-fill ph-warning-circle text-base"></i>
+                    {pwError}
+                  </div>
+                )}
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-550 dark:text-zinc-400">
+                      Current <span className="text-[11px] font-normal text-gray-450 dark:text-zinc-500">*</span>
+                    </label>
+                    <div className="relative group">
+                      <Input
+                        type={showPw.current ? "text" : "password"}
+                        className="h-10 rounded-[8px] border-[0.5px] border-gray-300 bg-white pr-10 text-[13px] font-normal text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:border-zinc-800 dark:bg-card dark:text-zinc-50 dark:focus:border-zinc-650"
+                        style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
+                        value={pwCurrent}
+                        onChange={(e) => setPwCurrent(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPw(prev => ({ ...prev, current: !prev.current }))}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500 dark:hover:text-red-500"
+                      >
+                        <i className={cn("ph-bold text-[16px]", showPw.current ? "ph-eye-slash" : "ph-eye")}></i>
+                      </button>
                     </div>
-                  )}
-                  <div className="space-y-4">
-                    <div>
-                      <label className="mb-1.5 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
-                        Current Password <span className="text-pup-maroon dark:text-primary">*</span>
-                      </label>
-                      <div className="relative group">
-                        <Input
-                          type={showPw.current ? "text" : "password"}
-                          className="h-11 rounded-brand border-gray-300 bg-gray-50 pr-10 text-sm font-semibold text-gray-900 focus-visible:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:ring-red-500/20"
-                          value={pwCurrent}
-                          onChange={(e) => setPwCurrent(e.target.value)}
-                          placeholder="e.g. pupstaff"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPw(prev => ({ ...prev, current: !prev.current }))}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500 dark:hover:text-red-500"
-                        >
-                          <i className={cn("ph-bold", showPw.current ? "ph-eye-slash" : "ph-eye")}></i>
-                        </button>
-                      </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-550 dark:text-zinc-400">
+                      New <span className="text-[11px] font-normal text-gray-450 dark:text-zinc-500">*</span>
+                    </label>
+                    <div className="relative group">
+                      <Input
+                        type={showPw.next ? "text" : "password"}
+                        className="h-10 rounded-[8px] border-[0.5px] border-gray-300 bg-white pr-10 text-[13px] font-normal text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:border-zinc-800 dark:bg-card dark:text-zinc-50 dark:focus:border-zinc-650"
+                        style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
+                        value={pwNext}
+                        onChange={(e) => setPwNext(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPw(prev => ({ ...prev, next: !prev.next }))}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500 dark:hover:text-red-500"
+                      >
+                        <i className={cn("ph-bold text-[16px]", showPw.next ? "ph-eye-slash" : "ph-eye")}></i>
+                      </button>
                     </div>
-                    <div>
-                      <label className="mb-1.5 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
-                        New Password <span className="text-pup-maroon dark:text-primary">*</span>
-                      </label>
-                      <div className="relative group">
-                        <Input
-                          type={showPw.next ? "text" : "password"}
-                          className="h-11 rounded-brand border-gray-300 bg-gray-50 pr-10 text-sm font-semibold text-gray-900 focus-visible:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:ring-red-500/20"
-                          value={pwNext}
-                          onChange={(e) => setPwNext(e.target.value)}
-                          placeholder="Min. 6 characters"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPw(prev => ({ ...prev, next: !prev.next }))}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500 dark:hover:text-red-500"
-                        >
-                          <i className={cn("ph-bold", showPw.next ? "ph-eye-slash" : "ph-eye")}></i>
-                        </button>
-                      </div>
-                    </div>
-                    <div>
-                      <label className="mb-1.5 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
-                        Confirm New Password <span className="text-pup-maroon dark:text-primary">*</span>
-                      </label>
-                      <div className="relative group">
-                        <Input
-                          type={showPw.confirm ? "text" : "password"}
-                          className="h-11 rounded-brand border-gray-300 bg-gray-50 pr-10 text-sm font-semibold text-gray-900 focus-visible:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:ring-red-500/20"
-                          value={pwConfirm}
-                          onChange={(e) => setPwConfirm(e.target.value)}
-                          placeholder="Must match new password"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowPw(prev => ({ ...prev, confirm: !prev.confirm }))}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500 dark:hover:text-red-500"
-                        >
-                          <i className={cn("ph-bold", showPw.confirm ? "ph-eye-slash" : "ph-eye")}></i>
-                        </button>
-                      </div>
+                  </div>
+
+                  <div>
+                    <label className="mb-1.5 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-550 dark:text-zinc-400">
+                      Confirm <span className="text-[11px] font-normal text-gray-450 dark:text-zinc-500">*</span>
+                    </label>
+                    <div className="relative group">
+                      <Input
+                        type={showPw.confirm ? "text" : "password"}
+                        className="h-10 rounded-[8px] border-[0.5px] border-gray-300 bg-white pr-10 text-[13px] font-normal text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:border-zinc-800 dark:bg-card dark:text-zinc-50 dark:focus:border-zinc-650"
+                        style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
+                        value={pwConfirm}
+                        onChange={(e) => setPwConfirm(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPw(prev => ({ ...prev, confirm: !prev.confirm }))}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-pup-maroon dark:hover:text-red-500 transition-colors dark:text-zinc-500 dark:hover:text-red-500"
+                      >
+                        <i className={cn("ph-bold text-[16px]", showPw.confirm ? "ph-eye-slash" : "ph-eye")}></i>
+                      </button>
                     </div>
                   </div>
                 </div>
-                <div className="flex shrink-0 justify-end border-t border-gray-100 bg-gray-50 p-5 dark:border-white/10 dark:bg-card">
-                  <Button
-                    type="submit"
-                    disabled={pwLoading}
-                    className="h-11 btn-brand-red px-6 text-xs font-semibold tracking-widest text-white shadow-sm transition-colors"
-                  >
-                    {pwLoading
-                      ? "Saving..."
-                      : needsSecurity
-                        ? "Next: Security Questions"
-                        : "Save Password & Enter"}
-                  </Button>
-                </div>
-              </form>
-            </>
+              </div>
+
+              <div className="flex shrink-0 justify-end p-6 bg-transparent border-none">
+                <Button
+                  type="submit"
+                  disabled={pwLoading}
+                  className="h-[36px] px-4 rounded-[8px] btn-brand-red text-[13px] font-medium text-white shadow-none cursor-pointer flex items-center justify-center border-none"
+                >
+                  {pwLoading ? "Saving..." : "Continue"}
+                </Button>
+              </div>
+            </form>
           )}
 
           {step === 2 && (
-            <>
-              <DialogHeader className="shrink-0 border-b border-gray-100 bg-white p-6 dark:border-white/10 dark:bg-card">
-                <DialogTitle className="text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
-                  Recovery Questions
-                </DialogTitle>
-                <DialogDescription className="mt-1 text-sm font-medium text-gray-600 dark:text-zinc-300">
-                  Set up your security questions to recover your account if you
-                  forget your password.
-                </DialogDescription>
-              </DialogHeader>
-              <form
-                onSubmit={submitSecurity}
-                className="flex min-h-0 flex-1 flex-col"
-              >
-                <div className="custom-scrollbar flex-1 space-y-5 overflow-y-auto p-6">
-                  {secError && (
-                    <div className="flex items-center gap-2 rounded-brand border border-red-100 bg-red-50 p-3 text-sm font-semibold text-red-700 dark:border-red-900/30 dark:bg-red-950/30 dark:text-red-400">
-                      <i className="ph-bold ph-warning-circle text-lg"></i>
-                      {secError}
-                    </div>
-                  )}
+            <form
+              onSubmit={submitSecurity}
+              className="flex min-h-0 flex-1 flex-col justify-between"
+            >
+              <div className="flex-1 overflow-y-auto p-6 space-y-6">
+                <div>
+                  <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                    Recovery Questions
+                  </h3>
+                  <p className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400 leading-normal">
+                    Set up security questions to recover your account if you forget your password.
+                  </p>
+                </div>
+
+                {secError && (
+                  <div className="flex items-center gap-2 rounded-[8px] border border-red-100 bg-red-50 p-3 text-xs font-semibold text-red-700 dark:border-red-900/30 dark:bg-red-950/30 dark:text-red-400 animate-in shake-1">
+                    <i className="ph-fill ph-warning-circle text-base"></i>
+                    {secError}
+                  </div>
+                )}
+
+                <div className="space-y-4">
                   {secLoading ? (
                     [1, 2, 3].map((i) => (
                       <div key={i} className="space-y-2">
-                        <Skeleton className="h-3 w-3/4" />
-                        <Skeleton className="h-11 w-full rounded-brand" />
+                        <Skeleton className="h-3 w-1/3" />
+                        <Skeleton className="h-10 w-full rounded-[8px]" />
                       </div>
                     ))
                   ) : questions.length === 0 ? (
-                    <div className="text-sm font-medium text-gray-500 dark:text-zinc-400">
+                    <div className="text-[13px] font-normal text-gray-500 dark:text-zinc-400">
                       No global security questions have been configured.
                     </div>
                   ) : (
                     questions.map((q) => (
-                      <div key={q.id}>
-                        <label className="mb-1.5 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
-                          {q.question}{" "}
+                      <div key={q.id} className="space-y-1">
+                        <label className="text-[11px] font-medium text-gray-500 dark:text-zinc-400 block">
+                          {q.question.replace(/\?$/, "")}{" "}
                           {q.is_required ? (
-                            <span className="text-pup-maroon dark:text-primary">*</span>
+                            <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500 ml-0.5">*</span>
                           ) : (
-                            <span className="ml-1 font-medium text-gray-400 normal-case dark:text-zinc-500">
-                              (Optional)
+                            <span className="ml-1 text-[11px] font-normal text-gray-400 dark:text-zinc-500 italic">
+                              Optional
                             </span>
                           )}
                         </label>
                         <Input
                           type="text"
                           placeholder={q.hasAnswer ? "•••••••• (Already Answered)" : "Enter your answer"}
-                          className="h-11 w-full rounded-brand border-gray-300 bg-gray-50 text-sm font-semibold text-gray-900 focus-visible:ring-pup-maroon dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:ring-red-500/20"
+                          className="h-10 w-full rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:border-zinc-800 dark:bg-card dark:text-zinc-50 dark:focus:border-zinc-650"
+                          style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                           value={answers[q.id] || ""}
                           onChange={(e) =>
                             setAnswers({ ...answers, [q.id]: e.target.value })
@@ -394,18 +424,18 @@ export default function AccountSetupModal({ authUser }) {
                     ))
                   )}
                 </div>
-                <div className="flex shrink-0 justify-end border-t border-gray-100 bg-gray-50 p-5 dark:border-white/10 dark:bg-card">
-                  <Button
-                    type="submit"
-                    disabled={
-                      secLoading || secSubmitting || questions.length === 0
-                    }
-                    className="h-11 btn-brand-red px-6 text-xs font-semibold tracking-widest text-white shadow-sm transition-colors"
-                  >                    {secSubmitting ? "Saving..." : "Complete Setup & Enter"}
-                  </Button>
-                </div>
-              </form>
-            </>
+              </div>
+
+              <div className="flex shrink-0 justify-end p-6 bg-transparent border-none">
+                <Button
+                  type="submit"
+                  disabled={secLoading || secSubmitting || questions.length === 0}
+                  className="h-[36px] px-4 rounded-[8px] btn-brand-red text-[13px] font-medium text-white shadow-none cursor-pointer flex items-center justify-center border-none"
+                >
+                  {secSubmitting ? "Saving..." : "Complete Setup"}
+                </Button>
+              </div>
+            </form>
           )}
         </div>
       </DialogContent>

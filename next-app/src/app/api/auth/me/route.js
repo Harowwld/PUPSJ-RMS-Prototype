@@ -63,6 +63,7 @@ export async function GET(req) {
         totp_enabled: Boolean(staff?.totp_enabled),
         last_active: payload.last_active || null,
         password_last_changed: staff?.password_last_changed || null,
+        avatar_filename: staff?.avatar_filename || null,
         preferences,
       },
     }));

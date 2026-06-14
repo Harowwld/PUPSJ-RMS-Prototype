@@ -61,6 +61,7 @@ export default function DocTypesTab({
   const [newDocTypeName, setNewDocTypeName] = useState("")
   const [isEditDocTypeOpen, setIsEditDocTypeOpen] = useState(false)
   const [editDocType, setEditDocType] = useState({ id: null, name: "" })
+  const [isExporting, setIsExporting] = useState(false)
 
   const [isQuickAddLoading, setIsQuickAddLoading] = useState(false)
 
@@ -217,6 +218,16 @@ export default function DocTypesTab({
     }
   })
 
+  const onExportClick = async () => {
+    setIsExporting(true)
+    try {
+      await new Promise(resolve => setTimeout(resolve, 600))
+      await handleExportDocTypes()
+    } finally {
+      setIsExporting(false)
+    }
+  }
+
   const totalInView = docTypes.filter((dt) => 
     showArchived ? dt.status === "Archived" : dt.status !== "Archived"
   ).length
@@ -229,7 +240,9 @@ export default function DocTypesTab({
   const handleBulkAction = () => {
     setConfirmPayload({
       title: showArchived ? "Restore Selected Types" : "Archive Selected Types",
-      message: `Apply ${showArchived ? "restoration" : "archival"} to the following ${selectedCount} document types?`,
+      message: showArchived 
+        ? "These document types will be visible for new records again."
+        : "These document types will be hidden from new registrations but their history will be preserved.",
       confirmLabel: showArchived ? "Restore Selected" : "Archive Selected",
       variant: showArchived ? "success" : "danger",
       buttonIcon: showArchived ? "ph-bold ph-arrow-counter-clockwise" : "ph-bold ph-archive",
@@ -263,12 +276,12 @@ export default function DocTypesTab({
             showBorder={false}
             titleClassName="text-[15px]"
             title={
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-[6px]">
                 Document Types
                 {showArchived && (
-                  <Badge className="border-red-100 bg-red-50 text-[10px] font-semibold text-red-700 dark:border-white/10 dark:bg-red-950/30 dark:text-red-400">
-                    Restore Mode
-                  </Badge>
+                  <span className="text-[12px] font-normal text-emerald-600 dark:text-emerald-400">
+                    · Restore Mode
+                  </span>
                 )}
               </div>
             }
@@ -331,10 +344,15 @@ export default function DocTypesTab({
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={handleExportDocTypes}
-                className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-[#111] hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none border-0"
+                onClick={onExportClick}
+                disabled={isExporting}
+                className="h-10 w-[68px] justify-center font-semibold text-sm text-gray-600 hover:text-[#111] hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center rounded-brand shadow-none border-0"
               >
-                Export
+                {isExporting ? (
+                  <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                ) : (
+                  "Export"
+                )}
               </Button>
 
               <Button
@@ -352,17 +370,17 @@ export default function DocTypesTab({
         <div key={showArchived} className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card w-full animate-fade-up">
           {/* Active Filter Chips Row */}
           {(localSearch !== "") && (
-            <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+            <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">Active filters:</span>
+                <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
                 {localSearch && (
-                  <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-semibold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
+                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                     Search: {localSearch}
                     <button
                       onClick={() => { setLocalSearch(""); setDocSearch(""); setPageDoc(1); }}
-                      className="ml-1 hover:text-pup-darkMaroon transition-colors"
+                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
                     >
-                      <i className="ph-bold ph-x text-[8px]"></i>
+                      ×
                     </button>
                   </div>
                 )}
@@ -374,9 +392,9 @@ export default function DocTypesTab({
                     setDocSearch("")
                     setPageDoc(1)
                   }}
-                  className="h-6 rounded-full border-2 border-dashed border-gray-300 px-3 text-[10px] font-semibold text-pup-maroon dark:text-primary transition-colors hover:border-pup-darkMaroon hover:bg-red-50 hover:text-pup-maroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
+                  className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
                 >
-                  CLEAR ALL FILTERS
+                  Clear
                 </Button>
               </div>
             </div>
@@ -418,7 +436,7 @@ export default function DocTypesTab({
                         </button>
                       </th>
                       <th className="w-48 p-4 px-6 text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Status</th>
-                      <th className="w-32 p-4 px-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
+                      <th className="w-32 p-4 px-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Action</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-white/10">
@@ -548,7 +566,7 @@ export default function DocTypesTab({
                           </td>
                           <td className="py-0 px-6 text-right align-middle">
                             <div 
-                              className="inline-flex items-center justify-end gap-[12px]"
+                              className="inline-flex items-center justify-end gap-1.5"
                               onClick={(e) => e.stopPropagation()}
                             >
                               {!showArchived && (
@@ -558,7 +576,7 @@ export default function DocTypesTab({
                                     setEditDocType({ id: dt.id, name: dt.name })
                                     setIsEditDocTypeOpen(true)
                                   }}
-                                  className="p-0 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-pup-maroon dark:hover:text-zinc-100 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                  className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-amber-500 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                 >
                                   <i className="ph-bold ph-pencil-simple text-[16px]"></i>
                                 </button>
@@ -570,7 +588,7 @@ export default function DocTypesTab({
                                   setConfirmPayload({
                                     title: "Restore Document Type",
                                     message:
-                                      "Restore this document type? It will be visible for new records again.",
+                                      "This document type will be visible for new records again.",
                                     confirmLabel: "Restore",
                                     variant: "success",
                                     buttonIcon:
@@ -581,7 +599,7 @@ export default function DocTypesTab({
                                   })
                                   setConfirmOpen(true)
                                 }}
-                                className="p-0 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                               >
                                 <i className="ph-bold ph-arrow-counter-clockwise text-[16px]"></i>
                               </button>
@@ -591,7 +609,7 @@ export default function DocTypesTab({
                                   setConfirmPayload({
                                     title: "Archive Document Type",
                                     message:
-                                      "Archive this document type? This will hide it from new registrations but preserve history.",
+                                      "This document type will be hidden from new registrations but its history will be preserved.",
                                     confirmLabel: "Archive",
                                     variant: "danger",
                                     buttonIcon: "ph-bold ph-archive",
@@ -601,7 +619,7 @@ export default function DocTypesTab({
                                   })
                                   setConfirmOpen(true)
                                 }}
-                                className="p-0 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
+                                className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                               >
                                 <i className="ph-bold ph-archive text-[16px]"></i>
                               </button>
@@ -672,18 +690,24 @@ export default function DocTypesTab({
                 <span>
                   Showing {filteredDocTypes.length} of {filteredDocTypesFull.length}
                 </span>
-                <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
+                <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
                   <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
-                  <select
-                    className="h-8 w-16 cursor-pointer rounded-[6px] border border-gray-200 bg-white px-2 text-[12px] font-normal text-gray-700 focus:outline-none transition-all hover:bg-gray-50 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10"
-                    value={itemsPerPage}
-                    onChange={handleItemsPerPageChange}
-                  >
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
+                  <div className="flex items-center gap-1">
+                    {[10, 20, 50, 100].map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => handleItemsPerPageChange({ target: { value: size } })}
+                        className={`px-2 py-0.5 rounded-[4px] text-[12px] font-normal cursor-pointer transition-colors border-0 ${
+                          itemsPerPage === size
+                            ? "bg-gray-100 text-[#111111] font-medium dark:bg-white/10 dark:text-zinc-50"
+                            : "bg-transparent text-gray-450 dark:text-zinc-550 hover:text-gray-700 dark:hover:text-zinc-300"
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -718,7 +742,7 @@ export default function DocTypesTab({
         selectionStatus="Selected Document Types"
         onCancel={() => toggleAllDocTypes(false)}
         onAction={handleBulkAction}
-        actionLabel={showArchived ? "RESTORE SELECTED" : "ARCHIVE SELECTED"}
+        actionLabel={showArchived ? "Restore" : "Archive"}
         actionIcon={showArchived ? "ph-arrow-counter-clockwise" : "ph-archive"}
         actionVariant={showArchived ? "success" : "danger"}
       />
@@ -769,16 +793,14 @@ export default function DocTypesTab({
                   setIsAddDocTypeOpen(false)
                   setIsEditDocTypeOpen(false)
                   setNewDocTypeName("")
-                  setNewDocTypeCode("")
-                  setEditDocType({ id: null, name: "", code: "" })
+                  setEditDocType({ id: null, name: "" })
                 }}
-                className="h-11 rounded-brand px-6 text-sm font-semibold text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors"
+                className="h-[36px] rounded-[8px] px-4 text-[13px] font-medium text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors"
               >Cancel</Button>
               <Button
                 type="submit"
-                className="flex h-11 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-semibold text-white shadow-sm dark:shadow-none"
+                className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all px-4 dark:shadow-none"
               >
-                <i className="ph-bold ph-check text-lg"></i>
                 CREATE TYPE
               </Button>
             </div>
@@ -793,30 +815,28 @@ export default function DocTypesTab({
           if (!open) setEditDocType({ id: null, name: "" })
         }}
       >
-        <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
-          <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
+        <DialogContent className="overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
+          <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon shadow-sm dark:bg-red-950/30 dark:border-white/10">
-                <i className="ph-duotone ph-pencil-line text-xl"></i>
-              </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
+                <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
                   Edit Document Type
                 </DialogTitle>
-                <DialogDescription className="mt-1.5 text-sm font-medium text-gray-600 dark:text-zinc-300">
+                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
                   Update the document category label.
                 </DialogDescription>
               </div>
             </div>
           </DialogHeader>
           <form onSubmit={updDocType}>
-            <div className="p-6">
-              <label className="mb-1.5 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
-                Document Type Name <span className="text-pup-maroon dark:text-primary">*</span>
+            <div className="p-6 pb-4">
+              <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                Document Type Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
               </label>
               <Input
                 type="text"
-                className="h-11 rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-pup-maroon dark:bg-card dark:border-white/10"
+                className="h-[36px] rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus-visible:border-zinc-600"
+                style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                 value={editDocType.name}
                 onChange={(e) =>
                   setEditDocType((prev) => ({
@@ -827,7 +847,7 @@ export default function DocTypesTab({
                 required
               />
             </div>
-            <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card">
+            <div className="flex flex-row justify-end gap-2 bg-white p-6 dark:bg-card border-none">
               <Button
                 type="button"
                 variant="ghost"
@@ -835,17 +855,15 @@ export default function DocTypesTab({
                   setIsAddDocTypeOpen(false)
                   setIsEditDocTypeOpen(false)
                   setNewDocTypeName("")
-                  setNewDocTypeCode("")
-                  setEditDocType({ id: null, name: "", code: "" })
+                  setEditDocType({ id: null, name: "" })
                 }}
-                className="h-11 rounded-brand px-6 text-sm font-semibold text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors"
+                className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 bg-transparent hover:bg-transparent border-none shadow-none p-0 h-auto cursor-pointer focus:outline-none"
               >Cancel</Button>
               <Button
                 type="submit"
-                className="flex h-11 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-semibold text-white shadow-sm dark:shadow-none"
+                className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white shadow-none border-none py-0 px-4 cursor-pointer"
               >
-                <i className="ph-bold ph-check text-lg"></i>
-                SAVE CHANGES
+                Save
               </Button>
             </div>
           </form>

@@ -251,8 +251,8 @@ export default function LogTable({
 
   return (
     <div className="flex flex-1 flex-col min-h-0 gap-6">
-      <div className="flex-1 min-h-0 flex flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card">
-        <div className="flex-1 overflow-visible rounded-[inherit]">
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card isolate">
+        <div className="flex-1 overflow-hidden rounded-[inherit] isolate">
           <table className="min-w-full text-sm">
             <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
               <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
@@ -383,23 +383,28 @@ export default function LogTable({
                 <span>
                   Showing {displayLogs.length} of {logTotal}
                 </span>
-                <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
+                <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
                   <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
-                  <select
-                    className="h-8 w-16 cursor-pointer rounded-[6px] border border-gray-200 bg-white px-2 text-[12px] font-normal text-gray-700 focus:outline-none transition-all hover:bg-gray-50 dark:border-white/10 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10"
-                    value={itemsPerPage}
-                    onChange={(e) => {
-                      const value = Number(e.target.value)
-                      setItemsPerPage(value)
-                      setLogsPerPage(value)
-                      setLogPage(1)
-                    }}
-                  >
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </select>
+                  <div className="flex items-center gap-1">
+                    {[10, 20, 50, 100].map((size) => (
+                      <button
+                        key={size}
+                        type="button"
+                        onClick={() => {
+                          setItemsPerPage(size)
+                          setLogsPerPage(size)
+                          setLogPage(1)
+                        }}
+                        className={`px-2 py-0.5 rounded-[4px] text-[12px] font-normal cursor-pointer transition-colors border-0 ${
+                          itemsPerPage === size
+                            ? "bg-gray-100 text-[#111111] font-medium dark:bg-white/10 dark:text-zinc-50"
+                            : "bg-transparent text-gray-450 dark:text-zinc-550 hover:text-gray-700 dark:hover:text-zinc-300"
+                        }`}
+                      >
+                        {size}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>

@@ -10,8 +10,8 @@ export default function FloatingActionBar({
   onCancel,
   onAction,
   actionLabel,
-  actionIcon,
-  actionVariant = "danger", // danger or success
+  actionIcon, // ignored to remove icons inside buttons
+  actionVariant = "danger", // danger or success/neutral
   selectionLabel = "Records Selected",
   selectionStatus = "Items Selected",
   customContent,
@@ -28,43 +28,45 @@ export default function FloatingActionBar({
   if (!mounted || selectedCount <= limit) return null
 
   return createPortal(
-    <div className="fixed bottom-10 left-1/2 z-[9999] -translate-x-1/2 animate-in fade-in slide-in-from-bottom-4 duration-300">
-      <div className="flex items-center gap-6 rounded-brand border border-gray-200 bg-white p-3 px-6 shadow-[0_20px_50px_rgba(0,0,0,0.15)] backdrop-blur-md dark:border-white/10 dark:bg-card/95">
-        <div className="flex items-center gap-3 border-r border-gray-100 pr-6 dark:border-white/10">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-pup-maroon dark:bg-[#b94642] text-white shadow-sm">
-            <span className="text-xs font-semibold">{selectedCount}</span>
-          </div>
-          <span className="text-sm font-semibold text-gray-700 dark:text-zinc-200">
-            {selectionStatus}
-          </span>
-        </div>
+    <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2">
+      <div className="flex min-w-[320px] w-fit items-center gap-3 rounded-[12px] border border-black/[0.12] dark:border-white/10 bg-white dark:bg-zinc-900 py-[10px] px-[16px] shadow-none">
+        
+        {/* Count Label (Plain text, no red circle badge, no background pill) */}
+        <span className="text-[13px] font-medium text-[#111111] dark:text-zinc-100 whitespace-nowrap">
+          {selectedCount} selected
+        </span>
 
-        <div className="flex items-center gap-3">
+        {/* Divider */}
+        <div className="w-[0.5px] bg-black/10 dark:bg-white/10 h-4 shrink-0" />
+
+        {/* Action buttons area */}
+        <div className="flex items-center gap-3 ml-auto flex-1 justify-end">
           {customContent ? (
             customContent
           ) : (
             <>
-              <Button
-                variant="ghost"
-                size="sm"
+              {/* Deselect All - Plain text, no border/background */}
+              <button
+                type="button"
                 onClick={onCancel}
-                className="h-9 rounded-[8px] px-4 text-[13px] font-medium tracking-[-0.01em] text-gray-500 hover:bg-gray-50 dark:text-zinc-400 dark:hover:bg-white/5"
+                className="h-auto text-[13px] font-normal text-[#8E8E93] hover:text-[#111111] dark:hover:text-white bg-transparent hover:bg-transparent border-0 p-0 shadow-none cursor-pointer whitespace-nowrap"
               >
                 Deselect All
-              </Button>
+              </button>
               
               {actionLabel && (
                 <Button
                   size="sm"
                   onClick={onAction}
                   className={cn(
-                    "flex h-10 items-center gap-2 rounded-brand px-6 text-xs font-semibold  text-white shadow-lg transition-all active:scale-95",
-                    actionVariant === "success" 
-                      ? "btn-brand-green" 
-                      : "btn-brand-red"
+                    "flex h-[36px] items-center justify-center rounded-[8px] px-5 text-[13px] transition-all active:scale-95 shadow-none cursor-pointer whitespace-nowrap",
+                    actionVariant === "danger" 
+                      ? "btn-brand-red text-white font-medium" 
+                      : actionVariant === "success"
+                      ? "btn-brand-green text-white font-medium"
+                      : "border border-black/15 bg-white text-[#111111] hover:bg-black/[0.02] font-normal dark:border-white/15 dark:bg-zinc-800 dark:text-zinc-100 dark:hover:bg-zinc-700/50"
                   )}
                 >
-                  {actionIcon && <i className={`ph-bold ${actionIcon} text-sm`}></i>}
                   {actionLabel}
                 </Button>
               )}
@@ -76,4 +78,3 @@ export default function FloatingActionBar({
     document.body
   )
 }
-

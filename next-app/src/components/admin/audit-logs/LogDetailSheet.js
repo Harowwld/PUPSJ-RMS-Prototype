@@ -70,7 +70,8 @@ export default function LogDetailSheet({
   onNext,
   onPrev,
   hasNext,
-  hasPrev
+  hasPrev,
+  hideActor = false
 }) {
   const formattedTime = selectedLog ? formatLastSync(selectedLog.time || selectedLog.created_at) : "";
   const severityInfo = selectedLog ? getSeverityInfo(selectedLog.severity) : null;
@@ -145,25 +146,27 @@ export default function LogDetailSheet({
             </div>
 
             {/* Actor Section */}
-            <div className="flex flex-col">
-              <div className="flex items-center gap-[6px] mb-[12px]">
-                <i className="ti ti-user text-[14px]" style={{ fontSize: '14px', color: '#8E8E93' }}></i>
-                <h4 className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#8E8E93]">
-                  Actor
-                </h4>
-              </div>
-              <div className="flex items-center gap-3 bg-white dark:bg-card p-[16px] rounded-[8px]" style={{ border: '0.5px solid rgba(0,0,0,0.08)' }}>
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-black/5 bg-gray-50 dark:border-white/5 dark:bg-zinc-800">
-                  <span className="text-[12px] font-medium text-[#8E8E93]">{initials}</span>
+            {!hideActor && (
+              <div className="flex flex-col">
+                <div className="flex items-center gap-[6px] mb-[12px]">
+                  <i className="ti ti-user text-[14px]" style={{ fontSize: '14px', color: '#8E8E93' }}></i>
+                  <h4 className="text-[11px] font-semibold uppercase tracking-[0.05em] text-[#8E8E93]">
+                    Actor
+                  </h4>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <p className="truncate text-[13px] font-medium text-[#111111] dark:text-zinc-50">{selectedLog.user}</p>
-                  <p className="mt-0.5 text-[12px] font-normal text-[#8E8E93]">
-                    {selectedLog.role}
-                  </p>
+                <div className="flex items-center gap-3 bg-white dark:bg-card p-[16px] rounded-[8px]" style={{ border: '0.5px solid rgba(0,0,0,0.08)' }}>
+                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-black/5 bg-gray-50 dark:border-white/5 dark:bg-zinc-800">
+                    <span className="text-[12px] font-medium text-[#8E8E93]">{initials}</span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="truncate text-[13px] font-medium text-[#111111] dark:text-zinc-50">{selectedLog.user}</p>
+                    <p className="mt-0.5 text-[12px] font-normal text-[#8E8E93]">
+                      {selectedLog.role}
+                    </p>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Event Details */}
             <div className="flex flex-col">
