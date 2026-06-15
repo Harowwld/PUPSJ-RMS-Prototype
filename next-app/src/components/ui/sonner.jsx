@@ -195,11 +195,11 @@ const triggerCustomToast = (message, options = {}, type = "default") => {
               className="rounded-full bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 py-1 px-3 text-[12px] font-semibold cursor-pointer shrink-0 ml-auto border-none outline-none"
             >
               <span className={
-                options.action.destructive || 
-                lowerTitle.includes("returned") || 
                 options.action.label.toLowerCase() === "undo"
-                  ? "text-[#e30000] dark:text-red-400"
-                  : "text-blue-600 dark:text-blue-400"
+                  ? "text-[#16a34a] dark:text-emerald-400"
+                  : (options.action.destructive || lowerTitle.includes("returned"))
+                    ? "text-[#e30000] dark:text-red-400"
+                    : "text-blue-600 dark:text-blue-400"
               }>
                 {options.action.label}
               </span>

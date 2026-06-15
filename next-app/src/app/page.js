@@ -63,6 +63,13 @@ export default function Home() {
   useEffect(() => {
     // Clear logout sync flag when on login page
     localStorage.removeItem("pup-logout");
+
+    // Dynamic favicon swap for login page
+    const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+    link.type = 'image/png';
+    link.rel = 'shortcut icon';
+    link.href = '/login-logo.png';
+    document.getElementsByTagName('head')[0].appendChild(link);
   }, []);
 
   const resetForgotState = () => {
@@ -280,7 +287,7 @@ export default function Home() {
 
         {/* Top-Left Brand Logo & Name */}
         <div className="absolute top-6 left-6 flex items-center gap-1 select-none z-20">
-          <img src="/icon.png" alt="eManage Logo" className="w-[32px] h-[32px] object-contain" />
+          <img src="/login-logo.png" alt="eManage Logo" className="w-[32px] h-[32px] object-contain" />
           <span className="text-[26px] font-semibold text-[#1D1D1F] dark:text-zinc-50 tracking-tight leading-none">eManage</span>
         </div>
 
@@ -290,20 +297,41 @@ export default function Home() {
             style={{ padding: "56px 52px", minHeight: "630px" }}
           >
             {/* APP ICON WITH CONCENTRIC CIRCLES */}
-            <div className="relative w-[120px] h-[120px] flex items-center justify-center mb-3 select-none shrink-0" style={{ width: '120px', height: '120px', flexShrink: 0 }}>
-              <svg className="absolute w-full h-full inset-0 pointer-events-none" viewBox="0 0 120 120">
+            <div className="relative w-[160px] h-[160px] flex items-center justify-center mb-3 select-none shrink-0" style={{ width: '160px', height: '160px', flexShrink: 0 }}>
+              <svg className="absolute w-full h-full inset-0 pointer-events-none" viewBox="0 0 160 160">
                 {[
-                  { r: 50, count: 28, size: 2.2, reverse: false },
-                  { r: 40, count: 20, size: 1.8, reverse: true },
-                  { r: 30, count: 12, size: 1.4, reverse: false }
+                  { r: 72, count: 24, size: 4.2, reverse: false },
+                  { r: 63, count: 24, size: 3.4, reverse: true },
+                  { r: 54, count: 24, size: 2.8, reverse: false },
+                  { r: 45, count: 24, size: 2.2, reverse: true }
                 ].map((ring, rIdx) => {
                   const dots = [];
                   for (let i = 0; i < ring.count; i++) {
                     const angle = (i * 2 * Math.PI) / ring.count;
-                    const cx = Number((60 + ring.r * Math.cos(angle)).toFixed(4));
-                    const cy = Number((60 + ring.r * Math.sin(angle)).toFixed(4));
-                    const hue = (i / ring.count) * 360;
-                    const color = `hsl(${hue}, 95%, 65%)`;
+                    const cx = Number((80 + ring.r * Math.cos(angle)).toFixed(4));
+                    const cy = Number((80 + ring.r * Math.sin(angle)).toFixed(4));
+                    const rawHue = (i / ring.count) * 360 + 200;
+                    const hue = rawHue % 360;
+                    
+                    // Sage/cream/yellow (hues 60 to 160) should be desaturated and lighter
+                    let sat = 78;
+                    let light = 70;
+                    if (hue >= 60 && hue <= 160) {
+                      sat = 35; // desaturated sage/cream
+                      light = 76; // lighter
+                    } else if (hue > 160 && hue <= 200) {
+                      // smooth transition to cyan
+                      const ratio = (hue - 160) / 40;
+                      sat = 35 + Math.round(ratio * 43);
+                      light = 76 - Math.round(ratio * 6);
+                    } else if (hue >= 20 && hue < 60) {
+                      // smooth transition to orange/cream
+                      const ratio = (hue - 20) / 40;
+                      sat = 78 - Math.round(ratio * 43);
+                      light = 70 + Math.round(ratio * 6);
+                    }
+                    
+                    const color = `hsl(${hue}, ${sat}%, ${light}%)`;
                     dots.push(
                       <circle
                         key={i}
@@ -314,13 +342,13 @@ export default function Home() {
                       />
                     );
                   }
-                  const duration = ring.reverse ? '25s' : rIdx === 0 ? '40s' : '55s';
+                  const duration = rIdx === 0 ? '45s' : rIdx === 1 ? '35s' : rIdx === 2 ? '50s' : '40s';
                   return (
                     <g 
                       key={rIdx} 
                       className={`origin-center ${ring.reverse ? "animate-spin-reverse" : "animate-spin-slow"}`}
                       style={{ 
-                        transformOrigin: '60px 60px',
+                        transformOrigin: '80px 80px',
                         animationDuration: duration 
                       }}
                     >
@@ -330,9 +358,9 @@ export default function Home() {
                 })}
               </svg>
               <img 
-                src="/icon.png" 
+                src="/login-logo.png" 
                 alt="eManage Logo" 
-                className="w-[50px] h-[50px] object-contain z-10 animate-in zoom-in-50 duration-500" 
+                className="w-[30px] h-[30px] object-contain z-10 animate-in zoom-in-50 duration-500" 
               />
             </div>
 
@@ -684,14 +712,7 @@ export default function Home() {
 
         {/* FIXED FOOTER */}
         <div className="absolute bottom-0 left-0 right-0 bg-[#f2f2f7] dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-800 py-6 px-8 flex justify-center text-[11px] text-[#8E8E93] select-none font-sans z-0">
-          <div className="w-full max-w-[980px] flex justify-between items-center">
-            <div className="flex items-center gap-2">
-              <span className="hover:underline cursor-pointer">System Status</span>
-              <span className="text-gray-300 dark:text-zinc-700">|</span>
-              <span className="hover:underline cursor-pointer">Privacy Policy</span>
-              <span className="text-gray-300 dark:text-zinc-700">|</span>
-              <span className="hover:underline cursor-pointer">Terms & Conditions</span>
-            </div>
+          <div className="w-full max-w-[980px] flex justify-center items-center text-center">
             <span>© 2026 Polytechnic University of the Philippines. All rights reserved.</span>
           </div>
         </div>

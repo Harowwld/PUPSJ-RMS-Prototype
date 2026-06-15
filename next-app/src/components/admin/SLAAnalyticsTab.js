@@ -233,7 +233,7 @@ export default function SLAAnalyticsTab({
                   {isGeneratingPdf ? (
                     <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
                   ) : (
-                    "Generate Report"
+                    "Get Report"
                   )}
                 </Button>
               </div>

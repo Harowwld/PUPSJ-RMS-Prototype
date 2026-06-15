@@ -35,6 +35,7 @@ export default function ConfirmModal({
   isRestoreModal = false,
   isPersonnelModal = false,
   isRegistrationModal = false,
+  isUnsavedChangesModal = false,
 }) {
   const inputRefs = [useRef(), useRef(), useRef(), useRef()];
 
@@ -135,7 +136,7 @@ export default function ConfirmModal({
     return () => window.removeEventListener("keydown", handleGlobalKey);
   }, [open, isLoading, disabled, isVerified, onConfirm]);
 
-  const isAppleStyled = isDeleteBackup || isArchiveModal || isRestoreModal || isPersonnelModal || isRegistrationModal;
+  const isAppleStyled = isDeleteBackup || isArchiveModal || isRestoreModal || isPersonnelModal || isRegistrationModal || isUnsavedChangesModal;
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onCancel()}>
@@ -366,14 +367,16 @@ export default function ConfirmModal({
             onClick={onConfirm}
             disabled={isLoading || disabled || !isVerified}
             className={cn(
-              "h-11 px-6 text-sm font-semibold shadow-sm rounded-brand gap-2 flex items-center transition-all active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
+              "h-11 px-6 text-sm font-semibold rounded-brand gap-2 flex items-center transition-all active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
+              !isAppleStyled && "shadow-sm",
               variant === "success" && "btn-brand-green",
-              variant === "warning" && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white"),
+              (variant === "warning" && !isAppleStyled) && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white"),
               (variant === "brand") && "btn-brand-red hover:from-red-700 hover:to-red-900",
-              v.confirmVariant === "destructive" && "btn-brand-red",
-              (v.confirmVariant === "default" && !["success", "warning", "brand"].includes(variant)) && "bg-gray-900 hover:bg-gray-800 text-white dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-50 dark:border-white/10",
-              ((isDeleteBackup || isArchiveModal || isPersonnelModal || isRegistrationModal) && !isRestoreModal) && "flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white shadow-none border-none py-0 px-4 cursor-pointer",
-              isRestoreModal && "flex h-[36px] items-center justify-center rounded-[8px] bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-none border-none py-0 px-4 cursor-pointer text-[13px] font-medium",
+              (v.confirmVariant === "destructive" && !isAppleStyled) && "btn-brand-red",
+              (v.confirmVariant === "default" && !["success", "warning", "brand"].includes(variant) && !isAppleStyled) && "bg-gray-900 hover:bg-gray-800 text-white dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-50 dark:border-white/10",
+              ((isDeleteBackup || isArchiveModal || isPersonnelModal || isRegistrationModal) && !isRestoreModal) && "flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white shadow-none! border-none! py-0 px-4 cursor-pointer",
+              isRestoreModal && "flex h-[36px] items-center justify-center rounded-[8px] bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-none! border-none! py-0 px-4 cursor-pointer text-[13px] font-medium",
+              isUnsavedChangesModal && "flex h-[36px] items-center justify-center rounded-[8px] bg-[#FF6410] hover:bg-[#e55300] active:bg-[#cc4a00] text-white shadow-none! border-none! py-0 px-4 cursor-pointer text-[13px] font-medium",
               isRegistrationModal && "w-[120px]",
               confirmClassName
             )}

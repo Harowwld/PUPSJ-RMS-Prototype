@@ -2,6 +2,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/shared/ThemeProvider";
+import LucideIconTranslator from "@/components/shared/LucideIconTranslator";
 import { Inter } from "next/font/google";
 
 const inter = Inter({
@@ -15,7 +16,7 @@ export const metadata = {
   title: "PUP E-Manage",
   description: "Records Management System",
   icons: {
-    icon: '/icon.png',
+    icon: '/favicon.ico',
   },
 }
 
@@ -23,26 +24,18 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <head>
-        <link rel="stylesheet" href="/assets/vendor/phosphor/bold/style.css" />
-        <link rel="stylesheet" href="/assets/vendor/phosphor/fill/style.css" />
-        <link
-          rel="stylesheet"
-          href="/assets/vendor/phosphor/duotone/style.css"
-        />
-        <link rel="stylesheet" href="/assets/vendor/phosphor/thin/style.css" />
-        <link rel="stylesheet" href="/assets/vendor/phosphor/light/style.css" />
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css" />
-
-        <link rel="icon" type="image/png" href="/icon.png" />
+        <link rel="icon" href="/favicon.ico" />
       </head>
       <body className="antialiased font-sans">
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
-          enableSystem
+          defaultTheme="light"
+          forcedTheme="light"
+          enableSystem={false}
         >
           <TooltipProvider>{children}</TooltipProvider>
           <Toaster position="top-center" />
+          <LucideIconTranslator />
         </ThemeProvider>
       </body>
     </html>

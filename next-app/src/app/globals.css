@@ -129,56 +129,6 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
-.dark {
-  /* HIGH-CONTRAST GRAY DARK THEME */
-  --background: oklch(0.14 0 0); /* Dark Gray Page Background */
-  --foreground: oklch(0.98 0 0);
-  
-  --card: oklch(0.24 0 0); /* Distinct Gray for Cards and Tables */
-  --card-foreground: oklch(0.98 0 0);
-  
-  --popover: oklch(0.26 0 0);
-  --popover-foreground: oklch(0.98 0 0);
-  
-  --primary: oklch(0.55 0.15 25); /* Vibrant Action Red */
-  --primary-foreground: oklch(0.98 0 0);
-  
-  --secondary: oklch(0.30 0 0);
-  --secondary-foreground: oklch(0.98 0 0);
-  
-  --muted: oklch(0.28 0 0); /* Lighter gray for headers/alternates */
-  --muted-foreground: oklch(0.7 0 0);
-  
-  --accent: oklch(0.32 0 0);
-  --accent-foreground: oklch(0.98 0 0);
-  
-  --destructive: oklch(0.5 0.2 25);
-  --destructive-foreground: oklch(0.98 0 0);
-  
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.55 0.15 25 / 50%);
-  
-  --chart-1: oklch(0.6 0.18 250);
-  --chart-2: oklch(0.7 0.15 150);
-  --chart-3: oklch(0.8 0.2 80);
-  --chart-4: oklch(0.65 0.22 300);
-  --chart-5: oklch(0.65 0.25 15);
-  
-  --sidebar: oklch(0.22 0 0); /* Gray Sidebar */
-  --sidebar-foreground: oklch(0.9 0 0);
-  --sidebar-primary: oklch(0.55 0.15 25);
-  --sidebar-primary-foreground: oklch(0.98 0 0);
-  --sidebar-accent: oklch(0.28 0 0);
-  --sidebar-accent-foreground: oklch(0.98 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.55 0.15 25 / 50%);
-
-  /* Custom Red overrides for dark mode button highlighting */
-  --color-red-400: #b94642;
-  --color-red-500: #b94642;
-  --color-red-600: #b94642;
-}
 @layer base {
   html, body {
     height: auto;
@@ -215,19 +165,7 @@
     @apply font-sans;
   }
 
-.dark .border-gray-200, 
-.dark .border-gray-100, 
-.dark .border-zinc-800 {
-    border-color: oklch(1 0 0 / 10%);
-}
 
-.dark .bg-white {
-    background-color: var(--card);
-}
-
-.dark .bg-gray-50 {
-    background-color: var(--muted); /* Use the lighter gray muted shade */
-}
 
 input:-webkit-autofill,
 input:-webkit-autofill:hover,
@@ -238,20 +176,9 @@ input:-webkit-autofill:active {
   caret-color: #1D1D1F;
 }
 
-.dark input:-webkit-autofill,
-.dark input:-webkit-autofill:hover,
-.dark input:-webkit-autofill:focus,
-.dark input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 52px #27272a inset !important;
-  -webkit-text-fill-color: #f4f4f5 !important;
-  caret-color: #f4f4f5;
-}
 
-/* Modern Card Styling Overrides for Dark Mode */
-.dark .rounded-brand:not([class*="bg-linear"]):not([class*="bg-gradient"]) {
-    background-image: linear-gradient(135deg, rgba(255,255,255,0.01) 0%, transparent 100%);
-    box-shadow: none;
-}
+
+
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -266,17 +193,13 @@ input:-webkit-autofill:active {
   border-radius: 10px;
 }
 
-.dark ::-webkit-scrollbar-thumb {
-  background: #4b5563; /* Tailwind gray-600 */
-}
+
 
 ::-webkit-scrollbar-thumb:hover {
   background: #9ca3af; /* Tailwind gray-400 */
 }
 
-.dark ::-webkit-scrollbar-thumb:hover {
-  background: #6b7280; /* Tailwind gray-500 */
-}
+
 
 /* Interactive Elements */
 :where(.form-input), :where(.form-select) {
@@ -291,10 +214,7 @@ input:-webkit-autofill:active {
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.dark :where(.form-input), .dark :where(.form-select) {
-  background-color: oklch(0.18 0 0);
-  border-color: oklch(1 0 0 / 12%);
-}
+
 
 :where(.form-input):focus, :where(.form-select):focus {
   outline: none;
@@ -302,19 +222,14 @@ input:-webkit-autofill:active {
   box-shadow: 0 0 0 3px rgba(128, 0, 0, 0.15);
 }
 
-.dark :where(.form-input):focus, .dark :where(.form-select):focus {
-  border-color: oklch(0.55 0.15 25);
-  box-shadow: 0 0 0 3px rgba(248, 113, 113, 0.15);
-}
+
 
 /* Custom Table Polish */
 .table-row-hover:hover {
   background-color: oklch(var(--accent) / 40%);
 }
 
-.dark .table-row-hover:hover {
-  background-color: oklch(1 0 0 / 4%);
-}
+
 
 thead th,
 thead th button,
@@ -322,11 +237,7 @@ th {
   color: #4a5565 !important;
 }
 
-.dark thead th,
-.dark thead th button,
-.dark th {
-  color: #9f9fa9 !important;
-}
+
 
 /* Animations */
 @keyframes fadeInUp {
@@ -360,10 +271,7 @@ th {
   box-shadow: 0 12px 25px -5px rgba(0, 0, 0, 0.1);
 }
 
-.dark .stats-card:hover {
-    box-shadow: none;
-    background-color: oklch(0.25 0 0);
-}
+
 
 /* View Transitions */
 ::view-transition-old(root),
@@ -379,9 +287,7 @@ th {
     transition: opacity 0.3s ease;
   }
 
-  .dark [data-slot='dialog-overlay'] {
-    @apply bg-black/70;
-  }
+
 
   [data-slot='dialog-overlay'][data-open],
   [data-slot='dialog-overlay'][data-state='open'] {
@@ -472,48 +378,43 @@ th {
 
 /* Brand Buttons */
 .btn-brand-red {
-  background-color: var(--color-pup-maroon) !important;
+  background-color: #0a83ff !important;
   background-image: none !important;
   border: none !important;
   border-width: 0px !important;
   border-style: none !important;
   color: #ffffff !important;
   border-radius: 12px !important;
-  box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.22), 
-    inset 0 -1px 0 rgba(0, 0, 0, 0.4) !important;
+  box-shadow: none !important;
   font-weight: 600 !important;
   @apply normal-case transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2;
 }
 
 .dark .btn-brand-red {
-  background-color: #b94642 !important;
+  background-color: #0a83ff !important;
   background-image: none !important;
   border: none !important;
   border-width: 0px !important;
   border-style: none !important;
-  box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.25), 
-    inset 0 -1px 0 rgba(0, 0, 0, 0.5) !important;
+  box-shadow: none !important;
 }
 
 .btn-brand-red:hover {
-  background-color: var(--color-pup-darkMaroon) !important;
+  background-color: #0070e0 !important;
   background-image: none !important;
   border: none !important;
   border-width: 0px !important;
   border-style: none !important;
-  box-shadow: 
-    inset 0 1px 0 rgba(255, 255, 255, 0.25), 
-    inset 0 -1.5px 0 rgba(0, 0, 0, 0.45) !important;
+  box-shadow: none !important;
 }
 
 .dark .btn-brand-red:hover {
-  background-color: #a33834 !important;
+  background-color: #0070e0 !important;
   background-image: none !important;
   border: none !important;
   border-width: 0px !important;
   border-style: none !important;
+  box-shadow: none !important;
 }
 
 /* Brand Orange Button */
@@ -900,3 +801,11 @@ h1.login-title {
     opacity: 0;
   }
 }
+
+/* Hide Phosphor/Tabler webfont pseudo-element glyphs when translated to Lucide SVGs */
+i[data-lucide-translated="true"]::before,
+i[data-lucide-translated="true"]::after {
+  content: none !important;
+  display: none !important;
+}
+

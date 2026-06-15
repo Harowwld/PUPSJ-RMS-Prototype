@@ -29,11 +29,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import PageHeader from "@/components/shared/PageHeader";
+import { RefreshButton } from "@/components/shared/RefreshButton";
 import { Select } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 
 const STATUS_OPTIONS = [
   "Pending",
+  "InProgress",
   "Ready",
   "Completed",
   "Cancelled",
@@ -52,24 +54,25 @@ function SortIndicator({ column, sortBy, sortOrder }) {
 
 function statusBadgeClass(status) {
   const s = String(status || "").toUpperCase();
-  if (s === "PENDING") return "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50";
-  if (s === "DONE" || s === "COMPLETED") return "bg-emerald-50 dark:bg-emerald-950/15 text-emerald-800 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20";
-  if (s === "CANCELLED") return "bg-gray-100 dark:bg-zinc-800/40 text-gray-600 dark:text-zinc-400 border-gray-200 dark:border-zinc-800/65";
-  if (s === "READY") return "bg-sky-50 dark:bg-sky-950/15 text-sky-800 dark:text-sky-400 border-sky-200 dark:border-sky-500/20";
-  if (s === "SHREDDED") return "bg-rose-50 dark:bg-rose-950/15 text-rose-800 dark:text-rose-400 border-rose-200 dark:border-rose-500/20";
-  if (s === "PROCESSING" || s === "INPROGRESS") return "bg-amber-50 dark:bg-amber-950/15 text-amber-900 dark:text-amber-400 border-amber-200 dark:border-amber-500/20";
-  return "bg-red-50 dark:bg-red-950/15 text-pup-maroon dark:text-red-400 border-red-100 dark:border-red-500/20";
-}
-
-function statusBadgeIcon(status) {
-  const s = String(status || "").toUpperCase();
-  if (s === "PENDING") return "ph-clock";
-  if (s === "PROCESSING" || s === "INPROGRESS") return "ph-gear-six";
-  if (s === "READY") return "ph-bell";
-  if (s === "DONE" || s === "COMPLETED") return "ph-check-circle";
-  if (s === "CANCELLED") return "ph-x-circle";
-  if (s === "SHREDDED") return "ph-trash";
-  return "ph-clock";
+  if (s === "PENDING") {
+    return "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400";
+  }
+  if (s === "PROCESSING" || s === "INPROGRESS") {
+    return "bg-[#DBEAFE] text-[#1E40AF] dark:bg-blue-950/40 dark:text-blue-400";
+  }
+  if (s === "READY") {
+    return "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400";
+  }
+  if (s === "DONE" || s === "COMPLETED") {
+    return "bg-[#D1FAE5] text-[#065F46] dark:bg-emerald-950/40 dark:text-emerald-400";
+  }
+  if (s === "CANCELLED") {
+    return "bg-gray-100 text-gray-600 dark:bg-zinc-800/50 dark:text-zinc-400";
+  }
+  if (s === "SHREDDED") {
+    return "bg-[#FEE2E2] text-[#991B1B] dark:bg-red-950/40 dark:text-red-400";
+  }
+  return "bg-gray-100 text-gray-800 dark:bg-zinc-800 dark:text-zinc-300";
 }
 
 export default function DocumentRequestsTab({
@@ -83,6 +86,7 @@ export default function DocumentRequestsTab({
   const [rows, setRows] = useState([]);
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [isManualLoading, setIsManualLoading] = useState(false);
   const [q, setQ] = useState("");
   const [debouncedQ, setDebouncedQ] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
@@ -110,6 +114,8 @@ export default function DocumentRequestsTab({
   // local edit state for the detail side-panel
   const [editStatus, setEditStatus] = useState("");
   const [editNotes, setEditNotes] = useState("");
+  const [statusFocused, setStatusFocused] = useState(false);
+  const [notesFocused, setNotesFocused] = useState(false);
 
   const debouncedPageResetSkip = useRef(true);
   const autoLinkAttempted = useRef(new Set());
@@ -153,7 +159,13 @@ export default function DocumentRequestsTab({
   const loadList = useCallback(
     async (opts = { showLoading: true }) => {
       const showLoading = opts.showLoading !== false;
-      if (showLoading) setLoading(true);
+      const isManual = opts.manual === true;
+      if (isManual) {
+        setIsManualLoading(true);
+      } else if (showLoading) {
+        setLoading(true);
+      }
+      const startTime = Date.now();
       try {
         const offset = (page - 1) * itemsPerPage;
         const qs = new URLSearchParams();
@@ -168,16 +180,25 @@ export default function DocumentRequestsTab({
         });
         const json = await res.json().catch(() => null);
         if (!res.ok || !json?.ok) throw new Error(json?.error || "Failed to load");
+        
+        if (isManual) {
+          const elapsed = Date.now() - startTime;
+          if (elapsed < 600) {
+            await new Promise((resolve) => setTimeout(resolve, 600 - elapsed));
+          }
+        }
+        
         setRows(Array.isArray(json.data) ? json.data : []);
         setTotal(Number(json.total) || 0);
       } catch (e) {
-        if (showLoading) {
+        if (showLoading || isManual) {
           showToast({ title: "Load Failed", description: e?.message || "Unable to load requests." }, true);
           setRows([]);
           setTotal(0);
         }
       } finally {
-        if (showLoading) setLoading(false);
+        setLoading(false);
+        setIsManualLoading(false);
       }
     },
     [page, itemsPerPage, debouncedQ, statusFilter, sortBy, sortOrder, showToast]
@@ -222,6 +243,11 @@ export default function DocumentRequestsTab({
   }, [loadList]);
 
   const openDetail = async (id) => {
+    if (selectedId === id) {
+      setSelectedId(null);
+      setDetail(null);
+      return;
+    }
     setSelectedId(id);
     setDetailLoading(true);
     setDetail(null);
@@ -382,77 +408,81 @@ export default function DocumentRequestsTab({
     }
   };
 
-  const handleItemsPerPageChange = (e) => {
-    setItemsPerPage(Number(e.target.value));
-    setPage(1);
-  };
+
   return (
-    <div className="flex flex-col h-auto gap-6 animate-fade-up font-inter">
+    <TooltipProvider delayDuration={200}>
+      <div className="flex flex-col h-auto gap-6 animate-fade-up font-inter">
       {/* 1. Alumni Request Card (Header & Filters) */}
       <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden">
         <PageHeader
           icon="ph-tray"
           title="Alumni Requests"
           description="Manage and track alumni requests."
+          showBorder={false}
+          titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+          descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
           actions={
-            <div className="flex items-center gap-3">
-              {!loading && !error && (
-                <Button
-                  type="button"
-                  className="btn-brand-red font-semibold shrink-0 dark:shadow-none"
-                  onClick={() => setCreateOpen(true)}
-                >
-                  <i className="ph-bold ph-plus mr-1.5"></i>
-                  New Request
-                </Button>
-              )}
+            <div className="flex items-center gap-6">
+              <RefreshButton 
+                onRefresh={() => loadList({ showLoading: false, manual: true })} 
+                isLoading={isManualLoading} 
+                title="Refresh Requests"
+              />
+
+              <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />
+
+              <div className="flex items-center gap-2">
+                {!loading && !error && (
+                  <Button
+                    type="button"
+                    className="btn-brand-red font-semibold shrink-0 dark:shadow-none"
+                    onClick={() => setCreateOpen(true)}
+                  >
+                    New Request
+                  </Button>
+                )}
+              </div>
             </div>
           }
         />
         
         {!loading && !error && (
           <div className="bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
-            <div className="flex w-full flex-wrap items-end gap-6">
-              {/* Global Search */}
-              <div className="flex-1 min-w-[320px]">
-                <div className="mb-1.5 flex items-center justify-between">
-                  <label className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-                    Search Requests
-                  </label>
-                  <span className="text-[9px] font-semibold text-pup-maroon dark:text-primary/70">
-                    {total > 0 ? `${total.toLocaleString()} matches` : "No results"}
-                  </span>
+            <div className="flex w-full flex-wrap items-center gap-5">
+              {/* Search */}
+              <div className="flex-[2] min-w-[280px] group relative">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
                 </div>
-                <div className="relative group">
-                  <i className="ph-bold ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500"></i>
-                  <Input
-                    className="h-11 rounded-brand border border-gray-200 bg-white pl-11 pr-4 text-sm font-medium transition-all placeholder:text-gray-400 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
-                    placeholder="Student no., name, document type…"
-                    value={q}
-                    onChange={(e) => {
-                      setQ(e.target.value);
-                      setPage(1);
-                    }}
-                  />
+                <Input
+                  type="text"
+                  placeholder="Student no., name, document type…"
+                  className="h-[36px] w-full rounded-[8px] border-[0.5px] border-gray-200 bg-white pl-9 pr-20 text-[13px] font-normal transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
+                  value={q}
+                  onChange={(e) => {
+                    setQ(e.target.value);
+                    setPage(1);
+                  }}
+                />
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
+                  {total > 0 ? `${total.toLocaleString()} results` : "0 results"}
                 </div>
               </div>
 
               {/* Status Filter */}
-              <div className="w-full sm:w-48">
-                <label className="mb-1.5 block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-                  Status
-                </label>
+              <div className="min-w-[120px] flex-1">
                 <Select
                   value={statusFilter}
                   onChange={(e) => {
                     setStatusFilter(e.target.value);
                     setPage(1);
                   }}
+                  className="h-[36px] w-full rounded-[8px] border-[0.5px] border-gray-200 bg-white text-[13px] font-medium transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
                 >
-                  <option value="">All</option>
+                  <option value="">All Status</option>
                   {STATUS_OPTIONS.map((s) => (
                     <option key={s} value={s}>
-                      {s}
+                      {s === "InProgress" ? "In Progress" : s}
                     </option>
                   ))}
                 </Select>
@@ -463,28 +493,28 @@ export default function DocumentRequestsTab({
 
         {/* Active filter Chips Row */}
         {!loading && !error && (q !== "" || statusFilter !== "") && (
-          <div className="border-t border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+          <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="mr-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">Active filters:</span>
+              <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
               {q && (
-                <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-semibold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
+                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                   Search: {q}
                   <button
                     onClick={() => { setQ(""); setPage(1); }}
-                    className="ml-1 hover:text-pup-darkMaroon transition-colors"
+                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
                   >
-                    <i className="ph-bold ph-x text-[8px]"></i>
+                    ×
                   </button>
                 </div>
               )}
               {statusFilter && (
-                <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
-                  Status: {statusFilter}
+                <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
+                  Status: {statusFilter === "InProgress" ? "In Progress" : statusFilter}
                   <button
                     onClick={() => { setStatusFilter(""); setPage(1); }}
-                    className="ml-1 hover:text-blue-800 transition-colors"
+                    className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
                   >
-                    <i className="ph-bold ph-x text-[8px]"></i>
+                    ×
                   </button>
                 </div>
               )}
@@ -496,9 +526,9 @@ export default function DocumentRequestsTab({
                   setStatusFilter("");
                   setPage(1);
                 }}
-                className="h-6 rounded-full border border-dashed border-gray-300 px-3 text-[10px] font-semibold text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
+                className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
               >
-                Clear All Filters
+                Clear
               </Button>
             </div>
           </div>
@@ -511,7 +541,7 @@ export default function DocumentRequestsTab({
         {/* Table Card (Left Column) */}
         <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden flex flex-col w-full p-0 mb-4">
           <CardContent className="p-0 h-auto flex flex-col">
-            {loading ? (
+            {(loading && !isManualLoading) ? (
               <div className="p-6 space-y-4">
                 <div className="border border-gray-100 rounded-brand overflow-hidden dark:border-white/10">
                   <Skeleton className="h-10 w-full rounded-none dark:bg-muted" />
@@ -549,13 +579,16 @@ export default function DocumentRequestsTab({
               >
                 <div className="overflow-x-auto flex-1">
                   <table className="min-w-full text-sm table-fixed">
-                    <thead className="bg-gray-50 backdrop-blur-sm select-none dark:bg-muted">
-                      <tr className="text-left text-[10px] font-semibold tracking-widest text-gray-600 dark:text-zinc-300">
+                    <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+                      <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                         <th className="p-4 w-20">
                           <button
                             type="button"
                             onClick={() => handleSort("id")}
-                            className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+                            className={cn(
+                              "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                              sortBy === "id" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                            )}
                           >
                             ID
                             <SortIndicator
@@ -569,7 +602,10 @@ export default function DocumentRequestsTab({
                           <button
                             type="button"
                             onClick={() => handleSort("student")}
-                            className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+                            className={cn(
+                              "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                              sortBy === "student" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                            )}
                           >
                             Student
                             <SortIndicator
@@ -583,7 +619,10 @@ export default function DocumentRequestsTab({
                           <button
                             type="button"
                             onClick={() => handleSort("doc_type")}
-                            className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+                            className={cn(
+                              "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                              sortBy === "doc_type" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                            )}
                           >
                             Document Type
                             <SortIndicator
@@ -597,7 +636,10 @@ export default function DocumentRequestsTab({
                           <button
                             type="button"
                             onClick={() => handleSort("status")}
-                            className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+                            className={cn(
+                              "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                              sortBy === "status" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                            )}
                           >
                             Status
                             <SortIndicator
@@ -612,7 +654,10 @@ export default function DocumentRequestsTab({
                             <button
                               type="button"
                               onClick={() => handleSort("created_at")}
-                              className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+                              className={cn(
+                                "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                                sortBy === "created_at" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+                              )}
                             >
                               Created
                               <SortIndicator
@@ -650,22 +695,20 @@ export default function DocumentRequestsTab({
                           <tr
                             key={r.id}
                             className={cn(
-                              "group border-l-2 border-transparent transition-all duration-200 hover:bg-gray-50 dark:bg-card dark:hover:bg-white/5 select-none cursor-pointer",
-                              selectedId === r.id && "border-amber-400 bg-amber-50 dark:bg-amber-950/40"
+                              "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                              selectedId === r.id && "bg-blue-50/60 dark:bg-blue-950/20"
                             )}
                             onClick={() => openDetail(r.id)}
                           >
-                            <td className="p-4 text-xs text-gray-500 dark:text-zinc-400">
+                            <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-300">
                               #{r.id}
                             </td>
-                            <td className="p-4">
-                              <div className="font-semibold text-gray-900 dark:text-zinc-50">
+                            <td className="py-0 px-4 align-middle">
+                              <div className="text-[14px] font-medium text-[#111111] dark:text-zinc-50 truncate">
                                 {r.student_name || "—"}
                               </div>
-                              <div className="flex flex-wrap items-center gap-2 mt-0.5">
-                                <span className="text-[11px] text-gray-500 dark:text-zinc-400">
-                                  {r.student_no}
-                                </span>
+                              <div className="flex flex-wrap items-center gap-2 mt-[2px] truncate text-[12px] font-normal text-[#8E8E93] dark:text-zinc-500">
+                                <span>{r.student_no}</span>
                                 {(() => {
                                   const student = students?.find(
                                     (s) => String(s.studentNo || s.student_no || "").toUpperCase() === String(r.student_no).toUpperCase()
@@ -679,7 +722,7 @@ export default function DocumentRequestsTab({
                                         onLocateOnMap(student);
                                       }}
                                       title="Locate on storage map"
-                                      className="inline-flex items-center gap-1 rounded-sm bg-red-50 hover:bg-red-100 px-1.5 py-0.5 text-[9px] font-semibold tracking-wider text-pup-maroon dark:bg-red-950/40 dark:text-primary dark:hover:bg-red-950/60 border border-red-100 dark:border-white/5 cursor-pointer transition-colors"
+                                      className="inline-flex items-center gap-1 rounded-[4px] bg-red-50 hover:bg-red-100 px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] text-pup-maroon dark:bg-red-950/40 dark:text-primary dark:hover:bg-red-950/60 border border-red-100/30 dark:border-white/5 cursor-pointer transition-colors whitespace-nowrap"
                                     >
                                       <i className="ph-bold ph-map-pin text-[10px]"></i>
                                       RM{student.room} · CAB-{student.cabinet} · DRW-{student.drawer}
@@ -688,25 +731,21 @@ export default function DocumentRequestsTab({
                                 })()}
                               </div>
                             </td>
-                            <td className="p-4">
-                               <Badge
-                                 variant="outline"
-                                 className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[9px] font-semibold tracking-wider text-pup-maroon whitespace-nowrap dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
+                            <td className="py-0 px-4 align-middle">
+                               <div
+                                 className="inline-flex w-fit items-center justify-center rounded-[4px] bg-gray-100 px-[8px] py-[3px] text-[11px] font-medium text-gray-900 dark:bg-zinc-800 dark:text-zinc-100 whitespace-nowrap"
                                >
-                                 <i className="ph-bold ph-file-text text-[10px]"></i>
                                  {r.doc_type}
-                               </Badge>
+                               </div>
                              </td>
-                             <td className="p-4">
-                               <Badge
-                                 variant="outline"
-                                 className={cn("flex w-fit items-center gap-1.5 rounded-full border px-2.5 py-1 text-[9px] font-semibold tracking-wider shadow-none transition-all", statusBadgeClass(r.status))}
+                             <td className="py-0 px-4 align-middle">
+                               <div
+                                 className={cn("inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap", statusBadgeClass(r.status))}
                                >
-                                 <i className={cn("ph-fill text-[10px]", statusBadgeIcon(r.status))}></i>
-                                 {r.status}
-                               </Badge>
+                                 {r.status === "InProgress" ? "In Progress" : r.status}
+                               </div>
                              </td>
-                            <td className="p-4 text-right text-[11px] text-gray-500 whitespace-nowrap dark:text-zinc-400">
+                            <td className="py-0 px-4 align-middle text-right text-[13px] font-normal text-[#8E8E93] dark:text-zinc-500 whitespace-nowrap">
                               {formatPHDateTime(r.created_at)}
                             </td>
                           </tr>
@@ -715,69 +754,70 @@ export default function DocumentRequestsTab({
                     </tbody>
                   </table>
                 </div>
-                {total > 0 ? (
-                  <div className="flex items-center justify-between border-t border-gray-100 bg-white px-6 py-3 rounded-b-brand dark:border-white/10 dark:bg-card">
-                    <div className="flex items-center gap-8 select-none cursor-default">
-                      <div className="flex items-center gap-6 text-[11px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">
+                {total > 0 && (
+                  <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card mt-auto">
+                    <div className="flex items-center gap-8">
+                      <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
                         <span>
-                          Showing <strong className="text-gray-900 dark:text-zinc-50">{Math.min(itemsPerPage, total - (page - 1) * itemsPerPage)}</strong> out of <strong className="text-gray-900 dark:text-zinc-50">{total.toLocaleString()}</strong> entries
+                          Showing {rows.length} of {total}
                         </span>
-
-                        <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
-                          <span className="text-[10px] opacity-60">Rows:</span>
-                          <Select
-                            className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-semibold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
-                            value={itemsPerPage}
-                            onChange={handleItemsPerPageChange}
-                          >
-                            <option value={10}>10</option>
-                            <option value={20}>20</option>
-                            <option value={50}>50</option>
-                            <option value={100}>100</option>
-                            <option value={200}>200</option>
-                          </Select>
+                        <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
+                          <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
+                          <div className="flex items-center gap-1">
+                            {[10, 20, 50, 100].map((size) => (
+                              <button
+                                key={size}
+                                type="button"
+                                onClick={() => {
+                                  setItemsPerPage(size);
+                                  setPage(1);
+                                }}
+                                className={`px-2 py-0.5 rounded-[4px] text-[12px] font-normal cursor-pointer transition-colors border-0 ${
+                                  itemsPerPage === size
+                                    ? "bg-gray-100 text-[#111111] font-medium dark:bg-white/10 dark:text-zinc-50"
+                                    : "bg-transparent text-gray-450 dark:text-zinc-550 hover:text-gray-700 dark:hover:text-zinc-300"
+                                }`}
+                              >
+                                {size}
+                              </button>
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex shrink-0 items-center gap-3 select-none">
-                      <Button
-                        variant="outline"
-                        size="sm"
+                    <div className="flex shrink-0 items-center gap-3">
+                      <button
                         disabled={page <= 1}
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
-                        className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                        className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
                       >
-                        <i className="ph-bold ph-caret-left mr-2 text-base"></i>
                         Prev
-                      </Button>
+                      </button>
 
-                      <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-semibold text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                      <div className="flex h-8 min-w-[32px] items-center justify-center rounded-[6px] border border-gray-200/80 bg-white px-2.5 text-[12px] font-medium text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
                         {page}
                       </div>
 
-                      <Button
-                        variant="outline"
-                        size="sm"
+                      <button
                         disabled={page >= totalPages}
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                        className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-500 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                        className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
                       >
                         Next
-                        <i className="ph-bold ph-caret-right ml-2 text-base"></i>
-                      </Button>
+                      </button>
                     </div>
                   </div>
-                ) : null}
+                )}
               </div>
             )}
           </CardContent>
         </Card>
 
         {/* 3. Request details Card (Right Column) */}
-        <Card className="rounded-brand border border-gray-200 bg-white shadow-sm overflow-hidden flex flex-col min-h-[280px] lg:min-h-0 dark:bg-card dark:border-white/10 dark:shadow-none p-0 mb-4">
-          <div className="p-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between dark:border-white/10 dark:bg-muted/30">
-            <div className="text-xs font-semibold tracking-wider text-gray-500 dark:text-zinc-400">
+        <Card className="rounded-[14px] border border-[#E5E5EA] bg-white shadow-sm overflow-hidden flex flex-col min-h-[560px] dark:bg-card dark:border-white/10 dark:shadow-none p-0 mb-4" style={{ fontFamily: '-apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif' }}>
+          <div className="p-[16px_20px] border-b border-[#E5E5EA] bg-white flex items-center justify-between dark:border-white/10 dark:bg-card">
+            <div className="text-[11px] font-semibold text-[#8E8E93] dark:text-zinc-400 tracking-wider">
               Request Details
             </div>
             {hasEdits && (
@@ -803,7 +843,7 @@ export default function DocumentRequestsTab({
               </div>
             )}
           </div>
-          <CardContent className="p-4 flex-grow flex flex-col">
+          <CardContent className="p-[20px] flex-grow flex flex-col">
             {loading ? (
               <div className="space-y-6">
                 <div className="space-y-2">
@@ -838,8 +878,8 @@ export default function DocumentRequestsTab({
                       <i className="ph-duotone ph-file-text text-xl text-gray-300 dark:text-zinc-600"></i>
                     </EmptyMedia>
                   </div>
-                  <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">Select a Request</EmptyTitle>
-                  <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                  <EmptyTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">Select a Request</EmptyTitle>
+                  <EmptyDescription className="max-w-xs text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400 mt-1">
                     Select a request to see details and location.
                   </EmptyDescription>
                 </EmptyHeader>
@@ -851,106 +891,117 @@ export default function DocumentRequestsTab({
                 <Skeleton className="h-4 w-full dark:bg-muted" />
               </div>
             ) : (
-              <div className="space-y-4 animate-fade-up">
-                      <div>
-                        <div className="text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                          Student
-                        </div>
-                        <div className="font-semibold text-gray-900 dark:text-zinc-50">{detail.student_name}</div>
-                        <div className="text-xs text-gray-600 dark:text-zinc-300">{detail.student_no}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs font-semibold text-gray-500 dark:text-zinc-400">
-                          Document Type
-                        </div>
-                        <div className="font-semibold text-gray-900 dark:text-zinc-50">{detail.doc_type}</div>
-                      </div>
+              <div className="flex flex-col gap-[18px] animate-fade-up">
+                {/* Student Detail Group */}
+                <div className="flex flex-col">
+                  <span className="text-[11px] font-semibold tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
+                    Student
+                  </span>
+                  <div className="w-full bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-white/10 rounded-[10px] p-[12px] text-[13px] font-medium text-[#111111] dark:text-zinc-50">
+                    <div>{detail.student_name}</div>
+                    <div className="text-[11px] text-[#8E8E93] dark:text-zinc-500 font-normal mt-0.5">{detail.student_no}</div>
+                  </div>
+                </div>
 
-                      <div className="rounded-brand border border-gray-200 p-3 dark:border-white/10">
-                        <div className="text-xs font-semibold text-gray-600 mb-1 dark:text-zinc-300">
-                          Physical Location
-                        </div>
+                {/* Document Type Group */}
+                <div className="flex flex-col">
+                  <span className="text-[11px] font-semibold tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
+                    Document Type
+                  </span>
+                  <div className="w-full bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-white/10 rounded-[10px] p-[12px] flex items-center">
+                    <span className="inline-flex w-fit items-center justify-center rounded-[6px] bg-white dark:bg-zinc-800 border border-[#E5E5EA] dark:border-white/10 px-[8px] py-[3px] text-[11px] font-medium text-gray-900 dark:text-zinc-100 whitespace-nowrap">
+                      {detail.doc_type}
+                    </span>
+                  </div>
+                </div>
 
-                        {studentForRequest ? (
-                          <div className="text-sm text-gray-800 dark:text-zinc-100">
-                            Room {studentForRequest.room} · Cabinet {studentForRequest.cabinet}{" "}
-                            · Drawer {studentForRequest.drawer}
-                          </div>
-                        ) : (
-                          <div className="text-sm text-amber-800 font-medium">
-                            Student record not loaded — refresh data or check student no.
-                          </div>
-                        )}
-                        <Button
-                          type="button"
-                          className="mt-3 w-full btn-brand-red font-semibold text-xs dark:shadow-none"
-                          disabled={!studentForRequest}
-                          onClick={() => {
-                            if (!studentForRequest) return;
-                            if (requestNeedsPhysicalVerification) {
-                              setFileWarningOpen(true);
-                              return;
-                            }
-                            onLocateOnMap(studentForRequest);
-                          }}
-                        >
-                          <i className="ph-bold ph-map-pin mr-2"></i>
-                          Locate On Storage Map
-                        </Button>
-                      </div>
+                {/* Status Dropdown Group */}
+                <div className="flex flex-col">
+                  <span className="text-[11px] font-semibold tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
+                    Status
+                  </span>
+                  <Select
+                    className="w-full h-auto py-[10px] px-[12px] text-[13px] font-normal text-[#111111] dark:text-zinc-300 bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-white/10 rounded-[10px] hover:bg-[#EAEAEA] dark:hover:bg-zinc-700/60 focus:bg-white focus:border-[#0A84FF] focus:ring-2 focus:ring-[#0A84FF]/20 focus:outline-none transition-all cursor-pointer shadow-none!"
+                    value={editStatus}
+                    disabled={saving}
+                    onChange={(e) => setEditStatus(e.target.value)}
+                  >
+                    {STATUS_OPTIONS.map((s) => (
+                      <option key={s} value={s}>
+                        {s === "InProgress" ? "In Progress" : s}
+                      </option>
+                    ))}
+                  </Select>
+                </div>
 
-                      {detail.status === "Ready" && retentionExpiryDate && (
-                        <div className="rounded-brand border border-amber-200 bg-amber-50/50 p-3 animate-in fade-in duration-200">
-                          <div className="flex gap-2">
-                            <i className="ph-bold ph-calendar-blank text-amber-700 text-lg shrink-0 mt-0.5 animate-pulse"></i>
-                            <div className="text-xs">
-                              <span className="font-semibold text-amber-950 block tracking-wider text-[10px]">
-                                PUP ODRS Retention Policy
-                              </span>
-                              <span className="text-gray-600 block mt-0.5">
-                                Unclaimed documents are shredded after 90 days according to ODRS policy.
-                              </span>
-                              <span className="text-amber-800 font-semibold block mt-1.5 flex items-center gap-1.5">
-                                <i className="ph-bold ph-warning"></i>
-                                Shred Schedule: {retentionExpiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                                {daysRemaining !== null && (
-                                  <span className="text-gray-500 font-normal">({daysRemaining > 0 ? `${daysRemaining}d left` : "Expired"})</span>
-                                )}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      )}
+                {/* Notes Textarea Group */}
+                <div className="flex flex-col">
+                  <span className="text-[11px] font-semibold tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
+                    Notes
+                  </span>
+                  <textarea
+                    className="w-full min-h-[90px] p-[12px] text-[13px] font-normal text-[#111111] dark:text-zinc-300 bg-[#F5F5F7] dark:bg-zinc-800/40 border border-[#E5E5EA] dark:border-white/10 rounded-[10px] focus:bg-white focus:border-[#0A84FF] focus:ring-2 focus:ring-[#0A84FF]/20 focus:outline-none transition-all resize-none shadow-[inset_0_1px_2px_rgba(0,0,0,0.05)] placeholder:text-gray-400"
+                    value={editNotes}
+                    onChange={(e) => setEditNotes(e.target.value)}
+                    placeholder="Add notes..."
+                  />
+                </div>
 
-                      <div>
-                        <label className="text-xs font-semibold text-gray-600 dark:text-zinc-300">
-                          Status
-                        </label>
-                        <Select
-                          className="mt-1 h-10 w-full rounded-brand border border-gray-300 bg-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-pup-maroon dark:bg-card dark:border-white/10"
-                          value={editStatus}
-                          disabled={saving}
-                          onChange={(e) => setEditStatus(e.target.value)}
-                        >
-                          {STATUS_OPTIONS.map((s) => (
-                            <option key={s} value={s}>
-                              {s}
-                            </option>
-                          ))}
-                        </Select>
-                      </div>
+                {/* Storage physical location wrapper */}
+                <div className="rounded-[14px] border border-[#E5E5EA] p-[16px_20px] dark:border-white/10 bg-[#F5F5F7] dark:bg-white/3">
+                  <div className="text-[11px] font-semibold tracking-wider text-[#8E8E93] dark:text-zinc-400 mb-1.5">
+                    Physical Location
+                  </div>
 
-                      <div>
-                        <label className="text-xs font-semibold text-gray-600 dark:text-zinc-300">
-                          Notes
-                        </label>
-                        <textarea
-                          className="mt-1 w-full min-h-[72px] rounded-brand border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-pup-maroon dark:border-white/10"
-                          value={editNotes}
-                          onChange={(e) => setEditNotes(e.target.value)}
-                        />
+                  {studentForRequest ? (
+                    <div className="text-[13px] font-normal text-[#111111] dark:text-zinc-155">
+                      RM {studentForRequest.room} · CAB {studentForRequest.cabinet} · DRW {studentForRequest.drawer}
+                    </div>
+                  ) : (
+                    <div className="text-[13px] text-amber-850 dark:text-amber-400 font-normal">
+                      Student record not loaded — check student number.
+                    </div>
+                  )}
+                  <Button
+                    type="button"
+                    className="mt-3 w-full bg-[#0A84FF] hover:bg-[#0070E0] text-white font-medium text-[13px] h-10 rounded-[10px] transition-all border-0 flex items-center justify-center gap-2 shadow-none!"
+                    disabled={!studentForRequest}
+                    onClick={() => {
+                      if (!studentForRequest) return;
+                      if (requestNeedsPhysicalVerification) {
+                        setFileWarningOpen(true);
+                        return;
+                      }
+                      onLocateOnMap(studentForRequest);
+                    }}
+                  >
+                    Locate
+                  </Button>
+                </div>
+
+                {detail.status === "Ready" && retentionExpiryDate && (
+                  <div className="rounded-brand border border-amber-250 bg-amber-50/40 p-3.5 dark:border-amber-950/40 dark:bg-amber-950/10 animate-in fade-in duration-200">
+                    <div className="flex gap-3">
+                      <i className="ph-bold ph-calendar-blank text-amber-700 dark:text-amber-500 text-lg shrink-0 mt-0.5"></i>
+                      <div className="text-[12px]">
+                        <span className="font-semibold text-amber-950 dark:text-amber-300 block tracking-wider text-[10px]">
+                          PUP ODRS Retention Policy
+                        </span>
+                        <span className="text-gray-600 dark:text-zinc-400 block mt-0.5 leading-normal">
+                          Unclaimed documents are shredded after 90 days according to ODRS policy.
+                        </span>
+                        <span className="text-amber-850 dark:text-amber-400 font-semibold block mt-1.5 flex items-center gap-1.5">
+                          <i className="ph-bold ph-warning"></i>
+                          Shred Schedule: {retentionExpiryDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          {daysRemaining !== null && (
+                            <span className="text-gray-500 dark:text-zinc-500 font-normal">({daysRemaining > 0 ? `${daysRemaining}d left` : "Expired"})</span>
+                          )}
+                        </span>
                       </div>
                     </div>
+                  </div>
+                )}
+              </div>
                   )}
           </CardContent>
         </Card>
@@ -1118,30 +1169,27 @@ export default function DocumentRequestsTab({
       </Dialog>
       <Dialog open={fileWarningOpen} onOpenChange={setFileWarningOpen}>
         <DialogContent className="sm:max-w-md p-0 overflow-hidden bg-white border border-gray-200 shadow-2xl rounded-brand dark:bg-card dark:border-white/10">
-          <DialogHeader className="p-6 border-b border-gray-100 bg-gray-50 dark:border-white/10 dark:bg-white/5">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl border border-red-100 bg-red-50 text-red-700 shadow-sm flex items-center justify-center shrink-0 dark:bg-red-950/30 dark:shadow-none">
-                <i className="ph-duotone ph-warning-circle text-xl"></i>
-              </div>
-              <div className="min-w-0">
-                <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
-                  No Digital Copy
-                </DialogTitle>
-                <DialogDescription className="text-sm font-medium text-gray-600 mt-1 dark:text-zinc-300">
-                  Document not yet scanned. Check physical storage.
-                </DialogDescription>
-              </div>
+          <DialogHeader className="p-6 bg-white dark:bg-card border-none pb-0">
+            <div className="min-w-0">
+              <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                No Digital Copy
+              </DialogTitle>
+              <DialogDescription className="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-1">
+                Document not yet scanned. Check physical storage.
+              </DialogDescription>
             </div>
           </DialogHeader>
-          <div className="p-6 space-y-4">
+          <div className="p-6 pt-4 space-y-4">
             <div className="space-y-3 text-sm">
-              <div className="rounded-brand border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900 font-medium dark:bg-amber-950/30">
+              <div className="rounded-brand border border-amber-250 bg-amber-50/40 p-3.5 text-[12px] text-amber-850 dark:border-amber-950/40 dark:bg-amber-950/10">
                 Check physical file before releasing.
               </div>
               {studentForRequest ? (
-                <div className="rounded-brand border border-gray-200 bg-gray-50 px-4 py-3 text-gray-800 font-medium dark:border-white/10 dark:bg-card dark:text-zinc-100">
-                  Room {studentForRequest.room} · Cabinet {studentForRequest.cabinet} · Drawer{" "}
-                  {studentForRequest.drawer}
+                <div 
+                  className="rounded-[8px] p-[10px_14px] bg-white dark:bg-card text-[13px] font-normal text-pup-maroon dark:text-red-400"
+                  style={{ borderWidth: '0.5px', borderStyle: 'solid', borderColor: 'rgba(0,0,0,0.1)' }}
+                >
+                  RM {studentForRequest.room} · CAB {studentForRequest.cabinet} · DRW {studentForRequest.drawer}
                 </div>
               ) : (
                 <Empty className="py-6 border-red-200 bg-red-50 text-red-800 dark:bg-red-950/30">
@@ -1158,11 +1206,11 @@ export default function DocumentRequestsTab({
               )}
             </div>
           </div>
-          <div className="p-4 border-t border-gray-100 bg-white flex flex-col-reverse sm:flex-row sm:justify-end gap-2 dark:border-white/10 dark:bg-card">
+          <div className="p-6 pt-0 border-none bg-white dark:bg-card flex justify-end items-center gap-4">
             <Button
               type="button"
-              variant="outline"
-              className="px-5 text-sm font-semibold border-gray-300 text-gray-700 hover:bg-gray-50 rounded-brand dark:text-zinc-200 dark:hover:bg-white/10 dark:bg-card dark:border-white/10"
+              variant="ghost"
+              className="text-[13px] font-medium text-gray-500 dark:text-zinc-400 bg-transparent hover:bg-transparent border-none shadow-none p-0 h-auto cursor-pointer"
               onClick={() => setFileWarningOpen(false)}
             >
               Close
@@ -1171,19 +1219,19 @@ export default function DocumentRequestsTab({
             {studentForRequest ? (
               <Button
                 type="button"
-                className="px-5 btn-brand-red font-semibold shadow-sm rounded-brand gap-2 flex items-center dark:shadow-none"
+                className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white shadow-none! border-none! py-0 px-4 cursor-pointer"
                 onClick={() => {
                   setFileWarningOpen(false);
                   onLocateOnMap(studentForRequest);
                 }}
               >
-                <i className="ph-bold ph-map-pin text-lg"></i>
-                Check Storage Map Anyway
+                Check Anyway
               </Button>
             ) : null}
           </div>
         </DialogContent>
       </Dialog>
     </div>
+    </TooltipProvider>
   );
 }

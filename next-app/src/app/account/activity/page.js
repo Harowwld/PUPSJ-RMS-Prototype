@@ -940,6 +940,19 @@ export default function AccountActivityPage() {
     })();
   }, [router]);
 
+  useEffect(() => {
+    if (!authUser) return;
+    const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+    link.type = 'image/png';
+    link.rel = 'shortcut icon';
+    if (isAdminRole(authUser.role)) {
+      link.href = '/admin-logo.png';
+    } else {
+      link.href = '/staff-logo.png';
+    }
+    document.getElementsByTagName('head')[0].appendChild(link);
+  }, [authUser]);
+
   // 2. Fetch logs matching filters
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -1193,7 +1206,7 @@ export default function AccountActivityPage() {
                     {isGeneratingPdf ? (
                       <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
                     ) : (
-                      "Generate Report"
+                      "Get Report"
                     )}
                   </Button>
                 </div>

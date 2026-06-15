@@ -31,12 +31,71 @@ export async function GET(req) {
     `);
 
     // We process analytics in memory to keep it manageable and extensible
+    let startVal = startDate;
+    let endVal = endDate;
+    if (!startVal || !endVal) {
+      const dates = (rows || [])
+        .map(r => r.created_at ? String(r.created_at).substring(0, 10) : "")
+        .filter(Boolean);
+      if (dates.length > 0) {
+        dates.sort();
+        startVal = startVal || dates[0];
+        endVal = endVal || dates[dates.length - 1];
+      } else {
+        const today = new Date();
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(today.getDate() - 30);
+        startVal = startVal || thirtyDaysAgo.toISOString().substring(0, 10);
+        endVal = endVal || today.toISOString().substring(0, 10);
+      }
+    }
+
     const statusCounts = { Pending: 0, InProgress: 0, Ready: 0, Completed: 0, Cancelled: 0 };
     const docTypeCounts = {};
-    
-    // Summary metrics
     let totalCompleted = 0;
     let filteredTotalRequests = 0;
+    const monthlyMap = {};
+    const weeklyMap = {};
+    const dailyMap = {};
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    // Pre-populate maps with 0s for all intervals in the date range
+    try {
+      const startD = new Date(startVal);
+      const endD = new Date(endVal);
+      // Cap safety to prevent infinite loop
+      let curr = new Date(startD);
+      const maxDays = 500;
+      let iterations = 0;
+
+      while (curr <= endD && iterations < maxDays) {
+        const yyyy = curr.getFullYear();
+        const mm = String(curr.getMonth() + 1).padStart(2, '0');
+        const dd = String(curr.getDate()).padStart(2, '0');
+        const dayStr = `${yyyy}-${mm}-${dd}`;
+
+        dailyMap[dayStr] = 0;
+
+        const monthKey = `${yyyy}-${mm}`;
+        monthlyMap[monthKey] = 0;
+
+        // Weekly
+        const dObj = new Date(dayStr);
+        const dayOfWeek = dObj.getDay();
+        const diff = dObj.getDate() - dayOfWeek;
+        const startOfWeek = new Date(dObj.setDate(diff));
+        const sY = startOfWeek.getFullYear();
+        const sM = String(startOfWeek.getMonth() + 1).padStart(2, '0');
+        const sD = String(startOfWeek.getDate()).padStart(2, '0');
+        const weekKey = `${sY}-${sM}-${sD}`;
+        weeklyMap[weekKey] = 0;
+
+        curr.setDate(curr.getDate() + 1);
+        iterations++;
+      }
+    } catch (e) {
+      console.error("Error populating trend intervals:", e);
+    }
 
     for (const r of (rows || [])) {
       // Lexicographical date filtering (User Recommendation)
@@ -53,6 +112,29 @@ export async function GET(req) {
       if (r.status === "Completed") {
           totalCompleted++;
       }
+
+      // Chronological Trends
+      if (createdDate) {
+        const [year, month] = createdDate.split("-");
+        
+        // Daily Grouping
+        dailyMap[createdDate] = (dailyMap[createdDate] || 0) + 1;
+
+        // Monthly Grouping
+        const monthKey = `${year}-${month}`;
+        monthlyMap[monthKey] = (monthlyMap[monthKey] || 0) + 1;
+
+        // Weekly Grouping
+        const dObj = new Date(createdDate);
+        const dayOfWeek = dObj.getDay();
+        const diff = dObj.getDate() - dayOfWeek;
+        const startOfWeek = new Date(dObj.setDate(diff));
+        const sY = startOfWeek.getFullYear();
+        const sM = String(startOfWeek.getMonth() + 1).padStart(2, '0');
+        const sD = String(startOfWeek.getDate()).padStart(2, '0');
+        const weekKey = `${sY}-${sM}-${sD}`;
+        weeklyMap[weekKey] = (weeklyMap[weekKey] || 0) + 1;
+      }
     }
 
     const sortedDocTypes = Object.entries(docTypeCounts)
@@ -66,12 +148,39 @@ export async function GET(req) {
         topDocTypes.push({ name: "Others", count: othersCount });
     }
 
+    // Format and Sort Trends
+    const monthlyTrend = Object.entries(monthlyMap)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([key, count]) => {
+        const [, m] = key.split("-");
+        return { name: monthNames[parseInt(m, 10) - 1] || m, count };
+      });
+
+    const weeklyTrend = Object.entries(weeklyMap)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([key, count]) => {
+        const [, m, d] = key.split("-");
+        return { name: `${monthNames[parseInt(m, 10) - 1] || m} ${parseInt(d, 10)}`, count };
+      });
+
+    const dailyTrend = Object.entries(dailyMap)
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([key, count]) => {
+        const [, m, d] = key.split("-");
+        return { name: `${monthNames[parseInt(m, 10) - 1] || m} ${parseInt(d, 10)}`, count };
+      });
+
     return NextResponse.json({
         ok: true,
         data: {
             totalRequests: filteredTotalRequests,
             statusCounts,
             topDocTypes,
+            trends: {
+                monthly: monthlyTrend,
+                weekly: weeklyTrend,
+                daily: dailyTrend
+            },
             sla: {
                 totalCompleted
             }

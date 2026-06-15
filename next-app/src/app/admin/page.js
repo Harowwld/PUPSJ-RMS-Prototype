@@ -11,7 +11,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation"
 import { toast } from "sonner"
 
-import { useTheme } from "next-themes"
+
 import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import Sidebar from "@/components/shared/Sidebar"
@@ -47,7 +47,7 @@ import { cn } from "@/lib/utils"
 
 function AdminPageContent() {
   const router = useRouter()
-  const { theme, setTheme } = useTheme()
+
   const searchParams = useSearchParams()
   const [loading, setLoading] = useState(true)
   const loadedViewsRef = useRef({
@@ -82,6 +82,27 @@ function AdminPageContent() {
     window.addEventListener("toggle-sidebar", handleToggle)
     return () => window.removeEventListener("toggle-sidebar", handleToggle)
   }, [])
+
+  useEffect(() => {
+    // Dynamic favicon swap for admin page
+    const updateFavicon = () => {
+      const links = document.querySelectorAll("link[rel*='icon']");
+      if (links.length > 0) {
+        links.forEach(link => {
+          link.type = 'image/png';
+          link.rel = 'shortcut icon';
+          link.href = '/admin-logo.png';
+        });
+      } else {
+        const link = document.createElement('link');
+        link.type = 'image/png';
+        link.rel = 'shortcut icon';
+        link.href = '/admin-logo.png';
+        document.getElementsByTagName('head')[0].appendChild(link);
+      }
+    };
+    updateFavicon();
+  }, [view, searchParams]);
 
   const [viewLoading, setViewLoading] = useState({
     directory: false,
@@ -593,9 +614,7 @@ function AdminPageContent() {
           return
         }
         setAuthUser(json.data)
-        if (json.data?.preferences?.theme) {
-          setTheme(json.data.preferences.theme)
-        }
+
         // Render first, then hydrate data in background.
         setLoading(false)
         setTimeout(() => {
@@ -1533,8 +1552,8 @@ function AdminPageContent() {
       iconClass: "ph-bold ph-warehouse",
     },
     { key: "system_data", label: "Data", iconClass: "ph-bold ph-gear" },
-    { key: "system", label: "Backup", iconClass: "ph-bold ph-database" },
-    { key: "logs", label: "Audit Log", iconClass: "ph-bold ph-scroll" },
+    { key: "system", label: "Backup", iconClass: "ph-bold ph-database-backup" },
+    { key: "logs", label: "Audit Log", iconClass: "ti ti-history" },
   ]
   const sidebarActiveKey = view === "backup" ? "system" : view
 
@@ -1566,7 +1585,7 @@ function AdminPageContent() {
               }}
               className="flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-700 cursor-pointer bg-transparent h-9 w-9"
             >
-              <i className="ti ti-layout-sidebar text-[21px]" style={{ color: "#E5484D" }}></i>
+              <i className="ti ti-panel-left text-[21px]" style={{ color: "#E5484D" }}></i>
             </button>
 
             {/* Apple Photos Style Zoom Control */}
@@ -1648,8 +1667,9 @@ function AdminPageContent() {
       )}
 
       <div className={cn("flex w-full flex-1 min-h-0 overflow-hidden", authUser?.preferences?.navigation_layout === "topbar" ? "flex-col" : "flex-row")}>
-        {authUser?.preferences?.navigation_layout !== "topbar" && sidebarOpen && (
+        {authUser?.preferences?.navigation_layout !== "topbar" && (
           <Sidebar
+            open={sidebarOpen}
             items={sidebarItems}
             activeKey={sidebarActiveKey}
             onSelect={switchView}
@@ -1857,7 +1877,7 @@ function AdminPageContent() {
       <ConfirmModal
         open={discardConfirmOpen}
         title="Unsaved Changes"
-        message="You have unsaved layout modifications. Moving to another section will discard these changes."
+        message="You have unsaved layout modifications. Navigating away will discard them."
         confirmLabel="Discard Changes"
         variant="warning"
         onConfirm={confirmDiscardChanges}
@@ -1865,7 +1885,7 @@ function AdminPageContent() {
           setDiscardConfirmOpen(false)
           setPendingView(null)
         }}
-        confirmClassName="bg-orange-600 hover:bg-orange-700 text-white h-11 px-8 rounded-lg shadow-md active:scale-95 transition-all"
+        isUnsavedChangesModal={true}
       />
 
       <EditUserModal

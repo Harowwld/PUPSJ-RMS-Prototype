@@ -534,7 +534,7 @@ export default function StaffDirectoryTab({
                 className={cn(
                   "relative pb-2 text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer",
                   activeTab === "active" 
-                    ? "text-[#ad2f2f] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-[#ad2f2f]" 
+                    ? "text-black after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-black dark:text-zinc-50 dark:after:bg-zinc-50" 
                     : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
                 )}
               >
@@ -546,7 +546,7 @@ export default function StaffDirectoryTab({
                 className={cn(
                   "relative pb-2 text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer",
                   activeTab === "archived" 
-                    ? "text-[#ad2f2f] after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-[#ad2f2f]" 
+                    ? "text-black after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-black dark:text-zinc-50 dark:after:bg-zinc-50" 
                     : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
                 )}
               >

@@ -28,15 +28,15 @@ export function RefreshButton({
           onClick={onRefresh}
           disabled={isLoading}
           className={cn(
-            "flex h-9 w-9 items-center justify-center rounded-full p-0 text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:text-primary dark:hover:bg-white/5 active:scale-95 disabled:opacity-50",
+            "flex h-10 w-10 items-center justify-center rounded-full p-0 text-gray-500 hover:text-pup-maroon hover:bg-gray-100 dark:text-zinc-400 dark:hover:text-primary dark:hover:bg-white/5 active:scale-95 disabled:opacity-50",
             isLoading && "animate-refresh-glow",
             className
           )}
         >
           <i
             className={cn(
-              "ph-bold ph-arrows-clockwise text-base",
-              isLoading && "animate-spin inline-block"
+              "ti ti-refresh-cw text-[17px] flex items-center justify-center leading-none",
+              isLoading && "animate-spin"
             )}
           ></i>
         </Button>

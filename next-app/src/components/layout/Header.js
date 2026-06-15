@@ -119,7 +119,7 @@ export default function Header({ authUser, onLogout, children }) {
             onClick={handleMainDashboardClick}
             onDoubleClick={(e) => e.preventDefault()}
           >
-            <img src="/icon.png" alt="eManage Logo" className="h-8 w-8 object-contain" />
+            <img src={(pathname?.startsWith("/account") ? hasAdminRights : isAdminView) ? "/admin-logo.png" : "/staff-logo.png"} alt="eManage Logo" className="h-8 w-8 object-contain" />
             <div className="flex items-center">
               <span className="font-semibold text-[26px] text-black dark:text-white tracking-tight transition-colors group-hover/logo:text-gray-850 dark:group-hover/logo:text-zinc-200 leading-none">
                 eManage
@@ -141,12 +141,12 @@ export default function Header({ authUser, onLogout, children }) {
           <DropdownMenu open={menuOpen} onOpenChange={setMenuOpen}>
             <DropdownMenuTrigger className="focus:outline-none select-none">
               <div className={cn(
-                "h-11 w-11 flex items-center justify-center rounded-[10px] transition-all",
+                "h-[52px] w-[52px] flex items-center justify-center rounded-[10px] transition-all",
                 menuOpen 
                   ? "bg-gray-200/70 dark:bg-white/10" 
                   : "hover:bg-gray-100 dark:hover:bg-white/5"
               )}>
-                <div className="h-9 w-9 rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center text-xs font-semibold text-gray-700 dark:text-zinc-300 border border-gray-200 dark:border-white/10 overflow-hidden">
+                <div className="h-[46px] w-[46px] rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center text-sm font-semibold text-gray-700 dark:text-zinc-300 border border-gray-200 dark:border-white/10 overflow-hidden">
                   {authUser?.avatar_filename && !imageError ? (
                     <img 
                       src={`/api/account/avatar?id=${authUser.id}&t=${authUser.updated_at || Date.now()}`}
@@ -160,7 +160,7 @@ export default function Header({ authUser, onLogout, children }) {
                 </div>
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-72 rounded-2xl border border-gray-200 shadow-2xl p-0 overflow-hidden bg-white/98 backdrop-blur-md dark:bg-card dark:border-white/10 dark:shadow-none">
+            <DropdownMenuContent align="end" sideOffset={6} className="w-72 rounded-2xl border border-gray-200 shadow-2xl p-0 overflow-hidden bg-white/98 backdrop-blur-md dark:bg-card dark:border-white/10 dark:shadow-none">
                <div className="bg-[#F2F2F7] dark:bg-zinc-800/80 px-5 py-4 border-b border-gray-200 dark:border-white/5 flex flex-col text-left">
                  <span className="font-bold text-[18px] text-gray-900 dark:text-zinc-50 leading-tight">
                    {authUser?.fname} {authUser?.lname}
@@ -171,44 +171,46 @@ export default function Header({ authUser, onLogout, children }) {
                </div>
 
                <DropdownMenuGroup className="p-1.5 flex flex-col gap-[2px]">
-                 <DropdownMenuItem
-                   className={cn(
-                     "cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 transition-colors outline-none",
-                     isSettingsActive
-                       ? "text-[#007AFF] bg-gray-50 dark:bg-white/5"
-                       : "text-gray-900 hover:bg-gray-50 dark:text-zinc-100 dark:hover:bg-white/5"
-                   )}
-                   onClick={() => router.push("/account")}
-                 >
-                   <i className="ti ti-settings text-[19px] text-[#007AFF] shrink-0"></i>
-                   <span>Account Settings</span>
-                 </DropdownMenuItem>
-
-                 <DropdownMenuItem
-                   className={cn(
-                     "cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 transition-colors outline-none",
-                     isActivityActive
-                       ? "text-[#007AFF] bg-gray-50 dark:bg-white/5"
-                       : "text-gray-900 hover:bg-gray-50 dark:text-zinc-100 dark:hover:bg-white/5"
-                   )}
-                   onClick={() => router.push("/account/activity")}
-                 >
-                   <i className="ti ti-history text-[19px] text-[#007AFF] shrink-0"></i>
-                   <span>My Activity</span>
-                 </DropdownMenuItem>
-
-                 {hasAdminRights && (
-                   <DropdownMenuItem
-                     onClick={() => handleViewSwitch(isAdminView ? "staff" : "admin")}
-                     className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-zinc-100 transition-colors outline-none"
-                   >
-                     <i className={cn(
-                       "text-[19px] shrink-0",
-                       isAdminView ? "ti ti-users text-[#007AFF]" : "ti ti-shield-check text-[#007AFF]"
-                     )}></i>
-                     <span>{isAdminView ? "Switch to Staff View" : "Switch to Admin View"}</span>
-                   </DropdownMenuItem>
-                 )}
+                  <DropdownMenuItem
+                    className={cn(
+                      "cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 transition-colors outline-none",
+                      isSettingsActive
+                        ? "text-[#007AFF] bg-gray-50 dark:bg-white/5 font-semibold"
+                        : "text-gray-900 hover:bg-gray-50 dark:text-zinc-100 dark:hover:bg-white/5"
+                    )}
+                    onClick={() => router.push("/account")}
+                  >
+                    <i className="ti ti-settings text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: "#0071eb" }}></i>
+                    <span>Account Settings</span>
+                  </DropdownMenuItem>
+ 
+                  <DropdownMenuItem
+                    className={cn(
+                      "cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 transition-colors outline-none",
+                      isActivityActive
+                        ? "text-[#007AFF] bg-gray-50 dark:bg-white/5 font-semibold"
+                        : "text-gray-900 hover:bg-gray-50 dark:text-zinc-100 dark:hover:bg-white/5"
+                    )}
+                    onClick={() => router.push("/account/activity")}
+                  >
+                    <i className="ti ti-history text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: "#03a10e" }}></i>
+                    <span>My Activity</span>
+                  </DropdownMenuItem>
+ 
+                  {hasAdminRights && (
+                    <DropdownMenuItem
+                      onClick={() => handleViewSwitch(isAdminView ? "staff" : "admin")}
+                      className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-zinc-100 transition-colors outline-none"
+                    >
+                      <i className={cn(
+                        "text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none",
+                        isAdminView ? "ti ti-users" : "ti ti-shield-check"
+                      )}
+                      style={{ color: isAdminView ? "#edbb00" : "#e30000" }}
+                      ></i>
+                      <span>{isAdminView ? "Switch to Staff View" : "Switch to Admin View"}</span>
+                    </DropdownMenuItem>
+                  )}
                </DropdownMenuGroup>
 
                <div className="border-t border-gray-100 dark:border-white/5 my-1 mx-1.5"></div>
@@ -218,7 +220,7 @@ export default function Header({ authUser, onLogout, children }) {
                    onClick={onLogout}
                    className="cursor-pointer rounded-[8px] flex items-center gap-3 font-medium text-[15px] py-2.5 px-3 text-[#FF3B30] dark:text-[#FF453A] hover:bg-red-50 dark:hover:bg-red-950/20 transition-colors outline-none"
                  >
-                   <i className="ti ti-circle-x text-[19px] text-[#FF3B30] dark:text-[#FF453A] shrink-0"></i>
+                   <i className="ti ti-circle-x text-[19px] text-[#FF3B30] dark:text-[#FF453A] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none"></i>
                    <span>Sign Out</span>
                  </DropdownMenuItem>
                </DropdownMenuGroup>

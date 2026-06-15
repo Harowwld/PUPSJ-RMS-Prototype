@@ -14,8 +14,8 @@ const ICON_MAP = {
   create: { icon: "ti ti-user-plus", color: "#E5484D" },
   storage_layout: { icon: "ti ti-building-warehouse", color: "#E5484D" },
   system_data: { icon: "ti ti-settings-cog", color: "#E5484D" },
-  system: { icon: "ti ti-database", color: "#E5484D" },
-  logs: { icon: "ti ti-shield-check", color: "#E5484D" },
+  system: { icon: "ti ti-database-backup", color: "#E5484D" },
+  logs: { icon: "ti ti-history", color: "#E5484D" },
 
   // Staff views
   requests: { icon: "ti ti-arrow-up-right", color: "#ebb800" },
@@ -25,7 +25,7 @@ const ICON_MAP = {
   search: { icon: "ti ti-archive", color: "#ebb800" },
 }
 
-export default function Sidebar({ items, activeKey, onSelect, onLogout, zoomNode, setZoomNode, handleZoomMouseDown }) {
+export default function Sidebar({ open = true, items, activeKey, onSelect, onLogout, zoomNode, setZoomNode, handleZoomMouseDown }) {
   const pathname = usePathname()
   const isStaff = pathname?.startsWith("/staff") || items.some(item => 
     ["requests", "upload", "documents", "notifications", "search"].includes(item.key)
@@ -112,10 +112,13 @@ export default function Sidebar({ items, activeKey, onSelect, onLogout, zoomNode
   return (
     <aside
       ref={sidebarRef}
-      className="z-10 hidden w-[260px] flex-shrink-0 flex-col gap-[2px] overflow-y-auto bg-[#fbfbfd] dark:bg-zinc-950 p-2 select-none md:flex sticky top-0 h-screen"
-      style={{ borderRight: "0.5px solid rgba(0,0,0,0.08)" }}
+      className={cn(
+        "z-10 flex-col gap-[2px] bg-[#fbfbfd] dark:bg-zinc-950 select-none sticky top-0 h-screen transition-[width,padding] duration-300 ease-in-out overflow-hidden hidden md:flex shrink-0",
+        open ? "w-[260px] py-2 px-2" : "w-0 py-2 px-0 pointer-events-none"
+      )}
+      style={{ borderRight: open ? "0.5px solid rgba(0,0,0,0.08)" : "0px solid transparent", transitionProperty: "width, padding-left, padding-right" }}
     >
-      <div className="flex flex-col gap-[2px] flex-1">
+      <div className="flex flex-col gap-[2px] flex-1 min-w-[244px] h-full overflow-y-auto">
         <div className="flex items-center gap-[5px] mb-1.5 ml-1">
           <button
             type="button"
@@ -126,7 +129,7 @@ export default function Sidebar({ items, activeKey, onSelect, onLogout, zoomNode
             }}
             className="flex w-[30px] h-[30px] items-center justify-center rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] cursor-pointer transition-colors"
           >
-            <i className="ti ti-layout-sidebar text-[21px]" style={{ color: activeColor }}></i>
+            <i className="ti ti-panel-left-dashed text-[21px]" style={{ color: activeColor }}></i>
           </button>
 
           {/* Zoom Control when Sidebar is Visible */}

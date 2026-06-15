@@ -1248,7 +1248,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
               type="button"
               className="p-0 border-0 bg-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-white transition-colors cursor-pointer focus:outline-none flex items-center justify-center w-[24px] h-[36px]"
             >
-              <i className="ph-bold ph-dots-three-vertical text-[16px]" />
+              <i className="ti ti-ellipsis-vertical text-[16px]" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-48 rounded-xl border border-gray-200 bg-white shadow-md dark:bg-zinc-900 dark:border-white/10">
@@ -1265,33 +1265,17 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <div className="inline-block">
-                <Button
-                  onClick={saveLayout}
-                  disabled={saving || hasAnyCollisions}
-                  className="flex h-[36px] w-[90px] items-center justify-center rounded-brand btn-brand-red text-white font-medium text-[13px] active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none cursor-pointer"
-                >
-                  {saving ? (
-                    <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
-                  ) : (
-                    "Save"
-                  )}
-                </Button>
-              </div>
-            </TooltipTrigger>
-            {hasAnyCollisions && (
-              <TooltipContent side="bottom" className="max-w-xs rounded-xl border-red-200 bg-red-50 p-3 text-[10px] font-semibold text-red-700 shadow-xl dark:bg-red-950/30 dark:shadow-none">
-                <div className="flex items-center gap-2">
-                   <i className="ph-fill ph-warning-circle text-sm" />
-                   CANNOT SAVE: RESOLVE OVERLAPS
-                </div>
-              </TooltipContent>
-            )}
-          </Tooltip>
-        </TooltipProvider>
+        <Button
+          onClick={saveLayout}
+          disabled={saving || hasAnyCollisions}
+          className="flex h-[36px] w-[90px] items-center justify-center rounded-brand btn-brand-red text-white font-medium text-[13px] active:scale-95 disabled:opacity-30 disabled:grayscale transition-all dark:shadow-none cursor-pointer"
+        >
+          {saving ? (
+            <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+          ) : (
+            "Save"
+          )}
+        </Button>
       </div>
     </div>
   )

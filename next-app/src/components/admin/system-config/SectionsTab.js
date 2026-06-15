@@ -307,7 +307,7 @@ export default function SectionsTab({
               onClick={() => setShowArchived(false)}
               className={`flex items-center justify-center text-[13px] pb-[10px] -mb-[17px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
                 !showArchived
-                  ? "border-[#ad2f2f] text-[#ad2f2f] font-semibold"
+                  ? "border-black text-black dark:border-zinc-50 dark:text-zinc-50 font-semibold"
                   : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
               }`}
             >
@@ -320,7 +320,7 @@ export default function SectionsTab({
               onClick={() => setShowArchived(true)}
               className={`flex items-center justify-center text-[13px] pb-[10px] -mb-[17px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
                 showArchived
-                  ? "border-[#ad2f2f] text-[#ad2f2f] font-semibold"
+                  ? "border-black text-black dark:border-zinc-50 dark:text-zinc-50 font-semibold"
                   : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
               }`}
             >
@@ -833,36 +833,33 @@ export default function SectionsTab({
           }
         }}
       >
-        <DialogContent className="overflow-hidden rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
-          <DialogHeader className="border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
+        <DialogContent className="overflow-hidden rounded-brand border border-gray-200 bg-white p-0 shadow-2xl sm:max-w-md dark:border-white/10 dark:bg-card">
+          <DialogHeader className="bg-white p-6 pb-0 dark:bg-card border-none">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-red-100 bg-red-50 text-pup-maroon shadow-sm dark:bg-red-950/30 dark:border-white/10">
-                <i className="ph-duotone ph-pencil-line text-xl"></i>
-              </div>
               <div className="min-w-0">
-                <DialogTitle className="text-lg font-semibold tracking-tight text-gray-900 dark:text-zinc-50">
-                  New course Block
+                <DialogTitle className="text-[16px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                  New Course Block
                 </DialogTitle>
-                <DialogDescription className="mt-1.5 text-sm font-medium text-gray-600 dark:text-zinc-300">
-                  Create a new organizational section for degree program
-                  management.
+                <DialogDescription className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400">
+                  Create a new organizational section for degree program management.
                 </DialogDescription>
               </div>
             </div>
           </DialogHeader>
           <form onSubmit={addSection} className="w-full min-w-0 overflow-hidden">
-            <div className="p-6 space-y-6">
+            <div className="p-6 pb-4 flex flex-col gap-[16px]">
               <div className="w-full min-w-0">
-                <label className="mb-1.5 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
-                  Degree Program <span className="text-pup-maroon dark:text-primary">*</span>
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  Degree Program <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                 </label>
                 <Select
-                  className="h-11 w-full rounded-brand border border-gray-300 bg-white px-3 text-sm font-semibold text-gray-700 shadow-sm focus:border-gray-300 focus:ring-pup-maroon dark:bg-card dark:text-zinc-200 dark:shadow-none dark:focus:border-zinc-700 dark:border-white/10 min-w-0"
+                  className="h-[40px] w-full rounded-[8px] border-[0.5px] border-gray-300 bg-white px-3 text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus-visible:border-zinc-600 min-w-0"
+                  style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                   value={secCourseCode}
                   onChange={(e) => setSecCourseCode(e.target.value)}
                   required
                 >
-                  <option value="">Select a program...</option>
+                  <option value="" className="text-gray-400">Select a program...</option>
                   {courses.map((c) => (
                     <option key={c.id} value={c.code}>
                       {c.code} - {c.name}
@@ -871,20 +868,21 @@ export default function SectionsTab({
                 </Select>
               </div>
               <div>
-                <label className="mb-1.5 block text-xs font-semibold tracking-wide text-gray-700 dark:text-zinc-200">
-                  Block Name <span className="text-pup-maroon dark:text-primary">*</span>
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                  Block Name <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500">*</span>
                 </label>
                 <Input
                   type="text"
                   placeholder="e.g. Section 1"
-                  className="h-11 w-full rounded-brand border border-gray-300 bg-white text-sm focus-visible:border-gray-300 focus-visible:ring-pup-maroon dark:bg-card dark:border-white/10 min-w-0"
+                  className="h-[40px] w-full rounded-[8px] border-[0.5px] border-gray-300 bg-white text-[13px] font-normal tracking-[-0.01em] text-gray-900 focus-visible:border-gray-500 focus-visible:ring-0 focus-visible:ring-offset-0 focus:outline-none focus:ring-0 focus:border-gray-500 dark:bg-card dark:border-zinc-800 dark:text-zinc-50 dark:focus:border-zinc-600 dark:focus-visible:border-zinc-600 min-w-0"
+                  style={{ borderWidth: '0.5px', borderStyle: 'solid' }}
                   value={newSectionName}
                   onChange={(e) => setNewSectionName(e.target.value)}
                   required
                 />
               </div>
             </div>
-            <div className="flex flex-col-reverse gap-2.5 border-t border-gray-100 bg-white p-4 sm:flex-row sm:justify-end dark:border-white/10 dark:bg-card">
+            <div className="flex items-center justify-end gap-2 border-t border-gray-100 bg-white p-4 dark:border-white/10 dark:bg-card">
               <Button
                 type="button"
                 variant="ghost"
@@ -893,14 +891,15 @@ export default function SectionsTab({
                   setNewSectionName("")
                   setSecCourseCode("")
                 }}
-                className="h-11 rounded-brand px-6 text-sm font-semibold text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors"
-              >Cancel</Button>
+                className="h-[36px] bg-transparent text-[13px] font-medium text-gray-500 hover:bg-transparent hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors border-0 shadow-none px-4"
+              >
+                Cancel
+              </Button>
               <Button
                 type="submit"
-                className="flex h-11 items-center gap-2 rounded-brand btn-brand-red hover:from-red-700 hover:to-red-900 hover:shadow-md transition-all px-6 font-semibold text-white shadow-sm dark:shadow-none"
+                className="flex h-[36px] items-center justify-center rounded-[8px] bg-[#007AFF] hover:bg-[#0066cc] text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all px-4 dark:shadow-none border-0"
               >
-                <i className="ph-bold ph-check text-lg"></i>
-                CREATE BLOCK
+                Create Block
               </Button>
             </div>
           </form>

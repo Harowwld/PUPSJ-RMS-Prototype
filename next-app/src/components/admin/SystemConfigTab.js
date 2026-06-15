@@ -976,9 +976,9 @@ export default function SystemConfigTab({
                 <button
                   type="button"
                   onClick={() => setActiveSubTab("document-types")}
-                  className={`flex items-center justify-center text-[13px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
+                  className={`flex items-center justify-center text-[15px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
                     activeSubTab === "document-types"
-                      ? "border-pup-maroon text-pup-maroon dark:border-primary dark:text-primary font-semibold"
+                      ? "border-black text-black dark:border-zinc-50 dark:text-zinc-50 font-semibold"
                       : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
                   }`}
                 >
@@ -987,9 +987,9 @@ export default function SystemConfigTab({
                 <button
                   type="button"
                   onClick={() => setActiveSubTab("degree-programs")}
-                  className={`flex items-center justify-center text-[13px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
+                  className={`flex items-center justify-center text-[15px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
                     activeSubTab === "degree-programs"
-                      ? "border-pup-maroon text-pup-maroon dark:border-primary dark:text-primary font-semibold"
+                      ? "border-black text-black dark:border-zinc-50 dark:text-zinc-50 font-semibold"
                       : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
                   }`}
                 >
@@ -998,9 +998,9 @@ export default function SystemConfigTab({
                 <button
                   type="button"
                   onClick={() => setActiveSubTab("course-blocks")}
-                  className={`flex items-center justify-center text-[13px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
+                  className={`flex items-center justify-center text-[15px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
                     activeSubTab === "course-blocks"
-                      ? "border-pup-maroon text-pup-maroon dark:border-primary dark:text-primary font-semibold"
+                      ? "border-black text-black dark:border-zinc-50 dark:text-zinc-50 font-semibold"
                       : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
                   }`}
                 >
@@ -1009,9 +1009,9 @@ export default function SystemConfigTab({
                 <button
                   type="button"
                   onClick={() => setActiveSubTab("security-questions")}
-                  className={`flex items-center justify-center text-[13px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
+                  className={`flex items-center justify-center text-[15px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
                     activeSubTab === "security-questions"
-                      ? "border-pup-maroon text-pup-maroon dark:border-primary dark:text-primary font-semibold"
+                      ? "border-black text-black dark:border-zinc-50 dark:text-zinc-50 font-semibold"
                       : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
                   }`}
                 >
@@ -1020,9 +1020,9 @@ export default function SystemConfigTab({
                 <button
                   type="button"
                   onClick={() => setActiveSubTab("bulk-import")}
-                  className={`flex items-center justify-center text-[13px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
+                  className={`flex items-center justify-center text-[15px] pt-[14px] pb-[10px] -mb-[0.5px] border-b-2 border-t-0 border-x-0 rounded-none cursor-pointer bg-transparent focus:outline-none transition-colors ${
                     activeSubTab === "bulk-import"
-                      ? "border-pup-maroon text-pup-maroon dark:border-primary dark:text-primary font-semibold"
+                      ? "border-black text-black dark:border-zinc-50 dark:text-zinc-50 font-semibold"
                       : "border-transparent text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 font-normal"
                   }`}
                 >

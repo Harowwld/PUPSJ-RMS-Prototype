@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { useTheme } from "next-themes";
+
 import Header from "@/components/layout/Header";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,7 +38,7 @@ import { cn } from "@/lib/utils";
 
 function AccountPageContent() {
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
+
   const [authUser, setAuthUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -125,9 +125,7 @@ function AccountPageContent() {
         setLname(user.lname || "");
         setUsername(user.email || user.username || "");
         setUserPreferences(user.preferences || {});
-        if (user.preferences?.theme) {
-          setTheme(user.preferences.theme);
-        }
+
 
         // If admin, fetch global system settings
         if (isAdminRole(user.role)) {
@@ -161,6 +159,19 @@ function AccountPageContent() {
       }
     })();
   }, [router]);
+
+  useEffect(() => {
+    if (!authUser) return;
+    const link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+    link.type = 'image/png';
+    link.rel = 'shortcut icon';
+    if (isAdminRole(authUser.role)) {
+      link.href = '/admin-logo.png';
+    } else {
+      link.href = '/staff-logo.png';
+    }
+    document.getElementsByTagName('head')[0].appendChild(link);
+  }, [authUser]);
 
   const handleUserPreferenceToggle = async (key, checked) => {
     const newValue = checked;
@@ -226,29 +237,7 @@ function AccountPageContent() {
   };
 
   const handleThemeChange = async (newThemeOrEvent) => {
-    const nextTheme = typeof newThemeOrEvent === "string"
-      ? newThemeOrEvent
-      : newThemeOrEvent?.target?.value;
-    
-    if (!nextTheme) return;
-
-    const changeThemeState = () => setTheme(nextTheme);
-
-    if (document.startViewTransition) {
-      document.startViewTransition(changeThemeState);
-    } else {
-      changeThemeState();
-    }
-
-    try {
-      await fetch("/api/auth/preferences", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ preferences: { theme: nextTheme } }),
-      });
-    } catch (err) {
-      console.error("Failed to save theme preference:", err);
-    }
+    // Theme switching is disabled (system is locked in light mode)
   };
 
   const handleLogout = async () => {
@@ -978,12 +967,13 @@ function AccountPageContent() {
                         <Button
                           type="submit"
                           disabled={pwLoading}
-                          className="h-10 px-6 btn-brand-red !rounded-[8px] text-[13px] font-medium tracking-[-0.01em] flex items-center gap-2 active:scale-95 disabled:opacity-50"
+                          className={cn(
+                            "h-10 px-6 btn-brand-red !rounded-[8px] text-[13px] font-medium tracking-[-0.01em] flex items-center active:scale-95 disabled:opacity-50",
+                            pwLoading && "gap-2"
+                          )}
                         >
-                          {pwLoading ? (
+                          {pwLoading && (
                             <i className="ph-bold ph-spinner animate-spin text-base"></i>
-                          ) : (
-                            <i className="ph-bold ph-key text-base"></i>
                           )}
                           {pwLoading ? "Updating..." : "Update"}
                         </Button>
@@ -1082,12 +1072,13 @@ function AccountPageContent() {
                         <Button
                           type="submit"
                           disabled={secLoading || globalQuestions.length === 0}
-                          className="h-10 px-6 btn-brand-red !rounded-[8px] text-[13px] font-medium tracking-[-0.01em] flex items-center gap-2 active:scale-95 disabled:opacity-50"
+                          className={cn(
+                            "h-10 px-6 btn-brand-red !rounded-[8px] text-[13px] font-medium tracking-[-0.01em] flex items-center active:scale-95 disabled:opacity-50",
+                            secLoading && "gap-2"
+                          )}
                         >
-                          {secLoading ? (
+                          {secLoading && (
                             <i className="ph-bold ph-spinner animate-spin text-base"></i>
-                          ) : (
-                            <i className="ph-bold ph-check text-base"></i>
                           )}
                           {secLoading ? "Saving..." : "Save"}
                         </Button>

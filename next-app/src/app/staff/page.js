@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useTheme } from "next-themes";
+
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import Sidebar from "@/components/shared/Sidebar";
@@ -62,7 +62,7 @@ function getStudentNoYear(studentNo) {
 
 function StaffPageContent() {
   const router = useRouter();
-  const { theme, setTheme } = useTheme();
+
   const searchParams = useSearchParams();
   const coreDataLoadedRef = useRef(false);
   const docsLoadedRef = useRef(false);
@@ -329,9 +329,7 @@ function StaffPageContent() {
           return;
         }
         setAuthUser(json.data);
-        if (json.data?.preferences?.theme) {
-          setTheme(json.data.preferences.theme);
-        }
+
         // Render first, then hydrate data in background.
         setLoading(false);
         setTimeout(() => {
@@ -1329,6 +1327,27 @@ function StaffPageContent() {
     return () => window.removeEventListener("toggle-sidebar", handleToggle);
   }, []);
 
+  useEffect(() => {
+    // Dynamic favicon swap for staff page
+    const updateFavicon = () => {
+      const links = document.querySelectorAll("link[rel*='icon']");
+      if (links.length > 0) {
+        links.forEach(link => {
+          link.type = 'image/png';
+          link.rel = 'shortcut icon';
+          link.href = '/staff-logo.png';
+        });
+      } else {
+        const link = document.createElement('link');
+        link.type = 'image/png';
+        link.rel = 'shortcut icon';
+        link.href = '/staff-logo.png';
+        document.getElementsByTagName('head')[0].appendChild(link);
+      }
+    };
+    updateFavicon();
+  }, [view, searchParams]);
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex flex-col font-inter p-4 gap-4 transition-colors duration-300 dark:bg-background">
@@ -1355,7 +1374,7 @@ function StaffPageContent() {
               }}
               className="flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-700 cursor-pointer bg-transparent h-9 w-9"
             >
-              <i className="ti ti-layout-sidebar text-[21px]" style={{ color: "#ebb800" }}></i>
+              <i className="ti ti-panel-left text-[21px]" style={{ color: "#ebb800" }}></i>
             </button>
 
             {/* Apple Photos Style Zoom Control */}
@@ -1440,8 +1459,9 @@ function StaffPageContent() {
               );
             })}
           </div>
-        ) : sidebarOpen ? (
+        ) : (
           <Sidebar 
+            open={sidebarOpen}
             items={sidebarItems} 
             activeKey={view} 
             onSelect={switchView} 
@@ -1450,7 +1470,7 @@ function StaffPageContent() {
             setZoomNode={setZoomNode}
             handleZoomMouseDown={handleZoomMouseDown}
           />
-        ) : null}
+        )}
         <main className="flex-1 relative w-full min-w-0 min-h-0 bg-white dark:bg-zinc-950 overflow-y-auto">
           <div 
             className="flex-1 p-4 flex flex-col min-h-0 w-full"
