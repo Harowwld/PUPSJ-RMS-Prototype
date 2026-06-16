@@ -84,6 +84,8 @@ export async function POST(req) {
     return handleGetRecoveryCodesStatus(req, user, body);
   } else if (action === "disable-recovery-codes") {
     return handleDisableRecoveryCodes(req, user, body);
+  } else if (action === "cancel-setup") {
+    return handleCancelSetup(req, user, body);
   }
 
   return NextResponse.json({ ok: false, error: "Invalid action" }, { status: 400 });
@@ -282,4 +284,21 @@ async function handleDisableRecoveryCodes(req, user, body) {
   });
 
   return NextResponse.json({ ok: true, data: { enabled: false } });
+}
+
+async function handleCancelSetup(req, user, body) {
+  const staff = await getStaffById(user.userId);
+  if (!staff) {
+    return NextResponse.json({ ok: false, error: "User not found" }, { status: 404 });
+  }
+
+  // Only clear if TOTP is not fully enabled yet
+  if (!staff.totp_enabled) {
+    await dbRun(
+      "UPDATE staff SET totp_secret = NULL, serial_key_hash = NULL, updated_at = datetime('now') WHERE id = ?",
+      [user.userId]
+    );
+  }
+
+  return NextResponse.json({ ok: true });
 }

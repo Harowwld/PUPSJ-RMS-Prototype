@@ -72,9 +72,12 @@ function AccountPageContent() {
 
   // TOTP Form State
   const [totpEnabled, setTotpEnabled] = useState(false);
+  const [hasTotpSecret, setHasTotpSecret] = useState(false);
   const [totpSetupData, setTotpSetupData] = useState(null);
   const [totpToken, setTotpToken] = useState("");
   const [totpLoading, setTotpLoading] = useState(false);
+  const [totpSetupLoading, setTotpSetupLoading] = useState(false);
+  const [recoveryCodesLoading, setRecoveryCodesLoading] = useState(false);
   const [totpError, setTotpError] = useState("");
   const [totpStep, setTotpStep] = useState("idle");
   const [recoveryCodes, setRecoveryCodes] = useState([]);
@@ -151,6 +154,7 @@ function AccountPageContent() {
         const jsonTOTP = await resTOTP.json().catch(() => null);
         if (jsonTOTP?.ok && jsonTOTP.data) {
           setTotpEnabled(jsonTOTP.data.enabled);
+          setHasTotpSecret(jsonTOTP.data.hasSecret);
           setRecoveryCodesCount(jsonTOTP.data.recoveryCodesCount || 0);
         }
       } catch {
@@ -479,8 +483,22 @@ function AccountPageContent() {
     }
   };
 
+  const refreshTOTPStatus = async () => {
+    try {
+      const res = await fetch("/api/auth/totp");
+      const json = await res.json();
+      if (json?.ok && json.data) {
+        setTotpEnabled(json.data.enabled);
+        setHasTotpSecret(json.data.hasSecret);
+        setRecoveryCodesCount(json.data.recoveryCodesCount || 0);
+      }
+    } catch (err) {
+      console.error("Failed to refresh TOTP status:", err);
+    }
+  };
+
   const startTOTPSetup = async () => {
-    setTotpLoading(true);
+    setTotpSetupLoading(true);
     setTotpError("");
     try {
       const res = await fetch("/api/auth/totp", {
@@ -500,7 +518,7 @@ function AccountPageContent() {
         description: err?.message || "Unable to initialize two-factor auth.",
       });
     } finally {
-      setTotpLoading(false);
+      setTotpSetupLoading(false);
     }
   };
 
@@ -523,12 +541,14 @@ function AccountPageContent() {
         throw new Error(json?.error || "Invalid code");
       }
       setTotpEnabled(true);
+      setHasTotpSecret(true);
       setTotpStep("idle");
       setTotpSetupData(null);
       setTotpToken("");
       toast.success("Two-Factor Auth Enabled", {
         description: "Your account is now extra secure.",
       });
+      await refreshTOTPStatus();
     } catch (err) {
       setTotpError(err?.message || "Invalid code");
       toast.error("Verification Failed", {
@@ -557,10 +577,12 @@ function AccountPageContent() {
         throw new Error(json?.error || "Invalid code");
       }
       setTotpEnabled(false);
+      setHasTotpSecret(false);
       setTotpToken("");
       toast.success("Two-Factor Auth Disabled", {
         description: "Your account is now using standard security.",
       });
+      await refreshTOTPStatus();
     } catch (err) {
       setTotpError(err?.message || "Invalid code");
       toast.error("Disable Failed", {
@@ -570,15 +592,27 @@ function AccountPageContent() {
       setTotpLoading(false);
     }
   };
-  const cancelTOTPSetup = () => {
-    setTotpStep("idle");
-    setTotpSetupData(null);
-    setTotpToken("");
-    setTotpError("");
+  const cancelTOTPSetup = async () => {
+    setTotpSetupLoading(true);
+    try {
+      await fetch("/api/auth/totp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "cancel-setup" }),
+      });
+    } catch (err) {
+      console.error("Failed to cancel TOTP setup on server:", err);
+    } finally {
+      setTotpStep("idle");
+      setTotpSetupData(null);
+      setTotpToken("");
+      setTotpError("");
+      setTotpSetupLoading(false);
+    }
   };
 
   const generateNewRecoveryCodes = async () => {
-    setTotpLoading(true);
+    setRecoveryCodesLoading(true);
     setTotpError("");
     try {
       const res = await fetch("/api/auth/totp", {
@@ -593,6 +627,7 @@ function AccountPageContent() {
       setRecoveryCodes(json.data.codes);
       setRecoveryCodesCount(json.data.codes.length);
       setShowRecoveryCodesDialog(true);
+      await refreshTOTPStatus();
       toast.success("Codes Generated", {
         description: "Please save these codes somewhere safe.",
       });
@@ -601,7 +636,7 @@ function AccountPageContent() {
         description: err?.message || "Unable to generate recovery codes.",
       });
     } finally {
-      setTotpLoading(false);
+      setRecoveryCodesLoading(false);
     }
   };
 
@@ -1187,7 +1222,7 @@ function AccountPageContent() {
                             <div>
                               <h4 className="text-[14px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50 flex items-center gap-2 leading-tight">
                                 Authenticator App
-                                {totpEnabled ? (
+                                {totpEnabled && hasTotpSecret ? (
                                   <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 uppercase tracking-[0.04em]">Active</span>
                                 ) : (
                                   <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-zinc-400 uppercase tracking-[0.04em]">Inactive</span>
@@ -1199,7 +1234,7 @@ function AccountPageContent() {
                             </div>
                           </div>
                           <div className="shrink-0 w-full md:w-auto flex justify-end">
-                             {totpEnabled ? (
+                             {totpEnabled && hasTotpSecret ? (
                                <Button
                                  onClick={() => setTotpStep("disable-flow")}
                                  variant="outline"
@@ -1210,10 +1245,14 @@ function AccountPageContent() {
                              ) : (
                                <Button
                                  onClick={startTOTPSetup}
-                                 disabled={totpLoading}
-                                 className="h-10 px-6 btn-brand-red !rounded-[8px] text-[13px] font-medium tracking-[-0.01em] active:scale-95 disabled:opacity-50"
+                                 disabled={totpSetupLoading}
+                                 className="h-10 px-6 btn-brand-red !rounded-[8px] text-[13px] font-medium tracking-[-0.01em] active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
                                >
-                                 {totpLoading ? "Setting Up..." : "Set Up"}
+                                 {totpSetupLoading ? (
+                                   <i className="ph-bold ph-spinner animate-spin text-base"></i>
+                                 ) : (
+                                   "Set Up"
+                                 )}
                                </Button>
                              )}
                            </div>
@@ -1291,7 +1330,7 @@ function AccountPageContent() {
                             {recoveryCodesCount > 0 && (
                               <Button
                                 onClick={async () => {
-                                  setTotpLoading(true);
+                                  setRecoveryCodesLoading(true);
                                   try {
                                     const res = await fetch("/api/auth/totp", {
                                       method: "POST",
@@ -1305,11 +1344,7 @@ function AccountPageContent() {
                                         description: "Your emergency backup codes have been invalidated."
                                       });
                                       // Refresh status
-                                      const resTOTP = await fetch("/api/auth/totp");
-                                      const jsonTOTP = await resTOTP.json().catch(() => null);
-                                      if (jsonTOTP?.ok && jsonTOTP.data) {
-                                        setTotpEnabled(jsonTOTP.data.enabled);
-                                      }
+                                      await refreshTOTPStatus();
                                     } else {
                                       throw new Error(json.error);
                                     }
@@ -1318,10 +1353,10 @@ function AccountPageContent() {
                                       description: "Failed to disable recovery codes: " + err.message
                                     });
                                   } finally {
-                                    setTotpLoading(false);
+                                    setRecoveryCodesLoading(false);
                                   }
                                 }}
-                                disabled={totpLoading}
+                                disabled={recoveryCodesLoading}
                                 variant="outline"
                                 className="h-10 px-4 font-medium text-[13px] tracking-[-0.01em] border-gray-300 rounded-[8px]"
                               >
@@ -1330,10 +1365,14 @@ function AccountPageContent() {
                             )}
                             <Button
                                onClick={generateNewRecoveryCodes}
-                               disabled={totpLoading}
-                               className="h-10 px-6 btn-brand-red !rounded-[8px] text-[13px] font-medium tracking-[-0.01em] active:scale-95 disabled:opacity-50"
+                               disabled={recoveryCodesLoading}
+                               className="h-10 px-6 btn-brand-red !rounded-[8px] text-[13px] font-medium tracking-[-0.01em] active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
                              >
-                               {totpLoading ? "Generating..." : (recoveryCodesCount > 0 ? "Regenerate" : "Generate")}
+                               {recoveryCodesLoading ? (
+                                 <i className="ph-bold ph-spinner animate-spin text-base"></i>
+                               ) : (
+                                 recoveryCodesCount > 0 ? "Regenerate" : "Generate"
+                               )}
                              </Button>
                           </div>
                         </div>

@@ -104,7 +104,7 @@ export async function GET(req) {
     if (fs.existsSync(uploadsDir)) {
       const files = fs.readdirSync(uploadsDir);
       for (const file of files) {
-        fs.unlinkSync(path.join(uploadsDir, file));
+        fs.rmSync(path.join(uploadsDir, file), { recursive: true, force: true });
       }
     }
 
