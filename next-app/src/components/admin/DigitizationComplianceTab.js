@@ -855,9 +855,9 @@ export default function DigitizationComplianceTab({
                     </tbody>
                   </table>
                 ) : (
-                  <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                  <Empty className="flex h-[320px] flex-col items-center justify-center border-0 bg-transparent text-center">
                     <EmptyHeader className="flex flex-col items-center gap-0">
-                      <div className="relative mb-6 mx-auto w-24 h-24">
+                      <div className="relative mb-6">
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-36 h-36 rounded-full bg-gray-100/50 dark:bg-zinc-800/30"></div>
                         <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
                           <i className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></i>

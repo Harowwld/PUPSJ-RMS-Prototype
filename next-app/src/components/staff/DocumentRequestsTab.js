@@ -578,7 +578,7 @@ export default function DocumentRequestsTab({
                 className="flex-1 w-full overflow-visible animate-fade-up"
               >
                 <div className="overflow-x-auto flex-1">
-                  <table className="min-w-full text-sm table-fixed">
+                  <table className={cn("min-w-full text-sm table-fixed", rows.length === 0 && "h-full")}>
                     <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
                       <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
                         <th className="p-4 w-20">
@@ -670,11 +670,11 @@ export default function DocumentRequestsTab({
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+                    <tbody className={cn("divide-y divide-gray-100 dark:divide-white/10", rows.length === 0 && "h-full")}>
                       {rows.length === 0 ? (
-                        <tr className="border-0 hover:bg-transparent">
-                          <td colSpan={5} className="p-0 border-0">
-                            <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                        <tr className="border-0 hover:bg-transparent h-full">
+                          <td colSpan={5} className="p-0 border-0 h-full">
+                            <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
                               <EmptyHeader className="flex flex-col items-center gap-0">
                                 <div className="relative mb-6">
                                   <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>

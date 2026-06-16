@@ -26,6 +26,39 @@ function Empty({
           min-height: 280px !important;
         }
 
+        /* Compact/Widget Variant */
+        [data-slot="empty"][data-compact="true"] {
+          min-height: 0 !important;
+          min-height: auto !important;
+          padding: 8px 16px !important;
+        }
+
+        [data-slot="empty"][data-compact="true"] [data-slot="empty-icon"] {
+          margin: 0 auto 8px auto !important;
+          width: 32px !important;
+          height: 32px !important;
+          min-width: 32px !important;
+          min-height: 32px !important;
+        }
+
+        [data-slot="empty"][data-compact="true"] [data-slot="empty-icon"] i,
+        [data-slot="empty"][data-compact="true"] [data-slot="empty-icon"] svg,
+        [data-slot="empty"][data-compact="true"] [data-slot="empty-icon"] .lucide-svg {
+          font-size: 32px !important;
+          width: 32px !important;
+          height: 32px !important;
+        }
+
+        [data-slot="empty"][data-compact="true"] [data-slot="empty-title"] {
+          font-size: 14px !important;
+          margin: 0 auto 2px auto !important;
+        }
+
+        [data-slot="empty"][data-compact="true"] [data-slot="empty-description"] {
+          font-size: 11px !important;
+          max-width: 180px !important;
+        }
+
         /* Reset all structural wrappers that might exist inside Empty */
         [data-slot="empty-header"], 
         [data-slot="empty-content"] {

@@ -32,6 +32,8 @@ export default function LucideIconTranslator() {
       "spinner": "loader-2",
       "eye-slash": "eye-off",
       "download-simple": "download",
+      "upload-simple": "upload",
+      "file-csv": "file-spreadsheet",
       "cloud-arrow-up": "cloud-upload",
       "shield-slash": "shield-off",
       "shield-key": "shield-alert",

@@ -1045,7 +1045,7 @@ export default function ScanUploadTab({
                           }}
                         />
                         <div className="pointer-events-none flex flex-col items-center justify-center text-center w-full h-full">
-                          <i className={cn("ph-bold ph-tray-arrow-up text-[32px] transition-colors duration-150", csvDropActive ? "text-pup-maroon" : "text-[#C7C7CC]")}></i>
+                          <i className={cn("ph-bold ph-file-csv text-[32px] transition-colors duration-150", csvDropActive ? "text-pup-maroon" : "text-[#C7C7CC]")}></i>
                           <p className="text-[14px] font-medium text-[#111111] dark:text-zinc-100 mt-[12px] m-0">
                             Drop CSV File Here
                           </p>
@@ -1285,7 +1285,7 @@ export default function ScanUploadTab({
                             >
                               <div className="flex flex-col items-center justify-center p-6 bg-white rounded-[12px] border border-[#E5E5EA] shadow-xl max-w-xs text-center pointer-events-none animate-scale-up dark:bg-card dark:border-white/10">
                                 <div className="w-14 h-14 rounded-full bg-gray-50 border border-gray-100 flex items-center justify-center mb-3 dark:bg-muted">
-                                  <i className="ph-bold ph-tray-arrow-up text-xl text-[#C7C7CC] animate-bounce"></i>
+                                  <i className="ph-bold ph-upload-simple text-xl text-[#C7C7CC] animate-bounce"></i>
                                 </div>
                                 <p className="text-sm font-medium text-[#111111] dark:text-zinc-100">
                                   Drop file here to replace preview
@@ -1310,7 +1310,7 @@ export default function ScanUploadTab({
                               onChange={(e) => handlePdfFileSelect(e.target.files)}
                             />
                             <div className="pointer-events-none flex flex-col items-center justify-center text-center w-full h-full">
-                              <i className={cn("ph-bold ph-tray-arrow-up text-[32px] transition-colors duration-150", dropActive ? "text-pup-maroon" : "text-[#C7C7CC]")}></i>
+                              <i className={cn("ph-bold ph-upload-simple text-[32px] transition-colors duration-150", dropActive ? "text-pup-maroon" : "text-[#C7C7CC]")}></i>
                               <p className="text-[14px] font-medium text-[#111111] dark:text-zinc-100 mt-[12px] m-0">
                                 Drop Document Or Image Here
                               </p>

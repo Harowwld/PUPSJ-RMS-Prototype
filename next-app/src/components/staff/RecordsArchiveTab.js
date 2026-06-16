@@ -470,6 +470,23 @@ export default function RecordsArchiveTab({
                     </Button>
                   </EmptyContent>
                 </Empty>
+              ) : archivedStudents.length === 0 && showArchived ? (
+                <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
+                  <EmptyHeader className="flex flex-col items-center gap-0">
+                    <div className="relative mb-6">
+                      <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
+                      <EmptyMedia className="relative z-10 flex h-24 w-24 items-center justify-center rounded-3xl border border-gray-100 bg-white shadow-xl rotate-3 dark:border-white/10 dark:bg-card dark:shadow-none">
+                        <i className="ph-duotone ph-archive text-xl text-gray-300 dark:text-zinc-600"></i>
+                      </EmptyMedia>
+                    </div>
+                    <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
+                      No Archived Students
+                    </EmptyTitle>
+                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
+                      There are currently no archived records found in the system.
+                    </EmptyDescription>
+                  </EmptyHeader>
+                </Empty>
               ) : currentLevel !== "students" ? (
                 <div 
                   key={`folders-${showArchived}`}

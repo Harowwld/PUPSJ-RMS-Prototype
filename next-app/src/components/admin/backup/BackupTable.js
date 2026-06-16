@@ -64,7 +64,7 @@ export default function BackupTable({
           "flex-1 overflow-hidden overflow-x-auto overflow-y-auto select-none min-h-[400px] isolate"
         )}
       >
-        <table className="min-w-full text-sm">
+        <table className={cn("min-w-full text-sm", sortedAndPaginatedBackups.length === 0 && "h-full")}>
           <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
             <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
               <th className="w-12 p-4 text-center">
@@ -136,11 +136,11 @@ export default function BackupTable({
               <th className="w-32 p-4 px-6 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Action</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+          <tbody className={cn("divide-y divide-gray-100 dark:divide-white/10", sortedAndPaginatedBackups.length === 0 && "h-full")}>
             {sortedAndPaginatedBackups.length === 0 ? (
-              <tr className="border-0 hover:bg-transparent">
-                <td colSpan={6} className="border-0 p-0">
-                  <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
+              <tr className="border-0 hover:bg-transparent h-full">
+                <td colSpan={6} className="border-0 p-0 h-full">
+                  <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
                     <EmptyHeader className="flex flex-col items-center gap-0">
                       <div className="relative mb-6">
                         <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>

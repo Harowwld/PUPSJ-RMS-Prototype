@@ -253,7 +253,7 @@ export default function LogTable({
     <div className="flex flex-1 flex-col min-h-0 gap-6">
       <div className="flex-1 min-h-0 flex flex-col overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card isolate">
         <div className="flex-1 overflow-hidden rounded-[inherit] isolate">
-          <table className="min-w-full text-sm">
+          <table className={cn("min-w-full text-sm", displayLogs.length === 0 && "h-full")}>
             <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
               <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                 <th className="w-12 p-4 text-center"></th>
@@ -313,11 +313,11 @@ export default function LogTable({
                 <th className="p-4 text-right text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">Actions</th>
               </tr>
             </thead>
-            <tbody className="bg-transparent">
+            <tbody className={cn("bg-transparent", displayLogs.length === 0 && "h-full")}>
               {displayLogs.length === 0 ? (
-                <tr className="border-0 hover:bg-transparent">
-                  <td colSpan={7} className="border-0 p-0">
-                    <Empty className="flex h-[450px] flex-col items-center justify-center border-0 bg-transparent text-center">
+                <tr className="border-0 hover:bg-transparent h-full">
+                  <td colSpan={7} className="border-0 p-0 h-full">
+                    <Empty className="flex h-full flex-col items-center justify-center border-0 bg-transparent text-center">
                       <EmptyHeader className="flex flex-col items-center gap-0">
                         <div className="relative mb-6">
                           <div className="absolute inset-0 scale-150 animate-pulse rounded-full bg-gray-50 opacity-50 dark:bg-card"></div>
