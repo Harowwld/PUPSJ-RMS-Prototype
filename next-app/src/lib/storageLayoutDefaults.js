@@ -45,9 +45,9 @@ function buildGridCabinets({
 
   for (let row = 0; row < rows; row++) {
     for (let col = 0; col < cols; col++) {
-      const cabChar = String.fromCharCode(65 + (cabIdx++));
+      const cabinetYear = 2020 + (cabIdx++);
       cabinets.push({
-        id: `${cabChar}`,
+        id: `${cabinetYear}`,
         rect: {
           x: (startXUnits + col * 4) * GX,
           y: (startYUnits + row * 4) * GY,
@@ -68,7 +68,7 @@ function buildUShapeLayout({ reversed = false } = {}) {
   const h = GY * 3; // 3 units
   let cabIdx = 0;
 
-  const getNextId = () => `${String.fromCharCode(65 + cabIdx++)}`;
+  const getNextId = () => `${2020 + (cabIdx++)}`;
 
   // Left column (4 cabinets)
   // Start at x=1 unit, y=1 unit

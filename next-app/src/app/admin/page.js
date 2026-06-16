@@ -2242,7 +2242,7 @@ function AdminPageContent() {
               )} />
               <p className="text-[11px] font-medium text-gray-600 dark:text-zinc-400">
                 {extDriveEvent?.type === "connected"
-                  ? "Backup archives can now be synchronized to this external drive from the Backup Records panel."
+                  ? "Backup archives can now be synchronized to this external drive from the Backup & Maintenance panel."
                   : "Any pending or future backup synchronization to this drive will fail until it is reconnected."}
               </p>
             </div>
@@ -2266,7 +2266,7 @@ function AdminPageContent() {
                 className="flex h-10 items-center gap-2 rounded-brand btn-brand-red px-5 font-semibold text-white shadow-sm"
               >
                 <i className="ph-bold ph-hard-drives" />
-                Go to Backup Records
+                Go to Backup & Maintenance
               </Button>
             )}
           </div>

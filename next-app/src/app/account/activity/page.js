@@ -1204,7 +1204,7 @@ export default function AccountActivityPage() {
                     className="flex h-[36px] w-[142px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none cursor-pointer"
                   >
                     {isGeneratingPdf ? (
-                      <i className="ph-bold ph-spinner animate-spin text-[16px]"></i>
+                      <i className="ph-bold ph-spinner animate-spin text-[16px] flex items-center justify-center"></i>
                     ) : (
                       "Get Report"
                     )}

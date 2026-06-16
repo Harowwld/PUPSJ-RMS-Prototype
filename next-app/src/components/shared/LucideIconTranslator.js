@@ -48,6 +48,7 @@ export default function LucideIconTranslator() {
       "square": "square",
       "bell": "bell",
       "archive": "archive",
+      "archive-restore": "archive-restore",
       "scan": "scan",
       "users": "users",
       "user-plus": "user-plus",
@@ -65,6 +66,9 @@ export default function LucideIconTranslator() {
       "gear": "cog",
       "paperclip": "paperclip",
       "file": "file",
+      "checks": "check-check",
+      "envelope": "mail",
+      "envelopes": "mails",
     };
 
     function toCamelCase(str) {

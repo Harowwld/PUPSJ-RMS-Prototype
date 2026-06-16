@@ -5,6 +5,7 @@ import { useState, useEffect, useMemo } from "react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import FloatingActionBar from "@/components/shared/FloatingActionBar"
+import PageHeader from "@/components/shared/PageHeader"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -14,8 +15,8 @@ import {
 } from "@/components/ui/breadcrumb"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
+import { Card, CardContent } from "@/components/ui/card"
 import { Toggle } from "@/components/ui/toggle"
-import RoomMap2D from "@/components/staff/RoomMap2D"
 import { Skeleton } from "@/components/ui/skeleton"
 import {
   Popover,
@@ -31,81 +32,23 @@ import {
   EmptyMedia,
 } from "@/components/ui/empty"
 
-const FOLDER_COLORS = {
-  yellow: {
-    name: "Yellow",
-    back: "bg-[#dca11e] dark:bg-[#c28d17] border-[#c28d17] dark:border-[#a37613]",
-    front: "bg-[#f1b82d] dark:bg-[#d69f21] border-[#d69f21] dark:border-[#b88915]",
-    icon: "text-[#5c3e03] dark:text-[#452c02]",
-    title: "text-[#3e2702] dark:text-[#2d1c02]",
-    subtitle: "text-[#785002] dark:text-[#5c3e02]",
-    bubble: "bg-[#f1b82d]",
-    isLight: true,
-  },
-  red: {
-    name: "Red",
-    back: "bg-red-600 dark:bg-red-700 border-red-700 dark:border-red-800",
-    front: "bg-red-500 dark:bg-red-600 border-red-600 dark:border-red-700",
-    icon: "text-white/90",
-    title: "text-white",
-    subtitle: "text-white/70",
-    bubble: "bg-red-500",
-  },
-  blue: {
-    name: "Blue",
-    back: "bg-blue-600 dark:bg-blue-700 border-blue-700 dark:border-blue-800",
-    front: "bg-blue-500 dark:bg-blue-600 border-blue-600 dark:border-blue-700",
-    icon: "text-white/90",
-    title: "text-white",
-    subtitle: "text-white/70",
-    bubble: "bg-blue-500",
-  },
-  green: {
-    name: "Green",
-    back: "bg-emerald-600 dark:bg-emerald-700 border-emerald-700 dark:border-emerald-800",
-    front: "bg-emerald-500 dark:bg-emerald-600 border-emerald-600 dark:border-emerald-700",
-    icon: "text-white/90",
-    title: "text-white",
-    subtitle: "text-white/70",
-    bubble: "bg-emerald-500",
-  },
-  purple: {
-    name: "Purple",
-    back: "bg-purple-600 dark:bg-purple-700 border-purple-700 dark:border-purple-800",
-    front: "bg-purple-500 dark:bg-purple-600 border-purple-600 dark:border-purple-700",
-    icon: "text-white/90",
-    title: "text-white",
-    subtitle: "text-white/70",
-    bubble: "bg-purple-500",
-  },
-  pink: {
-    name: "Pink",
-    back: "bg-pink-600 dark:bg-pink-700 border-pink-700 dark:border-pink-800",
-    front: "bg-pink-500 dark:bg-pink-600 border-pink-600 dark:border-pink-700",
-    icon: "text-white/90",
-    title: "text-white",
-    subtitle: "text-white/70",
-    bubble: "bg-pink-500",
-  },
-  indigo: {
-    name: "Indigo",
-    back: "bg-indigo-600 dark:bg-indigo-700 border-indigo-700 dark:border-indigo-800",
-    front: "bg-indigo-500 dark:bg-indigo-600 border-indigo-600 dark:border-indigo-700",
-    icon: "text-white/90",
-    title: "text-white",
-    subtitle: "text-white/70",
-    bubble: "bg-indigo-500",
-  },
-  gray: {
-    name: "Gray",
-    back: "bg-gray-600 dark:bg-gray-700 border-gray-700 dark:border-gray-800",
-    front: "bg-gray-500 dark:bg-gray-600 border-gray-600 dark:border-gray-700",
-    icon: "text-white/90",
-    title: "text-white",
-    subtitle: "text-white/70",
-    bubble: "bg-gray-500",
-  },
+import { FOLDER_COLORS } from "@/lib/constants"
+function getStudentNoYear(studentNo) {
+  const raw = String(studentNo || "").trim();
+  const yearPart = raw.split("-")[0];
+  const year = Number(yearPart);
+  if (!Number.isInteger(year) || year < 1900 || year > 2200) return null;
+  return year;
 }
+
+function getStudentFolderYear(s) {
+  if (!s) return null;
+  const derived = getStudentNoYear(s.studentNo || s.student_no);
+  if (derived != null) return derived;
+  const fromDb = Number(s.yearLevel ?? s.year_level);
+  return Number.isFinite(fromDb) ? fromDb : null;
+}
+
 import ConfirmModal from "@/components/shared/ConfirmModal"
 import { cn } from "@/lib/utils"
 
@@ -123,18 +66,8 @@ export default function RecordsArchiveTab({
   archivedStudents,
   explorerItems,
   onSwitchView,
-  locatorModel,
-  selectedRoom,
-  setSelectedRoom,
-  setSelectedCabinet,
-  setCurrentLocatorLevel,
-  selectedCabinet,
-  currentLocatorLevel,
-  activeStudent,
-  activeStudentDocs,
   onPreviewDocument,
   onRestoreStudent,
-  onUnfocusStudent,
   selectedIds,
   onSelectionChange,
   onBulkArchive,
@@ -142,7 +75,6 @@ export default function RecordsArchiveTab({
 }) {
   const [listType, setListType] = useState("card")
   const [showArchived, setShowArchived] = useState(false)
-  const [scrollTrigger, setScrollTrigger] = useState(0)
   const [page, setPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(9) // 9 fits nicely in 3-column card grid, 10 or more in table
 
@@ -206,21 +138,7 @@ export default function RecordsArchiveTab({
 
   const handleLocateStudentClick = (student) => {
     onLocateStudent(student)
-    setScrollTrigger((prev) => prev + 1)
   }
-
-  // Scroll to storage layout when a student is located
-  useEffect(() => {
-    if (activeStudent) {
-      const timer = setTimeout(() => {
-        const el = document.getElementById("storage-layout-section")
-        if (el) {
-          el.scrollIntoView({ behavior: "smooth", block: "start" })
-        }
-      }, 100)
-      return () => clearTimeout(timer)
-    }
-  }, [activeStudent, scrollTrigger])
 
 
 
@@ -240,22 +158,39 @@ export default function RecordsArchiveTab({
   }, [showArchived, quickResults, archivedStudents, quickQuery])
 
   const filteredExplorerItems = useMemo(() => {
-    if (currentLevel !== "students") return explorerItems
+    if (currentLevel !== "students") {
+      return explorerItems.map((item) => {
+        const yearStr = item.key
+        const yearNum = Number(yearStr)
+        const activeCount = students.filter((s) => {
+          return getStudentFolderYear(s) === yearNum
+        }).length
+        const archCount = archivedStudents.filter((s) => {
+          return getStudentFolderYear(s) === yearNum
+        }).length
+
+        return {
+          ...item,
+          title: yearStr,
+          subtitle: showArchived ? `${archCount} archived` : `${activeCount} active`
+        }
+      })
+    }
 
     if (showArchived) {
       const year = breadcrumbs
         .find((b) => b.level === "students")
         ?.label.split(" ")[1]
       if (!year) return []
+      const yearNum = Number(year)
       return archivedStudents
         .filter((s) => {
-          const snYear = String(s.studentNo || "").split("-")[0]
-          return snYear === year
+          return getStudentFolderYear(s) === yearNum
         })
         .map((s) => ({ key: s.studentNo, student: s }))
     }
     return explorerItems
-  }, [showArchived, explorerItems, archivedStudents, currentLevel, breadcrumbs])
+  }, [showArchived, explorerItems, archivedStudents, students, currentLevel, breadcrumbs])
 
   const paginatedExplorerItems = useMemo(() => {
     if (currentLevel !== "students") return filteredExplorerItems
@@ -266,395 +201,186 @@ export default function RecordsArchiveTab({
   const totalItems = currentLevel === "students" ? filteredExplorerItems.length : 0
   const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
 
-  function renderStorageBody(isFullscreen) {
-    const mapWrap = isFullscreen
-      ? "min-h-[min(70vh,800px)] flex-1 w-full aspect-[16/10] mx-auto max-w-6xl overflow-hidden rounded-xl shadow-2xl"
-      : "w-full aspect-[16/10] max-h-[600px] mx-auto max-w-4xl overflow-hidden rounded-xl shadow-lg border border-gray-200 dark:border-white/10"
-    const rowClass = isFullscreen
-      ? "flex flex-1 flex-col overflow-visible"
-      : "flex flex-col w-full"
-    const leftClass = isFullscreen
-      ? "bg-white dark:bg-zinc-950 p-8 h-auto overflow-visible flex flex-1 flex-col w-full"
-      : "bg-white dark:bg-zinc-950 p-8 flex flex-col w-full"
-    const innerLeftClass = "flex w-full flex-col min-h-0 flex-1 mx-auto max-w-6xl"
+  const activeTabCount = useMemo(() => {
+    if (currentLevel === "students") {
+      const yearItem = breadcrumbs.find((b) => b.level === "students")
+      if (yearItem) {
+        const yearNum = Number(yearItem.label.split(" ")[1])
+        if (Number.isFinite(yearNum)) {
+          return students.filter((s) => getStudentFolderYear(s) === yearNum).length
+        }
+      }
+    }
+    return students.length
+  }, [currentLevel, breadcrumbs, students])
 
-    return (
-      <div className={rowClass}>
-        <div className={leftClass}>
-          <div className={innerLeftClass}>
-            {/* Storage Explorer Unified Header with Browser-style Back & Forward Buttons */}
-            <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-200 dark:border-white/10 pb-6">
-              <div className="flex flex-col gap-2">
-                <span className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">Storage Explorer</span>
-                
-                <div className="flex items-center gap-1.5 sm:gap-2">
-                  {/* Back Navigation Button */}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8 rounded-full border border-gray-300 dark:border-white/10 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 cursor-pointer"
-                    disabled={currentLocatorLevel === "rooms"}
-                    onClick={() => {
-                      if (currentLocatorLevel === "drawers") {
-                        setCurrentLocatorLevel("cabinets");
-                      } else if (currentLocatorLevel === "cabinets") {
-                        setCurrentLocatorLevel("rooms");
-                        setSelectedRoom(null);
-                        setSelectedCabinet(null);
-                      }
-                    }}
-                  >
-                    <i className="ph-bold ph-caret-left text-sm" />
-                  </Button>
+  const archivedTabCount = useMemo(() => {
+    if (currentLevel === "students") {
+      const yearItem = breadcrumbs.find((b) => b.level === "students")
+      if (yearItem) {
+        const yearNum = Number(yearItem.label.split(" ")[1])
+        if (Number.isFinite(yearNum)) {
+          return archivedStudents.filter((s) => getStudentFolderYear(s) === yearNum).length
+        }
+      }
+    }
+    return archivedStudents.length
+  }, [currentLevel, breadcrumbs, archivedStudents])
 
-                  {/* Forward Navigation Button */}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="h-8 w-8 rounded-full border border-gray-300 dark:border-white/10 dark:bg-zinc-900 text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-800 disabled:opacity-30 cursor-pointer"
-                    disabled={
-                      (currentLocatorLevel === "rooms" && !selectedRoom) ||
-                      (currentLocatorLevel === "cabinets" && !selectedCabinet) ||
-                      currentLocatorLevel === "drawers"
-                    }
-                    onClick={() => {
-                      if (currentLocatorLevel === "rooms" && selectedRoom) {
-                        setCurrentLocatorLevel("cabinets");
-                      } else if (currentLocatorLevel === "cabinets" && selectedCabinet) {
-                        setCurrentLocatorLevel("drawers");
-                      }
-                    }}
-                  >
-                    <i className="ph-bold ph-caret-right text-sm" />
-                  </Button>
-                  
-                  {/* Location Path Text */}
-                  <h4 className="text-xl sm:text-xl font-semibold tracking-tight text-gray-900 dark:text-zinc-50 flex items-center select-none ml-1.5">
-                    {currentLocatorLevel === "rooms" && "Storage Rooms"}
-                    {currentLocatorLevel === "cabinets" && (
-                      <>
-                        Room {selectedRoom} <span className="text-gray-300 dark:text-zinc-700 mx-2">/</span> Layout
-                      </>
-                    )}
-                    {currentLocatorLevel === "drawers" && (
-                      <>
-                        Room {selectedRoom} <span className="text-gray-300 dark:text-zinc-700 mx-2">/</span> {String(selectedCabinet).startsWith("CAB") ? selectedCabinet : `Cab ${selectedCabinet}`}
-                      </>
-                    )}
-                  </h4>
-                </div>
-              </div>
 
-              {activeStudent && (
-                <div className="flex items-center gap-3">
-                  <div className="flex flex-col text-right hidden sm:flex">
-                    <span className="text-[10px] font-semibold text-gray-400 dark:text-zinc-500 tracking-widest mb-1">Locating Target</span>
-                    <span className="text-lg sm:text-xl font-semibold text-pup-maroon dark:text-red-400 tracking-tight">{activeStudent.name}</span>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      onUnfocusStudent?.();
-                    }}
-                    className="h-10 px-4 rounded-brand border-red-200 text-xs font-semibold tracking-widest text-red-600 shadow-xs hover:bg-red-50 dark:border-red-950 dark:hover:bg-red-950/30 cursor-pointer"
-                  >
-                    <i className="ph-bold ph-eye-slash mr-1.5 text-sm" />
-                    Unfocus
-                  </Button>
-                </div>
-              )}
-            </div>
-
-            {/* Level Inner Content */}
-            {locatorModel.kind === "rooms" ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 pb-8">
-                {locatorModel.rooms.map((r) => (
-                  <div
-                    key={r.room}
-                    className={cn(
-                      "group relative flex cursor-pointer flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-300 hover:shadow-xl hover:-translate-y-1 dark:border-white/10 dark:bg-card",
-                      r.isTarget && "ring-2 ring-pup-maroon border-pup-maroon dark:ring-primary dark:border-primary"
-                    )}
-                    onClick={() => {
-                      setSelectedRoom(r.room)
-                      setSelectedCabinet(null)
-                      setCurrentLocatorLevel("cabinets")
-                    }}
-                  >
-                    <div className={cn(
-                      "flex h-48 items-center justify-center transition-colors",
-                      r.isTarget ? "bg-pup-maroon/5 dark:bg-primary/5" : "bg-gray-50 dark:bg-muted"
-                    )}>
-                      <div className={cn(
-                        "flex h-24 w-24 items-center justify-center rounded-3xl shadow-lg transition-transform group-hover:scale-110",
-                        r.isTarget ? "bg-pup-maroon text-white dark:bg-primary" : "bg-white text-gray-400 dark:bg-zinc-800 dark:text-zinc-500"
-                      )}>
-                        <i className="ph-fill ph-warehouse text-xl"></i>
-                      </div>
-                    </div>
-                    <div className="p-6">
-                      <div className="flex items-center justify-between mb-2">
-                        <h5 className="text-xl font-semibold text-gray-900 dark:text-zinc-50 tracking-tight">
-                          Room {r.room}
-                        </h5>
-                        {r.isTarget && (
-                          <Badge className="bg-pup-maroon text-white animate-pulse dark:bg-primary">
-                            Located
-                          </Badge>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <div className="h-1 w-8 bg-pup-maroon/20 rounded-full dark:bg-primary/20"></div>
-                        <span className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-                          {r.occupiedCount} archived records
-                        </span>
-                      </div>
-                    </div>
-                    {r.isTarget && (
-                      <div className="absolute top-4 right-4 flex h-8 w-8 items-center justify-center rounded-full bg-pup-maroon text-white shadow-lg dark:bg-primary">
-                        <i className="ph-bold ph-map-pin"></i>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : locatorModel.kind === "cabinets" ? (
-              <div className={mapWrap}>
-                <RoomMap2D
-                  kind="cabinets"
-                  activeStudent={activeStudent}
-                  cabinets={locatorModel.cabinets}
-                  roomDoor={locatorModel.roomDoor}
-                  selectedCabinetId={selectedCabinet}
-                   onCabinetClick={(cabId) => {
-                    setSelectedCabinet(cabId)
-                    if (cabId) {
-                      setCurrentLocatorLevel("drawers")
-                    } else {
-                      setCurrentLocatorLevel("cabinets")
-                    }
-                  }}
-                  onDrawerClick={(drawerId) => {
-                    // Optional: Highlight drawer students in the future
-                  }}
-                  onPreviewDocument={onPreviewDocument}
-                />
-              </div>
-            ) : (
-              <div className={mapWrap}>
-                <RoomMap2D
-                  kind="drawers"
-                  activeStudent={activeStudent}
-                  cabinets={locatorModel.cabinets || []}
-                  roomDoor={locatorModel.roomDoor}
-                  selectedCabinetId={selectedCabinet}
-                  drawerSlots={locatorModel.drawers}
-                  onCabinetClick={(cabId) => {
-                    setSelectedCabinet(cabId)
-                    if (cabId) {
-                      setCurrentLocatorLevel("drawers")
-                    } else {
-                      setCurrentLocatorLevel("cabinets")
-                    }
-                  }}
-                  onPreviewDocument={onPreviewDocument}
-                />
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-    )
-  }
 
   return (
     <div
       id="view-search"
-      className="animate-fade-up font-inter flex h-auto w-full flex-col gap-6 lg:flex-row"
+      className="animate-fade-up font-inter flex h-auto w-full flex-col gap-6"
     >
-      <div className="flex flex-1 flex-col items-stretch gap-6 lg:flex-row">
-        <div className="flex w-full flex-shrink-0 flex-col gap-6 lg:w-1/4 h-auto">
-          {/* Pill Tabs Container (Standalone) */}
-          <div className="flex w-full cursor-default items-center overflow-hidden rounded-brand border border-gray-200 bg-gray-100 p-0.5 shadow-xs backdrop-blur-sm sm:w-auto dark:border-white/10 dark:bg-muted/50 dark:shadow-none">
+      <Card className="rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-visible flex flex-col">
+        <PageHeader
+          icon="ph-archive"
+          title="Records & Archive"
+          description="Browse, search, and locate student records and physical archives."
+          showBorder={false}
+          titleClassName="text-[15px] font-bold text-gray-900 dark:text-zinc-50"
+          descriptionClassName="text-[14px] font-normal text-[#8E8E93] dark:text-zinc-400 mt-[2px]"
+          actions={
+            <Button
+              variant="ghost"
+              onClick={() => onSwitchView("storage")}
+              className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none! border-0!"
+            >
+              Storage Explorer
+              <i className="ph-bold ph-arrow-right"></i>
+            </Button>
+          }
+        />
+        <div className="bg-white px-6 pb-[16px] dark:bg-card flex flex-col md:flex-row md:items-center justify-between gap-4 select-none pt-3">
+          {/* Left: Active / Archived Tabs */}
+          <div className="flex gap-[24px] select-none items-center">
             <button
               type="button"
               onClick={() => setShowArchived(false)}
               className={cn(
-                "group flex h-12 flex-1 cursor-pointer items-center justify-center gap-3 px-4 text-sm font-semibold transition-all duration-200 active:scale-[0.98]",
+                "relative pb-[16px] -mb-[16px] text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer",
                 !showArchived
-                  ? "rounded-l-[calc(var(--radius)-2px)] rounded-r-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
-                  : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
+                  ? "text-black after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-black dark:text-zinc-50 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
               )}
             >
-              <i className={cn("ph-bold ph-users-three text-lg", !showArchived ? "text-pup-maroon dark:text-primary" : "text-gray-400 dark:text-zinc-500")} />
-              <span className="whitespace-nowrap tracking-wide text-xs font-semibold">Active</span>
-              <span
-                className={cn(
-                  "flex h-6 min-w-[30px] items-center justify-center rounded-full px-2 text-[11px] font-semibold transition-all duration-300",
-                  !showArchived
-                    ? "bg-pup-maroon text-white shadow-sm dark:bg-[#352021] dark:text-primary"
-                    : "bg-gray-200 text-gray-500 dark:bg-zinc-800 dark:text-zinc-500"
-                )}
-              >
-                {students.length}
-              </span>
+              Active ({activeTabCount})
             </button>
             <button
               type="button"
               onClick={() => setShowArchived(true)}
               className={cn(
-                "group flex h-12 flex-1 cursor-pointer items-center justify-center gap-3 px-4 text-sm font-semibold transition-all duration-200 active:scale-[0.98]",
+                "relative pb-[16px] -mb-[16px] text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer",
                 showArchived
-                  ? "rounded-r-[calc(var(--radius)-2px)] rounded-l-none bg-white text-pup-maroon shadow-sm ring-1 ring-inset ring-black/5 dark:bg-zinc-900 dark:text-primary dark:ring-white/10"
-                  : "text-gray-500 ring-transparent hover:bg-white/50 hover:text-gray-700 dark:text-zinc-500 dark:hover:bg-white/5 dark:hover:text-zinc-200"
+                  ? "text-black after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-black dark:text-zinc-50 dark:after:bg-zinc-50"
+                  : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
               )}
             >
-              <i className={cn("ph-bold ph-archive text-lg", showArchived ? "text-pup-maroon dark:text-primary" : "text-gray-400 dark:text-zinc-500")} />
-              <span className="whitespace-nowrap tracking-wide text-xs font-semibold">Archived</span>
-              <span
-                className={cn(
-                  "flex h-6 min-w-[30px] items-center justify-center rounded-full px-2 text-[11px] font-semibold transition-all duration-300",
-                  showArchived
-                    ? "bg-pup-maroon text-white shadow-sm dark:bg-[#352021] dark:text-primary"
-                    : "bg-gray-200 text-gray-500 dark:bg-zinc-800 dark:text-zinc-500"
-                )}
-              >
-                {archivedStudents.length}
-              </span>
+              Archived ({archivedTabCount})
             </button>
           </div>
 
-          {/* Global Search Card */}
-          <section className="flex flex-col overflow-hidden rounded-2xl border border-gray-300 bg-white shadow-sm dark:bg-card dark:shadow-none dark:border-white/10 mb-4">
-            <div className="space-y-3 border-b border-gray-200 bg-gray-50 p-4 dark:border-white/10 dark:bg-card">
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-                  Global Search
-                </span>
-              </div>
-              <div className="group relative">
-                <i className="ph-bold ph-magnifying-glass absolute top-3 left-3 text-gray-500 group-focus-within:text-pup-maroon dark:text-zinc-400"></i>
-                <Input
-                  type="text"
-                  placeholder={
-                    showArchived
-                      ? "Search archived ID..."
-                      : "Search ID or Name..."
-                  }
-                  className="h-10 w-full rounded-brand border border-gray-300 bg-white pr-10 pl-10 text-sm font-medium text-gray-900 placeholder-gray-500 transition-all focus-visible:border-gray-300 focus-visible:ring-2 focus-visible:ring-pup-maroon focus-visible:outline-none dark:bg-card dark:text-zinc-50 dark:border-white/10"
-                  value={quickQuery}
-                  onChange={(e) => setQuickQuery(e.target.value)}
-                />
-                {quickQuery !== "" && (
-                  <button
-                    type="button"
-                    onClick={() => setQuickQuery("")}
-                    className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500"
-                  >
-                    <i className="ph-bold ph-x-circle text-lg"></i>
-                  </button>
-                )}
-              </div>
-            </div>
-
-            <div className="flex-1 flex flex-col overflow-y-auto p-2">
-              {quickQuery.trim().length < 2 && !showArchived ? (
-                <Empty className="m-auto flex flex-col items-center border-0 py-6 text-center">
-                  <EmptyHeader className="flex flex-col items-center gap-0">
-                    <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                      Search Records
-                    </EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                      Enter a student name or ID to quickly locate their records.
-                    </EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
-              ) : isQuickSearching ? (
-                <div className="p-4">
-                  <div className="space-y-3">
-                    {Array.from({ length: 8 }).map((_, idx) => (
-                      <div
-                        key={idx}
-                        className="flex items-center gap-3 border-b border-gray-200 p-3 dark:border-white/10"
-                      >
-                        <div className="flex-1 space-y-2">
-                           <Skeleton className="h-4 w-40 dark:bg-muted" />
-                           <Skeleton className="h-3 w-28 dark:bg-muted" />
-                        </div>
-                        <Skeleton className="h-4 w-4 dark:bg-muted" />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : filteredQuickResults.length === 0 ? (
-                <Empty className="m-auto flex flex-col items-center justify-center border-0 py-6 text-center text-gray-500 dark:text-zinc-400">
-                  <EmptyHeader className="flex flex-col items-center gap-0">
-                    <EmptyTitle className="text-xl font-semibold text-gray-900 dark:text-zinc-50">
-                      {showArchived ? "No Archived Records" : "No Records Found"}
-                    </EmptyTitle>
-                    <EmptyDescription className="max-w-xs text-sm font-medium text-gray-500 dark:text-zinc-400">
-                      {showArchived
-                        ? "There are no archived students matching your search."
-                        : "We couldn't find any students matching your search query."}
-                    </EmptyDescription>
-                  </EmptyHeader>
-                </Empty>
-              ) : (
-                filteredQuickResults.map((s) => (
-                  <div
-                    key={s.studentNo}
-                    className="group flex cursor-pointer items-center justify-between border-b border-gray-200 p-3 transition-colors hover:bg-gray-100 dark:border-white/10 dark:bg-muted dark:hover:bg-white/10"
-                    onClick={() => handleLocateStudentClick(s)}
-                  >
-                    <div>
-                      <div className="text-sm font-semibold text-gray-800 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-100">
-                        {s.name}
-                      </div>
-                      <div className="font-mono text-xs font-medium text-gray-500 dark:text-zinc-400">
-                        {s.studentNo}
-                      </div>
-                    </div>
-                    <i className="ph-bold ph-caret-right text-sm text-gray-400 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-500"></i>
-                  </div>
-                ))
+          {/* Right: Search Toolbar */}
+          <div className="flex-1 md:max-w-md relative group">
+            <div className="relative">
+              <i className="ph-bold ph-magnifying-glass absolute top-1/2 -translate-y-1/2 left-3 text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+              <Input
+                type="text"
+                placeholder="Search Student"
+                className="h-[36px] w-full rounded-[8px] border-[0.5px] border-black/15 bg-white pl-9 pr-10 text-[13px] font-normal placeholder:text-[#8E8E93] dark:border-white/15 dark:bg-card"
+                value={quickQuery}
+                onChange={(e) => setQuickQuery(e.target.value)}
+              />
+              {quickQuery !== "" && (
+                <button
+                  type="button"
+                  onClick={() => setQuickQuery("")}
+                  className="absolute top-1/2 right-3 -translate-y-1/2 text-gray-400 transition-colors hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-500"
+                >
+                  <i className="ph-bold ph-x-circle text-[15px]"></i>
+                </button>
               )}
             </div>
-          </section>
-        </div>
 
-        <section className="flex h-auto w-full flex-1 flex-col gap-6 lg:w-3/4">
-          <div className="relative flex min-h-[250px] shrink-0 flex-col rounded-2xl overflow-hidden border border-gray-300 bg-white shadow-sm dark:bg-[#202020] dark:shadow-none dark:border-white/10 mb-4">
-            <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-gray-200 bg-white p-4 text-sm dark:border-white/10 dark:bg-[#202020]">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => onBreadcrumbClick({ level: "years" })}
-                  className="w-8 text-gray-500 transition-colors hover:bg-transparent hover:text-pup-maroon dark:hover:text-red-500 dark:text-zinc-400"
-                  title="Home"
-                >
-                  <i className="ph-bold ph-house text-lg"></i>
-                </Button>
-                <span className="font-semibold text-gray-400 dark:text-zinc-50">/</span>
+            {/* Quick Search Results Dropdown Overlay */}
+            {quickQuery.trim().length >= 2 && (
+              <div className="absolute top-[calc(100%+4px)] left-0 right-0 z-50 rounded-xl border border-gray-200 bg-white shadow-lg p-2 dark:border-white/10 dark:bg-zinc-900 max-h-[250px] overflow-y-auto">
+                {isQuickSearching ? (
+                  <div className="p-2 space-y-2">
+                    {[1, 2, 3].map((i) => (
+                      <Skeleton key={i} className="h-10 w-full rounded-lg" />
+                    ))}
+                  </div>
+                ) : filteredQuickResults.length === 0 ? (
+                  <div className="p-4 text-center text-xs text-gray-500 dark:text-zinc-400">
+                    {showArchived ? "No archived records found." : "No records found."}
+                  </div>
+                ) : (
+                  filteredQuickResults.map((s) => (
+                    <div
+                      key={s.studentNo}
+                      className="group flex cursor-pointer items-center justify-between rounded-lg p-2 transition-colors hover:bg-gray-100 dark:hover:bg-white/5"
+                      onClick={() => {
+                        handleLocateStudentClick(s)
+                        setQuickQuery("")
+                      }}
+                    >
+                      <div>
+                        <div className="text-sm font-semibold text-gray-800 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:text-zinc-100">
+                          {s.name}
+                        </div>
+                        <div className="font-mono text-xs font-medium text-gray-500 dark:text-zinc-400">
+                          {s.studentNo}
+                        </div>
+                      </div>
+                      <i className="ph-bold ph-caret-right text-sm text-gray-400 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:text-zinc-500"></i>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </Card>
+      <div className="flex flex-col gap-6">
+        <section className="flex h-auto w-full flex-col gap-6">
+          <div className="relative flex min-h-[250px] shrink-0 flex-col rounded-2xl overflow-hidden border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none mb-4">
+            <div className="flex h-[52px] items-center justify-between gap-2 border-b border-gray-200 bg-white px-6 text-sm dark:border-white/10 dark:bg-card">
+              <div className="flex items-center gap-3">
+                {currentLevel === "students" && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => onBreadcrumbClick({ level: "years" })}
+                    className="h-10 px-2 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-1.5 rounded-brand shadow-none! border-0!"
+                  >
+                    <i className="ph-bold ph-arrow-left text-sm"></i>
+                    Back
+                  </Button>
+                )}
                 <Breadcrumb>
-                  <BreadcrumbList className="font-semibold text-gray-700 sm:gap-2 dark:text-zinc-200">
+                  <BreadcrumbList className="flex items-center font-medium text-[14px] text-[#8E8E93] gap-0 dark:text-zinc-400">
                     {breadcrumbs.map((b, idx) => (
                       <div
                         key={`${b.level}-${idx}`}
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-0"
                       >
                         {idx > 0 && (
-                          <BreadcrumbSeparator>
-                            <i className="ph-bold ph-caret-right text-sm text-gray-400 dark:text-zinc-500"></i>
+                          <BreadcrumbSeparator className="flex items-center">
+                            <span className="text-[#C7C7CC] text-[13px] mx-[7px] select-none font-normal">›</span>
                           </BreadcrumbSeparator>
                         )}
                         <BreadcrumbItem>
                           <BreadcrumbLink
-                            className={`cursor-pointer transition-colors hover:text-pup-maroon dark:hover:text-red-500 hover:no-underline ${ currentLevel === b.level ? "font-semibold text-pup-maroon dark:text-primary" : "" } dark:text-primary`}
+                            className={cn(
+                              "cursor-pointer transition-colors hover:no-underline text-[14px]",
+                              currentLevel === b.level
+                                ? "text-pup-maroon font-semibold dark:text-red-400"
+                                : "text-[#8E8E93] font-medium hover:text-[#1C1C1E] dark:text-zinc-400 dark:hover:text-zinc-200"
+                            )}
                             onClick={() => onBreadcrumbClick(b)}
                           >
                             {b.label}
@@ -662,45 +388,60 @@ export default function RecordsArchiveTab({
                         </BreadcrumbItem>
                       </div>
                     ))}
-                    {showArchived && (
-                      <div className="flex items-center gap-2">
-                        <BreadcrumbSeparator>
-                          <i className="ph-bold ph-caret-right text-sm text-gray-400 dark:text-zinc-500"></i>
-                        </BreadcrumbSeparator>
-                        <BreadcrumbItem>
-                          <Badge className="border-red-100 bg-red-50 text-[10px] font-semibold text-red-700 dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400">
-                            Archive View
-                          </Badge>
-                        </BreadcrumbItem>
-                      </div>
-                    )}
                   </BreadcrumbList>
                 </Breadcrumb>
+                {showArchived && (
+                  <>
+                    <div className="h-4 w-[1px] bg-[#E5E5EA] dark:bg-zinc-800 mx-3.5" />
+                    <div className="py-[5px] px-[10px] bg-pup-maroon/10 dark:bg-red-400/10 text-pup-maroon dark:text-red-400 rounded-[6px] text-[12.5px] font-medium select-none">
+                      Archive View
+                    </div>
+                  </>
+                )}
               </div>
 
               {currentLevel === "students" && (
-                <div className="flex items-center gap-1 rounded-brand bg-gray-100 p-1 dark:bg-muted">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={`px-2 text-xs font-semibold ${listType === "card" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"} dark:bg-card dark:text-zinc-50 dark:shadow-none dark:hover:text-zinc-50`}
+                <div className="flex gap-[24px] select-none items-center h-full">
+                  {listType === "card" && paginatedExplorerItems.length > 0 && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => toggleSelectAll(paginatedExplorerItems)}
+                      className="h-7 px-2.5 text-[12px] font-medium text-[#8E8E93] hover:text-[#0A84FF] hover:bg-[#F5F5F7] dark:text-zinc-400 dark:hover:text-red-400 dark:hover:bg-zinc-800 rounded-[6px] border border-[#E5E5EA] dark:border-white/10 cursor-pointer"
+                    >
+                      {paginatedExplorerItems.every(it => selectedIds.has(it.student.studentNo)) ? "Deselect All" : "Select All"}
+                    </Button>
+                  )}
+                  <button
+                    type="button"
                     onClick={() => setListType("card")}
+                    className={cn(
+                      "relative pb-[16px] -mb-[16px] text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer flex items-center justify-center",
+                      listType === "card"
+                        ? "text-black after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-black dark:text-zinc-50 dark:after:bg-zinc-50"
+                        : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                    )}
                   >
-                    <i className="ph-bold ph-squares-four" /> Card
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className={`px-2 text-xs font-semibold ${listType === "table" ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-900"} dark:bg-card dark:text-zinc-50 dark:shadow-none dark:hover:text-zinc-50`}
+                    Card
+                  </button>
+                  <button
+                    type="button"
                     onClick={() => setListType("table")}
+                    className={cn(
+                      "relative pb-[16px] -mb-[16px] text-[13px] font-semibold transition-colors focus:outline-none cursor-pointer flex items-center justify-center",
+                      listType === "table"
+                        ? "text-black after:absolute after:bottom-0 after:left-0 after:h-[2px] after:w-full after:bg-black dark:text-zinc-50 dark:after:bg-zinc-50"
+                        : "text-[#8E8E93] font-normal hover:text-gray-700 dark:hover:text-zinc-200"
+                    )}
                   >
-                    <i className="ph-bold ph-list-dashes" /> Table
-                  </Button>
+                    Table
+                  </button>
                 </div>
               )}
             </div>
 
-            <div className="flex-1 bg-gray-50 p-6 dark:bg-[#202020]">
+            <div className="flex-1 bg-white p-6 dark:bg-card">
               {students.length === 0 && !showArchived ? (
                 <Empty className="flex h-full flex-col items-center justify-center border-0 text-center text-gray-500 dark:text-zinc-400">
                   <EmptyHeader className="flex flex-col items-center gap-0">
@@ -732,7 +473,12 @@ export default function RecordsArchiveTab({
               ) : currentLevel !== "students" ? (
                 <div 
                   key={`folders-${showArchived}`}
-                  className="animate-fade-up grid grid-cols-1 gap-4 p-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 lg:gap-5"
+                  className="animate-fade-up grid p-1"
+                  style={{
+                    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+                    gap: "24px",
+                    justifyItems: "center"
+                  }}
                 >
                   {filteredExplorerItems.map((it, index) => {
                     const theme = FOLDER_COLORS[folderColors[it.key]] || FOLDER_COLORS["yellow"]
@@ -740,73 +486,101 @@ export default function RecordsArchiveTab({
                       <div
                         key={index}
                         onClick={it.disabled ? undefined : it.onClick}
-                        className={`group relative h-36 w-full transition-all duration-300 ${ it.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:-translate-y-1.5" }`}
+                        className={`group relative h-48 w-full min-w-[180px] max-w-[300px] transition-all duration-300 ${ it.disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer" }`}
+                        style={{ perspective: "1000px" }}
                       >
-                        {/* Color Picker Popover */}
-                        {!it.disabled && (
-                          <div className="absolute top-4 right-3 z-30" onClick={(e) => e.stopPropagation()}>
-                            <Popover>
-                              <PopoverTrigger asChild>
-                                <button
-                                  type="button"
-                                  className={cn(
-                                    "flex h-8 w-8 items-center justify-center rounded-full transition-all opacity-0 group-hover:opacity-100 shadow-lg border-2 active:scale-95 cursor-pointer",
-                                    theme.isLight 
-                                      ? "bg-white border-black/10 text-[#5c3e03] hover:bg-gray-50" 
-                                      : "bg-zinc-900 border-white/20 text-white hover:bg-zinc-800"
-                                  )}
-                                  title="Change folder color"
-                                >
-                                  <i className="ph-bold ph-palette text-sm"></i>
-                                </button>
-                              </PopoverTrigger>
-                              <PopoverContent className="w-auto p-3 rounded-xl border-gray-200 shadow-2xl dark:bg-zinc-900 dark:border-white/10" side="top" align="end">
-                                <div className="flex items-center gap-2">
-                                  {Object.entries(FOLDER_COLORS).map(([cid, cfg]) => (
-                                    <button
-                                      key={cid}
-                                      type="button"
-                                      onClick={() => updateFolderColor(it.key, cid)}
-                                      className={cn(
-                                        "h-7 w-7 rounded-full border border-black/10 shadow-sm transition-all hover:scale-125 active:scale-90 cursor-pointer",
-                                        cfg.bubble,
-                                        folderColors[it.key] === cid ? "ring-2 ring-pup-maroon ring-offset-2 dark:ring-primary dark:ring-offset-zinc-900 scale-110" : "hover:shadow-md"
-                                      )}
-                                      title={cfg.name}
-                                    />
-                                  ))}
-                                </div>
-                              </PopoverContent>
-                            </Popover>
-                          </div>
-                        )}
+                        {/* Paint Palette Color Picker Button */}
+                        <div 
+                          className="absolute bottom-2 right-2 z-40 opacity-0 group-hover:opacity-100 transition-opacity duration-200" 
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className={cn(
+                                  "w-6 h-6 rounded-full bg-white/20 hover:bg-white/40 border border-black/10 shadow-xs transition-colors",
+                                  theme.isLight ? "text-amber-950/80" : "text-white/80"
+                                )}
+                                title="Change Folder Color"
+                              >
+                                <i className="ph-bold ph-palette text-xs" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-36 p-2 rounded-xl bg-white/95 backdrop-blur-md border border-gray-200 shadow-xl" side="top" align="end">
+                              <div className="text-[9px] font-bold text-gray-400 uppercase mb-1.5 px-1 tracking-wider">Folder Color</div>
+                              <div className="grid grid-cols-4 gap-1.5">
+                                {Object.entries(FOLDER_COLORS).map(([colorKey, colorVal]) => (
+                                  <button
+                                    key={colorKey}
+                                    type="button"
+                                    onClick={() => updateFolderColor(it.key, colorKey)}
+                                    className="w-5 h-5 rounded-full border border-black/10 hover:scale-110 active:scale-95 transition-transform cursor-pointer flex items-center justify-center"
+                                    style={{ backgroundColor: colorVal.frontStart }}
+                                    title={colorVal.name}
+                                  >
+                                    {(folderColors[it.key] === colorKey || (!folderColors[it.key] && colorKey === "yellow")) ? (
+                                      <div className="w-1.5 h-1.5 rounded-full bg-white shadow-xs" />
+                                    ) : null}
+                                  </button>
+                                ))}
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        </div>
 
-                        {/* Realistic Folder Tab (Backside) */}
-                        <div className={cn(
-                          "absolute top-0 left-0 z-0 h-8 w-[38%] rounded-t-lg transition-all duration-300 group-hover:scale-y-105 border-t border-l border-r",
-                          theme.back
-                        )}></div>
+                        {/* macOS Folder Back Flap (CSS panel matching front dimensions/alignment) */}
+                        <div 
+                          className="absolute top-[18px] left-0 right-0 bottom-0 rounded-2xl transition-all duration-300"
+                          style={{
+                            background: `linear-gradient(180deg, ${theme.backStart} 0%, ${theme.backEnd} 100%)`
+                          }}
+                        >
+                          {/* Folder Tab (Attached to top-left of the back flap) */}
+                          <div 
+                            className="absolute bottom-[calc(100%-1px)] left-[16px] w-20 h-4 rounded-t-[8px] z-0"
+                            style={{
+                              backgroundColor: theme.backStart
+                            }}
+                          />
+                        </div>
 
-                        {/* Realistic Folder Body (Frontside) */}
-                        <div className={cn(
-                          "absolute top-3 right-0 bottom-0 left-0 z-10 flex flex-col items-center justify-center rounded-lg rounded-tl-none border p-4 transition-all duration-300 shadow-[0_2.5px_5px_rgba(0,0,0,0.15)] group-hover:shadow-[0_6px_12px_rgba(0,0,0,0.25)]",
-                          theme.front
-                        )}>
+                        {/* Solid Paper Peek Sheets (Apple-like stacking) */}
+                        <div className="absolute top-[2px] left-[5%] right-[5%] bottom-[20px] z-10 flex flex-col justify-end transition-all duration-300 group-hover:translate-y-[-12px] group-hover:scale-[1.02]">
+                          {/* Back sheet */}
+                          <div className="absolute bottom-0 left-[6%] right-[6%] h-[56px] bg-white/70 rounded-t-md shadow-[0_-1px_3px_rgba(0,0,0,0.05)] border-t border-x border-gray-200/20 transform -rotate-3 origin-bottom transition-all duration-300 group-hover:rotate-[-6deg]" />
                           
-                          <i
-                            className={cn(
-                              `ph-fill ${it.icon} mb-1 text-xl transition-transform duration-300 group-hover:scale-105`,
-                              theme.icon
-                            )}
-                          ></i>
+                          {/* Middle sheet */}
+                          <div className="absolute bottom-0 left-[3%] right-[3%] h-[60px] bg-white/85 rounded-t-md shadow-[0_-1px_4px_rgba(0,0,0,0.05)] border-t border-x border-gray-200/30 transform rotate-2 origin-bottom transition-all duration-300 group-hover:rotate-[4deg]" />
+                          
+                          {/* Front sheet with mock content lines */}
+                          <div className="absolute bottom-0 left-0 right-0 h-[64px] bg-white rounded-t-md shadow-[0_-2px_6px_rgba(0,0,0,0.08)] border-t border-x border-gray-200 p-3 flex flex-col gap-1.5 transition-all duration-300">
+                            {/* Mock lines */}
+                            <div className="h-1.5 w-1/3 bg-gray-300/60 rounded-full" />
+                            <div className="h-1 w-full bg-gray-200/50 rounded-full" />
+                            <div className="h-1 w-5/6 bg-gray-200/50 rounded-full" />
+                          </div>
+                        </div>
+
+                        {/* macOS Folder Front Body with 3D Opening Tilt */}
+                        <div 
+                          className="absolute top-[28px] right-0 bottom-0 left-0 z-20 flex flex-col items-center justify-center rounded-2xl p-4 transition-all duration-300 origin-bottom [transform-style:preserve-3d] group-hover:[transform:rotateX(-14deg)_translateY(2px)]"
+                          style={{
+                            background: `linear-gradient(180deg, ${theme.frontStart} 0%, ${theme.frontEnd} 100%)`
+                          }}
+                        >
+                          {/* Glossy highlight/gradient overlay */}
+                          <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-transparent via-white/5 to-white/15 pointer-events-none z-25" />
+                          
                           <h3 className={cn(
-                            "w-full truncate px-1 text-center text-sm  font-semibold sm:text-base",
+                            "w-full truncate px-1 text-center text-3xl font-black sm:text-4xl z-30 tracking-tight",
                             theme.title
                           )}>
                             {it.title}
                           </h3>
                           <span className={cn(
-                            "mt-0.5 text-[9px] font-semibold tracking-widest",
+                            "mt-1 text-xs font-bold tracking-widest z-30 uppercase opacity-90",
                             theme.subtitle
                           )}>
                             {it.subtitle}
@@ -847,97 +621,74 @@ export default function RecordsArchiveTab({
                 >
                   {paginatedExplorerItems.map((row, index) => {
                     const isSelected = selectedIds.has(row.student.studentNo)
+                    const studentYear = getStudentFolderYear(row.student)
+                    const theme = FOLDER_COLORS[folderColors[studentYear]] || FOLDER_COLORS["yellow"]
+                    const cardStyle = {
+                      background: `linear-gradient(135deg, ${theme.frontStart} 0%, ${theme.frontEnd} 100%)`,
+                    }
                     return (
                       <div
                         key={index}
                         className={cn(
-                          "group relative flex cursor-pointer flex-col rounded-brand border p-5 shadow-sm transition-all hover:border-gray-300 hover:shadow-md dark:shadow-none dark:hover:border-zinc-700",
+                          "group relative flex cursor-pointer flex-col rounded-[14px] p-5 shadow-[0_2px_8px_rgba(0,0,0,0.08)] select-none text-white border-0",
                           isSelected 
-                            ? "border-amber-200 bg-amber-50/30 dark:border-amber-900/30 dark:bg-amber-950/20" 
-                            : "border-gray-300 bg-white dark:border-white/10 dark:bg-card",
-                          showArchived && !isSelected && "opacity-90"
+                            ? "ring-2 ring-[#0A84FF]" 
+                            : "",
+                          showArchived && "opacity-95"
                         )}
+                        style={cardStyle}
                         onClick={() => handleLocateStudentClick(row.student)}
                       >
-                        <div className="absolute top-4 right-4 z-20" onClick={(e) => e.stopPropagation()}>
-                           <input
-                             type="checkbox"
-                             className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:border-white/10 dark:text-primary"
-                             checked={isSelected}
-                             onChange={() => toggleSelect(row.student.studentNo)}
-                           />
+                        <div className="absolute top-4 right-4 z-20" onClick={(e) => { e.stopPropagation(); toggleSelect(row.student.studentNo); }}>
+                           <div className={cn(
+                             "h-5 w-5 rounded-[6px] border flex items-center justify-center transition-all duration-150 cursor-pointer",
+                             isSelected 
+                               ? "bg-white border-white text-[#0A84FF]" 
+                               : "border-white/40 bg-white/10 hover:border-white/80"
+                           )}>
+                             {isSelected && <i className="ph-bold ph-check text-[10px]" />}
+                           </div>
                         </div>
-                        <div className="mb-4 flex items-start gap-4">
-                          <Avatar className="h-12 w-12 shrink-0 border border-gray-100 shadow-sm dark:border-white/10 dark:shadow-none">
-                            <AvatarFallback
-                              className={cn(
-                                "font-semibold transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-500",
-                                isSelected 
-                                  ? "bg-white text-pup-maroon dark:bg-zinc-800 dark:text-primary" 
-                                  : "bg-gray-50 text-gray-400 dark:bg-card"
-                              )}
-                            >
-                              <i className="ph-bold ph-user text-xl"></i>
-                            </AvatarFallback>
-                          </Avatar>
-                          <div className="min-w-0 flex-1">
-                            <h4 className={cn(
-                              "truncate text-base  font-semibold transition-colors group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-50",
-                              isSelected ? "text-pup-maroon dark:text-primary" : "text-gray-900"
-                            )}>
-                              {row.student.name}
-                            </h4>
-                            <div className="mt-1.5 flex items-center gap-2">
-                              <Badge
-                                variant="outline"
-                                className="rounded border-gray-200 px-1.5 py-0 font-mono text-[10px] font-semibold text-gray-600 dark:border-white/10 dark:text-zinc-300"
-                              >
+                        <div className="flex items-start w-full">
+                          <div className="min-w-0 flex-1 flex flex-col justify-center">
+                            <div className="flex items-center min-w-0 mb-1">
+                              <h4 className="truncate text-[19px] font-bold text-white transition-colors">
+                                {row.student.name}
+                              </h4>
+                            </div>
+                            <div className="mt-2 flex items-center gap-2">
+                              <div className="rounded-[6px] border border-white/20 bg-white/10 px-2 py-0.5 font-sans text-[12px] font-medium text-white/90">
                                 {row.student.studentNo}
-                              </Badge>
+                              </div>
                               {showArchived && (
-                                <Badge className="h-4 border-red-100 bg-red-50 px-1 text-[9px] font-semibold text-red-700 dark:bg-red-950/30">
+                                <Badge className="h-4 border-white/30 bg-white/20 px-1.5 text-[9px] font-semibold text-white">
                                   Archived
                                 </Badge>
                               )}
                             </div>
-                          </div>
-                        </div>
-
-                        <div className="mt-auto flex items-center justify-between border-t border-gray-100 pt-4 dark:border-white/10">
-                          <div className="flex items-center gap-1.5">
-                            <div className="flex h-6 w-6 items-center justify-center rounded bg-gray-50 text-gray-400 transition-colors group-hover:bg-red-50 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:bg-card dark:text-zinc-500">
-                              <i className="ph-duotone ph-map-pin text-sm"></i>
-                            </div>
-                            <span className="text-[10px] font-semibold tracking-widest text-gray-500 dark:text-zinc-400">
-                              R-{row.student.room} • C-{row.student.cabinet}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            {showArchived ? (
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setRestoreTarget(row.student)
-                                  setRestoreStudentOpen(true)
-                                }}
-                                className="h-8 rounded-brand border-green-200 px-2.5 text-[9px] font-semibold text-green-700 shadow-xs hover:bg-green-50"
-                              >
-                                <i className="ph-bold ph-arrow-counter-clockwise mr-1"></i>
-                                Restore
-                              </Button>
-                            ) : (
-                              <>
-                                <Badge
-                                  variant="secondary"
-                                  className="border-transparent bg-gray-100 px-2 text-[10px] font-semibold tracking-tight text-gray-700 dark:text-zinc-200 dark:bg-muted"
+                            <div className="mt-2 flex items-center justify-between gap-2">
+                              <div className="flex items-center gap-1.5 text-white/80">
+                                <i className="ph-bold ph-map-pin text-[14px]"></i>
+                                <span className="text-[13px] font-medium text-white/80 select-none whitespace-nowrap">
+                                  Room {row.student.room} • Cabinet {row.student.cabinet} • Drawer {row.student.drawer}
+                                </span>
+                              </div>
+                              {showArchived && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setRestoreTarget(row.student)
+                                    setRestoreStudentOpen(true)
+                                  }}
+                                  className="h-8 rounded-brand border-white/30 bg-white/10 px-2.5 text-[9px] font-semibold text-white shadow-xs hover:bg-white/20"
                                 >
-                                  D-{row.student.drawer}
-                                </Badge>
-                                <i className="ph-bold ph-caret-right text-gray-300 transition-all group-hover:translate-x-0.5 group-hover:text-pup-maroon dark:group-hover:text-red-500 dark:hover:text-red-500 dark:text-zinc-600"></i>
-                              </>
-                            )}
+                                  <i className="ph-bold ph-archive-restore mr-1"></i>
+                                  Restore
+                                </Button>
+                              )}
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -947,105 +698,80 @@ export default function RecordsArchiveTab({
               ) : (
                 <div 
                   key={`table-${currentLevel}-${showArchived}`}
-                  className="flex-1 overflow-visible rounded-brand border border-gray-200 bg-white shadow-sm animate-fade-up dark:border-white/10 dark:bg-card"
+                  className="flex-1 overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm animate-fade-up dark:border-white/10 dark:bg-card"
                 >
                   <table className="min-w-full text-sm">
-                    <thead className="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 backdrop-blur-sm select-none dark:border-white/10 dark:bg-muted">
-                      <tr className="text-left text-[10px] font-semibold tracking-widest text-gray-600 dark:text-zinc-300 dark:border-white/10">
-                        <th className="w-[40px] p-4 text-center">
+                    <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+                      <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+                        <th className="w-16 p-4 text-center font-medium">
                            <input
                              type="checkbox"
-                             className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:border-white/10 dark:text-primary"
+                             className="h-4 w-4 cursor-pointer rounded border border-gray-300 dark:border-white/10"
                              checked={paginatedExplorerItems.length > 0 && paginatedExplorerItems.every(it => selectedIds.has(it.student.studentNo))}
                              onChange={() => toggleSelectAll(paginatedExplorerItems)}
                            />
                         </th>
-                        <th className="w-48 p-4">Student No.</th>
-                        <th className="p-4">Full Name</th>
-                        <th className="w-56 p-4">Physical Location</th>
-                        <th className="w-40 p-4 text-right">
-                        </th>
+                        <th className="w-48 p-4 font-medium">Student No.</th>
+                        <th className="p-4 font-medium">Full Name</th>
+                        <th className="w-56 p-4 font-medium">Physical Location</th>
+                        <th className="w-32 p-4 text-right font-medium">Locate</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100 dark:divide-white/10">
+                    <tbody className="bg-transparent">
                       {paginatedExplorerItems.map((row) => {
                         const isSelected = selectedIds.has(row.student.studentNo)
                         return (
                           <tr
                             key={row.key}
                             className={cn(
-                              "group cursor-pointer transition-all duration-200 select-none",
-                              isSelected 
-                                ? "bg-amber-50 dark:bg-amber-950/40" 
-                                : "hover:bg-gray-50 dark:hover:bg-white/5 dark:bg-card"
+                              "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
+                              isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                             )}
                             onClick={() => handleLocateStudentClick(row.student)}
                           >
-                            <td className="p-4 text-center" onClick={(e) => e.stopPropagation()}>
+                            <td className="py-0 px-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
                                <input
                                  type="checkbox"
-                                 className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon disabled:opacity-20 dark:border-white/10 dark:text-primary"
+                                 className={cn(
+                                   "h-4 w-4 cursor-pointer rounded border border-gray-300 dark:border-white/10 transition-opacity",
+                                   isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
+                                 )}
                                  checked={isSelected}
                                  onChange={() => toggleSelect(row.student.studentNo)}
                                />
                             </td>
-                            <td className="p-4 font-mono text-xs font-semibold text-gray-600 dark:text-zinc-300">
+                            <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-300">
                               {row.student.studentNo}
                             </td>
-                            <td className="p-4">
-                              <div className="flex flex-col">
-                                <span className={cn(
-                                  "text-sm font-semibold transition-colors",
-                                  isSelected 
-                                    ? "text-pup-maroon dark:text-primary" 
-                                    : "text-gray-900 group-hover:text-pup-maroon dark:group-hover:text-primary dark:text-zinc-50"
-                                )}>
-                                  {row.student.name}
-                                </span>
+                            <td className="py-0 px-4 align-middle">
+                              <div className="flex flex-col min-w-0">
+                                <div className="flex items-center gap-2 text-[14px] font-medium text-[#111111] dark:text-zinc-50">
+                                  <span className="truncate">
+                                    {row.student.name}
+                                  </span>
+                                </div>
                                 {showArchived && (
-                                  <Badge className="mt-1 w-fit border-red-100 bg-red-50 px-1.5 text-[8px] font-semibold text-red-700 dark:bg-red-950/30">
+                                  <div className="truncate text-[12px] font-normal text-red-650 dark:text-red-400 mt-[2px]">
                                     Archived Record
-                                  </Badge>
+                                  </div>
                                 )}
                               </div>
                             </td>
-                            <td className="p-4">
-                              <div className="flex items-center gap-2">
-                                <span className="text-[10px] font-semibold tracking-widest text-gray-500 dark:text-zinc-400">
-                                  Cabinet {row.student.cabinet} • Drawer {row.student.drawer}
-                                </span>
-                              </div>
+                            <td className="py-0 px-4 align-middle">
+                               <div className="inline-flex w-fit items-center justify-center rounded-[4px] bg-[#E5E5EA]/50 dark:bg-zinc-800 px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em] text-[#111111] dark:text-zinc-300 whitespace-nowrap">
+                                 Room {row.student.room} • Cabinet {row.student.cabinet} • Drawer {row.student.drawer}
+                               </div>
                             </td>
-                            <td className="p-4 text-right">
-                               {showArchived ? (
-                                 <Button
-                                   variant="outline"
-                                   size="sm"
-                                   onClick={(e) => {
-                                     e.stopPropagation()
-                                     setRestoreTarget(row.student)
-                                     setRestoreStudentOpen(true)
-                                   }}
-                                   className="h-9 rounded-brand border-green-200 bg-green-50/50 px-4 text-[10px] font-semibold text-green-700 shadow-xs hover:bg-green-100"
+                            <td className="py-0 px-4 align-middle text-right">
+                              <div className="flex items-center justify-end gap-1.5" onClick={(e) => e.stopPropagation()}>
+                                 <button
+                                   onClick={() => handleLocateStudentClick(row.student)}
+                                   title="Locate"
+                                   className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-650 transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                  >
-                                   <i className="ph-bold ph-arrow-counter-clockwise mr-2"></i>
-                                   Restore
-                                 </Button>
-                               ) : (
-                                 <Button
-                                   variant="outline"
-                                   size="sm"
-                                   className={cn(
-                                     "h-9 rounded-brand border px-4 text-[10px] font-semibold tracking-widest shadow-xs transition-all",
-                                     isSelected 
-                                       ? "border-amber-300 bg-white text-pup-maroon hover:border-pup-maroon dark:border-amber-700 dark:bg-zinc-800 dark:text-primary" 
-                                       : "border-gray-200 bg-white text-gray-600 hover:border-pup-maroon hover:bg-red-50 hover:text-pup-maroon dark:hover:text-primary dark:text-zinc-300 dark:bg-zinc-800 dark:border-white/10"
-                                   )}
-                                 >
-                                   <i className="ph-bold ph-magnifying-glass-plus mr-2 text-sm"></i>
-                                   Locate
-                                 </Button>
-                               )}
+                                   <i className="ph-bold ph-map-pin text-[16px]"></i>
+                                 </button>
+                              </div>
                             </td>
                           </tr>
                         )
@@ -1057,69 +783,63 @@ export default function RecordsArchiveTab({
             </div>
 
             {currentLevel === "students" && totalItems > 0 && (
-              <div className="flex items-center justify-between border-t border-gray-200 bg-white p-6 px-8 rounded-b-brand dark:border-white/10 dark:bg-card">
-                <div className="flex items-center gap-8 select-none cursor-default">
-                  <div className="flex items-center gap-6 text-[11px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">
+              <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card mt-auto rounded-b-brand">
+                <div className="flex items-center gap-8">
+                  <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
                     <span>
-                      Showing <strong className="text-gray-900 dark:text-zinc-50">{(page - 1) * itemsPerPage + 1}-{Math.min(page * itemsPerPage, totalItems)}</strong> out of <strong className="text-gray-900 dark:text-zinc-50">{totalItems.toLocaleString()}</strong> entries
+                      Showing {paginatedExplorerItems.length} of {totalItems}
                     </span>
-
-                    <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
-                      <span className="text-[10px] opacity-60">Rows:</span>
-                      <select
-                        className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-semibold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
-                        value={itemsPerPage}
-                        onChange={(e) => {
-                          setItemsPerPage(Number(e.target.value))
-                          setPage(1)
-                        }}
-                      >
-                        <option value={9}>9</option>
-                        <option value={12}>12</option>
-                        <option value={24}>24</option>
-                        <option value={48}>48</option>
-                      </select>
+                    <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
+                      <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
+                      <div className="flex items-center gap-1">
+                        {[9, 12, 24, 48].map((size) => (
+                          <button
+                            key={size}
+                            type="button"
+                            onClick={() => {
+                              setItemsPerPage(size)
+                              setPage(1)
+                            }}
+                            className={`px-2 py-0.5 rounded-[4px] text-[12px] font-normal cursor-pointer transition-colors border-0 ${
+                              itemsPerPage === size
+                                ? "bg-gray-100 text-[#111111] font-medium dark:bg-white/10 dark:text-zinc-50"
+                                : "bg-transparent text-[#8E8E93] dark:text-zinc-500 hover:text-gray-700 dark:hover:text-zinc-300"
+                            }`}
+                          >
+                            {size}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex shrink-0 items-center gap-3 select-none">
-                  <Button
-                    variant="outline"
-                    size="sm"
+                <div className="flex shrink-0 items-center gap-3">
+                  <button
                     disabled={page <= 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
-                    className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                    className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
                   >
-                    <i className="ph-bold ph-caret-left mr-2 text-base"></i>
                     Prev
-                  </Button>
-                  
-                  <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-semibold text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                  </button>
+
+                  <div className="flex h-8 min-w-[32px] items-center justify-center rounded-[6px] border border-gray-200/80 bg-white px-2.5 text-[12px] font-medium text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
                     {page}
                   </div>
 
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <button
                     disabled={page >= totalPages}
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                    className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-500 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                    className="h-8 bg-transparent text-[12px] font-normal text-[#8E8E93] hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
                   >
                     Next
-                    <i className="ph-bold ph-caret-right ml-2 text-base"></i>
-                  </Button>
+                  </button>
                 </div>
               </div>
             )}
           </div>
 
-          <div
-            id="storage-layout-section"
-            className="relative flex flex-col rounded-2xl overflow-hidden bg-white shadow-sm scroll-mt-6 shrink-0 dark:bg-card dark:shadow-none dark:border-white/10 mb-4"
-          >
-            {renderStorageBody(false)}
-          </div>
+
         </section>
       </div>
 
@@ -1133,6 +853,7 @@ export default function RecordsArchiveTab({
         message={`Restore record for ${restoreTarget?.name} (${restoreTarget?.studentNo})? This will make the student active and visible in all modules again.`}
         confirmLabel="Restore Record"
         variant="success"
+        isRestoreModal={true}
         onConfirm={async () => {
           if (restoreTarget) {
             await onRestoreStudent(restoreTarget.studentNo)

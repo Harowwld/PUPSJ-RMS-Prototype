@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/empty";
 import ConfirmModal from "@/components/shared/ConfirmModal";
 import PageHeader from "@/components/shared/PageHeader";
+import { RefreshButton } from "@/components/shared/RefreshButton";
 import { Select } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
@@ -54,15 +55,18 @@ function DocumentsTable({
   onRescan,
 }) {
   return (
-    <table className="min-w-full text-sm table-fixed border-separate border-spacing-0">
-      <thead className="sticky top-0 z-10 bg-gray-50 backdrop-blur-sm select-none dark:bg-muted">
-        <tr className="text-left text-[10px] font-semibold tracking-widest text-gray-600 dark:text-zinc-300">
-          <th className="p-4 border-b border-gray-200 dark:border-white/10">
+    <table className="min-w-full text-sm table-fixed">
+      <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-card">
+        <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">
+          <th className="p-4">
             <button
               onClick={() => handleSort("student_no")}
-              className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+              className={cn(
+                "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                sortBy === "student_no" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+              )}
             >
-              Student No{" "}
+              Student No
               <SortIndicator
                 column="student_no"
                 sortBy={sortBy}
@@ -70,12 +74,15 @@ function DocumentsTable({
               />
             </button>
           </th>
-          <th className="p-4 border-b border-gray-200 dark:border-white/10">
+          <th className="p-4">
             <button
               onClick={() => handleSort("student_name")}
-              className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+              className={cn(
+                "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                sortBy === "student_name" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+              )}
             >
-              Name{" "}
+              Name
               <SortIndicator
                 column="student_name"
                 sortBy={sortBy}
@@ -83,12 +90,15 @@ function DocumentsTable({
               />
             </button>
           </th>
-          <th className="p-4 border-b border-gray-200 dark:border-white/10">
+          <th className="p-4">
             <button
               onClick={() => handleSort("doc_type")}
-              className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+              className={cn(
+                "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                sortBy === "doc_type" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+              )}
             >
-              Document Type{" "}
+              Document Type
               <SortIndicator
                 column="doc_type"
                 sortBy={sortBy}
@@ -96,12 +106,15 @@ function DocumentsTable({
               />
             </button>
           </th>
-          <th className="p-4 border-b border-gray-200 dark:border-white/10">
+          <th className="p-4">
             <button
               onClick={() => handleSort("status")}
-              className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+              className={cn(
+                "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                sortBy === "status" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+              )}
             >
-              Status{" "}
+              Status
               <SortIndicator
                 column="status"
                 sortBy={sortBy}
@@ -109,12 +122,15 @@ function DocumentsTable({
               />
             </button>
           </th>
-          <th className="p-4 border-b border-gray-200 dark:border-white/10">
+          <th className="p-4">
             <button
               onClick={() => handleSort("file")}
-              className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+              className={cn(
+                "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                sortBy === "file" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+              )}
             >
-              File{" "}
+              File
               <SortIndicator
                 column="file"
                 sortBy={sortBy}
@@ -122,12 +138,15 @@ function DocumentsTable({
               />
             </button>
           </th>
-          <th className="p-4 border-b border-gray-200 dark:border-white/10">
+          <th className="p-4">
             <button
               onClick={() => handleSort("created_at")}
-              className="group flex items-center transition-colors hover:text-pup-maroon dark:hover:text-red-500 focus:outline-none dark:text-zinc-300"
+              className={cn(
+                "group flex items-center transition-colors focus:outline-none cursor-pointer text-[12px] font-medium tracking-[0.04em]",
+                sortBy === "created_at" ? "text-[#111111] dark:text-white" : "text-[#8E8E93] dark:text-zinc-500 hover:text-[#111111] dark:hover:text-white"
+              )}
             >
-              Created{" "}
+              Created
               <SortIndicator
                 column="created_at"
                 sortBy={sortBy}
@@ -135,7 +154,7 @@ function DocumentsTable({
               />
             </button>
           </th>
-          <th className="p-4 text-right border-b border-gray-200 dark:border-white/10">Actions</th>
+          <th className="p-4 text-right text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-500">Actions</th>
         </tr>
       </thead>
       <tbody className="divide-y divide-gray-100 dark:divide-white/10">
@@ -188,19 +207,19 @@ function DocumentsTable({
             <tr
               key={r.id || idx}
               className={cn(
-                "group transition-all duration-200 hover:bg-gray-50 dark:bg-card dark:hover:bg-white/5 select-none",
+                "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
                 r.status === "uploaded"
-                  ? (r.verificationStatus === "unverified" ? "bg-amber-50 dark:bg-amber-950/40" : "bg-green-50/40 dark:bg-emerald-950/30")
-                  : "bg-red-50 dark:bg-red-950/30"
+                  ? (r.verificationStatus === "unverified" ? "bg-amber-50/30 dark:bg-amber-950/20" : "bg-green-50/30 dark:bg-emerald-950/20")
+                  : "bg-red-50/30 dark:bg-red-950/20"
               )}
             >
-              <td className="p-4 font-semibold text-gray-900 dark:text-zinc-50">
+              <td className="py-0 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-300">
                 {r.student_no}
               </td>
-              <td className="p-4 font-semibold text-gray-900 dark:text-zinc-50">
+              <td className="py-0 px-4 align-middle text-[14px] font-medium text-[#111111] dark:text-zinc-50 truncate">
                 {r.student_name || "—"}
               </td>
-              <td className="p-4">
+              <td className="py-0 px-4 align-middle">
                 <Badge
                   variant="outline"
                   className="flex w-fit items-center gap-1.5 px-2.5 py-1 rounded-full border border-pup-maroon/20 bg-pup-maroon/10 text-[9px] font-semibold tracking-wider text-pup-maroon whitespace-nowrap dark:border-red-400/20 dark:bg-red-400/10 dark:text-red-400 shadow-none"
@@ -209,7 +228,7 @@ function DocumentsTable({
                   {r.doc_type}
                 </Badge>
               </td>
-              <td className="p-4">
+              <td className="py-0 px-4 align-middle">
                 {r.status === "uploaded" ? (
                   r.verificationStatus === "unverified" ? (
                     <Badge
@@ -238,26 +257,26 @@ function DocumentsTable({
                   </Badge>
                 )}
               </td>
-              <td className="p-4 text-gray-700 max-w-[180px] dark:text-zinc-200">
+              <td className="py-0 px-4 align-middle text-gray-700 max-w-[180px] dark:text-zinc-200">
                 {r.doc ? (
                   <>
-                    <div className="truncate font-medium text-gray-900 dark:text-zinc-50" title={r.doc.original_filename}>
+                    <div className="truncate font-medium text-gray-900 dark:text-zinc-50 text-[13px]" title={r.doc.original_filename}>
                       {r.doc.original_filename}
                     </div>
-                    <div className="text-xs text-gray-500 dark:text-zinc-400">
+                    <div className="text-[11px] text-gray-500 dark:text-zinc-400 font-normal mt-[1px]">
                       {(r.doc.size_bytes / 1024).toFixed(1)} KB
                     </div>
                   </>
                 ) : (
-                  <span className="text-xs font-medium text-gray-400 dark:text-zinc-500">
+                  <span className="text-[12px] font-normal text-gray-400 dark:text-zinc-500">
                     Not uploaded
                   </span>
                 )}
               </td>
-              <td className="p-3 text-gray-600 font-medium dark:text-zinc-300">
+              <td className="py-0 px-4 align-middle text-gray-600 font-medium dark:text-zinc-300 text-[13px]">
                 {formatPHDateTime(r.reviewDoc?.created_at)}
               </td>
-              <td className="p-3 whitespace-nowrap text-right">
+              <td className="py-0 px-4 align-middle whitespace-nowrap text-right">
                 <div className="flex justify-end gap-2">
                   {r.doc ? (
                     <>
@@ -326,6 +345,7 @@ export default function DocumentsTab({
   currentStudent,
 }) {
   const [isDragActive, setIsDragActive] = useState(false);
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   const fileRef = useRef(null);
 
   const [detailModalOpen, setDetailModalOpen] = useState(false);
@@ -497,16 +517,41 @@ export default function DocumentsTab({
             icon="ph-files"
             title="Documents"
             description="Search and view digitized student records."
+            showBorder={false}
+            titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+            actions={
+              <div className="flex items-center gap-6">
+                <RefreshButton 
+                  onRefresh={async () => {
+                    setIsManualRefreshing(true);
+                    const startTime = Date.now();
+                    try {
+                      await refreshDocuments(docsForm);
+                      const elapsed = Date.now() - startTime;
+                      if (elapsed < 600) {
+                        await new Promise((resolve) => setTimeout(resolve, 600 - elapsed));
+                      }
+                    } finally {
+                      setIsManualRefreshing(false);
+                    }
+                  }} 
+                  isLoading={docsLoading || isManualRefreshing} 
+                  title="Refresh Documents"
+                />
+              </div>
+            }
           />
 
-          <div className="bg-white border-t border-b border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
-            <div className="flex w-full flex-wrap items-end gap-6">
-              <div className="flex-1 min-w-[240px]">
-                <label className="mb-1.5 block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-                  Student Number
-                </label>
+          <div className="bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
+            <div className="flex w-full flex-wrap items-center gap-5">
+              {/* Student Number */}
+              <div className="flex-1 min-w-[200px] group relative">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+                </div>
                 <Input
-                  className="h-11 rounded-brand border border-gray-200 bg-white px-4 text-sm transition-all placeholder:text-gray-400 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
+                  className="h-[36px] w-full rounded-[8px] border-[0.5px] border-gray-200 bg-white pl-9 pr-4 text-[13px] font-normal transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
                   value={docsForm.studentNo}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -516,17 +561,17 @@ export default function DocumentsTab({
                       return next;
                     });
                   }}
-                  placeholder="202X-XXXXX-MN-0"
-                  required
+                  placeholder="Student number"
                 />
               </div>
 
-              <div className="flex-1 min-w-[240px]">
-                <label className="mb-1.5 block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-                  Student Name
-                </label>
+              {/* Student Name */}
+              <div className="flex-1 min-w-[200px] group relative">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <i className="ph-bold ph-user text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+                </div>
                 <Input
-                  className="h-11 rounded-brand border border-gray-200 bg-white px-4 text-sm transition-all placeholder:text-gray-400 focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
+                  className="h-[36px] w-full rounded-[8px] border-[0.5px] border-gray-200 bg-white pl-9 pr-4 text-[13px] font-normal transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
                   value={docsForm.studentName}
                   onChange={(e) => {
                     const v = e.target.value;
@@ -536,14 +581,12 @@ export default function DocumentsTab({
                       return next;
                     });
                   }}
-                  placeholder="Optional"
+                  placeholder="Student name"
                 />
               </div>
 
-              <div className="w-full sm:w-56">
-                <label className="mb-1.5 block text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-                  Document Type
-                </label>
+              {/* Document Type */}
+              <div className="min-w-[180px] flex-1">
                 <Select
                   value={docsForm.docType}
                   onChange={(e) => {
@@ -554,9 +597,9 @@ export default function DocumentsTab({
                       return next;
                     });
                   }}
-                  required
+                  className="h-[36px] w-full rounded-[8px] border-[0.5px] border-gray-200 bg-white text-[13px] font-medium transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
                 >
-                  <option value="">All</option>
+                  <option value="">All Document Types</option>
                   {docTypes.map((t) => (
                     <option key={t} value={t}>
                       {t}
@@ -575,51 +618,51 @@ export default function DocumentsTab({
 
           {/* Active filter Chips Row */}
           {(docsForm.studentNo !== "" || docsForm.studentName !== "" || docsForm.docType !== "") && (
-            <div className="flex-none border-b border-gray-100 bg-white px-4 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+            <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="mr-1 text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">Active Filters:</span>
+                <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
                 {docsForm.studentNo && (
-                  <div className="flex items-center gap-1 rounded-full border border-gray-300 bg-pup-maroon/10 px-2.5 py-1 text-[10px] font-semibold text-pup-maroon dark:text-primary dark:border-white/10 dark:text-primary">
+                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                     ID: {docsForm.studentNo}
                     <button
                       onClick={() => {
-                          const next = { ...docsForm, studentNo: "" };
-                          setDocsForm(next);
-                          refreshDocuments(next);
+                        const next = { ...docsForm, studentNo: "" };
+                        setDocsForm(next);
+                        refreshDocuments(next);
                       }}
-                      className="ml-1 hover:text-pup-darkMaroon transition-colors"
+                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
                     >
-                      <i className="ph-bold ph-x text-[8px]"></i>
+                      ×
                     </button>
                   </div>
                 )}
                 {docsForm.studentName && (
-                  <div className="flex items-center gap-1 rounded-full border border-blue-100/30 bg-blue-50 px-2.5 py-1 text-[10px] font-semibold text-blue-600 dark:bg-blue-950/30 dark:text-blue-400">
+                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                     Name: {docsForm.studentName}
                     <button
                       onClick={() => {
-                          const next = { ...docsForm, studentName: "" };
-                          setDocsForm(next);
-                          refreshDocuments(next);
+                        const next = { ...docsForm, studentName: "" };
+                        setDocsForm(next);
+                        refreshDocuments(next);
                       }}
-                      className="ml-1 hover:text-blue-800 transition-colors"
+                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
                     >
-                      <i className="ph-bold ph-x text-[8px]"></i>
+                      ×
                     </button>
                   </div>
                 )}
                 {docsForm.docType && (
-                  <div className="flex items-center gap-1 rounded-full border border-amber-100/30 bg-amber-50 px-2.5 py-1 text-[10px] font-semibold text-amber-600 dark:bg-amber-950/30 dark:text-amber-400">
+                  <div className="flex items-center gap-[6px] rounded-[6px] bg-gray-100 dark:bg-zinc-800 px-[10px] py-[4px] text-[12px] font-normal text-gray-900 dark:text-zinc-50">
                     Type: {docsForm.docType}
                     <button
                       onClick={() => {
-                          const next = { ...docsForm, docType: "" };
-                          setDocsForm(next);
-                          refreshDocuments(next);
+                        const next = { ...docsForm, docType: "" };
+                        setDocsForm(next);
+                        refreshDocuments(next);
                       }}
-                      className="ml-1 hover:text-amber-800 transition-colors"
+                      className="text-[12px] text-gray-400 hover:text-gray-600 dark:text-zinc-500 dark:hover:text-zinc-300 transition-colors cursor-pointer border-0 bg-transparent p-0 leading-none"
                     >
-                      <i className="ph-bold ph-x text-[8px]"></i>
+                      ×
                     </button>
                   </div>
                 )}
@@ -631,9 +674,9 @@ export default function DocumentsTab({
                     setDocsForm(cleared);
                     refreshDocuments(cleared);
                   }}
-                  className="h-6 rounded-full border border-dashed border-gray-300 px-3 text-[10px] font-semibold text-pup-maroon dark:text-primary hover:bg-red-50 hover:text-pup-darkMaroon dark:border-white/10 dark:text-primary dark:bg-red-950/30"
+                  className="h-auto text-[12px] font-medium text-gray-400 dark:text-zinc-500 border-0 bg-transparent hover:bg-transparent shadow-none p-0 hover:text-red-600 dark:hover:text-red-500 transition-colors cursor-pointer"
                 >
-                  Clear All Filters
+                  Clear
                 </Button>
               </div>
             </div>
@@ -755,72 +798,68 @@ export default function DocumentsTab({
                 />
               </div>
 
-              {docsForm.studentNo.trim() ||
-              docsForm.studentName.trim() ||
-              docsForm.docType.trim() ? (
-                <div className="flex items-center justify-between border-t border-gray-100 bg-white p-4 dark:border-white/10 dark:bg-card">
-                  <div className="flex items-center gap-8 select-none cursor-default">
-                    <div className="flex items-center gap-6 text-[11px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">
+              {docsRows.length > 0 && (
+                <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card mt-auto">
+                  <div className="flex items-center gap-8">
+                    <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
                       <span>
-                        Showing <strong className="text-gray-900 dark:text-zinc-50">{paginatedRows.length}</strong> Out Of <strong className="text-gray-900 dark:text-zinc-50">{docsRows.length.toLocaleString()}</strong> Entries
+                        Showing {paginatedRows.length} of {docsRows.length}
                       </span>
-
-                      <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
-                        <span className="text-[10px] opacity-60">Rows:</span>
-                        <Select
-                          className="h-8 w-16 cursor-pointer rounded-brand border border-gray-300 bg-white px-2 text-[10px] font-semibold text-gray-700 focus:ring-1 focus:ring-pup-maroon focus:outline-none transition-all hover:bg-gray-50 dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
-                          value={itemsPerPage}
-                          onChange={(e) => {
-                            const val = Number(e.target.value);
-                            setItemsPerPage(val);
-                            setPage(1);
-                            setJumpPage("1");
-                          }}
-                        >
-                          <option value={10}>10</option>
-                          <option value={20}>20</option>
-                          <option value={50}>50</option>
-                          <option value={100}>100</option>
-                        </Select>
+                      <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
+                        <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
+                        <div className="flex items-center gap-1">
+                          {[10, 20, 50, 100].map((size) => (
+                            <button
+                              key={size}
+                              type="button"
+                              onClick={() => {
+                                setItemsPerPage(size);
+                                setPage(1);
+                                setJumpPage("1");
+                              }}
+                              className={`px-2 py-0.5 rounded-[4px] text-[12px] font-normal cursor-pointer transition-colors border-0 ${
+                                itemsPerPage === size
+                                  ? "bg-gray-100 text-[#111111] font-medium dark:bg-white/10 dark:text-zinc-50"
+                                  : "bg-transparent text-gray-450 dark:text-zinc-550 hover:text-gray-700 dark:hover:text-zinc-300"
+                              }`}
+                            >
+                              {size}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex shrink-0 items-center gap-3 select-none">
-                    <Button
-                      variant="outline"
-                      size="sm"
+                  <div className="flex shrink-0 items-center gap-3">
+                    <button
                       disabled={page <= 1}
                       onClick={() => {
-                        setPage((p) => p - 1);
-                        setJumpPage(String(page - 1));
+                        setPage((p) => Math.max(1, p - 1));
+                        setJumpPage(String(Math.max(1, page - 1)));
                       }}
-                      className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-600 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                      className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
                     >
-                      <i className="ph-bold ph-caret-left mr-2 text-base"></i>
                       Prev
-                    </Button>
+                    </button>
 
-                    <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-brand border border-gray-200 bg-white px-3 text-[11px] font-semibold text-gray-900 shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
+                    <div className="flex h-8 min-w-[32px] items-center justify-center rounded-[6px] border border-gray-200/80 bg-white px-2.5 text-[12px] font-medium text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
                       {page}
                     </div>
 
-                    <Button
-                      variant="outline"
-                      size="sm"
+                    <button
                       disabled={page >= totalPages}
                       onClick={() => {
-                        setPage((p) => p + 1);
-                        setJumpPage(String(page + 1));
+                        setPage((p) => Math.min(totalPages, p + 1));
+                        setJumpPage(String(Math.min(totalPages, page + 1)));
                       }}
-                      className="h-10 rounded-brand border border-gray-300 bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-500 shadow-sm transition-all hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
+                      className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
                     >
                       Next
-                      <i className="ph-bold ph-caret-right ml-2 text-base"></i>
-                    </Button>
+                    </button>
                   </div>
                 </div>
-              ) : null}
+              )}
             </div>
           )}
         </div>

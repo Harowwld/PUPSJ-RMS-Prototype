@@ -293,8 +293,8 @@ export default function Home() {
 
         <div className="w-full max-w-[550px] p-4 z-10">
           <div
-            className="bg-white rounded-[20px] shadow-[0_4px_40px_rgba(0,0,0,0.12)] transition-all dark:bg-zinc-900 flex flex-col items-center w-full relative"
-            style={{ padding: "56px 52px", minHeight: "630px" }}
+            className="bg-white rounded-[20px] shadow-[0_4px_40px_rgba(0,0,0,0.12)] dark:bg-zinc-900 flex flex-col items-center w-full relative"
+            style={{ padding: "56px 52px", height: "630px" }}
           >
             {/* APP ICON WITH CONCENTRIC CIRCLES */}
             <div className="relative w-[160px] h-[160px] flex items-center justify-center mb-3 select-none shrink-0" style={{ width: '160px', height: '160px', flexShrink: 0 }}>
@@ -467,17 +467,15 @@ export default function Home() {
                           </label>
                         )}
 
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setView("forgot");
-                            setLoginStep(1);
-                          }}
+                        <a
+                          href="/forgot-password"
+                          target="_blank"
+                          rel="noopener noreferrer"
                           className="text-[13px] text-[#E5484D] focus:outline-none flex items-center gap-0.5 group shrink-0"
                         >
                           <span className="group-hover:underline">Forgot Password?</span>
                           <i className="ph-bold ph-arrow-up-right text-[11px] mt-0.5"></i>
-                        </button>
+                        </a>
                       </div>
                     )}
 
@@ -495,10 +493,10 @@ export default function Home() {
 
                   {/* Disclaimer Text with Icon (Step 1 only) */}
                   {loginStep === 1 ? (
-                    <div className="w-full mt-auto pt-9 mb-[78px] text-left flex flex-col items-start select-none animate-in fade-in duration-200">
+                    <div className="w-full mt-auto pt-9 mb-[124px] text-left flex flex-col items-start select-none animate-in fade-in duration-200">
                       <i className="ph-fill ph-users text-[23px] text-[#007AFF] mb-1"></i>
                       <p className="w-full text-[11px] text-[#8E8E93] dark:text-zinc-400 leading-normal font-normal">
-                        Your eManage account is used to provide secure access to student records, document requests, and administrative tools within the Polytechnic University of the Philippines registrar system. Certain account activity is logged for security, auditing, and support purposes. By signing in, you agree to the acceptable use policies of PUP's digital records management system.
+                        Your eManage account provides secure access to the digitization process and administrative tools. Account activity is logged for security and auditing purposes.
                       </p>
                     </div>
                   ) : (
@@ -506,14 +504,14 @@ export default function Home() {
                   )}
 
                   {/* Continue Button (Always visible at the bottom) */}
-                  <div className="absolute bottom-[78px] left-[52px] right-[52px]">
+                  <div className="absolute bottom-[64px] left-[52px] right-[52px]">
                     <Button
                       type="submit"
                       disabled={isLoading || isStep1Loading || (loginStep === 1 && !username.trim())}
                       className="w-full h-11 rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                     >
                       {isLoading || isStep1Loading ? (
-                        <i className="ph-bold ph-spinner animate-spin text-lg"></i>
+                        <i className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></i>
                       ) : (
                         <span>{loginStep === 1 ? "Continue" : "Sign In"}</span>
                       )}
@@ -564,14 +562,14 @@ export default function Home() {
                     </div>
 
                     {/* Locate Account Button (Always visible at the bottom) */}
-                    <div className="absolute bottom-[78px] left-[52px] right-[52px]">
+                    <div className="absolute bottom-[64px] left-[52px] right-[52px]">
                       <Button
                         type="submit"
                         disabled={forgotLoading || !forgotIdentifier.trim()}
                         className="w-full h-11 rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                       >
                         {forgotLoading ? (
-                          <i className="ph-bold ph-spinner animate-spin text-lg"></i>
+                          <i className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></i>
                         ) : (
                           <span>Locate Account</span>
                         )}
@@ -679,14 +677,14 @@ export default function Home() {
                     </div>
 
                     {/* Reset Password Button (Always visible at the bottom) */}
-                    <div className="absolute bottom-[78px] left-[52px] right-[52px]">
+                    <div className="absolute bottom-[64px] left-[52px] right-[52px]">
                       <Button
                         type="submit"
                         disabled={forgotLoading || !forgotAnswer.trim() || !forgotNewPassword || !forgotConfirmPassword}
                         className="w-full h-11 rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all flex items-center justify-center"
                       >
                         {forgotLoading ? (
-                          <i className="ph-bold ph-spinner animate-spin text-lg"></i>
+                          <i className="ph-bold ph-spinner animate-spin text-lg flex items-center justify-center"></i>
                         ) : (
                           <span>Reset Password</span>
                         )}

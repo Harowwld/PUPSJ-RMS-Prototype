@@ -280,8 +280,8 @@ export default function CoursesTab({
         : "These degree programs will be hidden from new registrations but their history will be preserved.",
       confirmLabel: showArchived ? "Restore Selected" : "Archive Selected",
       variant: showArchived ? "success" : "danger",
-      buttonIcon: showArchived ? "ph-bold ph-arrow-counter-clockwise" : "ph-bold ph-archive",
-      icon: showArchived ? "ph-duotone ph-arrow-counter-clockwise" : "ph-duotone ph-archive",
+      buttonIcon: showArchived ? "ph-bold ph-archive-restore" : "ph-bold ph-archive",
+      icon: showArchived ? "ph-duotone ph-archive-restore" : "ph-duotone ph-archive",
       selectedItems: selectedNames,
       onConfirm: () => executeBulkTaxonomyAction("Course", showArchived ? "restore" : "delete"),
     })
@@ -678,8 +678,8 @@ export default function CoursesTab({
                                     confirmLabel: "Restore",
                                     variant: "success",
                                     buttonIcon:
-                                      "ph-bold ph-arrow-counter-clockwise",
-                                    icon: "ph-duotone ph-arrow-counter-clockwise",
+                                      "ph-bold ph-archive-restore",
+                                    icon: "ph-duotone ph-archive-restore",
                                     selectedItems: [`${c.code} - ${c.name}`],
                                     onConfirm: () => resCourse(c.id, c.code),
                                   })
@@ -687,7 +687,7 @@ export default function CoursesTab({
                                 }}
                                 className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                               >
-                                <i className="ph-bold ph-arrow-counter-clockwise text-[16px]"></i>
+                                <i className="ph-bold ph-archive-restore text-[16px]"></i>
                               </button>
                             ) : (
                               <button
@@ -744,7 +744,7 @@ export default function CoursesTab({
                                   }}
                                   className="mt-4 flex h-9 items-center gap-2 rounded-brand border border-gray-300 bg-white px-4 text-xs font-semibold text-gray-600 shadow-sm transition-colors hover:border-gray-300 hover:bg-red-50 hover:text-pup-maroon dark:hover:text-red-500 active:scale-95 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
                                 >
-                                  <i className="ph-bold ph-arrow-counter-clockwise"></i>
+                                  <i className="ph-bold ph-archive-restore"></i>
                                   CLEAR SEARCH
                                 </Button>
                               ) : (
@@ -828,7 +828,7 @@ export default function CoursesTab({
         onCancel={() => toggleAllCourses(false)}
         onAction={handleBulkAction}
         actionLabel={showArchived ? "Restore" : "Archive"}
-        actionIcon={showArchived ? "ph-arrow-counter-clockwise" : "ph-archive"}
+        actionIcon={showArchived ? "ph-archive-restore" : "ph-archive"}
         actionVariant={showArchived ? "success" : "danger"}
       />
 

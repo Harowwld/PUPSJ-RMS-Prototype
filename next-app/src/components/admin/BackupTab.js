@@ -219,15 +219,17 @@ export default function BackupTab({
             <Card className="p-0 gap-0 overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none w-full">
               <PageHeader
                 icon="ph-hard-drives"
-                title="Backup Records"
+                title="Backup & Maintenance"
                 description="Manage system archives and secure copies."
                 showBorder={false}
+                titleClassName="text-[15px] font-bold text-gray-900 dark:text-zinc-50"
+                descriptionClassName="text-[14px] font-normal text-[#8E8E93] dark:text-zinc-400 mt-[2px]"
                 actions={
                   <div className="flex items-center gap-6">
                     <RefreshButton 
                       onRefresh={onRefresh} 
                       isLoading={isLoading} 
-                      title="Refresh Backup Records"
+                      title="Refresh Backup & Maintenance"
                     />
 
                     <div className="h-6 w-px bg-gray-200 dark:bg-zinc-800" />

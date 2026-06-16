@@ -29,6 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Select } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
@@ -685,19 +686,19 @@ function AccountPageContent() {
             defaultValue="profile"
             value={activeTab}
             onValueChange={setActiveTab}
-            className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-10 items-start"
+            className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-10 items-stretch"
           >
           {/* Sidebar Navigation */}
-          <aside className="space-y-6 lg:sticky lg:top-24">
-            <div className="bg-white rounded-brand border border-gray-200 shadow-2xl shadow-black/5 overflow-hidden dark:bg-zinc-900 dark:border-white/5 p-6 flex flex-col gap-5">
+          <aside className="lg:sticky lg:top-24 h-full flex flex-col justify-stretch">
+            <div className="bg-transparent p-0 flex flex-col h-full w-full">
               
               {/* Header Section */}
-              <div className="flex items-center justify-center gap-4.5 w-full">
-                {/* Avatar: 60px, circular */}
+              <div className="flex items-center gap-4 w-full mb-[24px] px-1">
+                {/* Avatar: 68px, circular */}
                 <div className="flex flex-col items-center shrink-0">
                   <div 
                     onClick={handleAvatarClick}
-                    className="relative group w-[60px] h-[60px] shrink-0 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 flex items-center justify-center text-[20px] font-semibold shadow-inner cursor-pointer overflow-hidden transition-all duration-300 hover:ring-2 hover:ring-pup-maroon/20"
+                    className="relative group w-[68px] h-[68px] shrink-0 rounded-full bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 flex items-center justify-center text-[22px] font-semibold shadow-inner cursor-pointer overflow-hidden transition-all duration-300 hover:ring-2 hover:ring-pup-maroon/20"
                   >
                     {avatarUrl ? (
                       <img 
@@ -735,16 +736,16 @@ function AccountPageContent() {
                 {/* Identity Info */}
                 <div className="min-w-0 flex flex-col items-start justify-center">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-[17px] font-semibold text-gray-900 tracking-[-0.01em] dark:text-zinc-50 leading-tight">
+                    <h3 className="text-[18px] font-semibold text-gray-900 tracking-[-0.01em] dark:text-zinc-50 leading-tight">
                       {fname} {lname}
                     </h3>
                     {authUser?.role && (
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-[4px] bg-red-50 text-pup-maroon dark:bg-red-500/20 dark:text-red-400 tracking-[0.04em]">
+                      <span className="text-[11px] font-medium px-2.5 py-1 rounded-[4px] bg-red-50 text-pup-maroon dark:bg-red-500/20 dark:text-red-400 tracking-[0.04em]">
                         {isAdminRole(authUser.role) ? "Admin" : authUser.role}
                       </span>
                     )}
                   </div>
-                  <p className="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px] truncate">
+                  <p className="text-[14px] font-normal text-[#8E8E93] dark:text-zinc-400 mt-[4px] truncate">
                     {authUser?.email || authUser?.username}
                   </p>
                 </div>
@@ -759,15 +760,15 @@ function AccountPageContent() {
                   <TabsTrigger
                     key={tab.id}
                     value={tab.id}
-                    className="group flex items-center justify-start gap-[6px] w-full px-3.5 h-[42px] rounded-[8px] text-[15px] font-normal tracking-[-0.01em] whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 data-[state=active]:bg-red-50 dark:data-[state=active]:bg-red-500/10 data-[state=active]:text-pup-maroon dark:data-[state=active]:text-primary text-gray-650 hover:bg-gray-50 dark:hover:bg-white/5 dark:text-zinc-400 dark:hover:text-zinc-50 dark:focus-visible:ring-red-500/20 cursor-pointer"
+                    className="group flex items-center justify-start gap-3 w-full px-4 py-3 rounded-[10px] text-[15px] font-medium tracking-[-0.01em] whitespace-nowrap transition-colors outline-none focus-visible:ring-2 focus-visible:ring-pup-maroon/20 cursor-pointer data-[state=active]:bg-[#F0F0F2] data-[state=active]:text-[#1C1C1E] data-[state=active]:font-semibold dark:data-[state=active]:bg-zinc-800 dark:data-[state=active]:text-zinc-100 text-[#8E8E93] hover:bg-[#F5F5F7] dark:hover:bg-zinc-850 dark:text-zinc-400 dark:hover:text-zinc-200"
                   >
                     <i className={cn(
-                      "ph-bold text-[18px] shrink-0 text-gray-400 dark:text-zinc-500 transition-colors",
-                      "group-data-[state=active]:text-pup-maroon dark:group-data-[state=active]:text-primary"
+                      "ph-bold text-[18px] shrink-0 transition-colors",
+                      "text-[#8E8E93] group-data-[state=active]:text-[#1C1C1E] dark:text-zinc-500 dark:group-data-[state=active]:text-zinc-100"
                     )}></i>
                     <span className="truncate text-left">{tab.label}</span>
                     <div className="shrink-0 ml-auto w-5 h-5 flex items-center justify-center opacity-0 group-data-[state=active]:opacity-100 transition-opacity">
-                      <i className="ph-bold ph-caret-right text-sm"></i>
+                      <i className="ph-bold ph-caret-right text-sm text-[#1C1C1E] dark:text-zinc-100"></i>
                     </div>
                   </TabsTrigger>
                 ))}
@@ -1057,7 +1058,7 @@ function AccountPageContent() {
                                       autoFocus={isEditing}
                                     />
                                   ) : (
-                                    <div className="h-10 flex items-center px-3 bg-gray-50 border-[0.5px] border-gray-200 rounded-[8px] text-[11px] font-normal text-gray-400 italic select-none dark:bg-white/5 dark:border-white/10 dark:text-zinc-500">
+                                    <div className="h-10 flex items-center px-3 bg-gray-50 border-[0.5px] border-gray-200 rounded-[8px] text-[11px] font-normal text-gray-400 select-none dark:bg-white/5 dark:border-white/10 dark:text-zinc-500">
                                       Answer saved and encrypted.
                                     </div>
                                   )}
@@ -1103,7 +1104,7 @@ function AccountPageContent() {
                   <CardContent className="p-[28px] pt-6">
                     {totpStep === "setup" && totpSetupData ? (
                       <div className="space-y-6 animate-in zoom-in-95 duration-500">
-                        <div className="grid grid-cols-1 md:grid-cols-[1fr_250px] gap-8 bg-gray-50 rounded-2xl border border-gray-100 p-8 items-center dark:bg-card dark:border-white/10">
+                        <div className="grid grid-cols-1 md:grid-cols-[1fr_300px] gap-8 bg-gray-50 rounded-2xl border border-gray-100 p-8 items-center dark:bg-card dark:border-white/10">
                           <div className="space-y-4">
                             <h4 className="text-lg font-semibold text-gray-900 tracking-tight dark:text-zinc-50">Setup</h4>
                             <p className="text-sm font-medium text-gray-600 dark:text-zinc-300">
@@ -1113,23 +1114,22 @@ function AccountPageContent() {
                             <div className="space-y-2 mt-4">
                                <div className="bg-white px-4 py-3 rounded-xl border border-gray-200 flex flex-col gap-1.5 shadow-xs dark:bg-card dark:border-white/10">
                                   <span className="text-[9px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">Secret key</span>
-                                  <code className="text-sm font-semibold text-pup-maroon dark:text-primary tracking-wider break-all">{totpSetupData.secret}</code>
-                               </div>
+                                  <span className="text-sm font-semibold text-pup-maroon dark:text-primary tracking-wider break-all font-inter">{totpSetupData.secret}</span>
+                                </div>
                                <div className="bg-white px-4 py-3 rounded-xl border border-gray-200 flex flex-col gap-1.5 shadow-xs dark:bg-card dark:border-white/10">
                                   <span className="text-[9px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">Serial key (Backup)</span>
-                                  <code className="text-sm font-semibold text-gray-900 tracking-wider break-all dark:text-zinc-50">{totpSetupData.serialKey}</code>
-                               </div>
+                                  <span className="text-sm font-semibold text-gray-900 tracking-wider break-all dark:text-zinc-50 font-inter">{totpSetupData.serialKey}</span>
+                                </div>
                             </div>
                           </div>
-                          <div className="flex flex-col items-center">
-                            <div className="bg-white p-4 rounded-2xl border-2 border-white shadow-2xl rotate-2 hover:rotate-0 transition-transform duration-500 dark:bg-card">
+                          <div className="flex flex-col items-center w-full">
+                            <div className="bg-transparent p-0 border-0 shadow-none dark:bg-transparent w-full flex justify-center">
                               <img
                                 src={totpSetupData.qrCode}
                                 alt="TOTP QR Code"
-                                className="w-44 h-44"
+                                className="w-full h-auto max-w-[280px] aspect-square object-contain"
                               />
                             </div>
-                            <span className="mt-4 text-[10px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">Scan QR code</span>
                           </div>
                         </div>
 
@@ -1155,24 +1155,22 @@ function AccountPageContent() {
                           </div>
                         )}
 
-                        <div className="pt-8 border-t border-gray-100 flex justify-end gap-4 dark:border-white/10">
+                        <div className="pt-8 border-t border-gray-100 flex justify-end gap-2 dark:border-white/10">
                           <Button
                             onClick={cancelTOTPSetup}
                             disabled={totpLoading}
-                            variant="outline"
-                            className="h-12 px-8 font-semibold tracking-widest text-[11px] border-gray-200 bg-white rounded-xl hover:bg-gray-50 transition-all shadow-xs dark:border-white/10 dark:bg-card dark:hover:bg-white/10"
+                            variant="ghost"
+                            className="h-12 px-8 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center justify-center rounded-xl shadow-none! border-0!"
                           >
                             Cancel
                           </Button>
                           <Button
                              onClick={verifyTOTP}
                              disabled={totpLoading || totpToken.length !== 6}
-                             className="h-12 px-10 btn-brand-red font-semibold text-sm shadow-md"
+                             className="h-12 px-10 btn-brand-red font-semibold text-sm shadow-md flex items-center justify-center gap-2"
                            >
-                             {totpLoading ? (
+                             {totpLoading && (
                                <i className="ph-bold ph-spinner animate-spin text-xl"></i>
-                             ) : (
-                               <i className="ph-bold ph-shield-check text-xl"></i>
                              )}
                              Activate 2FA
                            </Button>
@@ -1249,8 +1247,8 @@ function AccountPageContent() {
                              <div className="flex justify-end gap-3">
                                 <Button
                                   onClick={() => { setTotpStep("idle"); setTotpToken(""); setTotpError(""); }}
-                                  variant="outline"
-                                  className="h-12 px-6 font-semibold tracking-widest text-[10px] border-gray-300 rounded-xl"
+                                  variant="ghost"
+                                  className="h-12 px-6 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center justify-center rounded-xl shadow-none! border-0!"
                                 >
                                   Cancel
                                 </Button>
@@ -1345,36 +1343,39 @@ function AccountPageContent() {
                 </Card>
               </div>
             </TabsContent>
-
-
           </div>
         </Tabs>
         </div>
 
         {/* Recovery Codes Modal */}
         <Dialog open={showRecoveryCodesDialog} onOpenChange={setShowRecoveryCodesDialog}>
-          <DialogContent className="max-w-md rounded-2xl border-pup-border p-0 overflow-hidden bg-white shadow-2xl dark:bg-card">
-            <div className="bg-linear-to-br from-red-800 to-pup-maroon p-8 text-white relative overflow-hidden">
-               <i className="ph-fill ph-shield-key absolute -right-8 -bottom-8 text-[120px] text-white/5 rotate-12"></i>
-               <DialogTitle className="text-xl font-semibold tracking-tight relative z-10">Recovery Codes</DialogTitle>
-               <DialogDescription className="font-semibold text-white/70 mt-1 relative z-10 text-sm">
+          <DialogContent hideClose={true} className="max-w-[560px] sm:max-w-[560px] rounded-[20px] border-[#E5E5EA] dark:border-zinc-800 p-6 overflow-hidden bg-white shadow-2xl dark:bg-card">
+            <div className="relative pb-4">
+               <DialogClose asChild>
+                 <button className="absolute top-0 right-0 w-8 h-8 flex items-center justify-center rounded-full text-[#8E8E93] hover:bg-[#F5F5F7] dark:hover:bg-zinc-800 transition-colors focus:outline-none">
+                   <i className="ph-bold ph-x text-[16px]"></i>
+                 </button>
+               </DialogClose>
+               <DialogTitle className="text-[20px] font-bold text-[#1C1C1E] dark:text-zinc-100 tracking-tight">Recovery Codes</DialogTitle>
+               <DialogDescription className="text-[13.5px] font-normal text-[#8E8E93] mt-1 dark:text-zinc-400">
                   Generated codes for emergency access.
                </DialogDescription>
             </div>
             
-            <div className="p-8 space-y-8">
-              <div className="bg-gray-50 p-6 rounded-2xl border-2 border-gray-100 shadow-inner grid grid-cols-2 gap-4 dark:bg-card dark:border-white/10 dark:shadow-none">
+            <div className="flex flex-col gap-5">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-4">
                 {recoveryCodes.map((code, idx) => (
-                  <div key={idx} className="font-mono text-sm font-semibold text-gray-700 flex items-center gap-3 bg-white p-2 rounded-lg border border-gray-100 shadow-xs dark:text-zinc-200 dark:bg-card dark:border-white/10">
-                    <span className="text-[10px] text-pup-maroon dark:text-primary font-semibold bg-red-50 w-5 h-5 flex items-center justify-center rounded dark:data-[state=active]:bg-red-500/10">{idx + 1}</span>
-                    <span className="tracking-widest">{code}</span>
+                  <div key={idx} className="font-inter text-[14.5px] font-semibold text-[#1C1C1E] dark:text-zinc-200 flex items-center gap-3 bg-[#F5F5F7] p-3 rounded-[10px] border border-[#E5E5EA] dark:bg-white/5 dark:border-zinc-850">
+                    <span className="text-[11px] text-[#636366] dark:text-zinc-400 font-bold bg-[#E5E5EA] dark:bg-zinc-800 w-5 h-5 flex items-center justify-center rounded-full shrink-0">
+                      {idx + 1}
+                    </span>
+                    <span className="tracking-widest font-inter">{code}</span>
                   </div>
                 ))}
               </div>
 
-              <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl flex items-start gap-3 dark:bg-amber-400/10 dark:border-amber-400/20">
-                 <i className="ph-fill ph-warning text-xl text-amber-600 shrink-0 dark:text-amber-400"></i>
-                 <p className="text-[11px] text-amber-900 font-semibold dark:text-amber-400/90">
+              <div className="p-4 bg-amber-50/70 border border-amber-200/50 rounded-[12px] dark:bg-amber-500/10 dark:border-amber-500/25">
+                 <p className="text-[13.5px] text-[#8A6D3B] dark:text-amber-300 font-medium leading-relaxed">
                     WARNING: These codes are for emergency use only. Each code can be used once. Save them somewhere safe.
                  </p>
               </div>
@@ -1384,23 +1385,23 @@ function AccountPageContent() {
                   <Button 
                     onClick={copyRecoveryCodes}
                     variant="outline" 
-                    className="flex-1 h-12 font-semibold tracking-widest text-[10px] border-gray-300 rounded-xl hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center justify-center gap-2 dark:border-white/10"
+                    className="flex-1 h-11 px-5 font-semibold text-[13px] text-[#1C1C1E] dark:text-zinc-200 border-[#E5E5EA] dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-[10px] hover:bg-[#F5F5F7] dark:hover:bg-zinc-800 hover:text-[#1C1C1E] transition-all shadow-none flex items-center justify-center gap-2"
                   >
-                    <i className="ph-bold ph-copy text-lg"></i> Clipboard
+                    <i className="ph-bold ph-copy text-base"></i> Clipboard
                   </Button>
                   <Button 
                     onClick={downloadRecoveryCodes}
                     variant="outline" 
-                    className="flex-1 h-12 font-semibold tracking-widest text-[10px] border-gray-300 rounded-xl hover:border-pup-maroon hover:text-pup-maroon dark:hover:text-red-500 transition-all shadow-xs flex items-center justify-center gap-2 dark:border-white/10"
+                    className="flex-1 h-11 px-5 font-semibold text-[13px] text-[#1C1C1E] dark:text-zinc-200 border-[#E5E5EA] dark:border-zinc-800 bg-white dark:bg-zinc-900 rounded-[10px] hover:bg-[#F5F5F7] dark:hover:bg-zinc-800 hover:text-[#1C1C1E] transition-all shadow-none flex items-center justify-center gap-2"
                   >
-                    <i className="ph-bold ph-download-simple text-lg"></i> Save File
+                    <i className="ph-bold ph-download-simple text-base"></i> Save File
                   </Button>
                 </div>
                 <Button 
                   onClick={() => setShowRecoveryCodesDialog(false)}
-                  className="w-full h-14 bg-linear-to-b from-gray-900 to-black border-4 border-gray-800 hover:bg-gray-800 hover:shadow-xl transition-all text-white font-semibold tracking-widest rounded-xl shadow-lg active:scale-95"
+                  className="w-full h-11 bg-[#0A84FF] hover:bg-[#0070E0] active:bg-[#0062C4] text-white font-semibold text-[14px] rounded-[12px] transition-colors shadow-none active:scale-95 border-0"
                 >
-                  Confirm Codes Secured
+                  Done
                 </Button>
               </div>
             </div>

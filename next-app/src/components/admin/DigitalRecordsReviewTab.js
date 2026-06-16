@@ -782,7 +782,7 @@ export default function DigitalRecordsReviewTab({
               </div>
               <Input
                 type="text"
-                placeholder="Search student, document, filename..."
+                placeholder="Search Student"
                 className="h-[36px] w-full rounded-[8px] border-[0.5px] border-gray-200 bg-white pl-9 pr-20 text-[13px] font-normal transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
                 value={localSearch}
                 onChange={(e) => setLocalSearch(e.target.value)}
@@ -838,7 +838,7 @@ export default function DigitalRecordsReviewTab({
                     className={cn(
                       "text-[12px] font-normal transition-all bg-transparent border-0 cursor-pointer shadow-none focus:outline-none focus:ring-0 pb-1",
                       isActive 
-                        ? "text-pup-maroon dark:text-red-500 border-b-[2px] border-pup-maroon dark:border-red-500 font-medium" 
+                        ? "text-[#03a10e] dark:text-[#03a10e] border-b-[2px] border-[#03a10e] dark:border-[#03a10e] font-medium" 
                         : "text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300"
                     )}
                   >

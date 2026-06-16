@@ -336,7 +336,7 @@ th {
 
 @keyframes wayfinder-wave {
   0%, 100% { transform: scale(1); opacity: 0.3; }
-  50% { transform: scale(1.8); opacity: 1; box-shadow: 0 0 10px currentColor; }
+  50% { transform: scale(1.8); opacity: 1; }
 }
 
 /* Selection */

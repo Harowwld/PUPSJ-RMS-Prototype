@@ -35,7 +35,15 @@ import {
 import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils"
-import { splitNameComponents, findStudentsByOcrName } from "@/lib/ocrClient"
+import { findStudentsByOcrName } from "@/lib/ocrClient"
+function toNormalCase(str) {
+  if (!str) return ""
+  return str
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ")
+}
 
 export default function ScanUploadTab({
   loading,
@@ -102,6 +110,7 @@ export default function ScanUploadTab({
   setRotation,
 }) {
   const [clearInboxOpen, setClearInboxOpen] = useState(false)
+  const [showPagesSidebar, setShowPagesSidebar] = useState(true)
   const [pendingDroppedFile, setPendingDroppedFile] = useState(null)
   const [confirmDropOpen, setConfirmDropOpen] = useState(false)
   const [windowDragActive, setWindowDragActive] = useState(false)
@@ -541,18 +550,30 @@ export default function ScanUploadTab({
       id="view-upload"
       className="animate-fade-up font-inter flex h-auto w-full flex-col"
     >
-      <Card className="rounded-[16px] border-[#E5E5EA] bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden mb-4">
+      <Card className="rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none overflow-hidden mb-4">
         <PageHeader
+          icon="ph-scan"
           title="Scan & Upload"
           description="Scan student records or import files to save them digitally."
           showBorder={false}
           titleClassName="text-[15px] font-bold text-gray-900 dark:text-zinc-50"
           descriptionClassName="text-[14px] font-normal text-[#8E8E93] dark:text-zinc-400 mt-[2px]"
-          className="px-[28px] pt-[20px] pb-0"
+          actions={
+            uploadMode === "pdf" && (
+              <RefreshButton
+                onRefresh={(e) => {
+                  e.stopPropagation()
+                  hf.refresh()
+                }}
+                isLoading={hf.loading}
+                className="h-[32px] w-[32px] rounded-full p-[6px] !text-[#8E8E93] hover:!text-[#636366] hover:!bg-[#F5F5F7] transition-all duration-200 dark:!text-zinc-400 dark:hover:!text-zinc-200 dark:hover:!bg-white/10"
+              />
+            )
+          }
         />
 
         {/* Mode Toggles as Sub-tabs */}
-        <div className="w-full select-none px-[28px] border-b border-gray-100 dark:border-white/5">
+        <div className="w-full select-none px-6 border-b border-gray-100 dark:border-white/5">
           <div className="flex items-center gap-[24px]">
             <button
               type="button"
@@ -648,473 +669,400 @@ export default function ScanUploadTab({
                   )}
                 >
                   {uploadMode === "csv" ? (
-                    <div className="flex h-full w-full flex-col overflow-hidden bg-white transition-all duration-300 rounded-[16px] border border-[#E5E5EA] dark:bg-card dark:border-white/10">
-                      <div className="flex flex-col items-center justify-between gap-4 border-b border-gray-100 bg-gray-50/50 p-6 px-8 sm:flex-row dark:border-white/10 dark:bg-white/5">
-                        <div className="flex items-center gap-4">
-                          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[12px] border border-[#E5E5EA] bg-white text-[#0A84FF] shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                            <i className="ph-duotone ph-table text-xl"></i>
-                          </div>
-                          <div>
-                            <h3 className="text-lg font-semibold tracking-tight text-[#1C1C1E] dark:text-zinc-50">
-                              CSV Preview
-                            </h3>
-                            <div className="mt-0.5 text-xs font-medium text-gray-500 dark:text-zinc-400">
-                              {csvFile ? (
+                    csvFile ? (
+                      <div className="flex h-full w-full flex-col overflow-hidden bg-white transition-all duration-300 rounded-[16px] border border-[#E5E5EA] dark:bg-card dark:border-white/10">
+                        <div className="flex flex-col items-center justify-between gap-4 border-b border-gray-100 bg-gray-50/50 p-6 px-8 sm:flex-row dark:border-white/10 dark:bg-white/5">
+                          <div className="flex items-center gap-4">
+                            <div>
+                              <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                                CSV Preview
+                              </h3>
+                              <div className="mt-[4px] text-[13px] font-normal text-gray-500 dark:text-zinc-400">
                                 <div className="flex flex-col gap-0.5">
-                                  <span className="flex items-center gap-1.5 font-semibold break-all text-gray-800 dark:text-zinc-100">
-                                    <i className="ph-bold ph-file-csv text-[#0A84FF] dark:text-primary" />{" "}
+                                  <span className="break-all text-pup-maroon dark:text-red-400 font-medium text-[13px]">
                                     {csvFile.name}
                                   </span>
-                                  <span className="text-gray-500 dark:text-zinc-400">
+                                  <span className="text-[11px] font-normal text-gray-400 dark:text-zinc-500 mt-[2px]">
                                     {csvRows.length} rows detected ·{" "}
                                     {csvRows.filter((r) => r.error).length} invalid
                                     rows
                                   </span>
                                 </div>
-                              ) : (
-                                "Select a CSV file to preview and edit records before importing."
-                              )}
+                              </div>
                             </div>
                           </div>
-                        </div>
                         <div className="flex shrink-0 items-center gap-4">
-                          {csvFile && (
                             <div className="relative group w-48 sm:w-64">
                               <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-                                <i className="ph-bold ph-magnifying-glass text-gray-400 group-focus-within:text-[#0A84FF] dark:text-zinc-500 transition-colors"></i>
+                                <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
                               </div>
-                              <input
+                              <Input
                                 type="text"
-                                className="h-9 w-full rounded-[10px] border border-[#E5E5EA] bg-white pl-9 pr-3 text-xs font-semibold transition-all placeholder:text-gray-400 focus:border-[#0A84FF] focus:ring-2 focus:ring-[#0A84FF]/20 dark:border-white/10 dark:bg-card dark:text-zinc-300 outline-none"
+                                className="h-[36px] w-full rounded-[8px] border-[0.5px] border-gray-200 bg-white pl-9 pr-4 text-[13px] font-normal transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
                                 placeholder="Search records..."
                                 value={localCsvSearch}
                                 onChange={(e) => setLocalCsvSearch(e.target.value)}
                               />
                             </div>
-                          )}
-                          {csvFile && (
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleCsvFileSelect(null)}
-                              className="h-9 shrink-0 rounded-[10px] border-[#E5E5EA] px-4 text-[10px] font-semibold tracking-widest text-gray-700 shadow-sm transition-all hover:bg-[#F5F5F7] dark:hover:text-red-500 dark:text-zinc-200 dark:shadow-none dark:hover:border-zinc-700 dark:bg-zinc-800/30 dark:border-white/10"
+                             <Button
+                               variant="ghost"
+                               size="sm"
+                               onClick={() => handleCsvFileSelect(null)}
+                               className="h-10 px-3 font-semibold text-sm text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors flex items-center gap-2 rounded-brand shadow-none! border-0!"
+                             >
+                               Clear File
+                             </Button>
+                          </div>
+                        </div>
+
+                        <div
+                          className={`relative min-h-0 flex-1 overflow-auto transition-colors duration-200 ${csvDropActive ? "bg-[#FAFAFA]" : ""} dark:bg-[#2c2c2c]`}
+                          onDragOver={(e) => {
+                            e.preventDefault()
+                            setCsvDropActive(true)
+                          }}
+                        >
+                          {csvDropActive && (
+                            <div
+                              className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#0A84FF]/5 backdrop-blur-xs border-2 border-dashed border-[#D1D1D6] rounded-[16px] animate-fade-up dark:bg-blue-600/[0.04] dark:border-primary/50"
+                              onDragOver={(e) => {
+                                e.preventDefault()
+                                setCsvDropActive(true)
+                              }}
+                              onDragLeave={(e) => {
+                                e.preventDefault()
+                                setCsvDropActive(false)
+                              }}
+                              onDrop={(e) => {
+                                e.preventDefault()
+                                setCsvDropActive(false)
+                                const file = e.dataTransfer.files?.[0]
+                                if (
+                                  file &&
+                                  (file.name.toLowerCase().endsWith(".csv") ||
+                                    file.type === "text/csv" ||
+                                    file.type === "application/vnd.ms-excel" ||
+                                    file.type === "application/csv" ||
+                                    file.type === "")
+                                ) {
+                                  handleCsvFileSelect(file)
+                                }
+                              }}
                             >
-                              <i className="ph-bold ph-x-circle mr-1.5 text-xs" />
-                              Clear File
-                            </Button>
+                              <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-[#E5E5EA] shadow-2xl max-w-xs text-center pointer-events-none dark:bg-card/95 dark:border-white/10 animate-scale-up">
+                                <div className="w-14 h-14 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center mb-3 dark:bg-blue-950/30">
+                                  <i className="ph-duotone ph-file-csv text-xl text-[#0A84FF] dark:text-primary animate-bounce"></i>
+                                </div>
+                                <p className="text-sm font-semibold text-[#1C1C1E] dark:text-zinc-50">
+                                  Drop CSV here to replace data
+                                </p>
+                                <p className="text-[11px] font-semibold text-[#0A84FF] dark:text-primary mt-1.5 tracking-wider dark:text-primary">
+                                  Load new batch
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          {filteredCsvRows.length ? (
+                            <table className="min-w-full text-sm">
+                              <thead className="sticky top-0 z-10 border-b border-gray-200 bg-white dark:bg-card dark:border-white/10">
+                                <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-gray-400 dark:text-zinc-500">
+                                  <th className="w-12 p-4 text-center">
+                                    <input
+                                      type="checkbox"
+                                      className="h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10"
+                                      checked={
+                                        filteredCsvRows.length > 0 &&
+                                        Object.keys(csvSelected).filter(k => csvSelected[k]).length >= filteredCsvRows.length &&
+                                        filteredCsvRows.every(r => csvSelected[r.index])
+                                      }
+                                      onChange={(e) => {
+                                        const checked = e.target.checked
+                                        const next = { ...csvSelected }
+                                        filteredCsvRows.forEach(r => {
+                                          next[r.index] = checked
+                                        })
+                                        setCsvSelected(next)
+                                      }}
+                                    />
+                                  </th>
+                                  <th className="p-4">#</th>
+                                  <th className="p-4">Student No</th>
+                                  <th className="p-4">Name</th>
+                                  <th className="p-4">Course</th>
+                                  <th className="p-4">Year</th>
+                                  <th className="p-4">Section</th>
+                                  <th className="p-4">Room</th>
+                                  <th className="p-4">Cabinet</th>
+                                  <th className="p-4">Drawer</th>
+                                  <th className="p-4 text-right">Status</th>
+                                </tr>
+                              </thead>
+                              <tbody className="bg-transparent">
+                                {paginatedCsvRows.map((r) => {
+                                  const isValid = isLocationValid(r.student.room, r.student.cabinet, r.student.drawer)
+                                  const isSelected = !!csvSelected?.[r.index]
+
+                                  return (
+                                    <tr
+                                      key={r.index}
+                                      className={cn(
+                                        "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                                        isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
+                                      )}
+                                      onClick={() => toggleCsvRowSelected(r.index)}
+                                    >
+                                      <td className="py-0 px-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
+                                        <input
+                                          type="checkbox"
+                                          className={cn(
+                                            "h-4 w-4 cursor-pointer rounded border border-gray-300 text-pup-maroon dark:text-primary accent-pup-maroon focus:ring-pup-maroon dark:text-primary dark:border-white/10 transition-opacity",
+                                            isSelected ? "opacity-100" : "opacity-50 group-hover:opacity-80"
+                                          )}
+                                          checked={isSelected}
+                                          onChange={() => toggleCsvRowSelected(r.index)}
+                                        />
+                                      </td>
+                                      <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-400 dark:text-zinc-500">
+                                        {r.index}
+                                      </td>
+                                      <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                                        {r.student.studentNo}
+                                      </td>
+                                      <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                                        {toNormalCase(r.student.name)}
+                                      </td>
+                                      <td className="py-0 px-4 align-middle">
+                                        <span className="inline-flex w-fit items-center justify-center rounded-[4px] bg-gray-100 px-[8px] py-[3px] text-[11px] font-medium text-gray-900 dark:bg-zinc-800 dark:text-zinc-100">
+                                          {r.student.courseCode}
+                                        </span>
+                                      </td>
+                                      <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-700 dark:text-zinc-300">
+                                        {r.student.yearLevel}
+                                      </td>
+                                      <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-700 dark:text-zinc-300">
+                                        {r.student.section}
+                                      </td>
+                                      <td className="py-0 px-4 align-middle" onClick={(e) => e.stopPropagation()}>
+                                        <Select
+                                          className="h-8 w-16 rounded-[6px] border border-gray-200 px-2 py-0 text-[11px] font-medium dark:border-white/10"
+                                          value={String(r.student.room || "")}
+                                          onChange={(e) =>
+                                            setCsvRowField(
+                                              r.index,
+                                              "room",
+                                              parseInt(e.target.value)
+                                            )
+                                          }
+                                        >
+                                          {roomOptions.map((room) => (
+                                            <option key={room} value={room}>
+                                              {room}
+                                            </option>
+                                          ))}
+                                        </Select>
+                                      </td>
+                                      <td className="py-0 px-4 align-middle" onClick={(e) => e.stopPropagation()}>
+                                        <Select
+                                          className="h-8 w-16 rounded-[6px] border border-gray-200 px-2 py-0 text-[11px] font-medium dark:border-white/10"
+                                          value={String(r.student.cabinet || "")}
+                                          onChange={(e) =>
+                                            setCsvRowField(
+                                              r.index,
+                                              "cabinet",
+                                              e.target.value
+                                            )
+                                          }
+                                        >
+                                          {mergeSelectedCabinetId(
+                                            r.student.room,
+                                            r.student.cabinet
+                                          ).map((c) => (
+                                            <option key={c} value={c}>
+                                              {c}
+                                            </option>
+                                          ))}
+                                        </Select>
+                                      </td>
+                                      <td className="py-0 px-4 align-middle" onClick={(e) => e.stopPropagation()}>
+                                        <Select
+                                          className="h-8 w-16 rounded-[6px] border border-gray-200 px-2 py-0 text-[11px] font-medium dark:border-white/10"
+                                          value={String(r.student.drawer || "")}
+                                          onChange={(e) =>
+                                            setCsvRowField(
+                                              r.index,
+                                              "drawer",
+                                              parseInt(e.target.value)
+                                            )
+                                          }
+                                        >
+                                          {mergeSelectedDrawerId(
+                                            r.student.room,
+                                            r.student.cabinet,
+                                            r.student.drawer
+                                          ).map((d) => (
+                                            <option key={d} value={d}>
+                                              {d}
+                                            </option>
+                                          ))}
+                                        </Select>
+                                      </td>
+                                      <td className="py-0 px-4 align-middle text-right">
+                                        <span
+                                          className={cn(
+                                            "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium uppercase tracking-[0.04em] shadow-none transition-all border",
+                                            r.error
+                                              ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-500/90 dark:border-red-900/50"
+                                              : !isValid
+                                              ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50"
+                                              : "bg-green-50 text-green-700 border-green-200 dark:bg-emerald-950/20 dark:text-emerald-500/90 dark:border-emerald-900/50"
+                                          )}
+                                          title={r.error || (!isValid ? "This location does not exist in the physical system." : undefined)}
+                                        >
+                                          {r.error ? "Error" : !isValid ? "Invalid" : "Valid"}
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  )
+                                })}
+                              </tbody>
+                            </table>
+                          ) : (
+                            <Empty className="py-12">
+                              <EmptyMedia>
+                                <i className="ph-magnifying-glass" />
+                              </EmptyMedia>
+                              <EmptyTitle>No Matches Found</EmptyTitle>
+                              <EmptyDescription>
+                                We couldn&apos;t find any rows matching &quot;{csvSearch}&quot;.
+                              </EmptyDescription>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setLocalCsvSearch("")}
+                                className="mt-6 h-9 rounded-[10px] border-[#E5E5EA] px-6 font-semibold text-xs tracking-widest text-[#0A84FF] hover:bg-[#F5F5F7] dark:text-primary dark:border-white/10"
+                              >
+                                Clear Search
+                              </Button>
+                            </Empty>
                           )}
                         </div>
-                      </div>
 
+                        {filteredCsvRows.length > 0 && (
+                          <div className="flex items-center justify-between border-t border-gray-100 bg-white p-6 px-8 dark:border-white/10 dark:bg-card">
+                            <div className="flex items-center gap-8">
+                              <div className="flex items-center gap-6 text-[12px] font-normal text-gray-400 dark:text-zinc-500">
+                                <span>
+                                  Showing {paginatedCsvRows.length} of {filteredCsvRows.length}
+                                </span>
+                                <div className="flex items-center gap-1.5 border-l border-gray-200 pl-6 dark:border-white/10">
+                                  <span className="text-[12px] text-gray-400 dark:text-zinc-500">Rows:</span>
+                                  <div className="flex items-center gap-1">
+                                    {[10, 20, 50, 100].map((size) => (
+                                      <button
+                                        key={size}
+                                        type="button"
+                                        onClick={() => {
+                                          setCsvRowsPerPage(size)
+                                          setCsvPage(1)
+                                        }}
+                                        className={`px-2 py-0.5 rounded-[4px] text-[12px] font-normal cursor-pointer transition-colors border-0 ${
+                                          csvRowsPerPage === size
+                                            ? "bg-gray-100 text-[#111111] font-medium dark:bg-white/10 dark:text-zinc-50"
+                                            : "bg-transparent text-gray-450 dark:text-zinc-550 hover:text-gray-700 dark:hover:text-zinc-300"
+                                        }`}
+                                      >
+                                        {size}
+                                      </button>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex shrink-0 items-center gap-3">
+                              <button
+                                disabled={csvPage <= 1}
+                                onClick={() => setCsvPage((p) => Math.max(1, p - 1))}
+                                className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
+                              >
+                                Prev
+                              </button>
+
+                              <div className="flex h-8 min-w-[32px] items-center justify-center rounded-[6px] border border-gray-200/80 bg-white px-2.5 text-[12px] font-medium text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-100">
+                                {csvPage}
+                              </div>
+
+                              <button
+                                disabled={csvPage >= Math.ceil(filteredCsvRows.length / csvRowsPerPage)}
+                                onClick={() => setCsvPage((p) => Math.min(Math.ceil(filteredCsvRows.length / csvRowsPerPage), p + 1))}
+                                className="h-8 bg-transparent text-[12px] font-normal text-gray-400 hover:text-pup-maroon dark:text-zinc-500 dark:hover:text-zinc-200 disabled:opacity-30 disabled:pointer-events-none transition-colors cursor-pointer border-0 p-0"
+                              >
+                                Next
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
                       <div
-                        className={`relative min-h-0 flex-1 overflow-auto transition-colors duration-200 ${csvDropActive ? "bg-[#FAFAFA]" : ""} dark:bg-[#2c2c2c]`}
+                        className={cn(
+                          "group relative flex min-h-[500px] flex-1 cursor-pointer flex-col items-center justify-center p-6 rounded-[12px] border border-[#E5E5EA] bg-[#FAFAFA] transition-all duration-150 ease-out dark:bg-zinc-900/50 dark:border-white/12",
+                          csvDropActive ? "border-pup-maroon/40" : ""
+                        )}
                         onDragOver={(e) => {
                           e.preventDefault()
                           setCsvDropActive(true)
                         }}
+                        onDragLeave={(e) => {
+                          e.preventDefault()
+                          setCsvDropActive(false)
+                        }}
+                        onDrop={(e) => {
+                          e.preventDefault()
+                          setCsvDropActive(false)
+                          const file = e.dataTransfer.files?.[0]
+                          if (
+                            file &&
+                            (file.name.toLowerCase().endsWith(".csv") ||
+                              file.type === "text/csv" ||
+                              file.type === "application/vnd.ms-excel" ||
+                              file.type === "application/csv" ||
+                              file.type === "")
+                          ) {
+                            handleCsvFileSelect(file)
+                          }
+                        }}
                       >
-                        {csvDropActive && (
-                          <div
-                            className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-[#0A84FF]/5 backdrop-blur-xs border-2 border-dashed border-[#D1D1D6] rounded-[16px] animate-fade-up dark:bg-blue-600/[0.04] dark:border-primary/50"
-                            onDragOver={(e) => {
-                              e.preventDefault()
-                              setCsvDropActive(true)
-                            }}
-                            onDragLeave={(e) => {
-                              e.preventDefault()
-                              setCsvDropActive(false)
-                            }}
-                            onDrop={(e) => {
-                              e.preventDefault()
-                              setCsvDropActive(false)
-                              const file = e.dataTransfer.files?.[0]
-                              if (
-                                file &&
-                                (file.name.toLowerCase().endsWith(".csv") ||
-                                  file.type === "text/csv" ||
-                                  file.type === "application/vnd.ms-excel" ||
-                                  file.type === "application/csv" ||
-                                  file.type === "")
-                              ) {
-                                handleCsvFileSelect(file)
-                              }
-                            }}
-                          >
-                            <div className="flex flex-col items-center justify-center p-6 bg-white rounded-2xl border border-[#E5E5EA] shadow-2xl max-w-xs text-center pointer-events-none dark:bg-card/95 dark:border-white/10 animate-scale-up">
-                              <div className="w-14 h-14 rounded-full bg-blue-50 border border-blue-100 flex items-center justify-center mb-3 dark:bg-blue-950/30">
-                                <i className="ph-duotone ph-file-csv text-xl text-[#0A84FF] dark:text-primary animate-bounce"></i>
-                              </div>
-                              <p className="text-sm font-semibold text-[#1C1C1E] dark:text-zinc-50">
-                                Drop CSV here to replace data
-                              </p>
-                              <p className="text-[11px] font-semibold text-[#0A84FF] dark:text-primary mt-1.5 tracking-wider dark:text-primary">
-                                Load new batch
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                        {filteredCsvRows.length ? (
-                          <table className="min-w-full text-[12px] table-auto">
-                            <thead className="sticky top-0 z-10 border-b border-[#E5E5EA] bg-transparent dark:border-white/10 dark:bg-transparent">
-                              <tr className="text-left text-[10px] font-semibold tracking-wider text-gray-500 dark:text-zinc-400 dark:border-white/10">
-                                <th className="w-12 p-3.5 py-3 text-center">
-                                  <input
-                                    type="checkbox"
-                                    className="h-3.5 w-3.5 cursor-pointer rounded border-[#E5E5EA] text-[#0A84FF] dark:text-primary accent-[#0A84FF] focus:ring-[#0A84FF]/20 dark:border-white/10"
-                                    checked={
-                                      filteredCsvRows.length > 0 &&
-                                      Object.keys(csvSelected).filter(k => csvSelected[k]).length >= filteredCsvRows.length &&
-                                      filteredCsvRows.every(r => csvSelected[r.index])
-                                    }
-                                    onChange={(e) => {
-                                      const checked = e.target.checked
-                                      const next = { ...csvSelected }
-                                      filteredCsvRows.forEach(r => {
-                                        next[r.index] = checked
-                                      })
-                                      setCsvSelected(next)
-                                    }}
-                                  />
-                                </th>
-                                <th className="px-3.5 py-3">#</th>
-                                <th className="px-3.5 py-3">Student No</th>
-                                <th className="px-3.5 py-3">Name</th>
-                                <th className="px-3.5 py-3">Course</th>
-                                <th className="px-3.5 py-3">Year</th>
-                                <th className="px-3.5 py-3">Section</th>
-                                <th className="px-3.5 py-3">Room</th>
-                                <th className="px-3.5 py-3">Cabinet</th>
-                                <th className="px-3.5 py-3">Drawer</th>
-                                <th className="px-3.5 py-3 text-right">Status</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-[#E5E5EA] dark:divide-white/10">
-                              {paginatedCsvRows.map((r) => {
-                                const isValid = isLocationValid(r.student.room, r.student.cabinet, r.student.drawer)
-
-                                return (
-                                  <tr
-                                    key={r.index}
-                                    className={`transition-colors hover:bg-[#FAFAFA] ${csvSelected?.[r.index] ? (isValid ? "bg-blue-50/50" : "bg-orange-50") : ""} dark:hover:bg-white/10 dark:bg-card`}
-                                  >
-                                    <td className="p-3.5 py-3 text-center">
-                                      <input
-                                        type="checkbox"
-                                        className="h-3.5 w-3.5 cursor-pointer rounded border-[#E5E5EA] text-[#0A84FF] dark:text-primary accent-[#0A84FF] focus:ring-[#0A84FF]/20 dark:border-white/10"
-                                        checked={!!csvSelected?.[r.index]}
-                                        onChange={() => toggleCsvRowSelected(r.index)}
-                                      />
-                                    </td>
-                                    <td className="px-3.5 py-3 text-[10px] text-gray-400 dark:text-zinc-500">
-                                      {r.index}
-                                    </td>
-                                    <td className="px-3.5 py-3 font-semibold text-[#1C1C1E] dark:text-zinc-50">
-                                      {r.student.studentNo}
-                                    </td>
-                                    <td className="px-3.5 py-3 font-semibold text-gray-800 dark:text-zinc-100">
-                                      {r.student.name}
-                                    </td>
-                                    <td className="px-3.5 py-3">
-                                      <Badge
-                                        variant="outline"
-                                        className="border-0 bg-blue-50 text-[9px] font-semibold tracking-tight text-[#0A84FF] dark:bg-blue-950/30 dark:text-blue-300 px-1.5 py-0.5"
-                                      >
-                                        {r.student.courseCode}
-                                      </Badge>
-                                    </td>
-                                    <td className="px-3.5 py-3 font-semibold text-gray-600 dark:text-zinc-300">
-                                      {r.student.yearLevel}
-                                    </td>
-                                    <td className="px-3.5 py-3 font-semibold text-gray-600 dark:text-zinc-300">
-                                      {r.student.section}
-                                    </td>
-                                    <td className="px-3.5 py-3">
-                                      <Select
-                                        className={cn(
-                                          "h-7 w-[64px] rounded-[6px] border border-[#E5E5EA] px-1 py-0 text-[10px] font-semibold dark:border-white/10",
-                                          !isValid && "border-orange-500 bg-orange-50 dark:bg-orange-950/20"
-                                        )}
-                                        value={String(r.student.room || "")}
-                                        onChange={(e) =>
-                                          setCsvRowField(
-                                            r.index,
-                                            "room",
-                                            parseInt(e.target.value)
-                                          )
-                                        }
-                                      >
-                                        {roomOptions.map((room) => (
-                                          <option key={room} value={room}>
-                                            {room}
-                                          </option>
-                                        ))}
-                                      </Select>
-                                    </td>
-                                    <td className="px-3.5 py-3">
-                                      <Select
-                                        className={cn(
-                                          "h-7 w-[64px] rounded-[6px] border border-[#E5E5EA] px-1 py-0 text-[10px] font-semibold dark:border-white/10",
-                                          !isValid && "border-orange-500 bg-orange-50 dark:bg-orange-950/20"
-                                        )}
-                                        value={String(r.student.cabinet || "")}
-                                        onChange={(e) =>
-                                          setCsvRowField(
-                                            r.index,
-                                            "cabinet",
-                                            e.target.value
-                                          )
-                                        }
-                                      >
-                                        {mergeSelectedCabinetId(
-                                          r.student.room,
-                                          r.student.cabinet
-                                        ).map((c) => (
-                                          <option key={c} value={c}>
-                                            {c}
-                                          </option>
-                                        ))}
-                                      </Select>
-                                    </td>
-                                    <td className="px-3.5 py-3">
-                                      <Select
-                                        className={cn(
-                                          "h-7 w-[64px] rounded-[6px] border border-[#E5E5EA] px-1 py-0 text-[10px] font-semibold dark:border-white/10",
-                                          !isValid && "border-orange-500 bg-orange-50 dark:bg-orange-950/20"
-                                        )}
-                                        value={String(r.student.drawer || "")}
-                                        onChange={(e) =>
-                                          setCsvRowField(
-                                            r.index,
-                                            "drawer",
-                                            parseInt(e.target.value)
-                                          )
-                                        }
-                                      >
-                                        {mergeSelectedDrawerId(
-                                          r.student.room,
-                                          r.student.cabinet,
-                                          r.student.drawer
-                                        ).map((d) => (
-                                          <option key={d} value={d}>
-                                            {d}
-                                          </option>
-                                        ))}
-                                      </Select>
-                                    </td>
-                                    <td className="px-3.5 py-3 text-right">
-                                      {r.error ? (
-                                        <div className="flex items-center justify-end gap-0.5 text-red-600">
-                                          <i className="ph-bold ph-warning-circle text-[11px]" />
-                                          <span className="text-[8px] font-semibold tracking-tight">
-                                            Error
-                                          </span>
-                                        </div>
-                                      ) : !isValid ? (
-                                        <div className="flex items-center justify-end gap-0.5 text-orange-600" title="This location does not exist in the physical system.">
-                                          <i className="ph-bold ph-warning text-[11px]" />
-                                          <span className="text-[8px] font-semibold tracking-tight truncate">
-                                            Invalid
-                                          </span>
-                                        </div>
-                                      ) : (
-                                        <div className="flex items-center justify-end gap-0.5 text-emerald-600 dark:text-emerald-400">
-                                          <i className="ph-bold ph-check-circle text-[11px]" />
-                                          <span className="text-[8px] font-semibold tracking-tight">
-                                            Valid
-                                          </span>
-                                        </div>
-                                      )}
-                                    </td>
-                                  </tr>
-                                )
-                              })}
-                            </tbody>
-                          </table>
-                        ) : csvRows.length > 0 ? (
-                          <div className="flex flex-col items-center justify-center p-20 text-center bg-white dark:bg-card">
-                            <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-gray-50 dark:bg-muted">
-                              <i className="ph-duotone ph-magnifying-glass text-xl text-gray-300 dark:text-zinc-600"></i>
-                            </div>
-                            <h3 className="text-lg font-semibold text-[#1C1C1E] dark:text-zinc-50 tracking-tight">No matches found</h3>
-                            <p className="mt-1 text-sm font-medium text-gray-500 dark:text-zinc-400">
-                              We couldn&apos;t find any rows matching &quot;{csvSearch}&quot;.
-                            </p>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setLocalCsvSearch("")}
-                              className="mt-6 h-9 rounded-[10px] border-[#E5E5EA] px-6 font-semibold text-xs tracking-widest text-[#0A84FF] hover:bg-[#F5F5F7] dark:text-primary dark:border-white/10"
-                            >
-                              CLEAR SEARCH
-                            </Button>
-                          </div>
-                        ) : (
-                          <div
-                            className={cn(
-                              "group flex h-full cursor-pointer items-center justify-center rounded-[12px] border border-[#E5E5EA] bg-[#FAFAFA] p-12 transition-all duration-150 ease-out dark:bg-zinc-900/50 dark:border-white/12",
-                              csvDropActive ? "border-pup-maroon/40" : ""
-                            )}
-                            onClick={() => csvInputRef.current?.click()}
-                          >
-                            <div className="pointer-events-none flex flex-col items-center justify-center text-center">
-                              <i className={cn("ph-bold ph-tray-arrow-up text-[32px] transition-colors duration-150", csvDropActive ? "text-pup-maroon" : "text-[#C7C7CC]")}></i>
-                              <p className="text-[14px] font-medium text-[#111111] dark:text-zinc-100 mt-[12px] m-0">
-                                Drop CSV File Here
-                              </p>
-                              <p className="text-[13px] font-normal text-[#8E8E93] mt-[4px] m-0">
-                                or click to <span className="text-[#E5484D] cursor-pointer hover:underline">browse</span> local files (.csv)
-                              </p>
-                            </div>
-                          </div>
-                        )}
-                        {filteredCsvRows.length > 0 && (
-                          <div className="flex flex-wrap items-center justify-between border-t border-gray-100 bg-white px-6 py-3 rounded-b-[16px] dark:border-white/10 dark:bg-card select-none shrink-0">
-                            <div className="flex items-center gap-8 cursor-default">
-                              <div className="flex items-center gap-6 text-[11px] font-semibold text-gray-400 tracking-widest dark:text-zinc-500">
-                                <span>
-                                  Showing <strong className="text-[#1C1C1E] dark:text-zinc-50">{Math.min(csvRowsPerPage, filteredCsvRows.length - (csvPage - 1) * csvRowsPerPage)}</strong> Out Of <strong className="text-[#1C1C1E] dark:text-zinc-50">{filteredCsvRows.length.toLocaleString()}</strong> Entries
-                                </span>
-                                <div className="flex items-center gap-3 border-l border-gray-200 pl-6 dark:border-white/10">
-                                  <span className="text-[10px] opacity-60">Rows:</span>
-                                  <Select
-                                    className="h-8 w-16 cursor-pointer rounded-[6px] border border-[#E5E5EA] bg-white px-2 text-[10px] font-semibold text-gray-700 focus:border-[#0A84FF] focus:ring-2 focus:ring-[#0A84FF]/20 transition-all hover:bg-[#FAFAFA] dark:bg-card dark:text-zinc-200 dark:hover:bg-white/10 dark:border-white/10"
-                                    value={csvRowsPerPage}
-                                    onChange={(e) => {
-                                      setCsvRowsPerPage(Number(e.target.value))
-                                      setCsvPage(1)
-                                    }}
-                                  >
-                                    {[10, 20, 50, 100, 200].map((n) => (
-                                      <option key={n} value={n}>
-                                        {n}
-                                      </option>
-                                    ))}
-                                  </Select>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex shrink-0 items-center gap-3">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={csvPage <= 1}
-                                onClick={() => setCsvPage((p) => p - 1)}
-                                className="h-10 rounded-[10px] border-[#E5E5EA] bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-600 shadow-sm transition-all hover:bg-[#F5F5F7] active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-                              >
-                                <i className="ph-bold ph-caret-left mr-2 text-base" /> Prev
-                              </Button>
-                              <div className="flex h-9 min-w-[48px] cursor-default items-center justify-center rounded-[8px] border border-[#E5E5EA] bg-white px-3 text-[11px] font-semibold text-[#1C1C1E] shadow-sm dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:shadow-none">
-                                {csvPage}
-                              </div>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                disabled={csvPage >= (Math.ceil(filteredCsvRows.length / csvRowsPerPage) || 1)}
-                                onClick={() => setCsvPage((p) => p + 1)}
-                                className="h-10 rounded-[10px] border-[#E5E5EA] bg-white px-5 text-[10px] font-semibold tracking-widest text-gray-600 shadow-sm transition-all hover:bg-[#F5F5F7] active:scale-95 disabled:opacity-30 dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
-                              >
-                                Next <i className="ph-bold ph-caret-right ml-2 text-base" />
-                              </Button>
-                            </div>
-                          </div>
-                        )}
+                        <input
+                          type="file"
+                          className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
+                          accept=".csv"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0]
+                            if (file) {
+                              handleCsvFileSelect(file)
+                            }
+                          }}
+                        />
+                        <div className="pointer-events-none flex flex-col items-center justify-center text-center w-full h-full">
+                          <i className={cn("ph-bold ph-tray-arrow-up text-[32px] transition-colors duration-150", csvDropActive ? "text-pup-maroon" : "text-[#C7C7CC]")}></i>
+                          <p className="text-[14px] font-medium text-[#111111] dark:text-zinc-100 mt-[12px] m-0">
+                            Drop CSV File Here
+                          </p>
+                          <p className="text-[13px] font-normal text-[#8E8E93] mt-[4px] m-0">
+                            or click to <span className="text-[#E5484D] cursor-pointer hover:underline">browse</span> local files (.csv)
+                          </p>
+                        </div>
                       </div>
-                    </div>
+                    )
                   ) : (
                     <div className="flex flex-col gap-4 w-full h-full">
-                      {uploadMode === "pdf" && (
-                        <Card className="z-10 shrink-0 border border-[#E5E5EA] bg-white p-[24px] dark:border-white/10 dark:bg-card/95 shadow-sm rounded-[16px]">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <div>
-                              <div className="text-[11px] font-semibold uppercase tracking-[0.5px] text-[#8E8E93] dark:text-zinc-400">
-                                SCANNER FILES
-                              </div>
-                              <div className="flex items-center gap-[8px] mt-[4px]">
-                                <div className="relative flex h-[8px] w-[8px] items-center justify-center">
-                                  <span className="relative inline-flex h-full w-full rounded-full bg-emerald-500"></span>
-                                </div>
-                                {hf.rows.length === 0 ? (
-                                  <div className="flex items-center gap-[6px]">
-                                    <span className="text-[14px] font-bold text-[#1C1C1E] dark:text-zinc-50">0 waiting</span>
-                                    <span className="text-[14px] font-normal text-[#8E8E93] dark:text-zinc-400">· listening for scans...</span>
-                                  </div>
-                                ) : (
-                                  <div className="flex items-center gap-[6px]">
-                                    <span className="text-[14px] font-bold text-[#1C1C1E] dark:text-zinc-50">{hf.rows.length} waiting</span>
-                                    <span className="text-[14px] font-normal text-[#8E8E93] dark:text-zinc-400">· auto-refresh ~3s</span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              {hf.rows.length > 0 && (
-                                <button
-                                  type="button"
-                                  className="h-8 rounded-[8px] border border-[#E5E5EA] bg-white px-3 text-xs font-semibold text-gray-800 hover:bg-[#FAFAFA] disabled:opacity-60 dark:bg-card dark:text-zinc-100 dark:hover:border-zinc-700 dark:border-white/10"
-                                  disabled={hf.loading}
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setClearInboxOpen(true)
-                                  }}
-                                >
-                                  Clear Inbox
-                                </button>
-                              )}
-                              <RefreshButton
-                                onRefresh={(e) => {
-                                  e.stopPropagation()
-                                  hf.refresh()
-                                }}
-                                isLoading={hf.loading}
-                                className="h-[32px] w-[32px] rounded-full p-[6px] !text-[#8E8E93] hover:!text-[#636366] hover:!bg-[#F5F5F7] transition-all duration-200 dark:!text-zinc-400 dark:hover:!text-zinc-200 dark:hover:!bg-white/10"
-                              />
-                            </div>
-                          </div>
-
-                          <div className="h-[1px] w-full bg-[#E5E5EA] my-[16px] dark:bg-white/10"></div>
-
-                          {hf.rows.length > 0 ? (
-                            <div className="max-h-[min(40vh,220px)] space-y-1 overflow-y-auto pr-1">
-                              {hf.rows.map((row) => (
-                                <button
-                                  key={row.id}
-                                  type="button"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    // Fetch the file blob and set it as the uploaded file for direct submission
-                                    hf.openItem(row).then((file) => {
-                                      if (file) {
-                                        onFileSelect(file, true)
-                                        hf.clearIngestSelection()
-                                      }
-                                    })
-                                  }}
-                                  className={`w-full rounded-[10px] border p-2.5 text-left transition-colors ${ hf.selected === row.id ? "border-[#0A84FF] bg-blue-50/50" : "border-transparent bg-gray-50 hover:bg-gray-100" } dark:border-white/10 dark:bg-red-950/50 dark:hover:bg-white/10`}
-                                >
-                                  <div className="truncate text-sm font-semibold text-[#1C1C1E] dark:text-zinc-50">
-                                    {row.original_filename}
-                                  </div>
-                                  <div className="mt-0.5 text-xs font-medium text-gray-600 dark:text-zinc-300">
-                                    {row.mime_type} ·{" "}
-                                    {(Number(row.size_bytes || 0) / 1024).toFixed(1)}{" "}
-                                    KB
-                                  </div>
-                                </button>
-                              ))}
-                            </div>
-                          ) : (
-                            <div className="text-[13px] font-normal text-[#8E8E93] leading-[1.5] dark:text-zinc-400">
-                              No files waiting. Dropping scanned documents into the hot folder will automatically queue them here.
-                            </div>
-                          )}
-                        </Card>
-                      )}
-
                       <div
                         className={cn(
-                          "group relative flex flex-1 min-h-[480px] w-full flex-col overflow-hidden rounded-[12px] border border-[#E5E5EA] bg-[#FAFAFA] transition-all duration-150 ease-out",
+                          "group relative flex flex-1 min-h-[480px] w-full flex-col overflow-hidden rounded-[12px] border border-[#E5E5EA] transition-all duration-150 ease-out",
+                          uploadedFile ? "bg-white dark:bg-card" : "bg-[#FAFAFA] dark:bg-zinc-900/50",
                           fe.pdfFile ? "border-orange-400 bg-orange-50/30" : "",
-                          "dark:bg-zinc-900/50 dark:border-white/12"
+                          "dark:border-white/12"
                         )}
                         onDragOver={(e) => {
                           e.preventDefault()
@@ -1128,7 +1076,7 @@ export default function ScanUploadTab({
                       >
                         {uploadedFile ? (
                           <div
-                            className={`relative flex-1 flex flex-col overflow-hidden rounded-[11px] bg-white border border-[#E5E5EA] transition-all duration-200 dark:bg-card dark:border-white/10`}
+                            className={`relative flex-1 flex flex-col overflow-hidden rounded-[11px] bg-white transition-all duration-200 dark:bg-card`}
                             onDragOver={(e) => {
                               e.preventDefault()
                               setDropActive(true)
@@ -1139,12 +1087,12 @@ export default function ScanUploadTab({
                             }}
                             onDrop={onPdfDrop}
                           >
-                            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[#E5E5EA] bg-gray-50 px-4 py-2.5 dark:border-white/10 dark:bg-card">
+                            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-[#E5E5EA] bg-white px-4 py-2.5 dark:border-white/10 dark:bg-card">
                           <div className="min-w-0">
-                            <div className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
+                            <div className="text-[15px] font-medium text-gray-500 dark:text-zinc-400">
                               {hf.selectedRow ? "Scanner Preview" : "Document Preview"}
                             </div>
-                            <div className="truncate text-sm font-semibold text-[#1C1C1E] dark:text-zinc-50">
+                            <div className="truncate text-sm font-semibold text-pup-maroon dark:text-red-400">
                               {hf.selectedRow?.original_filename || uploadedFile?.name}
                             </div>
                           </div>
@@ -1155,6 +1103,17 @@ export default function ScanUploadTab({
                                 OCR Active
                               </div>
                             )}
+                             {uploadedFiles && uploadedFiles.length > 1 && !hf.selectedRow && (
+                               <Button
+                                 type="button"
+                                 variant="ghost"
+                                 size="sm"
+                                 onClick={() => setShowPagesSidebar(!showPagesSidebar)}
+                                 className="h-8 px-2.5 font-semibold text-xs text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors shadow-none! border-0!"
+                               >
+                                 {showPagesSidebar ? "Hide" : "Show"}
+                               </Button>
+                             )}
                             <button
                               type="button"
                               className="flex h-8 w-8 items-center justify-center rounded-[8px] border border-[#E5E5EA] bg-white text-gray-600 shadow-sm transition-all hover:bg-[#FAFAFA] hover:text-[#0A84FF] dark:bg-card dark:text-zinc-300 dark:shadow-none dark:hover:border-zinc-700 dark:border-white/10"
@@ -1171,9 +1130,11 @@ export default function ScanUploadTab({
                             >
                               <i className="ph-bold ph-arrow-clockwise text-xs" />
                             </button>
-                            <button
+                            <Button
                               type="button"
-                              className="ml-1 flex h-8 items-center gap-2 rounded-[8px] border border-[#E5E5EA] bg-white px-3 text-[10px] font-semibold tracking-widest text-gray-700 transition-all hover:bg-[#F5F5F7] dark:bg-card dark:text-zinc-200 dark:border-white/10"
+                              variant="ghost"
+                              size="sm"
+                              className="ml-1 h-8 px-2.5 font-semibold text-xs text-gray-600 hover:text-gray-900 hover:bg-transparent dark:text-zinc-400 dark:hover:text-zinc-200 dark:hover:bg-transparent transition-colors shadow-none! border-0!"
                               onClick={() => {
                                 if (hf.selectedRow) {
                                   hf.clearIngestSelection()
@@ -1183,11 +1144,11 @@ export default function ScanUploadTab({
                             >
                               <i className="ph-bold ph-x text-xs" />
                               Close
-                            </button>
+                            </Button>
                           </div>
                         </div>
                         <div className="min-h-0 flex-1 flex overflow-hidden bg-gray-100 relative dark:bg-muted">
-                          {uploadedFiles && uploadedFiles.length > 1 && !hf.selectedRow && (
+                          {uploadedFiles && uploadedFiles.length > 1 && !hf.selectedRow && showPagesSidebar && (
                             <div className="w-1/3 min-w-[200px] max-w-[280px] border-r border-[#E5E5EA] bg-white/95 backdrop-blur-md flex flex-col min-h-0 overflow-y-auto p-4 gap-3 dark:border-white/10 dark:bg-card/95 shrink-0 z-10">
                               <div className="flex items-center justify-between pb-2 border-b border-gray-100 dark:border-white/5">
                                 <span className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
@@ -1393,25 +1354,13 @@ export default function ScanUploadTab({
                       </div>
                   )}
                   {uploadMode === "pdf" && (ocrLoading || hf.ocrLoading) ? (
-                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-[16px] bg-white backdrop-blur-sm dark:bg-card/80">
-                      <div className="w-full max-w-md px-6">
-                        <div className="mb-4 text-center text-sm font-semibold text-[#1C1C1E] dark:text-zinc-100">
-                          Reading file…
-                        </div>
-                        <div className="rounded-[16px] border border-[#E5E5EA] bg-white p-5 shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                          <div className="flex items-center justify-center gap-3">
-                            <div className="h-10 w-10 animate-spin rounded-full border border-gray-300 border-t-[#0A84FF] dark:border-white/10"></div>
-                            <i className="ph-duotone ph-scan animate-pulse text-xl text-[#0A84FF] dark:text-primary"></i>
-                          </div>
-                          <div className="mt-4 h-2 w-full overflow-hidden rounded bg-gray-100 dark:bg-muted">
-                            <div className="h-full w-1/2 animate-pulse bg-[#0A84FF]/80"></div>
-                          </div>
-                          <div className="mt-3 text-center text-xs font-medium text-gray-600 dark:text-zinc-300">
+                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-[16px] bg-white/95 backdrop-blur-sm dark:bg-card/90">
+                      <div className="w-full max-w-xs px-6">
+                        <div className="rounded-[16px] border border-[#E5E5EA] bg-white p-[26px] shadow-[0_4px_16px_rgba(0,0,0,0.06)] dark:border-white/10 dark:bg-zinc-900 dark:shadow-none flex flex-col items-center justify-center">
+                          <div className="h-[34px] w-[34px] rounded-full border-[2.5px] border-[#E5E5EA] border-t-pup-maroon dark:border-zinc-800 dark:border-t-pup-maroon animate-spin mb-[12px]"></div>
+                          <div className="text-center text-[13px] font-normal text-[#8E8E93] dark:text-zinc-400">
                             Processing scanned information...
                           </div>
-                        </div>
-                        <div className="mt-4 text-center text-xs font-medium text-gray-600 dark:text-zinc-300">
-                          Working offline (LAN)
                         </div>
                       </div>
                     </div>
@@ -1419,13 +1368,13 @@ export default function ScanUploadTab({
                 </section>
 
                 <section
-                  className={`font-inter flex h-auto flex-col overflow-hidden rounded-[16px] border border-[#E5E5EA] bg-white shadow-sm transition-all duration-300 ${ uploadMode === "csv" ? "w-full lg:w-[32%]" : "lg:w-[52%]" } dark:border-white/10 dark:bg-card dark:shadow-none`}
+                  className={`font-inter flex h-fit flex-col overflow-hidden rounded-[16px] border border-[#E5E5EA] bg-white shadow-sm transition-all duration-300 ${ uploadMode === "csv" ? "w-full lg:w-[32%]" : "lg:w-[52%]" } dark:border-white/10 dark:bg-card dark:shadow-none`}
                 >
-                  <div className="flex flex-col gap-[2px] border-b border-gray-100 bg-transparent p-[28px] pt-[20px] pb-[16px] dark:border-white/10">
-                    <h3 className="text-[15px] font-bold text-gray-900 dark:text-zinc-50 m-0">
+                  <div className="flex flex-col gap-[2px] border-b border-gray-100 bg-transparent p-[20px] pb-[16px] dark:border-white/10">
+                    <h3 className="text-[16px] font-bold text-[#1C1C1E] dark:text-zinc-50 m-0">
                       {uploadMode === "csv" ? "Bulk Upload" : "Label Document"}
                     </h3>
-                    <p className="text-[14px] font-normal text-[#8E8E93] dark:text-zinc-400 m-0">
+                    <p className="text-[13px] font-normal text-[#8E8E93] leading-[1.5] dark:text-zinc-400 m-0">
                       {uploadMode === "csv"
                         ? "Review rows, bulk-edit locations, then import students."
                         : uploadedFile
@@ -1434,12 +1383,12 @@ export default function ScanUploadTab({
                     </p>
                   </div>
 
-                  <div className="flex-1 bg-gray-50 p-6 dark:bg-white/5">
+                  <div className="p-[20px] bg-white dark:bg-white/5">
                     {uploadMode === "pdf" ? (
                       <div className="space-y-6">
                         {uploadStudentIsExisting && (
                           <div className="flex flex-col gap-2 rounded-[10px] border border-emerald-200 bg-emerald-50 px-3 py-2.5 dark:border-emerald-500/20 dark:bg-emerald-950/20">
-                            <span className="inline-flex items-start gap-2 text-[11px] font-medium uppercase tracking-[0.04em] text-emerald-900 dark:text-emerald-400">
+                             <span className="inline-flex items-start gap-2 text-[11px] font-medium tracking-[0.04em] text-emerald-900 dark:text-emerald-400">
                               <i
                                 className="ph-bold ph-check-circle mt-0.5 shrink-0"
                                 aria-hidden
@@ -1467,7 +1416,7 @@ export default function ScanUploadTab({
                           <div>
                             <div className="mb-2 flex items-center justify-between">
                               <label
-                                className={`block text-[11px] font-medium uppercase tracking-[0.04em] ${ lockIdentity ? lockedLabel : "text-gray-500" } dark:text-zinc-400`}
+                                className={`block text-[11px] font-medium tracking-[0.04em] ${ lockIdentity ? lockedLabel : "text-gray-500" } dark:text-zinc-400`}
                               >
                                 Student Number
                               </label>
@@ -1570,7 +1519,7 @@ export default function ScanUploadTab({
                           {lockIdentity ? (
                             <div>
                               <label
-                                className={`mb-2 block text-[11px] font-medium uppercase tracking-[0.04em] ${lockedLabel} dark:text-zinc-400`}
+                                className={`mb-2 block text-[11px] font-medium tracking-[0.04em] ${lockedLabel} dark:text-zinc-400`}
                               >
                                 Full Name
                               </label>
@@ -1584,7 +1533,7 @@ export default function ScanUploadTab({
                           ) : (
                             <div>
                               <label
-                                className="mb-2 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400"
+                                className="mb-2 block text-[11px] font-medium tracking-[0.04em] text-gray-500 dark:text-zinc-400"
                               >
                                 Full Name (LN, FN MI.)
                               </label>
@@ -1634,7 +1583,7 @@ export default function ScanUploadTab({
 
                         <div>
                           <label
-                            className={`mb-2 block text-[11px] font-medium uppercase tracking-[0.04em] ${ lockIdentity ? lockedLabel : "text-gray-500" } dark:text-zinc-400`}
+                            className={`mb-2 block text-[11px] font-medium tracking-[0.04em] ${ lockIdentity ? lockedLabel : "text-gray-500" } dark:text-zinc-400`}
                           >
                             Course / Program
                           </label>
@@ -1662,7 +1611,7 @@ export default function ScanUploadTab({
 
                         <div>
                           <label
-                            className={`mb-2 block text-[11px] font-medium uppercase tracking-[0.04em] ${ lockIdentity ? lockedLabel : "text-gray-500" } dark:text-zinc-400`}
+                            className={`mb-2 block text-[11px] font-medium tracking-[0.04em] ${ lockIdentity ? lockedLabel : "text-gray-500" } dark:text-zinc-400`}
                           >
                             Section
                           </label>
@@ -1689,7 +1638,7 @@ export default function ScanUploadTab({
 
                         <div className="grid grid-cols-3 gap-5">
                           <div>
-                            <label className="mb-2 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                            <label className="mb-2 block text-[11px] font-medium text-gray-500 dark:text-zinc-400">
                               Room
                             </label>
                             <Select
@@ -1717,7 +1666,7 @@ export default function ScanUploadTab({
                             </Select>
                           </div>
                           <div>
-                            <label className="mb-2 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                            <label className="mb-2 block text-[11px] font-medium text-gray-500 dark:text-zinc-400">
                               Cabinet
                             </label>
                             <Select
@@ -1744,7 +1693,7 @@ export default function ScanUploadTab({
                             </Select>
                           </div>
                           <div>
-                            <label className="mb-2 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                            <label className="mb-2 block text-[11px] font-medium text-gray-500 dark:text-zinc-400">
                               Drawer
                             </label>
                             <Select
@@ -1770,7 +1719,7 @@ export default function ScanUploadTab({
                         </div>
 
                         <div className="border-t border-gray-200 pt-6 dark:border-white/10">
-                          <label className="mb-2 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                          <label className="mb-2 block text-[11px] font-medium text-gray-500 dark:text-zinc-400">
                             Document Type
                           </label>
                           <Select
@@ -1803,9 +1752,9 @@ export default function ScanUploadTab({
                               },
                             })
                           }
-                          className="flex h-10 w-full items-center justify-center gap-2 rounded-[10px] bg-pup-maroon hover:bg-pup-darkMaroon active:scale-[0.98] text-sm font-semibold text-white transition-all dark:shadow-none"
+                          className="flex h-10 w-full items-center justify-center gap-2 rounded-[10px] bg-[#0A84FF] hover:bg-[#0062c4] active:scale-[0.98] text-sm font-semibold text-white transition-all dark:shadow-none"
                         >
-                          <i className="ph-bold ph-upload-simple" /> Submit Upload
+                          Submit Upload
                         </button>
 
                         {uploadError ? (
@@ -1815,9 +1764,9 @@ export default function ScanUploadTab({
                         ) : null}
                       </div>
                     ) : (
-                      <div className="space-y-6">
+                      <div className="space-y-[16px]">
                         <div>
-                          <label className="mb-2 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-200">
+                          <label className="mb-2 block text-[11px] font-semibold tracking-[0.5px] text-[#8E8E93] dark:text-zinc-400">
                             Source File
                           </label>
                           <div className="flex items-center gap-2">
@@ -1831,9 +1780,9 @@ export default function ScanUploadTab({
                                   handleCsvFileSelect(e.target.files?.[0] || null)
                                 }
                               />
-                              <div className="flex h-11 items-center gap-2 rounded-[10px] border border-[#E5E5EA] bg-white px-3 transition-all hover:bg-[#FAFAFA] dark:bg-card dark:border-white/10">
-                                <i className="ph-bold ph-file-csv text-pup-maroon dark:text-primary"></i>
-                                <span className="truncate text-xs font-semibold text-gray-600 dark:text-zinc-300">
+                              <div className="flex h-11 items-center gap-2 rounded-[10px] border border-[#E5E5EA] bg-white px-[12px] transition-all hover:bg-[#FAFAFA] dark:bg-card dark:border-white/10">
+                                <i className="ph-bold ph-file-csv text-[#8E8E93] dark:text-primary"></i>
+                                <span className="truncate text-[12px] font-semibold text-[#1C1C1E] dark:text-zinc-300">
                                   {csvFile ? csvFile.name : "Select CSV..."}
                                 </span>
                               </div>
@@ -1842,10 +1791,10 @@ export default function ScanUploadTab({
                               <button
                                 type="button"
                                 onClick={() => handleCsvFileSelect(null)}
-                                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] border border-[#E5E5EA] bg-white text-gray-500 shadow-sm transition-all hover:bg-[#F5F5F7] hover:text-red-600 dark:bg-card dark:text-zinc-400 dark:shadow-none dark:border-white/10"
+                                className="group flex h-11 w-11 shrink-0 items-center justify-center rounded-[10px] border border-[#E5E5EA] bg-white text-[#8E8E93] transition-all hover:bg-[#F5F5F7] dark:bg-card dark:text-zinc-400 dark:border-white/10"
                                 title="Clear File"
                               >
-                                <i className="ph-bold ph-trash text-lg" />
+                                <i className="ph-bold ph-trash text-lg transition-colors group-hover:text-[#FF3B30]" />
                               </button>
                             )}
                           </div>
@@ -1857,24 +1806,24 @@ export default function ScanUploadTab({
                           </div>
                         ) : null}
 
-                        <div className="overflow-hidden rounded-[16px] border border-[#E5E5EA] bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
-                          <div className="border-b border-gray-100 bg-transparent p-4 dark:border-white/10 dark:bg-transparent">
-                            <div className="text-[10px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
+                        <div className="overflow-hidden rounded-[12px] bg-white p-[0px] dark:border-white/10 dark:bg-card">
+                          <div className="flex items-center justify-between pb-3 border-b border-[#E5E5EA] mx-[-20px] px-[20px] dark:border-white/10">
+                            <div className="text-[11px] font-semibold tracking-[0.5px] text-[#8E8E93] dark:text-zinc-500">
                               Bulk Edit
                             </div>
-                            <div className="mt-1 text-sm font-semibold text-[#1C1C1E] dark:text-zinc-50">
+                            <div className="text-[15px] font-bold text-[#1C1C1E] dark:text-zinc-50">
                               {Object.values(csvSelected).filter(Boolean).length}{" "}
                               rows selected
                             </div>
                           </div>
 
-                          <div className="space-y-4 p-5">
+                          <div className="space-y-[12px] pt-3">
                             <div>
-                              <label className="mb-2 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                              <label className="mb-1.5 block text-[11px] font-semibold tracking-[0.5px] text-[#8E8E93] dark:text-zinc-400">
                                 Room
                               </label>
                               <Select
-                                className="h-11 rounded-[10px] px-[12px] bg-white hover:bg-[#FAFAFA] transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 outline-none border border-[#E5E5EA] dark:border-white/10"
+                                className="h-11 rounded-[10px] px-[12px] bg-white hover:bg-[#FAFAFA] transition-all focus:border-[#0A84FF] focus:ring-2 focus:ring-[#0A84FF]/20 outline-none border border-[#E5E5EA] dark:border-white/10 w-full text-[13px] text-[#1C1C1E]"
                                 value={csvBulkRoom}
                                 onChange={(e) => setCsvBulkRoom(e.target.value)}
                               >
@@ -1888,11 +1837,11 @@ export default function ScanUploadTab({
                             </div>
 
                             <div>
-                              <label className="mb-2 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                              <label className="mb-1.5 block text-[11px] font-semibold tracking-[0.5px] text-[#8E8E93] dark:text-zinc-400">
                                 Cabinet
                               </label>
                               <Select
-                                className="h-11 rounded-[10px] px-[12px] bg-white hover:bg-[#FAFAFA] transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 outline-none border border-[#E5E5EA] dark:border-white/10"
+                                className="h-11 rounded-[10px] px-[12px] bg-white hover:bg-[#FAFAFA] transition-all focus:border-[#0A84FF] focus:ring-2 focus:ring-[#0A84FF]/20 outline-none border border-[#E5E5EA] dark:border-white/10 w-full text-[13px] text-[#1C1C1E]"
                                 value={csvBulkCabinet}
                                 onChange={(e) => setCsvBulkCabinet(e.target.value)}
                               >
@@ -1920,11 +1869,11 @@ export default function ScanUploadTab({
                             </div>
 
                             <div>
-                              <label className="mb-2 block text-[11px] font-medium uppercase tracking-[0.04em] text-gray-500 dark:text-zinc-400">
+                              <label className="mb-1.5 block text-[11px] font-semibold tracking-[0.5px] text-[#8E8E93] dark:text-zinc-400">
                                 Drawer
                               </label>
                               <Select
-                                className="h-11 rounded-[10px] px-[12px] bg-white hover:bg-[#FAFAFA] transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 outline-none border border-[#E5E5EA] dark:border-white/10"
+                                className="h-11 rounded-[10px] px-[12px] bg-white hover:bg-[#FAFAFA] transition-all focus:border-[#0A84FF] focus:ring-2 focus:ring-[#0A84FF]/20 outline-none border border-[#E5E5EA] dark:border-white/10 w-full text-[13px] text-[#1C1C1E]"
                                 value={csvBulkDrawer}
                                 onChange={(e) => setCsvBulkDrawer(e.target.value)}
                               >
@@ -1956,34 +1905,33 @@ export default function ScanUploadTab({
                               </Select>
                             </div>
 
-                            <div className="flex items-center gap-2 pt-1">
+                            <div className="flex items-center gap-2 pt-2">
                               <button
                                 type="button"
                                 onClick={applyCsvBulkLocation}
-                                className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-[10px] bg-pup-maroon hover:bg-pup-darkMaroon active:scale-[0.98] text-[10px] font-semibold tracking-widest text-white transition-all dark:shadow-none"
+                                className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-[10px] bg-[#0A84FF] hover:bg-[#0062c4] active:scale-[0.98] text-[13px] font-semibold text-white transition-all disabled:opacity-50 disabled:pointer-events-none"
                                 disabled={
                                   Object.values(csvSelected).filter(Boolean)
                                     .length === 0
                                 }
                               >
-                                <i className="ph-bold ph-check text-xs" />
                                 Apply
                               </button>
                               <button
                                 type="button"
                                 onClick={() => setCsvSelected({})}
-                                className="flex h-10 flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-[#E5E5EA] bg-white text-[10px] font-semibold tracking-widest text-gray-700 transition-all hover:bg-[#F5F5F7] dark:hover:text-red-500 disabled:opacity-40 dark:bg-card dark:text-zinc-200 dark:hover:border-zinc-700 dark:border-white/10"
+                                className="group flex h-10 flex-1 items-center justify-center gap-1.5 rounded-[10px] border border-[#E5E5EA] bg-white text-[13px] font-medium text-[#1C1C1E] transition-all hover:bg-[#F5F5F7] disabled:opacity-40 disabled:pointer-events-none dark:bg-card dark:text-zinc-200 dark:border-white/10"
                                 disabled={
                                   Object.values(csvSelected).filter(Boolean)
                                     .length === 0
                                 }
                               >
-                                <i className="ph-bold ph-trash text-xs" />
                                 Clear
                               </button>
                             </div>
                           </div>
                         </div>
+                        <div className="border-t border-[#E5E5EA] mx-[-20px] pt-[16px] dark:border-white/10" />
 
                         {(() => {
                           const selectedIndices = Object.keys(csvSelected).filter(k => csvSelected[k])
@@ -1998,8 +1946,7 @@ export default function ScanUploadTab({
                                 onClick={importCsvStudents}
                                 disabled={importDisabled}
                                 className={cn(
-                                  "flex h-11 w-full items-center justify-center gap-2 rounded-[10px] bg-pup-maroon hover:bg-pup-darkMaroon active:scale-[0.98] text-xs font-semibold tracking-widest text-white transition-all dark:shadow-none",
-                                  importDisabled && "cursor-not-allowed grayscale-[0.5]"
+                                  "flex h-11 w-full items-center justify-center gap-2 rounded-[12px] bg-[#0A84FF] hover:bg-[#0062c4] active:scale-[0.98] text-[13px] font-semibold text-white transition-all disabled:opacity-50 disabled:pointer-events-none"
                                 )}
                               >
                                 {csvLoading ? (

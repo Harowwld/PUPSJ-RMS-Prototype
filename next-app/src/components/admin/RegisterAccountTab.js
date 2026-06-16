@@ -192,7 +192,7 @@ export default function RegisterAccountTab({
                     className={cn(
                       "text-[13px] pb-1 bg-transparent rounded-none h-auto px-0 w-auto hover:bg-transparent cursor-pointer focus:outline-none focus-visible:outline-none border-b-[1.5px] border-transparent transition-all font-medium",
                       createForm.role === "Staff"
-                        ? "text-pup-maroon dark:text-red-400 border-pup-maroon dark:border-red-400"
+                        ? "text-[#edbb00] border-[#edbb00]"
                         : "text-gray-500 dark:text-zinc-500"
                     )}
                   >
@@ -206,7 +206,7 @@ export default function RegisterAccountTab({
                     className={cn(
                       "text-[13px] pb-1 bg-transparent rounded-none h-auto px-0 w-auto hover:bg-transparent cursor-pointer focus:outline-none focus-visible:outline-none border-b-[1.5px] border-transparent transition-all font-medium",
                       createForm.role === "Admin"
-                        ? "text-pup-maroon dark:text-red-400 border-pup-maroon dark:border-red-400"
+                        ? "text-[#e30000] border-[#e30000]"
                         : "text-gray-500 dark:text-zinc-500"
                     )}
                   >

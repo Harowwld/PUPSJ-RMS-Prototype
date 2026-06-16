@@ -76,7 +76,7 @@ export default function ConfirmModal({
       confirmStyle: "bg-orange-600 hover:bg-orange-700 border-0! border-none! shadow-[inset_0_1px_0_rgba(255,255,255,0.22),inset_0_-1px_0_rgba(0,0,0,0.4),0_1px_3px_rgba(0,0,0,0.2),0_1px_2px_-1px_rgba(0,0,0,0.1)]! text-white",
     },
     success: {
-      icon: "ph-duotone ph-arrow-counter-clockwise",
+      icon: "ph-duotone ph-archive-restore",
       iconWrap: "bg-green-50 border-green-100 text-green-600 shadow-sm dark:bg-emerald-950/30 dark:border-white/10",
       title: "text-gray-900 dark:text-zinc-50",
       description: "text-gray-600 dark:text-zinc-300",

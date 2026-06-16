@@ -236,9 +236,9 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
 
     const existingIds = new Set(activeRoom.cabinets.map(c => c.id))
     const getNextId = (currentSet) => {
-      let counter = 0
+      let counter = 2020
       while (true) {
-        const id = String.fromCharCode(65 + (counter % 26)) + (counter >= 26 ? Math.floor(counter / 26) : "")
+        const id = String(counter)
         if (!currentSet.has(id)) return id
         counter++
       }
@@ -259,7 +259,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     })
 
     const updatedCabinets = [...activeRoom.cabinets, ...newCabinets].sort((a, b) =>
-      String(a.id).localeCompare(String(b.id))
+      String(a.id).localeCompare(String(b.id), undefined, { numeric: true })
     )
 
     const nextRooms = layout.rooms.map((r) =>
@@ -275,9 +275,9 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     if (!activeRoom) return
     const existing = new Set(activeRoom.cabinets.map((c) => c.id))
     let id = ""
-    let counter = 0
+    let counter = 2020
     while (true) {
-      id = String.fromCharCode(65 + (counter % 26)) + (counter >= 26 ? Math.floor(counter / 26) : "")
+      id = String(counter)
       if (!existing.has(id)) break
       counter++
     }
@@ -289,7 +289,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     }
 
     const updatedCabinets = [...activeRoom.cabinets, cab].sort((a, b) =>
-      String(a.id).localeCompare(String(b.id))
+      String(a.id).localeCompare(String(b.id), undefined, { numeric: true })
     )
 
     const nextRooms = layout.rooms.map((r) =>
@@ -337,9 +337,9 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
     if (!activeRoom || !selectedCabinet) return
     const existingIds = new Set(activeRoom.cabinets.map((c) => c.id))
     let id = ""
-    let counter = 0
+    let counter = 2020
     while (true) {
-      id = String.fromCharCode(65 + (counter % 26)) + (counter >= 26 ? Math.floor(counter / 26) : "")
+      id = String(counter)
       if (!existingIds.has(id)) break
       counter++
     }
@@ -352,7 +352,7 @@ export default function StorageLayoutEditorTab({ showToast, isDirty, setIsDirty,
       rect: { ...selectedCabinet.rect, x: foundX, y: foundY },
     }
     const updatedCabinets = [...activeRoom.cabinets, newCab].sort((a, b) =>
-      String(a.id).localeCompare(String(b.id))
+      String(a.id).localeCompare(String(b.id), undefined, { numeric: true })
     )
 
     const nextRooms = layout.rooms.map((r) =>

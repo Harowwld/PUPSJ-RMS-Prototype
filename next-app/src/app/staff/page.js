@@ -9,6 +9,7 @@ import Sidebar from "@/components/shared/Sidebar";
 import { toast } from "sonner";
 import { StaffGuard } from "@/components/shared/AuthGuard";
 import RecordsArchiveTab from "@/components/staff/RecordsArchiveTab";
+import StorageExplorerTab from "@/components/staff/StorageExplorerTab";
 import ScanUploadTab from "@/components/staff/ScanUploadTab";
 import DocumentsTab from "@/components/staff/DocumentsTab";
 import NotificationsTab from "@/components/staff/NotificationsTab";
@@ -66,8 +67,9 @@ function StaffPageContent() {
   const searchParams = useSearchParams();
   const coreDataLoadedRef = useRef(false);
   const docsLoadedRef = useRef(false);
+  const locateTimeoutRef = useRef(null);
 
-  const validViews = ["requests", "upload", "documents", "notifications", "search"];
+  const validViews = ["requests", "upload", "documents", "notifications", "search", "storage"];
   const initialView = validViews.includes(searchParams?.get("view"))
     ? searchParams.get("view")
     : "requests";
@@ -85,7 +87,7 @@ function StaffPageContent() {
 
   useEffect(() => {
     const tab = String(searchParams?.get("view") || searchParams?.get("tab") || "").trim()
-    const allowedTabs = new Set(["requests", "upload", "documents", "notifications", "search"])
+    const allowedTabs = new Set(["requests", "upload", "documents", "notifications", "search", "storage"])
     if (allowedTabs.has(tab)) {
       setView(tab)
     }
@@ -395,6 +397,21 @@ function StaffPageContent() {
     refreshStorageLayout();
   }, [view, refreshStorageLayout]);
 
+  useEffect(() => {
+    if (view !== "storage" && locateTimeoutRef.current) {
+      clearTimeout(locateTimeoutRef.current);
+      locateTimeoutRef.current = null;
+    }
+  }, [view]);
+
+  useEffect(() => {
+    return () => {
+      if (locateTimeoutRef.current) {
+        clearTimeout(locateTimeoutRef.current);
+      }
+    };
+  }, []);
+
   // Keep locator selection valid when layout changes (rooms/cabinets can be added/removed).
   useEffect(() => {
     const rooms = storageLayout?.rooms || [];
@@ -662,13 +679,22 @@ function StaffPageContent() {
     setActiveStudent(s);
     setSelectedRoom(s.room);
     setSelectedCabinet(s.cabinet);
-    setCurrentLocatorLevel("drawers");
-  }, []);
+    setCurrentLocatorLevel("rooms");
+    switchView("storage");
+
+    if (locateTimeoutRef.current) {
+      clearTimeout(locateTimeoutRef.current);
+    }
+
+    locateTimeoutRef.current = setTimeout(() => {
+      setCurrentLocatorLevel("drawers");
+      locateTimeoutRef.current = null;
+    }, 1500);
+  }, [switchView]);
 
   const goToStorageMapFromRequest = useCallback(
     (studentRow) => {
       locateStudent(studentRow);
-      setView("search");
     },
     [locateStudent],
   );
@@ -1317,6 +1343,7 @@ function StaffPageContent() {
 
     { type: "header", label: "Records Archive" },
     { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
+    { key: "storage", label: "Storage Explorer", iconClass: "ph-bold ph-folder-open" },
   ];
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -1499,16 +1526,6 @@ function StaffPageContent() {
               archivedStudents={archivedStudents}
               explorerItems={explorerItems}
               onSwitchView={setView}
-              locatorModel={locatorModel}
-              selectedRoom={selectedRoom}
-              setSelectedRoom={setSelectedRoom}
-              setSelectedCabinet={setSelectedCabinet}
-              setCurrentLocatorLevel={setCurrentLocatorLevel}
-              selectedCabinet={selectedCabinet}
-              currentLocatorLevel={currentLocatorLevel}
-              activeStudent={activeStudent}
-              activeStudentDocs={activeStudentDocs}
-              onUnfocusStudent={() => setActiveStudent(null)}
               onPreviewDocument={(docType, name, no, id) => {
                 setPreview({
                   docType,
@@ -1540,6 +1557,32 @@ function StaffPageContent() {
               onSelectionChange={setSelectedStudentIds}
               onBulkArchive={() => setBulkArchiveOpen(true)}
               onBulkRestore={() => setBulkRestoreOpen(true)}
+            />
+          </TabsContent>
+
+          <TabsContent value="storage" className="h-full m-0 border-0 focus-visible:ring-0">
+            <StorageExplorerTab
+              loading={!storageLayout}
+              locatorModel={locatorModel}
+              selectedRoom={selectedRoom}
+              setSelectedRoom={setSelectedRoom}
+              setSelectedCabinet={setSelectedCabinet}
+              setCurrentLocatorLevel={setCurrentLocatorLevel}
+              selectedCabinet={selectedCabinet}
+              currentLocatorLevel={currentLocatorLevel}
+              activeStudent={activeStudent}
+              onUnfocusStudent={() => setActiveStudent(null)}
+              onPreviewDocument={(docType, name, no, id) => {
+                setPreview({
+                  docType,
+                  studentName: name,
+                  studentNo: no,
+                  docId: id,
+                  refId: `DOC-${Date.now()}`,
+                });
+                setPreviewOpen(true);
+              }}
+              onSwitchView={setView}
             />
           </TabsContent>
 
@@ -1948,19 +1991,24 @@ function StaffPageContent() {
         title="Confirm Bulk Archival"
         message={`You are about to move ${selectedStudentIds.size} student record(s) to the system archive. This will disable associated processing for these records.`}
         confirmLabel="Archive Selected"
+        selectedItems={Array.from(selectedStudentIds)}
         onConfirm={confirmBulkArchive}
         onCancel={() => setBulkArchiveOpen(false)}
         loading={bulkArchiveLoading}
         variant="warning"
+        isArchiveModal={true}
       />
       <ConfirmModal
         open={bulkRestoreOpen}
         title="Confirm Bulk Restoration"
         message={`You are about to restore ${selectedStudentIds.size} student record(s) to active status.`}
         confirmLabel="Restore Selected"
+        selectedItems={Array.from(selectedStudentIds)}
         onConfirm={confirmBulkRestore}
         onCancel={() => setBulkRestoreOpen(false)}
         loading={bulkRestoreLoading}
+        variant="success"
+        isRestoreModal={true}
       />
     </div>
   );

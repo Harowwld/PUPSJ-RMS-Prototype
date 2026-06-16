@@ -259,12 +259,12 @@ const CabinetElement = memo(({
   return (
     <div
       className={cn(
-        "absolute border-2 rounded-md overflow-hidden transition-colors duration-200 cursor-move group/cab shadow-sm hover:shadow-md",
+        "absolute border-2 rounded-md transition-colors duration-200 cursor-move group/cab shadow-sm hover:shadow-md",
         isSelected 
-          ? "z-10 border-cyan-500 bg-cyan-50 shadow-[0_0_0_4px_rgba(6,182,212,0.15)] dark:border-cyan-400 dark:bg-cyan-950 dark:shadow-[0_0_0_4px_rgba(34,211,238,0.15)]" 
+          ? "z-10 border-cyan-500 bg-cyan-50 dark:border-cyan-400 dark:bg-cyan-950" 
           : isConflict 
-            ? "border-red-600 bg-red-50 shadow-[0_0_0_4px_rgba(220,38,38,0.15)] dark:border-red-500 dark:bg-red-950 dark:shadow-[0_0_0_4px_rgba(239,68,68,0.15)]" 
-            : "border-gray-400 bg-gray-100 dark:border-zinc-500 dark:bg-[#949494]"
+            ? "border-red-600 bg-red-50 dark:border-red-500 dark:bg-red-950" 
+            : "border-gray-300/80 bg-gray-100 dark:border-zinc-700/50 dark:bg-[#949494]"
       )}
       style={{
         left: `${cab.rect.x * 100}%`,
@@ -324,7 +324,7 @@ const CabinetElement = memo(({
       title={`Cabinet ${cab.id}`}
     >
       {/* Physical Drawer Divisions & Handle Notches (Skeuomorphic-lite) */}
-      <div className="absolute inset-0 flex flex-col pointer-events-none">
+      <div className="absolute inset-0 flex flex-col pointer-events-none overflow-hidden rounded-[4px]">
         {Array.from({ length: drawerCount }).map((_, idx) => (
           <div
             key={idx}
@@ -346,23 +346,91 @@ const CabinetElement = memo(({
         ))}
       </div>
 
-      {/* Bounding Frame Details */}
-      <div className="absolute inset-0 border border-white/20 pointer-events-none rounded-[3px]" />
-      <div className="absolute inset-[1px] border border-black/5 pointer-events-none rounded-[3px]" />
 
-      {/* Floating Cabinet ID Badge Overlay */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none z-10">
-        <div className={cn(
-          "px-2 py-0.5 rounded-md font-mono text-[9px] font-semibold tracking-tight shadow-sm border border-black/5 dark:border-white/5",
-          isSelected
-            ? "bg-cyan-500 text-white dark:bg-cyan-400 dark:text-zinc-950"
-            : isConflict
-              ? "bg-red-600 text-white dark:bg-red-500 dark:text-white"
-              : "bg-gray-100/90 text-gray-800 dark:bg-zinc-800/90 dark:text-zinc-200"
-        )}>
-          {cab.id}
-        </div>
-      </div>
+
+      {/* Floating Cabinet ID Badge Overlay (Positioned outside depending on constraints and overlaps) */}
+      {(() => {
+        const otherCabinets = (activeRoom?.cabinets || []).filter(c => c.id !== cab.id)
+        
+        // Approximate normalized dimensions of the badge
+        const wl = 0.075
+        const hl = 0.035
+
+        // Check if candidate placement rect overlaps canvas bounds or any other cabinet
+        const isInvalid = (xl, yl, wl, hl) => {
+          // Canvas bounds check (with a small buffer)
+          if (xl < 0.002 || yl < 0.002 || xl + wl > 0.998 || yl + hl > 0.998) {
+            return true
+          }
+          // Other cabinets overlap check
+          for (const other of otherCabinets) {
+            const otherEff = getCabinetEffectiveSize(other)
+            const ox = other.rect.x
+            const oy = other.rect.y
+            const ow = otherEff.w
+            const oh = otherEff.h
+            
+            const pad = 0.001
+            if (xl < ox + ow - pad && xl + wl > ox + pad && yl < oy + oh - pad && yl + hl > oy + pad) {
+              return true
+            }
+          }
+          return false
+        }
+
+        const candidates = ["top", "bottom", "right", "left"]
+        let placement = "top"
+        let found = false
+
+        for (const cand of candidates) {
+          let xl = cab.rect.x + eff.w / 2 - wl / 2
+          let yl = cab.rect.y - hl
+          
+          if (cand === "bottom") {
+            xl = cab.rect.x + eff.w / 2 - wl / 2
+            yl = cab.rect.y + eff.h
+          } else if (cand === "left") {
+            xl = cab.rect.x - wl
+            yl = cab.rect.y + eff.h / 2 - hl / 2
+          } else if (cand === "right") {
+            xl = cab.rect.x + eff.w
+            yl = cab.rect.y + eff.h / 2 - hl / 2
+          }
+          
+          if (!isInvalid(xl, yl, wl, hl)) {
+            placement = cand
+            found = true
+            break
+          }
+        }
+
+        if (!found) {
+          placement = "center"
+        }
+
+        const placementClasses = {
+          top: "absolute bottom-full left-1/2 -translate-x-1/2 mb-0.5 z-30",
+          bottom: "absolute top-full left-1/2 -translate-x-1/2 mt-0.5 z-30",
+          left: "absolute right-full top-1/2 -translate-y-1/2 mr-0.5 z-30",
+          right: "absolute left-full top-1/2 -translate-y-1/2 ml-0.5 z-30",
+          center: "absolute inset-0 flex items-center justify-center z-30"
+        }
+
+        return (
+          <div className={cn(placementClasses[placement], "pointer-events-none select-none")}>
+            <div className={cn(
+              "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap shadow-xs border font-sans",
+              isSelected
+                ? "bg-[#ECFEFF] text-[#0891B2] border-[#CFFAFE] dark:bg-cyan-950/40 dark:text-cyan-400 dark:border-cyan-900/30"
+                : isConflict
+                  ? "bg-[#FEF2F2] text-[#DC2626] border-[#FEE2E2] dark:bg-red-950/40 dark:text-red-400 dark:border-red-900/30"
+                  : "bg-[#D1FAE5] text-[#065F46] border-[#A7F3D0] dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/30"
+            )}>
+              {cab.id}
+            </div>
+          </div>
+        )
+      })()}
 
       {isSelected && selectedCabinetIds.size === 1 && (
         <div

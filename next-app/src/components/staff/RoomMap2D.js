@@ -2,10 +2,12 @@
 
 import { useEffect, useRef, useState } from "react"
 import { cn } from "@/lib/utils"
+import { FOLDER_COLORS } from "@/lib/constants"
 
 export default function RoomMap2D({
   kind, // "cabinets" | "drawers"
   activeStudent,
+  activeStudentColor = "yellow",
   cabinets,
   roomDoor,
   selectedCabinetId,
@@ -13,7 +15,10 @@ export default function RoomMap2D({
   onCabinetClick,
   onDrawerClick,
   onPreviewDocument,
+  onUnfocusStudent,
 }) {
+  const theme = FOLDER_COLORS[activeStudentColor] || FOLDER_COLORS["yellow"]
+  const trailColor = activeStudent ? theme.frontStart : "#06b6d4"
   const cabinetRects = cabinets || []
   const containerRef = useRef(null)
   const [modalPosition, setModalPosition] = useState("right")
@@ -228,8 +233,6 @@ export default function RoomMap2D({
     }
   }, [selectedCabinetId, cabinetRects])
 
-  // Removed hover auto-shifting / teleporting feature as requested
-
   const handlePointerDown = (e) => {
     e.preventDefault()
     const target = e.currentTarget.parentElement
@@ -285,11 +288,6 @@ export default function RoomMap2D({
     return { ...c.rect, w: c.rect.h, h: c.rect.w }
   }
 
-  const positionClasses = {
-    right: "top-4 right-4",
-    left: "top-4 left-4",
-  }
-
   return (
     <div
       ref={containerRef}
@@ -307,26 +305,23 @@ export default function RoomMap2D({
         }}
       />
 
-      {/* Wayfinder Path Trail */}
+      {/* Wayfinder Path Trail - Blue */}
       {pathCoordinates.slice(0, drawnLength).map(([r, c], idx) => (
         <div
           key={`${r}-${c}-${idx}`}
           className="absolute z-10 flex items-center justify-center pointer-events-none"
           style={{
-            left: `${c * 2.5}%`,
-            top: `${r * 4}%`,
+            left: `${c * 2.5 + 1.25}%`,
+            top: `${r * 4 + 2}%`,
+            transform: "translate(-50%, -50%)",
             width: "2.5%",
             height: "4%",
           }}
         >
           <div 
-            className={cn(
-              "w-1.5 h-1.5 rounded-full transition-colors duration-300",
-              activeStudent
-                ? "bg-pup-maroon shadow-[0_0_10px_rgba(128,0,0,0.6)] dark:bg-red-400 dark:shadow-[0_0_10px_rgba(248,113,113,0.6)]"
-                : "bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.5)] dark:bg-cyan-400 dark:shadow-[0_0_10px_rgba(34,211,238,0.5)]"
-            )}
+            className="w-2.5 h-2.5 rounded-sm transition-colors duration-300"
             style={{ 
+              backgroundColor: trailColor,
               animation: `wayfinder-wave 2s infinite ease-in-out`,
               animationDelay: `${idx * 50}ms` 
             }}
@@ -344,9 +339,16 @@ export default function RoomMap2D({
           height: `${(roomDoor?.h ?? 0.04) * 100}%`,
         }}
       >
-        <div className="relative flex h-full w-full items-center justify-center rounded-sm bg-pup-maroon shadow-md dark:bg-[#b94642] dark:shadow-none">
-          <span className="text-[9px] font-semibold tracking-widest text-white whitespace-nowrap">
-            Entrance
+        <div className="relative flex h-full w-full items-center justify-center rounded-sm bg-pup-maroon shadow-md transition-all duration-300 dark:bg-[#b94642] dark:shadow-none">
+          <span className={cn(
+            "text-[9px] font-semibold tracking-widest text-white whitespace-nowrap transition-transform duration-300 flex items-center gap-1",
+            roomDoor?.rotation === 0 && "rotate-0",
+            roomDoor?.rotation === 180 && "rotate-0", 
+            roomDoor?.rotation === 90 && "-rotate-90", 
+            roomDoor?.rotation === 270 && "rotate-90"  
+          )}>
+            <i className="ph-fill ph-door text-xs" />
+            ENTRANCE
           </span>
         </div>
       </div>
@@ -357,24 +359,26 @@ export default function RoomMap2D({
         const isTarget = Boolean(c.isTarget)
         const rect = getEffectiveRect(c)
         const isClickable = !hasActiveTarget || isTarget
+        const drawerCount = (c.drawerIds || []).length || 4
 
         return (
           <div
             key={c.cab}
             className={cn(
-              "absolute border-2 transition-all duration-300 rounded-sm shadow-xs overflow-hidden",
+              "absolute border-2 transition-all duration-300 rounded-md shadow-xs group/cab",
               isClickable ? "cursor-pointer" : "opacity-30 pointer-events-none select-none",
               isTarget
-                ? "border-red-600 bg-red-100 shadow-[0_0_0_4px_rgba(220,38,38,0.2)] dark:border-red-500 dark:bg-red-950/40 dark:shadow-[0_0_0_4px_rgba(239,68,68,0.2)]"
+                ? "z-10 bg-gray-100 dark:bg-[#949494]"
                 : isSelected
-                  ? "z-10 border-cyan-500 bg-cyan-50 shadow-[0_0_0_4px_rgba(6,182,212,0.2)] dark:border-cyan-300 dark:bg-cyan-950/40"
-                  : "border-gray-500 bg-gray-100 hover:bg-gray-200 dark:border-zinc-400 dark:bg-[#949494] dark:hover:bg-zinc-300"
+                  ? "z-10 border-cyan-500 bg-cyan-50 dark:border-cyan-300 dark:bg-cyan-950/40"
+                  : "border-gray-300 bg-gray-100 hover:bg-gray-200 dark:border-zinc-600 dark:bg-[#949494] dark:hover:bg-zinc-300"
             )}
             style={{
               left: `${rect.x * 100}%`,
               top: `${rect.y * 100}%`,
               width: `${rect.w * 100}%`,
               height: `${rect.h * 100}%`,
+              ...(isTarget ? { borderColor: theme.frontStart } : {})
             }}
             onClick={() => {
               if (isClickable) {
@@ -382,212 +386,124 @@ export default function RoomMap2D({
               }
             }}
           >
-            {/* Precision Frame Overlay (Simulated Depth) */}
-            <div className="absolute inset-0 border border-white/20 pointer-events-none rounded-[1px]" />
-            <div className="absolute inset-[1px] border border-black/5 pointer-events-none rounded-[1px]" />
-
-            {/* Cabinet Label always rendered cleanly inside */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-2 pointer-events-none select-none">
-              <span className={cn(
-                "text-[10px] font-semibold tracking-tight",
-                isTarget
-                  ? "text-red-800 dark:text-red-400"
-                  : isSelected
-                    ? "text-cyan-800 dark:text-cyan-400"
-                    : "text-gray-700 dark:text-zinc-300"
-              )}>
-                {c.cab}
-              </span>
-              <span className="text-[8px] font-semibold text-gray-500 dark:text-zinc-400 mt-0.5">
-                {c.occupiedCount} recs
-              </span>
+            {/* Physical Drawer Divisions & Handle Notches (Skeuomorphic-lite) */}
+            <div className="absolute inset-0 flex flex-col pointer-events-none overflow-hidden rounded-[4px]">
+              {Array.from({ length: drawerCount }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className={cn(
+                    "flex-1 flex items-center justify-center border-b last:border-b-0 border-gray-300/40 dark:border-zinc-700/40",
+                    isSelected && "border-cyan-300/30 dark:border-cyan-700/30"
+                  )}
+                  style={isTarget ? {
+                    borderBottomColor: `${theme.frontStart}30`,
+                  } : undefined}
+                >
+                  {/* Skeuomorphic Pull Handle */}
+                  <div
+                    className={cn(
+                      "w-7 h-1.5 rounded-sm bg-gray-300 dark:bg-[#737373] border border-black/10 dark:border-white/10 shadow-[inset_0_1px_1px_rgba(0,0,0,0.15)] group-hover/cab:scale-x-110 transition-transform duration-200",
+                      isSelected && "bg-cyan-400 dark:bg-cyan-800 border-cyan-500/20"
+                    )}
+                    style={isTarget ? {
+                      backgroundColor: theme.frontStart,
+                      borderColor: theme.frontEnd,
+                    } : undefined}
+                  />
+                </div>
+              ))}
             </div>
+
+            {/* Floating Cabinet ID Badge Overlay (Positioned outside depending on constraints and overlaps) */}
+            {(() => {
+              const otherCabinets = cabinetRects.filter((other) => other.cab !== c.cab)
+              
+              // Approximate normalized dimensions of the badge
+              const wl = 0.075
+              const hl = 0.035
+
+              // Check if candidate placement rect overlaps canvas bounds or any other cabinet
+              const isInvalid = (xl, yl, wl, hl) => {
+                if (xl < 0.002 || yl < 0.002 || xl + wl > 0.998 || yl + hl > 0.998) {
+                  return true
+                }
+                for (const other of otherCabinets) {
+                  const otherEff = getEffectiveRect(other)
+                  const ox = other.rect.x
+                  const oy = other.rect.y
+                  const ow = otherEff.w
+                  const oh = otherEff.h
+                  
+                  const pad = 0.001
+                  if (xl < ox + ow - pad && xl + wl > ox + pad && yl < oy + oh - pad && yl + hl > oy + pad) {
+                    return true
+                  }
+                }
+                return false
+              }
+
+              const candidates = ["top", "bottom", "right", "left"]
+              let placement = "top"
+              let found = false
+
+              for (const cand of candidates) {
+                let xl = rect.x + rect.w / 2 - wl / 2
+                let yl = rect.y - hl
+                
+                if (cand === "bottom") {
+                  xl = rect.x + rect.w / 2 - wl / 2
+                  yl = rect.y + rect.h
+                } else if (cand === "left") {
+                  xl = rect.x - wl
+                  yl = rect.y + rect.h / 2 - hl / 2
+                } else if (cand === "right") {
+                  xl = rect.x + rect.w
+                  yl = rect.y + rect.h / 2 - hl / 2
+                }
+                
+                if (!isInvalid(xl, yl, wl, hl)) {
+                  placement = cand
+                  found = true
+                  break
+                }
+              }
+
+              if (!found) {
+                placement = "center"
+              }
+
+              const placementClasses = {
+                top: "absolute bottom-full left-1/2 -translate-x-1/2 mb-0.5 z-30",
+                bottom: "absolute top-full left-1/2 -translate-x-1/2 mt-0.5 z-30",
+                left: "absolute right-full top-1/2 -translate-y-1/2 mr-0.5 z-30",
+                right: "absolute left-full top-1/2 -translate-y-1/2 ml-0.5 z-30",
+                center: "absolute inset-0 flex items-center justify-center z-30"
+              }
+
+              return (
+                <div className={cn(placementClasses[placement], "pointer-events-none select-none")}>
+                  <div className={cn(
+                    "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[2.5px] text-[11px] font-medium tracking-[0.04em] whitespace-nowrap shadow-xs border font-sans",
+                    isTarget
+                      ? "text-white"
+                      : isSelected
+                        ? "bg-[#ECFEFF] text-[#0891B2] border-[#CFFAFE] dark:bg-cyan-950/40 dark:text-cyan-400 dark:border-cyan-900/30"
+                        : "bg-[#D1FAE5] text-[#065F46] border-[#A7F3D0] dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/30"
+                  )}
+                  style={isTarget ? {
+                    backgroundColor: theme.frontStart,
+                    borderColor: theme.frontEnd,
+                  } : undefined}
+                  >
+                    {c.cab}
+                  </div>
+                </div>
+              )
+            })()}
+
           </div>
         )
       })}
-
-      {/* Floating Drawer Details Overlay Panel inside the Preview container */}
-      {kind === "drawers" && selectedCabinetId && (
-        <div
-          onClick={(e) => e.stopPropagation()}
-          className={cn(
-            "absolute z-30 w-64 rounded-xl border border-gray-200/80 bg-white/95 p-4 shadow-xl backdrop-blur-md dark:border-white/10 dark:bg-zinc-900/95 animate-in fade-in duration-300",
-            inspectorPos ? "transition-none" : "transition-all",
-            !inspectorPos && (positionClasses[modalPosition] || "top-4 right-4")
-          )}
-          style={inspectorPos ? { left: `${inspectorPos.x}%`, top: `${inspectorPos.y}%` } : undefined}
-        >
-          <div 
-            className="mb-3 flex items-center justify-between cursor-grab active:cursor-grabbing select-none touch-none"
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-          >
-            <div className="flex items-center gap-2 pointer-events-none">
-              <i className="ph-fill ph-archive-box text-pup-maroon dark:text-primary text-base"></i>
-              <h5 className="font-semibold text-xs text-gray-900 dark:text-zinc-50 tracking-tight">
-                Cabinet {selectedCabinetId}
-              </h5>
-            </div>
-            {/* Clean close/back button that toggles cabinet selection back to null */}
-            {!activeStudent && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onCabinetClick?.(null)
-                }}
-                onPointerDown={(e) => e.stopPropagation()}
-                className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-white/10 dark:hover:text-zinc-200 transition-colors pointer-events-auto"
-                title="Back to Cabinets"
-              >
-                <i className="ph-bold ph-x text-sm"></i>
-              </button>
-            )}
-          </div>
-
-          <div className="space-y-2">
-            <span className="text-[9px] font-semibold tracking-widest text-gray-400 dark:text-zinc-500">
-              Drawer slots
-            </span>
-            <div className="flex flex-col gap-1.5 max-h-[300px] overflow-y-auto pr-1">
-              {drawerSlots?.map((d) => {
-                const isDrawerTarget = d.isTarget
-                const hasOccupants = d.count > 0
-                const hasActiveDrawerTarget = drawerSlots?.some((slot) => slot.isTarget)
-                const isClickable = !hasActiveDrawerTarget || isDrawerTarget
-
-                return (
-                  <div
-                    key={d.drawer}
-                    className={cn(
-                      "flex flex-col gap-1 transition-all duration-300",
-                      !isClickable && "opacity-30 pointer-events-none select-none"
-                    )}
-                  >
-                    <div
-                      className={cn(
-                        "flex items-center justify-between rounded-lg border-2 p-2 cursor-pointer transition-all active:scale-[0.98]",
-                        isDrawerTarget
-                          ? "border-red-500 bg-red-50 hover:bg-red-100 text-red-900 dark:border-red-400 dark:bg-red-950/20 dark:text-red-300"
-                          : hasOccupants
-                            ? activeStudent
-                              ? "border-pup-maroon bg-red-50 hover:bg-red-100 text-pup-maroon dark:border-red-400/60 dark:bg-red-950/20 dark:text-red-300"
-                              : "border-cyan-500 bg-cyan-50 hover:bg-cyan-100 text-cyan-900 dark:border-cyan-500 dark:bg-cyan-950/20 dark:text-cyan-300"
-                            : "border-gray-200 bg-gray-50 hover:bg-gray-100 text-gray-500 dark:border-zinc-800 dark:bg-zinc-800/50 dark:text-zinc-400 dark:hover:bg-zinc-800"
-                      )}
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setExpandedDrawer(expandedDrawer === d.drawer ? null : d.drawer)
-                        onDrawerClick?.(d.drawer)
-                      }}
-                    >
-                      <div className="flex items-center gap-2">
-                        <i className={cn(
-                          "ph-bold text-sm",
-                          isDrawerTarget
-                            ? "ph-map-pin"
-                            : hasOccupants
-                              ? "ph-folder-open"
-                              : "ph-folder"
-                        )}></i>
-                        <span className="text-[11px] font-semibold">
-                          Drawer {d.drawer}
-                        </span>
-                      </div>
-                      <span className="text-[9px] font-semibold tracking-wider">
-                        {isDrawerTarget ? "Target" : hasOccupants ? `${d.count} recs` : "Empty"}
-                      </span>
-                    </div>
-
-                    {expandedDrawer === d.drawer && hasOccupants && d.students && (
-                      <div className={cn(
-                        "ml-2 pl-3 border-l-2 border-dashed py-1.5 space-y-1.5 max-h-40 overflow-y-auto",
-                        activeStudent ? "border-red-200 dark:border-red-950" : "border-cyan-300 dark:border-cyan-800"
-                      )}>
-                        {d.students.map((student) => {
-                          const isTargetPerson = activeStudent && student.studentNo === activeStudent.studentNo;
-                          return (
-                            <div
-                              key={student.studentNo}
-                              className={cn(
-                                "group/item flex flex-col gap-1 rounded-md p-1.5 text-[10px] bg-slate-100/50 dark:bg-zinc-800/50 transition-colors border",
-                                isTargetPerson
-                                  ? "border-red-500 bg-red-50/90 dark:bg-red-950/40 ring-1 ring-red-500/30"
-                                  : activeStudent
-                                    ? "border-transparent hover:bg-red-50/50 dark:hover:bg-red-950/20"
-                                    : "border-transparent hover:bg-cyan-50/50 dark:hover:bg-cyan-950/20"
-                              )}
-                            >
-                              <div className="min-w-0 flex-1 flex items-center justify-between gap-1">
-                                <div className="min-w-0 flex-1">
-                                  <p className={cn(
-                                    "font-semibold text-gray-800 dark:text-zinc-200 truncate",
-                                    isTargetPerson
-                                      ? "text-red-700 dark:text-red-400 font-semibold"
-                                      : activeStudent
-                                        ? "group-hover/item:text-pup-maroon dark:group-hover/item:text-red-400"
-                                        : "group-hover/item:text-cyan-600 dark:group-hover/item:text-cyan-400"
-                                  )}>
-                                    {student.name}
-                                  </p>
-                                  <p className={cn(
-                                    "font-mono text-[9px]",
-                                    isTargetPerson ? "text-red-500/80 dark:text-red-400/80" : "text-gray-400 dark:text-zinc-500"
-                                  )}>
-                                    {student.studentNo}
-                                  </p>
-                                </div>
-                                {isTargetPerson && (
-                                  <i className="ph-fill ph-target text-red-600 dark:text-red-400 text-sm shrink-0 animate-pulse" />
-                                )}
-                              </div>
-                              {student.documents && student.documents.length > 0 ? (
-                                <div className="mt-1 space-y-1">
-                                  <div className="flex flex-col gap-1">
-                                    {student.documents.map((doc) => (
-                                      <div
-                                        key={doc.id}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          onPreviewDocument?.(doc.docType, student.name, student.studentNo, doc.id);
-                                        }}
-                                        className="flex items-center justify-between gap-1.5 p-1 rounded bg-white hover:bg-red-50 dark:bg-zinc-900/50 dark:hover:bg-red-950/30 border border-gray-200/50 dark:border-white/5 cursor-pointer transition-colors group/doc"
-                                      >
-                                        <div className="flex items-center gap-1 min-w-0">
-                                          <i className="ph-bold ph-file-pdf text-[10px] text-red-500 group-hover/doc:scale-110 transition-transform"></i>
-                                          <span className="truncate font-semibold text-[8px] text-gray-700 dark:text-zinc-300 group-hover/doc:text-pup-maroon dark:group-hover/doc:text-red-400" title={doc.filename}>
-                                            {doc.docType}
-                                          </span>
-                                        </div>
-                                        <span className={cn(
-                                          "text-[6px] font-semibold px-1 rounded-full border shrink-0 scale-90 origin-right",
-                                          doc.approvalStatus === "Approved"
-                                            ? "bg-emerald-50 text-emerald-700 border-emerald-100 dark:bg-emerald-950/20 dark:text-emerald-400 dark:border-emerald-900"
-                                            : "bg-amber-50 text-amber-700 border-amber-100 dark:bg-amber-950/20 dark:text-amber-400 dark:border-amber-900"
-                                        )}>
-                                          {doc.approvalStatus}
-                                        </span>
-                                      </div>
-                                    ))}
-                                  </div>
-                                </div>
-                              ) : (
-                                <p className="text-[8px] font-medium text-gray-400 dark:text-zinc-500 italic mt-0.5 pl-1">
-                                  No documents uploaded
-                                </p>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

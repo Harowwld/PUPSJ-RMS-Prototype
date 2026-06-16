@@ -23,6 +23,7 @@ const ICON_MAP = {
   documents: { icon: "ti ti-file-text", color: "#ebb800" },
   notifications: { icon: "ti ti-bell", color: "#ebb800" },
   search: { icon: "ti ti-archive", color: "#ebb800" },
+  storage: { icon: "ti ti-folder-open", color: "#ebb800" },
 }
 
 export default function Sidebar({ open = true, items, activeKey, onSelect, onLogout, zoomNode, setZoomNode, handleZoomMouseDown }) {

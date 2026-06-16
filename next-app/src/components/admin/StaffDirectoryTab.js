@@ -189,7 +189,7 @@ const StaffTableRow = React.memo(({
                   onClick={() => onRestoreUser(s.id)}
                   className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                 >
-                  <i className="ph-bold ph-arrow-counter-clockwise text-[16px]"></i>
+                  <i className="ph-bold ph-archive-restore text-[16px]"></i>
                 </button>
               ) : (
                 <button

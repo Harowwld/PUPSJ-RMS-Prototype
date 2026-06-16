@@ -129,7 +129,7 @@ async function main() {
       yearLevel: 2024,
       section: "BSIT-4A",
       room: 1,
-      cabinet: "A",
+      cabinet: "2020",
       drawer: 1,
     },
     {
@@ -139,7 +139,7 @@ async function main() {
       yearLevel: 2024,
       section: "BSIT-4A",
       room: 1,
-      cabinet: "B",
+      cabinet: "2021",
       drawer: 2,
     },
     {
@@ -149,7 +149,7 @@ async function main() {
       yearLevel: 2025,
       section: "BSIT-4B",
       room: 2,
-      cabinet: "C",
+      cabinet: "2022",
       drawer: 3,
     },
     {
@@ -159,7 +159,7 @@ async function main() {
       yearLevel: 2024,
       section: "BSCS-3A",
       room: 3,
-      cabinet: "D",
+      cabinet: "2023",
       drawer: 4,
     },
     {
@@ -169,7 +169,7 @@ async function main() {
       yearLevel: 2025,
       section: "BSCS-3A",
       room: 1,
-      cabinet: "E",
+      cabinet: "2024",
       drawer: 1,
     },
     {
@@ -179,7 +179,7 @@ async function main() {
       yearLevel: 2024,
       section: "BSIT-4B",
       room: 4,
-      cabinet: "F",
+      cabinet: "2025",
       drawer: 2,
     },
   ];
