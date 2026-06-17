@@ -817,7 +817,7 @@ export default function DocumentRequestsTab({
         {/* 3. Request details Card (Right Column) */}
         <Card className="rounded-[14px] border border-[#E5E5EA] bg-white shadow-sm overflow-hidden flex flex-col min-h-[560px] dark:bg-card dark:border-white/10 dark:shadow-none p-0 mb-4" style={{ fontFamily: '-apple-system, "SF Pro Text", "Segoe UI", Roboto, sans-serif' }}>
           <div className="p-[16px_20px] border-b border-[#E5E5EA] bg-white flex items-center justify-between dark:border-white/10 dark:bg-card">
-            <div className="text-[11px] font-semibold text-[#8E8E93] dark:text-zinc-400 tracking-wider">
+            <div className="text-[14px] font-semibold text-[#8E8E93] dark:text-zinc-400 tracking-wider">
               Request Details
             </div>
             {hasEdits && (

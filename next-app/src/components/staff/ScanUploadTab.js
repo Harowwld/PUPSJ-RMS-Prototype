@@ -785,16 +785,15 @@ export default function ScanUploadTab({
                                       }}
                                     />
                                   </th>
-                                  <th className="p-4">#</th>
-                                  <th className="p-4">Student No</th>
-                                  <th className="p-4">Name</th>
-                                  <th className="p-4">Course</th>
-                                  <th className="p-4">Year</th>
-                                  <th className="p-4">Section</th>
-                                  <th className="p-4">Room</th>
-                                  <th className="p-4">Cabinet</th>
-                                  <th className="p-4">Drawer</th>
-                                  <th className="p-4 text-right">Status</th>
+                                  <th className="p-4 whitespace-nowrap">Student No</th>
+                                  <th className="p-4 whitespace-nowrap">Name</th>
+                                  <th className="p-4 whitespace-nowrap">Course</th>
+                                  <th className="p-4 whitespace-nowrap">Year</th>
+                                  <th className="p-4 whitespace-nowrap">Section</th>
+                                  <th className="p-4 px-2 whitespace-nowrap text-left w-[90px]">Room</th>
+                                  <th className="p-4 px-2 whitespace-nowrap text-left w-[90px]">Cabinet</th>
+                                  <th className="p-4 px-2 whitespace-nowrap text-left w-[90px]">Drawer</th>
+                                  <th className="p-4 text-right whitespace-nowrap">Status</th>
                                 </tr>
                               </thead>
                               <tbody className="bg-transparent">
@@ -822,29 +821,26 @@ export default function ScanUploadTab({
                                           onChange={() => toggleCsvRowSelected(r.index)}
                                         />
                                       </td>
-                                      <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-400 dark:text-zinc-500">
-                                        {r.index}
-                                      </td>
-                                      <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                                      <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50 whitespace-nowrap">
                                         {r.student.studentNo}
                                       </td>
-                                      <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50">
+                                      <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-900 dark:text-zinc-50 whitespace-nowrap">
                                         {toNormalCase(r.student.name)}
                                       </td>
-                                      <td className="py-0 px-4 align-middle">
+                                      <td className="py-0 px-4 align-middle whitespace-nowrap">
                                         <span className="inline-flex w-fit items-center justify-center rounded-[4px] bg-gray-100 px-[8px] py-[3px] text-[11px] font-medium text-gray-900 dark:bg-zinc-800 dark:text-zinc-100">
                                           {r.student.courseCode}
                                         </span>
                                       </td>
-                                      <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-700 dark:text-zinc-300">
+                                      <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-700 dark:text-zinc-300 whitespace-nowrap">
                                         {r.student.yearLevel}
                                       </td>
-                                      <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-700 dark:text-zinc-300">
+                                      <td className="py-0 px-4 align-middle text-[13px] font-medium tracking-[-0.01em] text-gray-700 dark:text-zinc-300 whitespace-nowrap">
                                         {r.student.section}
                                       </td>
-                                      <td className="py-0 px-4 align-middle" onClick={(e) => e.stopPropagation()}>
+                                      <td className="py-0 px-2 align-middle w-[90px]" onClick={(e) => e.stopPropagation()}>
                                         <Select
-                                          className="h-8 w-16 rounded-[6px] border border-gray-200 px-2 py-0 text-[11px] font-medium dark:border-white/10"
+                                          className="h-8 w-20 rounded-[6px] border border-gray-200 px-2 py-0 text-[11px] font-medium dark:border-white/10"
                                           value={String(r.student.room || "")}
                                           onChange={(e) =>
                                             setCsvRowField(
@@ -861,9 +857,9 @@ export default function ScanUploadTab({
                                           ))}
                                         </Select>
                                       </td>
-                                      <td className="py-0 px-4 align-middle" onClick={(e) => e.stopPropagation()}>
+                                      <td className="py-0 px-2 align-middle w-[90px]" onClick={(e) => e.stopPropagation()}>
                                         <Select
-                                          className="h-8 w-16 rounded-[6px] border border-gray-200 px-2 py-0 text-[11px] font-medium dark:border-white/10"
+                                          className="h-8 w-20 rounded-[6px] border border-gray-200 px-2 py-0 text-[11px] font-medium dark:border-white/10"
                                           value={String(r.student.cabinet || "")}
                                           onChange={(e) =>
                                             setCsvRowField(
@@ -883,9 +879,9 @@ export default function ScanUploadTab({
                                           ))}
                                         </Select>
                                       </td>
-                                      <td className="py-0 px-4 align-middle" onClick={(e) => e.stopPropagation()}>
+                                      <td className="py-0 px-2 align-middle w-[90px]" onClick={(e) => e.stopPropagation()}>
                                         <Select
-                                          className="h-8 w-16 rounded-[6px] border border-gray-200 px-2 py-0 text-[11px] font-medium dark:border-white/10"
+                                          className="h-8 w-20 rounded-[6px] border border-gray-200 px-2 py-0 text-[11px] font-medium dark:border-white/10"
                                           value={String(r.student.drawer || "")}
                                           onChange={(e) =>
                                             setCsvRowField(
@@ -907,19 +903,24 @@ export default function ScanUploadTab({
                                         </Select>
                                       </td>
                                       <td className="py-0 px-4 align-middle text-right">
-                                        <span
-                                          className={cn(
-                                            "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium uppercase tracking-[0.04em] shadow-none transition-all border",
-                                            r.error
-                                              ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/20 dark:text-red-500/90 dark:border-red-900/50"
-                                              : !isValid
-                                              ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/20 dark:text-amber-500/90 dark:border-amber-900/50"
-                                              : "bg-green-50 text-green-700 border-green-200 dark:bg-emerald-950/20 dark:text-emerald-500/90 dark:border-emerald-900/50"
+                                        <div className="inline-flex items-center justify-end">
+                                          {r.error ? (
+                                            <i
+                                              className="ph-bold ph-x-circle text-red-500 dark:text-red-400 text-[18px]"
+                                              title={`Error: ${r.error}`}
+                                            />
+                                          ) : !isValid ? (
+                                            <i
+                                              className="ph-bold ph-warning-circle text-amber-500 dark:text-amber-400 text-[18px]"
+                                              title="Invalid: This location does not exist in the physical system."
+                                            />
+                                          ) : (
+                                            <i
+                                              className="ph-bold ph-check-circle text-emerald-500 dark:text-emerald-400 text-[18px]"
+                                              title="Valid location"
+                                            />
                                           )}
-                                          title={r.error || (!isValid ? "This location does not exist in the physical system." : undefined)}
-                                        >
-                                          {r.error ? "Error" : !isValid ? "Invalid" : "Valid"}
-                                        </span>
+                                        </div>
                                       </td>
                                     </tr>
                                   )

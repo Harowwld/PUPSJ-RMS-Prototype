@@ -696,16 +696,16 @@ export default function DigitizationComplianceTab({
                           </div>
                         </div>
                         <div className="flex flex-col items-end pb-1">
-                          <div className="text-[11px] font-medium text-red-600 dark:text-red-500 text-right">
+                          <div className="text-[11px] font-medium text-emerald-600 dark:text-emerald-500 text-right">
                             {percent}% Complete
                           </div>
                         </div>
                       </div>
                       
                       {/* Substantial Progress Bar */}
-                      <div className="relative h-[4px] w-full overflow-hidden rounded-[4px] bg-gray-100 dark:bg-zinc-800">
+                      <div className="relative h-[8px] w-full overflow-hidden rounded-[4px] bg-gray-100 dark:bg-zinc-800">
                         <div 
-                          className="absolute top-0 left-0 h-full rounded-[4px] bg-red-600 dark:bg-red-500 transition-all duration-1000 ease-out"
+                          className="absolute top-0 left-0 h-full rounded-[4px] bg-emerald-600 dark:bg-emerald-500 transition-all duration-1000 ease-out"
                           style={{ width: `${percent}%` }}
                         />
                       </div>
@@ -844,7 +844,7 @@ export default function DigitizationComplianceTab({
                               </span>
                               <div className="w-[80px] h-[4px] rounded-[2px] bg-gray-100 overflow-hidden hidden sm:block dark:bg-zinc-800">
                                 <div
-                                  className="h-full bg-red-600 dark:bg-red-500"
+                                  className="h-full bg-emerald-600 dark:bg-emerald-500"
                                   style={{ width: `${Math.min(100, row.percent || 0)}%` }}
                                 />
                               </div>

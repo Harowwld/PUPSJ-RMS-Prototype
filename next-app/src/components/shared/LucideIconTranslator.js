@@ -71,6 +71,7 @@ export default function LucideIconTranslator() {
       "checks": "check-check",
       "envelope": "mail",
       "envelopes": "mails",
+      "floppy-disk": "save",
     };
 
     function toCamelCase(str) {

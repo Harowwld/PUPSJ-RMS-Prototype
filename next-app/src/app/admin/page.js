@@ -16,6 +16,7 @@ import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 import Sidebar from "@/components/shared/Sidebar"
 import ConfirmModal from "@/components/shared/ConfirmModal"
+import FloatingChatWidget from "@/components/shared/FloatingChatWidget"
 import PromptModal from "@/components/shared/PromptModal"
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal"
 import { TOTPChallengeModal } from "@/components/shared/TOTPChallengeModal"
@@ -2272,6 +2273,7 @@ function AdminPageContent() {
           </div>
         </DialogContent>
       </Dialog>
+      <FloatingChatWidget />
     </div>
   )
 }

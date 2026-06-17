@@ -17,6 +17,7 @@ import DocumentRequestsTab from "@/components/staff/DocumentRequestsTab";
 import PDFPreviewModal from "@/components/shared/PDFPreviewModal";
 import OCRPromptModal from "@/components/staff/OCRPromptModal";
 import ConfirmModal from "@/components/shared/ConfirmModal";
+import FloatingChatWidget from "@/components/shared/FloatingChatWidget";
 import {
   Tabs,
   TabsList,
@@ -2010,6 +2011,7 @@ function StaffPageContent() {
         variant="success"
         isRestoreModal={true}
       />
+      <FloatingChatWidget />
     </div>
   );
 }

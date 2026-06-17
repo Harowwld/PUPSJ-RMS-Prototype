@@ -1075,6 +1075,7 @@ export async function getDb() {
     ensureScanSessionTables();
     ensureStaffPreferencesColumn();
     ensureStaffAvatarColumn();
+    ensureChatMessagesTable();
 
     return db;
   } catch (err) {
@@ -1170,6 +1171,76 @@ function ensureStaffAvatarColumn() {
   }
 }
 
+function ensureChatMessagesTable() {
+  if (!db) return;
+  try {
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS chat_messages (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        sender_id TEXT NOT NULL,
+        recipient_id TEXT,
+        message TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        is_read INTEGER DEFAULT 0,
+        FOREIGN KEY (sender_id) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE CASCADE,
+        FOREIGN KEY (recipient_id) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE CASCADE
+      );
+      CREATE INDEX IF NOT EXISTS idx_chat_messages_sender_recipient ON chat_messages(sender_id, recipient_id);
+      CREATE INDEX IF NOT EXISTS idx_chat_messages_created_at ON chat_messages(created_at);
+    `);
+
+    // Migration to add is_deleted column
+    if (!columnExists("chat_messages", "is_deleted")) {
+      db.exec("ALTER TABLE chat_messages ADD COLUMN is_deleted INTEGER DEFAULT 0");
+      console.log("[DB] Added missing is_deleted column to chat_messages table.");
+    }
+
+    // Migration to add is_edited column
+    if (!columnExists("chat_messages", "is_edited")) {
+      db.exec("ALTER TABLE chat_messages ADD COLUMN is_edited INTEGER DEFAULT 0");
+      console.log("[DB] Added missing is_edited column to chat_messages table.");
+    }
+
+    // Migration to add updated_at column
+    if (!columnExists("chat_messages", "updated_at")) {
+      db.exec("ALTER TABLE chat_messages ADD COLUMN updated_at TEXT");
+      console.log("[DB] Added missing updated_at column to chat_messages table.");
+    }
+
+    // Migration to add original_message column
+    if (!columnExists("chat_messages", "original_message")) {
+      db.exec("ALTER TABLE chat_messages ADD COLUMN original_message TEXT");
+      console.log("[DB] Added missing original_message column to chat_messages table.");
+    }
+
+    // Migration to add image_filename column
+    if (!columnExists("chat_messages", "image_filename")) {
+      db.exec("ALTER TABLE chat_messages ADD COLUMN image_filename TEXT");
+      console.log("[DB] Added missing image_filename column to chat_messages table.");
+    }
+
+    // Migration to add mime_type column
+    if (!columnExists("chat_messages", "mime_type")) {
+      db.exec("ALTER TABLE chat_messages ADD COLUMN mime_type TEXT");
+      console.log("[DB] Added missing mime_type column to chat_messages table.");
+    }
+
+    // Create chat_message_deletions table for soft-deletion by other users
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS chat_message_deletions (
+        message_id INTEGER NOT NULL,
+        user_id TEXT NOT NULL,
+        PRIMARY KEY (message_id, user_id),
+        FOREIGN KEY (message_id) REFERENCES chat_messages(id) ON UPDATE CASCADE ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES staff(id) ON UPDATE CASCADE ON DELETE CASCADE
+      );
+    `);
+    console.log("[DB] Checked/Created chat_messages and deletions tables.");
+  } catch (e) {
+    console.error("[DB] ensureChatMessagesTable:", e);
+  }
+}
+
 function ensureBirthCertificateDocType() {
   if (!db) return;
   try {
@@ -1178,3 +1249,4 @@ function ensureBirthCertificateDocType() {
     console.error("[DB] ensureBirthCertificateDocType:", e);
   }
 }
+

@@ -1156,6 +1156,7 @@ export default function SystemConfigTab({
                 importFile={importFile}
                 importRows={importRows}
                 importSelected={importSelected}
+                setImportSelected={setImportSelected}
                 toggleImportRowSelected={toggleImportRowSelected}
                 toggleImportSelectAll={toggleImportSelectAll}
                 executeBulkImport={executeBulkImport}
