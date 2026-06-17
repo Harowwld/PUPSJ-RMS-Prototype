@@ -114,10 +114,10 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
     <aside
       ref={sidebarRef}
       className={cn(
-        "z-10 flex-col gap-[2px] bg-[#fbfbfd] dark:bg-zinc-950 select-none sticky top-0 h-screen transition-[width,padding] duration-300 ease-in-out overflow-hidden hidden md:flex shrink-0",
+        "z-10 flex-col gap-[2px] bg-white/20 backdrop-blur-md dark:bg-zinc-950/25 select-none sticky top-0 h-screen transition-[width,padding] duration-300 ease-in-out overflow-hidden hidden md:flex shrink-0",
         open ? "w-[260px] py-2 px-2" : "w-0 py-2 px-0 pointer-events-none"
       )}
-      style={{ borderRight: open ? "0.5px solid rgba(0,0,0,0.08)" : "0px solid transparent", transitionProperty: "width, padding-left, padding-right" }}
+      style={{ borderRight: open ? "0.5px solid rgba(255,255,255,0.18)" : "0px solid transparent", transitionProperty: "width, padding-left, padding-right" }}
     >
       <div className="flex flex-col gap-[2px] flex-1 min-w-[244px] h-full overflow-y-auto">
         <div className="flex items-center gap-[5px] mb-1.5 ml-1">

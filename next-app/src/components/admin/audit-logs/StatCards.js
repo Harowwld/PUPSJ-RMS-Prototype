@@ -132,7 +132,10 @@ export default function StatCards({ isLoading, logStats }) {
             key={i} 
             className={cn(
               "group relative overflow-hidden rounded-xl border-none p-5 shadow-sm dark:shadow-none transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-br",
-              classes.bg
+              classes.bg,
+              stat.color === "blue" ? "glass-stat-card-blue" :
+              stat.color === "emerald" ? "glass-stat-card-green" :
+              stat.color === "amber" ? "glass-stat-card-orange" : ""
             )}
           >
             {/* iCloud diagonal overlay vectors */}

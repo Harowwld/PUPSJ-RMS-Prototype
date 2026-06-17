@@ -283,7 +283,14 @@ export default function Home() {
 
   return (
     <TooltipProvider delay={200}>
-      <div className="min-h-screen w-full flex items-center justify-center relative bg-[#ffffff] dark:bg-zinc-950 font-sans p-8">
+      <div className="min-h-screen w-full flex items-center justify-center relative bg-slate-50 dark:bg-zinc-950 font-sans p-8 overflow-hidden">
+
+        {/* Dynamic Liquid Glass Background Blobs */}
+        <div className="liquid-container">
+          <div className="liquid-blob liquid-blob-1"></div>
+          <div className="liquid-blob liquid-blob-2"></div>
+          <div className="liquid-blob liquid-blob-3"></div>
+        </div>
 
         {/* Top-Left Brand Logo & Name */}
         <div className="absolute top-6 left-6 flex items-center gap-1 select-none z-20">
@@ -293,7 +300,7 @@ export default function Home() {
 
         <div className="w-full max-w-[550px] p-4 z-10">
           <div
-            className="bg-white rounded-[20px] shadow-[0_4px_40px_rgba(0,0,0,0.12)] dark:bg-zinc-900 flex flex-col items-center w-full relative"
+            className="glass-panel rounded-[20px] shadow-[0_8px_32px_rgba(0,0,0,0.06)] flex flex-col items-center w-full relative"
             style={{ padding: "56px 52px", height: "630px" }}
           >
             {/* APP ICON WITH CONCENTRIC CIRCLES */}
@@ -310,26 +317,12 @@ export default function Home() {
                     const angle = (i * 2 * Math.PI) / ring.count;
                     const cx = Number((80 + ring.r * Math.cos(angle)).toFixed(4));
                     const cy = Number((80 + ring.r * Math.sin(angle)).toFixed(4));
-                    const rawHue = (i / ring.count) * 360 + 200;
+                    const progress = i / ring.count;
+                    const rawHue = 340 + progress * 35;
                     const hue = rawHue % 360;
                     
-                    // Sage/cream/yellow (hues 60 to 160) should be desaturated and lighter
-                    let sat = 78;
-                    let light = 70;
-                    if (hue >= 60 && hue <= 160) {
-                      sat = 35; // desaturated sage/cream
-                      light = 76; // lighter
-                    } else if (hue > 160 && hue <= 200) {
-                      // smooth transition to cyan
-                      const ratio = (hue - 160) / 40;
-                      sat = 35 + Math.round(ratio * 43);
-                      light = 76 - Math.round(ratio * 6);
-                    } else if (hue >= 20 && hue < 60) {
-                      // smooth transition to orange/cream
-                      const ratio = (hue - 20) / 40;
-                      sat = 78 - Math.round(ratio * 43);
-                      light = 70 + Math.round(ratio * 6);
-                    }
+                    const sat = Math.round(65 + Math.sin(progress * Math.PI) * 25);
+                    const light = Math.round(28 + progress * 24);
                     
                     const color = `hsl(${hue}, ${sat}%, ${light}%)`;
                     dots.push(

@@ -565,9 +565,9 @@ export default function DigitalRecordsReviewTab({
             ))}
           </div>
         ) : !error ? (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
             {/* Stat Card 1: Pending Review */}
-            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa] p-5 transition-all duration-300 hover:-translate-y-0.5">
+            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa] p-5 transition-all duration-300 hover:-translate-y-0.5 glass-stat-card-blue">
                 <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
                   <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#0055FF]/40 to-[#007AFF]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
                   <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#14C8FF]/30 to-[#007AFF]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
@@ -577,13 +577,13 @@ export default function DigitalRecordsReviewTab({
                     <div className="w-full">
                        <div className="mb-1 flex items-center justify-between">
                         <div className="flex items-center gap-1.5 font-medium text-white animate-fade-in" style={{ fontSize: "14px", fontWeight: 500, color: "#ffffff" }}>
-                          Pending Review
+                           Pending Review
                         </div>
                         {stats.hasSlaBreach && !isLoading && (
-                          <div className="flex items-center gap-1.5">
+                           <div className="flex items-center gap-1.5">
                              <span className="relative flex h-2 w-2">
-                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                 <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
                              </span>
                               <Tooltip>
                                 <TooltipTrigger asChild>
@@ -598,7 +598,7 @@ export default function DigitalRecordsReviewTab({
                                     </p>
                                 </TooltipContent>
                               </Tooltip>
-                          </div>
+                           </div>
                         )}
                       </div>
                       <div className="font-semibold text-white tracking-tight" style={{ fontSize: "48px", fontWeight: 600, color: "#ffffff" }}>
@@ -613,7 +613,7 @@ export default function DigitalRecordsReviewTab({
               </div>
 
             {/* Stat Card 2: Approved Today */}
-            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37] p-5 transition-all duration-300 hover:-translate-y-0.5">
+            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37] p-5 transition-all duration-300 hover:-translate-y-0.5 glass-stat-card-green">
                 <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
                   <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#047857]/40 to-[#059669]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
                   <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#34d399]/30 to-[#059669]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
@@ -636,7 +636,7 @@ export default function DigitalRecordsReviewTab({
               </div>
 
             {/* Stat Card 3: Returned Today */}
-            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#f87171] via-[#dc2626] to-[#b91c1c] dark:from-[#dc2626] dark:to-[#7f1d1d] p-5 transition-all duration-300 hover:-translate-y-0.5">
+            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#f87171] via-[#dc2626] to-[#b91c1c] dark:from-[#dc2626] dark:to-[#7f1d1d] p-5 transition-all duration-300 hover:-translate-y-0.5 glass-stat-card-red">
                 <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
                   <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#b91c1c]/40 to-[#dc2626]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
                   <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#f87171]/30 to-[#dc2626]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />

@@ -1389,7 +1389,13 @@ function StaffPageContent() {
   }
 
   return (
-    <div className="h-screen overflow-hidden flex flex-col bg-gray-50 font-inter transition-colors duration-300 dark:bg-background">
+    <div className="h-screen overflow-hidden flex flex-col bg-slate-50/30 dark:bg-zinc-950/30 font-inter relative transition-colors duration-300">
+      {/* Dynamic Liquid Glass Background Blobs */}
+      <div className="liquid-container">
+        <div className="liquid-blob liquid-blob-1"></div>
+        <div className="liquid-blob liquid-blob-2"></div>
+        <div className="liquid-blob liquid-blob-3"></div>
+      </div>
       <Header authUser={authUser} onLogout={handleLogout}>
         {authUser?.preferences?.navigation_layout !== "topbar" && !sidebarOpen && (
           <div className="flex items-center gap-3.5 pl-1.5">
@@ -1499,7 +1505,7 @@ function StaffPageContent() {
             handleZoomMouseDown={handleZoomMouseDown}
           />
         )}
-        <main className="flex-1 relative w-full min-w-0 min-h-0 bg-white dark:bg-zinc-950 overflow-y-auto">
+        <main className="flex-1 relative w-full min-w-0 min-h-0 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">
           <div 
             className="flex-1 p-4 flex flex-col min-h-0 w-full"
             style={{ zoom: [0.75, 0.83, 0.92, 1.0, 1.08, 1.17, 1.25][zoomNode] }}

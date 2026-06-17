@@ -376,8 +376,8 @@ export default function RoomMap2D({
             style={{
               left: `${rect.x * 100}%`,
               top: `${rect.y * 100}%`,
-              width: `${rect.w * 100}%`,
-              height: `${rect.h * 100}%`,
+              width: `calc(${rect.w * 100}% + 1px)`,
+              height: `calc(${rect.h * 100}% + 1px)`,
               ...(isTarget ? { borderColor: theme.frontStart } : {})
             }}
             onClick={() => {

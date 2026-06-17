@@ -135,12 +135,11 @@ const triggerCustomToast = (message, options = {}, type = "default") => {
 
       return (
         <div 
-          className={`flex items-center gap-[10px] bg-white dark:bg-zinc-900 border-[0.5px] border-black/[0.08] dark:border-white/[0.08] rounded-full w-max max-w-[450px] pointer-events-auto ${animationClass}`}
+          className={`flex items-center gap-[10px] glass-panel rounded-full w-max max-w-[450px] pointer-events-auto ${animationClass}`}
           style={{
             borderRadius: '999px',
             padding: '8px 16px 8px 10px',
-            boxShadow: '0 4px 24px rgba(0,0,0,0.10)',
-            border: '0.5px solid rgba(0,0,0,0.08)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.08), inset 0 1px 0 rgba(255, 255, 255, 0.25)',
           }}
         >
           {/* Left Icon (Stage 2, 3, 5) */}
@@ -178,7 +177,7 @@ const triggerCustomToast = (message, options = {}, type = "default") => {
                 e.stopPropagation();
                 hotToast.dismiss(t.id);
               }}
-              className="h-7 w-7 rounded-full bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 flex items-center justify-center cursor-pointer shrink-0 ml-auto border-none outline-none"
+              className="h-7 w-7 rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 flex items-center justify-center cursor-pointer shrink-0 ml-auto border-none outline-none transition-colors"
             >
               <i className="ph-bold ph-x text-gray-500 dark:text-zinc-400 text-xs" />
             </button>
@@ -192,7 +191,7 @@ const triggerCustomToast = (message, options = {}, type = "default") => {
                 options.action.onClick?.(e);
                 hotToast.dismiss(t.id);
               }}
-              className="rounded-full bg-gray-100 dark:bg-zinc-800 hover:bg-gray-200 dark:hover:bg-zinc-700 py-1 px-3 text-[12px] font-semibold cursor-pointer shrink-0 ml-auto border-none outline-none"
+              className="rounded-full bg-black/5 dark:bg-white/10 hover:bg-black/10 dark:hover:bg-white/20 py-1 px-3 text-[12px] font-semibold cursor-pointer shrink-0 ml-auto border-none outline-none transition-colors"
             >
               <span className={
                 options.action.label.toLowerCase() === "undo"

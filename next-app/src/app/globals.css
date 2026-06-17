@@ -376,45 +376,47 @@ th {
   animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Brand Buttons */
+/* Brand Buttons - Solid Maroon Style */
 .btn-brand-red {
-  background-color: #0a83ff !important;
+  background-color: var(--color-pup-maroon) !important;
   background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
   border: none !important;
-  border-width: 0px !important;
-  border-style: none !important;
   color: #ffffff !important;
-  border-radius: 12px !important;
-  box-shadow: none !important;
+  border-radius: var(--radius-brand, 8px) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
   font-weight: 600 !important;
-  @apply normal-case transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2;
+  text-shadow: none !important;
+  @apply normal-case transition-all disabled:opacity-50 flex items-center justify-center gap-2;
 }
 
 .dark .btn-brand-red {
-  background-color: #0a83ff !important;
-  background-image: none !important;
-  border: none !important;
-  border-width: 0px !important;
-  border-style: none !important;
+  background-color: var(--color-pup-maroon) !important;
   box-shadow: none !important;
 }
 
 .btn-brand-red:hover {
-  background-color: #0070e0 !important;
+  background-color: var(--color-pup-darkMaroon) !important;
   background-image: none !important;
-  border: none !important;
-  border-width: 0px !important;
-  border-style: none !important;
-  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transform: none !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
 }
 
 .dark .btn-brand-red:hover {
-  background-color: #0070e0 !important;
-  background-image: none !important;
-  border: none !important;
-  border-width: 0px !important;
-  border-style: none !important;
+  background-color: var(--color-pup-darkMaroon) !important;
   box-shadow: none !important;
+}
+
+.btn-brand-red:active {
+  background-color: #7b2020 !important;
+  background-image: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  transform: scale(0.98) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05) !important;
 }
 
 /* Brand Orange Button */
@@ -808,4 +810,249 @@ i[data-lucide-translated="true"]::after {
   content: none !important;
   display: none !important;
 }
+
+/* --- High-Performance Liquid Glass Styling --- */
+@keyframes liquid-drift-1 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  }
+  33% {
+    transform: translate3d(30px, -50px, 0) scale(1.2) rotate(120deg);
+  }
+  66% {
+    transform: translate3d(-20px, 20px, 0) scale(0.8) rotate(240deg);
+  }
+}
+
+@keyframes liquid-drift-2 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(-45px, 45px, 0) scale(1.1) rotate(-180deg);
+  }
+}
+
+@keyframes liquid-drift-3 {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(40px, 30px, 0) scale(0.9) rotate(180deg);
+  }
+}
+
+.liquid-container {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.liquid-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  mix-blend-mode: plus-lighter;
+  will-change: transform;
+  pointer-events: none;
+  opacity: 0.65;
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+}
+
+.dark .liquid-blob {
+  mix-blend-mode: screen;
+  opacity: 0.25;
+}
+
+.liquid-blob-1 {
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, #ad2f2f 0%, rgba(173, 47, 47, 0) 70%);
+  top: -10%;
+  left: -10%;
+  animation: liquid-drift-1 25s ease-in-out infinite;
+}
+
+.liquid-blob-2 {
+  width: 350px;
+  height: 350px;
+  background: radial-gradient(circle, #f97316 0%, rgba(249, 115, 22, 0) 70%);
+  bottom: -15%;
+  right: -10%;
+  animation: liquid-drift-2 30s ease-in-out infinite;
+}
+
+.liquid-blob-3 {
+  width: 250px;
+  height: 250px;
+  background: radial-gradient(circle, #16a34a 0%, rgba(22, 163, 74, 0) 70%);
+  top: 40%;
+  left: 30%;
+  animation: liquid-drift-3 20s ease-in-out infinite;
+}
+
+.glass-panel {
+  position: relative;
+  background: rgba(255, 255, 255, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(24px) saturate(160%);
+  -webkit-backdrop-filter: blur(24px) saturate(160%);
+  transform: translate3d(0, 0, 0);
+  backface-visibility: hidden;
+  z-index: 1;
+  box-shadow: 
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.4), 
+    0 8px 32px 0 rgba(0, 0, 0, 0.06);
+}
+
+.dark .glass-panel {
+  background: rgba(15, 15, 15, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  box-shadow: 
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.12), 
+    0 8px 32px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* --- High-Performance Liquid Glass Styling --- */
+.glass-panel-liquid {
+  position: relative;
+  background: rgba(255, 255, 255, 0.15) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  backdrop-filter: blur(28px) saturate(170%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(170%) !important;
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.25),
+    0 8px 32px 0 rgba(0, 0, 0, 0.04) !important;
+  z-index: 1;
+}
+
+.dark .glass-panel-liquid {
+  background: rgba(15, 15, 15, 0.35) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 
+    inset 0 1px 1px 0 rgba(255, 255, 255, 0.15),
+    0 8px 32px 0 rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Music Player Style Vibrant Blue/Cyan Translucent Glass */
+.liquid-glass-blue {
+  position: relative;
+  background: linear-gradient(135deg, rgba(6, 107, 227, 0.4) 0%, rgba(2, 60, 148, 0.3) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.35) !important;
+  backdrop-filter: blur(32px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(32px) saturate(180%) !important;
+  box-shadow: 
+    inset 0 1.5px 0 0 rgba(255, 255, 255, 0.4),
+    inset 0 -1.5px 0 0 rgba(0, 0, 0, 0.15),
+    0 12px 40px rgba(0, 91, 237, 0.2) !important;
+  z-index: 1;
+}
+
+.dark .liquid-glass-blue {
+  background: linear-gradient(135deg, rgba(6, 107, 227, 0.25) 0%, rgba(2, 60, 148, 0.15) 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  box-shadow: 
+    inset 0 1.5px 0 0 rgba(255, 255, 255, 0.2),
+    inset 0 -1.5px 0 0 rgba(0, 0, 0, 0.3),
+    0 12px 40px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Reduced Motion Override */
+@media (prefers-reduced-motion: reduce) {
+  .liquid-blob {
+    animation: none !important;
+    transform: none !important;
+  }
+  .glass-panel, .glass-panel-liquid, .liquid-glass-blue {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: rgba(255, 255, 255, 0.85) !important;
+  }
+  .dark .glass-panel, .dark .glass-panel-liquid, .dark .liquid-glass-blue {
+    background: rgba(24, 24, 27, 0.95) !important;
+  }
+}
+
+/* Glass Stat Card Enhancements - Liquid Glass overlay shadows */
+.glass-stat-card-blue,
+.glass-stat-card-green,
+.glass-stat-card-red,
+.glass-stat-card-orange {
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+/* Specular highlight overlay via ::before pseudo-element */
+.glass-stat-card-blue::before,
+.glass-stat-card-green::before,
+.glass-stat-card-red::before,
+.glass-stat-card-orange::before {
+  content: "" !important;
+  position: absolute !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  height: 35% !important;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.18), transparent) !important;
+  mix-blend-mode: overlay !important;
+  pointer-events: none !important;
+  z-index: 2 !important;
+  border-top-left-radius: inherit !important;
+  border-top-right-radius: inherit !important;
+}
+
+/* Inset edge rim/refraction shadow overlay via ::after pseudo-element */
+.glass-stat-card-blue::after,
+.glass-stat-card-green::after,
+.glass-stat-card-red::after,
+.glass-stat-card-orange::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: inherit !important;
+  pointer-events: none !important;
+  z-index: 3 !important;
+  box-shadow: 
+    inset 0 2px 2px rgba(255, 255, 255, 0.25),
+    inset 0 -4px 10px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Base floating outer shadow configurations */
+.glass-stat-card-blue {
+  box-shadow: 0 8px 20px rgba(10, 132, 255, 0.25) !important;
+}
+
+.glass-stat-card-green {
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.25) !important;
+}
+
+.glass-stat-card-red {
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.25) !important;
+}
+
+.glass-stat-card-orange {
+  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.25) !important;
+}
+
+/* Dark mode overrides for outer floating shadow */
+.dark .glass-stat-card-blue {
+  box-shadow: 0 8px 20px rgba(10, 132, 255, 0.3) !important;
+}
+
+.dark .glass-stat-card-green {
+  box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3) !important;
+}
+
+.dark .glass-stat-card-red {
+  box-shadow: 0 8px 20px rgba(239, 68, 68, 0.3) !important;
+}
+
+.dark .glass-stat-card-orange {
+  box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3) !important;
+}
+
 

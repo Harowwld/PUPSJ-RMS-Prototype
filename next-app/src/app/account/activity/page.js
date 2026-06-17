@@ -137,7 +137,10 @@ function StatCards({ isLoading, stats }) {
           key={i}
           className={cn(
             "group relative overflow-hidden rounded-xl border-none p-5 transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-br",
-            stat.bgClass
+            stat.bgClass,
+            i === 0 ? "glass-stat-card-blue" :
+            i === 1 ? "glass-stat-card-green" :
+            i === 2 ? "glass-stat-card-orange" : ""
           )}
         >
           <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">

@@ -110,7 +110,7 @@ export default function Header({ authUser, onLogout, children }) {
   const isActivityActive = pathname === "/account/activity";
 
   return (
-    <header className="bg-[#f2f2f7] dark:bg-card border-b border-gray-300 flex-none z-20 select-none transition-colors duration-300 dark:border-white/5">
+    <header className="bg-white/35 backdrop-blur-md dark:bg-black/35 border-b border-gray-350 dark:border-white/10 flex-none z-20 select-none transition-all duration-300 shadow-[0_1px_8px_rgba(0,0,0,0.02)]">
       <AccountSetupModal authUser={authUser} />
       <div className="w-full px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-[6px]">
@@ -146,7 +146,7 @@ export default function Header({ authUser, onLogout, children }) {
                   ? "bg-gray-200/70 dark:bg-white/10" 
                   : "hover:bg-gray-100 dark:hover:bg-white/5"
               )}>
-                <div className="h-[46px] w-[46px] rounded-full bg-white dark:bg-zinc-800 flex items-center justify-center text-sm font-semibold text-gray-700 dark:text-zinc-300 border border-gray-200 dark:border-white/10 overflow-hidden">
+                <div className="h-[46px] w-[46px] rounded-full bg-white dark:bg-zinc-850 flex items-center justify-center text-sm font-semibold text-gray-700 dark:text-zinc-300 border border-gray-200 dark:border-white/10 overflow-hidden">
                   {authUser?.avatar_filename && !imageError ? (
                     <img 
                       src={`/api/account/avatar?id=${authUser.id}&t=${authUser.updated_at || Date.now()}`}
@@ -160,8 +160,8 @@ export default function Header({ authUser, onLogout, children }) {
                 </div>
               </div>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" sideOffset={6} className="w-72 rounded-2xl border border-gray-200 shadow-2xl p-0 overflow-hidden bg-white/98 backdrop-blur-md dark:bg-card dark:border-white/10 dark:shadow-none">
-               <div className="bg-[#F2F2F7] dark:bg-zinc-800/80 px-5 py-4 border-b border-gray-200 dark:border-white/5 flex flex-col text-left">
+            <DropdownMenuContent align="end" sideOffset={6} className="w-72 rounded-2xl border border-gray-200 shadow-2xl p-0 overflow-hidden bg-white dark:bg-zinc-900 dark:border-white/10 dark:shadow-none">
+               <div className="bg-gray-50 dark:bg-zinc-800/50 px-5 py-4 border-b border-gray-200 dark:border-white/5 flex flex-col text-left">
                  <span className="font-bold text-[18px] text-gray-900 dark:text-zinc-50 leading-tight">
                    {authUser?.fname} {authUser?.lname}
                  </span>

@@ -269,8 +269,8 @@ const CabinetElement = memo(({
       style={{
         left: `${cab.rect.x * 100}%`,
         top: `${cab.rect.y * 100}%`,
-        width: `${eff.w * 100}%`,
-        height: `${eff.h * 100}%`,
+        width: `calc(${eff.w * 100}% + 1px)`,
+        height: `calc(${eff.h * 100}% + 1px)`,
         userSelect: "none",
       }}
       onPointerDown={(e) => {
