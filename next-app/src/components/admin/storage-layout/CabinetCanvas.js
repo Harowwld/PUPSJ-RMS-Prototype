@@ -45,7 +45,7 @@ const CabinetCanvas = memo(({
       ref={canvasRef}
       data-slot="storage-canvas"
       className={cn(
-        "relative w-full overflow-hidden border border-gray-300 dark:border-white/10 bg-[#f8fafc] dark:bg-zinc-600/30 shadow-inner dark:shadow-none transition-all duration-300 rounded-brand",
+        "relative w-full overflow-hidden border border-gray-300 dark:border-white/10 bg-[#f8fafc] dark:bg-zinc-600/30 shadow-inner dark:shadow-none transition-all duration-normal rounded-brand",
         isModalOpen ? "h-full" : ""
       )}
       style={!isModalOpen ? { aspectRatio: "16 / 10" } : {}}
@@ -167,11 +167,11 @@ const CabinetCanvas = memo(({
         }}
       >
         <div 
-          className="relative flex h-full w-full items-center justify-center rounded-sm bg-pup-maroon shadow-md transition-all duration-300 dark:bg-[#b94642] dark:shadow-none"
+          className="relative flex h-full w-full items-center justify-center rounded-sm bg-pup-maroon shadow-md transition-all duration-normal dark:bg-[#b94642] dark:shadow-none"
         >
           {/* Inner Text Label - Dynamically Rotated and Flipped */}
           <span className={cn(
-            "text-[9px] font-semibold tracking-widest text-white whitespace-nowrap transition-transform duration-300 flex items-center gap-1",
+            "text-[9px] font-semibold tracking-widest text-white whitespace-nowrap transition-transform duration-normal flex items-center gap-1",
             activeRoom?.door?.rotation === 0 && "rotate-0",
             activeRoom?.door?.rotation === 180 && "rotate-0", // Opposite flip for bottom
             activeRoom?.door?.rotation === 90 && "-rotate-90", // Opposite flip for right
@@ -259,7 +259,7 @@ const CabinetElement = memo(({
   return (
     <div
       className={cn(
-        "absolute border-2 rounded-md transition-colors duration-200 cursor-move group/cab shadow-sm hover:shadow-md",
+        "absolute border-2 rounded-md transition-colors duration-fast cursor-move group/cab shadow-sm hover:shadow-md",
         isSelected 
           ? "z-10 border-cyan-500 bg-cyan-50 dark:border-cyan-400 dark:bg-cyan-950" 
           : isConflict 
@@ -337,7 +337,7 @@ const CabinetElement = memo(({
             {/* Skeuomorphic Pull Handle */}
             <div
               className={cn(
-                "w-7 h-1.5 rounded-sm bg-gray-300 dark:bg-[#737373] border border-black/10 dark:border-white/10 shadow-[inset_0_1px_1px_rgba(0,0,0,0.15)] group-hover/cab:scale-x-110 transition-transform duration-200",
+                "w-7 h-1.5 rounded-sm bg-gray-300 dark:bg-[#737373] border border-black/10 dark:border-white/10 shadow-[inset_0_1px_1px_rgba(0,0,0,0.15)] group-hover/cab:scale-x-110 transition-transform duration-fast",
                 isSelected && "bg-cyan-400 dark:bg-cyan-800 border-cyan-500/20",
                 isConflict && "bg-red-400 dark:bg-red-800 border-red-500/20"
               )}

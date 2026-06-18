@@ -45,6 +45,7 @@ import {
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { PageTransition } from "@/components/ui/motion"
 
 function AdminPageContent() {
   const router = useRouter()

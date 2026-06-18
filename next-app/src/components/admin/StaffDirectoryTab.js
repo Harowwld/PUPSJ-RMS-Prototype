@@ -86,7 +86,7 @@ const StaffTableRow = React.memo(({
     <tr
       onClick={(e) => !isCurrentUser && toggleSelect(s.id, e)}
       className={cn(
-        "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
+        "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
         !isCurrentUser && "cursor-pointer",
         isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
       )}
@@ -476,7 +476,7 @@ export default function StaffDirectoryTab({
         />
 
         {hasActiveFilters && (
-          <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+          <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
             <div className="flex flex-wrap items-center gap-2">
               <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                 Active filters:

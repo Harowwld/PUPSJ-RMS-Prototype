@@ -122,7 +122,7 @@ export default function StatCards({ isLoading, logStats }) {
 
   return (
     <div className={cn(
-      "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 transition-all duration-500",
+      "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 transition-all duration-slow",
       isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
     )}>
       {stats.map((stat, i) => {
@@ -131,7 +131,7 @@ export default function StatCards({ isLoading, logStats }) {
           <div 
             key={i} 
             className={cn(
-              "group relative overflow-hidden rounded-xl border-none p-5 shadow-sm dark:shadow-none transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-br",
+              "group relative overflow-hidden rounded-xl border-none p-5 shadow-sm dark:shadow-none transition-all duration-normal hover:-translate-y-0.5 bg-gradient-to-br",
               classes.bg,
               stat.color === "blue" ? "glass-stat-card-blue" :
               stat.color === "emerald" ? "glass-stat-card-green" :

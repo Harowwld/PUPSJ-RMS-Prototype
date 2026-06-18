@@ -84,7 +84,7 @@ const LogRow = React.memo(function LogRow({
     <React.Fragment>
       <tr
         className={cn(
-          "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+          "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
           isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
           isExpanded && "bg-gray-50 dark:bg-white/8"
         )}
@@ -95,7 +95,7 @@ const LogRow = React.memo(function LogRow({
         <td className="py-0 px-4 align-middle text-center" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => toggleRow(log.id)}
-            className="mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-transform duration-200"
+            className="mx-auto flex h-7 w-7 items-center justify-center bg-transparent border-none text-[#8E8E93] hover:text-[#111111] dark:hover:text-zinc-200 cursor-pointer transition-transform duration-fast"
             style={{ transform: isExpanded ? 'rotate(180deg)' : 'rotate(0deg)' }}
           >
             <i className="ti ti-chevron-down text-[14px]" style={{ fontSize: '14px' }}></i>

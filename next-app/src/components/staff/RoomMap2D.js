@@ -291,7 +291,7 @@ export default function RoomMap2D({
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full overflow-hidden rounded-brand border border-gray-300 dark:border-white/10 bg-[#f8fafc] dark:bg-zinc-600/30 shadow-inner dark:shadow-none transition-all duration-300"
+      className="relative h-full w-full overflow-hidden rounded-brand border border-gray-300 dark:border-white/10 bg-[#f8fafc] dark:bg-zinc-600/30 shadow-inner dark:shadow-none transition-all duration-normal"
     >
       {/* AutoCAD-inspired precision grid */}
       <div
@@ -319,10 +319,10 @@ export default function RoomMap2D({
           }}
         >
           <div 
-            className="w-2.5 h-2.5 rounded-sm transition-colors duration-300"
+            className="w-2.5 h-2.5 rounded-sm transition-colors duration-normal"
             style={{ 
               backgroundColor: trailColor,
-              animation: `wayfinder-wave 2s infinite ease-in-out`,
+              animation: `wayfinder-wave 2s infinite ease-standard`,
               animationDelay: `${idx * 50}ms` 
             }}
           />
@@ -339,9 +339,9 @@ export default function RoomMap2D({
           height: `${(roomDoor?.h ?? 0.04) * 100}%`,
         }}
       >
-        <div className="relative flex h-full w-full items-center justify-center rounded-sm bg-pup-maroon shadow-md transition-all duration-300 dark:bg-[#b94642] dark:shadow-none">
+        <div className="relative flex h-full w-full items-center justify-center rounded-sm bg-pup-maroon shadow-md transition-all duration-normal dark:bg-[#b94642] dark:shadow-none">
           <span className={cn(
-            "text-[9px] font-semibold tracking-widest text-white whitespace-nowrap transition-transform duration-300 flex items-center gap-1",
+            "text-[9px] font-semibold tracking-widest text-white whitespace-nowrap transition-transform duration-normal flex items-center gap-1",
             roomDoor?.rotation === 0 && "rotate-0",
             roomDoor?.rotation === 180 && "rotate-0", 
             roomDoor?.rotation === 90 && "-rotate-90", 
@@ -365,7 +365,7 @@ export default function RoomMap2D({
           <div
             key={c.cab}
             className={cn(
-              "absolute border-2 transition-all duration-300 rounded-md shadow-xs group/cab",
+              "absolute border-2 transition-all duration-normal rounded-md shadow-xs group/cab",
               isClickable ? "cursor-pointer" : "opacity-30 pointer-events-none select-none",
               isTarget
                 ? "z-10 bg-gray-100 dark:bg-[#949494]"
@@ -402,7 +402,7 @@ export default function RoomMap2D({
                   {/* Skeuomorphic Pull Handle */}
                   <div
                     className={cn(
-                      "w-7 h-1.5 rounded-sm bg-gray-300 dark:bg-[#737373] border border-black/10 dark:border-white/10 shadow-[inset_0_1px_1px_rgba(0,0,0,0.15)] group-hover/cab:scale-x-110 transition-transform duration-200",
+                      "w-7 h-1.5 rounded-sm bg-gray-300 dark:bg-[#737373] border border-black/10 dark:border-white/10 shadow-[inset_0_1px_1px_rgba(0,0,0,0.15)] group-hover/cab:scale-x-110 transition-transform duration-fast",
                       isSelected && "bg-cyan-400 dark:bg-cyan-800 border-cyan-500/20"
                     )}
                     style={isTarget ? {

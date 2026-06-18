@@ -110,7 +110,7 @@ export default function Header({ authUser, onLogout, children }) {
   const isActivityActive = pathname === "/account/activity";
 
   return (
-    <header className="bg-white/35 backdrop-blur-md dark:bg-black/35 border-b border-gray-350 dark:border-white/10 flex-none z-20 select-none transition-all duration-300 shadow-[0_1px_8px_rgba(0,0,0,0.02)]">
+    <header className="bg-white/35 backdrop-blur-md dark:bg-black/35 border-b border-gray-350 dark:border-white/10 flex-none z-20 select-none transition-all duration-normal shadow-[0_1px_8px_rgba(0,0,0,0.02)]">
       <AccountSetupModal authUser={authUser} />
       <div className="w-full px-4 h-16 flex items-center justify-between">
         <div className="flex items-center gap-[6px]">
@@ -127,7 +127,7 @@ export default function Header({ authUser, onLogout, children }) {
             </div>
           </div>
           <span 
-            className="text-[26px] font-medium select-none leading-none tracking-tight transition-colors duration-300" 
+            className="text-[26px] font-medium select-none leading-none tracking-tight transition-colors duration-normal" 
             style={{ color: (authUser?.role || "Staff").toLowerCase() === "admin" ? "#e30000" : "#edbb00" }}
           >
             {authUser?.role || "Staff"}

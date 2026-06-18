@@ -580,7 +580,7 @@ export default function FloatingChatWidget() {
 
       {/* Chat Window Panel */}
       {isOpen && (
-        <div className="mb-4 flex h-[480px] w-[350px] flex-col overflow-hidden rounded-[16px] border border-[#E5E5EA] bg-white shadow-[0_8px_32px_rgba(0,0,0,0.08)] transition-all duration-300 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="mb-4 flex h-[480px] w-[350px] flex-col overflow-hidden rounded-[16px] border border-[#E5E5EA] bg-white shadow-[0_8px_32px_rgba(0,0,0,0.08)] transition-all duration-normal dark:border-zinc-800 dark:bg-zinc-900">
           
           {/* Header */}
           <div className="flex items-center justify-between bg-white border-b border-[#E5E5EA] px-4 py-3 text-[#1C1C1E] dark:bg-zinc-900 dark:border-zinc-800 dark:text-zinc-100 shrink-0">

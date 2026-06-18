@@ -246,7 +246,7 @@ export default function StorageExplorerTab({
                           <div
                             key={r.room}
                             className={cn(
-                              "group relative flex flex-col overflow-hidden rounded-[24px] border-none transition-all duration-300 bg-gradient-to-br shadow-sm dark:shadow-none",
+                              "group relative flex flex-col overflow-hidden rounded-[24px] border-none transition-all duration-normal bg-gradient-to-br shadow-sm dark:shadow-none",
                               isClickable ? "cursor-pointer hover:shadow-md hover:-translate-y-0.5" : "pointer-events-none select-none",
                               !isClickable && !isTarget && "opacity-30",
                               isTarget ? "scale-[1.02] ring-2 ring-white/25 shadow-lg" : "",
@@ -454,7 +454,7 @@ export default function StorageExplorerTab({
                               <div
                                 key={d.drawer}
                                 className={cn(
-                                  "flex flex-col gap-[10px] transition-all duration-300",
+                                  "flex flex-col gap-[10px] transition-all duration-normal",
                                   !isClickable && "opacity-30 pointer-events-none select-none"
                                 )}
                               >

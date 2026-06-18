@@ -30,7 +30,7 @@ import { findMatchingDocument } from "@/lib/docAvailability";
 import { imageToPdf, needsConversion, mergeImagesToPdf } from "@/lib/imageToPdf";
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils";
 import { cn } from "@/lib/utils";
-
+import { PageTransition } from "@/components/ui/motion";
 
 function normalizeStudentRow(row) {
   if (!row || typeof row !== "object") return row;

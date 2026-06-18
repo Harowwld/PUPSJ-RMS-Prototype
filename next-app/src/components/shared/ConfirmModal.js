@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { useMemo, useRef, useEffect } from "react";
 
 export default function ConfirmModal({
@@ -361,29 +362,31 @@ export default function ConfirmModal({
           >
             {cancelLabel}
           </Button>
-          <Button
+          <LiquidGlassButton
             type="button"
-            variant={v.confirmVariant}
             onClick={onConfirm}
             disabled={isLoading || disabled || !isVerified}
+            height={((isDeleteBackup || isArchiveModal || isPersonnelModal || isRegistrationModal) || isRestoreModal || isUnsavedChangesModal) ? 36 : 44}
+            radius={((isDeleteBackup || isArchiveModal || isPersonnelModal || isRegistrationModal) || isRestoreModal || isUnsavedChangesModal) ? 18 : 22}
+            glassColor="rgba(10, 132, 255, 0.15)"
             className={cn(
-              "h-11 px-6 text-sm font-semibold rounded-brand gap-2 flex items-center transition-all active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
+              "px-6 text-sm font-semibold gap-2 flex items-center transition-all active:scale-95 disabled:opacity-30 disabled:grayscale-[0.5] disabled:cursor-not-allowed",
               !isAppleStyled && "shadow-sm",
               variant === "success" && "btn-brand-green",
               (variant === "warning" && !isAppleStyled) && (v.confirmStyle || "bg-amber-600 hover:bg-amber-700 text-white"),
               (variant === "brand") && "btn-brand-red hover:from-red-700 hover:to-red-900",
               (v.confirmVariant === "destructive" && !isAppleStyled) && "btn-brand-red",
               (v.confirmVariant === "default" && !["success", "warning", "brand"].includes(variant) && !isAppleStyled) && "bg-gray-900 hover:bg-gray-800 text-white dark:bg-zinc-800 dark:hover:bg-zinc-700 dark:text-zinc-50 dark:border-white/10",
-              ((isDeleteBackup || isArchiveModal || isPersonnelModal || isRegistrationModal) && !isRestoreModal) && "flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white shadow-none! border-none! py-0 px-4 cursor-pointer",
-              isRestoreModal && "flex h-[36px] items-center justify-center rounded-[8px] bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-none! border-none! py-0 px-4 cursor-pointer text-[13px] font-medium",
-              isUnsavedChangesModal && "flex h-[36px] items-center justify-center rounded-[8px] bg-[#FF6410] hover:bg-[#e55300] active:bg-[#cc4a00] text-white shadow-none! border-none! py-0 px-4 cursor-pointer text-[13px] font-medium",
+              ((isDeleteBackup || isArchiveModal || isPersonnelModal || isRegistrationModal) && !isRestoreModal) && "text-[13px] font-medium text-white shadow-none! border-none! py-0 px-4 cursor-pointer",
+              isRestoreModal && "bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white shadow-none! border-none! py-0 px-4 cursor-pointer text-[13px] font-medium",
+              isUnsavedChangesModal && "bg-[#FF6410] hover:bg-[#e55300] active:bg-[#cc4a00] text-white shadow-none! border-none! py-0 px-4 cursor-pointer text-[13px] font-medium",
               isRegistrationModal && "w-[120px]",
               confirmClassName
             )}
           >
             {!isAppleStyled && <i className={`${displayButtonIcon} text-lg`}></i>}
             {isLoading ? "Processing..." : confirmLabel}
-          </Button>
+          </LiquidGlassButton>
         </div>
       </DialogContent>
     </Dialog>

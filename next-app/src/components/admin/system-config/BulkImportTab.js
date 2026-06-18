@@ -165,7 +165,7 @@ export default function BulkImportTab({
             <div className="flex flex-col flex-1 items-center justify-center min-h-0 w-full">
               <div
                 className={cn(
-                  "group relative flex flex-1 h-full w-full cursor-pointer flex-col items-center justify-center rounded-[12px] border-[0.5px] border-black/12 bg-[#FAFAFA] dark:border-white/12 dark:bg-zinc-900/50 p-[40px] text-center transition-all duration-150 ease-out min-h-[570px]",
+                  "group relative flex flex-1 h-full w-full cursor-pointer flex-col items-center justify-center rounded-[12px] border-[0.5px] border-black/12 bg-[#FAFAFA] dark:border-white/12 dark:bg-zinc-900/50 p-[40px] text-center transition-all duration-fast ease-standard min-h-[570px]",
                   importDropActive && "border-[#E5484D] border bg-[#FFF5F5] dark:bg-red-950/20"
                 )}
                 onDragOver={(e) => {
@@ -189,7 +189,7 @@ export default function BulkImportTab({
                   className="absolute inset-0 z-10 h-full w-full cursor-pointer opacity-0"
                 />
                 <div className="pointer-events-none flex flex-col items-center justify-center text-center w-full h-full">
-                  <i className={cn("ti ti-upload text-[24px] transition-colors duration-150", importDropActive ? "text-[#E5484D]" : "text-[#C7C7CC]")}></i>
+                  <i className={cn("ti ti-upload text-[24px] transition-colors duration-fast", importDropActive ? "text-[#E5484D]" : "text-[#C7C7CC]")}></i>
                   <p className="text-[14px] font-medium text-[#111111] dark:text-zinc-100 mt-[12px] m-0">
                     Drop CSV file here
                   </p>
@@ -202,7 +202,7 @@ export default function BulkImportTab({
           </div>
         </div>
       ) : importStatus === "preview" ? (
-      <div className="animate-in fade-in slide-in-from-bottom-2 flex flex-1 min-h-[500px] flex-col gap-4 duration-300">
+      <div className="animate-in fade-in slide-in-from-bottom-2 flex flex-1 min-h-[500px] flex-col gap-4 duration-normal">
         <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center mt-[20px]">
           <div className="flex items-center gap-4">
             <Button
@@ -406,7 +406,7 @@ export default function BulkImportTab({
                       <tr
                         key={row.index}
                         className={cn(
-                          "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
+                          "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
                           row.error && "bg-red-50/40 dark:bg-red-500/5 hover:bg-red-50/60 dark:hover:bg-red-500/10"
                         )}
                       >
@@ -682,7 +682,7 @@ export default function BulkImportTab({
           </div>
         </div>
       ) : (
-        <div className="animate-in zoom-in-95 flex flex-1 min-h-[500px] flex-col items-center justify-center rounded-brand border border-gray-300 bg-white shadow-sm duration-300 dark:bg-card dark:shadow-none dark:border-white/10">
+        <div className="animate-in zoom-in-95 flex flex-1 min-h-[500px] flex-col items-center justify-center rounded-brand border border-gray-300 bg-white shadow-sm duration-normal dark:bg-card dark:shadow-none dark:border-white/10">
           <div className="flex w-full max-w-md flex-col items-center gap-8 px-6 text-center">
             <div className="relative">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-950/30 text-emerald-600 dark:text-emerald-400">

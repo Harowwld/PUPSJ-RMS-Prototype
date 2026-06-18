@@ -7,6 +7,7 @@ import Header from "@/components/layout/Header";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AuthGuard } from "@/components/shared/AuthGuard";
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +37,7 @@ import { Separator } from "@/components/ui/separator";
 import PageHeader from "@/components/shared/PageHeader";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { cn } from "@/lib/utils";
+import { FadeIn, SlideUp, StaggerContainer, StaggerItem, PageTransition } from "@/components/ui/motion";
 
 function AccountPageContent() {
   const router = useRouter();
@@ -694,7 +696,7 @@ function AccountPageContent() {
     <div className="h-screen overflow-hidden flex flex-col bg-gray-50 dark:bg-background font-inter selection:bg-pup-maroon selection:text-white">
       <Header authUser={authUser} onLogout={handleLogout} />
 
-      <main className="flex-1 min-h-0 overflow-y-auto w-full">
+      <PageTransition className="flex-1 min-h-0 overflow-y-auto w-full">
         <div className="max-w-[1200px] mx-auto py-10 px-4">
         <PageHeader
           title="Account Settings"
@@ -733,7 +735,7 @@ function AccountPageContent() {
                 <div className="flex flex-col items-center shrink-0">
                   <div 
                     onClick={handleAvatarClick}
-                    className="relative group w-[68px] h-[68px] shrink-0 rounded-full bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 flex items-center justify-center text-[22px] font-semibold shadow-inner cursor-pointer overflow-hidden transition-all duration-300 hover:ring-2 hover:ring-pup-maroon/20"
+                    className="relative group w-[68px] h-[68px] shrink-0 rounded-full bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 flex items-center justify-center text-[22px] font-semibold shadow-inner cursor-pointer overflow-hidden transition-all duration-normal hover:ring-2 hover:ring-pup-maroon/20"
                   >
                     {avatarUrl ? (
                       <img 
@@ -746,7 +748,7 @@ function AccountPageContent() {
                       <span>{initials}</span>
                     )}
                     {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                    <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-fast">
                       <i className="ph-bold ph-camera text-white text-base"></i>
                     </div>
                   </div>
@@ -880,10 +882,13 @@ function AccountPageContent() {
                     </div>
 
                     <div className="flex justify-end pt-4">
-                      <Button
+                      <LiquidGlassButton
                         type="submit"
                         disabled={profileLoading}
-                        className="h-10 px-6 btn-brand-red !rounded-[8px] text-[13px] font-medium tracking-[-0.01em] flex items-center gap-2 active:scale-95 disabled:opacity-50"
+                        height={40}
+                        radius={20}
+                        glassColor="rgba(10, 132, 255, 0.15)"
+                        className="px-6 text-[13px] font-medium tracking-[-0.01em] flex items-center gap-2 active:scale-95 disabled:opacity-50 text-white"
                       >
                         {profileLoading ? (
                           <i className="ph-bold ph-spinner animate-spin text-base"></i>
@@ -891,7 +896,7 @@ function AccountPageContent() {
                           <i className="ph-bold ph-check text-base"></i>
                         )}
                         {profileLoading ? "Saving..." : "Save"}
-                      </Button>
+                      </LiquidGlassButton>
                     </div>
                   </form>
                 </CardContent>
@@ -1000,19 +1005,19 @@ function AccountPageContent() {
                       </div>
 
                       <div className="flex justify-end pt-4">
-                        <Button
+                        <LiquidGlassButton
                           type="submit"
                           disabled={pwLoading}
-                          className={cn(
-                            "h-10 px-6 btn-brand-red !rounded-[8px] text-[13px] font-medium tracking-[-0.01em] flex items-center active:scale-95 disabled:opacity-50",
-                            pwLoading && "gap-2"
-                          )}
+                          height={40}
+                          radius={20}
+                          glassColor="rgba(10, 132, 255, 0.15)"
+                          className="px-6 text-[13px] font-medium tracking-[-0.01em] flex items-center active:scale-95 disabled:opacity-50 text-white"
                         >
                           {pwLoading && (
                             <i className="ph-bold ph-spinner animate-spin text-base"></i>
                           )}
                           {pwLoading ? "Updating..." : "Update"}
-                        </Button>
+                        </LiquidGlassButton>
                       </div>
                     </form>
                   </CardContent>
@@ -1086,7 +1091,7 @@ function AccountPageContent() {
                                   {showInput ? (
                                     <Input
                                       type="text"
-                                      className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-white px-3 text-[14px] font-normal tracking-[-0.01em] shadow-none transition-all focus-visible:border-gray-400 focus-visible:ring-0 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:border-white/20 animate-in fade-in slide-in-from-top-1 duration-300"
+                                      className="h-10 rounded-[8px] border-[0.5px] border-gray-200 bg-white px-3 text-[14px] font-normal tracking-[-0.01em] shadow-none transition-all focus-visible:border-gray-400 focus-visible:ring-0 text-gray-900 dark:border-white/10 dark:bg-card dark:text-zinc-50 dark:focus-visible:border-white/20 animate-in fade-in slide-in-from-top-1 duration-normal"
                                       placeholder="••••••••"
                                       value={secAnswers[q.id] || ""}
                                       onChange={(e) => setSecAnswers({ ...secAnswers, [q.id]: e.target.value })}
@@ -1105,19 +1110,19 @@ function AccountPageContent() {
                       </div>
 
                       <div className="flex justify-end pt-4">
-                        <Button
+                        <LiquidGlassButton
                           type="submit"
                           disabled={secLoading || globalQuestions.length === 0}
-                          className={cn(
-                            "h-10 px-6 btn-brand-red !rounded-[8px] text-[13px] font-medium tracking-[-0.01em] flex items-center active:scale-95 disabled:opacity-50",
-                            secLoading && "gap-2"
-                          )}
+                          height={40}
+                          radius={20}
+                          glassColor="rgba(10, 132, 255, 0.15)"
+                          className="px-6 text-[13px] font-medium tracking-[-0.01em] flex items-center active:scale-95 disabled:opacity-50 text-white"
                         >
                           {secLoading && (
                             <i className="ph-bold ph-spinner animate-spin text-base"></i>
                           )}
                           {secLoading ? "Saving..." : "Save"}
-                        </Button>
+                        </LiquidGlassButton>
                       </div>
                     </form>
                   </CardContent>
@@ -1138,7 +1143,7 @@ function AccountPageContent() {
 
                   <CardContent className="p-[28px] pt-6">
                     {totpStep === "setup" && totpSetupData ? (
-                      <div className="space-y-6 animate-in zoom-in-95 duration-500">
+                      <div className="space-y-6 animate-in zoom-in-95 duration-slow">
                         <div className="grid grid-cols-1 md:grid-cols-[1fr_300px] gap-8 bg-gray-50 rounded-2xl border border-gray-100 p-8 items-center dark:bg-card dark:border-white/10">
                           <div className="space-y-4">
                             <h4 className="text-lg font-semibold text-gray-900 tracking-tight dark:text-zinc-50">Setup</h4>
@@ -1212,7 +1217,7 @@ function AccountPageContent() {
                         </div>
                       </div>
                     ) : (
-                      <div className="divide-y divide-gray-100 dark:divide-white/5 animate-in fade-in duration-500">
+                      <div className="divide-y divide-gray-100 dark:divide-white/5 animate-in fade-in duration-slow">
                         {/* Authenticator App Method */}
                         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 py-6">
                           <div className="flex gap-3 items-start">
@@ -1260,7 +1265,7 @@ function AccountPageContent() {
 
                         {/* TOTP Disable Form Flow */}
                         {totpStep === "disable-flow" && (
-                          <div className="bg-gray-50 rounded-2xl border border-gray-100 p-8 space-y-6 animate-in zoom-in-95 duration-300 dark:bg-white/5 dark:border-white/10">
+                          <div className="bg-gray-50 rounded-2xl border border-gray-100 p-8 space-y-6 animate-in zoom-in-95 duration-normal dark:bg-white/5 dark:border-white/10">
                              <div className="space-y-2">
                                 <label className="text-[10px] font-semibold tracking-widest text-gray-500 px-1 dark:text-zinc-400">
                                   Enter Authenticator Code to Disable
@@ -1447,7 +1452,7 @@ function AccountPageContent() {
           </DialogContent>
         </Dialog>
         </div>
-      </main>
+      </PageTransition>
     </div>
   );
 }

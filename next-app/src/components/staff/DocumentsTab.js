@@ -38,9 +38,9 @@ function SortIndicator({ column, sortBy, sortOrder }) {
   if (sortBy !== column)
     return <i className="ph-bold ph-caret-up-down ml-1 text-[11px] opacity-40 transition-opacity group-hover:opacity-70 dark:opacity-30 dark:group-hover:opacity-60"></i>
   return sortOrder === "ASC" ? (
-    <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
+    <i className="ph-bold ph-caret-up ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-normal dark:text-primary"></i>
   ) : (
-    <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-300 dark:text-primary"></i>
+    <i className="ph-bold ph-caret-down ml-1 text-[11px] text-pup-maroon animate-in fade-in zoom-in duration-normal dark:text-primary"></i>
   )
 }
 
@@ -207,7 +207,7 @@ function DocumentsTable({
             <tr
               key={r.id || idx}
               className={cn(
-                "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
+                "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
                 r.status === "uploaded"
                   ? (r.verificationStatus === "unverified" ? "bg-amber-50/30 dark:bg-amber-950/20" : "bg-green-50/30 dark:bg-emerald-950/20")
                   : "bg-red-50/30 dark:bg-red-950/20"
@@ -618,7 +618,7 @@ export default function DocumentsTab({
 
           {/* Active filter Chips Row */}
           {(docsForm.studentNo !== "" || docsForm.studentName !== "" || docsForm.docType !== "") && (
-            <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+            <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
                 {docsForm.studentNo && (
@@ -765,7 +765,7 @@ export default function DocumentsTab({
                         </span>
                         <div className="w-32 sm:w-48 h-2.5 bg-gray-200 rounded-full overflow-hidden dark:bg-zinc-700">
                           <div
-                            className={`h-full transition-all duration-500 ${compPercent >= 100 ? "bg-emerald-500" : compPercent >= 50 ? "bg-amber-500" : "bg-red-500"}`}
+                            className={`h-full transition-all duration-slow ${compPercent >= 100 ? "bg-emerald-500" : compPercent >= 50 ? "bg-amber-500" : "bg-red-500"}`}
                             style={{ width: `${compPercent}%` }}
                           />
                         </div>
@@ -1068,7 +1068,7 @@ export default function DocumentsTab({
             }
           }}
         >
-          <DialogContent className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 xl:max-w-[1400px] rounded-brand dark:border-white/10 dark:bg-muted">
+          <DialogContent className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal xl:max-w-[1400px] rounded-brand dark:border-white/10 dark:bg-muted">
             <DialogHeader className="shrink-0 border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -1090,7 +1090,7 @@ export default function DocumentsTab({
             <div className="relative flex flex-1 overflow-hidden bg-gray-100 dark:bg-muted">
               {/* Fullscreen Overlay */}
               {isFullscreen && selectedDoc?.doc?.id && (
-                <div className="fixed inset-0 z-[9999] flex flex-col bg-white dark:bg-card animate-in fade-in duration-300">
+                <div className="fixed inset-0 z-[9999] flex flex-col bg-white dark:bg-card animate-in fade-in duration-normal">
                   <div className="absolute top-4 right-4 z-[10000]">
                     <Button
                       variant="default"

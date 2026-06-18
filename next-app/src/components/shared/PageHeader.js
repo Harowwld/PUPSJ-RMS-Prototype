@@ -39,7 +39,7 @@ export default function PageHeader({
 }) {
   return (
     <div className={cn(
-      "bg-transparent p-6 rounded-t-brand select-none transition-colors duration-300 dark:bg-transparent",
+      "bg-transparent p-6 rounded-t-brand select-none transition-colors duration-normal dark:bg-transparent",
       showBorder && "border-b border-gray-100 dark:border-white/5",
       className
     )}>

@@ -411,7 +411,7 @@ export default function NotificationsTab({
             ) : (
               <>
                 <div
-                  className="overflow-hidden rounded-brand border border-gray-200 dark:border-white/10 bg-white dark:bg-card shadow-sm dark:shadow-none transition-all duration-500 animate-fade-up"
+                  className="overflow-hidden rounded-brand border border-gray-200 dark:border-white/10 bg-white dark:bg-card shadow-sm dark:shadow-none transition-all duration-slow animate-fade-up"
                 >
                   <div className="overflow-x-auto rounded-[inherit]">
                     <table className="min-w-full table-fixed text-sm">
@@ -564,7 +564,7 @@ export default function NotificationsTab({
                               <tr
                                 key={n.id}
                                 className={cn(
-                                  "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
+                                  "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none",
                                   isUnread && "bg-amber-50 dark:bg-amber-950/40"
                                 )}
                               >
@@ -802,7 +802,7 @@ export default function NotificationsTab({
             }
           }}
         >
-          <DialogContent className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 xl:max-w-[1400px] rounded-brand dark:border-white/10 dark:bg-muted">
+          <DialogContent className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal xl:max-w-[1400px] rounded-brand dark:border-white/10 dark:bg-muted">
             <DialogHeader className="shrink-0 border-b border-gray-100 bg-gray-50 p-6 dark:border-white/10 dark:bg-white/5">
               <div className="flex items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -824,7 +824,7 @@ export default function NotificationsTab({
             <div className="relative flex flex-1 overflow-hidden bg-gray-100 dark:bg-muted">
               {/* Fullscreen Overlay */}
               {isFullscreen && selectedNotif && (
-                <div className="fixed inset-0 z-[9999] flex flex-col bg-white dark:bg-card animate-in fade-in duration-300">
+                <div className="fixed inset-0 z-[9999] flex flex-col bg-white dark:bg-card animate-in fade-in duration-normal">
                   <div className="absolute top-4 right-4 z-[10000]">
                     <Button
                       variant="default"

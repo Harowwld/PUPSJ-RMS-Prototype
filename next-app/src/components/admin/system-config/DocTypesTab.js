@@ -370,7 +370,7 @@ export default function DocTypesTab({
         <div key={showArchived} className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card w-full animate-fade-up">
           {/* Active Filter Chips Row */}
           {(localSearch !== "") && (
-            <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+            <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">Active filters:</span>
                 {localSearch && (
@@ -443,7 +443,7 @@ export default function DocTypesTab({
                     {!showArchived && (
                       <tr
                         className={cn(
-                          "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                          "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                           newDocTypeName.trim() && "bg-amber-50/50 dark:bg-amber-950/10"
                         )}
                       >
@@ -522,7 +522,7 @@ export default function DocTypesTab({
                             if (!isDisabled) toggleDocTypeSelected(dt.id, e);
                           }}
                           className={cn(
-                            "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                            "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                             dt.status === "Archived" && "opacity-75",
                             isSelected && "bg-blue-50/60 dark:bg-blue-950/20",
                             isDisabled && "cursor-not-allowed"

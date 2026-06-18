@@ -373,13 +373,13 @@ export default function DigitizationComplianceTab({
         </div>
       ) : !error && data ? (
         <div className={cn(
-          "transition-all duration-500", 
+          "transition-all duration-slow", 
           (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
         )}>
           {/* Stats Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Completeness Card */}
-            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#f87171] via-[#dc2626] to-[#b91c1c] dark:from-[#dc2626] dark:to-[#7f1d1d] p-5 transition-all duration-300 hover:-translate-y-0.5 glass-stat-card-red">
+            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#f87171] via-[#dc2626] to-[#b91c1c] dark:from-[#dc2626] dark:to-[#7f1d1d] p-5 transition-all duration-normal hover:-translate-y-0.5 glass-stat-card-red">
                 <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
                   <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#b91c1c]/40 to-[#dc2626]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
                   <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#f87171]/30 to-[#dc2626]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
@@ -415,7 +415,7 @@ export default function DigitizationComplianceTab({
             </div>
 
             {/* Students Card */}
-            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa] p-5 transition-all duration-300 hover:-translate-y-0.5 glass-stat-card-blue">
+            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#14C8FF] via-[#007AFF] to-[#0055FF] dark:from-[#007AFF] dark:to-[#0033aa] p-5 transition-all duration-normal hover:-translate-y-0.5 glass-stat-card-blue">
                 <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
                   <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#0055FF]/40 to-[#007AFF]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
                   <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#14C8FF]/30 to-[#007AFF]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
@@ -434,7 +434,7 @@ export default function DigitizationComplianceTab({
             </div>
 
             {/* Complete Card */}
-            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37] p-5 transition-all duration-300 hover:-translate-y-0.5 glass-stat-card-green">
+            <div className="group relative overflow-hidden rounded-xl border-none bg-gradient-to-br from-[#34d399] via-[#059669] to-[#047857] dark:from-[#059669] dark:to-[#024e37] p-5 transition-all duration-normal hover:-translate-y-0.5 glass-stat-card-green">
                 <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
                   <div className="absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr from-[#047857]/40 to-[#059669]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
                   <div className="absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr from-[#34d399]/30 to-[#059669]/0 pointer-events-none" style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
@@ -522,7 +522,7 @@ export default function DigitizationComplianceTab({
               }
             }
             return (
-              <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-300 dark:border-white/10 dark:bg-card">
+              <div className="flex-none border-b border-gray-100 bg-white px-6 py-3 animate-in fade-in slide-in-from-top-1 duration-normal dark:border-white/10 dark:bg-card">
                 <div className="flex flex-wrap items-center gap-2">
                     <span className="mr-1 text-[11px] font-medium uppercase tracking-[0.04em] text-gray-400 dark:text-zinc-500">
                     Active filters:
@@ -656,7 +656,7 @@ export default function DigitizationComplianceTab({
                 : 0;
               return (
                 <div className={cn(
-                  "transition-all duration-500", 
+                  "transition-all duration-slow", 
                   (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
                 )}>
                   <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8 py-4 w-full bg-transparent border-0">
@@ -705,7 +705,7 @@ export default function DigitizationComplianceTab({
                       {/* Substantial Progress Bar */}
                       <div className="relative h-[8px] w-full overflow-hidden rounded-[4px] bg-gray-100 dark:bg-zinc-800">
                         <div 
-                          className="absolute top-0 left-0 h-full rounded-[4px] bg-emerald-600 dark:bg-emerald-500 transition-all duration-1000 ease-out"
+                          className="absolute top-0 left-0 h-full rounded-[4px] bg-emerald-600 dark:bg-emerald-500 transition-all duration-slow ease-standard"
                           style={{ width: `${percent}%` }}
                         />
                       </div>
@@ -818,7 +818,7 @@ export default function DigitizationComplianceTab({
                     </thead>
                     <tbody className="bg-transparent">
                       {sortedByCourse.map((row) => (
-                        <tr key={row.courseCode} className="h-[48px] border-b-[0.5px] border-gray-100 last:border-b-0 group transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/[0.02]">
+                        <tr key={row.courseCode} className="h-[48px] border-b-[0.5px] border-gray-100 last:border-b-0 group transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/[0.02]">
                           <td className="p-4 px-6 text-[13px] font-medium text-gray-900 dark:text-zinc-50 tracking-[-0.01em]">
                             {row.courseCode || "—"}
                           </td>
@@ -903,7 +903,7 @@ export default function DigitizationComplianceTab({
       >
         <DialogContent
           hideClose={true}
-          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-300 ease-out font-inter xl:max-w-[1200px] rounded-2xl dark:border-white/10 dark:bg-muted"
+          className="flex h-[90vh] w-[96vw] max-w-[96vw] flex-col overflow-hidden border border-gray-200 bg-gray-100 p-0 shadow-2xl transition-all duration-normal ease-standard font-inter xl:max-w-[1200px] rounded-2xl dark:border-white/10 dark:bg-muted"
         >
           <DialogHeader 
             className="shrink-0 bg-gray-50 dark:bg-white/5"
@@ -943,7 +943,7 @@ export default function DigitizationComplianceTab({
           </DialogHeader>
           <div className="relative flex-1 overflow-hidden bg-gray-100 dark:bg-muted">
             {pdfBlobUrl ? (
-              <div className={cn("relative h-full w-full transition-all duration-300", isFullscreenPreview ? "fixed inset-0 z-[9999] bg-white dark:bg-card" : "")}>
+              <div className={cn("relative h-full w-full transition-all duration-normal", isFullscreenPreview ? "fixed inset-0 z-[9999] bg-white dark:bg-card" : "")}>
                 {isFullscreenPreview && (
                   <div className="absolute top-4 right-4 z-[10000]">
                     <Button

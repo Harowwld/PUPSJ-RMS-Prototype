@@ -114,7 +114,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
     <aside
       ref={sidebarRef}
       className={cn(
-        "z-10 flex-col gap-[2px] bg-white/20 backdrop-blur-md dark:bg-zinc-950/25 select-none sticky top-0 h-screen transition-[width,padding] duration-300 ease-in-out overflow-hidden hidden md:flex shrink-0",
+        "z-10 flex-col gap-[2px] bg-white/20 backdrop-blur-md dark:bg-zinc-950/25 select-none sticky top-0 h-screen transition-[width,padding] duration-normal ease-standard overflow-hidden hidden md:flex shrink-0",
         open ? "w-[260px] py-2 px-2" : "w-0 py-2 px-0 pointer-events-none"
       )}
       style={{ borderRight: open ? "0.5px solid rgba(255,255,255,0.18)" : "0px solid transparent", transitionProperty: "width, padding-left, padding-right" }}
@@ -236,7 +236,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                     ) : null}
                     <i
                       className={cn(
-                        "ti ti-chevron-down text-xs transition-transform duration-300",
+                        "ti ti-chevron-down text-xs transition-transform duration-normal",
                         isExpanded && "rotate-180"
                       )}
                     ></i>
@@ -245,7 +245,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
 
                 <div
                   className={cn(
-                    "overflow-hidden transition-all duration-[450ms] ease-out",
+                    "overflow-hidden transition-all duration-[450ms] ease-standard",
                     isExpanded ? "mt-[2px] max-h-[500px] opacity-100" : "mt-0 max-h-0 opacity-0"
                   )}
                 >

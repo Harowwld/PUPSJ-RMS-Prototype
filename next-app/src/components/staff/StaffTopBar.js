@@ -25,13 +25,13 @@ export default function StaffTopBar({ items, activeKey, onSelect }) {
               key={item.key}
               href={`${pathname}?view=${item.key}`}
               onClick={(e) => handleLinkClick(e, item.key)}
-              className={`group relative flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-300 outline-none hover:scale-[1.03] active:scale-[0.98] cursor-pointer ${
+              className={`group relative flex items-center gap-2 rounded-full px-6 py-3 text-sm font-semibold whitespace-nowrap transition-all duration-normal outline-none hover:scale-[1.03] active:scale-[0.98] cursor-pointer ${
  isActive
  ? "bg-red-50 text-pup-maroon shadow-xs dark:bg-red-500/10 dark:text-primary dark:shadow-none"
  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900 dark:text-zinc-400 dark:hover:bg-white/5 dark:hover:text-zinc-50"
  }`}
             >
-              <i className={`${item.iconClass} text-base transition-transform duration-300 group-hover:scale-110 ${
+              <i className={`${item.iconClass} text-base transition-transform duration-normal group-hover:scale-110 ${
  isActive 
  ? "text-pup-maroon dark:text-primary" 
  : "text-gray-400 group-hover:text-gray-900 dark:text-zinc-500 dark:group-hover:text-zinc-100"
@@ -39,7 +39,7 @@ export default function StaffTopBar({ items, activeKey, onSelect }) {
               <span>{item.label}</span>
               
               {item.badge > 0 ? (
-                <span className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold  transition-all duration-300 ${
+                <span className={`inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[10px] font-semibold  transition-all duration-normal ${
  isActive 
  ? "bg-pup-maroon text-white dark:bg-red-500/20 dark:text-primary"
  : "bg-emerald-600 text-white dark:bg-emerald-950/60 dark:text-emerald-400 dark:ring-1 dark:ring-emerald-500/20"

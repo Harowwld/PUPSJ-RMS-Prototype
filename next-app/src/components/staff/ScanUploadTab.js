@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
+import { LiquidGlassButton } from "@/components/ui/liquid-glass-button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import ConfirmModal from "@/components/shared/ConfirmModal"
@@ -566,7 +567,7 @@ export default function ScanUploadTab({
                   hf.refresh()
                 }}
                 isLoading={hf.loading}
-                className="h-[32px] w-[32px] rounded-full p-[6px] !text-[#8E8E93] hover:!text-[#636366] hover:!bg-[#F5F5F7] transition-all duration-200 dark:!text-zinc-400 dark:hover:!text-zinc-200 dark:hover:!bg-white/10"
+                className="h-[32px] w-[32px] rounded-full p-[6px] !text-[#8E8E93] hover:!text-[#636366] hover:!bg-[#F5F5F7] transition-all duration-fast dark:!text-zinc-400 dark:hover:!text-zinc-200 dark:hover:!bg-white/10"
               />
             )
           }
@@ -664,13 +665,13 @@ export default function ScanUploadTab({
               <div className="flex flex-col gap-6 h-auto lg:flex-row lg:items-stretch">
                 <section
                   className={cn(
-                    "relative flex h-auto min-h-[580px] flex-col transition-all duration-300",
+                    "relative flex h-auto min-h-[580px] flex-col transition-all duration-normal",
                     uploadMode === "csv" ? "w-full lg:w-[68%]" : "w-full lg:w-[48%]"
                   )}
                 >
                   {uploadMode === "csv" ? (
                     csvFile ? (
-                      <div className="flex h-full w-full flex-col overflow-hidden bg-white transition-all duration-300 rounded-[16px] border border-[#E5E5EA] dark:bg-card dark:border-white/10">
+                      <div className="flex h-full w-full flex-col overflow-hidden bg-white transition-all duration-normal rounded-[16px] border border-[#E5E5EA] dark:bg-card dark:border-white/10">
                         <div className="flex flex-col items-center justify-between gap-4 border-b border-gray-100 bg-gray-50/50 p-6 px-8 sm:flex-row dark:border-white/10 dark:bg-white/5">
                           <div className="flex items-center gap-4">
                             <div>
@@ -716,7 +717,7 @@ export default function ScanUploadTab({
                         </div>
 
                         <div
-                          className={`relative min-h-0 flex-1 overflow-auto transition-colors duration-200 ${csvDropActive ? "bg-[#FAFAFA]" : ""} dark:bg-[#2c2c2c]`}
+                          className={`relative min-h-0 flex-1 overflow-auto transition-colors duration-fast ${csvDropActive ? "bg-[#FAFAFA]" : ""} dark:bg-[#2c2c2c]`}
                           onDragOver={(e) => {
                             e.preventDefault()
                             setCsvDropActive(true)
@@ -805,7 +806,7 @@ export default function ScanUploadTab({
                                     <tr
                                       key={r.index}
                                       className={cn(
-                                        "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
+                                        "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-fast hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none cursor-pointer",
                                         isSelected && "bg-blue-50/60 dark:bg-blue-950/20"
                                       )}
                                       onClick={() => toggleCsvRowSelected(r.index)}
@@ -1007,7 +1008,7 @@ export default function ScanUploadTab({
                     ) : (
                       <div
                         className={cn(
-                          "group relative flex min-h-[500px] flex-1 cursor-pointer flex-col items-center justify-center p-6 rounded-[12px] border border-[#E5E5EA] bg-[#FAFAFA] transition-all duration-150 ease-out dark:bg-zinc-900/50 dark:border-white/12",
+                          "group relative flex min-h-[500px] flex-1 cursor-pointer flex-col items-center justify-center p-6 rounded-[12px] border border-[#E5E5EA] bg-[#FAFAFA] transition-all duration-fast ease-standard dark:bg-zinc-900/50 dark:border-white/12",
                           csvDropActive ? "border-pup-maroon/40" : ""
                         )}
                         onDragOver={(e) => {
@@ -1046,7 +1047,7 @@ export default function ScanUploadTab({
                           }}
                         />
                         <div className="pointer-events-none flex flex-col items-center justify-center text-center w-full h-full">
-                          <i className={cn("ph-bold ph-file-csv text-[32px] transition-colors duration-150", csvDropActive ? "text-pup-maroon" : "text-[#C7C7CC]")}></i>
+                          <i className={cn("ph-bold ph-file-csv text-[32px] transition-colors duration-fast", csvDropActive ? "text-pup-maroon" : "text-[#C7C7CC]")}></i>
                           <p className="text-[14px] font-medium text-[#111111] dark:text-zinc-100 mt-[12px] m-0">
                             Drop CSV File Here
                           </p>
@@ -1060,7 +1061,7 @@ export default function ScanUploadTab({
                     <div className="flex flex-col gap-4 w-full h-full">
                       <div
                         className={cn(
-                          "group relative flex flex-1 min-h-[480px] w-full flex-col overflow-hidden rounded-[12px] border border-[#E5E5EA] transition-all duration-150 ease-out",
+                          "group relative flex flex-1 min-h-[480px] w-full flex-col overflow-hidden rounded-[12px] border border-[#E5E5EA] transition-all duration-fast ease-standard",
                           uploadedFile ? "bg-white dark:bg-card" : "bg-[#FAFAFA] dark:bg-zinc-900/50",
                           fe.pdfFile ? "border-orange-400 bg-orange-50/30" : "",
                           "dark:border-white/12"
@@ -1077,7 +1078,7 @@ export default function ScanUploadTab({
                       >
                         {uploadedFile ? (
                           <div
-                            className={`relative flex-1 flex flex-col overflow-hidden rounded-[11px] bg-white transition-all duration-200 dark:bg-card`}
+                            className={`relative flex-1 flex flex-col overflow-hidden rounded-[11px] bg-white transition-all duration-fast dark:bg-card`}
                             onDragOver={(e) => {
                               e.preventDefault()
                               setDropActive(true)
@@ -1241,7 +1242,7 @@ export default function ScanUploadTab({
                                   <img
                                     src={isImg ? url : pdfPreviewDataUrl}
                                     alt="Preview"
-                                    className="max-h-full max-w-full rounded-md object-contain shadow-2xl transition-transform duration-300"
+                                    className="max-h-full max-w-full rounded-md object-contain shadow-2xl transition-transform duration-normal"
                                     draggable="false"
                                     style={{ transform: `rotate(${rotation}deg)` }}
                                   />
@@ -1311,7 +1312,7 @@ export default function ScanUploadTab({
                               onChange={(e) => handlePdfFileSelect(e.target.files)}
                             />
                             <div className="pointer-events-none flex flex-col items-center justify-center text-center w-full h-full">
-                              <i className={cn("ph-bold ph-upload-simple text-[32px] transition-colors duration-150", dropActive ? "text-pup-maroon" : "text-[#C7C7CC]")}></i>
+                              <i className={cn("ph-bold ph-upload-simple text-[32px] transition-colors duration-fast", dropActive ? "text-pup-maroon" : "text-[#C7C7CC]")}></i>
                               <p className="text-[14px] font-medium text-[#111111] dark:text-zinc-100 mt-[12px] m-0">
                                 Drop Document Or Image Here
                               </p>
@@ -1369,7 +1370,7 @@ export default function ScanUploadTab({
                 </section>
 
                 <section
-                  className={`font-inter flex h-fit flex-col overflow-hidden rounded-[16px] border border-[#E5E5EA] bg-white shadow-sm transition-all duration-300 ${ uploadMode === "csv" ? "w-full lg:w-[32%]" : "lg:w-[52%]" } dark:border-white/10 dark:bg-card dark:shadow-none`}
+                  className={`font-inter flex h-fit flex-col overflow-hidden rounded-[16px] border border-[#E5E5EA] bg-white shadow-sm transition-all duration-normal ${ uploadMode === "csv" ? "w-full lg:w-[32%]" : "lg:w-[52%]" } dark:border-white/10 dark:bg-card dark:shadow-none`}
                 >
                   <div className="flex flex-col gap-[2px] border-b border-gray-100 bg-transparent p-[20px] pb-[16px] dark:border-white/10">
                     <h3 className="text-[16px] font-bold text-[#1C1C1E] dark:text-zinc-50 m-0">
@@ -1488,7 +1489,7 @@ export default function ScanUploadTab({
                                 }}
                               />
                               {showStudentNoSuggestions && filteredStudentNoSuggestions.length > 0 && (
-                                <div className="absolute z-50 left-0 right-0 mt-1 rounded-[10px] border border-[#E5E5EA] bg-white overflow-hidden shadow-lg animate-in fade-in slide-in-from-top-1 duration-200 dark:bg-zinc-900 dark:border-zinc-800">
+                                <div className="absolute z-50 left-0 right-0 mt-1 rounded-[10px] border border-[#E5E5EA] bg-white overflow-hidden shadow-lg animate-in fade-in slide-in-from-top-1 duration-fast dark:bg-zinc-900 dark:border-zinc-800">
                                   {filteredStudentNoSuggestions.map((s) => {
                                     const sn = String(s?.studentNo || s?.student_no || "");
                                     return (
@@ -1554,7 +1555,7 @@ export default function ScanUploadTab({
                                   }}
                                 />
                                 {showNameSuggestions && filteredNameSuggestions.length > 0 && (
-                                  <div className="absolute z-50 left-0 right-0 mt-1 rounded-[10px] border border-[#E5E5EA] bg-white overflow-hidden shadow-lg animate-in fade-in slide-in-from-top-1 duration-200 dark:bg-zinc-900 dark:border-zinc-800">
+                                  <div className="absolute z-50 left-0 right-0 mt-1 rounded-[10px] border border-[#E5E5EA] bg-white overflow-hidden shadow-lg animate-in fade-in slide-in-from-top-1 duration-fast dark:bg-zinc-900 dark:border-zinc-800">
                                     {filteredNameSuggestions.map((s) => {
                                       const sn = String(s?.studentNo || s?.student_no || "");
                                       return (
@@ -1740,7 +1741,7 @@ export default function ScanUploadTab({
                           </Select>
                         </div>
 
-                          <button
+                          <LiquidGlassButton
                           type="button"
                           onClick={() =>
                             processSubmission({
@@ -1753,10 +1754,13 @@ export default function ScanUploadTab({
                               },
                             })
                           }
-                          className="flex h-10 w-full items-center justify-center gap-2 rounded-[10px] bg-[#0A84FF] hover:bg-[#0062c4] active:scale-[0.98] text-sm font-semibold text-white transition-all dark:shadow-none"
+                          height={40}
+                          radius={20}
+                          glassColor="rgba(10, 132, 255, 0.15)"
+                          className="w-full text-sm font-semibold text-white"
                         >
                           Submit Upload
-                        </button>
+                        </LiquidGlassButton>
 
                         {uploadError ? (
                           <div className="mt-3 rounded-brand border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800 dark:bg-red-950/30">
@@ -1942,13 +1946,14 @@ export default function ScanUploadTab({
 
                           return (
                             <>
-                              <button
+                              <LiquidGlassButton
                                 type="button"
                                 onClick={importCsvStudents}
                                 disabled={importDisabled}
-                                className={cn(
-                                  "flex h-11 w-full items-center justify-center gap-2 rounded-[12px] bg-[#0A84FF] hover:bg-[#0062c4] active:scale-[0.98] text-[13px] font-semibold text-white transition-all disabled:opacity-50 disabled:pointer-events-none"
-                                )}
+                                height={44}
+                                radius={22}
+                                glassColor="rgba(10, 132, 255, 0.15)"
+                                className="w-full text-[13px] font-semibold text-white"
                               >
                                 {csvLoading ? (
                                   <>
@@ -1961,7 +1966,7 @@ export default function ScanUploadTab({
                                     Import Records
                                   </>
                                 )}
-                              </button>
+                              </LiquidGlassButton>
 
                               {hasInvalidSelected && (
                                 <div className="mt-3 flex items-start gap-2 rounded-[10px] border border-orange-200 bg-orange-50 p-3 text-[10px] font-semibold text-orange-800 animate-in fade-in slide-in-from-top-2 dark:bg-orange-950/20 dark:border-orange-900/30">

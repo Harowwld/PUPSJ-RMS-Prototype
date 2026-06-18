@@ -13,6 +13,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { PageTransition, FadeIn, SlideUp } from "@/components/ui/motion";
 
 export default function Home() {
   const router = useRouter();
@@ -283,8 +284,7 @@ export default function Home() {
 
   return (
     <TooltipProvider delay={200}>
-      <div className="min-h-screen w-full flex items-center justify-center relative bg-slate-50 dark:bg-zinc-950 font-sans p-8 overflow-hidden">
-
+      <PageTransition className="min-h-screen w-full flex items-center justify-center relative bg-slate-50 dark:bg-zinc-950 font-sans p-8 overflow-hidden">
         {/* Dynamic Liquid Glass Background Blobs */}
         <div className="liquid-container">
           <div className="liquid-blob liquid-blob-1"></div>
@@ -353,7 +353,7 @@ export default function Home() {
               <img 
                 src="/login-logo.png" 
                 alt="eManage Logo" 
-                className="w-[30px] h-[30px] object-contain z-10 animate-in zoom-in-50 duration-500" 
+                className="w-[30px] h-[30px] object-contain z-10 animate-in zoom-in-50 duration-slow" 
               />
             </div>
 
@@ -395,7 +395,7 @@ export default function Home() {
                       </div>
 
                       {/* PASSWORD FIELD (bottom half) */}
-                      <div className={`flex flex-col transition-opacity duration-200 ${
+                      <div className={`flex flex-col transition-opacity duration-fast ${
                         loginStep === 2 
                           ? 'opacity-100 max-h-[52px] pointer-events-auto' 
                           : 'opacity-0 max-h-0 overflow-hidden pointer-events-none'
@@ -442,9 +442,9 @@ export default function Home() {
 
                     {/* Keep me signed in and Forgot Password options (Step 2 only) */}
                     {loginStep === 2 && (
-                      <div className="flex items-center justify-between w-full mt-2.5 select-none animate-in fade-in duration-200">
+                      <div className="flex items-center justify-between w-full mt-2.5 select-none animate-in fade-in duration-fast">
                         {emailError || passwordError || error ? (
-                          <div className="flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200 text-left pr-2">
+                          <div className="flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-fast text-left pr-2">
                             <i className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></i>
                             <p className="text-[12px] font-normal leading-none">
                               {emailError || passwordError || error}
@@ -477,7 +477,7 @@ export default function Home() {
                       <button
                         type="button"
                         onClick={() => setShowCreateAccountModal(true)}
-                        className="text-[13px] text-[#E5484D] hover:underline focus:outline-none mt-2.5 block text-left font-normal animate-in fade-in duration-200"
+                        className="text-[13px] text-[#E5484D] hover:underline focus:outline-none mt-2.5 block text-left font-normal animate-in fade-in duration-fast"
                       >
                         Create Your eManage Account
                       </button>
@@ -486,7 +486,7 @@ export default function Home() {
 
                   {/* Disclaimer Text with Icon (Step 1 only) */}
                   {loginStep === 1 ? (
-                    <div className="w-full mt-auto pt-9 mb-[124px] text-left flex flex-col items-start select-none animate-in fade-in duration-200">
+                    <div className="w-full mt-auto pt-9 mb-[124px] text-left flex flex-col items-start select-none animate-in fade-in duration-fast">
                       <i className="ph-fill ph-users text-[23px] text-[#007AFF] mb-1"></i>
                       <p className="w-full text-[11px] text-[#8E8E93] dark:text-zinc-400 leading-normal font-normal">
                         Your eManage account provides secure access to the digitization process and administrative tools. Account activity is logged for security and auditing purposes.
@@ -513,7 +513,7 @@ export default function Home() {
                 </form>
               </div>
             ) : (
-              <div className="w-full text-center flex-1 flex flex-col animate-in fade-in duration-300">
+              <div className="w-full text-center flex-1 flex flex-col animate-in fade-in duration-normal">
                 <h1 className="login-title text-[25px] font-bold text-[#1D1D1F] dark:text-zinc-50 tracking-tight mb-5">
                   Account Recovery
                 </h1>
@@ -545,7 +545,7 @@ export default function Home() {
                       </div>
 
                       {forgotError && (
-                        <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
+                        <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-fast">
                           <i className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></i>
                           <p className="text-[12px] font-normal leading-none">
                             {forgotError}
@@ -660,7 +660,7 @@ export default function Home() {
                       </div>
 
                       {forgotError && (
-                        <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-200">
+                        <div className="h-5 mt-1.5 text-left flex items-center gap-1.5 text-[#E5484D] animate-in fade-in duration-fast">
                           <i className="ph-bold ph-warning-circle text-[14px] shrink-0 mt-[1px]"></i>
                           <p className="text-[12px] font-normal leading-none">
                             {forgotError}
@@ -794,7 +794,7 @@ export default function Home() {
             </DialogHeader>
           </DialogContent>
         </Dialog>
-      </div>
+      </PageTransition>
     </TooltipProvider>
   );
 }
