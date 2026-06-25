@@ -17,6 +17,36 @@ import PageHeader from "@/components/shared/PageHeader"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
+// Predefined icon palette so SuperAdmins can click an icon instead of typing a
+// raw class string. Values are full icon classes consumed by LucideIconTranslator
+// (the "ti ti-<name>" form is mapped to a Lucide glyph at runtime).
+const PRESET_ICONS = [
+  { value: "ti ti-building", label: "Building" },
+  { value: "ti ti-building-2", label: "Building (alt)" },
+  { value: "ti ti-landmark", label: "Institution" },
+  { value: "ti ti-school", label: "School" },
+  { value: "ti ti-graduation-cap", label: "Graduation" },
+  { value: "ti ti-scroll-text", label: "Certificate" },
+  { value: "ti ti-award", label: "Award" },
+  { value: "ti ti-shield-check", label: "Clearance" },
+  { value: "ti ti-users", label: "Staff" },
+  { value: "ti ti-user", label: "Student" },
+  { value: "ti ti-clipboard-list", label: "Records" },
+  { value: "ti ti-file-text", label: "Documents" },
+  { value: "ti ti-folder", label: "Folder" },
+  { value: "ti ti-archive", label: "Archive" },
+  { value: "ti ti-book", label: "Library" },
+  { value: "ti ti-library", label: "Catalog" },
+  { value: "ti ti-calendar", label: "Calendar" },
+  { value: "ti ti-mail", label: "Mail" },
+  { value: "ti ti-banknote", label: "Finance" },
+  { value: "ti ti-wallet", label: "Cashier" },
+  { value: "ti ti-stethoscope", label: "Clinic" },
+  { value: "ti ti-heart-pulse", label: "Health" },
+  { value: "ti ti-flask-conical", label: "Laboratory" },
+  { value: "ti ti-database", label: "Data" },
+]
+
 export default function OfficeManagementTab({ showToast }) {
   const [offices, setOffices] = useState([])
   const [loading, setLoading] = useState(true)
@@ -26,6 +56,7 @@ export default function OfficeManagementTab({ showToast }) {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
   const [selectedOfficeId, setSelectedOfficeId] = useState(null)
+  const [showCustomIcon, setShowCustomIcon] = useState(false)
   
   const [form, setForm] = useState({
     id: "",
@@ -62,6 +93,7 @@ export default function OfficeManagementTab({ showToast }) {
   const handleOpenCreate = () => {
     setIsEditing(false)
     setSelectedOfficeId(null)
+    setShowCustomIcon(false)
     setForm({
       id: "",
       name: "",
@@ -77,12 +109,14 @@ export default function OfficeManagementTab({ showToast }) {
   const handleOpenEdit = (office) => {
     setIsEditing(true)
     setSelectedOfficeId(office.id)
+    const icon = office.icon || "ti ti-building"
+    setShowCustomIcon(!PRESET_ICONS.some(p => p.value === icon))
     setForm({
       id: office.id,
       name: office.name,
       short_name: office.short_name,
       description: office.description || "",
-      icon: office.icon || "ti ti-building",
+      icon,
       accent_color: office.accent_color || "#800000",
       status: office.status || "Active",
     })
@@ -117,7 +151,15 @@ export default function OfficeManagementTab({ showToast }) {
 
       const json = await res.json()
       if (res.ok && json.ok) {
-        showToast(isEditing ? "Office updated successfully" : "Office created successfully")
+        if (isEditing) {
+          showToast("Office updated successfully")
+        } else if (json.admin && json.admin.created) {
+          showToast(
+            `Office created. Default admin ${json.admin.id} (password: ${json.admin.defaultPassword}) — change it on first login.`
+          )
+        } else {
+          showToast("Office created successfully")
+        }
         setDialogOpen(false)
         fetchOffices()
       } else {
@@ -319,7 +361,7 @@ export default function OfficeManagementTab({ showToast }) {
               </DialogDescription>
             </DialogHeader>
 
-            <div className="p-6 space-y-4">
+            <div className="p-6 space-y-4 max-h-[65vh] overflow-y-auto">
               {/* ID */}
               <div>
                 <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
@@ -335,7 +377,7 @@ export default function OfficeManagementTab({ showToast }) {
                 />
                 {!isEditing && (
                   <span className="text-[10px] text-gray-400 mt-1 block">
-                    Must be letters only. Creates a separate folder and database file (`.local/id/db.sqlite`).
+                    Letters/numbers only. Creates a separate database + a default admin (e.g. <span className="font-mono">PUP{(form.id || "OFFICE").trim().toUpperCase()}-001</span>).
                   </span>
                 )}
               </div>
@@ -381,17 +423,54 @@ export default function OfficeManagementTab({ showToast }) {
                 />
               </div>
 
-              {/* Icon Class */}
+              {/* Icon Picker */}
               <div>
-                <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider mb-1">
-                  Tabler Icon Class
-                </label>
-                <Input
-                  value={form.icon}
-                  onChange={(e) => setForm(prev => ({ ...prev, icon: e.target.value }))}
-                  placeholder="e.g. ti ti-building, ti ti-users"
-                  className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
-                />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">
+                    Office Icon
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowCustomIcon(v => !v)}
+                    className="text-[10px] font-semibold text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200 cursor-pointer"
+                  >
+                    {showCustomIcon ? "Use picker" : "Custom class"}
+                  </button>
+                </div>
+
+                {!showCustomIcon ? (
+                  <div className="grid grid-cols-8 gap-1.5 p-2 rounded-xl border border-gray-200 bg-white dark:bg-zinc-950 dark:border-white/10">
+                    {PRESET_ICONS.map((opt) => {
+                      const selected = form.icon === opt.value
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          title={opt.label}
+                          onClick={() => setForm(prev => ({ ...prev, icon: opt.value }))}
+                          className={cn(
+                            "h-8 w-8 flex items-center justify-center rounded-lg border text-base transition-all cursor-pointer",
+                            selected
+                              ? "border-slate-900 bg-slate-900 text-white dark:border-zinc-100 dark:bg-zinc-100 dark:text-zinc-900"
+                              : "border-gray-200 text-gray-600 hover:border-gray-300 hover:bg-gray-50 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-white/5"
+                          )}
+                        >
+                          <i className={opt.value}></i>
+                        </button>
+                      )
+                    })}
+                  </div>
+                ) : (
+                  <Input
+                    value={form.icon}
+                    onChange={(e) => setForm(prev => ({ ...prev, icon: e.target.value }))}
+                    placeholder="e.g. ti ti-building, ph-bold ph-certificate"
+                    className="h-10 rounded-xl bg-white border border-gray-200 text-xs focus-visible:ring-pup-maroon dark:bg-zinc-950 dark:border-white/10 dark:text-white"
+                  />
+                )}
+                <span className="text-[10px] text-gray-400 mt-1 flex items-center gap-1.5">
+                  Selected: <i className={form.icon}></i> <span className="font-mono">{form.icon}</span>
+                </span>
               </div>
 
               {/* Accent Color */}
