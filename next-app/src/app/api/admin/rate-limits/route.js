@@ -18,7 +18,7 @@ async function verifyAdmin(req) {
 
   try {
     const payload = await verifySessionToken(token);
-    if (payload?.role !== 'Admin') {
+    if (payload?.role !== 'Admin' && payload?.role !== 'SuperAdmin') {
       return { valid: false, error: "Admin access required" };
     }
     return { valid: true, payload };

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { dbGet, dbRun, dbAll } from "@/lib/sqlite";
+import { sysDbGet, sysDbRun, sysDbAll } from "@/lib/sqlite";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { verifySessionToken } from "@/lib/jwt";
 import { hasAllSecurityAnswers } from "@/lib/staffRepo";
@@ -18,11 +18,11 @@ export async function GET(req) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const questions = await dbAll("SELECT id, question, is_required FROM security_questions ORDER BY id ASC");
+    const questions = await sysDbAll("SELECT id, question, is_required FROM security_questions ORDER BY id ASC");
     
     // Also fetch what they have answered so far, if any
     const uid = user.sub || user.id;
-    const answeredRows = await dbAll("SELECT question_id FROM staff_security_answers WHERE staff_id = ?", [uid]);
+    const answeredRows = await sysDbAll("SELECT question_id FROM staff_security_answers WHERE staff_id = ?", [uid]);
     const answeredSet = new Set((answeredRows || []).map(r => r.question_id));
     
     // Use the central logic to determine if the setup is complete
@@ -69,7 +69,7 @@ export async function PUT(req) {
       if (!ans.questionId) continue;
 
       // Verify the question exists
-      const qRow = await dbGet("SELECT id, is_required FROM security_questions WHERE id = ?", [ans.questionId]);
+      const qRow = await sysDbGet("SELECT id, is_required FROM security_questions WHERE id = ?", [ans.questionId]);
       if (!qRow) continue;
 
       const answerRaw = String(ans.answer || "").trim();
@@ -79,7 +79,7 @@ export async function PUT(req) {
         if (qRow.is_required) continue;
 
         // Otherwise, delete the answer if it exists
-        await dbRun("DELETE FROM staff_security_answers WHERE staff_id = ? AND question_id = ?", [uid, qRow.id]);
+        await sysDbRun("DELETE FROM staff_security_answers WHERE staff_id = ? AND question_id = ?", [uid, qRow.id]);
         continue;
       }
 
@@ -87,7 +87,7 @@ export async function PUT(req) {
       const answerHash = crypto.createHash("sha256").update(answerNormalized).digest("hex");
 
       // Use INSERT OR REPLACE since PRIMARY KEY is (staff_id, question_id)
-      await dbRun(`
+      await sysDbRun(`
         INSERT OR REPLACE INTO staff_security_answers (staff_id, question_id, answer_hash, updated_at)
         VALUES (?, ?, ?, datetime('now'))
       `, [uid, qRow.id, answerHash]);

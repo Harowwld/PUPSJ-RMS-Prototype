@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { dbGet, dbRun } from "@/lib/sqlite";
+import { sysDbGet, sysDbRun } from "@/lib/sqlite";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { checkAuthForgotPasswordRateLimit, resetAuthForgotPasswordRateLimit } from "@/lib/rateLimiter";
 import crypto from "node:crypto";
@@ -48,7 +48,7 @@ export async function POST(req) {
         return NextResponse.json({ ok: false, error: "Password must be at least 8 characters long." }, { status: 400 });
     }
 
-    const staff = await dbGet(
+    const staff = await sysDbGet(
       "SELECT id, fname, lname, role FROM staff WHERE id = ?",
       [id]
     );
@@ -57,7 +57,7 @@ export async function POST(req) {
       return NextResponse.json({ ok: false, error: "Invalid request" }, { status: 400 });
     }
 
-    const resAnswer = await dbGet(`
+    const resAnswer = await sysDbGet(`
       SELECT answer_hash 
       FROM staff_security_answers
       WHERE staff_id = ? AND question_id = ?
@@ -76,7 +76,7 @@ export async function POST(req) {
 
     const newPasswordHash = crypto.createHash("sha256").update(newPassword).digest("hex");
 
-    await dbRun("UPDATE staff SET password_hash = ?, updated_at = (datetime('now')), password_last_changed = (datetime('now')) WHERE id = ?", [
+    await sysDbRun("UPDATE staff SET password_hash = ?, updated_at = (datetime('now')), password_last_changed = (datetime('now')) WHERE id = ?", [
       newPasswordHash, staff.id
     ]);
 

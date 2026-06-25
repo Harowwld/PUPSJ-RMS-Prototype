@@ -4,7 +4,9 @@ import { buildDefaultStorageLayout } from "./storageLayoutDefaults";
 import { createStudent } from "./studentsRepo";
 import { createStaff } from "./staffRepo";
 import { createDocument } from "./documentsRepo";
+import { officeLocalStorage } from "./officeDb";
 
+// Touch to force recompile of imports
 const MINIMAL_PDF = Buffer.from(
   [
     "%PDF-1.4",
@@ -31,7 +33,109 @@ function normDocTypeName(name) {
     .replace(/\s+/g, " ");
 }
 
+/**
+ * Helper to run seeding logic in a specific office database context.
+ */
+async function runInOfficeContext(officeId, fn) {
+  return officeLocalStorage.run({ officeId }, fn);
+}
+
+/**
+ * Main seeding function that seeds global data, then Registrar, then OSAS data.
+ */
 export async function populateSampleData({ force = false } = {}) {
+  // 1. Seed Global Staff Accounts in system.sqlite
+  console.log("[seedRepo] Seeding global staff accounts...");
+  
+  try {
+    await createStaff({
+      id: "PUPREGISTRAR-002",
+      officeId: "registrar",
+      fname: "Marcus",
+      lname: "Reyes",
+      role: "Staff",
+      section: "Records",
+      status: "Active",
+      email: "records.marcus@pup.local",
+      password: "pupstaff",
+    });
+  } catch (e) {
+    console.warn("[seedRepo] Skipped Marcus Reyes (may already exist):", e?.message || e);
+  }
+
+  try {
+    await createStaff({
+      id: "PUPREGISTRAR-003",
+      officeId: "registrar",
+      fname: "Elias",
+      lname: "Austria",
+      role: "Admin",
+      section: "Administrative",
+      status: "Active",
+      email: "admin.registrar@pup.local",
+      password: "pupstaff",
+    });
+  } catch (e) {
+    console.warn("[seedRepo] Skipped Elias Austria (Registrar Admin) (may already exist):", e?.message || e);
+  }
+
+  try {
+    await createStaff({
+      id: "PUPOSAS-001",
+      officeId: "osas",
+      fname: "Sandra",
+      lname: "Gomez",
+      role: "Admin",
+      section: "OSAS Admin",
+      status: "Active",
+      email: "admin.osas@pup.local",
+      password: "pupstaff",
+    });
+  } catch (e) {
+    console.warn("[seedRepo] Skipped Sandra Gomez (OSAS Admin) (may already exist):", e?.message || e);
+  }
+
+  try {
+    await createStaff({
+      id: "PUPOSAS-002",
+      officeId: "osas",
+      fname: "Juanito",
+      lname: "Rizal",
+      role: "Staff",
+      section: "Student Affairs",
+      status: "Active",
+      email: "staff.osas@pup.local",
+      password: "pupstaff",
+    });
+  } catch (e) {
+    console.warn("[seedRepo] Skipped Juanito Rizal (OSAS Staff) (may already exist):", e?.message || e);
+  }
+
+  // 2. Seed Registrar specific data (registrar/db.sqlite)
+  console.log("[seedRepo] Seeding Registrar office database...");
+  await runInOfficeContext("registrar", async () => {
+    await seedRegistrarOfficeData({ force });
+  });
+
+  // 3. Seed OSAS specific data (osas/db.sqlite)
+  console.log("[seedRepo] Seeding OSAS office database...");
+  await runInOfficeContext("osas", async () => {
+    await seedOsasOfficeData({ force });
+  });
+
+  return {
+    ok: true,
+    summary: {
+      registrarSeeded: true,
+      osasSeeded: true,
+    }
+  };
+}
+
+/**
+ * Seeds Registrar-specific tables
+ */
+async function seedRegistrarOfficeData({ force = false }) {
   const db = await getDb();
   
   // Check if students already exist
@@ -39,13 +143,8 @@ export async function populateSampleData({ force = false } = {}) {
   const studentCount = studentCountRow?.count || 0;
   
   if (studentCount > 0 && !force) {
-    throw new Error(`${studentCount} student(s) already in the database. Use force=true to override.`);
-  }
-
-  // Ensure bootstrap admin exists (or skip if we're just seeding data)
-  const bootstrapAdmin = await dbGet("SELECT id FROM staff WHERE email = ?", ["admin.default@pup.local"]);
-  if (!bootstrapAdmin) {
-    console.warn("[seedRepo] No default admin found. Seeding may be incomplete if staff relationships are required.");
+    console.log("[seedRepo] Registrar already has students. Skipping...");
+    return;
   }
 
   // 1. Storage Layout
@@ -89,23 +188,7 @@ export async function populateSampleData({ force = false } = {}) {
     ]);
   }
 
-  // 5. Sample Staff
-  try {
-    await createStaff({
-      id: "PUPREGISTRAR-002",
-      fname: "Marcus",
-      lname: "Reyes",
-      role: "Staff",
-      section: "Records",
-      status: "Active",
-      email: "records.marcus@pup.local",
-      password: "pupstaff",
-    });
-  } catch (e) {
-    console.warn("[seedRepo] Skipped sample staff (may already exist):", e?.message || e);
-  }
-
-  // 6. Students
+  // 5. Students
   const students = [
     {
       studentNo: "2022-10001-MN-1",
@@ -170,14 +253,13 @@ export async function populateSampleData({ force = false } = {}) {
   ];
 
   for (const s of students) {
-    // Check if student exists before creating to avoid unique constraint error
     const existing = await dbGet("SELECT student_no FROM students WHERE student_no = ?", [s.studentNo]);
     if (!existing) {
       await createStudent(s);
     }
   }
 
-  // 7. Sample Documents
+  // 6. Sample Documents
   const docRows = [
     {
       studentNo: "2022-10001-MN-1",
@@ -206,7 +288,6 @@ export async function populateSampleData({ force = false } = {}) {
   ];
 
   for (const d of docRows) {
-    // Check if document already exists to avoid duplicates
     const existing = await dbGet(
       "SELECT id FROM documents WHERE student_no = ? AND doc_type = ? AND original_filename = ?",
       [d.studentNo, d.docType, d.originalFilename]
@@ -224,7 +305,7 @@ export async function populateSampleData({ force = false } = {}) {
     }
   }
 
-  // 8. Document Requests
+  // 7. Document Requests
   await dbRun(
     `INSERT INTO document_requests (
       student_no, doc_type, status, notes, created_by, updated_by
@@ -253,7 +334,6 @@ export async function populateSampleData({ force = false } = {}) {
     ],
   );
 
-  // Ready - 85 days old (5 days left)
   const date85DaysAgo = new Date();
   date85DaysAgo.setDate(date85DaysAgo.getDate() - 85);
   const date85Str = date85DaysAgo.toISOString().replace('T', ' ').substring(0, 19);
@@ -274,7 +354,6 @@ export async function populateSampleData({ force = false } = {}) {
     ],
   );
 
-  // Ready - 95 days old (Expired / Scheduled for Shredding)
   const date95DaysAgo = new Date();
   date95DaysAgo.setDate(date95DaysAgo.getDate() - 95);
   const date95Str = date95DaysAgo.toISOString().replace('T', ' ').substring(0, 19);
@@ -295,7 +374,6 @@ export async function populateSampleData({ force = false } = {}) {
     ],
   );
 
-  // Ready - 2 days old (Plenty of time)
   const date2DaysAgo = new Date();
   date2DaysAgo.setDate(date2DaysAgo.getDate() - 2);
   const date2Str = date2DaysAgo.toISOString().replace('T', ' ').substring(0, 19);
@@ -316,18 +394,151 @@ export async function populateSampleData({ force = false } = {}) {
     ],
   );
 
-  // 9. Audit Logs
+  // 8. Audit Logs
   await dbRun(
     `INSERT INTO audit_logs (actor, role, action, ip) VALUES (?, ?, ?, ?)`,
-    ["System Administrator", "Admin", "Sample data populated (API)", "127.0.0.1"],
+    ["System Administrator", "Admin", "Registrar sample data populated", "127.0.0.1"],
   );
+}
 
-  return {
-    ok: true,
-    summary: {
-      students: students.length,
-      documents: docRows.length,
-      requests: 2
+/**
+ * Seeds OSAS-specific tables
+ */
+async function seedOsasOfficeData({ force = false }) {
+  const db = await getDb();
+
+  // Check if students already exist
+  const studentCountRow = await dbGet("SELECT COUNT(*) AS count FROM students");
+  const studentCount = studentCountRow?.count || 0;
+  
+  if (studentCount > 0 && !force) {
+    console.log("[seedRepo] OSAS already has students. Skipping...");
+    return;
+  }
+
+  // 1. Courses
+  const courses = [
+    ["BSIT", "Bachelor of Science in Information Technology"],
+    ["BSCS", "Bachelor of Science in Computer Science"],
+    ["BSA", "Bachelor of Science in Accountancy"],
+  ];
+  for (const [code, name] of courses) {
+    await dbRun("INSERT OR IGNORE INTO courses (code, name) VALUES (?, ?)", [code, name]);
+  }
+
+  // 2. Sections
+  const sections = [
+    ["BSIT-4A", "BSIT"],
+    ["BSIT-4B", "BSIT"],
+    ["BSCS-3A", "BSCS"],
+    ["BSA-2A", "BSA"],
+  ];
+  for (const [name, courseCode] of sections) {
+    await dbRun("INSERT OR IGNORE INTO sections (name, course_code) VALUES (?, ?)", [
+      name,
+      courseCode,
+    ]);
+  }
+
+  // 3. Document Types (OSAS specific)
+  const docTypes = [
+    "Good Moral Certificate",
+    "Clearance Form",
+    "Organization Registration Certificate",
+    "Activity Permit",
+  ];
+  for (const name of docTypes) {
+    await dbRun("INSERT OR IGNORE INTO document_types (name, name_norm) VALUES (?, ?)", [
+      name,
+      normDocTypeName(name),
+    ]);
+  }
+
+  // 4. Students (OSAS-specific simplified schema, room/cabinet/drawer not filled in)
+  const students = [
+    {
+      studentNo: "2022-10001-MN-1",
+      name: "DELA CRUZ, JUAN A.",
+      courseCode: "BSIT",
+      yearLevel: 2024,
+      section: "BSIT-4A",
+    },
+    {
+      studentNo: "2022-10002-MN-2",
+      name: "SANTOS, MARIA B.",
+      courseCode: "BSIT",
+      yearLevel: 2024,
+      section: "BSIT-4A",
+    },
+    {
+      studentNo: "2023-20003-MN-0",
+      name: "REYES, CARLOS C.",
+      courseCode: "BSIT",
+      yearLevel: 2025,
+      section: "BSIT-4B",
+    },
+    {
+      studentNo: "2025-90001-MN-0",
+      name: "DE LA ROSA, ANGELA M.",
+      courseCode: "BSA",
+      yearLevel: 2026,
+      section: "BSA-2A",
     }
-  };
+  ];
+
+  for (const s of students) {
+    const existing = await dbGet("SELECT student_no FROM students WHERE student_no = ?", [s.studentNo]);
+    if (!existing) {
+      await dbRun(
+        "INSERT INTO students (student_no, name, course_code, year_level, section, status) VALUES (?, ?, ?, ?, ?, ?)",
+        [s.studentNo, s.name.toUpperCase(), s.courseCode, s.yearLevel, s.section, "Active"]
+      );
+    }
+  }
+
+  // 5. Sample Documents
+  const docRows = [
+    {
+      studentNo: "2022-10001-MN-1",
+      studentName: "DELA CRUZ, JUAN A.",
+      docType: "Good Moral Certificate",
+      originalFilename: "juan-good-moral.pdf",
+    },
+    {
+      studentNo: "2022-10002-MN-2",
+      studentName: "SANTOS, MARIA B.",
+      docType: "Clearance Form",
+      originalFilename: "maria-clearance.pdf",
+    },
+    {
+      studentNo: "2025-90001-MN-0",
+      studentName: "DE LA ROSA, ANGELA M.",
+      docType: "Organization Registration Certificate",
+      originalFilename: "angel-org-cert.pdf",
+    }
+  ];
+
+  for (const d of docRows) {
+    const existing = await dbGet(
+      "SELECT id FROM documents WHERE student_no = ? AND doc_type = ? AND original_filename = ?",
+      [d.studentNo, d.docType, d.originalFilename]
+    );
+    if (!existing) {
+      await createDocument({
+        studentNo: d.studentNo,
+        studentName: d.studentName,
+        docType: d.docType,
+        originalFilename: d.originalFilename,
+        mimeType: "application/pdf",
+        sizeBytes: MINIMAL_PDF.length,
+        buffer: MINIMAL_PDF,
+      });
+    }
+  }
+
+  // 6. Audit Logs
+  await dbRun(
+    `INSERT INTO audit_logs (actor, role, action, ip) VALUES (?, ?, ?, ?)`,
+    ["System Administrator", "Admin", "OSAS sample data populated", "127.0.0.1"],
+  );
 }

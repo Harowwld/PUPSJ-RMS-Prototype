@@ -21,7 +21,21 @@ export async function GET(req) {
   const limit = searchParams.get("limit") || "200";
   const offset = searchParams.get("offset") || "0";
 
+  // Resolve office filter context
+  let officeId = user.office_id; // default to user's own office
+  if (user.role === "SuperAdmin") {
+    const officeFilter = searchParams.get("officeId");
+    if (officeFilter === "global" || officeFilter === "null") {
+      officeId = null;
+    } else if (officeFilter && officeFilter !== "All") {
+      officeId = officeFilter;
+    } else {
+      officeId = undefined; // SuperAdmin sees all by default
+    }
+  }
+
   const rows = await listStaff({
+    officeId,
     q: q || undefined,
     role: role || undefined,
     status: status || undefined,
@@ -76,9 +90,16 @@ export async function POST(req) {
     );
   }
 
+  // Resolve officeId for new staff
+  let officeId = user.office_id; // Default: user's own office
+  if (user.role === "SuperAdmin") {
+    officeId = body.officeId || body.office_id || null;
+  }
+
   try {
     const row = await createStaff({
       id,
+      officeId,
       fname,
       lname,
       role,
@@ -89,7 +110,7 @@ export async function POST(req) {
       password,
     });
     await writeAuditLog(req, `Create Staff Account`, {
-      details: `provisioned new personnel account for '${fname} ${lname}' (ID: ${id}, Role: ${role}, Section: ${section}) with default credentials`,
+      details: `provisioned new personnel account for '${fname} ${lname}' (ID: ${id}, Role: ${role}, Section: ${section}, Office: ${officeId || "Global"}) with default credentials`,
       entity_type: "User",
       entity_id: id
     });

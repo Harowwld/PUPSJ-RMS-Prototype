@@ -1,4 +1,4 @@
-import { dbAll, dbRun, dbGet } from "./sqlite";
+import { dbAll, dbRun, dbGet, sysDbAll, sysDbGet, sysDbRun } from "./sqlite";
 
 /**
  * Creates a new audit log entry.
@@ -222,3 +222,104 @@ export async function getAuditLogStats(actor = "") {
   stats.trends = trends;
   return stats;
 }
+
+/**
+ * Creates a new global audit log entry.
+ */
+export async function createGlobalAuditLog(data) {
+  const actor = data.actor;
+  const role = data.role;
+  const officeId = data.officeId || data.office_id || null;
+  const action = data.action;
+  const details = data.details || "";
+  const severity = data.severity || "INFO";
+  const ip = data.ip || "localhost";
+
+  const sql = "INSERT INTO global_audit_logs (actor, role, office_id, action, details, severity, ip) VALUES (?, ?, ?, ?, ?, ?, ?)";
+  await sysDbRun(sql, [actor, role, officeId, action, details, severity, ip]);
+}
+
+/**
+ * List global audit logs with filtering and pagination.
+ */
+export async function listGlobalAuditLogs(options = {}) {
+  const limit = options.limit !== undefined ? options.limit : 50;
+  const offset = options.offset !== undefined ? options.offset : 0;
+  const search = options.search || "";
+  const officeId = options.officeId || options.office_id || "";
+  const severity = options.severity || "";
+
+  let query = "SELECT * FROM global_audit_logs";
+  let params = [];
+  let whereClauses = [];
+
+  if (officeId && officeId !== "All") {
+    if (officeId === "global") {
+      whereClauses.push("office_id IS NULL");
+    } else {
+      whereClauses.push("office_id = ?");
+      params.push(officeId);
+    }
+  }
+
+  if (severity && severity !== "All") {
+    whereClauses.push("severity = ?");
+    params.push(severity);
+  }
+
+  if (search) {
+    whereClauses.push("(actor LIKE ? OR action LIKE ? OR details LIKE ? OR ip LIKE ?)");
+    const term = "%" + search + "%";
+    params.push(term, term, term, term);
+  }
+
+  if (whereClauses.length > 0) {
+    query += " WHERE " + whereClauses.join(" AND ");
+  }
+
+  query += " ORDER BY datetime(created_at) DESC, id DESC LIMIT ? OFFSET ?";
+  params.push(limit, offset);
+
+  return await sysDbAll(query, params);
+}
+
+/**
+ * Count global audit logs matching criteria.
+ */
+export async function countGlobalAuditLogs(options = {}) {
+  const search = options.search || "";
+  const officeId = options.officeId || options.office_id || "";
+  const severity = options.severity || "";
+
+  let query = "SELECT COUNT(*) as count FROM global_audit_logs";
+  let params = [];
+  let whereClauses = [];
+
+  if (officeId && officeId !== "All") {
+    if (officeId === "global") {
+      whereClauses.push("office_id IS NULL");
+    } else {
+      whereClauses.push("office_id = ?");
+      params.push(officeId);
+    }
+  }
+
+  if (severity && severity !== "All") {
+    whereClauses.push("severity = ?");
+    params.push(severity);
+  }
+
+  if (search) {
+    whereClauses.push("(actor LIKE ? OR action LIKE ? OR details LIKE ? OR ip LIKE ?)");
+    const term = "%" + search + "%";
+    params.push(term, term, term, term);
+  }
+
+  if (whereClauses.length > 0) {
+    query += " WHERE " + whereClauses.join(" AND ");
+  }
+
+  const row = await sysDbGet(query, params);
+  return row ? (row.count || 0) : 0;
+}
+

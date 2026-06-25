@@ -22,7 +22,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import AccountSetupModal from "@/components/shared/AccountSetupModal";
-import { isAdminRole, getRoleLabel } from "@/lib/roleUtils";
+import { isAdminRole, getRoleLabel, isSuperAdminRole, hasAdminPrivileges } from "@/lib/roleUtils";
 import { cn } from "@/lib/utils";
 
 export default function Header({ authUser, onLogout, children }) {
@@ -37,43 +37,49 @@ export default function Header({ authUser, onLogout, children }) {
     setImageError(false);
   }, [authUser?.avatar_filename]);
 
+  const isSuperAdmin = isSuperAdminRole(authUser?.role);
+  const isAdmin = isAdminRole(authUser?.role);
+  const hasAdminRights = hasAdminPrivileges(authUser?.role);
+
   useEffect(() => {
-    // Only admins have a choice of view
-    if (isAdminRole(authUser?.role)) {
+    // Only admins/superadmins have a choice of view
+    if (hasAdminRights) {
       const stored = localStorage.getItem("pup_admin_view_pref");
-      const target = stored || (pathname?.startsWith("/admin") ? "admin" : "staff");
+      const defaultView = isSuperAdmin ? "superadmin" : (isAdmin ? "admin" : "staff");
+      const target = stored || (pathname?.startsWith("/superadmin") ? "superadmin" : (pathname?.startsWith("/admin") ? "admin" : "staff"));
       const timer = setTimeout(() => {
         setPreferredView(target);
       }, 0);
       return () => clearTimeout(timer);
     }
-  }, [authUser?.role, pathname]);
+  }, [authUser?.role, pathname, hasAdminRights, isSuperAdmin, isAdmin]);
 
   const initials = authUser?.fname && authUser?.lname
     ? (authUser.fname[0] + authUser.lname[0]).toUpperCase()
     : "AD";
 
-  // If we're on /admin or /staff, that IS our current view.
+  // If we're on /superadmin, /admin, or /staff, that IS our current view.
   // If we're on /account, we use the preferredView state.
-  const activeView = (pathname?.startsWith("/admin"))
-    ? "admin"
-    : (pathname?.startsWith("/staff"))
-      ? "staff"
-      : (preferredView || (isAdminRole(authUser?.role) ? "admin" : "staff"));
+  const activeView = (pathname?.startsWith("/superadmin"))
+    ? "superadmin"
+    : (pathname?.startsWith("/admin"))
+      ? "admin"
+      : (pathname?.startsWith("/staff"))
+        ? "staff"
+        : (preferredView || (isSuperAdmin ? "superadmin" : (isAdmin ? "admin" : "staff")));
 
   const isAdminView = activeView === "admin";
-  const hasAdminRights = isAdminRole(authUser?.role);
 
   const handleViewSwitch = (viewKey) => {
-    if (hasAdminRights) {
-      localStorage.setItem("pup_admin_view_pref", viewKey);
-      setPreferredView(viewKey);
-    }
-    router.push(viewKey === "admin" ? "/admin" : "/staff");
+    localStorage.setItem("pup_admin_view_pref", viewKey);
+    setPreferredView(viewKey);
+    router.push(viewKey === "superadmin" ? "/superadmin" : (viewKey === "admin" ? "/admin" : "/staff"));
   };
 
   const handleMainDashboardClick = () => {
-    if (hasAdminRights) {
+    if (isSuperAdmin) {
+      router.push(activeView === "superadmin" ? "/superadmin" : (activeView === "admin" ? "/admin" : "/staff"));
+    } else if (hasAdminRights) {
       router.push(activeView === "admin" ? "/admin" : "/staff");
     } else {
       router.push("/staff");
@@ -119,7 +125,11 @@ export default function Header({ authUser, onLogout, children }) {
             onClick={handleMainDashboardClick}
             onDoubleClick={(e) => e.preventDefault()}
           >
-            <img src={(pathname?.startsWith("/account") ? hasAdminRights : isAdminView) ? "/admin-logo.png" : "/staff-logo.png"} alt="eManage Logo" className="h-8 w-8 object-contain" />
+            <img 
+              src={(activeView === "superadmin" || activeView === "admin") ? "/admin-logo.png" : "/staff-logo.png"} 
+              alt="eManage Logo" 
+              className="h-8 w-8 object-contain" 
+            />
             <div className="flex items-center">
               <span className="font-semibold text-[26px] text-black dark:text-white tracking-tight transition-colors group-hover/logo:text-gray-850 dark:group-hover/logo:text-zinc-200 leading-none">
                 eManage
@@ -128,9 +138,16 @@ export default function Header({ authUser, onLogout, children }) {
           </div>
           <span 
             className="text-[26px] font-medium select-none leading-none tracking-tight transition-colors duration-300" 
-            style={{ color: (authUser?.role || "Staff").toLowerCase() === "admin" ? "#e30000" : "#edbb00" }}
+            style={{ 
+              color: 
+                String(authUser?.role || "").toLowerCase() === "superadmin" 
+                  ? "#0f172a" 
+                  : String(authUser?.role || "").toLowerCase() === "admin" 
+                    ? "#e30000" 
+                    : "#edbb00" 
+            }}
           >
-            {authUser?.role || "Staff"}
+            {getRoleLabel(authUser?.role)}
           </span>
         </div>
 
@@ -197,18 +214,49 @@ export default function Header({ authUser, onLogout, children }) {
                     <span>My Activity</span>
                   </DropdownMenuItem>
  
-                  {hasAdminRights && (
+                  {isSuperAdmin && (
+                    <>
+                      {activeView !== "superadmin" && (
+                        <DropdownMenuItem
+                          onClick={() => handleViewSwitch("superadmin")}
+                          className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-zinc-100 transition-colors outline-none"
+                        >
+                          <i className="ti ti-shield text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: "#0f172a" }}></i>
+                          <span>Switch to SuperAdmin View</span>
+                        </DropdownMenuItem>
+                      )}
+                      {activeView !== "admin" && (
+                        <DropdownMenuItem
+                          onClick={() => handleViewSwitch("admin")}
+                          className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-zinc-100 transition-colors outline-none"
+                        >
+                          <i className="ti ti-shield-check text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: "#e30000" }}></i>
+                          <span>Switch to Admin View</span>
+                        </DropdownMenuItem>
+                      )}
+                      {activeView !== "staff" && (
+                        <DropdownMenuItem
+                          onClick={() => handleViewSwitch("staff")}
+                          className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-zinc-100 transition-colors outline-none"
+                        >
+                          <i className="ti ti-users text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none" style={{ color: "#edbb00" }}></i>
+                          <span>Switch to Staff View</span>
+                        </DropdownMenuItem>
+                      )}
+                    </>
+                  )}
+                  {!isSuperAdmin && hasAdminRights && (
                     <DropdownMenuItem
-                      onClick={() => handleViewSwitch(isAdminView ? "staff" : "admin")}
+                      onClick={() => handleViewSwitch(activeView === "admin" ? "staff" : "admin")}
                       className="cursor-pointer rounded-[8px] flex items-center gap-3 font-normal text-[15px] py-2.5 px-3 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-900 dark:text-zinc-100 transition-colors outline-none"
                     >
                       <i className={cn(
                         "text-[19px] shrink-0 flex items-center justify-center h-[19px] w-[19px] leading-none",
-                        isAdminView ? "ti ti-users" : "ti ti-shield-check"
+                        activeView === "admin" ? "ti ti-users" : "ti ti-shield-check"
                       )}
-                      style={{ color: isAdminView ? "#edbb00" : "#e30000" }}
+                      style={{ color: activeView === "admin" ? "#edbb00" : "#e30000" }}
                       ></i>
-                      <span>{isAdminView ? "Switch to Staff View" : "Switch to Admin View"}</span>
+                      <span>{activeView === "admin" ? "Switch to Staff View" : "Switch to Admin View"}</span>
                     </DropdownMenuItem>
                   )}
                </DropdownMenuGroup>

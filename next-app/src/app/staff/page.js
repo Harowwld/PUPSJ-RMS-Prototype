@@ -138,6 +138,54 @@ function StaffPageContent() {
 
   const [notificationsUnread, setNotificationsUnread] = useState(0);
 
+  const sidebarItems = useMemo(() => {
+    if (!authUser?.enabled_modules) return []
+    const enabled = new Set(authUser.enabled_modules)
+    
+    const MODULE_KEY_MAP = {
+      requests: "alumni_requests",
+      upload: "scan_upload",
+      documents: "documents",
+      notifications: "notifications",
+      search: "records_archive",
+      storage: "storage_explorer",
+    }
+
+    const groups = [
+      {
+        type: "group",
+        label: "Operations",
+        children: [
+          { key: "requests", label: "Alumni Requests", iconClass: "ph-bold ph-tray-arrow-up" },
+          { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
+          { key: "documents", label: "Documents", iconClass: "ph-bold ph-file-text" },
+          { key: "notifications", label: "Notifications", iconClass: "ph-bold ph-bell", badge: notificationsUnread },
+        ]
+      },
+      {
+        type: "group",
+        label: "Records Archive",
+        children: [
+          { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
+          { key: "storage", label: "Storage Explorer", iconClass: "ph-bold ph-folder-open" },
+        ]
+      }
+    ]
+
+    const result = []
+    for (const group of groups) {
+      const activeChildren = group.children.filter(child => {
+        const requiredModule = MODULE_KEY_MAP[child.key]
+        return !requiredModule || enabled.has(requiredModule)
+      })
+      if (activeChildren.length > 0) {
+        result.push({ type: "header", label: group.label })
+        result.push(...activeChildren)
+      }
+    }
+    return result
+  }, [authUser?.enabled_modules, notificationsUnread])
+
   const [students, setStudents] = useState([]);
   const [archivedStudents, setArchivedStudents] = useState([]);
   const [docTypes, setDocTypes] = useState([]);
@@ -935,6 +983,26 @@ function StaffPageContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [rotation, uploadedFile]);
 
+  useEffect(() => {
+    if (!authUser) return
+    const enabled = new Set(authUser.enabled_modules || [])
+    const MODULE_KEY_MAP = {
+      requests: "alumni_requests",
+      upload: "scan_upload",
+      documents: "documents",
+      notifications: "notifications",
+      search: "records_archive",
+      storage: "storage_explorer",
+    }
+    const requiredModule = MODULE_KEY_MAP[view]
+    if (requiredModule && !enabled.has(requiredModule)) {
+      const firstEnabled = sidebarItems.find(item => item.key)
+      if (firstEnabled) {
+        switchView(firstEnabled.key)
+      }
+    }
+  }, [authUser, view, sidebarItems, switchView])
+
   const checkDuplicate = useCallback((studentNo, docType) => {
     if (!studentNo || !docType) return;
     const cleanNo = String(studentNo).trim().toUpperCase();
@@ -1335,17 +1403,7 @@ function StaffPageContent() {
     }
   };
 
-  const sidebarItems = [
-    { type: "header", label: "Operations" },
-    { key: "requests", label: "Alumni Requests", iconClass: "ph-bold ph-tray-arrow-up" },
-    { key: "upload", label: "Scan & Upload", iconClass: "ph-bold ph-scan" },
-    { key: "documents", label: "Documents", iconClass: "ph-bold ph-file-text" },
-    { key: "notifications", label: "Notifications", iconClass: "ph-bold ph-bell", badge: notificationsUnread },
 
-    { type: "header", label: "Records Archive" },
-    { key: "search", label: "Records & Archive", iconClass: "ph-bold ph-archive-box" },
-    { key: "storage", label: "Storage Explorer", iconClass: "ph-bold ph-folder-open" },
-  ];
 
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
@@ -1503,6 +1561,8 @@ function StaffPageContent() {
             zoomNode={zoomNode}
             setZoomNode={setZoomNode}
             handleZoomMouseDown={handleZoomMouseDown}
+            accentColor={authUser?.accent_color}
+            officeName={authUser?.office_name}
           />
         )}
         <main className="flex-1 relative w-full min-w-0 min-h-0 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">

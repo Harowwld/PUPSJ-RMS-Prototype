@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { getStaffById, hasAllSecurityAnswers } from "../../../../lib/staffRepo";
+import { getOfficeById } from "../../../../lib/officesRepo";
+import { getOfficeModules } from "../../../../lib/modulesRepo";
 
 export const runtime = "nodejs";
 
@@ -32,6 +34,27 @@ export async function GET(req) {
     const currentStatus = staff?.status || "Inactive";
     const hasSecurity = userId ? await hasAllSecurityAnswers(userId) : true;
 
+    // Multi-office context resolution
+    let officeName = null;
+    let accentColor = "#800000"; // default maroon
+    let enabledModules = [];
+
+    if (staff && staff.office_id) {
+      const office = await getOfficeById(staff.office_id);
+      if (office) {
+        officeName = office.name;
+        accentColor = office.accent_color || "#800000";
+        const modules = await getOfficeModules(staff.office_id);
+        enabledModules = (modules || []).map(m => m.id);
+      }
+    } else if (currentRole === "SuperAdmin") {
+      officeName = "Super Administration";
+      accentColor = "#1e293b"; // Dark slate for platform level
+      // SuperAdmin has access to everything
+      const allModules = await getOfficeModules("registrar");
+      enabledModules = (allModules || []).map(m => m.id);
+    }
+
     const defaultPreferences = {
       theme: "light",
       navigation_layout: "sidebar",
@@ -55,6 +78,10 @@ export async function GET(req) {
         id: userId,
         role: currentRole,
         status: currentStatus,
+        office_id: staff?.office_id || null,
+        office_name: officeName,
+        accent_color: accentColor,
+        enabled_modules: enabledModules,
         username: payload.username || null,
         fname: staff?.fname || "",
         lname: staff?.lname || "",

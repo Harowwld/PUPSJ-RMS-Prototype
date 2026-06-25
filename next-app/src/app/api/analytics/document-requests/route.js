@@ -12,7 +12,7 @@ export async function GET(req) {
     }
     
     const user = await verifySessionToken(token);
-    if (!user || user.role !== "Admin") {
+    if (!user || (user.role !== "Admin" && user.role !== "SuperAdmin")) {
       return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
     }
 

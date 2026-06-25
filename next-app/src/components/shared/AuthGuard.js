@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Skeleton } from "@/components/ui/skeleton"
-import { isAdminRole, isStaffRole } from "@/lib/roleUtils"
+import { isAdminRole, isStaffRole, isSuperAdminRole } from "@/lib/roleUtils"
 
 function applyAccessibility(highContrast) {
   if (typeof window === "undefined") return;
@@ -89,11 +89,14 @@ export function AuthGuard({ allowedRoles = [], children, redirectTo = "/" }) {
           const userRole = String(user.role || "").toLowerCase()
           
           let hasRequiredRole = false
-          if (allowedRoles.includes("Admin")) {
-            if (isAdminRole(userRole)) hasRequiredRole = true
+          if (allowedRoles.includes("SuperAdmin")) {
+            if (isSuperAdminRole(userRole)) hasRequiredRole = true
+          }
+          if (!hasRequiredRole && allowedRoles.includes("Admin")) {
+            if (isAdminRole(userRole) || isSuperAdminRole(userRole)) hasRequiredRole = true
           }
           if (!hasRequiredRole && allowedRoles.includes("Staff")) {
-            if (isStaffRole(userRole)) hasRequiredRole = true
+            if (isStaffRole(userRole) || isSuperAdminRole(userRole)) hasRequiredRole = true
           }
           
           // Fallback to strict array comparison if not explicitly handled
@@ -170,6 +173,13 @@ export function AuthGuard({ allowedRoles = [], children, redirectTo = "/" }) {
 
   // Render children if authorized, otherwise render nothing (redirect will happen)
   return isAuthorized ? children : null
+}
+
+/**
+ * Specific guard for superadmin-only routes
+ */
+export function SuperAdminGuard({ children }) {
+  return <AuthGuard allowedRoles={["SuperAdmin"]}>{children}</AuthGuard>
 }
 
 /**

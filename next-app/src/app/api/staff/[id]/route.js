@@ -30,7 +30,6 @@ async function getStaffDisplayNameById(id) {
   }
 }
 
-
 export async function PATCH(req, ctx) {
   const params = await ctx.params;
   const raw = params.id;
@@ -42,6 +41,20 @@ export async function PATCH(req, ctx) {
     );
   }
 
+  const currentUserId = await getCurrentUserId();
+  if (!currentUserId) {
+    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  }
+
+  const targetStaff = await getStaffById(id);
+  if (!targetStaff) {
+    return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+  }
+
+  const currentUser = await getStaffById(currentUserId);
+  const isSuper = currentUser?.role === "SuperAdmin";
+  const isAdmin = currentUser?.role === "Admin";
+
   const body = await req.json().catch(() => null);
   if (!body || typeof body !== "object") {
     return NextResponse.json(
@@ -50,9 +63,21 @@ export async function PATCH(req, ctx) {
     );
   }
 
+  // Permission Check
+  if (currentUserId !== id) {
+    if (!isSuper && (!isAdmin || currentUser?.office_id !== targetStaff.office_id)) {
+      return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
+    }
+  } else {
+    // If self-update, do not allow changing role, office_id, or status
+    if (body.role !== undefined || body.officeId !== undefined || body.office_id !== undefined || body.status !== undefined) {
+      return NextResponse.json({ ok: false, error: "You cannot change your own role, office, or status." }, { status: 403 });
+    }
+  }
+
   const name = await getStaffDisplayNameById(id);
 
-  // Handle explicit status toggle (archiving/restoring) - only if it's a dedicated status change request
+  // Handle explicit status toggle (archiving/restoring)
   const isStatusToggle = body.status !== undefined && Object.keys(body).length === 1;
   if (isStatusToggle) {
     if (body.status === "Active") {
@@ -82,16 +107,14 @@ export async function PATCH(req, ctx) {
     fname: body.fname === undefined ? undefined : String(body.fname).trim(),
     lname: body.lname === undefined ? undefined : String(body.lname).trim(),
     role: body.role === undefined ? undefined : String(body.role).trim(),
-    section:
-      body.section === undefined ? undefined : String(body.section).trim(),
+    officeId: body.officeId !== undefined ? body.officeId : (body.office_id !== undefined ? body.office_id : undefined),
+    section: body.section === undefined ? undefined : String(body.section).trim(),
     email: body.email === undefined ? undefined : String(body.email).trim(),
-    lastActive:
-      body.lastActive === undefined ? undefined : String(body.lastActive).trim(),
+    lastActive: body.lastActive === undefined ? undefined : String(body.lastActive).trim(),
   };
 
-  const needsTOTP = patch.role !== undefined;
+  const needsTOTP = patch.role !== undefined || patch.officeId !== undefined;
   if (needsTOTP) {
-    const currentUserId = await getCurrentUserId();
     const totpToken = extractTOTPToken(req.headers);
     const totpResult = await requireTOTP(currentUserId, totpToken);
     if (!totpResult.valid) {
@@ -103,8 +126,6 @@ export async function PATCH(req, ctx) {
   }
 
   try {
-    const currentUserId = await getCurrentUserId();
-    
     if (currentUserId === id && patch.role !== undefined) {
       const existing = await getStaffById(id);
       if (existing && existing.role !== patch.role) {
@@ -153,8 +174,24 @@ export async function DELETE(req, ctx) {
     );
   }
 
-  const name = await getStaffDisplayNameById(id);
   const currentUserId = await getCurrentUserId();
+  if (!currentUserId) {
+    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  }
+
+  const targetStaff = await getStaffById(id);
+  if (!targetStaff) {
+    return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+  }
+
+  const currentUser = await getStaffById(currentUserId);
+  const isSuper = currentUser?.role === "SuperAdmin";
+  const isAdmin = currentUser?.role === "Admin";
+
+  if (!isSuper && (!isAdmin || currentUser?.office_id !== targetStaff.office_id)) {
+    return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
+  }
+
   const totpToken = extractTOTPToken(req.headers);
   const totpResult = await requireTOTP(currentUserId, totpToken);
   if (!totpResult.valid) {
@@ -175,6 +212,7 @@ export async function DELETE(req, ctx) {
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
   }
+  const name = `${targetStaff.fname} ${targetStaff.lname}`;
   await writeAuditLog(req, `Archive Account`, { 
     details: `archived personnel profile for '${name}' (ID: ${id}) via administrative DELETE protocol`,
     severity: "WARNING",
@@ -196,9 +234,24 @@ export async function GET(_req, ctx) {
     );
   }
 
+  const currentUserId = await getCurrentUserId();
+  if (!currentUserId) {
+    return NextResponse.json({ ok: false, error: "Unauthorized" }, { status: 401 });
+  }
+
   const row = await getStaffById(id);
   if (!row) {
     return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+  }
+
+  // Permission Check
+  if (currentUserId !== id) {
+    const currentUser = await getStaffById(currentUserId);
+    const isSuper = currentUser?.role === "SuperAdmin";
+    const isAdmin = currentUser?.role === "Admin";
+    if (!isSuper && (!isAdmin || currentUser?.office_id !== row.office_id)) {
+      return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
+    }
   }
 
   return NextResponse.json({ ok: true, data: row });

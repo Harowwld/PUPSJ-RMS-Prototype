@@ -252,6 +252,97 @@ function AdminPageContent() {
 
   const [authUser, setAuthUser] = useState(null)
 
+  const sidebarItems = useMemo(() => {
+    if (!authUser?.enabled_modules) return []
+    const enabled = new Set(authUser.enabled_modules)
+    
+    const MODULE_KEY_MAP = {
+      review: "records_review",
+      digitization: "compliance_analytics",
+      request_analytics: "request_analytics",
+      directory: "staff_directory",
+      storage_layout: "storage_layout",
+      system_data: "system_config",
+      system: "backup",
+      logs: "audit_logs",
+    }
+
+    const groups = [
+      {
+        type: "group",
+        label: "Operations & Analytics",
+        children: [
+          {
+            key: "review",
+            label: "Records Review",
+            iconClass: "ph-bold ph-seal-check",
+            badge: pendingReviewCount,
+          },
+          {
+            key: "digitization",
+            label: "Compliance",
+            iconClass: "ph-bold ph-chart-bar",
+          },
+          {
+            key: "request_analytics",
+            label: "Requests",
+            iconClass: "ph-bold ph-trend-up",
+          },
+        ]
+      },
+      {
+        type: "group",
+        label: "User Management",
+        children: [
+          {
+            key: "directory",
+            label: "Directory",
+            iconClass: "ph-bold ph-users",
+          },
+        ]
+      },
+      {
+        type: "group",
+        label: "System Configuration",
+        children: [
+          {
+            key: "storage_layout",
+            label: "Storage",
+            iconClass: "ph-bold ph-warehouse",
+          },
+          {
+            key: "system_data",
+            label: "Data",
+            iconClass: "ph-bold ph-gear",
+          },
+          {
+            key: "system",
+            label: "Backup",
+            iconClass: "ph-bold ph-database-backup",
+          },
+          {
+            key: "logs",
+            label: "Audit Log",
+            iconClass: "ti ti-history",
+          },
+        ]
+      }
+    ]
+
+    const result = []
+    for (const group of groups) {
+      const activeChildren = group.children.filter(child => {
+        const requiredModule = MODULE_KEY_MAP[child.key]
+        return !requiredModule || enabled.has(requiredModule)
+      })
+      if (activeChildren.length > 0) {
+        result.push({ type: "header", label: group.label })
+        result.push(...activeChildren)
+      }
+    }
+    return result
+  }, [authUser?.enabled_modules, pendingReviewCount])
+
   const [defaultPwOpen, setDefaultPwOpen] = useState(false)
   const [defaultPwUserLabel, setDefaultPwUserLabel] = useState("")
   const [defaultReturnedPw, setDefaultReturnedPw] = useState("")
@@ -540,6 +631,67 @@ function AdminPageContent() {
     }
   }, [reviewStatusFilter, showToast, fetchPendingReviewCount])
 
+  const performSwitchView = useCallback(
+    (nextView) => {
+      if (nextView === "storage_layout") {
+        setIsStorageDirty(false)
+      }
+      setView(nextView)
+      // Update URL without a full refresh
+      const params = new URLSearchParams(window.location.search)
+      params.set("view", nextView)
+      router.replace(`${window.location.pathname}?${params.toString()}`, {
+        scroll: false,
+      })
+
+      if (nextView === "directory" && !loadedViewsRef.current.directory) {
+        setTimeout(() => {
+          refreshStaff()
+        }, 0)
+      }
+      if (nextView === "logs" && !loadedViewsRef.current.logs) {
+        setTimeout(() => {
+          refreshAuditLogs()
+        }, 0)
+      }
+      if (
+        (nextView === "system" || nextView === "backup") &&
+        !loadedViewsRef.current.system
+      ) {
+        setTimeout(() => {
+          refreshBackups()
+        }, 0)
+      }
+      if (nextView === "review" && !loadedViewsRef.current.review) {
+        setTimeout(() => {
+          refreshReviewRecords()
+        }, 0)
+      }
+    },
+    [refreshAuditLogs, refreshBackups, refreshStaff, refreshReviewRecords, router]
+  )
+
+  const switchView = useCallback(
+    (nextView) => {
+      if (isStorageDirty && view === "storage_layout") {
+        setPendingView(nextView)
+        setDiscardConfirmOpen(true)
+        return
+      }
+      performSwitchView(nextView)
+    },
+    [isStorageDirty, view, performSwitchView]
+  )
+
+  const confirmDiscardChanges = useCallback(() => {
+    setIsStorageDirty(false)
+    setDiscardConfirmOpen(false)
+    if (pendingView) {
+      performSwitchView(pendingView)
+      setPendingView(null)
+    }
+  }, [pendingView, performSwitchView])
+
   const logAdminAction = useCallback(
     async (input, detailsInput = "") => {
       // Support legacy (action, details) and new { action, details, severity, ... } patterns
@@ -628,6 +780,28 @@ function AdminPageContent() {
       }
     })()
   }, [router, refreshStaff, refreshAuditLogs, refreshSystemHealth, fetchPendingReviewCount])
+
+  useEffect(() => {
+    if (!authUser) return
+    const enabled = new Set(authUser.enabled_modules || [])
+    const MODULE_KEY_MAP = {
+      review: "records_review",
+      digitization: "compliance_analytics",
+      request_analytics: "request_analytics",
+      directory: "staff_directory",
+      storage_layout: "storage_layout",
+      system_data: "system_config",
+      system: "backup",
+      logs: "audit_logs",
+    }
+    const requiredModule = MODULE_KEY_MAP[view]
+    if (requiredModule && !enabled.has(requiredModule)) {
+      const firstEnabled = sidebarItems.find(item => item.key)
+      if (firstEnabled) {
+        performSwitchView(firstEnabled.key)
+      }
+    }
+  }, [authUser, view, sidebarItems, performSwitchView])
 
   useEffect(() => {
     const timer = setInterval(refreshSystemHealth, 10000)
@@ -744,66 +918,7 @@ function AdminPageContent() {
     }
   }, [view, refreshReviewRecords])
 
-  const performSwitchView = useCallback(
-    (nextView) => {
-      if (nextView === "storage_layout") {
-        setIsStorageDirty(false)
-      }
-      setView(nextView)
-      // Update URL without a full refresh
-      const params = new URLSearchParams(window.location.search)
-      params.set("view", nextView)
-      router.replace(`${window.location.pathname}?${params.toString()}`, {
-        scroll: false,
-      })
 
-      if (nextView === "directory" && !loadedViewsRef.current.directory) {
-        setTimeout(() => {
-          refreshStaff()
-        }, 0)
-      }
-      if (nextView === "logs" && !loadedViewsRef.current.logs) {
-        setTimeout(() => {
-          refreshAuditLogs()
-        }, 0)
-      }
-      if (
-        (nextView === "system" || nextView === "backup") &&
-        !loadedViewsRef.current.system
-      ) {
-        setTimeout(() => {
-          refreshBackups()
-        }, 0)
-      }
-      if (nextView === "review" && !loadedViewsRef.current.review) {
-        setTimeout(() => {
-          refreshReviewRecords()
-        }, 0)
-      }
-    },
-    [refreshAuditLogs, refreshBackups, refreshStaff, refreshReviewRecords, router]
-  )
-
-  const switchView = useCallback(
-    (nextView) => {
-      if (isStorageDirty && view === "storage_layout") {
-        setPendingView(nextView)
-        setDiscardConfirmOpen(true)
-        return
-      }
-      performSwitchView(nextView)
-    },
-    [isStorageDirty, view, performSwitchView]
-  )
-
-  const confirmDiscardChanges = useCallback(() => {
-    setIsStorageDirty(false)
-    setDiscardConfirmOpen(false)
-    if (pendingView) {
-      performSwitchView(pendingView)
-      setPendingView(null)
-    }
-  }, [pendingView, performSwitchView])
 
   const reviewDocumentStatus = useCallback(
     async (id, approvalStatus, reviewNote = "", suppressToast = false) => {
@@ -1520,42 +1635,7 @@ function AdminPageContent() {
     }
   }
 
-  const sidebarItems = [
-    { type: "header", label: "Operations & Analytics" },
-    {
-      key: "review",
-      label: "Records Review",
-      iconClass: "ph-bold ph-seal-check",
-      badge: pendingReviewCount,
-    },
-    {
-      key: "digitization",
-      label: "Compliance",
-      iconClass: "ph-bold ph-chart-bar",
-    },
-    {
-      key: "request_analytics",
-      label: "Requests",
-      iconClass: "ph-bold ph-trend-up",
-    },
 
-    { type: "header", label: "User Management" },
-    {
-      key: "directory",
-      label: "Directory",
-      iconClass: "ph-bold ph-users",
-    },
-
-    { type: "header", label: "System Configuration" },
-    {
-      key: "storage_layout",
-      label: "Storage",
-      iconClass: "ph-bold ph-warehouse",
-    },
-    { key: "system_data", label: "Data", iconClass: "ph-bold ph-gear" },
-    { key: "system", label: "Backup", iconClass: "ph-bold ph-database-backup" },
-    { key: "logs", label: "Audit Log", iconClass: "ti ti-history" },
-  ]
   const sidebarActiveKey = view === "backup" ? "system" : view
 
   if (loading) {
@@ -1684,6 +1764,8 @@ function AdminPageContent() {
             zoomNode={zoomNode}
             setZoomNode={setZoomNode}
             handleZoomMouseDown={handleZoomMouseDown}
+            accentColor={authUser?.accent_color}
+            officeName={authUser?.office_name}
           />
         )}
         <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">
