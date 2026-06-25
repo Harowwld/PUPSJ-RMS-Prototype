@@ -43,7 +43,11 @@ export async function POST(req) {
   try {
     const body = await req.json();
     const office = await createOffice(body);
-    return NextResponse.json({ ok: true, data: office });
+
+    // Surface the auto-provisioned default admin account (id + default password)
+    // so the SuperAdmin sees the credentials right after creation.
+    const admin = office?._admin || null;
+    return NextResponse.json({ ok: true, data: office, admin });
   } catch (err) {
     return NextResponse.json({ ok: false, error: err.message }, { status: 400 });
   }
