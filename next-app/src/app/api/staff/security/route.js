@@ -3,6 +3,7 @@ import { dbGet, dbRun, dbAll } from "@/lib/sqlite";
 import { writeAuditLog } from "@/lib/auditLogRequest";
 import { verifySessionToken } from "@/lib/jwt";
 import { hasAllSecurityAnswers } from "@/lib/staffRepo";
+import { isStrongSecurityAnswer } from "@/lib/authSchemas";
 import crypto from "node:crypto";
 
 export const runtime = "nodejs";
@@ -81,6 +82,16 @@ export async function PUT(req) {
         // Otherwise, delete the answer if it exists
         await dbRun("DELETE FROM staff_security_answers WHERE staff_id = ? AND question_id = ?", [uid, qRow.id]);
         continue;
+      }
+
+      if (!isStrongSecurityAnswer(answerRaw)) {
+        return NextResponse.json(
+          {
+            ok: false,
+            error: "Security answers must be at least 10 characters and not too repetitive.",
+          },
+          { status: 400 }
+        );
       }
 
       const answerNormalized = answerRaw.toLowerCase();

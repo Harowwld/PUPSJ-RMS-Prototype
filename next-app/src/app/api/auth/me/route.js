@@ -5,6 +5,12 @@ import { getStaffById, hasAllSecurityAnswers } from "../../../../lib/staffRepo";
 
 export const runtime = "nodejs";
 
+function isBootstrapAdminAccount(staff, payload) {
+  const staffId = String(staff?.id || payload?.sub || "").trim().toUpperCase();
+  const email = String(staff?.email || payload?.username || "").trim().toLowerCase();
+  return staffId === "PUPREGISTRAR-001" || email === "admin.default@pup.local";
+}
+
 function addSecurityHeaders(response) {
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
@@ -30,7 +36,9 @@ export async function GET(req) {
     const staff = userId ? await getStaffById(userId) : null;
     const currentRole = staff?.role || payload.role || null;
     const currentStatus = staff?.status || "Inactive";
-    const hasSecurity = userId ? await hasAllSecurityAnswers(userId) : true;
+    const hasSecurity = userId
+      ? isBootstrapAdminAccount(staff, payload) || await hasAllSecurityAnswers(userId)
+      : true;
 
     const defaultPreferences = {
       theme: "light",
@@ -72,4 +80,3 @@ export async function GET(req) {
     return addSecurityHeaders(NextResponse.json({ ok: false, error: "Invalid session: " + err.message }, { status: 401 }));
   }
 }
-

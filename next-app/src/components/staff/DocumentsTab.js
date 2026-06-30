@@ -14,6 +14,7 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatPHDateTime } from "@/lib/timeFormat";
+import { generateStudentDigitizationCompliancePdf } from "@/lib/pdfGenerator";
 import {
   Empty,
   EmptyHeader,
@@ -343,6 +344,7 @@ export default function DocumentsTab({
   onUpdateStudent,
   onArchiveStudent,
   currentStudent,
+  showToast,
 }) {
   const [isDragActive, setIsDragActive] = useState(false);
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
@@ -351,6 +353,7 @@ export default function DocumentsTab({
   const [detailModalOpen, setDetailModalOpen] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isGeneratingStudentReport, setIsGeneratingStudentReport] = useState(false);
 
   useEffect(() => {
     if (!detailModalOpen) {
@@ -361,6 +364,49 @@ export default function DocumentsTab({
   const handleViewDetails = (doc) => {
     setSelectedDoc(doc);
     setDetailModalOpen(true);
+  };
+
+  const handleGenerateStudentReport = async () => {
+    const studentNo = String(selectedDoc?.student_no || "").trim();
+    if (!studentNo || isGeneratingStudentReport) return;
+
+    setIsGeneratingStudentReport(true);
+    try {
+      const res = await fetch(
+        `/api/analytics/digitization-compliance?studentNo=${encodeURIComponent(studentNo)}`,
+        { cache: "no-store" }
+      );
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok || !json?.data) {
+        throw new Error(json?.error || "Failed to load student compliance report");
+      }
+
+      const blob = await generateStudentDigitizationCompliancePdf(json.data);
+      const url = URL.createObjectURL(blob);
+      const fileName = `DIGITIZATION-COMPLIANCE-${studentNo}.pdf`;
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showToast?.({
+        title: "Report Downloaded",
+        description: `Individual compliance report for ${studentNo} has been generated.`,
+      });
+    } catch (err) {
+      showToast?.(
+        {
+          title: "Report Generation Failed",
+          description: err?.message || "Unable to generate the student compliance report.",
+        },
+        true
+      );
+    } finally {
+      setIsGeneratingStudentReport(false);
+    }
   };
 
   // Sorting & Pagination state
@@ -1245,6 +1291,15 @@ export default function DocumentsTab({
               </div>
 
               <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handleGenerateStudentReport}
+                  disabled={!selectedDoc?.student_no || isGeneratingStudentReport}
+                  className="h-11 rounded-brand border-gray-300 px-6 text-sm font-semibold tracking-wide text-gray-700 hover:border-gray-300 hover:bg-gray-50 dark:hover:bg-white/10 shadow-sm transition-colors dark:text-zinc-200 dark:border-white/10"
+                >
+                  <i className="ph-bold ph-file-pdf mr-2"></i>
+                  {isGeneratingStudentReport ? "Generating..." : "Student Report"}
+                </Button>
                 <Button
                   variant="outline"
                   onClick={() => setDetailModalOpen(false)}

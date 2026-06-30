@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "ocr:baseline": "node scripts/ocr-baseline.mjs",
     "reset-students": "node scripts/reset-students.mjs --confirm",
     "reset-db": "bash scripts/reset-db.sh",
     "populate-sample-data": "node scripts/populate-sample-data.mjs",

@@ -159,7 +159,7 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
   const logoData = await getLogoAsPng()
   
   const docId = `PUP-RKS-ANL-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
-  addPUPReportHeader(doc, "Digitization Compliance Report", { documentId: docId, logoData })
+  addPUPReportHeader(doc, "System-Wide Incomplete Records Report", { documentId: docId, logoData })
 
   let y = 215
   doc.setFont("helvetica", "bold")
@@ -254,7 +254,52 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
   doc.setFontSize(12)
   doc.setFont("helvetica", "bold")
   doc.setTextColor(122, 30, 40)
-  doc.text("III. Certification Statement", 40, y)
+  doc.text("III. Incomplete Records (Non-Compliance)", 40, y)
+  doc.setLineWidth(1.5)
+  doc.setDrawColor(122, 30, 40)
+  doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
+  y += 25
+
+  doc.setFontSize(10)
+  doc.setFont("helvetica", "normal")
+  doc.setTextColor(60, 60, 60)
+  const incompleteIntro = `The following students have not yet met the full document requirement of ${meta?.definitions?.configuredDocTypes?.length || 0} unique document types. This section identifies the system-wide non-compliance list for follow-up and remediation.`
+  const splitIncompleteIntro = doc.splitTextToSize(incompleteIntro, doc.internal.pageSize.getWidth() - 80)
+  doc.text(splitIncompleteIntro, 40, y)
+  y += splitIncompleteIntro.length * 14 + 10
+
+  const incompleteStudents = Array.isArray(data?.incompleteStudents) ? data.incompleteStudents : []
+  const incompleteTableData = incompleteStudents.map((student) => [
+    student.studentNo,
+    student.studentName,
+    student.courseCode,
+    `${student.actualCount}/${student.expectedCount}`,
+    `${student.missingCount}`,
+    (student.missingDocumentTypes || []).join(", ") || "N/A",
+  ])
+
+  autoTable(doc, {
+    startY: y,
+    head: [["Student No.", "Name", "Program", "Complete", "Missing", "Missing Documents"]],
+    body: incompleteTableData.length ? incompleteTableData : [["No incomplete records found", "", "", "", "", ""]],
+    theme: "striped",
+    headStyles: { fillColor: [122, 30, 40], textColor: [255, 255, 255], fontStyle: "bold" },
+    styles: { fontSize: 9, cellPadding: 5 },
+    columnStyles: {
+      0: { cellWidth: 85, fontStyle: "bold" },
+      1: { cellWidth: 105 },
+      2: { cellWidth: 60 },
+      3: { halign: "center", cellWidth: 60 },
+      4: { halign: "center", cellWidth: 50 },
+      5: { cellWidth: "auto" },
+    },
+  })
+
+  y = doc.lastAutoTable.finalY + 40
+  doc.setFontSize(12)
+  doc.setFont("helvetica", "bold")
+  doc.setTextColor(122, 30, 40)
+  doc.text("IV. Certification Statement", 40, y)
   doc.setLineWidth(1.5)
   doc.setDrawColor(122, 30, 40)
   doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
@@ -267,6 +312,131 @@ export const generateDigitizationCompliancePdf = async (data, summary, meta, byC
   doc.text(splitCert, 40, y)
   y += splitCert.length * 14 + 60
   addSignatures(doc, y)
+
+  return doc.output("blob")
+}
+
+/**
+ * Generates an Individual Student Digitization Compliance PDF Report
+ */
+export const generateStudentDigitizationCompliancePdf = async (report) => {
+  const doc = new jsPDF("p", "pt", "a4")
+  const logoData = await getLogoAsPng()
+
+  const studentNo = report?.student?.studentNo || report?.meta?.studentNo || "UNKNOWN"
+  const docId = `PUP-RKS-STU-${new Date().getFullYear()}-${Math.floor(1000 + Math.random() * 9000)}`
+  addPUPReportHeader(doc, "Individual Digitization Compliance Report", { documentId: docId, logoData })
+
+  let y = 215
+  doc.setFont("helvetica", "bold")
+  doc.setFontSize(9)
+  doc.setTextColor(150, 150, 150)
+  doc.text("GENERATED ON:", 40, y)
+  doc.setTextColor(0, 0, 0)
+  doc.text(formatPHDateTime(new Date().toISOString()), 130, y)
+
+  y += 15
+  doc.setTextColor(150, 150, 150)
+  doc.text("STUDENT NO.:", 40, y)
+  doc.setTextColor(0, 0, 0)
+  doc.text(String(studentNo), 130, y)
+
+  y += 35
+  doc.setFontSize(12)
+  doc.setFont("helvetica", "bold")
+  doc.setTextColor(122, 30, 40)
+  doc.text("I. Student Summary", 40, y)
+  doc.setLineWidth(1.5)
+  doc.setDrawColor(122, 30, 40)
+  doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
+
+  y += 25
+  doc.setFontSize(10)
+  doc.setFont("helvetica", "normal")
+  doc.setTextColor(60, 60, 60)
+  const student = report?.student || {}
+  const summary = report?.summary || {}
+  const summaryLines = [
+    `Name: ${student.name || "—"}`,
+    `Course: ${student.courseCode || "—"}`,
+    `Year Level: ${student.yearLevel || "—"}`,
+    `Section: ${student.section || "—"}`,
+    `Storage Location: Room ${student.room || "—"} / Cabinet ${student.cabinet || "—"} / Drawer ${student.drawer || "—"}`,
+    `Account Status: ${student.status || "—"}`,
+  ]
+  doc.text(summaryLines, 40, y)
+  y += summaryLines.length * 14 + 10
+
+  doc.setFont("helvetica", "bold")
+  doc.setTextColor(80, 80, 80)
+  doc.text("Compliance Metrics:", 40, y)
+  y += 20
+
+  const metricRows = [
+    ["Configured document types", summary.totalRequired ?? 0],
+    ["Uploaded documents", summary.totalUploaded ?? 0],
+    ["Approved documents", summary.totalApproved ?? 0],
+    ["Completed requirements", summary.completedCount ?? 0],
+    ["Missing requirements", summary.incompleteCount ?? 0],
+    ["Compliance rate", summary.compliancePercent != null ? `${summary.compliancePercent}%` : "N/A"],
+  ]
+
+  autoTable(doc, {
+    startY: y,
+    head: [["Metric", "Value"]],
+    body: metricRows,
+    theme: "striped",
+    headStyles: { fillColor: [122, 30, 40], textColor: [255, 255, 255], fontStyle: "bold" },
+    styles: { fontSize: 10, cellPadding: 6 },
+    columnStyles: { 0: { fontStyle: "bold" }, 1: { halign: "right" } },
+  })
+
+  y = doc.lastAutoTable.finalY + 30
+  doc.setFontSize(12)
+  doc.setFont("helvetica", "bold")
+  doc.setTextColor(122, 30, 40)
+  doc.text("II. Document Status", 40, y)
+  doc.setLineWidth(1.5)
+  doc.setDrawColor(122, 30, 40)
+  doc.line(40, y + 5, doc.internal.pageSize.getWidth() - 40, y + 5)
+  y += 25
+
+  const completedRows = (report?.documents || []).map((docRow) => [
+    docRow.docType || "—",
+    docRow.originalFilename || "—",
+    docRow.approvalStatus || "Pending",
+    docRow.createdAt ? formatPHDateTime(docRow.createdAt) : "—",
+  ])
+
+  autoTable(doc, {
+    startY: y,
+    head: [["Document Type", "Filename", "Status", "Uploaded"]],
+    body: completedRows.length
+      ? completedRows
+      : [["No uploaded documents", "—", "—", "—"]],
+    theme: "striped",
+    headStyles: { fillColor: [122, 30, 40], textColor: [255, 255, 255], fontStyle: "bold" },
+    styles: { fontSize: 9, cellPadding: 5 },
+    columnStyles: {
+      0: { fontStyle: "bold" },
+      1: { cellWidth: 200 },
+      2: { halign: "center" },
+      3: { cellWidth: 90 },
+    },
+  })
+
+  y = doc.lastAutoTable.finalY + 30
+  const missingTypes = Array.isArray(report?.incompleteDocTypes) ? report.incompleteDocTypes : []
+  doc.setFontSize(10)
+  doc.setFont("helvetica", "bold")
+  doc.setTextColor(80, 80, 80)
+  doc.text("Missing Document Types:", 40, y)
+  y += 16
+  doc.setFont("helvetica", "normal")
+  doc.setTextColor(60, 60, 60)
+  const missingText = missingTypes.length ? missingTypes.join(", ") : "None"
+  const splitMissing = doc.splitTextToSize(missingText, doc.internal.pageSize.getWidth() - 80)
+  doc.text(splitMissing, 40, y)
 
   return doc.output("blob")
 }

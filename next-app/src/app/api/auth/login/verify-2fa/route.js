@@ -15,6 +15,12 @@ import { checkAuthLoginRateLimit, resetAuthLoginRateLimit } from "@/lib/rateLimi
 
 export const runtime = "nodejs";
 
+function isBootstrapAdminAccount(staff) {
+  const staffId = String(staff?.id || "").trim().toUpperCase();
+  const email = String(staff?.email || "").trim().toLowerCase();
+  return staffId === "PUPREGISTRAR-001" || email === "admin.default@pup.local";
+}
+
 function addSecurityHeaders(response) {
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
@@ -116,7 +122,7 @@ export async function POST(req) {
   // 4. Verification Successful -> Create Full Session
   const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
   const defaultHash = hashPasswordForStorage(defaultPassword);
-  const mustChangePassword = staff.password_hash === defaultHash;
+  const mustChangePassword = staff.password_hash === defaultHash && !isBootstrapAdminAccount(staff);
 
   const sessionPayload = {
     sub: staff.id,

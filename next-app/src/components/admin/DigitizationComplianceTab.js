@@ -225,10 +225,26 @@ export default function DigitizationComplianceTab({
   }, [byCourse, sortBy, sortOrder, tableSearch]);
 
   const handlePreview = async () => {
-    if (!data || loading) return;
+    if (loading) return;
     setIsGeneratingPdf(true);
     try {
-      const blob = await generateDigitizationCompliancePdf(data, summary, meta, byCourse);
+      const reportParams = new URLSearchParams();
+      reportParams.set("status", "All");
+      if (requireApproved) reportParams.set("requireApproved", "1");
+
+      const res = await fetch(`/api/analytics/digitization-compliance?${reportParams.toString()}`, { cache: "no-store" });
+      const json = await res.json().catch(() => null);
+      if (!res.ok || !json?.ok) {
+        throw new Error(json?.error || "Failed to load report data");
+      }
+
+      const reportData = json.data;
+      const blob = await generateDigitizationCompliancePdf(
+        reportData,
+        reportData?.summary,
+        reportData?.meta,
+        reportData?.byCourse
+      );
       const url = URL.createObjectURL(blob);
       setPdfPreviewUrl(url);
       setReportOpen(true);
@@ -245,7 +261,23 @@ export default function DigitizationComplianceTab({
     if (!pdfBlobUrl) {
       setIsGeneratingPdf(true);
       try {
-        const blob = await generateDigitizationCompliancePdf(data, summary, meta, byCourse);
+        const reportParams = new URLSearchParams();
+        reportParams.set("status", "All");
+        if (requireApproved) reportParams.set("requireApproved", "1");
+
+        const res = await fetch(`/api/analytics/digitization-compliance?${reportParams.toString()}`, { cache: "no-store" });
+        const json = await res.json().catch(() => null);
+        if (!res.ok || !json?.ok) {
+          throw new Error(json?.error || "Failed to load report data");
+        }
+
+        const reportData = json.data;
+        const blob = await generateDigitizationCompliancePdf(
+          reportData,
+          reportData?.summary,
+          reportData?.meta,
+          reportData?.byCourse
+        );
         const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
@@ -272,11 +304,11 @@ export default function DigitizationComplianceTab({
 
     onLogAction?.({
       action: "Generate Report",
-      details: `generated formal physical record compliance report (${fileName}) for university accreditation records`,
+      details: `generated system-wide incomplete records report (${fileName}) for university non-compliance tracking`,
       entityType: "Report"
     });
 
-    showToast?.({ title: "Report Downloaded", description: "The Compliance report has been successfully downloaded." });
+    showToast?.({ title: "Report Downloaded", description: "The incomplete records report has been successfully downloaded." });
   };
 
   const downloadCsv = useCallback(async () => {
@@ -922,7 +954,7 @@ export default function DigitizationComplianceTab({
                 Compliance Report
               </DialogTitle>
               <p style={{ marginTop: '2px', fontSize: '12px', fontWeight: 400, color: '#8E8E93' }} className="text-left">
-                Filter: {statusFilter} · {courseFilter || "All"}{requireApproved ? " · Approved Only" : ""}
+                Report scope: System-wide incomplete records{requireApproved ? " · Approved Only" : ""}
               </p>
             </div>
             

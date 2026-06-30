@@ -167,6 +167,7 @@ function StaffPageContent() {
   const [uploadMode, setUploadMode] = useState("pdf");
   /** When true, submit attaches the PDF to an existing student (no new student row). */
   const [uploadStudentIsExisting, setUploadStudentIsExisting] = useState(false);
+  const [studentMismatchResetToken, setStudentMismatchResetToken] = useState(0);
   const [dropActive, setDropActive] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [uploadedFiles, setUploadedFiles] = useState([]);
@@ -234,7 +235,12 @@ function StaffPageContent() {
   const showToast = useCallback((msg, typeOrIsError = false) => {
     const isRich = msg && typeof msg === "object" && msg.title;
     const title = isRich ? msg.title : String(msg || "");
-    const opts = isRich && msg.description ? { description: msg.description } : {};
+    const opts = isRich
+      ? {
+          ...(msg.description ? { description: msg.description } : {}),
+          ...(msg.id ? { id: msg.id } : {}),
+        }
+      : {};
 
     if (typeOrIsError === true || typeOrIsError === "error") {
       toast.error(title, opts);
@@ -1241,8 +1247,18 @@ function StaffPageContent() {
       }));
       setUploadStudentIsExisting(false);
     }
+    setUploadMode("pdf");
+    setUploadError("");
+    setCsvError("");
+    setOcrError("");
+    setOcrSuggestion(null);
+    setUploadedFile(null);
+    setUploadedFiles([]);
+    setSelectedQueuedFileIndex(0);
+    setRotation(0);
     clearAllUploadFieldErrors();
-    setView("upload");
+    setStudentMismatchResetToken((p) => p + 1);
+    switchView("upload");
 
     if (docId) {
       try {
@@ -1258,7 +1274,7 @@ function StaffPageContent() {
         console.error("Failed to preload rejected document for rescan:", err);
       }
     }
-  }, [students, applyStudentToPdfForm, clearAllUploadFieldErrors]);
+  }, [students, applyStudentToPdfForm, clearAllUploadFieldErrors, switchView]);
 
   const confirmBulkArchive = async () => {
     if (bulkArchiveLoading) return;
@@ -1617,6 +1633,7 @@ function StaffPageContent() {
                 setUploadStudentIsExisting(false);
                 setUploadFieldErrors({});
                 setRotation(0);
+                setStudentMismatchResetToken((p) => p + 1);
               }}
               ocrLoading={ocrLoading}
               ocrError={ocrError}
@@ -1841,6 +1858,7 @@ function StaffPageContent() {
                 setOcrPromptOpen(false);
                 checkDuplicate(student.studentNo || student.student_no, ocrDocType);
               }}
+              studentMismatchResetToken={studentMismatchResetToken}
             />
           </TabsContent>
 
@@ -1866,6 +1884,7 @@ function StaffPageContent() {
               docsError={docsError}
               docsRows={docsRows}
               onRescan={handleRescan}
+              showToast={showToast}
               onUpdateStudent={async (studentNo, data) => {
                 try {
                   const res = await fetch(`/api/students/${encodeURIComponent(studentNo)}`, {

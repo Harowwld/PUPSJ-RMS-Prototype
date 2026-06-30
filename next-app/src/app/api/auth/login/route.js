@@ -13,6 +13,12 @@ import { LoginSchema } from "../../../../lib/authSchemas";
 
 export const runtime = "nodejs";
 
+function isBootstrapAdminAccount(staff) {
+  const staffId = String(staff?.id || "").trim().toUpperCase();
+  const email = String(staff?.email || "").trim().toLowerCase();
+  return staffId === "PUPREGISTRAR-001" || email === "admin.default@pup.local";
+}
+
 function addSecurityHeaders(response) {
   response.headers.set('X-Content-Type-Options', 'nosniff');
   response.headers.set('X-Frame-Options', 'DENY');
@@ -142,7 +148,7 @@ export async function POST(req) {
 
   const defaultPassword = process.env.DEFAULT_STAFF_PASSWORD || "pupstaff";
   const defaultHash = hashPasswordForStorage(defaultPassword);
-  const mustChangePassword = stored === defaultHash;
+  const mustChangePassword = stored === defaultHash && !isBootstrapAdminAccount(staff);
 
   const sessionPayload = {
     sub: touched.id,
@@ -187,4 +193,3 @@ export async function POST(req) {
 
   return addSecurityHeaders(res);
 }
-

@@ -1,0 +1,42 @@
+[
+  {
+    "id": "psa-vertical-name-and-doc",
+    "description": "PSA birth certificate layout with split vertical labels",
+    "rawText": "Republic of the Philippines\nPhilippine Statistics Authority\n1. NAME\n(First)\n(Last)\nRJ JACK\nAPURA\nFLORIDA\n2. SEX\nMale\nCertificate of Live Birth",
+    "expected": {
+      "name": "RJ JACK, RJ J.",
+      "docType": "Birth Certificate"
+    }
+  },
+  {
+    "id": "student-number-match",
+    "description": "OCR text with a valid student number should match the exact student record",
+    "rawText": "Student No: 2024-12345-CE-1\nStudent Name: Maria Teresa Dela Cruz\nTranscript of Records",
+    "students": [
+      { "studentNo": "2024-12345-CE-1", "name": "DELA CRUZ, MARIA TERESA" }
+    ],
+    "expected": {
+      "name": "DELA CRUZ, MARIA TERESA",
+      "matchedStudentNo": "2024-12345-CE-1",
+      "docType": "Transcript of Records"
+    }
+  },
+  {
+    "id": "same-line-parenthesized-name",
+    "description": "Horizontal PSA parenthesized layout should reconstruct the name",
+    "rawText": "1. NAME (First) RJ APURA (Middle) JACK (Last) FLORIDA\n2. SEX Male\nCertificate of Live Birth",
+    "expected": {
+      "name": "FLORIDA, RJ APURA J.",
+      "docType": "Birth Certificate"
+    }
+  },
+  {
+    "id": "diploma-detection",
+    "description": "Generic diploma text should map to the closest configured document type",
+    "rawText": "This certifies that Juan Dela Cruz has conferred upon the degree of Bachelor of Science\nDiploma",
+    "expected": {
+      "name": "DELA CRUZ, JUAN",
+      "docType": "Diploma"
+    }
+  }
+]

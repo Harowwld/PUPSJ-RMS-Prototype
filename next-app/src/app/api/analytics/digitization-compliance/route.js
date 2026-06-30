@@ -3,7 +3,10 @@ import { cookies } from "next/headers";
 
 import { getSessionCookieName, verifySessionToken } from "../../../../lib/jwt";
 import { getStaffById } from "../../../../lib/staffRepo";
-import { getDigitizationComplianceSummary } from "../../../../lib/digitizationComplianceRepo";
+import {
+  getDigitizationComplianceSummary,
+  getStudentDigitizationComplianceReport,
+} from "../../../../lib/digitizationComplianceRepo";
 
 export const runtime = "nodejs";
 
@@ -60,6 +63,7 @@ export async function GET(req) {
 
     const courseCode = searchParams.get("courseCode") || "";
     const requireApproved = parseBool(searchParams.get("requireApproved"));
+    const studentNo = String(searchParams.get("studentNo") || "").trim();
 
     const thresholdRaw = searchParams.get("threshold");
     let threshold = 0.95;
@@ -68,12 +72,21 @@ export async function GET(req) {
       if (Number.isFinite(t)) threshold = t;
     }
 
-    const data = await getDigitizationComplianceSummary({
-      studentStatus,
-      courseCode: courseCode.trim() || undefined,
-      requireApproved,
-      threshold,
-    });
+    const data = studentNo
+      ? await getStudentDigitizationComplianceReport({
+          studentNo,
+          requireApproved,
+        })
+      : await getDigitizationComplianceSummary({
+          studentStatus,
+          courseCode: courseCode.trim() || undefined,
+          requireApproved,
+          threshold,
+        });
+
+    if (!data) {
+      return NextResponse.json({ ok: false, error: "Not found" }, { status: 404 });
+    }
 
     return NextResponse.json({ ok: true, data });
   } catch (err) {

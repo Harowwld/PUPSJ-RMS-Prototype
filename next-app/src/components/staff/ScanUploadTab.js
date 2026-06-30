@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import { useMemo, useState, useEffect } from "react"
+import { toast } from "sonner"
 import { useHotFolderInbox } from "@/hooks/useHotFolderInbox"
 import { cn } from "@/lib/utils"
 import {
@@ -36,6 +37,9 @@ import PageHeader from "@/components/shared/PageHeader"
 import { RefreshButton } from "@/components/shared/RefreshButton"
 import { canonicalizeCabinetId } from "@/lib/storageLayoutUtils"
 import { findStudentsByOcrName } from "@/lib/ocrClient"
+
+const dismissMismatchToasts = () => toast.dismiss()
+
 function toNormalCase(str) {
   if (!str) return ""
   return str
@@ -106,6 +110,7 @@ export default function ScanUploadTab({
   showToast = () => {},
   onIngestPromoted,
   onSelectExistingStudent,
+  studentMismatchResetToken = 0,
   rotation = 0,
   setRotation,
 }) {
@@ -114,6 +119,7 @@ export default function ScanUploadTab({
   const [pendingDroppedFile, setPendingDroppedFile] = useState(null)
   const [confirmDropOpen, setConfirmDropOpen] = useState(false)
   const [windowDragActive, setWindowDragActive] = useState(false)
+  const [studentMismatchError, setStudentMismatchError] = useState("")
   const [csvPage, setCsvPage] = useState(1)
   const [csvRowsPerPage, setCsvRowsPerPage] = useState(10)
   const [csvSearch, setCsvSearch] = useState("")
@@ -167,7 +173,38 @@ export default function ScanUploadTab({
     }).slice(0, 5);
   }, [newRec.name, students, uploadStudentIsExisting]);
 
+  const normalizeStudentNameForCompare = (value) =>
+    String(value || "")
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "");
+
+  const findStudentByStudentNo = (studentNo) => {
+    const cleanStudentNo = String(studentNo || "").trim().toUpperCase();
+    if (!cleanStudentNo) return null;
+    return (
+      students.find((s) => {
+        const sn = String(s?.studentNo || s?.student_no || "").trim().toUpperCase();
+        return sn === cleanStudentNo;
+      }) || null
+    );
+  };
+
+  const getStudentMismatchMessage = (studentNo, enteredName) => {
+    const matchedStudent = findStudentByStudentNo(studentNo);
+    if (!matchedStudent) return "";
+
+    const cleanEnteredName = normalizeStudentNameForCompare(enteredName);
+    if (!cleanEnteredName) return "";
+
+    const cleanMatchedName = normalizeStudentNameForCompare(matchedStudent.name);
+    if (!cleanMatchedName || cleanMatchedName === cleanEnteredName) return "";
+
+    return `Student No. ${String(studentNo).trim()} belongs to ${matchedStudent.name}, not ${String(enteredName).trim()}.`;
+  };
+
   const handleSelectStudent = (student) => {
+    setStudentMismatchError("");
+    dismissMismatchToasts()
     onSelectExistingStudent?.(student, newRec.docType || null);
     setShowStudentNoSuggestions(false);
     setShowNameSuggestions(false);
@@ -176,6 +213,11 @@ export default function ScanUploadTab({
   useEffect(() => {
     setCsvPage(1)
   }, [csvFile])
+
+  useEffect(() => {
+    setStudentMismatchError("")
+    dismissMismatchToasts()
+  }, [studentMismatchResetToken])
 
   useEffect(() => {
     if (uploadMode !== "pdf") return
@@ -335,12 +377,34 @@ export default function ScanUploadTab({
     onPromoted: onIngestPromoted,
     onOcrResult: (suggestion) => {
       if (!suggestion) return
+      setStudentMismatchError("")
       // Always set the docType from OCR regardless of student match
       const ocrDocType =
         suggestion.docType && String(suggestion.docType).trim()
           ? String(suggestion.docType).trim()
           : ""
       if (suggestion.matchedStudent) {
+        const suggestedName = String(suggestion.name || "").trim()
+        const matchedName = String(suggestion.matchedStudent.name || "").trim()
+        const hasMismatch =
+          suggestedName &&
+          normalizeStudentNameForCompare(suggestedName) !== normalizeStudentNameForCompare(matchedName)
+
+        if (hasMismatch) {
+          setUploadStudentIsExisting(false)
+          setNewRec((p) => ({
+            ...p,
+            studentNo: String(suggestion.matchedStudent.studentNo || suggestion.matchedStudent.student_no || p.studentNo || "").trim(),
+            name: suggestedName.toUpperCase(),
+            docType: ocrDocType || p.docType,
+          }))
+          setStudentMismatchError(
+            `OCR matched ${matchedName} for Student No. ${String(suggestion.matchedStudent.studentNo || suggestion.matchedStudent.student_no || "").trim()}, but the detected name is ${suggestedName}. Please verify before submitting.`
+          )
+          clearAllUploadFieldErrors?.()
+          setOcrPromptOpen(false)
+          return
+        }
         // Existing student matched — lock the form fields to their record.
         onSelectExistingStudent?.(suggestion.matchedStudent, ocrDocType)
       } else {
@@ -355,10 +419,17 @@ export default function ScanUploadTab({
           middleName: suggestion.middleName || parsed.middleName || p.middleName,
           lastName: suggestion.lastName || parsed.lastName || p.lastName,
           docType: ocrDocType || p.docType,
-        }))
+          }))
       }
     },
   })
+
+  useEffect(() => {
+    if (!uploadedFile && !hf.selectedRow && !hf.previewUrl) {
+      setStudentMismatchError("")
+      dismissMismatchToasts()
+    }
+  }, [uploadedFile, hf.selectedRow, hf.previewUrl])
 
   useEffect(() => {
     if (uploadMode !== "pdf" || (!uploadedFile && !hf.selectedRow)) return
@@ -487,11 +558,15 @@ export default function ScanUploadTab({
 
   const handlePdfFileSelect = (files) => {
     if (!files) return
+    setStudentMismatchError("")
+    dismissMismatchToasts()
     hf.clearIngestSelection()
     onFileSelect(files)
   }
 
   const handleClearPdf = () => {
+    setStudentMismatchError("")
+    dismissMismatchToasts()
     hf.clearIngestSelection()
     onClearFile()
   }
@@ -542,6 +617,29 @@ export default function ScanUploadTab({
     } catch (err) {
       showToast("Cannot read clipboard automatically. Try pressing Ctrl+V or Cmd+V.", "warning")
     }
+  }
+
+  const handleSubmitUpload = () => {
+    const mismatchMessage = getStudentMismatchMessage(newRec.studentNo, newRec.name)
+    if (mismatchMessage || studentMismatchError) {
+      const nextMessage = mismatchMessage || studentMismatchError
+      setStudentMismatchError(nextMessage)
+      showToast(
+        { title: "Student Mismatch", description: nextMessage },
+        true,
+      )
+      return
+    }
+
+    processSubmission({
+      onSuccess: (ids) => {
+        if (Array.isArray(ids) && ids.length > 0) {
+          ids.forEach((id) => hf.removeIngestItem(id))
+        } else {
+          hf.removeIngestItem()
+        }
+      },
+    })
   }
 
 
@@ -1433,6 +1531,8 @@ export default function ScanUploadTab({
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => {
+                                    setStudentMismatchError("")
+                                    dismissMismatchToasts()
                                     setNewRec({
                                       studentNo: "",
                                       name: "",
@@ -1473,6 +1573,8 @@ export default function ScanUploadTab({
                                   clearUploadFieldError?.("studentNo")
                                   clearUploadFieldError?.("year")
                                   clearUploadFieldError?.("sectionPart")
+                                  setStudentMismatchError("")
+                                  dismissMismatchToasts()
                                   setNewRecStudentNoTouched(true)
                                   const masked = applyStudentNoMask(e.target.value)
                                   const derivedYear = deriveYearFromStudentNo(
@@ -1549,6 +1651,8 @@ export default function ScanUploadTab({
                                   }}
                                   onChange={(e) => {
                                     clearUploadFieldError?.("name")
+                                    setStudentMismatchError("")
+                                    dismissMismatchToasts()
                                     setNewRec((p) => ({ ...p, name: e.target.value }))
                                   }}
                                 />
@@ -1741,21 +1845,17 @@ export default function ScanUploadTab({
 
                           <button
                           type="button"
-                          onClick={() =>
-                            processSubmission({
-                              onSuccess: (ids) => {
-                                if (Array.isArray(ids) && ids.length > 0) {
-                                  ids.forEach(id => hf.removeIngestItem(id));
-                                } else {
-                                  hf.removeIngestItem();
-                                }
-                              },
-                            })
-                          }
+                          onClick={handleSubmitUpload}
                           className="flex h-10 w-full items-center justify-center gap-2 rounded-[10px] bg-[#0A84FF] hover:bg-[#0062c4] active:scale-[0.98] text-sm font-semibold text-white transition-all dark:shadow-none"
                         >
                           Submit Upload
                         </button>
+
+                        {studentMismatchError ? (
+                          <div className="rounded-[10px] border border-amber-200 bg-amber-50 p-3 text-xs font-semibold text-amber-800 dark:border-amber-500/20 dark:bg-amber-950/20 dark:text-amber-300">
+                            {studentMismatchError}
+                          </div>
+                        ) : null}
 
                         {uploadError ? (
                           <div className="mt-3 rounded-brand border border-red-200 bg-red-50 p-3 text-sm font-semibold text-red-800 dark:bg-red-950/30">

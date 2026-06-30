@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
+import { isStrongSecurityAnswer } from "@/lib/authSchemas"
 
 export default function AccountSetupModal({ authUser }) {
   const [open, setOpen] = useState(false)
@@ -122,15 +123,22 @@ export default function AccountSetupModal({ authUser }) {
     e.preventDefault()
     if (secSubmitting) return
     
-    // Validation: Only require answers if they haven't been answered before
-    const requiredQuestions = questions.filter((q) => q.is_required)
-    for (const q of requiredQuestions) {
-      const hasCurrentInput = !!(answers[q.id] && answers[q.id].trim());
-      if (!q.hasAnswer && !hasCurrentInput) {
-        setSecError(`Please provide an answer for: ${q.question}`)
-        return
+      // Validation: Only require answers if they haven't been answered before
+      for (const q of questions) {
+        const currentAnswer = (answers[q.id] || "").trim()
+        if (currentAnswer) {
+          if (!isStrongSecurityAnswer(currentAnswer)) {
+            setSecError("Security answers must be at least 10 characters and not too repetitive.")
+            return
+          }
+          continue
+        }
+
+        if (q.is_required && !q.hasAnswer) {
+          setSecError(`Please provide an answer for: ${q.question}`)
+          return
+        }
       }
-    }
 
     setSecError("")
     setSecSubmitting(true)
@@ -264,7 +272,7 @@ export default function AccountSetupModal({ authUser }) {
                     Update Default Password
                   </h3>
                   <p className="mt-1 text-[13px] font-normal text-gray-500 dark:text-zinc-400 leading-normal">
-                    You're logging in for the first time. Change your default password to continue.
+                    You&apos;re logging in for the first time. Change your default password to continue.
                   </p>
                 </div>
 
@@ -442,5 +450,3 @@ export default function AccountSetupModal({ authUser }) {
     </Dialog>
   )
 }
-
-

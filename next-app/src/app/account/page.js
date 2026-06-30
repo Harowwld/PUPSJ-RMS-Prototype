@@ -36,6 +36,7 @@ import { Separator } from "@/components/ui/separator";
 import PageHeader from "@/components/shared/PageHeader";
 import { formatPHDateTime } from "@/lib/timeFormat";
 import { cn } from "@/lib/utils";
+import { isStrongSecurityAnswer } from "@/lib/authSchemas";
 
 function AccountPageContent() {
   const router = useRouter();
@@ -430,8 +431,13 @@ function AccountPageContent() {
     const payload = [];
     for (const q of globalQuestions) {
       const val = secAnswers[q.id];
-      if (val && val.trim()) {
-        payload.push({ questionId: q.id, answer: val.trim() });
+      const trimmed = val?.trim();
+      if (trimmed) {
+        if (!isStrongSecurityAnswer(trimmed)) {
+          setSecError("Security answers must be at least 10 characters and not too repetitive.");
+          return;
+        }
+        payload.push({ questionId: q.id, answer: trimmed });
       }
     }
 
