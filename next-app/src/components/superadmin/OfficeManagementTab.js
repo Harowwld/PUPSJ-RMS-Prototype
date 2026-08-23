@@ -261,17 +261,14 @@ export default function OfficeManagementTab({ showToast }) {
             return (
               <Card 
                 key={office.id} 
-                className="overflow-hidden border border-gray-200/60 dark:border-white/5 bg-white/60 dark:bg-zinc-900/40 relative shadow-[0_4px_16px_rgba(0,0,0,0.02)] transition-all duration-300 hover:translate-y-[-2px] hover:shadow-[0_8px_24px_rgba(0,0,0,0.04)]"
+                className="overflow-hidden border border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] relative shadow-[0_2px_8px_rgba(0,0,0,0.03)] transition-all duration-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.08)] hover:-translate-y-0.5 rounded-2xl"
               >
-                {/* Visual accent bar */}
-                <div className="h-1.5 w-full" style={{ backgroundColor: accent }} />
-                
                 <CardContent className="p-6 flex flex-col h-full justify-between">
                   <div>
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex items-center gap-3">
                         <div 
-                          className="h-10 w-10 rounded-xl flex items-center justify-center border text-lg shadow-2xs"
+                          className="h-10 w-10 rounded-xl flex items-center justify-center border text-lg shadow-sm"
                           style={{ borderColor: `${accent}20`, backgroundColor: `${accent}08`, color: accent }}
                         >
                           <i className={office.icon || "ti ti-building"}></i>
@@ -280,7 +277,7 @@ export default function OfficeManagementTab({ showToast }) {
                           <h3 className="font-bold text-gray-900 dark:text-zinc-50 leading-tight">
                             {office.short_name}
                           </h3>
-                          <span className="text-[11px] font-mono text-gray-400 dark:text-zinc-500 uppercase">
+                          <span className="text-[10px] font-mono text-gray-400 dark:text-zinc-500 uppercase tracking-wider">
                             ID: {office.id}
                           </span>
                         </div>
@@ -288,17 +285,17 @@ export default function OfficeManagementTab({ showToast }) {
 
                       <Badge 
                         className={cn(
-                          "rounded-md shadow-2xs px-2 py-0.5 text-[10px] font-semibold border",
+                          "rounded-full border-0 px-2 py-0.5 text-[10px] font-bold shadow-none",
                           isActive 
-                            ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/20"
-                            : "bg-gray-100 text-gray-600 border-gray-200 dark:bg-white/5 dark:text-zinc-400 dark:border-white/5"
+                            ? "bg-[#34c759]/10 text-[#34c759] dark:bg-[#30d158]/20 dark:text-[#30d158]"
+                            : "bg-[#8e8e93]/10 text-[#8e8e93] dark:bg-[#8e8e93]/20 dark:text-[#aeaeb2]"
                         )}
                       >
                         {office.status}
                       </Badge>
                     </div>
 
-                    <h4 className="text-xs font-semibold text-gray-800 dark:text-zinc-300 mb-1 leading-snug">
+                    <h4 className="text-xs font-semibold text-gray-900 dark:text-[#f2f2f7] mb-1.5 leading-snug">
                       {office.name}
                     </h4>
                     
@@ -308,23 +305,22 @@ export default function OfficeManagementTab({ showToast }) {
                   </div>
 
                   {/* Office Metrics */}
-                  <div className="border-t border-gray-100 dark:border-white/5 pt-4 mt-2 flex items-center justify-between text-xs text-gray-600 dark:text-zinc-400">
-                    <div className="flex items-center gap-1.5">
+                  <div className="border-t border-gray-100 dark:border-zinc-800 pt-4 mt-2 flex items-center justify-between text-xs text-gray-600 dark:text-zinc-400">
+                    <div className="flex items-center gap-1.5 font-medium">
                       <i className="ti ti-users text-gray-400"></i>
-                      <span>Staff: <strong>{office.staff_count || 0}</strong></span>
+                      <span>Staff: <strong className="text-gray-900 dark:text-zinc-100 font-bold">{office.staff_count || 0}</strong></span>
                     </div>
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1.5 font-medium">
                       <i className="ti ti-layout-grid text-gray-400"></i>
-                      <span>Modules: <strong>{office.module_count || 0}</strong></span>
+                      <span>Modules: <strong className="text-gray-900 dark:text-zinc-100 font-bold">{office.module_count || 0}</strong></span>
                     </div>
                   </div>
 
                   {/* Actions */}
-                  <div className="flex items-center gap-2 mt-5 pt-3 border-t border-gray-100 dark:border-white/5">
+                  <div className="flex items-center gap-2 mt-5 pt-3 border-t border-gray-100 dark:border-zinc-800">
                     <Button 
-                      variant="outline" 
                       onClick={() => handleOpenEdit(office)}
-                      className="flex-1 border-gray-200 dark:border-white/5 hover:bg-gray-50 dark:hover:bg-white/5 text-gray-700 dark:text-zinc-300 font-medium text-xs h-8 cursor-pointer rounded-lg"
+                      className="flex-1 bg-[#f2f2f7] hover:bg-[#e5e5ea] dark:bg-[#2c2c2e] dark:hover:bg-[#3a3a3c] text-gray-800 dark:text-[#f2f2f7] font-semibold text-xs h-8 cursor-pointer rounded-lg border-0 shadow-none"
                     >
                       Configure
                     </Button>
@@ -332,10 +328,10 @@ export default function OfficeManagementTab({ showToast }) {
                       variant="ghost" 
                       onClick={() => handleToggleStatus(office)}
                       className={cn(
-                        "h-8 px-3 rounded-lg text-xs font-medium cursor-pointer",
+                        "h-8 px-3 rounded-lg text-xs font-semibold cursor-pointer border-0 shadow-none transition-colors",
                         isActive 
-                          ? "text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
-                          : "text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/20"
+                          ? "text-[#ff3b30] hover:bg-[#ff3b30]/10 dark:text-[#ff453a] dark:hover:bg-[#ff453a]/15"
+                          : "text-[#34c759] hover:bg-[#34c759]/10 dark:text-[#30d158] dark:hover:bg-[#30d158]/15"
                       )}
                     >
                       {isActive ? "Deactivate" : "Activate"}

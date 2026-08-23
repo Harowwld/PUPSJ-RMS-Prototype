@@ -132,29 +132,77 @@ const labelShortener = (value) => {
 export default function SlaCharts({ data, pieData, onSwitchView }) {
   const isDark = false
   const [timeGrain, setTimeGrain] = useState("monthly") // "monthly", "weekly", "daily"
+  const [activeBarName, setActiveBarName] = useState(null)
+  const [activePieIndex, setActivePieIndex] = useState(null)
+  const [hoveredTrendPoint, setHoveredTrendPoint] = useState(null)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
+
   const totalSlaRequests = pieData.reduce((acc, curr) => acc + curr.value, 0)
 
   const trendData = data?.trends?.[timeGrain] || []
   const hasDemandData = data?.topDocTypes?.length > 0
   const hasTrendData = trendData.length > 0
 
+  const latestTrendPoint = trendData[trendData.length - 1]
+  const displayPoint = hoveredTrendPoint || latestTrendPoint
+
   return (
     <div className="grid grid-cols-1 gap-[20px] lg:grid-cols-3">
       {/* Card 1: Request Trends Chart */}
       <div className="rounded-[12px] border-[0.5px] border-black/10 bg-white p-[28px] shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:border-white/10 dark:bg-card flex flex-col">
-        <div className="flex items-center justify-between mb-4 flex-wrap gap-3">
-          <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50 m-0">
-            Request Trends
-          </h3>
-          <select
-            className="h-8 min-w-[100px] w-fit cursor-pointer rounded-brand border-[0.5px] border-black/15 bg-white px-2.5 text-[12px] font-normal text-[#111111] dark:border-white/10 dark:bg-card dark:text-zinc-100 focus:outline-none focus:ring-0"
-            value={timeGrain}
-            onChange={(e) => setTimeGrain(e.target.value)}
-          >
-            <option value="monthly">Monthly</option>
-            <option value="weekly">Weekly</option>
-            <option value="daily">Daily</option>
-          </select>
+        <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
+          <div className="flex flex-col">
+            <h3 className="text-[18px] font-semibold tracking-[-0.01em] text-[#111111] dark:text-zinc-50 m-0">
+              Request Trends
+            </h3>
+            {displayPoint && (
+              <div className="mt-1.5 flex items-baseline gap-1 animate-fade-in">
+                <span className="text-[28px] font-extrabold text-[#111111] dark:text-zinc-50 leading-none">
+                  {displayPoint.count}
+                </span>
+                <span className="text-[12px] font-semibold text-[#8E8E93] dark:text-zinc-550 lowercase">
+                  requests ({displayPoint.name})
+                </span>
+              </div>
+            )}
+          </div>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex items-center justify-between h-8 min-w-[100px] gap-2 rounded-lg border border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#2c2c2e] px-2.5 text-[12px] font-semibold text-gray-800 dark:text-[#f2f2f7] hover:bg-gray-50 dark:hover:bg-[#3a3a3c] transition-all cursor-pointer shadow-[0_1px_2px_0_rgba(0,0,0,0.05)] select-none"
+            >
+              <span>{timeGrain === "monthly" ? "Monthly" : timeGrain === "weekly" ? "Weekly" : "Daily"}</span>
+              <i className="ph-bold ph-caret-down text-[10px] text-gray-400"></i>
+            </button>
+            {dropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setDropdownOpen(false)} />
+                <div className="absolute right-0 mt-1.5 w-32 rounded-xl border border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#2c2c2e] p-1 shadow-lg z-50 animate-fade-in font-sans">
+                  {["monthly", "weekly", "daily"].map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      onClick={() => {
+                        setTimeGrain(opt)
+                        setHoveredTrendPoint(null)
+                        setDropdownOpen(false)
+                      }}
+                      className={cn(
+                        "w-full text-left px-3 py-1.5 text-[12px] font-medium rounded-lg transition-colors cursor-pointer flex items-center justify-between",
+                        timeGrain === opt 
+                          ? "bg-[#007aff]/10 text-[#007aff] font-semibold" 
+                          : "text-gray-700 dark:text-zinc-300 hover:bg-gray-50 dark:hover:bg-zinc-800"
+                      )}
+                    >
+                      {opt === "monthly" ? "Monthly" : opt === "weekly" ? "Weekly" : "Daily"}
+                      {timeGrain === opt && <i className="ph-bold ph-check text-[10px] text-[#007aff]" />}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
         </div>
         <div className="flex-1 min-h-[288px] w-full flex flex-col justify-center">
           {hasTrendData ? (
@@ -162,6 +210,12 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
               <AreaChart
                 data={trendData}
                 margin={{ top: 10, right: 10, left: -20, bottom: 20 }}
+                onMouseMove={(state) => {
+                  if (state && state.activePayload && state.activePayload.length) {
+                    setHoveredTrendPoint(state.activePayload[0].payload)
+                  }
+                }}
+                onMouseLeave={() => setHoveredTrendPoint(null)}
               >
                 <defs>
                   <linearGradient id="areaBlueGradient" x1="0" y1="0" x2="0" y2="1">
@@ -269,11 +323,24 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                 <Bar
                   dataKey="count"
                   name="Requests"
-                  fill="url(#barOrangeGradient)"
                   radius={[8, 8, 0, 0]}
                   barSize={54}
-                  activeBar={{ fill: "#e55300" }}
-                />
+                  onMouseEnter={(entry) => setActiveBarName(entry?.name || null)}
+                  onMouseLeave={() => setActiveBarName(null)}
+                >
+                  {(data?.topDocTypes || []).map((entry, index) => {
+                    const isHighlighted = activeBarName === entry.name;
+                    return (
+                      <Cell
+                        key={`cell-${index}`}
+                        fill={isHighlighted ? "#FF6410" : "url(#barOrangeGradient)"}
+                        opacity={activeBarName && !isHighlighted ? 0.35 : 1}
+                        className="transition-all duration-300"
+                        cursor="pointer"
+                      />
+                    )
+                  })}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           ) : (
@@ -326,13 +393,24 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                       paddingAngle={2}
                       dataKey="value"
                       stroke="none"
+                      onMouseEnter={(_, index) => setActivePieIndex(index)}
+                      onMouseLeave={() => setActivePieIndex(null)}
                     >
-                      {pieData.map((entry, index) => (
-                        <Cell
-                          key={`cell-${index}`}
-                          fill={APPLE_STATUS_COLORS[entry.name] || "#e5e7eb"}
-                        />
-                      ))}
+                      {pieData.map((entry, index) => {
+                        const isHovered = activePieIndex === index;
+                        return (
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={APPLE_STATUS_COLORS[entry.name] || "#e5e7eb"}
+                            style={{
+                              transform: isHovered ? 'scale(1.03)' : 'none',
+                              transformOrigin: '50% 50%',
+                              transition: 'all 0.2s ease-in-out',
+                              cursor: 'pointer'
+                            }}
+                          />
+                        );
+                      })}
                     </Pie>
                     <ChartTooltip content={<CustomPieTooltip />} />
                   </PieChart>
@@ -363,11 +441,15 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
               const percent = totalSlaRequests > 0 ? ((d.value / totalSlaRequests) * 100).toFixed(0) : 0
               const displayName = d.name === "InProgress" ? "In Progress" : d.name
               const color = APPLE_STATUS_COLORS[d.name] || "#ccc"
+              const isHovered = activePieIndex === index
               return (
                 <div
                   key={d.name}
+                  onMouseEnter={() => setActivePieIndex(index)}
+                  onMouseLeave={() => setActivePieIndex(null)}
                   className={cn(
-                    "flex items-center justify-between h-[36px] border-b-[0.5px] border-[#F2F2F7] dark:border-white/5",
+                    "flex items-center justify-between h-[36px] border-b-[0.5px] border-[#F2F2F7] dark:border-white/5 px-2 rounded-md transition-colors cursor-pointer",
+                    isHovered && "bg-gray-50 dark:bg-zinc-800/40",
                     index === pieData.length - 1 && "border-b-0"
                   )}
                 >
@@ -409,8 +491,13 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
               data.topDocTypes.map((dt, i) => (
                 <div
                   key={dt.name}
+                  onMouseEnter={() => setActiveBarName(dt.name)}
+                  onMouseLeave={() => setActiveBarName(null)}
                   className={cn(
-                    "flex items-center justify-between h-[44px] border-b-[0.5px] border-[#F2F2F7] dark:border-white/5",
+                    "flex items-center justify-between h-[44px] border-b-[0.5px] border-[#F2F2F7] dark:border-white/5 px-2 rounded-lg transition-all cursor-pointer",
+                    activeBarName === dt.name 
+                      ? "bg-orange-50/50 dark:bg-orange-950/20 font-bold" 
+                      : "hover:bg-gray-50/50 dark:hover:bg-zinc-800/20",
                     i === data.topDocTypes.length - 1 && "border-b-0"
                   )}
                 >

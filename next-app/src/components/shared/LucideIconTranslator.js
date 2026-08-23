@@ -24,6 +24,8 @@ export default function LucideIconTranslator() {
       "trend-up": "trending-up",
       "tray-arrow-up": "inbox",
       "archive-box": "archive",
+      "door": "door-closed",
+      "warning-diamond": "alert-triangle",
       "hard-drives": "database",
       "funnel": "filter",
       "pencil-simple": "pencil",

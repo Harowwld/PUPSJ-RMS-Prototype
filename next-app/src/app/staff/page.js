@@ -592,6 +592,7 @@ function StaffPageContent() {
         rooms: storageLayout.rooms.map((r) => ({
           room: r.id,
           occupiedCount: students.filter((s) => s.room === r.id).length,
+          cabinetsCount: r.cabinets?.length || 0,
           isTarget: activeStudent?.room === r.id,
         })),
       };

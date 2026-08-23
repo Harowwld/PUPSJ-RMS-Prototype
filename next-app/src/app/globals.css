@@ -1055,4 +1055,36 @@ i[data-lucide-translated="true"]::after {
   box-shadow: 0 8px 20px rgba(249, 115, 22, 0.3) !important;
 }
 
+/* Apple styled premium shimmer loading skeleton */
+@utility animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(229, 229, 234, 0.4) 25%,
+    rgba(242, 242, 247, 0.7) 50%,
+    rgba(229, 229, 234, 0.4) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite linear;
+}
+
+:is(.dark *) .animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(44, 44, 46, 0.4) 25%,
+    rgba(58, 58, 60, 0.7) 50%,
+    rgba(44, 44, 46, 0.4) 75%
+  );
+  background-size: 200% 100%;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+
 

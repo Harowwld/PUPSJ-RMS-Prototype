@@ -28,6 +28,15 @@ export default function GlobalStaffTab({ authUser, showToast }) {
   const [roleFilter, setRoleFilter] = useState("All")
   const [statusFilter, setStatusFilter] = useState("Active") // "Active" | "Inactive"
 
+  // Pagination states
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(20)
+
+  // Reset page when search or filters change
+  useEffect(() => {
+    setPage(1)
+  }, [search, officeFilter, roleFilter, statusFilter])
+
   // Dialogs
   const [formOpen, setFormOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
@@ -199,6 +208,10 @@ export default function GlobalStaffTab({ authUser, showToast }) {
     })
   }, [staff, search, officeFilter, roleFilter, statusFilter])
 
+  const startIndex = (page - 1) * pageSize
+  const endIndex = startIndex + pageSize
+  const paginatedStaff = filteredStaff.slice(startIndex, endIndex)
+
   return (
     <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto">
       <PageHeader
@@ -243,9 +256,9 @@ export default function GlobalStaffTab({ authUser, showToast }) {
         </div>
       </div>
 
-      {/* Filters Toolbar */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white/40 dark:bg-zinc-900/30 p-3 rounded-2xl border border-gray-200/50 dark:border-white/5 backdrop-blur-xs">
-        <div className="relative">
+      {/* Toolbar / Search */}
+      <div className="flex items-center justify-between bg-white/40 dark:bg-zinc-900/30 p-3 rounded-2xl border border-gray-200/50 dark:border-white/5 backdrop-blur-xs">
+        <div className="relative w-72">
           <i className="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500"></i>
           <Input
             value={search}
@@ -255,30 +268,31 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           />
         </div>
 
-        {/* Office filter */}
-        <select
-          value={officeFilter}
-          onChange={(e) => setOfficeFilter(e.target.value)}
-          className="h-9 w-full px-3 text-xs bg-white/70 dark:bg-zinc-900/40 border border-gray-200 dark:border-white/5 rounded-xl outline-none focus:border-slate-900 dark:text-white cursor-pointer"
-        >
-          <option value="All">All Offices</option>
-          <option value="global">Super Administration (No Office)</option>
-          {offices.map(o => (
-            <option key={o.id} value={o.id}>{o.short_name}</option>
-          ))}
-        </select>
+        {/* Filters */}
+        <div className="flex items-center gap-3">
+          <select
+            value={officeFilter}
+            onChange={(e) => setOfficeFilter(e.target.value)}
+            className="h-9 px-3 text-xs bg-white/70 dark:bg-zinc-900/40 border border-gray-200 dark:border-white/5 rounded-xl outline-none focus:border-slate-900 dark:text-white cursor-pointer"
+          >
+            <option value="All">All Offices</option>
+            <option value="global">Super Administration (No Office)</option>
+            {offices.map(o => (
+              <option key={o.id} value={o.id}>{o.short_name}</option>
+            ))}
+          </select>
 
-        {/* Role filter */}
-        <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          className="h-9 w-full px-3 text-xs bg-white/70 dark:bg-zinc-900/40 border border-gray-200 dark:border-white/5 rounded-xl outline-none focus:border-slate-900 dark:text-white cursor-pointer"
-        >
-          <option value="All">All Roles</option>
-          <option value="SuperAdmin">Super Administrator</option>
-          <option value="Admin">Administrator</option>
-          <option value="Staff">Records Staff</option>
-        </select>
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="h-9 px-3 text-xs bg-white/70 dark:bg-zinc-900/40 border border-gray-200 dark:border-white/5 rounded-xl outline-none focus:border-slate-900 dark:text-white cursor-pointer"
+          >
+            <option value="All">All Roles</option>
+            <option value="SuperAdmin">Super Administrator</option>
+            <option value="Admin">Administrator</option>
+            <option value="Staff">Records Staff</option>
+          </select>
+        </div>
       </div>
 
       {/* Directory Table */}
@@ -299,93 +313,89 @@ export default function GlobalStaffTab({ authUser, showToast }) {
           </CardContent>
         </Card>
       ) : (
-        <div className="overflow-hidden rounded-2xl border border-gray-200/60 dark:border-white/5 bg-white/60 dark:bg-zinc-900/40 shadow-[0_4px_16px_rgba(0,0,0,0.02)] backdrop-blur-xs">
-          <table className="w-full border-collapse text-left text-xs">
-            <thead>
-              <tr className="border-b border-gray-200/80 dark:border-white/5 bg-gray-50/55 dark:bg-zinc-950/20 text-gray-500 dark:text-zinc-400 font-bold uppercase tracking-wider h-[46px]">
-                <th className="p-4">Staff Name / Contact</th>
+        <div className="overflow-hidden rounded-brand border border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card flex flex-col flex-1">
+          <table className="min-w-full text-sm">
+            <thead className="sticky top-0 z-10 border-b-[0.5px] border-black/10 dark:border-white/10 bg-white dark:bg-[#1c1c1e]">
+              <tr className="text-left text-[12px] font-medium tracking-[0.04em] text-[#8E8E93] dark:text-zinc-550 h-11 select-none">
+                <th className="p-4 pl-6">Staff Name / Contact</th>
                 <th className="p-4">Staff ID</th>
                 <th className="p-4">Office Partition</th>
                 <th className="p-4">Privilege Level</th>
                 <th className="p-4">Active Section</th>
-                <th className="p-4 text-right">Actions</th>
+                <th className="p-4 pr-6 text-right">Actions</th>
               </tr>
             </thead>
             
-            <tbody className="divide-y divide-gray-100 dark:divide-white/5 font-medium text-gray-900 dark:text-zinc-100">
-              {filteredStaff.map((member) => {
+            <tbody className="divide-y divide-gray-100 dark:divide-white/5 font-medium text-gray-900 dark:text-zinc-100 bg-white dark:bg-[#1c1c1e]">
+              {paginatedStaff.map((member) => {
                 const office = offices.find(o => o.id === member.office_id)
                 const isSelf = member.id === authUser?.id
                 
                 return (
                   <tr 
                     key={member.id}
-                    className="hover:bg-gray-50/30 dark:hover:bg-white/2 transition-colors duration-150 h-[56px]"
+                    className="group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 select-none"
                   >
-                    <td className="p-4">
-                      <div className="flex flex-col">
-                        <span className="font-semibold text-[13px] text-gray-950 dark:text-zinc-50">
+                    <td className="py-2 px-4 pl-6 align-middle">
+                      <div className="flex flex-col min-w-0">
+                        <span className={cn("text-[14px] font-medium text-[#111111] dark:text-zinc-50 truncate", isSelf && "font-semibold")}>
                           {member.fname} {member.lname} {isSelf && "(You)"}
                         </span>
-                        <span className="text-gray-400 dark:text-zinc-500 font-normal mt-[1px]">
+                        <span className="truncate text-[12px] font-normal text-[#8E8E93] dark:text-zinc-500 mt-[2px]">
                           {member.email}
                         </span>
                       </div>
                     </td>
-                    <td className="p-4 font-mono font-normal tracking-wide text-gray-500 dark:text-zinc-400">
+                    <td className="py-2 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-300">
                       {member.id}
                     </td>
-                    <td className="p-4">
+                    <td className="py-2 px-4 align-middle">
                       {office ? (
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: office.accent_color || "#800000" }} />
-                          <span className="font-semibold">{office.short_name}</span>
+                        <div 
+                          className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-semibold tracking-[0.04em] border-0 select-none"
+                          style={{
+                            backgroundColor: `${office.accent_color || "#800000"}15`,
+                            color: office.accent_color || "#800000"
+                          }}
+                        >
+                          {office.short_name}
                         </div>
                       ) : (
-                        <span className="text-blue-600 dark:text-blue-400 font-semibold uppercase tracking-wide text-[10px]">
+                        <span className="inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-semibold tracking-[0.04em] bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 select-none">
                           Platform Level
                         </span>
                       )}
                     </td>
-                    <td className="p-4">
-                      <Badge 
+                    <td className="py-2 px-4 align-middle">
+                      <div 
                         className={cn(
-                          "rounded-md shadow-2xs font-semibold px-2 py-0.5 border text-[10px] tracking-wide",
-                          member.role === "SuperAdmin" 
-                            ? "bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/20"
-                            : member.role === "Admin"
-                              ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20"
-                              : "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
+                          "inline-flex w-fit items-center justify-center rounded-[4px] px-[8px] py-[3px] text-[11px] font-medium tracking-[0.04em]",
+                          member.role === "SuperAdmin" || member.role === "Admin"
+                            ? "bg-[#FEE2E2] text-[#991B1B] dark:bg-red-950/40 dark:text-red-400"
+                            : "bg-[#FEF3C7] text-[#92400E] dark:bg-amber-950/40 dark:text-amber-400"
                         )}
                       >
-                        {member.role === "SuperAdmin" ? "SuperAdmin" : member.role}
-                      </Badge>
+                        {member.role}
+                      </div>
                     </td>
-                    <td className="p-4 text-gray-500 dark:text-zinc-400 font-normal">
+                    <td className="py-2 px-4 align-middle text-[13px] font-normal text-[#111111] dark:text-zinc-300">
                       {member.section || "—"}
                     </td>
-                    <td className="p-4 text-right">
+                    <td className="py-2 px-4 pr-6 align-middle text-right">
                       <div className="flex items-center justify-end gap-1.5">
-                        <Button
-                          variant="ghost"
+                        <button
                           onClick={() => handleOpenEdit(member)}
-                          className="h-8 w-8 p-0 rounded-lg hover:bg-gray-100 dark:hover:bg-white/5 cursor-pointer"
+                          className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-amber-500 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                         >
-                          <i className="ti ti-pencil text-sm text-gray-500"></i>
-                        </Button>
+                          <i className="ph-bold ph-pencil-simple text-[16px]"></i>
+                        </button>
                         {!isSelf && (
-                          <Button
-                            variant="ghost"
+                          <button
                             onClick={() => handleToggleStatus(member)}
-                            className={cn(
-                              "h-8 text-xs font-semibold rounded-lg cursor-pointer",
-                              member.status === "Active"
-                                ? "text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-950/20"
-                                : "text-emerald-600 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:bg-emerald-950/20"
-                            )}
+                            className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                           >
-                            {member.status === "Active" ? "Suspend" : "Reactivate"}
-                          </Button>
+                            <i className="ph-bold ph-archive text-[16px]"></i>
+                          </button>
                         )}
                       </div>
                     </td>
@@ -394,6 +404,56 @@ export default function GlobalStaffTab({ authUser, showToast }) {
               })}
             </tbody>
           </table>
+
+          {/* Pagination Footer */}
+          <div className="flex items-center justify-between border-t border-[#e5e5ea] dark:border-[#3a3a3c] bg-white dark:bg-[#1c1c1e] p-4 px-6 rounded-b-2xl">
+            <div className="flex items-center gap-6 text-xs text-gray-500 dark:text-zinc-400 select-none">
+              <span>Showing {paginatedStaff.length} of {filteredStaff.length}</span>
+              <div className="flex items-center gap-2">
+                <span>Rows:</span>
+                {[10, 20, 50, 100].map(sz => (
+                  <button
+                    key={sz}
+                    onClick={() => {
+                      setPageSize(sz)
+                      setPage(1)
+                    }}
+                    className={cn(
+                      "px-2 py-0.5 rounded-md text-[11px] font-bold transition-all cursor-pointer",
+                      pageSize === sz 
+                        ? "bg-gray-100 dark:bg-zinc-800 text-gray-900 dark:text-zinc-100" 
+                        : "text-gray-400 hover:text-gray-600 dark:hover:text-zinc-200"
+                    )}
+                  >
+                    {sz}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div className="flex items-center gap-3 select-none">
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={page <= 1}
+                onClick={() => setPage(p => p - 1)}
+                className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer"
+              >
+                Prev
+              </Button>
+              <div className="h-8 w-8 rounded-lg border border-[#e5e5ea] dark:border-zinc-800 flex items-center justify-center text-xs font-bold text-gray-800 dark:text-zinc-200 bg-white dark:bg-zinc-900">
+                {page}
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                disabled={endIndex >= filteredStaff.length}
+                onClick={() => setPage(p => p + 1)}
+                className="text-xs text-gray-500 dark:text-zinc-400 disabled:opacity-40 cursor-pointer"
+              >
+                Next
+              </Button>
+            </div>
+          </div>
         </div>
       )}
 
