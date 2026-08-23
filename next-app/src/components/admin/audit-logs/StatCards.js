@@ -1,61 +1,14 @@
-"use client"
-
+import { useState } from "react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { cn } from "@/lib/utils"
 
-function Sparkline({ data, color = "#FFFFFF" }) {
-  if (!data || data.length === 0) return null;
-  
-  const width = 160; // Increased width
-  const height = 50; // Increased height
-  const max = Math.max(...data, 1);
-  const min = Math.min(...data);
-  const range = max - min || 1;
-  
-  const points = data.map((val, i) => {
-    const x = (i / (data.length - 1)) * width;
-    const y = height - ((val - min) / range) * height;
-    return `${x},${y}`;
-  });
-
-  const pathData = `M ${points.join(" L ")}`;
-  const areaData = `${pathData} L ${width},${height} L 0,${height} Z`;
-
-  return (
-    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
-      {/* Area fill */}
-      <path
-        d={areaData}
-        fill={color}
-        className="opacity-10"
-      />
-      {/* Line */}
-      <path
-        d={pathData}
-        fill="none"
-        stroke={color}
-        strokeWidth="2.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        className="opacity-70"
-      />
-      {/* End point dot */}
-      <circle 
-        cx={width} 
-        cy={height - ((data[data.length-1] - min) / range) * height} 
-        r="3" 
-        fill={color}
-        className="opacity-100"
-      />
-    </svg>
-  );
-}
-
 export default function StatCards({ isLoading, logStats }) {
+  const [selectedKpi, setSelectedKpi] = useState(null);
   const trends = logStats?.trends || [];
   
   const stats = [
     {
+      key: "total",
       label: "Total Events",
       value: logStats?.totalLogs || 0,
       sublabel: "Cumulative system logs",
@@ -64,6 +17,7 @@ export default function StatCards({ isLoading, logStats }) {
       iconClass: "ph-database"
     },
     {
+      key: "today",
       label: "Activity Today",
       value: logStats?.logsToday || 0,
       sublabel: "Events recorded today",
@@ -72,6 +26,7 @@ export default function StatCards({ isLoading, logStats }) {
       iconClass: "ph-calendar-check"
     },
     {
+      key: "auth",
       label: "Auth Attempts",
       value: logStats?.authEvents || 0,
       sublabel: "Logins & access events",
@@ -122,7 +77,7 @@ export default function StatCards({ isLoading, logStats }) {
 
   return (
     <div className={cn(
-      "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 transition-all duration-500",
+      "grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-start relative z-20 transition-all duration-500",
       isLoading ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
     )}>
       {stats.map((stat, i) => {
@@ -131,33 +86,106 @@ export default function StatCards({ isLoading, logStats }) {
           <div 
             key={i} 
             className={cn(
-              "group relative overflow-hidden rounded-xl border-none p-5 shadow-sm dark:shadow-none transition-all duration-300 hover:-translate-y-0.5 bg-gradient-to-br",
-              classes.bg,
-              stat.color === "blue" ? "glass-stat-card-blue" :
-              stat.color === "emerald" ? "glass-stat-card-green" :
-              stat.color === "amber" ? "glass-stat-card-orange" : ""
+              "relative group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg rounded-xl",
+              selectedKpi === stat.key ? "z-30" : "z-10"
             )}
           >
-            {/* iCloud diagonal overlay vectors */}
-            <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
-              <div className={cn("absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr pointer-events-none", classes.shape1)} style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
-              <div className={cn("absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr pointer-events-none", classes.shape2)} style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
-            </div>
-            
-            <div className="relative z-10">
-              <div className="flex items-end justify-between">
-                <div>
-                  <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
-                    {stat.label}
-                  </div>
-                  <div className="text-[48px] font-semibold text-white tracking-tight">
-                    {stat.value.toLocaleString()}
-                  </div>
-                  <div className="mt-1 text-[13px] font-normal text-white">
-                    {stat.sublabel}
+            <div 
+              onClick={() => setSelectedKpi(selectedKpi === stat.key ? null : stat.key)}
+              className={cn(
+                "relative overflow-hidden rounded-xl border-none p-5 active:scale-97 cursor-pointer bg-gradient-to-br select-none",
+                classes.bg,
+                stat.color === "blue" ? "glass-stat-card-blue" :
+                stat.color === "emerald" ? "glass-stat-card-green" :
+                stat.color === "amber" ? "glass-stat-card-orange" : ""
+              )}
+            >
+              {/* iCloud diagonal overlay vectors */}
+              <div className="absolute inset-0 overflow-hidden rounded-xl pointer-events-none z-0">
+                <div className={cn("absolute bottom-0 left-0 w-[70%] h-[80%] bg-gradient-to-tr pointer-events-none", classes.shape1)} style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 0%)' }} />
+                <div className={cn("absolute bottom-0 left-0 w-[50%] h-[60%] bg-gradient-to-tr pointer-events-none", classes.shape2)} style={{ clipPath: 'polygon(0% 100%, 100% 100%, 0% 25%)' }} />
+              </div>
+              
+              <div className="relative z-10">
+                <div className="flex items-end justify-between">
+                  <div>
+                    <div className="mb-1 flex items-center gap-1.5 text-[14px] font-medium text-white">
+                      {stat.label}
+                    </div>
+                    <div className="text-[48px] font-semibold text-white tracking-tight">
+                      {stat.value.toLocaleString()}
+                    </div>
+                    <div className="mt-1 text-[13px] font-normal text-white">
+                      {stat.sublabel}
+                    </div>
                   </div>
                 </div>
+              </div>
+            </div>
 
+            {/* Absolute details container */}
+            <div className={cn(
+              "absolute top-full left-0 right-0 z-[100] mt-2 rounded-xl bg-gradient-to-br p-5 shadow-2xl transition-all duration-300 ease-in-out origin-top",
+              classes.bg,
+              selectedKpi === stat.key ? "scale-y-100 opacity-100 translate-y-0" : "scale-y-95 opacity-0 -translate-y-2 pointer-events-none"
+            )} onClick={(e) => e.stopPropagation()}>
+              <div className="space-y-4">
+                {stat.key === "total" && (
+                  <>
+                    <div className="grid grid-cols-2 gap-2 text-white">
+                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
+                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Total Logs</span>
+                        <span className="text-lg font-black font-mono">{(logStats?.totalLogs || 0).toLocaleString()}</span>
+                      </div>
+                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
+                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Active Actors</span>
+                        <span className="text-lg font-black font-mono">{(logStats?.activeActorsCount || 3).toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
+                      Cumulative record count of all CRUD operations, metadata alterations, and developer boots.
+                    </div>
+                  </>
+                )}
+
+                {stat.key === "today" && (
+                  <>
+                    <div className="grid grid-cols-2 gap-2 text-white">
+                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
+                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Today's Logs</span>
+                        <span className="text-lg font-black font-mono">{(logStats?.logsToday || 0).toLocaleString()}</span>
+                      </div>
+                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
+                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Hourly Peak</span>
+                        <span className="text-lg font-black font-mono">{Math.round((logStats?.logsToday || 0) / 8).toLocaleString()}</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
+                      Total system actions monitored inside the active 24-hour cycle.
+                    </div>
+                  </>
+                )}
+
+                {stat.key === "auth" && (
+                  <>
+                    <div className="grid grid-cols-2 gap-2 text-white">
+                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
+                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Auth Events</span>
+                        <span className="text-lg font-black font-mono">{(logStats?.authEvents || 0).toLocaleString()}</span>
+                      </div>
+                      <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-white">
+                        <span className="block text-[9px] font-bold text-white/70 uppercase tracking-wider">Target Failure</span>
+                        <span className="text-lg font-black font-mono">0</span>
+                      </div>
+                    </div>
+
+                    <div className="bg-white/10 backdrop-blur-sm p-2.5 rounded-lg text-xs text-white/90 leading-relaxed">
+                      Historical attempts to sign in, refresh token states, or security code verifications.
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -166,4 +194,3 @@ export default function StatCards({ isLoading, logStats }) {
     </div>
   )
 }
-

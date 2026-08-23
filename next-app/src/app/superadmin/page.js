@@ -193,6 +193,7 @@ function SuperAdminPageContent() {
           zoomNode={zoomNode}
           setZoomNode={setZoomNode}
           handleZoomMouseDown={handleZoomMouseDown}
+          accentColor="#000000"
         />
         
         <main className="relative w-full min-w-0 min-h-0 flex-1 bg-white/25 dark:bg-zinc-950/25 overflow-y-auto backdrop-blur-xs">

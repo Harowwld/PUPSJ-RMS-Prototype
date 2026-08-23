@@ -49,7 +49,7 @@ export async function GET(req) {
       }
     } else if (currentRole === "SuperAdmin") {
       officeName = "Super Administration";
-      accentColor = "#1e293b"; // Dark slate for platform level
+      accentColor = "#e30000"; // eManage Brand Red
       // SuperAdmin has access to everything
       const allModules = await getOfficeModules("registrar");
       enabledModules = (allModules || []).map(m => m.id);

@@ -31,8 +31,8 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
   const isStaff = pathname?.startsWith("/staff") || items.some(item => 
     ["requests", "upload", "documents", "notifications", "search"].includes(item.key)
   )
-  const activeColor = accentColor || (isStaff ? "#ebb800" : "#E5484D")
-  const staffIconColor = accentColor || (isStaff ? "#ebb800" : "#E5484D")
+  const activeColor = accentColor || (isStaff ? "#ebb800" : "#e30000")
+  const staffIconColor = accentColor || (isStaff ? "#ebb800" : "#e30000")
   const sidebarRef = useRef(null)
   const pendingFocusKeyRef = useRef(null)
   const [sidebarFocused, setSidebarFocused] = useState(true)
@@ -133,15 +133,9 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
             <i className="ti ti-panel-left-dashed text-[21px]" style={{ color: activeColor }}></i>
           </button>
 
-          {officeName && (
-            <span className="text-[12px] font-bold text-gray-800 dark:text-zinc-200 truncate max-w-[125px] select-none" title={officeName}>
-              {officeName}
-            </span>
-          )}
-
           {/* Zoom Control when Sidebar is Visible */}
           {zoomNode !== undefined && setZoomNode && handleZoomMouseDown && (
-            <div className="flex items-center gap-1 select-none">
+            <div className="flex items-center gap-1 select-none opacity-25 hover:opacity-100 transition-opacity duration-200">
               <button
                 type="button"
                 onClick={() => setZoomNode(prev => Math.max(0, prev - 1))}

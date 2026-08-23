@@ -1561,7 +1561,7 @@ function StaffPageContent() {
             zoomNode={zoomNode}
             setZoomNode={setZoomNode}
             handleZoomMouseDown={handleZoomMouseDown}
-            accentColor={authUser?.accent_color}
+            accentColor="#ebb800"
             officeName={authUser?.office_name}
           />
         )}

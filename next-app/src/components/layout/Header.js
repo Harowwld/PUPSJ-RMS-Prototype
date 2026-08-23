@@ -128,7 +128,10 @@ export default function Header({ authUser, onLogout, children }) {
             <img 
               src={(activeView === "superadmin" || activeView === "admin") ? "/admin-logo.png" : "/staff-logo.png"} 
               alt="eManage Logo" 
-              className="h-8 w-8 object-contain" 
+              className={cn(
+                "h-8 w-8 object-contain",
+                activeView === "superadmin" && "brightness-0 dark:invert"
+              )} 
             />
             <div className="flex items-center">
               <span className="font-semibold text-[26px] text-black dark:text-white tracking-tight transition-colors group-hover/logo:text-gray-850 dark:group-hover/logo:text-zinc-200 leading-none">
