@@ -181,7 +181,7 @@ export default function SLAAnalyticsTab({
         </div>
       ) : !error && data ? (
         <div className={cn(
-          "transition-all duration-500", 
+          "w-full transition-all duration-500", 
           (loading && !manualLoading) ? "opacity-40 blur-[1px] grayscale-[0.1]" : "opacity-100"
         )}>
           <SlaKpiCards total={total} completionRate={completionRate} />

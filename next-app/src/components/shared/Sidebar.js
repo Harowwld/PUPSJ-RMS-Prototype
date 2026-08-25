@@ -114,13 +114,19 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
     <aside
       ref={sidebarRef}
       className={cn(
-        "z-10 flex-col gap-[2px] bg-white/20 backdrop-blur-md dark:bg-zinc-950/25 select-none sticky top-0 h-screen transition-[width,padding] duration-300 ease-in-out overflow-hidden hidden md:flex shrink-0",
-        open ? "w-[260px] py-2 px-2" : "w-0 py-2 px-0 pointer-events-none"
+        "z-10 flex-col gap-[2px] bg-white/20 backdrop-blur-md dark:bg-zinc-950/25 select-none sticky top-0 h-screen overflow-hidden hidden md:flex shrink-0",
+        open ? "w-[260px] py-2 px-2" : "w-[60px] py-2 px-1"
       )}
-      style={{ borderRight: open ? "0.5px solid rgba(255,255,255,0.18)" : "0px solid transparent", transitionProperty: "width, padding-left, padding-right" }}
+      style={{ 
+        borderRight: "0.5px solid rgba(255,255,255,0.18)",
+        transition: "width 300ms cubic-bezier(0.4, 0, 0.2, 1), padding 300ms cubic-bezier(0.4, 0, 0.2, 1)" 
+      }}
     >
-      <div className="flex flex-col gap-[2px] flex-1 min-w-[244px] h-full overflow-y-auto">
-        <div className="flex items-center gap-[5px] mb-1.5 ml-1">
+      <div className="flex flex-col gap-[2px] flex-1 h-full overflow-y-auto w-full items-stretch">
+        <div 
+          className="flex items-center mb-1.5 w-full"
+          style={{ paddingLeft: "8px", height: "36px" }}
+        >
           <button
             type="button"
             onClick={() => {
@@ -128,96 +134,117 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                 window.dispatchEvent(new CustomEvent("toggle-sidebar"))
               }
             }}
-            className="flex w-[30px] h-[30px] items-center justify-center rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] cursor-pointer transition-colors shrink-0"
+            className="flex w-[36px] h-[36px] items-center justify-center rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] cursor-pointer transition-colors shrink-0"
           >
-            <i className="ti ti-panel-left-dashed text-[21px]" style={{ color: activeColor }}></i>
+            <i className={cn("text-[21px] transition-all duration-300", open ? "ti ti-panel-left-dashed" : "ti ti-panel-left")} style={{ color: activeColor }}></i>
           </button>
-
+ 
           {/* Zoom Control when Sidebar is Visible */}
-          {zoomNode !== undefined && setZoomNode && handleZoomMouseDown && (
-            <div className="flex items-center gap-1 select-none opacity-25 hover:opacity-100 transition-opacity duration-200">
-              <button
-                type="button"
-                onClick={() => setZoomNode(prev => Math.max(0, prev - 1))}
-                className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-7 w-7 transition-colors duration-75"
-              >
-                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M2.5 7H11.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-                </svg>
-              </button>
-              <div 
-                onMouseDown={handleZoomMouseDown}
-                onTouchStart={handleZoomMouseDown}
-                className="relative w-[50px] h-[14px] flex items-center group cursor-pointer"
-              >
-                {/* Track */}
-                <div className="absolute left-0 right-0 h-[2.5px] bg-[#D1D1D6] dark:bg-zinc-700 rounded-full"></div>
-                {/* Active Track */}
+          <div className={cn(
+            "flex items-center gap-1 select-none transition-all duration-300 ease-in-out overflow-hidden origin-left",
+            open ? "opacity-25 hover:opacity-100 max-w-[150px] ml-1" : "opacity-0 max-w-0 ml-0 pointer-events-none"
+          )}>
+            {zoomNode !== undefined && setZoomNode && handleZoomMouseDown && (
+              <>
+                <button
+                  type="button"
+                  onClick={() => setZoomNode(prev => Math.max(0, prev - 1))}
+                  className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 hover:text-gray-75 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-7 w-7 transition-colors duration-75"
+                >
+                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2.5 7H11.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+                  </svg>
+                </button>
                 <div 
-                  className="absolute left-0 h-[2.5px] bg-[#007AFF] rounded-full"
-                  style={{ width: `${(zoomNode / 6) * 100}%` }}
-                ></div>
-                {/* Handle */}
-                <div 
-                  className="absolute -translate-x-1/2 w-[12px] h-[12px] rounded-full bg-white dark:bg-zinc-900 border-[2px] border-[#007AFF] shadow-xs"
-                  style={{ left: `${(zoomNode / 6) * 100}%` }}
-                ></div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setZoomNode(prev => Math.min(6, prev + 1))}
-                className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 hover:text-gray-700 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-7 w-7 transition-colors duration-75"
-              >
-                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M7 2.5V11.5M2.5 7H11.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
-                </svg>
-              </button>
-            </div>
-          )}
+                  onMouseDown={handleZoomMouseDown}
+                  onTouchStart={handleZoomMouseDown}
+                  className="relative w-[50px] h-[14px] flex items-center group cursor-pointer"
+                >
+                  <div className="absolute left-0 right-0 h-[2.5px] bg-[#D1D1D6] dark:bg-zinc-700 rounded-full"></div>
+                  <div 
+                    className="absolute left-0 h-[2.5px] bg-[#007AFF] rounded-full"
+                    style={{ width: `${(zoomNode / 6) * 100}%` }}
+                  ></div>
+                  <div 
+                    className="absolute -translate-x-1/2 w-[12px] h-[12px] rounded-full bg-white dark:bg-zinc-900 border-[2px] border-[#007AFF] shadow-xs"
+                    style={{ left: `${(zoomNode / 6) * 100}%` }}
+                  ></div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setZoomNode(prev => Math.min(6, prev + 1))}
+                  className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-150 dark:hover:bg-white/5 text-gray-500 hover:text-gray-75 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-7 w-7 transition-colors duration-75"
+                >
+                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M7 2.5V11.5M2.5 7H11.5" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
+                  </svg>
+                </button>
+              </>
+            )}
+          </div>
         </div>
         {items.map((item, idx) => {
           if (item.type === "header") {
             return (
               <div
                 key={`header-${idx}`}
-                className={cn(
-                  "mb-[2px] pl-2 text-[12px] font-semibold tracking-[0.05em] uppercase text-[#8E8E93]",
-                  idx === 0 ? "mt-1.5" : "mt-5"
-                )}
+                className="transition-all duration-300 ease-in-out w-full flex items-center"
+                style={{ 
+                  height: "20px", 
+                  marginTop: idx === 0 ? "8px" : "24px",
+                  marginBottom: "8px",
+                  paddingLeft: "16px"
+                }}
               >
-                {item.label}
+                {open ? (
+                  <span className="text-[12px] font-semibold tracking-[0.05em] uppercase text-[#8E8E93] block truncate transition-opacity duration-300 opacity-100">
+                    {item.label}
+                  </span>
+                ) : (
+                  <div className="h-[1px] bg-gray-200 dark:bg-zinc-800 w-[50%] transition-opacity duration-300 opacity-100" />
+                )}
               </div>
             )
           }
-
+ 
           if (item.type === "accordion") {
             const isExpanded = expandedKeys[item.key]
             const hasActiveChild = item.children?.some((c) => c.key === activeKey)
             const iconConfig = ICON_MAP[item.key] || { icon: item.iconClass, color: staffIconColor }
-
+ 
             return (
-              <div key={item.key} className="flex flex-col gap-[2px]">
+              <div key={item.key} className="flex flex-col gap-[2px] w-full items-stretch">
                 <button
                   type="button"
                   onClick={() => toggleAccordion(item.key)}
                   className={cn(
-                    "flex w-full h-[36px] items-center justify-between rounded-[6px] px-2 text-[15px] transition-colors outline-none cursor-pointer",
+                    "flex w-full h-[36px] items-center rounded-[6px] text-[15px] outline-none cursor-pointer justify-between",
                     hasActiveChild && !isExpanded
                       ? sidebarFocused
-                        ? "text-white font-normal"
+                        ? "text-white font-normal animate-none"
                         : "bg-[#F0F0F0] text-[#1D1D1F] font-normal"
                       : "text-[#1D1D1F] hover:bg-[rgba(0,0,0,0.06)] font-normal"
                   )}
-                  style={hasActiveChild && !isExpanded && sidebarFocused ? { backgroundColor: activeColor } : {}}
+                  style={{
+                    backgroundColor: hasActiveChild && !isExpanded && sidebarFocused ? activeColor : undefined,
+                    paddingLeft: "16px",
+                    paddingRight: "8px",
+                    transition: "background-color 150ms ease"
+                  }}
                 >
-                  <div className="flex min-w-0 items-center gap-1.5 pl-4">
+                  <div className="flex min-w-0 items-center justify-start">
                     <i
                       className={cn(iconConfig.icon, "text-[18px] transition-colors shrink-0")}
                       style={{ color: hasActiveChild && !isExpanded ? (sidebarFocused ? "#FFFFFF" : staffIconColor) : staffIconColor }}
                     ></i>
-                    <span>{item.label}</span>
+                    <span className={cn(
+                      "transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden origin-left block",
+                      open ? "opacity-100 max-w-[150px] ml-1.5" : "opacity-0 max-w-0 ml-0 pointer-events-none"
+                    )}>
+                      {item.label}
+                    </span>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className={cn("flex items-center gap-2 transition-all duration-300", open ? "opacity-100 max-w-[50px] scale-100" : "opacity-0 max-w-0 scale-0 pointer-events-none w-0")}>
                     {item.badge > 0 ? (
                       <span
                         className={cn(
@@ -242,18 +269,18 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                     ></i>
                   </div>
                 </button>
-
+ 
                 <div
                   className={cn(
-                    "overflow-hidden transition-all duration-[450ms] ease-out",
-                    isExpanded ? "mt-[2px] max-h-[500px] opacity-100" : "mt-0 max-h-0 opacity-0"
+                    "overflow-hidden transition-all duration-[450ms] ease-out w-full",
+                    open && isExpanded ? "mt-[2px] max-h-[500px] opacity-100" : "mt-0 max-h-0 opacity-0 pointer-events-none"
                   )}
                 >
-                  <div className="ml-4 flex flex-col gap-[2px] border-l border-gray-150 pl-2">
+                  <div className="flex flex-col gap-[2px] items-stretch">
                     {item.children.map((child, childIdx) => {
                       const isActive = activeKey === child.key
                       const childIconConfig = ICON_MAP[child.key] || { icon: child.iconClass, color: staffIconColor }
-
+ 
                       return (
                         <a
                           key={child.key}
@@ -261,43 +288,50 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                           href={`${pathname}?view=${child.key}`}
                           onClick={(e) => handleLinkClick(e, child.key)}
                           className={cn(
-                            "flex w-full h-[36px] items-center justify-between gap-[6px] rounded-[6px] px-2 text-[15px] transition-colors outline-none cursor-pointer",
+                            "flex w-full h-[36px] items-center rounded-[6px] text-[15px] outline-none cursor-pointer justify-between",
                             isActive
                               ? sidebarFocused
-                                ? "text-white font-normal"
+                                ? "text-white font-normal animate-none"
                                 : "bg-[#F0F0F0] text-[#1D1D1F] font-normal"
                               : "text-[#1D1D1F] hover:bg-[rgba(0,0,0,0.06)] font-normal"
                           )}
                           style={{
                             backgroundColor: isActive && sidebarFocused ? activeColor : undefined,
+                            paddingLeft: "32px",
+                            paddingRight: "8px",
+                            transition: "background-color 150ms ease",
                             transitionDelay: isExpanded
                               ? `${childIdx * 50}ms`
                               : "0ms",
                           }}
                         >
-                          <span className="flex min-w-0 items-center gap-1.5 pl-4">
+                          <span className="flex min-w-0 items-center justify-start">
                             <i
                               className={cn(childIconConfig.icon, "text-[18px] transition-colors shrink-0")}
                               style={{ color: isActive ? (sidebarFocused ? "#FFFFFF" : staffIconColor) : staffIconColor }}
                             ></i>
-                            <span>{child.label}</span>
-                          </span>
-                          {child.badge > 0 ? (
-                            <span
-                              className={cn(
-                                "flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
-                              )}
-                              style={
-                                isActive
-                                  ? sidebarFocused
-                                    ? { backgroundColor: "#FFFFFF", color: activeColor }
-                                    : { backgroundColor: activeColor, color: "#FFFFFF" }
-                                  : { backgroundColor: activeColor, color: "#FFFFFF" }
-                              }
-                            >
-                              {child.badge > 99 ? "99+" : child.badge}
+                            <span className={cn(
+                              "transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden origin-left block",
+                              open ? "opacity-100 max-w-[150px] ml-1.5" : "opacity-0 max-w-0 ml-0 pointer-events-none"
+                            )}>
+                              {child.label}
                             </span>
-                          ) : null}
+                          </span>
+                          <span
+                            className={cn(
+                              "flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold transition-all duration-300",
+                              open && child.badge > 0 ? "opacity-100 scale-100" : "opacity-0 scale-0 pointer-events-none w-0"
+                            )}
+                            style={
+                              isActive
+                                ? sidebarFocused
+                                  ? { backgroundColor: "#FFFFFF", color: activeColor }
+                                  : { backgroundColor: activeColor, color: "#FFFFFF" }
+                                : { backgroundColor: activeColor, color: "#FFFFFF" }
+                            }
+                          >
+                            {child.badge > 99 ? "99+" : child.badge}
+                          </span>
                         </a>
                       )
                     })}
@@ -306,49 +340,58 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
               </div>
             )
           }
-
+ 
           const isActive = activeKey === item.key
           const iconConfig = ICON_MAP[item.key] || { icon: item.iconClass, color: staffIconColor }
-
+ 
           return (
             <a
               key={item.key}
               data-sidebar-key={item.key}
-              href={`${pathname}?view={item.key}`}
+              href={`${pathname}?view=${item.key}`}
               onClick={(e) => handleLinkClick(e, item.key)}
               className={cn(
-                "flex w-full h-[36px] items-center justify-between gap-1.5 rounded-[6px] px-2 text-[15px] transition-colors outline-none cursor-pointer",
+                "flex w-full h-[36px] items-center rounded-[6px] text-[15px] outline-none cursor-pointer justify-between",
                 isActive
                   ? sidebarFocused
-                    ? "text-white font-normal"
+                    ? "text-white font-normal animate-none"
                     : "bg-[#F0F0F0] text-[#1D1D1F] font-normal"
                   : "text-[#1D1D1F] hover:bg-[rgba(0,0,0,0.06)] font-normal"
               )}
-              style={isActive && sidebarFocused ? { backgroundColor: activeColor } : {}}
+              style={{
+                backgroundColor: isActive && sidebarFocused ? activeColor : undefined,
+                paddingLeft: "16px",
+                paddingRight: "8px",
+                transition: "background-color 150ms ease"
+              }}
             >
-              <span className="flex min-w-0 items-center gap-1.5 pl-4">
+              <span className="flex min-w-0 items-center justify-start">
                 <i
                   className={cn(iconConfig.icon, "text-[18px] transition-colors shrink-0")}
                   style={{ color: isActive ? (sidebarFocused ? "#FFFFFF" : staffIconColor) : staffIconColor }}
                 ></i>
-                <span>{item.label}</span>
-              </span>
-              {item.badge > 0 ? (
-                <span
-                  className={cn(
-                    "ml-auto flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold"
-                  )}
-                  style={
-                    isActive
-                      ? sidebarFocused
-                        ? { backgroundColor: "#FFFFFF", color: activeColor }
-                        : { backgroundColor: activeColor, color: "#FFFFFF" }
-                      : { backgroundColor: activeColor, color: "#FFFFFF" }
-                  }
-                >
-                  {item.badge > 99 ? "99+" : item.badge}
+                <span className={cn(
+                  "transition-all duration-300 ease-in-out whitespace-nowrap overflow-hidden origin-left block",
+                  open ? "opacity-100 max-w-[150px] ml-1.5" : "opacity-0 max-w-0 ml-0 pointer-events-none"
+                )}>
+                  {item.label}
                 </span>
-              ) : null}
+              </span>
+              <span
+                className={cn(
+                  "flex h-[16px] min-w-[16px] shrink-0 items-center justify-center rounded-full px-1 text-[10px] font-semibold transition-all duration-300",
+                  open && item.badge > 0 ? "opacity-100 scale-100 ml-auto" : "opacity-0 scale-0 pointer-events-none w-0"
+                )}
+                style={
+                  isActive
+                    ? sidebarFocused
+                      ? { backgroundColor: "#FFFFFF", color: activeColor }
+                      : { backgroundColor: activeColor, color: "#FFFFFF" }
+                    : { backgroundColor: activeColor, color: "#FFFFFF" }
+                }
+              >
+                {item.badge > 99 ? "99+" : item.badge}
+              </span>
             </a>
           )
         })}
