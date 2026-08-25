@@ -337,7 +337,7 @@ const CabinetElement = memo(({
             {/* Skeuomorphic Pull Handle */}
             <div
               className={cn(
-                "w-7 h-1.5 rounded-sm bg-gray-300 dark:bg-[#737373] border border-black/10 dark:border-white/10 shadow-[inset_0_1px_1px_rgba(0,0,0,0.15)] group-hover/cab:scale-x-110 transition-transform duration-200",
+                "w-7 h-1.5 rounded-sm bg-gray-300 dark:bg-[#737373] border border-black/10 dark:border-white/10 shadow-[inset_0_1px_1px_rgba(0,0,0,0.15)]",
                 isSelected && "bg-cyan-400 dark:bg-cyan-800 border-cyan-500/20",
                 isConflict && "bg-red-400 dark:bg-red-800 border-red-500/20"
               )}

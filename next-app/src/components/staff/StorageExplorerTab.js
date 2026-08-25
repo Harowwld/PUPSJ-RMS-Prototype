@@ -286,14 +286,8 @@ export default function StorageExplorerTab({
                             )}
 
                             <div className="relative z-10 flex flex-col flex-1 w-full">
-                              {/* Room Number with icon */}
-                              <div className="flex items-center gap-3 mb-3">
-                                <div className={cn(
-                                  "h-10 w-10 rounded-xl flex items-center justify-center transition-all duration-300 group-hover:scale-105 shadow-sm",
-                                  isTarget ? "bg-white/20 text-white" : "bg-[#f2f2f7] dark:bg-[#2c2c2e] text-[#8e8e93] dark:text-[#aeaeb2]"
-                                )}>
-                                  <i className="ph-bold ph-door text-[18px]" />
-                                </div>
+                              {/* Room Number */}
+                              <div className="mb-3">
                                 <h5 className={cn(
                                   "text-[18px] font-bold tracking-tight font-inter leading-none",
                                   isTarget ? "text-white" : "text-gray-900 dark:text-[#f2f2f7]"

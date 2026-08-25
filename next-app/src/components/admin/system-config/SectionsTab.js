@@ -545,6 +545,7 @@ export default function SectionsTab({
                               size="sm"
                               disabled={!secCourseCode || !newSectionName.trim() || isQuickAddLoading}
                               onClick={() => addSection(null, { courseCode: secCourseCode, name: newSectionName })}
+                              title="Add Course Block"
                               className="h-9 w-9 p-0 flex items-center justify-center rounded-[8px] text-[14px] font-semibold text-white shadow-sm active:scale-95 disabled:opacity-50 transition-all dark:shadow-none btn-brand-orange shrink-0"
                             >
                             {isQuickAddLoading ? (
@@ -645,6 +646,7 @@ export default function SectionsTab({
                                     })
                                     setIsEditSectionOpen(true)
                                   }}
+                                  title="Edit Course Block"
                                   className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-amber-500 dark:hover:text-amber-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                 >
                                   <i className="ph-bold ph-pencil-simple text-[16px]"></i>
@@ -672,6 +674,7 @@ export default function SectionsTab({
                                   })
                                   setConfirmOpen(true)
                                 }}
+                                title="Restore Course Block"
                                 className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-emerald-600 dark:hover:text-emerald-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                               >
                                 <i className="ph-bold ph-archive-restore text-[16px]"></i>
@@ -697,6 +700,7 @@ export default function SectionsTab({
                                   })
                                   setConfirmOpen(true)
                                 }}
+                                title="Archive Course Block"
                                 className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 border-0 bg-transparent text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                               >
                                 <i className="ph-bold ph-archive text-[16px]"></i>

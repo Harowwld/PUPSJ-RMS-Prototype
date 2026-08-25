@@ -9,19 +9,42 @@ import { Badge } from "@/components/ui/badge"
 import PageHeader from "@/components/shared/PageHeader"
 import { formatPHDateTime } from "@/lib/timeFormat"
 import { cn } from "@/lib/utils"
+import { Select } from "@/components/ui/select"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { format } from "date-fns"
+import { RefreshButton } from "@/components/shared/RefreshButton"
+import LogDetailSheet from "../admin/audit-logs/LogDetailSheet"
 
 export default function GlobalAuditLogsTab({ showToast }) {
   const [logs, setLogs] = useState([])
   const [offices, setOffices] = useState([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(true)
+  const [isManualLoading, setIsManualLoading] = useState(false)
+  const [selectedLog, setSelectedLog] = useState(null)
   
   // Pagination & Filtering
   const [page, setPage] = useState(1)
-  const [limit, setLimit] = useState(25)
+  const [limit, setLimit] = useState(10)
   const [search, setSearch] = useState("")
+  const [localSearch, setLocalSearch] = useState("")
   const [officeFilter, setOfficeFilter] = useState("All")
   const [severityFilter, setSeverityFilter] = useState("All")
+  const [startDate, setStartDate] = useState("")
+  const [endDate, setEndDate] = useState("")
+
+  // Debounce search input
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (localSearch !== search) {
+        setSearch(localSearch)
+        setPage(1)
+      }
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [localSearch, search])
 
   const fetchOffices = useCallback(async () => {
     try {
@@ -33,15 +56,18 @@ export default function GlobalAuditLogsTab({ showToast }) {
     } catch {}
   }, [])
 
-  const fetchLogs = useCallback(async () => {
+  const fetchLogs = useCallback(async (isManual = false) => {
+    if (isManual) setIsManualLoading(true)
     setLoading(true)
     try {
       const offset = (page - 1) * limit
       const officeQuery = officeFilter !== "All" ? `&officeId=${encodeURIComponent(officeFilter)}` : ""
       const severityQuery = severityFilter !== "All" ? `&severity=${encodeURIComponent(severityFilter)}` : ""
       const searchQuery = search ? `&search=${encodeURIComponent(search)}` : ""
+      const startQuery = startDate ? `&startDate=${encodeURIComponent(startDate)}` : ""
+      const endQuery = endDate ? `&endDate=${encodeURIComponent(endDate)}` : ""
       
-      const res = await fetch(`/api/audit-logs/global?limit=${limit}&offset=${offset}${officeQuery}${severityQuery}${searchQuery}`)
+      const res = await fetch(`/api/audit-logs/global?limit=${limit}&offset=${offset}${officeQuery}${severityQuery}${searchQuery}${startQuery}${endQuery}`)
       const json = await res.json()
       
       if (res.ok && json.ok) {
@@ -54,8 +80,9 @@ export default function GlobalAuditLogsTab({ showToast }) {
       showToast("Network error fetching audit logs", true)
     } finally {
       setLoading(false)
+      setIsManualLoading(false)
     }
-  }, [page, limit, officeFilter, severityFilter, search, showToast])
+  }, [page, limit, officeFilter, severityFilter, search, startDate, endDate, showToast])
 
   useEffect(() => {
     fetchOffices()
@@ -65,12 +92,7 @@ export default function GlobalAuditLogsTab({ showToast }) {
     fetchLogs()
   }, [fetchLogs])
 
-  const handleSearchChange = (e) => {
-    setSearch(e.target.value)
-    setPage(1) // Reset to first page
-  }
-
-  const handleOfficeChange = (e) => {
+  const handleRoleChange = (e) => {
     setOfficeFilter(e.target.value)
     setPage(1)
   }
@@ -80,172 +102,368 @@ export default function GlobalAuditLogsTab({ showToast }) {
     setPage(1)
   }
 
+  const handleQuickRange = (range) => {
+    const end = new Date()
+    let start = new Date()
+
+    switch (range) {
+      case "today":
+        start.setHours(0, 0, 0, 0)
+        break
+      case "yesterday":
+        start.setDate(start.getDate() - 1)
+        start.setHours(0, 0, 0, 0)
+        end.setDate(end.getDate() - 1)
+        end.setHours(23, 59, 59, 999)
+        break
+      case "last7":
+        start.setDate(start.getDate() - 7)
+        start.setHours(0, 0, 0, 0)
+        break
+      case "last30":
+        start.setDate(start.getDate() - 30)
+        start.setHours(0, 0, 0, 0)
+        break
+    }
+
+    setStartDate(format(start, "yyyy-MM-dd"))
+    setEndDate(format(end, "yyyy-MM-dd"))
+    setPage(1)
+  }
+
+  const activeShortcut = (() => {
+    if (!startDate || !endDate) return null
+    const todayStr = format(new Date(), "yyyy-MM-dd")
+    
+    if (startDate === todayStr && endDate === todayStr) return "today"
+    
+    const yesterday = new Date()
+    yesterday.setDate(yesterday.getDate() - 1)
+    const yesterdayStr = format(yesterday, "yyyy-MM-dd")
+    if (startDate === yesterdayStr && endDate === yesterdayStr) return "yesterday"
+    
+    const last7 = new Date()
+    last7.setDate(last7.getDate() - 7)
+    const last7Str = format(last7, "yyyy-MM-dd")
+    if (startDate === last7Str && endDate === todayStr) return "last7"
+    
+    const last30 = new Date()
+    last30.setDate(last30.getDate() - 30)
+    const last30Str = format(last30, "yyyy-MM-dd")
+    if (startDate === last30Str && endDate === todayStr) return "last30"
+    
+    return null
+  })()
+
   const totalPages = Math.ceil(total / limit) || 1
+  const startEntry = (page - 1) * limit + 1
+  const endEntry = Math.min(page * limit, total)
+
+  const handleCopy = (text, label) => {
+    if (!text) return
+    navigator.clipboard.writeText(text)
+    showToast({ title: "Copied to Clipboard", description: `${label} has been successfully copied to your clipboard.` })
+  }
 
   return (
-    <div className="flex flex-col gap-6 w-full max-w-6xl mx-auto">
-      <PageHeader
-        title="Platform Audit Trail"
-        description="Inspect administrative actions, tenant configuration updates, and security logs across all database environments."
-      />
-
-      {/* Filters Toolbar */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-white/40 dark:bg-zinc-900/30 p-3 rounded-2xl border border-gray-200/50 dark:border-white/5 backdrop-blur-xs">
-        <div className="relative">
-          <i className="ti ti-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-zinc-500"></i>
-          <Input
-            value={search}
-            onChange={handleSearchChange}
-            placeholder="Search logs by actor, action or IP..."
-            className="pl-9 h-9 w-full bg-white/70 dark:bg-zinc-900/40 border border-gray-200 dark:border-white/5 rounded-xl text-xs"
+    <TooltipProvider delay={200}>
+      <div className="animate-fade-up font-inter flex w-full flex-col gap-6 max-w-6xl mx-auto">
+        <Card className="flex h-auto w-full flex-col p-0 gap-0 overflow-hidden rounded-xl border-gray-200 bg-white shadow-sm dark:border-white/10 dark:bg-card dark:shadow-none">
+          <PageHeader
+            icon="ph-shield-check"
+            title="Platform Audit Trail"
+            description="Inspect administrative actions, tenant configuration updates, and security logs across all database environments."
+            showBorder={false}
+            titleClassName="text-[18px] font-semibold tracking-[-0.01em] text-gray-900 dark:text-zinc-50"
+            descriptionClassName="text-[13px] font-normal text-gray-500 dark:text-zinc-400 mt-[4px]"
+            actions={
+              <div className="flex items-center gap-6">
+                <RefreshButton 
+                  onRefresh={() => fetchLogs(true)} 
+                  isLoading={isManualLoading} 
+                  title="Refresh Audit Logs"
+                />
+              </div>
+            }
           />
-        </div>
 
-        {/* Office filter */}
-        <select
-          value={officeFilter}
-          onChange={handleOfficeChange}
-          className="h-9 w-full px-3 text-xs bg-white/70 dark:bg-zinc-900/40 border border-gray-200 dark:border-white/5 rounded-xl outline-none focus:border-slate-900 dark:text-white cursor-pointer"
-        >
-          <option value="All">All Scopes</option>
-          <option value="global">Global (Platform Level)</option>
-          {offices.map(o => (
-            <option key={o.id} value={o.id}>{o.short_name}</option>
-          ))}
-        </select>
+          {/* Filters Toolbar */}
+          <div className="bg-white border-t border-gray-100 p-4 backdrop-blur-md dark:bg-card/50 dark:border-white/10">
+            <div className="flex w-full flex-wrap items-center gap-5">
+              {/* Search */}
+              <div className="flex-[2] min-w-[280px] group relative">
+                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none">
+                  <i className="ph-bold ph-magnifying-glass text-gray-400 transition-colors group-focus-within:text-pup-maroon dark:text-zinc-500 text-sm"></i>
+                </div>
+                <Input
+                  type="text"
+                  placeholder="Search logs by actor, action or IP..."
+                  className="h-[36px] w-full rounded-[8px] border-[0.5px] border-gray-200 bg-white pl-9 pr-20 text-[13px] font-normal transition-all focus:border-pup-maroon/30 focus:ring-4 focus:ring-pup-maroon/5 placeholder:text-gray-400 dark:border-white/10 dark:bg-card dark:text-zinc-300 dark:focus:border-primary"
+                  value={localSearch}
+                  onChange={(e) => setLocalSearch(e.target.value)}
+                />
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-[12px] font-normal text-gray-400 dark:text-zinc-500">
+                  {total > 0 ? `${total.toLocaleString()} results` : "0 results"}
+                </div>
+              </div>
 
-        {/* Severity filter */}
-        <select
-          value={severityFilter}
-          onChange={handleSeverityChange}
-          className="h-9 w-full px-3 text-xs bg-white/70 dark:bg-zinc-900/40 border border-gray-200 dark:border-white/5 rounded-xl outline-none focus:border-slate-900 dark:text-white cursor-pointer"
-        >
-          <option value="All">All Severities</option>
-          <option value="INFO">INFO</option>
-          <option value="WARNING">WARNING</option>
-          <option value="CRITICAL">CRITICAL</option>
-        </select>
-      </div>
+              {/* Office / Scope Select */}
+              <div className="min-w-[140px] flex-1">
+                <Select
+                  value={officeFilter}
+                  onChange={handleRoleChange}
+                  className="h-[36px] rounded-[8px] border-[0.5px] border-gray-200 text-[13px] font-normal"
+                >
+                  <option value="All">All Scopes</option>
+                  <option value="global">Global (Platform)</option>
+                  {offices.map((o) => (
+                    <option key={o.id} value={o.id}>
+                      {o.short_name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
 
-      {/* Audit Logs Table */}
-      {loading ? (
-        <div className="space-y-3">
-          {[1, 2, 3, 4, 5].map(i => (
-            <Skeleton key={i} className="h-12 w-full rounded-xl" />
-          ))}
-        </div>
-      ) : logs.length === 0 ? (
-        <Card className="border border-dashed border-gray-200 dark:border-white/5 bg-white/10 rounded-2xl">
-          <CardContent className="p-12 flex flex-col items-center justify-center text-center">
-            <div className="w-12 h-12 rounded-full bg-white dark:bg-zinc-900 border border-gray-100 flex items-center justify-center mb-3 shadow-xs">
-              <i className="ti ti-history text-xl text-gray-400"></i>
-            </div>
-            <span className="font-semibold text-gray-800 dark:text-zinc-200">No matching log entries</span>
-            <span className="text-xs text-gray-500 mt-1">Try relaxing the search filters or choosing another category.</span>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="flex flex-col gap-4">
-          <div className="overflow-hidden rounded-2xl border border-gray-200/60 dark:border-white/5 bg-white/60 dark:bg-zinc-900/40 shadow-[0_4px_16px_rgba(0,0,0,0.02)] backdrop-blur-xs">
-            <table className="w-full border-collapse text-left text-xs">
-              <thead>
-                <tr className="border-b border-gray-200/80 dark:border-white/5 bg-gray-50/55 dark:bg-zinc-950/20 text-gray-500 dark:text-zinc-400 font-bold uppercase tracking-wider h-[46px]">
-                  <th className="p-4 min-w-[150px]">Timestamp</th>
-                  <th className="p-4">Actor</th>
-                  <th className="p-4">Scope</th>
-                  <th className="p-4">Action</th>
-                  <th className="p-4 min-w-[250px]">Details</th>
-                  <th className="p-4">Severity</th>
-                  <th className="p-4 text-right">IP Address</th>
-                </tr>
-              </thead>
-              
-              <tbody className="divide-y divide-gray-100 dark:divide-white/5 font-medium text-gray-900 dark:text-zinc-100">
-                {logs.map((log) => {
-                  const office = offices.find(o => o.id === log.office_id)
-                  
+              {/* Severity Select */}
+              <div className="min-w-[130px] flex-1">
+                <Select
+                  value={severityFilter}
+                  onChange={handleSeverityChange}
+                  className="h-[36px] rounded-[8px] border-[0.5px] border-gray-200 text-[13px] font-normal"
+                >
+                  <option value="All">Severity</option>
+                  <option value="INFO">Information</option>
+                  <option value="WARNING">Warning</option>
+                  <option value="CRITICAL">Critical</option>
+                </Select>
+              </div>
+
+              {/* Time shortcuts */}
+              <div className="flex items-center gap-[12px] h-[36px] flex-none">
+                {[
+                  { key: "today", label: "Today" },
+                  { key: "yesterday", label: "Yesterday" },
+                  { key: "last7", label: "7 days" },
+                  { key: "last30", label: "30 days" },
+                ].map((range) => {
+                  const isActive = activeShortcut === range.key
                   return (
-                    <tr 
-                      key={log.id}
+                    <button
+                      key={range.key}
+                      type="button"
+                      onClick={() => handleQuickRange(range.key)}
                       className={cn(
-                        "hover:bg-gray-50/30 dark:hover:bg-white/2 transition-colors duration-150 h-[52px]",
-                        log.severity === "CRITICAL" && "bg-red-500/5 hover:bg-red-500/10 dark:bg-red-950/10 dark:hover:bg-red-950/20",
-                        log.severity === "WARNING" && "bg-amber-500/5 hover:bg-amber-500/10 dark:bg-amber-950/10 dark:hover:bg-amber-950/20"
+                        "text-[12px] font-normal transition-all bg-transparent border-0 cursor-pointer shadow-none focus:outline-none focus:ring-0 pb-1",
+                        isActive 
+                          ? "text-[#03a10e] dark:text-[#03a10e] border-b-[2px] border-[#03a10e] dark:border-[#03a10e] font-medium" 
+                          : "text-gray-400 dark:text-zinc-500 hover:text-gray-600 dark:hover:text-zinc-300"
                       )}
                     >
-                      <td className="p-4 font-mono font-normal text-gray-400 dark:text-zinc-500">
-                        {formatPHDateTime(log.created_at)}
-                      </td>
-                      <td className="p-4">
-                        <div className="flex flex-col">
-                          <span className="font-semibold text-gray-950 dark:text-zinc-50">{log.actor}</span>
-                          <span className="text-[10px] text-gray-400 font-normal">{log.role}</span>
-                        </div>
-                      </td>
-                      <td className="p-4">
-                        {office ? (
-                          <span className="font-semibold text-gray-800 dark:text-zinc-300">{office.short_name}</span>
-                        ) : (
-                          <span className="text-blue-600 dark:text-blue-400 font-semibold uppercase text-[10px]">Global</span>
-                        )}
-                      </td>
-                      <td className="p-4 font-semibold text-slate-800 dark:text-zinc-200">
-                        {log.action}
-                      </td>
-                      <td className="p-4 text-gray-500 dark:text-zinc-400 font-normal leading-relaxed text-[11px] max-w-sm whitespace-pre-line">
-                        {log.details}
-                      </td>
-                      <td className="p-4">
-                        <Badge
-                          className={cn(
-                            "rounded-md shadow-2xs font-semibold px-2 py-0.5 border text-[10px] tracking-wide",
-                            log.severity === "CRITICAL"
-                              ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20"
-                              : log.severity === "WARNING"
-                                ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
-                                : "bg-gray-50 text-gray-700 border-gray-200 dark:bg-white/5 dark:text-zinc-400 dark:border-white/5"
-                          )}
-                        >
-                          {log.severity}
-                        </Badge>
-                      </td>
-                      <td className="p-4 text-right font-mono font-normal text-gray-400 dark:text-zinc-500">
-                        {log.ip}
-                      </td>
-                    </tr>
+                      {range.label}
+                    </button>
                   )
                 })}
+              </div>
+
+              {/* Date pickers */}
+              <div className="flex items-center gap-2 flex-none">
+                <div className="w-[120px]">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "h-[36px] w-full justify-start rounded-[8px] border-[0.5px] border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-[13px] font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10",
+                          !startDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
+                        )}
+                      >
+                        {startDate ? format(new Date(startDate), "MMM d, yyyy") : "Start Date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={startDate ? new Date(startDate) : undefined}
+                        onSelect={(date) => {
+                          setStartDate(date ? format(date, "yyyy-MM-dd") : "")
+                          setPage(1)
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="text-[12px] text-gray-400 dark:text-zinc-500 shrink-0">
+                  →
+                </div>
+                <div className="w-[120px]">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "h-[36px] w-full justify-start rounded-[8px] border-[0.5px] border-gray-200 dark:border-white/10 bg-white dark:bg-card text-left text-[13px] font-normal shadow-xs transition-all hover:bg-gray-50 dark:hover:bg-white/10",
+                          !endDate ? "text-gray-400 dark:text-zinc-500" : "text-gray-700 dark:text-zinc-200"
+                        )}
+                      >
+                        {endDate ? format(new Date(endDate), "MMM d, yyyy") : "End Date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto rounded-2xl border border-gray-200 bg-white p-0 shadow-2xl dark:border-white/10 dark:bg-card" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={endDate ? new Date(endDate) : undefined}
+                        onSelect={(date) => {
+                          setEndDate(date ? format(date, "yyyy-MM-dd") : "")
+                          setPage(1)
+                        }}
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Table content */}
+          <div className="relative w-full overflow-auto">
+            <table className="w-full border-collapse text-left text-xs">
+              <thead>
+                <tr className="border-b-[0.5px] border-gray-150 bg-gray-50 text-[11px] font-bold uppercase tracking-wider text-gray-500 h-[40px] dark:border-white/10 dark:bg-zinc-950/20 select-none">
+                  <th className="py-0 px-4 align-middle font-bold text-gray-500 dark:text-zinc-400">Timestamp</th>
+                  <th className="py-0 px-4 align-middle font-bold text-gray-500 dark:text-zinc-400">Actor</th>
+                  <th className="py-0 px-4 align-middle font-bold text-gray-500 dark:text-zinc-400">Scope</th>
+                  <th className="py-0 px-4 align-middle font-bold text-gray-500 dark:text-zinc-400">Action</th>
+                  <th className="py-0 px-4 align-middle font-bold text-gray-500 dark:text-zinc-400 min-w-[250px]">Details</th>
+                  <th className="py-0 px-4 align-middle font-bold text-gray-500 dark:text-zinc-400">Severity</th>
+                  <th className="py-0 px-4 align-middle font-bold text-gray-500 dark:text-zinc-400 text-right">IP Address</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100 dark:divide-white/5 font-medium text-gray-900 dark:text-zinc-100">
+                {loading ? (
+                  Array.from({ length: 5 }).map((_, idx) => (
+                    <tr key={idx} className="h-[52px]">
+                      <td className="p-4"><Skeleton className="h-4 w-28" /></td>
+                      <td className="p-4"><Skeleton className="h-4 w-24" /></td>
+                      <td className="p-4"><Skeleton className="h-4 w-16" /></td>
+                      <td className="p-4"><Skeleton className="h-4 w-24" /></td>
+                      <td className="p-4"><Skeleton className="h-4 w-full max-w-sm" /></td>
+                      <td className="p-4"><Skeleton className="h-4 w-12" /></td>
+                      <td className="p-4"><Skeleton className="h-4 w-20" /></td>
+                    </tr>
+                  ))
+                ) : logs.length === 0 ? (
+                  <tr className="border-0 hover:bg-transparent">
+                    <td colSpan={7} className="p-0 border-0">
+                      <div className="h-[400px] flex flex-col items-center justify-center text-gray-500">
+                        <div className="w-16 h-16 rounded-full bg-white border border-gray-200 flex items-center justify-center mb-4 shadow-xs">
+                          <i className="ph-duotone ph-history text-3xl text-pup-maroon"></i>
+                        </div>
+                        <div className="text-lg font-bold text-gray-900">No matching log entries</div>
+                        <div className="text-sm font-medium text-gray-600 mt-1 max-w-md">
+                          Try relaxing the search filters or choosing another category.
+                        </div>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  logs.map((log) => {
+                    const office = offices.find((o) => o.id === log.office_id)
+                    const isCritical = log.severity === "CRITICAL"
+                    const isWarning = log.severity === "WARNING"
+
+                    return (
+                      <tr 
+                        key={log.id}
+                        onClick={() => setSelectedLog(log)}
+                        className={cn(
+                          "group h-[52px] border-b-[0.5px] border-gray-100 dark:border-white/10 last:border-b-0 transition-all duration-200 hover:bg-gray-50/40 dark:bg-card dark:hover:bg-white/2 cursor-pointer select-none",
+                          isCritical && "bg-red-500/5 hover:bg-red-500/10 dark:bg-red-950/10 dark:hover:bg-red-950/20",
+                          isWarning && "bg-amber-500/5 hover:bg-amber-500/10 dark:bg-amber-950/10 dark:hover:bg-amber-950/20"
+                        )}
+                      >
+                        <td className="py-0 px-4 align-middle font-mono font-normal text-gray-400 dark:text-zinc-500">
+                          {formatPHDateTime(log.created_at)}
+                        </td>
+                        <td className="py-0 px-4 align-middle">
+                          <div className="flex flex-col">
+                            <span className="font-semibold text-gray-950 dark:text-zinc-50">{log.actor}</span>
+                            <span className="text-[10px] text-gray-400 font-normal">{log.role}</span>
+                          </div>
+                        </td>
+                        <td className="py-0 px-4 align-middle">
+                          {office ? (
+                            <span className="font-semibold text-gray-800 dark:text-zinc-300">{office.short_name}</span>
+                          ) : (
+                            <span className="text-blue-600 dark:text-blue-400 font-semibold uppercase text-[10px]">Global</span>
+                          )}
+                        </td>
+                        <td className="py-0 px-4 align-middle font-semibold text-slate-800 dark:text-zinc-200">
+                          {log.action}
+                        </td>
+                        <td className="py-0 px-4 align-middle text-gray-500 dark:text-zinc-400 font-normal leading-relaxed text-[11px] max-w-sm truncate">
+                          {log.details || "—"}
+                        </td>
+                        <td className="py-0 px-4 align-middle">
+                          <Badge
+                            className={cn(
+                              "rounded-md shadow-2xs font-semibold px-2 py-0.5 border text-[10px] tracking-wide",
+                              isCritical
+                                ? "bg-red-50 text-red-700 border-red-200 dark:bg-red-500/10 dark:text-red-400 dark:border-red-500/20"
+                                : isWarning
+                                  ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-500/10 dark:text-amber-400 dark:border-amber-500/20"
+                                  : "bg-gray-50 text-gray-700 border-gray-200 dark:bg-white/5 dark:text-zinc-400 dark:border-white/5"
+                            )}
+                          >
+                            {log.severity || "INFO"}
+                          </Badge>
+                        </td>
+                        <td className="py-0 px-4 align-middle text-right font-mono font-normal text-gray-400 dark:text-zinc-500">
+                          {log.ip || "—"}
+                        </td>
+                      </tr>
+                    )
+                  })
+                )}
               </tbody>
             </table>
           </div>
 
           {/* Pagination Toolbar */}
-          <div className="flex items-center justify-between mt-2 px-2">
-            <span className="text-xs text-gray-500 dark:text-zinc-400">
-              Showing page <strong>{page}</strong> of <strong>{totalPages}</strong> ({total.toLocaleString()} total entries)
-            </span>
+          <div className="border-t border-gray-100 px-6 py-4 flex items-center justify-between mt-0 dark:border-white/10 dark:bg-card">
+            <div className="text-xs font-medium text-gray-500">
+              Showing {startEntry}-{endEntry} of <strong>{total.toLocaleString()}</strong> entries
+            </div>
             
             <div className="flex items-center gap-2">
               <Button
                 variant="outline"
                 disabled={page <= 1}
-                onClick={() => setPage(p => p - 1)}
+                onClick={() => setPage((p) => p - 1)}
                 className="h-8 border-gray-200 dark:border-white/10 text-xs font-semibold rounded-lg cursor-pointer"
               >
-                <i className="ti ti-chevron-left mr-1"></i> Previous
+                <i className="ph-bold ph-caret-left mr-1"></i> Previous
               </Button>
               <Button
                 variant="outline"
                 disabled={page >= totalPages}
-                onClick={() => setPage(p => p + 1)}
+                onClick={() => setPage((p) => p + 1)}
                 className="h-8 border-gray-200 dark:border-white/10 text-xs font-semibold rounded-lg cursor-pointer"
               >
-                Next <i className="ti ti-chevron-right ml-1"></i>
+                Next <i className="ph-bold ph-caret-right ml-1"></i>
               </Button>
             </div>
           </div>
-        </div>
-      )}
-    </div>
+        </Card>
+      </div>
+
+      <LogDetailSheet
+        isOpen={!!selectedLog}
+        onOpenChange={(open) => !open && setSelectedLog(null)}
+        log={selectedLog}
+        onCopy={handleCopy}
+      />
+    </TooltipProvider>
   )
 }

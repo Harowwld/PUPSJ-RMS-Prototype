@@ -1,5 +1,6 @@
 "use client"
 
+import React, { useState } from "react"
 import {
   Tooltip as ChartTooltip,
   ResponsiveContainer,
@@ -16,7 +17,6 @@ import {
   Area,
 } from "recharts"
 import { cn } from "@/lib/utils"
-import { useState } from "react"
 import {
   Empty,
   EmptyHeader,
@@ -129,7 +129,7 @@ const labelShortener = (value) => {
   return value;
 };
 
-export default function SlaCharts({ data, pieData, onSwitchView }) {
+const SlaCharts = React.memo(function SlaCharts({ data, pieData, onSwitchView }) {
   const isDark = false
   const [timeGrain, setTimeGrain] = useState("monthly") // "monthly", "weekly", "daily"
   const [activeBarName, setActiveBarName] = useState(null)
@@ -206,7 +206,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
         </div>
         <div className="flex-1 min-h-[288px] w-full flex flex-col justify-center">
           {hasTrendData ? (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" debounce={100}>
               <AreaChart
                 data={trendData}
                 margin={{ top: 10, right: 10, left: -20, bottom: 20 }}
@@ -285,7 +285,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
         </h3>
         <div className="flex-1 min-h-[288px] w-full flex flex-col justify-center">
           {hasDemandData ? (
-            <ResponsiveContainer width="100%" height="100%">
+            <ResponsiveContainer width="100%" height="100%" debounce={100}>
               <BarChart
                 data={data.topDocTypes}
                 margin={{ top: 10, right: 10, left: -20, bottom: 20 }}
@@ -382,7 +382,7 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
                     total
                   </span>
                 </div>
-                <ResponsiveContainer width="100%" height="100%">
+                <ResponsiveContainer width="100%" height="100%" debounce={100}>
                   <PieChart>
                     <Pie
                       data={pieData}
@@ -534,6 +534,8 @@ export default function SlaCharts({ data, pieData, onSwitchView }) {
       </div>
     </div>
   )
-}
+})
+
+export default SlaCharts
 
 

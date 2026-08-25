@@ -1007,7 +1007,7 @@ export default function ScanUploadTab({
                     ) : (
                       <div
                         className={cn(
-                          "group relative flex min-h-[500px] flex-1 cursor-pointer flex-col items-center justify-center p-6 rounded-[12px] border border-[#E5E5EA] bg-[#FAFAFA] transition-all duration-150 ease-out dark:bg-zinc-900/50 dark:border-white/12",
+                          "group relative flex min-h-[745px] flex-1 cursor-pointer flex-col items-center justify-center p-6 rounded-[12px] border border-[#E5E5EA] bg-[#FAFAFA] transition-all duration-150 ease-out dark:bg-zinc-900/50 dark:border-white/12",
                           csvDropActive ? "border-pup-maroon/40" : ""
                         )}
                         onDragOver={(e) => {
@@ -1060,7 +1060,7 @@ export default function ScanUploadTab({
                     <div className="flex flex-col gap-4 w-full h-full">
                       <div
                         className={cn(
-                          "group relative flex flex-1 min-h-[480px] w-full flex-col overflow-hidden rounded-[12px] border border-[#E5E5EA] transition-all duration-150 ease-out",
+                          "group relative flex flex-1 min-h-[745px] w-full flex-col overflow-hidden rounded-[12px] border border-[#E5E5EA] transition-all duration-150 ease-out",
                           uploadedFile ? "bg-white dark:bg-card" : "bg-[#FAFAFA] dark:bg-zinc-900/50",
                           fe.pdfFile ? "border-orange-400 bg-orange-50/30" : "",
                           "dark:border-white/12"
@@ -1301,7 +1301,7 @@ export default function ScanUploadTab({
                         </div>
                         ) : (
                           <div
-                            className="relative flex min-h-[500px] flex-1 cursor-pointer flex-col items-center justify-center p-6"
+                            className="relative flex min-h-0 flex-1 cursor-pointer flex-col items-center justify-center p-6"
                           >
                             <input
                               type="file"

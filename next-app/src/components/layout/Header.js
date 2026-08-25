@@ -32,9 +32,11 @@ export default function Header({ authUser, onLogout, children }) {
   const [preferredView, setPreferredView] = useState(null);
   const [showSessionExpired, setShowSessionExpired] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   useEffect(() => {
     setImageError(false);
+    setImageLoaded(false);
   }, [authUser?.avatar_filename]);
 
   const isSuperAdmin = isSuperAdminRole(authUser?.role);
@@ -168,12 +170,20 @@ export default function Header({ authUser, onLogout, children }) {
               )}>
                 <div className="h-[46px] w-[46px] rounded-full bg-white dark:bg-zinc-850 flex items-center justify-center text-sm font-semibold text-gray-700 dark:text-zinc-300 border border-gray-200 dark:border-white/10 overflow-hidden">
                   {authUser?.avatar_filename && !imageError ? (
-                    <img 
-                      src={`/api/account/avatar?id=${authUser.id}&t=${authUser.updated_at || Date.now()}`}
-                      alt="Avatar"
-                      className="w-full h-full object-cover"
-                      onError={() => setImageError(true)}
-                    />
+                    <>
+                      <img 
+                        src={`/api/account/avatar?id=${authUser.id}&t=${authUser.updated_at || Date.now()}`}
+                        alt=""
+                        className={cn("w-full h-full object-cover", imageLoaded ? "block" : "hidden")}
+                        onLoad={() => setImageLoaded(true)}
+                        onError={() => setImageError(true)}
+                      />
+                      {!imageLoaded && (
+                        <div className="flex h-full w-full items-center justify-center bg-gray-100 dark:bg-zinc-800 animate-pulse">
+                          <i className="ph-bold ph-user text-[18px] text-gray-400 dark:text-zinc-550" />
+                        </div>
+                      )}
+                    </>
                   ) : (
                     initials
                   )}

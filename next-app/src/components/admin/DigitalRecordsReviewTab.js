@@ -652,13 +652,9 @@ export default function DigitalRecordsReviewTab({
                         </div>
                         {stats.hasSlaBreach && !isLoading && (
                           <div className="flex items-center gap-1.5">
-                            <span className="relative flex h-2 w-2">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
-                            </span>
                             <Tooltip>
                               <TooltipTrigger asChild>
-                                <Badge className="bg-red-500 text-white border-0 text-[8px] font-semibold px-1.5 py-0 h-4 tracking-tight cursor-help">
+                                <Badge className="bg-[#FEE2E2] text-[#991B1B] hover:bg-[#FEE2E2] dark:bg-red-950/40 dark:text-red-400 dark:hover:bg-red-950/40 border border-red-200/50 dark:border-red-500/20 text-[10px] font-bold px-2 py-0.5 tracking-wide cursor-help rounded-[4px]">
                                   SLA Warning
                                 </Badge>
                               </TooltipTrigger>
@@ -1362,6 +1358,7 @@ export default function DigitalRecordsReviewTab({
                             <div className="flex items-center justify-end gap-[12px]" onClick={(e) => e.stopPropagation()}>
                               <button
                                 onClick={() => handlePreview(r)}
+                                title="Preview Document"
                                 className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-[#E5484D] dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                               >
                                 <i className="ph-bold ph-eye text-[16px]"></i>
@@ -1371,6 +1368,7 @@ export default function DigitalRecordsReviewTab({
                                  <>
                                    <button
                                      onClick={() => handleApprove(r.id)}
+                                     title="Approve Document"
                                      className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-green-600 dark:hover:text-green-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                    >
                                      <i className="ph-bold ph-check text-[16px]"></i>
@@ -1378,6 +1376,7 @@ export default function DigitalRecordsReviewTab({
 
                                    <button
                                      onClick={() => onDecline(r.id)}
+                                     title="Decline Document"
                                      className="w-7 h-7 rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] dark:hover:bg-white/10 text-[#C7C7CC] dark:text-zinc-600 transition-colors hover:text-red-600 dark:hover:text-red-400 focus:outline-none cursor-pointer active:scale-95 flex items-center justify-center"
                                    >
                                      <i className="ph-bold ph-x text-[16px]"></i>

@@ -29,10 +29,12 @@ export async function GET(req) {
     const search = searchParams.get("search") || "";
     const officeId = searchParams.get("officeId") || "";
     const severity = searchParams.get("severity") || "";
+    const startDate = searchParams.get("startDate") || "";
+    const endDate = searchParams.get("endDate") || "";
 
     const [rows, total] = await Promise.all([
-      listGlobalAuditLogs({ limit, offset, search, officeId, severity }),
-      countGlobalAuditLogs({ search, officeId, severity }),
+      listGlobalAuditLogs({ limit, offset, search, officeId, severity, startDate, endDate }),
+      countGlobalAuditLogs({ search, officeId, severity, startDate, endDate }),
     ]);
 
     return NextResponse.json({ ok: true, data: rows, total });

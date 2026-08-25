@@ -45,6 +45,7 @@ function AccountPageContent() {
 
   // Avatar State
   const [avatarUrl, setAvatarUrl] = useState(null);
+  const [avatarLoaded, setAvatarLoaded] = useState(false);
   const fileInputRef = useRef(null);
 
   // Profile Form State
@@ -177,6 +178,10 @@ function AccountPageContent() {
     }
     document.getElementsByTagName('head')[0].appendChild(link);
   }, [authUser]);
+
+  useEffect(() => {
+    setAvatarLoaded(false);
+  }, [avatarUrl]);
 
   const handleUserPreferenceToggle = async (key, checked) => {
     const newValue = checked;
@@ -736,12 +741,20 @@ function AccountPageContent() {
                     className="relative group w-[68px] h-[68px] shrink-0 rounded-full bg-gray-200 dark:bg-zinc-800 text-gray-700 dark:text-zinc-300 flex items-center justify-center text-[22px] font-semibold shadow-inner cursor-pointer overflow-hidden transition-all duration-300 hover:ring-2 hover:ring-pup-maroon/20"
                   >
                     {avatarUrl ? (
-                      <img 
-                        src={avatarUrl} 
-                        alt="Profile avatar" 
-                        className="w-full h-full object-cover"
-                        onError={() => setAvatarUrl(null)}
-                      />
+                      <>
+                        <img 
+                          src={avatarUrl} 
+                          alt="" 
+                          className={`w-full h-full object-cover ${avatarLoaded ? "block" : "hidden"}`}
+                          onLoad={() => setAvatarLoaded(true)}
+                          onError={() => setAvatarUrl(null)}
+                        />
+                        {!avatarLoaded && (
+                          <div className="flex h-full w-full items-center justify-center bg-gray-200 dark:bg-zinc-800 animate-pulse">
+                            <i className="ph-bold ph-user text-[24px] text-gray-400 dark:text-zinc-500" />
+                          </div>
+                        )}
+                      </>
                     ) : (
                       <span>{initials}</span>
                     )}

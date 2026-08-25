@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import React, { useEffect, useState, useMemo } from "react"
 import {
   Card,
   CardContent,
@@ -39,7 +39,7 @@ import SlaKpiCards from "./analytics/SlaKpiCards"
 import SlaCharts from "./analytics/SlaCharts"
 import SlaFilters from "./analytics/SlaFilters"
 
-export default function SLAAnalyticsTab({
+const SLAAnalyticsTab = React.memo(function SLAAnalyticsTab({
  showToast, onLogAction, onSwitchView }) {
   const [data, setData] = useState(null)
    const [loading, setLoading] = useState(true)
@@ -96,9 +96,11 @@ export default function SLAAnalyticsTab({
   const completed = data?.sla?.totalCompleted || 0
   const completionRate = total > 0 ? Math.round((completed / total) * 100) : 0
 
-  const pieData = Object.entries(data?.statusCounts || {})
-    .map(([name, value]) => ({ name, value }))
-    .filter((d) => d.value > 0)
+  const pieData = useMemo(() => {
+    return Object.entries(data?.statusCounts || {})
+      .map(([name, value]) => ({ name, value }))
+      .filter((d) => d.value > 0)
+  }, [data?.statusCounts])
 
   const handlePreview = async () => {
     if (!data || loading) return;
@@ -485,7 +487,9 @@ export default function SLAAnalyticsTab({
       </Dialog>
     </div>
   )
-}
+})
+
+export default SLAAnalyticsTab
 
 
 

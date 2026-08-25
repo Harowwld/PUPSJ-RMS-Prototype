@@ -248,6 +248,8 @@ export async function listGlobalAuditLogs(options = {}) {
   const search = options.search || "";
   const officeId = options.officeId || options.office_id || "";
   const severity = options.severity || "";
+  const startDate = options.startDate || "";
+  const endDate = options.endDate || "";
 
   let query = "SELECT * FROM global_audit_logs";
   let params = [];
@@ -265,6 +267,24 @@ export async function listGlobalAuditLogs(options = {}) {
   if (severity && severity !== "All") {
     whereClauses.push("severity = ?");
     params.push(severity);
+  }
+
+  if (startDate) {
+    if (startDate.includes("T") || startDate.includes(":")) {
+      whereClauses.push("datetime(created_at) >= datetime(?)");
+    } else {
+      whereClauses.push("date(created_at, 'localtime') >= date(?)");
+    }
+    params.push(startDate);
+  }
+
+  if (endDate) {
+    if (endDate.includes("T") || endDate.includes(":")) {
+      whereClauses.push("datetime(created_at) <= datetime(?)");
+    } else {
+      whereClauses.push("date(created_at, 'localtime') <= date(?)");
+    }
+    params.push(endDate);
   }
 
   if (search) {
@@ -290,6 +310,8 @@ export async function countGlobalAuditLogs(options = {}) {
   const search = options.search || "";
   const officeId = options.officeId || options.office_id || "";
   const severity = options.severity || "";
+  const startDate = options.startDate || "";
+  const endDate = options.endDate || "";
 
   let query = "SELECT COUNT(*) as count FROM global_audit_logs";
   let params = [];
@@ -307,6 +329,24 @@ export async function countGlobalAuditLogs(options = {}) {
   if (severity && severity !== "All") {
     whereClauses.push("severity = ?");
     params.push(severity);
+  }
+
+  if (startDate) {
+    if (startDate.includes("T") || startDate.includes(":")) {
+      whereClauses.push("datetime(created_at) >= datetime(?)");
+    } else {
+      whereClauses.push("date(created_at, 'localtime') >= date(?)");
+    }
+    params.push(startDate);
+  }
+
+  if (endDate) {
+    if (endDate.includes("T") || endDate.includes(":")) {
+      whereClauses.push("datetime(created_at) <= datetime(?)");
+    } else {
+      whereClauses.push("date(created_at, 'localtime') <= date(?)");
+    }
+    params.push(endDate);
   }
 
   if (search) {

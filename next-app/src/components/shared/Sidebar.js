@@ -134,6 +134,8 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                 window.dispatchEvent(new CustomEvent("toggle-sidebar"))
               }
             }}
+            title={open ? "Collapse Sidebar" : "Expand Sidebar"}
+            data-tooltip-placement="right"
             className="flex w-[36px] h-[36px] items-center justify-center rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] cursor-pointer transition-colors shrink-0"
           >
             <i className={cn("text-[21px] transition-all duration-300", open ? "ti ti-panel-left-dashed" : "ti ti-panel-left")} style={{ color: activeColor }}></i>
@@ -149,6 +151,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                 <button
                   type="button"
                   onClick={() => setZoomNode(prev => Math.max(0, prev - 1))}
+                  title="Zoom Out"
                   className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-100 dark:hover:bg-white/5 text-gray-500 hover:text-gray-75 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-7 w-7 transition-colors duration-75"
                 >
                   <svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -158,6 +161,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                 <div 
                   onMouseDown={handleZoomMouseDown}
                   onTouchStart={handleZoomMouseDown}
+                  title="Adjust Layout scale"
                   className="relative w-[50px] h-[14px] flex items-center group cursor-pointer"
                 >
                   <div className="absolute left-0 right-0 h-[2.5px] bg-[#D1D1D6] dark:bg-zinc-700 rounded-full"></div>
@@ -173,6 +177,7 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                 <button
                   type="button"
                   onClick={() => setZoomNode(prev => Math.min(6, prev + 1))}
+                  title="Zoom In"
                   className="group flex items-center justify-center border-0 rounded-brand hover:bg-gray-150 dark:hover:bg-white/5 text-gray-500 hover:text-gray-75 dark:text-zinc-400 dark:hover:text-zinc-200 cursor-pointer bg-transparent h-7 w-7 transition-colors duration-75"
                 >
                   <svg width="12" height="12" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -217,6 +222,8 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                 <button
                   type="button"
                   onClick={() => toggleAccordion(item.key)}
+                  title={!open ? item.label : undefined}
+                  data-tooltip-placement="right"
                   className={cn(
                     "flex w-full h-[36px] items-center rounded-[6px] text-[15px] outline-none cursor-pointer justify-between",
                     hasActiveChild && !isExpanded
@@ -287,6 +294,8 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
                           data-sidebar-key={child.key}
                           href={`${pathname}?view=${child.key}`}
                           onClick={(e) => handleLinkClick(e, child.key)}
+                          title={!open ? child.label : undefined}
+                          data-tooltip-placement="right"
                           className={cn(
                             "flex w-full h-[36px] items-center rounded-[6px] text-[15px] outline-none cursor-pointer justify-between",
                             isActive
@@ -350,6 +359,8 @@ export default function Sidebar({ open = true, items, activeKey, onSelect, onLog
               data-sidebar-key={item.key}
               href={`${pathname}?view=${item.key}`}
               onClick={(e) => handleLinkClick(e, item.key)}
+              title={!open ? item.label : undefined}
+              data-tooltip-placement="right"
               className={cn(
                 "flex w-full h-[36px] items-center rounded-[6px] text-[15px] outline-none cursor-pointer justify-between",
                 isActive
