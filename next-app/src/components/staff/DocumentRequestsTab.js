@@ -445,16 +445,13 @@ export default function DocumentRequestsTab({
 
               <div className="flex items-center gap-2">
                 {!loading && !error && (
-                  <LiquidGlassButton
+                  <Button
                     type="button"
-                    height={40}
-                    radius={20}
-                    glassColor="rgba(10, 132, 255, 0.15)"
-                    className="font-semibold shrink-0 dark:shadow-none text-white"
                     onClick={() => setCreateOpen(true)}
+                    className="flex h-[36px] items-center justify-center rounded-[8px] btn-brand-red text-[13px] font-medium text-white active:scale-95 disabled:opacity-50 transition-all dark:shadow-none px-4 cursor-pointer"
                   >
                     New Request
-                  </LiquidGlassButton>
+                  </Button>
                 )}
               </div>
             </div>
